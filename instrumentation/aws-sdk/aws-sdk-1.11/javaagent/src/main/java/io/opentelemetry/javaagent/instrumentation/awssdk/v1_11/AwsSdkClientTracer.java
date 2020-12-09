@@ -39,7 +39,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     if (inClientSpan(parentContext)) {
       return HttpClientOperation.noop();
     }
-    SpanBuilder spanBuilder = spanBuilder(parentContext, request);
+    SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanNameForRequest(request));
 
     String awsServiceName = request.getServiceName();
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
@@ -70,6 +70,15 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
       span.setAttribute("aws.requestId", awsResp.getRequestId());
     }
     super.onResponse(span, response);
+  }
+
+  private String spanNameForRequest(Request<?> request) {
+    if (request == null) {
+      return DEFAULT_SPAN_NAME;
+    }
+    String awsServiceName = request.getServiceName();
+    Class<?> awsOperation = request.getOriginalRequest().getClass();
+    return qualifiedOperation(awsServiceName, awsOperation);
   }
 
   private String qualifiedOperation(String service, Class<?> operation) {
