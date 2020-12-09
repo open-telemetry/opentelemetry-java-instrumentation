@@ -10,18 +10,21 @@ import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClient
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentationModule.AkkaHttpHeaders;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class AkkaHttpClientTracer
-    extends HttpClientTracer<HttpRequest, AkkaHttpHeaders, HttpResponse> {
+public class AkkaHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
   private static final AkkaHttpClientTracer TRACER = new AkkaHttpClientTracer();
 
   public static AkkaHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<HttpResponse> startOperation(
+      HttpRequest request, AkkaHttpHeaders headers) {
+    return startOperation(request, headers, SETTER, -1);
   }
 
   @Override
@@ -52,11 +55,6 @@ public class AkkaHttpClientTracer
   @Override
   protected String responseHeader(HttpResponse httpResponse, String name) {
     return httpResponse.getHeader(name).map(HttpHeader::value).orElse(null);
-  }
-
-  @Override
-  protected Setter<AkkaHttpHeaders> getSetter() {
-    return SETTER;
   }
 
   @Override

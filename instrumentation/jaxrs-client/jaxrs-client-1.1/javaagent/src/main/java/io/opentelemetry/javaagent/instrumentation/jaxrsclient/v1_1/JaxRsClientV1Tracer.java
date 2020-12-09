@@ -9,16 +9,19 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.Inject
 
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 
-public class JaxRsClientV1Tracer
-    extends HttpClientTracer<ClientRequest, ClientRequest, ClientResponse> {
+public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientResponse> {
   private static final JaxRsClientV1Tracer TRACER = new JaxRsClientV1Tracer();
 
   public static JaxRsClientV1Tracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<ClientResponse> startOperation(ClientRequest request) {
+    return super.startOperation(request, SETTER);
   }
 
   @Override
@@ -45,11 +48,6 @@ public class JaxRsClientV1Tracer
   @Override
   protected String responseHeader(ClientResponse clientResponse, String name) {
     return clientResponse.getHeaders().getFirst(name);
-  }
-
-  @Override
-  protected Setter<ClientRequest> getSetter() {
-    return SETTER;
   }
 
   @Override

@@ -5,27 +5,18 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientTracer;
 import java.net.URI;
 import software.amazon.awssdk.http.SdkHttpHeaders;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
-final class AwsSdkHttpClientTracer
-    extends LazyHttpClientTracer<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> {
+final class AwsSdkHttpClientTracer extends LazyHttpClientTracer<SdkHttpRequest, SdkHttpResponse> {
 
   private static final AwsSdkHttpClientTracer TRACER = new AwsSdkHttpClientTracer();
 
   static AwsSdkHttpClientTracer tracer() {
     return TRACER;
-  }
-
-  @Override
-  protected TextMapPropagator getTextMapPropagator() {
-    return AwsXRayPropagator.getInstance();
   }
 
   @Override
@@ -51,11 +42,6 @@ final class AwsSdkHttpClientTracer
   @Override
   protected String responseHeader(SdkHttpResponse sdkHttpResponse, String name) {
     return header(sdkHttpResponse, name);
-  }
-
-  @Override
-  protected Setter<SdkHttpRequest.Builder> getSetter() {
-    return AwsSdkInjectAdapter.INSTANCE;
   }
 
   private static String header(SdkHttpHeaders headers, String name) {

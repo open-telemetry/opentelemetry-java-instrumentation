@@ -9,12 +9,11 @@ import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter.SETTER;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
@@ -24,8 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class NettyHttpClientTracer
-    extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
+public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
   private static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
 
   public static NettyHttpClientTracer tracer() {
@@ -53,7 +51,9 @@ public class NettyHttpClientTracer
         spanBuilder::setAttribute, (InetSocketAddress) ctx.channel().remoteAddress());
 
     Context context = withClientSpan(parentContext, spanBuilder.startSpan());
-    inject(request.headers(), context);
+    OpenTelemetry.getGlobalPropagators()
+        .getTextMapPropagator()
+        .inject(context, request.headers(), SETTER);
     return newOperation(context, parentContext);
   }
 
@@ -108,11 +108,6 @@ public class NettyHttpClientTracer
   @Override
   protected String responseHeader(HttpResponse httpResponse, String name) {
     return httpResponse.headers().get(name);
-  }
-
-  @Override
-  protected Setter<HttpHeaders> getSetter() {
-    return SETTER;
   }
 
   @Override

@@ -10,18 +10,22 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
-import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ArmeriaClientTracer
-    extends HttpClientTracer<ClientRequestContext, ClientRequestContext, RequestLog> {
+public class ArmeriaClientTracer extends HttpClientTracer<ClientRequestContext, RequestLog> {
 
   ArmeriaClientTracer() {}
 
   ArmeriaClientTracer(Tracer tracer) {
     super(tracer);
+  }
+
+  public HttpClientOperation<RequestLog> startOperation(
+      ClientRequestContext ctx, long requestStartTimeNanos) {
+    return super.startOperation(ctx, ctx, ArmeriaSetter.INSTANCE, requestStartTimeNanos);
   }
 
   @Override
@@ -36,7 +40,7 @@ public class ArmeriaClientTracer
 
   @Override
   @Nullable
-  protected URI url(ClientRequestContext ctx) throws URISyntaxException {
+  protected URI url(ClientRequestContext ctx) {
     HttpRequest request = ctx.request();
     return request != null ? request.uri() : null;
   }
@@ -57,11 +61,6 @@ public class ArmeriaClientTracer
   @Nullable
   protected String responseHeader(RequestLog log, String name) {
     return log.responseHeaders().get(name);
-  }
-
-  @Override
-  protected Setter<ClientRequestContext> getSetter() {
-    return ArmeriaSetter.INSTANCE;
   }
 
   @Override

@@ -14,7 +14,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.SpanAttributeSetter;
 import java.net.URI;
@@ -24,7 +23,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseTracer {
+public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(HttpClientTracer.class);
 
@@ -51,8 +50,6 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   @Nullable
   protected abstract String responseHeader(RESPONSE response, String name);
 
-  protected abstract TextMapPropagator.Setter<CARRIER> getSetter();
-
   protected HttpClientTracer() {
     super();
   }
@@ -63,19 +60,33 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  public final HttpClientOperation<RESPONSE> startOperation(REQUEST request, CARRIER carrier) {
-    return startOperation(request, carrier, -1);
+  protected final HttpClientOperation<RESPONSE> startOperation(
+      REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
+    return startOperation(request, request, setter);
   }
 
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  public final HttpClientOperation<RESPONSE> startOperation(
-      REQUEST request, CARRIER carrier, long startTimeNanos) {
-    return internalStartOperation(request, carrier, startTimeNanos);
+  protected final <CARRIER> HttpClientOperation<RESPONSE> startOperation(
+      REQUEST request, CARRIER carrier, TextMapPropagator.Setter<CARRIER> setter) {
+    return startOperation(request, carrier, setter, -1);
   }
 
-  private HttpClientOperation<RESPONSE> internalStartOperation(
-      REQUEST request, CARRIER carrier, long startTimeNanos) {
+  // if this resulting operation needs to be manually propagated, that should be done outside of
+  // this method
+  protected final <CARRIER> HttpClientOperation<RESPONSE> startOperation(
+      REQUEST request,
+      CARRIER carrier,
+      TextMapPropagator.Setter<CARRIER> setter,
+      long startTimeNanos) {
+    return internalStartOperation(request, carrier, setter, startTimeNanos);
+  }
+
+  private <CARRIER> HttpClientOperation<RESPONSE> internalStartOperation(
+      REQUEST request,
+      CARRIER carrier,
+      TextMapPropagator.Setter<CARRIER> setter,
+      long startTimeNanos) {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
       return HttpClientOperation.noop();
@@ -83,7 +94,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     String spanName = spanNameForRequest(request);
     SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanName, startTimeNanos);
     Context context = withClientSpan(parentContext, spanBuilder.startSpan());
-    inject(carrier, context);
+    OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
     return newOperation(context, parentContext);
   }
 
@@ -114,20 +125,6 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   protected final Context withClientSpan(Context parentContext, Span span) {
     return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
-  }
-
-  protected final void inject(CARRIER carrier, Context context) {
-    Setter<CARRIER> setter = getSetter();
-    if (setter == null) {
-      throw new IllegalStateException(
-          "getSetter() not defined but calling startScope(),"
-              + " either getSetter must be implemented or the scope should be setup manually");
-    }
-    getTextMapPropagator().inject(context, carrier, setter);
-  }
-
-  protected TextMapPropagator getTextMapPropagator() {
-    return OpenTelemetry.getGlobalPropagators().getTextMapPropagator();
   }
 
   protected final HttpClientOperation<RESPONSE> newOperation(

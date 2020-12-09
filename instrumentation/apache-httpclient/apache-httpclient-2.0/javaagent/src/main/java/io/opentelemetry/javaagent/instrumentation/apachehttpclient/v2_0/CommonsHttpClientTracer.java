@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.HttpHeadersInjectAdapter.SETTER;
+
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,11 +16,15 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.StatusLine;
 import org.apache.commons.httpclient.URIException;
 
-public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMethod, HttpMethod> {
+public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMethod> {
   private static final CommonsHttpClientTracer TRACER = new CommonsHttpClientTracer();
 
   public static CommonsHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<HttpMethod> startOperation(HttpMethod request) {
+    return super.startOperation(request, SETTER);
   }
 
   @Override
@@ -57,10 +63,5 @@ public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMe
   protected String responseHeader(HttpMethod httpMethod, String name) {
     Header header = httpMethod.getResponseHeader(name);
     return header != null ? header.getValue() : null;
-  }
-
-  @Override
-  protected Setter<HttpMethod> getSetter() {
-    return HttpHeadersInjectAdapter.SETTER;
   }
 }

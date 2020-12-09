@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.httpclients;
 
 import static io.opentelemetry.instrumentation.spring.httpclients.HttpHeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.io.IOException;
 import java.net.URI;
@@ -16,12 +16,17 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 
-class RestTemplateTracer extends HttpClientTracer<HttpRequest, HttpHeaders, ClientHttpResponse> {
+class RestTemplateTracer extends HttpClientTracer<HttpRequest, ClientHttpResponse> {
 
   private static final RestTemplateTracer TRACER = new RestTemplateTracer();
 
   public static RestTemplateTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<ClientHttpResponse> startOperation(
+      HttpRequest request, HttpHeaders headers) {
+    return super.startOperation(request, headers, SETTER);
   }
 
   @Override
@@ -51,11 +56,6 @@ class RestTemplateTracer extends HttpClientTracer<HttpRequest, HttpHeaders, Clie
   @Override
   protected String responseHeader(ClientHttpResponse response, String name) {
     return response.getHeaders().getFirst(name);
-  }
-
-  @Override
-  protected Setter<HttpHeaders> getSetter() {
-    return SETTER;
   }
 
   @Override

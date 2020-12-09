@@ -101,7 +101,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
       operation = storage.get(connection);
 
       if (operation == null) {
-        operation = tracer().startOperation(connection, connection);
+        operation = tracer().startOperation(connection);
         storage.put(connection, operation);
       }
 

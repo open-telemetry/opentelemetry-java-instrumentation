@@ -7,14 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class KubernetesClientTracer extends HttpClientTracer<Request, Request, Response> {
+public class KubernetesClientTracer extends HttpClientTracer<Request, Response> {
   private static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
 
   public static KubernetesClientTracer tracer() {
@@ -37,6 +36,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
             .setAttribute("name", digest.getResourceMeta().getName())
             .startSpan();
     Context context = withClientSpan(parentContext, span);
+    // TODO implement propagation?
     return newOperation(context, parentContext);
   }
 
@@ -63,12 +63,6 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
   @Override
   protected String responseHeader(Response response, String name) {
     return response.header(name);
-  }
-
-  @Override
-  protected Setter<Request> getSetter() {
-    // TODO (trask) no propagation implemented yet?
-    return null;
   }
 
   @Override

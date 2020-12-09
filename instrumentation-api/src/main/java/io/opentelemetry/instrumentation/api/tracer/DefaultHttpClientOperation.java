@@ -13,7 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
 class DefaultHttpClientOperation<
-        REQUEST, CARRIER, RESPONSE, TRACER extends HttpClientTracer<REQUEST, CARRIER, RESPONSE>>
+        REQUEST, RESPONSE, TRACER extends HttpClientTracer<REQUEST, RESPONSE>>
     implements HttpClientOperation<RESPONSE> {
 
   protected final Context context;

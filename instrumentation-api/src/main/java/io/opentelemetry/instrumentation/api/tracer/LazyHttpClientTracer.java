@@ -11,14 +11,14 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 
-public abstract class LazyHttpClientTracer<REQUEST, CARRIER, RESPONSE>
-    extends HttpClientTracer<REQUEST, CARRIER, RESPONSE> {
+public abstract class LazyHttpClientTracer<REQUEST, RESPONSE>
+    extends HttpClientTracer<REQUEST, RESPONSE> {
 
-  public final LazyHttpClientOperation<REQUEST, CARRIER, RESPONSE> startOperation() {
+  public final LazyHttpClientOperation<REQUEST, RESPONSE> startOperation() {
     return startOperation(DEFAULT_SPAN_NAME);
   }
 
-  public final LazyHttpClientOperation<REQUEST, CARRIER, RESPONSE> startOperation(String name) {
+  public final LazyHttpClientOperation<REQUEST, RESPONSE> startOperation(String name) {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
       return LazyHttpClientOperation.noop();

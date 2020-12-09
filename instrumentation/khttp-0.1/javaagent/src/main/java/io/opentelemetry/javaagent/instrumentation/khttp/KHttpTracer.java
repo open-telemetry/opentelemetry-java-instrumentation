@@ -7,18 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.khttp;
 
 import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpHeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import khttp.responses.Response;
 
-public class KHttpTracer extends HttpClientTracer<RequestWrapper, Map<String, String>, Response> {
+public class KHttpTracer extends HttpClientTracer<RequestWrapper, Response> {
   private static final KHttpTracer TRACER = new KHttpTracer();
 
   public static KHttpTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<Response> startOperation(
+      RequestWrapper request, Map<String, String> headers) {
+    return super.startOperation(request, headers, SETTER);
   }
 
   @Override
@@ -44,11 +49,6 @@ public class KHttpTracer extends HttpClientTracer<RequestWrapper, Map<String, St
   @Override
   protected String responseHeader(Response response, String name) {
     return response.getHeaders().get(name);
-  }
-
-  @Override
-  protected Setter<Map<String, String>> getSetter() {
-    return SETTER;
   }
 
   @Override

@@ -69,7 +69,7 @@ public class JaxRsClientInstrumentationModule extends InstrumentationModule {
         @Advice.Argument(0) ClientRequest request,
         @Advice.Local("otelOperation") HttpClientOperation<ClientResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(request, request);
+      operation = tracer().startOperation(request);
       scope = operation.makeCurrent();
     }
 

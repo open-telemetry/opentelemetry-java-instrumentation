@@ -152,7 +152,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Argument(0) HttpUriRequest request,
         @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(request, request);
+      operation = tracer().startOperation(request);
       scope = operation.makeCurrent();
     }
 
@@ -180,7 +180,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
             Object handler,
         @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(request, request);
+      operation = tracer().startOperation(request);
       scope = operation.makeCurrent();
 
       // Wrap the handler so we capture the status code

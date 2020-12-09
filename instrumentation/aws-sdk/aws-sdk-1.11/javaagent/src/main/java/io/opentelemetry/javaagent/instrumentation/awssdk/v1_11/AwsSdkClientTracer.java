@@ -9,16 +9,16 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, Response<?>> {
+public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>> {
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
@@ -59,7 +59,10 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     }
     Span span = spanBuilder.startSpan();
     Context context = withClientSpan(parentContext, span);
-    inject(request, context);
+    // TODO (trask) should this be AwsXRayPropagator.getInstance()?
+    OpenTelemetry.getGlobalPropagators()
+        .getTextMapPropagator()
+        .inject(context, request, AwsSdkInjectAdapter.INSTANCE);
     return newOperation(context, parentContext);
   }
 
@@ -117,11 +120,6 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   @Override
   protected String responseHeader(Response<?> response, String name) {
     return response.getHttpResponse().getHeaders().get(name);
-  }
-
-  @Override
-  protected Setter<Request<?>> getSetter() {
-    return AwsSdkInjectAdapter.INSTANCE;
   }
 
   @Override

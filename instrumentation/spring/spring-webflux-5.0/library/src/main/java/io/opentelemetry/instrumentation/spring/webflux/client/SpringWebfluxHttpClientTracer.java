@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -17,8 +17,7 @@ import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-public class SpringWebfluxHttpClientTracer
-    extends HttpClientTracer<ClientRequest, ClientRequest.Builder, ClientResponse> {
+public class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientRequest, ClientResponse> {
 
   private static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
 
@@ -27,6 +26,11 @@ public class SpringWebfluxHttpClientTracer
   }
 
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
+
+  public HttpClientOperation<ClientResponse> startOperation(
+      ClientRequest request, ClientRequest.Builder builder) {
+    return super.startOperation(request, builder, SETTER);
+  }
 
   @Override
   protected String method(ClientRequest httpRequest) {
@@ -61,11 +65,6 @@ public class SpringWebfluxHttpClientTracer
   protected String responseHeader(ClientResponse clientResponse, String name) {
     List<String> headers = clientResponse.headers().header(name);
     return !headers.isEmpty() ? headers.get(0) : null;
-  }
-
-  @Override
-  protected Setter<ClientRequest.Builder> getSetter() {
-    return SETTER;
   }
 
   @Override

@@ -68,7 +68,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Argument(1) HttpMethod httpMethod,
         @Advice.Local("otelOperation") HttpClientOperation<HttpMethod> operation,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(httpMethod, httpMethod);
+      operation = tracer().startOperation(httpMethod);
       scope = operation.makeCurrent();
     }
 

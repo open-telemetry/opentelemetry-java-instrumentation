@@ -9,16 +9,20 @@ import static io.opentelemetry.javaagent.instrumentation.okhttp.v2_2.RequestBuil
 
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
+public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
   private static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
 
   public static OkHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<Response> startOperation(Request request, Request.Builder builder) {
+    return super.startOperation(request, builder, SETTER);
   }
 
   @Override
@@ -44,11 +48,6 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builde
   @Override
   protected String responseHeader(Response response, String name) {
     return response.header(name);
-  }
-
-  @Override
-  protected Setter<Request.Builder> getSetter() {
-    return SETTER;
   }
 
   @Override

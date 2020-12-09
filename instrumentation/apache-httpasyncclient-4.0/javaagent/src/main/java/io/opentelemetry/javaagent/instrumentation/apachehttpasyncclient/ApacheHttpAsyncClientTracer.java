@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
-
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -21,8 +18,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ApacheHttpAsyncClientTracer
-    extends LazyHttpClientTracer<HttpRequest, HttpRequest, HttpResponse> {
+public class ApacheHttpAsyncClientTracer extends LazyHttpClientTracer<HttpRequest, HttpResponse> {
 
   private static final ApacheHttpAsyncClientTracer TRACER = new ApacheHttpAsyncClientTracer();
 
@@ -74,11 +70,6 @@ public class ApacheHttpAsyncClientTracer
   @Override
   protected String responseHeader(HttpResponse response, String name) {
     return header(response, name);
-  }
-
-  @Override
-  protected Setter<HttpRequest> getSetter() {
-    return SETTER;
   }
 
   @Override

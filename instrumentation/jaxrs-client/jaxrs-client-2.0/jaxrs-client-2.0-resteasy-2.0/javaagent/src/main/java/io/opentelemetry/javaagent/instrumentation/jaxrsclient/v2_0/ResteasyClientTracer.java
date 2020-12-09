@@ -7,18 +7,21 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.ResteasyInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import javax.ws.rs.core.Response;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
-public class ResteasyClientTracer
-    extends HttpClientTracer<ClientInvocation, ClientInvocation, Response> {
+public class ResteasyClientTracer extends HttpClientTracer<ClientInvocation, Response> {
   private static final ResteasyClientTracer TRACER = new ResteasyClientTracer();
 
   public static ResteasyClientTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<Response> startOperation(ClientInvocation request) {
+    return super.startOperation(request, SETTER);
   }
 
   @Override
@@ -44,11 +47,6 @@ public class ResteasyClientTracer
   @Override
   protected String responseHeader(Response httpResponse, String name) {
     return httpResponse.getHeaderString(name);
-  }
-
-  @Override
-  protected Setter<ClientInvocation> getSetter() {
-    return SETTER;
   }
 
   @Override

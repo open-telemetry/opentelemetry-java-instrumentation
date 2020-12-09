@@ -6,16 +6,14 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
-class DefaultLazyHttpClientOperation<REQUEST, CARRIER, RESPONSE>
-    extends DefaultHttpClientOperation<
-        REQUEST, CARRIER, RESPONSE, LazyHttpClientTracer<REQUEST, CARRIER, RESPONSE>>
-    implements LazyHttpClientOperation<REQUEST, CARRIER, RESPONSE> {
+class DefaultLazyHttpClientOperation<REQUEST, RESPONSE>
+    extends DefaultHttpClientOperation<REQUEST, RESPONSE, LazyHttpClientTracer<REQUEST, RESPONSE>>
+    implements LazyHttpClientOperation<REQUEST, RESPONSE> {
 
   DefaultLazyHttpClientOperation(
-      Context context,
-      Context parentContext,
-      LazyHttpClientTracer<REQUEST, CARRIER, RESPONSE> tracer) {
+      Context context, Context parentContext, LazyHttpClientTracer<REQUEST, RESPONSE> tracer) {
     super(context, parentContext, tracer);
   }
 
@@ -25,7 +23,8 @@ class DefaultLazyHttpClientOperation<REQUEST, CARRIER, RESPONSE>
   }
 
   @Override
-  public void inject(CARRIER carrier) {
-    tracer.inject(carrier, context);
+  public <CARRIER> void inject(
+      TextMapPropagator propagator, CARRIER carrier, TextMapPropagator.Setter<CARRIER> setter) {
+    propagator.inject(context, carrier, setter);
   }
 }

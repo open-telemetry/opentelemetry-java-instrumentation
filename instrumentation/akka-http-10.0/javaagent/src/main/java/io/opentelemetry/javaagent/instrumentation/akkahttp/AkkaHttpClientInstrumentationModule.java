@@ -120,22 +120,6 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
     }
   }
 
-  public static class AkkaHttpHeaders {
-    private HttpRequest request;
-
-    public AkkaHttpHeaders(HttpRequest request) {
-      this.request = request;
-    }
-
-    public HttpRequest getRequest() {
-      return request;
-    }
-
-    public void setRequest(HttpRequest request) {
-      this.request = request;
-    }
-  }
-
   public static class InjectAdapter implements TextMapPropagator.Setter<AkkaHttpHeaders> {
 
     public static final InjectAdapter SETTER = new InjectAdapter();

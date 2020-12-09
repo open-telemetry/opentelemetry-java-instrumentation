@@ -73,7 +73,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Local("otelOperation") HttpClientOperation<HttpResponse<?>> operation,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(httpRequest, httpRequest);
+      operation = tracer().startOperation(httpRequest);
       scope = operation.makeCurrent();
     }
 
@@ -95,7 +95,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Local("otelOperation") HttpClientOperation<HttpResponse<?>> operation,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(httpRequest, httpRequest);
+      operation = tracer().startOperation(httpRequest);
       scope = operation.makeCurrent();
     }
 

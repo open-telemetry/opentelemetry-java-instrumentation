@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -19,8 +18,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ApacheHttpClientTracer
-    extends HttpClientTracer<HttpUriRequest, HttpUriRequest, HttpResponse> {
+public class ApacheHttpClientTracer extends HttpClientTracer<HttpUriRequest, HttpResponse> {
 
   private static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
 
@@ -35,7 +33,11 @@ public class ApacheHttpClientTracer
     } else {
       httpUriRequest = new HostAndRequestAsHttpUriRequest(host, request);
     }
-    return startOperation(httpUriRequest, httpUriRequest);
+    return startOperation(httpUriRequest);
+  }
+
+  public HttpClientOperation<HttpResponse> startOperation(HttpUriRequest request) {
+    return startOperation(request, SETTER);
   }
 
   @Override
@@ -66,11 +68,6 @@ public class ApacheHttpClientTracer
   @Override
   protected String responseHeader(HttpResponse response, String name) {
     return header(response, name);
-  }
-
-  @Override
-  protected Setter<HttpUriRequest> getSetter() {
-    return SETTER;
   }
 
   private static String header(HttpMessage message, String name) {

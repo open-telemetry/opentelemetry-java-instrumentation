@@ -5,22 +5,23 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-class NoopLazyHttpClientOperation<REQUEST, CARRIER, RESPONSE>
-    extends NoopHttpClientOperation<RESPONSE>
-    implements LazyHttpClientOperation<REQUEST, CARRIER, RESPONSE> {
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
-  private static final LazyHttpClientOperation<Object, Object, Object> INSTANCE =
+class NoopLazyHttpClientOperation<REQUEST, RESPONSE> extends NoopHttpClientOperation<RESPONSE>
+    implements LazyHttpClientOperation<REQUEST, RESPONSE> {
+
+  private static final LazyHttpClientOperation<Object, Object> INSTANCE =
       new NoopLazyHttpClientOperation<>();
 
   @SuppressWarnings("unchecked")
-  static <REQUEST, CARRIER, RESPONSE>
-      LazyHttpClientOperation<REQUEST, CARRIER, RESPONSE> noopUnbound() {
-    return (LazyHttpClientOperation<REQUEST, CARRIER, RESPONSE>) INSTANCE;
+  static <REQUEST, RESPONSE> LazyHttpClientOperation<REQUEST, RESPONSE> noopUnbound() {
+    return (LazyHttpClientOperation<REQUEST, RESPONSE>) INSTANCE;
   }
 
   @Override
   public void onRequest(REQUEST request) {}
 
   @Override
-  public void inject(CARRIER request) {}
+  public <CARRIER> void inject(
+      TextMapPropagator propagator, CARRIER request, TextMapPropagator.Setter<CARRIER> setter) {}
 }

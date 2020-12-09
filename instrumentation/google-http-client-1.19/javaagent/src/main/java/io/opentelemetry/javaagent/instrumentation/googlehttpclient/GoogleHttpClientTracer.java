@@ -5,20 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
+import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.HeadersInjectAdapter.SETTER;
+
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class GoogleHttpClientTracer
-    extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
+public class GoogleHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
   private static final GoogleHttpClientTracer TRACER = new GoogleHttpClientTracer();
 
   public static GoogleHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<HttpResponse> startOperation(HttpRequest request) {
+    return startOperation(request, request.getHeaders(), SETTER, -1);
   }
 
   @Override
@@ -53,11 +58,6 @@ public class GoogleHttpClientTracer
   @Override
   protected String responseHeader(HttpResponse httpResponse, String name) {
     return header(httpResponse.getHeaders(), name);
-  }
-
-  @Override
-  protected Setter<HttpHeaders> getSetter() {
-    return HeadersInjectAdapter.SETTER;
   }
 
   private static String header(HttpHeaders headers, String name) {

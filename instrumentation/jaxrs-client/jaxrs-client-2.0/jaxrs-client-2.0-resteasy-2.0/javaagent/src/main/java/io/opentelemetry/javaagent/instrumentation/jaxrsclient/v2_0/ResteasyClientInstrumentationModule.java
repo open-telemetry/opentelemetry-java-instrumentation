@@ -69,7 +69,7 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
         @Advice.This ClientInvocation invocation,
         @Advice.Local("otelOperation") HttpClientOperation<Response> operation,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(invocation, invocation);
+      operation = tracer().startOperation(invocation);
       scope = operation.makeCurrent();
     }
 

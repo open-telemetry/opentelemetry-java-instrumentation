@@ -18,7 +18,7 @@ public interface HttpClientOperation<RESPONSE> {
   }
 
   static <RESPONSE> HttpClientOperation<RESPONSE> create(
-      Context context, Context parentContext, HttpClientTracer<?, ?, RESPONSE> tracer) {
+      Context context, Context parentContext, HttpClientTracer<?, RESPONSE> tracer) {
     return new DefaultHttpClientOperation<>(context, parentContext, tracer);
   }
 

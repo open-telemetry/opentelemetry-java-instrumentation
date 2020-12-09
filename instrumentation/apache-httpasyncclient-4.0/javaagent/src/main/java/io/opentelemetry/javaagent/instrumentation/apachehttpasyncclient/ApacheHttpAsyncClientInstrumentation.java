@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientOperation;
@@ -68,7 +69,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         @Advice.Argument(2) HttpContext httpContext,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback,
         @Advice.Local("otelOperation")
-            LazyHttpClientOperation<HttpRequest, HttpRequest, HttpResponse> operation) {
+            LazyHttpClientOperation<HttpRequest, HttpResponse> operation) {
       operation = tracer().startOperation();
       requestProducer = new DelegatingRequestProducer(operation, requestProducer);
       futureCallback = new TraceContinuedFutureCallback<>(operation, httpContext, futureCallback);
@@ -78,7 +79,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     public static void methodExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelOperation")
-            LazyHttpClientOperation<HttpRequest, HttpRequest, HttpResponse> operation) {
+            LazyHttpClientOperation<HttpRequest, HttpResponse> operation) {
       if (throwable != null) {
         operation.endExceptionally(throwable);
       }
@@ -86,11 +87,11 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    LazyHttpClientOperation<HttpRequest, HttpRequest, HttpResponse> operation;
+    LazyHttpClientOperation<HttpRequest, HttpResponse> operation;
     HttpAsyncRequestProducer delegate;
 
     public DelegatingRequestProducer(
-        LazyHttpClientOperation<HttpRequest, HttpRequest, HttpResponse> operation,
+        LazyHttpClientOperation<HttpRequest, HttpResponse> operation,
         HttpAsyncRequestProducer delegate) {
       this.operation = operation;
       this.delegate = delegate;
@@ -104,7 +105,10 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
       HttpRequest request = delegate.generateRequest();
-      operation.inject(request);
+      operation.inject(
+          OpenTelemetry.getGlobalPropagators().getTextMapPropagator(),
+          request,
+          HttpHeadersInjectAdapter.SETTER);
       operation.onRequest(request);
       return request;
     }

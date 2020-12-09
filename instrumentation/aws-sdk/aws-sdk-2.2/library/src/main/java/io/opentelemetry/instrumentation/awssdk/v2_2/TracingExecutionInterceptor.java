@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequ
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientOperation;
 import java.util.EnumMap;
@@ -35,8 +36,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
-  static final ExecutionAttribute<
-          LazyHttpClientOperation<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse>>
+  static final ExecutionAttribute<LazyHttpClientOperation<SdkHttpRequest, SdkHttpResponse>>
       OPERATION_ATTRIBUTE =
           new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Operation");
   static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
@@ -78,8 +78,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
-    // TODO (trask) this type name is horrible
-    LazyHttpClientOperation<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> operation =
+    LazyHttpClientOperation<SdkHttpRequest, SdkHttpResponse> operation =
         tracer().startOperation(spanName(executionAttributes));
     if (!operation.getSpan().isRecording()) {
       return;
@@ -101,11 +100,11 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
-    LazyHttpClientOperation<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> operation =
+    LazyHttpClientOperation<SdkHttpRequest, SdkHttpResponse> operation =
         getOperationOrNoop(executionAttributes);
     if (operation.getSpan().isRecording()) {
       SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
-      operation.inject(builder);
+      operation.inject(AwsXRayPropagator.getInstance(), builder, AwsSdkInjectAdapter.INSTANCE);
       return builder.build();
     } else {
       return context.httpRequest();
@@ -115,7 +114,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
-    LazyHttpClientOperation<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> operation =
+    LazyHttpClientOperation<SdkHttpRequest, SdkHttpResponse> operation =
         getOperationOrNoop(executionAttributes);
     operation.onRequest(context.httpRequest());
 

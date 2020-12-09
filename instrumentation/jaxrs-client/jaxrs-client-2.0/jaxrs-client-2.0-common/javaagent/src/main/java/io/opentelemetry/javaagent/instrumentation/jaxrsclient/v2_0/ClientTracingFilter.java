@@ -22,8 +22,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(ClientRequestContext requestContext) {
-    HttpClientOperation<ClientResponseContext> operation =
-        tracer().startOperation(requestContext, requestContext);
+    HttpClientOperation<ClientResponseContext> operation = tracer().startOperation(requestContext);
     requestContext.setProperty(OPERATION_PROPERTY_NAME, operation);
   }
 

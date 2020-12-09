@@ -93,7 +93,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      operation = tracer().startOperation(request, request.getHeaders());
+      operation = tracer().startOperation(request);
       scope = operation.makeCurrent();
     }
 
@@ -115,7 +115,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.This HttpRequest request,
         @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(request, request.getHeaders());
+      operation = tracer().startOperation(request);
       scope = operation.makeCurrent();
       // propagating the context manually here so this instrumentation will work with and without
       // the executors instrumentation

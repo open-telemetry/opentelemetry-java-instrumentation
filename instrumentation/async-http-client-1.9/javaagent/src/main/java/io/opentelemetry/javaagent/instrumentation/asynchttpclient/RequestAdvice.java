@@ -22,7 +22,7 @@ public class RequestAdvice {
       @Advice.Argument(0) Request request,
       @Advice.Argument(1) AsyncHandler<?> handler,
       @Advice.Local("otelScope") Scope scope) {
-    HttpClientOperation<Response> operation = tracer().startOperation(request, request);
+    HttpClientOperation<Response> operation = tracer().startOperation(request);
     InstrumentationContext.get(AsyncHandler.class, HttpClientOperation.class)
         .put(handler, operation);
     scope = operation.makeCurrent();

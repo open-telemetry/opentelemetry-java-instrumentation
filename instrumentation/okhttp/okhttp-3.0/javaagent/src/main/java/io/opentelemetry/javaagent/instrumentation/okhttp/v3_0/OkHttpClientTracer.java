@@ -7,17 +7,21 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.RequestBuilderInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
+public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
   private static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
 
   public static OkHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<Response> startOperation(Request request, Request.Builder builder) {
+    return super.startOperation(request, builder, SETTER);
   }
 
   @Override
@@ -43,11 +47,6 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builde
   @Override
   protected String responseHeader(Response response, String name) {
     return response.header(name);
-  }
-
-  @Override
-  protected Setter<Request.Builder> getSetter() {
-    return SETTER;
   }
 
   @Override

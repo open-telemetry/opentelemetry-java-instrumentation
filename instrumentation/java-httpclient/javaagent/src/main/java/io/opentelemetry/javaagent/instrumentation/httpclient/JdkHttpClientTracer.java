@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
+import static io.opentelemetry.javaagent.instrumentation.httpclient.HttpHeadersInjectAdapter.SETTER;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.http.HttpClient.Version;
@@ -22,12 +24,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
 
-public class JdkHttpClientTracer
-    extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse<?>> {
+public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResponse<?>> {
   private static final JdkHttpClientTracer TRACER = new JdkHttpClientTracer();
 
   public static JdkHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public HttpClientOperation<HttpResponse<?>> startOperation(HttpRequest request) {
+    return super.startOperation(request, SETTER);
   }
 
   @Override
@@ -65,11 +70,6 @@ public class JdkHttpClientTracer
     super.onResponse(span, httpResponse);
     span.setAttribute(
         SemanticAttributes.HTTP_FLAVOR, httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0");
-  }
-
-  @Override
-  protected Setter<HttpRequest> getSetter() {
-    return HttpHeadersInjectAdapter.SETTER;
   }
 
   @Override

@@ -50,8 +50,8 @@ public class AwsSdk {
    * Returns the {@link LazyHttpClientOperation} stored in the {@link ExecutionAttributes}, or
    * {@code null} if there is no operation set.
    */
-  public static LazyHttpClientOperation<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse>
-      getOperationOrNoop(ExecutionAttributes attributes) {
+  public static LazyHttpClientOperation<SdkHttpRequest, SdkHttpResponse> getOperationOrNoop(
+      ExecutionAttributes attributes) {
     return orDefault(attributes.getAttribute(OPERATION_ATTRIBUTE), LazyHttpClientOperation.noop());
   }
 
