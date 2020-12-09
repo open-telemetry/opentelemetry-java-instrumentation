@@ -77,7 +77,9 @@ public final class ClassLoaderMatcher {
     }
 
     private static boolean canSkipClassLoaderByName(ClassLoader loader) {
-      switch (loader.getClass().getName()) {
+      String name = loader.getClass().getName();
+      // check by FQCN
+      switch (name) {
         case "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader":
         case "sun.reflect.DelegatingClassLoader":
         case "jdk.internal.reflect.DelegatingClassLoader":
@@ -88,8 +90,18 @@ public final class ClassLoaderMatcher {
         case EXPORTER_CLASSLOADER_NAME:
           return true;
         default:
-          return false;
+          // noop
       }
+      // check by package prefix
+      if (name.startsWith("datadog.")
+          || name.startsWith("com.dynatrace.")
+          || name.startsWith("com.appdynamics.")
+          || name.startsWith("com.newrelic.agent.")
+          || name.startsWith("com.newrelic.api.agent.")
+          || name.startsWith("com.nr.agent.")) {
+        return true;
+      }
+      return false;
     }
 
     /**
