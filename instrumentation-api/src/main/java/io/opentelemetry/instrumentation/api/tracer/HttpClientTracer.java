@@ -64,7 +64,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
    * long)} which is applicable when the {@link TextMapPropagator.Setter} applies directly to the
    * {@code request}, and which uses the current time.
    */
-  protected Operation<RESPONSE> startOperation(
+  protected HttpClientOperation<RESPONSE> startOperation(
       REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
     return startOperation(request, request, setter, -1);
   }
@@ -74,7 +74,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
    * long)} which is applicable when the {@link TextMapPropagator.Setter} applies directly to the
    * {@code request}.
    */
-  protected Operation<RESPONSE> startOperation(
+  protected HttpClientOperation<RESPONSE> startOperation(
       REQUEST request, TextMapPropagator.Setter<REQUEST> setter, long startTimeNanos) {
     return startOperation(request, request, setter, startTimeNanos);
   }
@@ -83,25 +83,25 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
    * Convenience overload for {@link #startOperation(Object, Object, TextMapPropagator.Setter,
    * long)} which uses the current time.
    */
-  protected <CARRIER> Operation<RESPONSE> startOperation(
+  protected <CARRIER> HttpClientOperation<RESPONSE> startOperation(
       REQUEST request, CARRIER carrier, TextMapPropagator.Setter<CARRIER> setter) {
     return startOperation(request, carrier, setter, -1);
   }
 
-  protected <CARRIER> Operation<RESPONSE> startOperation(
+  protected <CARRIER> HttpClientOperation<RESPONSE> startOperation(
       REQUEST request,
       CARRIER carrier,
       TextMapPropagator.Setter<CARRIER> setter,
       long startTimeNanos) {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
-      return Operation.noop();
+      return HttpClientOperation.noop();
     }
     String spanName = spanName(request);
     SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanName, startTimeNanos);
     Context context = withClientSpan(parentContext, spanBuilder.startSpan());
     OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    return Operation.create(context, parentContext, this);
+    return HttpClientOperation.create(context, parentContext, this);
   }
 
   private SpanBuilder spanBuilder(

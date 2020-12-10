@@ -10,8 +10,8 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
@@ -27,16 +27,16 @@ final class AwsSdkHttpClientTracer extends HttpClientTracer<SdkHttpRequest, SdkH
     return TRACER;
   }
 
-  public final Operation<SdkHttpResponse> startOperation(ExecutionAttributes attributes) {
+  public final HttpClientOperation<SdkHttpResponse> startOperation(ExecutionAttributes attributes) {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
-      return Operation.noop();
+      return HttpClientOperation.noop();
     }
     String spanName = spanName(attributes);
     Span span =
         tracer.spanBuilder(spanName).setSpanKind(CLIENT).setParent(parentContext).startSpan();
     Context context = withClientSpan(parentContext, span);
-    return Operation.create(context, parentContext, this);
+    return HttpClientOperation.create(context, parentContext, this);
   }
 
   @Override
@@ -78,7 +78,7 @@ final class AwsSdkHttpClientTracer extends HttpClientTracer<SdkHttpRequest, SdkH
     return "io.opentelemetry.javaagent.aws-sdk";
   }
 
-  public void inject(Operation operation, SdkHttpRequest.Builder builder) {
+  public void inject(HttpClientOperation operation, SdkHttpRequest.Builder builder) {
     operation.inject(AwsXRayPropagator.getInstance(), builder, AwsSdkInjectAdapter.INSTANCE);
   }
 

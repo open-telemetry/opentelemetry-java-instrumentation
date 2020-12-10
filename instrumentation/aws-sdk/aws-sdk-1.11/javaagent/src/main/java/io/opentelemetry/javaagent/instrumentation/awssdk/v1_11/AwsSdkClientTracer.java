@@ -15,8 +15,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,11 +34,12 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
 
   public AwsSdkClientTracer() {}
 
-  public Operation<Response<?>> startOperation(Request<?> request, RequestMeta requestMeta) {
+  public HttpClientOperation<Response<?>> startOperation(
+      Request<?> request, RequestMeta requestMeta) {
 
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
-      return Operation.noop();
+      return HttpClientOperation.noop();
     }
     SpanBuilder spanBuilder =
         tracer.spanBuilder(spanName(request)).setSpanKind(CLIENT).setParent(parentContext);
@@ -66,7 +67,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
     OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(context, request, AwsSdkInjectAdapter.INSTANCE);
-    return Operation.create(context, parentContext, this);
+    return HttpClientOperation.create(context, parentContext, this);
   }
 
   @Override

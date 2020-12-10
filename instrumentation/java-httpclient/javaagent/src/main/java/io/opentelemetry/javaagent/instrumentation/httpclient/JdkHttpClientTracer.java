@@ -11,8 +11,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.net.http.HttpClient.Version;
 import java.net.http.HttpHeaders;
@@ -31,7 +31,7 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRespo
     return TRACER;
   }
 
-  public Operation<HttpResponse<?>> startOperation(HttpRequest request) {
+  public HttpClientOperation<HttpResponse<?>> startOperation(HttpRequest request) {
     return super.startOperation(request, SETTER);
   }
 

@@ -10,8 +10,8 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -23,7 +23,7 @@ public class ArmeriaClientTracer extends HttpClientTracer<ClientRequestContext, 
     super(tracer);
   }
 
-  public Operation<RequestLog> startOperation(
+  public HttpClientOperation<RequestLog> startOperation(
       ClientRequestContext ctx, long requestStartTimeNanos) {
     return super.startOperation(ctx, ctx, ArmeriaSetter.INSTANCE, requestStartTimeNanos);
   }

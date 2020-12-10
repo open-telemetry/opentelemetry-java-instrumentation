@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -71,8 +71,8 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
         @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
         Object operationObj = context.getProperty(ClientTracingFilter.OPERATION_PROPERTY_NAME);
-        if (operationObj instanceof Operation) {
-          ((Operation<?>) operationObj).endExceptionally(throwable);
+        if (operationObj instanceof HttpClientOperation) {
+          ((HttpClientOperation<?>) operationObj).endExceptionally(throwable);
         }
       }
     }

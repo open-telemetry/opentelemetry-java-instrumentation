@@ -18,7 +18,7 @@ class BaseTracerTest extends Specification {
   def resolvedAddress = new InetSocketAddress("github.com", 999)
 
   def span = Mock(Span)
-  def operation = Mock(Operation)
+  def operation = Mock(HttpClientOperation)
 
   def newTracer() {
     return new BaseTracer() {

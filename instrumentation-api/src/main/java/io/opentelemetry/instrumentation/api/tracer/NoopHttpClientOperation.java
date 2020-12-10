@@ -9,12 +9,12 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-class NoopOperation<RESULT> implements Operation<RESULT> {
-  private static final Operation<Object> INSTANCE = new NoopOperation();
+class NoopHttpClientOperation<RESULT> implements HttpClientOperation<RESULT> {
+  private static final HttpClientOperation<Object> INSTANCE = new NoopHttpClientOperation();
 
   @SuppressWarnings("unchecked")
-  static <RESULT> Operation<RESULT> noop() {
-    return (Operation<RESULT>) INSTANCE;
+  static <RESULT> HttpClientOperation<RESULT> noop() {
+    return (HttpClientOperation<RESULT>) INSTANCE;
   }
 
   @Override

@@ -19,7 +19,7 @@ import com.google.auto.service.AutoService;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -67,7 +67,7 @@ public class JaxRsClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter
     public static void onEnter(
         @Advice.Argument(0) ClientRequest request,
-        @Advice.Local("otelOperation") Operation<ClientResponse> operation,
+        @Advice.Local("otelOperation") HttpClientOperation<ClientResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(request);
       scope = operation.makeCurrent();
@@ -77,7 +77,7 @@ public class JaxRsClientInstrumentationModule extends InstrumentationModule {
     public static void onExit(
         @Advice.Return ClientResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<ClientResponse> operation,
+        @Advice.Local("otelOperation") HttpClientOperation<ClientResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       operation.endMaybeExceptionally(response, throwable);

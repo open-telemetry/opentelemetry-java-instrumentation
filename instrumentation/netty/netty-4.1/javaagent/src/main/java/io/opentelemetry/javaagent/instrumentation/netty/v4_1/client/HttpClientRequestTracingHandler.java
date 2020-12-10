@@ -12,14 +12,14 @@ import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
-    Operation<HttpResponse> operation = tracer().startOperation(ctx, msg);
+    HttpClientOperation<HttpResponse> operation = tracer().startOperation(ctx, msg);
     ctx.channel().attr(AttributeKeys.CLIENT_OPERATION).set(operation);
     try (Scope ignored = operation.makeCurrent()) {
       ctx.write(msg, prm);

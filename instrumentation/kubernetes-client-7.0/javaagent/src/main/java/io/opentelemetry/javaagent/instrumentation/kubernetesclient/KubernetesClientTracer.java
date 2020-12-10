@@ -9,8 +9,8 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -26,10 +26,10 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Response> 
    * This method is used to generate an acceptable CLIENT span (operation) name based on a given
    * KubernetesRequestDigest.
    */
-  public Operation<Response> startOperation(Request request) {
+  public HttpClientOperation<Response> startOperation(Request request) {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
-      return Operation.noop();
+      return HttpClientOperation.noop();
     }
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
     Span span =
@@ -42,7 +42,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Response> 
             .startSpan();
     Context context = withClientSpan(parentContext, span);
     // TODO implement propagation?
-    return Operation.create(context, parentContext, this);
+    return HttpClientOperation.create(context, parentContext, this);
   }
 
   @Override

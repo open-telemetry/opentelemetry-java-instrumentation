@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyHttpClientTracer.tracer;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import org.jboss.netty.channel.Channel;
@@ -29,7 +29,8 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
   public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) {
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
-    Operation<HttpResponse> operation = tracer().startOperation(ctx, msg, channelTraceContext);
+    HttpClientOperation<HttpResponse> operation =
+        tracer().startOperation(ctx, msg, channelTraceContext);
     channelTraceContext.setOperation(operation);
     try (Scope ignored = operation.makeCurrent()) {
       ctx.sendDownstream(msg);

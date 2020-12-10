@@ -16,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.io.IOException;
 import java.util.Map;
@@ -67,7 +67,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(2) HttpContext httpContext,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation) {
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation) {
       operation = tracer().startOperation();
       requestProducer = new DelegatingRequestProducer(operation, requestProducer);
       futureCallback = new TraceContinuedFutureCallback<>(operation, httpContext, futureCallback);
@@ -76,7 +76,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation) {
+        @Advice.Local("otelOperation") HttpClientOperation<HttpResponse> operation) {
       if (throwable != null) {
         operation.endExceptionally(throwable);
       }
@@ -84,11 +84,11 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    Operation<HttpResponse> operation;
+    HttpClientOperation<HttpResponse> operation;
     HttpAsyncRequestProducer delegate;
 
     public DelegatingRequestProducer(
-        Operation<HttpResponse> operation, HttpAsyncRequestProducer delegate) {
+        HttpClientOperation<HttpResponse> operation, HttpAsyncRequestProducer delegate) {
       this.operation = operation;
       this.delegate = delegate;
     }
@@ -141,12 +141,14 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
   }
 
   public static class TraceContinuedFutureCallback<T> implements FutureCallback<T> {
-    private final Operation<HttpResponse> operation;
+    private final HttpClientOperation<HttpResponse> operation;
     private final HttpContext httpContext;
     private final FutureCallback<T> delegate;
 
     public TraceContinuedFutureCallback(
-        Operation<HttpResponse> operation, HttpContext httpContext, FutureCallback<T> delegate) {
+        HttpClientOperation<HttpResponse> operation,
+        HttpContext httpContext,
+        FutureCallback<T> delegate) {
       this.operation = operation;
       this.httpContext = httpContext;
       // Note: this can be null in real life, so we have to handle this carefully
