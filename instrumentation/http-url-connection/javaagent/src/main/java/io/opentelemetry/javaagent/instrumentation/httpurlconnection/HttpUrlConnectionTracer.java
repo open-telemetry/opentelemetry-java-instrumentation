@@ -21,7 +21,7 @@ public class HttpUrlConnectionTracer extends HttpClientTracer<HttpURLConnection,
     return TRACER;
   }
 
-  public HttpClientOperation<HttpUrlResponse> startOperation(HttpURLConnection request) {
+  public HttpClientOperation startOperation(HttpURLConnection request) {
     return super.startOperation(request, SETTER);
   }
 

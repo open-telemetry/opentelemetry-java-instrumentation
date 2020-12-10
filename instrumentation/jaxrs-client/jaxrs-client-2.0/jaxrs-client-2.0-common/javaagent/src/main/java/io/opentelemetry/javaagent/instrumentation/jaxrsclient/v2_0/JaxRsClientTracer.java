@@ -21,7 +21,7 @@ public class JaxRsClientTracer
     return TRACER;
   }
 
-  public HttpClientOperation<ClientResponseContext> startOperation(ClientRequestContext request) {
+  public HttpClientOperation startOperation(ClientRequestContext request) {
     return super.startOperation(request, SETTER);
   }
 

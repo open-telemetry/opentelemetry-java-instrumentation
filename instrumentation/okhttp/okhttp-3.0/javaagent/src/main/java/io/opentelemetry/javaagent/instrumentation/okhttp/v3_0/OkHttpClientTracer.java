@@ -20,7 +20,7 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
     return TRACER;
   }
 
-  public HttpClientOperation<Response> startOperation(Request request, Request.Builder builder) {
+  public HttpClientOperation startOperation(Request request, Request.Builder builder) {
     return super.startOperation(request, builder, SETTER);
   }
 

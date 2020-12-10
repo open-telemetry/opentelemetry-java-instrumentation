@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.AsyncHttpClientTracer.tracer;
+
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Response;
@@ -16,11 +18,11 @@ import net.bytebuddy.asm.Advice;
 
 public class ResponseAdvice {
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope onEnter(
       @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
+    @SuppressWarnings("rawtypes")
     ContextStore<AsyncHandler, HttpClientOperation> contextStore =
         InstrumentationContext.get(AsyncHandler.class, HttpClientOperation.class);
     HttpClientOperation operation = contextStore.get(handler);
@@ -28,7 +30,7 @@ public class ResponseAdvice {
       return Scope.noop();
     }
     contextStore.put(handler, null);
-    operation.end(response);
+    tracer().end(operation, response);
     return operation.makeParentCurrent();
   }
 

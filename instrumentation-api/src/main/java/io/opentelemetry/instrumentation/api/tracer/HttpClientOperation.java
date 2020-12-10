@@ -8,18 +8,16 @@ package io.opentelemetry.instrumentation.api.tracer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
-// Operation has convenience overloads, Tracer has extension points
-// Usage should be consolidated to one or the other
-public interface HttpClientOperation<RESPONSE> {
+public interface HttpClientOperation {
 
-  static <RESPONSE> HttpClientOperation<RESPONSE> noop() {
+  static HttpClientOperation noop() {
     return NoopHttpClientOperation.noop();
   }
 
-  static <RESPONSE> HttpClientOperation<RESPONSE> create(
-      Context context, Context parentContext, HttpClientTracer<?, RESPONSE> tracer) {
-    return new DefaultHttpClientOperation<>(context, parentContext, tracer);
+  static HttpClientOperation create(Context context, Context parentContext) {
+    return new DefaultHttpClientOperation(context, parentContext);
   }
 
   Scope makeCurrent();
@@ -27,24 +25,12 @@ public interface HttpClientOperation<RESPONSE> {
   /** Used for running user callbacks on completion of the http client operation. */
   Scope makeParentCurrent();
 
-  void end(RESPONSE response);
-
-  void end(RESPONSE response, long endTimeNanos);
-
-  void endExceptionally(Throwable t);
-
-  void endExceptionally(RESPONSE response, Throwable throwable);
-
-  void endExceptionally(RESPONSE response, Throwable throwable, long endTimeNanos);
-
-  /** Convenience method for bytecode instrumentation. */
-  default void endMaybeExceptionally(RESPONSE response, Throwable throwable) {
-    if (throwable != null) {
-      endExceptionally(throwable);
-    } else {
-      end(response);
-    }
-  }
-
   Span getSpan();
+
+  <C> void inject(TextMapPropagator propagator, C carrier, TextMapPropagator.Setter<C> setter);
+
+  // TODO (trask) how to provide general access to context, but still no-op correctly?
+  //  maybe something like
+  //  - void doWithContext(Consumer<Context>)
+  //  - T doWithContext(Function<Context, R>)
 }

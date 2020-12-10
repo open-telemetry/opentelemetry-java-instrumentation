@@ -31,7 +31,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     return TRACER;
   }
 
-  public HttpClientOperation<HttpResponse> startOperation(
+  public HttpClientOperation startOperation(
       ChannelHandlerContext ctx, MessageEvent msg, ChannelTraceContext channelTraceContext) {
 
     if (!(msg.getMessage() instanceof HttpRequest)) {

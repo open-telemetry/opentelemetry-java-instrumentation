@@ -7,13 +7,13 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 
-class NoopHttpClientOperation<RESPONSE> implements HttpClientOperation<RESPONSE> {
-  private static final HttpClientOperation<Object> INSTANCE = new NoopHttpClientOperation<>();
+class NoopHttpClientOperation implements HttpClientOperation {
+  private static final HttpClientOperation INSTANCE = new NoopHttpClientOperation();
 
-  @SuppressWarnings("unchecked")
-  static <RESPONSE> HttpClientOperation<RESPONSE> noop() {
-    return (HttpClientOperation<RESPONSE>) INSTANCE;
+  static HttpClientOperation noop() {
+    return INSTANCE;
   }
 
   @Override
@@ -27,22 +27,11 @@ class NoopHttpClientOperation<RESPONSE> implements HttpClientOperation<RESPONSE>
   }
 
   @Override
-  public void end(RESPONSE response) {}
-
-  @Override
-  public void end(RESPONSE response, long endTimeNanos) {}
-
-  @Override
-  public void endExceptionally(Throwable t) {}
-
-  @Override
-  public void endExceptionally(RESPONSE response, Throwable throwable) {}
-
-  @Override
-  public void endExceptionally(RESPONSE response, Throwable throwable, long endTimeNanos) {}
-
-  @Override
   public Span getSpan() {
     return Span.getInvalid();
   }
+
+  @Override
+  public <C> void inject(
+      TextMapPropagator propagator, C carrier, TextMapPropagator.Setter<C> setter) {}
 }

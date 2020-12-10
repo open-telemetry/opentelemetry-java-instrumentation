@@ -58,23 +58,28 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     super(tracer);
   }
 
+  // TODO (trask) is this a good idea or no?
+  // NOTE: in general, the following methods are protected, and subclasses should expose the
+  // relevant methods as public. this is so that consumers of the tracers will only see the methods
+  // that are relevant to them
+
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  protected final HttpClientOperation<RESPONSE> startOperation(
+  protected final HttpClientOperation startOperation(
       REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
     return startOperation(request, request, setter);
   }
 
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  protected final <CARRIER> HttpClientOperation<RESPONSE> startOperation(
+  protected final <CARRIER> HttpClientOperation startOperation(
       REQUEST request, CARRIER carrier, TextMapPropagator.Setter<CARRIER> setter) {
     return startOperation(request, carrier, setter, -1);
   }
 
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  protected final <CARRIER> HttpClientOperation<RESPONSE> startOperation(
+  protected final <CARRIER> HttpClientOperation startOperation(
       REQUEST request,
       CARRIER carrier,
       TextMapPropagator.Setter<CARRIER> setter,
@@ -82,7 +87,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return internalStartOperation(request, carrier, setter, startTimeNanos);
   }
 
-  private <CARRIER> HttpClientOperation<RESPONSE> internalStartOperation(
+  private <CARRIER> HttpClientOperation internalStartOperation(
       REQUEST request,
       CARRIER carrier,
       TextMapPropagator.Setter<CARRIER> setter,
@@ -127,17 +132,20 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
   }
 
-  protected final HttpClientOperation<RESPONSE> newOperation(
-      Context context, Context parentContext) {
-    return HttpClientOperation.create(context, parentContext, this);
+  // TODO (trask) inline?
+  protected final HttpClientOperation newOperation(Context context, Context parentContext) {
+    return HttpClientOperation.create(context, parentContext);
   }
 
   protected void onRequest(SpanBuilder spanBuilder, REQUEST request) {
     onRequest(spanBuilder::setAttribute, request);
   }
 
-  // package protected to be accessible to LazyHttpClientTracer
-  void onRequest(SpanAttributeSetter span, REQUEST request) {
+  protected void onRequest(HttpClientOperation operation, REQUEST request) {
+    onRequest(operation.getSpan()::setAttribute, request);
+  }
+
+  private void onRequest(SpanAttributeSetter span, REQUEST request) {
     if (request != null) {
       span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
       span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
@@ -145,6 +153,46 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
       setFlavor(span, request);
       setUrl(span, request);
+    }
+  }
+
+  public void end(HttpClientOperation operation, RESPONSE response) {
+    end(operation, response, -1);
+  }
+
+  public void end(HttpClientOperation operation, RESPONSE response, long endTimeNanos) {
+    // TODO (trask) require response to be non-null here
+    Span span = operation.getSpan();
+    onResponse(span, response);
+    super.end(span, endTimeNanos);
+  }
+
+  public void endExceptionally(HttpClientOperation operation, Throwable throwable) {
+    checkNotNull(throwable);
+    endExceptionally(operation, throwable, null);
+  }
+
+  public void endExceptionally(
+      HttpClientOperation operation, Throwable throwable, RESPONSE response) {
+    endExceptionally(operation, throwable, response, -1);
+  }
+
+  public void endExceptionally(
+      HttpClientOperation operation, Throwable throwable, RESPONSE response, long endTimeNanos) {
+    Span span = operation.getSpan();
+    if (response != null) {
+      onResponse(span, response);
+    }
+    super.endExceptionally(span, throwable, endTimeNanos);
+  }
+
+  /** Convenience method primarily for bytecode instrumentation. */
+  public void endMaybeExceptionally(
+      HttpClientOperation operation, RESPONSE response, Throwable throwable) {
+    if (throwable != null) {
+      endExceptionally(operation, throwable);
+    } else {
+      end(operation, response);
     }
   }
 
@@ -195,5 +243,11 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     }
     String method = method(request);
     return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
+  }
+
+  private static void checkNotNull(Object obj) {
+    if (obj == null) {
+      throw new NullPointerException();
+    }
   }
 }

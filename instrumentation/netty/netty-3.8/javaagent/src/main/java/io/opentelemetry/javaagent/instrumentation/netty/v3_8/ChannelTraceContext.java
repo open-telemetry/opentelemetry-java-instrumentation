@@ -9,7 +9,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Objects;
-import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class ChannelTraceContext {
   public static class Factory implements ContextStore.Factory<ChannelTraceContext> {
@@ -22,7 +21,7 @@ public class ChannelTraceContext {
   }
 
   private Context connectionContext;
-  private HttpClientOperation<HttpResponse> operation; // used for client instrumentation
+  private HttpClientOperation operation; // used for client instrumentation
   private Context context; // used for server instrumentation
 
   public Context getConnectionContext() {
@@ -33,11 +32,11 @@ public class ChannelTraceContext {
     this.connectionContext = connectionContinuation;
   }
 
-  public HttpClientOperation<HttpResponse> getOperation() {
+  public HttpClientOperation getOperation() {
     return operation;
   }
 
-  public void setOperation(HttpClientOperation<HttpResponse> operation) {
+  public void setOperation(HttpClientOperation operation) {
     this.operation = operation;
   }
 

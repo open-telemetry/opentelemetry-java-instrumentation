@@ -20,7 +20,7 @@ public class ResteasyClientTracer extends HttpClientTracer<ClientInvocation, Res
     return TRACER;
   }
 
-  public HttpClientOperation<Response> startOperation(ClientInvocation request) {
+  public HttpClientOperation startOperation(ClientInvocation request) {
     return super.startOperation(request, SETTER);
   }
 

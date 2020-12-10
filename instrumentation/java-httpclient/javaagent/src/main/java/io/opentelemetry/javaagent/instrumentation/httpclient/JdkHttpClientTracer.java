@@ -31,7 +31,7 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRespo
     return TRACER;
   }
 
-  public HttpClientOperation<HttpResponse<?>> startOperation(HttpRequest request) {
+  public HttpClientOperation startOperation(HttpRequest request) {
     return super.startOperation(request, SETTER);
   }
 

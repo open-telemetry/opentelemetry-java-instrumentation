@@ -24,7 +24,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Response> 
    * This method is used to generate an acceptable CLIENT span (operation) name based on a given
    * KubernetesRequestDigest.
    */
-  public HttpClientOperation<Response> startOperation(Request request) {
+  public HttpClientOperation startOperation(Request request) {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
       return HttpClientOperation.noop();

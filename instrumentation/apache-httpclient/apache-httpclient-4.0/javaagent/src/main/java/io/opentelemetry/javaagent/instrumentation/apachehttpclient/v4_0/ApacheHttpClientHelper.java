@@ -5,20 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
+
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import org.apache.http.HttpResponse;
 
 public class ApacheHttpClientHelper {
 
   public static void endOperation(
-      HttpClientOperation<HttpResponse> operation, Object result, Throwable throwable) {
+      HttpClientOperation operation, Object result, Throwable throwable) {
     if (throwable != null) {
-      operation.endExceptionally(throwable);
+      tracer().endExceptionally(operation, throwable);
     } else if (result instanceof HttpResponse) {
-      operation.end((HttpResponse) result);
+      tracer().end(operation, (HttpResponse) result);
     } else {
       // ResponseHandler was probably provided
-      operation.end(null);
+      tracer().end(operation, null);
     }
   }
 }

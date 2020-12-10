@@ -23,8 +23,7 @@ public class ArmeriaClientTracer extends HttpClientTracer<ClientRequestContext, 
     super(tracer);
   }
 
-  public HttpClientOperation<RequestLog> startOperation(
-      ClientRequestContext ctx, long requestStartTimeNanos) {
+  public HttpClientOperation startOperation(ClientRequestContext ctx, long requestStartTimeNanos) {
     return super.startOperation(ctx, ctx, ArmeriaSetter.INSTANCE, requestStartTimeNanos);
   }
 

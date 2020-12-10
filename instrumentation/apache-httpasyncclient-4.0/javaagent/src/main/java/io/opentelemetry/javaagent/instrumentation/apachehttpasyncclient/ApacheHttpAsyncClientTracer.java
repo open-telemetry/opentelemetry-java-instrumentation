@@ -5,8 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientTracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.http.Header;
@@ -18,12 +22,27 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ApacheHttpAsyncClientTracer extends LazyHttpClientTracer<HttpRequest, HttpResponse> {
+public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, HttpResponse> {
 
   private static final ApacheHttpAsyncClientTracer TRACER = new ApacheHttpAsyncClientTracer();
 
   public static ApacheHttpAsyncClientTracer tracer() {
     return TRACER;
+  }
+
+  public final HttpClientOperation startOperation() {
+    Context parentContext = Context.current();
+    if (inClientSpan(parentContext)) {
+      return HttpClientOperation.noop();
+    }
+    Span clientSpan =
+        tracer
+            .spanBuilder(DEFAULT_SPAN_NAME)
+            .setSpanKind(CLIENT)
+            .setParent(parentContext)
+            .startSpan();
+    Context context = withClientSpan(parentContext, clientSpan);
+    return HttpClientOperation.create(context, parentContext);
   }
 
   @Override
@@ -73,10 +92,12 @@ public class ApacheHttpAsyncClientTracer extends LazyHttpClientTracer<HttpReques
   }
 
   @Override
-  protected void onRequest(Span span, HttpRequest request) {
+  public void onRequest(HttpClientOperation operation, HttpRequest request) {
     String method = method(request);
-    span.updateName(method != null ? "HTTP " + method : DEFAULT_SPAN_NAME);
-    super.onRequest(span, request);
+    if (method != null) {
+      operation.getSpan().updateName("HTTP " + method);
+    }
+    super.onRequest(operation, request);
   }
 
   private static String header(HttpMessage message, String name) {

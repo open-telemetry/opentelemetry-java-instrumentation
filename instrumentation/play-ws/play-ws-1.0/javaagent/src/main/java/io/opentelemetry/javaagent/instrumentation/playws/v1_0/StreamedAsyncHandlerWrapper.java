@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import org.reactivestreams.Publisher;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseBodyPart;
-import play.shaded.ahc.org.asynchttpclient.Response;
 import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 
 public class StreamedAsyncHandlerWrapper<T> extends AsyncHandlerWrapper<T>
@@ -16,7 +15,7 @@ public class StreamedAsyncHandlerWrapper<T> extends AsyncHandlerWrapper<T>
   private final StreamedAsyncHandler<T> streamedDelegate;
 
   public StreamedAsyncHandlerWrapper(
-      StreamedAsyncHandler<T> delegate, HttpClientOperation<Response> operation) {
+      StreamedAsyncHandler<T> delegate, HttpClientOperation operation) {
     super(delegate, operation);
     streamedDelegate = delegate;
   }

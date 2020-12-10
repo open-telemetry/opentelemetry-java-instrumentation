@@ -17,7 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
-import io.opentelemetry.instrumentation.api.tracer.LazyHttpClientOperation;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.io.IOException;
 import java.util.Map;
@@ -68,8 +67,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(2) HttpContext httpContext,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback,
-        @Advice.Local("otelOperation")
-            LazyHttpClientOperation<HttpRequest, HttpResponse> operation) {
+        @Advice.Local("otelOperation") HttpClientOperation operation) {
       operation = tracer().startOperation();
       requestProducer = new DelegatingRequestProducer(operation, requestProducer);
       futureCallback = new TraceContinuedFutureCallback<>(operation, httpContext, futureCallback);
@@ -78,21 +76,19 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation")
-            LazyHttpClientOperation<HttpRequest, HttpResponse> operation) {
+        @Advice.Local("otelOperation") HttpClientOperation operation) {
       if (throwable != null) {
-        operation.endExceptionally(throwable);
+        tracer().endExceptionally(operation, throwable);
       }
     }
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    LazyHttpClientOperation<HttpRequest, HttpResponse> operation;
+    HttpClientOperation operation;
     HttpAsyncRequestProducer delegate;
 
     public DelegatingRequestProducer(
-        LazyHttpClientOperation<HttpRequest, HttpResponse> operation,
-        HttpAsyncRequestProducer delegate) {
+        HttpClientOperation operation, HttpAsyncRequestProducer delegate) {
       this.operation = operation;
       this.delegate = delegate;
     }
@@ -109,7 +105,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
           OpenTelemetry.getGlobalPropagators().getTextMapPropagator(),
           request,
           HttpHeadersInjectAdapter.SETTER);
-      operation.onRequest(request);
+      tracer().onRequest(operation, request);
       return request;
     }
 
@@ -145,14 +141,12 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
   }
 
   public static class TraceContinuedFutureCallback<T> implements FutureCallback<T> {
-    private final HttpClientOperation<HttpResponse> operation;
+    private final HttpClientOperation operation;
     private final HttpContext httpContext;
     private final FutureCallback<T> delegate;
 
     public TraceContinuedFutureCallback(
-        HttpClientOperation<HttpResponse> operation,
-        HttpContext httpContext,
-        FutureCallback<T> delegate) {
+        HttpClientOperation operation, HttpContext httpContext, FutureCallback<T> delegate) {
       this.operation = operation;
       this.httpContext = httpContext;
       // Note: this can be null in real life, so we have to handle this carefully
@@ -161,7 +155,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public void completed(T result) {
-      operation.end(getResponse(httpContext));
+      tracer().end(operation, getResponse(httpContext));
       if (delegate != null) {
         try (Scope ignored = operation.makeParentCurrent()) {
           delegate.completed(result);
@@ -171,7 +165,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public void failed(Exception ex) {
-      operation.endExceptionally(getResponse(httpContext), ex);
+      tracer().endExceptionally(operation, ex, getResponse(httpContext));
       if (delegate != null) {
         try (Scope ignored = operation.makeParentCurrent()) {
           delegate.failed(ex);
@@ -181,7 +175,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public void cancelled() {
-      operation.end(getResponse(httpContext));
+      tracer().end(operation, getResponse(httpContext));
       if (delegate != null) {
         try (Scope ignored = operation.makeParentCurrent()) {
           delegate.cancelled();

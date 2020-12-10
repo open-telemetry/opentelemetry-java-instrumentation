@@ -24,8 +24,7 @@ class RestTemplateTracer extends HttpClientTracer<HttpRequest, ClientHttpRespons
     return TRACER;
   }
 
-  public HttpClientOperation<ClientHttpResponse> startOperation(
-      HttpRequest request, HttpHeaders headers) {
+  public HttpClientOperation startOperation(HttpRequest request, HttpHeaders headers) {
     return super.startOperation(request, headers, SETTER);
   }
 

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
+import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.tracer;
+
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import org.reactivestreams.Subscription;
@@ -21,11 +23,10 @@ public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResp
 
   final reactor.util.context.Context context;
 
-  private final HttpClientOperation<ClientResponse> operation;
+  private final HttpClientOperation operation;
 
   public TraceWebClientSubscriber(
-      CoreSubscriber<? super ClientResponse> actual,
-      HttpClientOperation<ClientResponse> operation) {
+      CoreSubscriber<? super ClientResponse> actual, HttpClientOperation operation) {
     this.actual = actual;
     this.context = actual.currentContext();
     this.operation = operation;
@@ -38,7 +39,7 @@ public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResp
 
   @Override
   public void onNext(ClientResponse response) {
-    operation.end(response);
+    tracer().end(operation, response);
     try (Scope ignored = operation.makeParentCurrent()) {
       actual.onNext(response);
     }
@@ -46,7 +47,7 @@ public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResp
 
   @Override
   public void onError(Throwable t) {
-    operation.endExceptionally(t);
+    tracer().endExceptionally(operation, t);
     try (Scope ignored = operation.makeParentCurrent()) {
       actual.onError(t);
     }

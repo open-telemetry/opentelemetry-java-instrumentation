@@ -15,7 +15,6 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelDownstreamHandler;
-import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHandler {
 
@@ -29,13 +28,12 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
   public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) {
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
-    HttpClientOperation<HttpResponse> operation =
-        tracer().startOperation(ctx, msg, channelTraceContext);
+    HttpClientOperation operation = tracer().startOperation(ctx, msg, channelTraceContext);
     channelTraceContext.setOperation(operation);
     try (Scope ignored = operation.makeCurrent()) {
       ctx.sendDownstream(msg);
     } catch (Throwable throwable) {
-      operation.endExceptionally(throwable);
+      tracer().endExceptionally(operation, throwable);
       throw throwable;
     }
   }

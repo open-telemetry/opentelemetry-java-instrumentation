@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
-import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
@@ -32,7 +31,7 @@ public class AttributeKeys {
   public static final AttributeKey<Context> SERVER_SPAN =
       attributeKey(AttributeKeys.class.getName() + ".server-span");
 
-  public static final AttributeKey<HttpClientOperation<HttpResponse>> CLIENT_OPERATION =
+  public static final AttributeKey<HttpClientOperation> CLIENT_OPERATION =
       attributeKey(AttributeKeys.class.getName() + ".client-operation");
 
   /**

@@ -22,7 +22,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(ClientRequestContext requestContext) {
-    HttpClientOperation<ClientResponseContext> operation = tracer().startOperation(requestContext);
+    HttpClientOperation operation = tracer().startOperation(requestContext);
     requestContext.setProperty(OPERATION_PROPERTY_NAME, operation);
   }
 
@@ -30,10 +30,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) {
     Object operationObj = requestContext.getProperty(OPERATION_PROPERTY_NAME);
     if (operationObj instanceof HttpClientOperation) {
-      @SuppressWarnings("unchecked")
-      HttpClientOperation<ClientResponseContext> operation =
-          (HttpClientOperation<ClientResponseContext>) operationObj;
-      operation.end(responseContext);
+      tracer().end((HttpClientOperation) operationObj, responseContext);
     }
   }
 }

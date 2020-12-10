@@ -22,7 +22,7 @@ public class PlayWsClientTracer extends HttpClientTracer<Request, Response> {
     return TRACER;
   }
 
-  public HttpClientOperation<Response> startOperation(Request request, HttpHeaders headers) {
+  public HttpClientOperation startOperation(Request request, HttpHeaders headers) {
     return super.startOperation(request, headers, SETTER);
   }
 

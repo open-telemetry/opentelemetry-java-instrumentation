@@ -26,7 +26,7 @@ public class ApacheHttpClientTracer extends HttpClientTracer<HttpUriRequest, Htt
     return TRACER;
   }
 
-  public HttpClientOperation<HttpResponse> startOperation(HttpHost host, HttpRequest request) {
+  public HttpClientOperation startOperation(HttpHost host, HttpRequest request) {
     HttpUriRequest httpUriRequest;
     if (request instanceof HttpUriRequest) {
       httpUriRequest = (HttpUriRequest) request;
@@ -36,7 +36,7 @@ public class ApacheHttpClientTracer extends HttpClientTracer<HttpUriRequest, Htt
     return startOperation(httpUriRequest);
   }
 
-  public HttpClientOperation<HttpResponse> startOperation(HttpUriRequest request) {
+  public HttpClientOperation startOperation(HttpUriRequest request) {
     return startOperation(request, SETTER);
   }
 

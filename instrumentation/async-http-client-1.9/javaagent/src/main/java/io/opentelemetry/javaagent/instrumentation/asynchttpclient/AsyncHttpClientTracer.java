@@ -22,7 +22,7 @@ public class AsyncHttpClientTracer extends HttpClientTracer<Request, Response> {
     return TRACER;
   }
 
-  public HttpClientOperation<Response> startOperation(Request request) {
+  public HttpClientOperation startOperation(Request request) {
     return super.startOperation(request, SETTER);
   }
 

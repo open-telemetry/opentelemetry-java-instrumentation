@@ -51,7 +51,7 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     @Override
     public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
       ClientRequest.Builder builder = ClientRequest.from(request);
-      HttpClientOperation<ClientResponse> operation = tracer().startOperation(request, builder);
+      HttpClientOperation operation = tracer().startOperation(request, builder);
       try (Scope ignored = operation.makeCurrent()) {
         this.next
             .exchange(builder.build())

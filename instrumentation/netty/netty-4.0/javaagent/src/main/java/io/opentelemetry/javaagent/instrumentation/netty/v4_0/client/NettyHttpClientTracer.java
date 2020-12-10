@@ -30,7 +30,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     return TRACER;
   }
 
-  public HttpClientOperation<HttpResponse> startOperation(ChannelHandlerContext ctx, Object msg) {
+  public HttpClientOperation startOperation(ChannelHandlerContext ctx, Object msg) {
     if (!(msg instanceof HttpRequest)) {
       return HttpClientOperation.noop();
     }
