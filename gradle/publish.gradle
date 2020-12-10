@@ -1,3 +1,5 @@
+import java.time.Duration
+
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
@@ -7,6 +9,9 @@ nexusPublishing {
   repositories {
     sonatype()
   }
+
+  connectTimeout = Duration.ofMinutes(5)
+  clientTimeout = Duration.ofMinutes(5)
 }
 
 publishing {
@@ -86,7 +91,7 @@ private String artifactPrefix(Project p, String archivesBaseName) {
 }
 
 rootProject.tasks.release.finalizedBy tasks.publishToSonatype
-rootProject.tasks.closeAndReleaseRepository.dependsOn tasks.publishToSonatype
+rootProject.tasks.closeAndReleaseRepository.mustRunAfter tasks.publishToSonatype
 
 tasks.withType(Sign).configureEach {
   onlyIf { System.getenv("CI") != null }
