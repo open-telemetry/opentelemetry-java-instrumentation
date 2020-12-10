@@ -127,7 +127,7 @@ for accessing these default methods from advice.
 
 ### Why hard code advice class names?
 
-Subclasses of `InstrumentationModule` will often implement advice classes static inner classes.
+Subclasses of `InstrumentationModule` will often implement advice classes as static inner classes.
 These classes are referred to by name in the mappings from method descriptor to advice class,
 typically in the `transform()` method.
 
@@ -145,6 +145,6 @@ calling `getName()` would be easier to read and understand than
 this odd mix of string concatenation...but please NOTE:  **this is intentional**
 and should be maintained.
 
-Instrumentation modules are typically loaded by the user's classloader, and this
+Instrumentation modules are loaded by the agent's classloader, and this
 string concatenation is an optimization that prevents the actual advice class
 from being loaded.
