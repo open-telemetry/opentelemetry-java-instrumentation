@@ -124,3 +124,27 @@ are not legal in Java 7 (and prior) bytecode.
 Because OpenTelemetry API has many common default methods (e.g. `Span.current()`),
 the `javaagent-api` artifact has a class `Java8BytecodeBridge` which provides static methods
 for accessing these default methods from advice.
+
+### Why hard code advice class names?
+
+Subclasses of `InstrumentationModule` will often implement advice classes static inner classes.
+These classes are referred to by name in the mappings from method descriptor to advice class,
+typically in the `transform()` method.
+
+For instance, this `MyInstrumentationModule` defines a single advice that mathches
+on a single `execute` method:
+
+```
+transformers.put(
+  isMethod().and(named("execute")), 
+  MyInstrumentationModule.class.getName() + "$WonderfulAdvice");
+```
+
+Simply referring to the inner class and
+calling `getName()` would be easier to read and understand than
+this odd mix of string concatenation...but please NOTE:  **this is intentional** 
+and should be maintained.
+
+Instrumentation modules are typically loaded by the user's classloader, and this 
+string concatenation is an optimization that prevents the actual advice class
+from being loaded.
