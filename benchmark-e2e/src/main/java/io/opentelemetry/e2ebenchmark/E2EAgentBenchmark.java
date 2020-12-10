@@ -11,14 +11,12 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
-import lombok.extern.log4j.Log4j2;
 import org.testcontainers.utility.MountableFile;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Log4j2
 public class E2EAgentBenchmark {
   private static final Logger LOG = LoggerFactory.getLogger(E2EAgentBenchmark.class);
   private List<GenericContainer<?>> containers;
@@ -85,7 +83,7 @@ public class E2EAgentBenchmark {
     wrk.dependsOn(app, collector);
     Startables.deepStart(Stream.of(wrk)).join();
 
-    log.info("Benchmark started");
+    LOG.info("Benchmark started");
     printContainerMapping(collector);
     printContainerMapping(app);
 
@@ -94,8 +92,8 @@ public class E2EAgentBenchmark {
     }
 
     Thread.sleep(5000);
-    log.info("Benchmark complete, wrk output:");
-    log.info(wrk.getLogs().replace("\n\n", "\n"));
+    LOG.info("Benchmark complete, wrk output:");
+    LOG.info(wrk.getLogs().replace("\n\n", "\n"));
   }
 
   static void printContainerMapping(GenericContainer<?> container) {
