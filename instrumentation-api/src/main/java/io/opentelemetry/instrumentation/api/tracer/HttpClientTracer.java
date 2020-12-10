@@ -31,6 +31,25 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   private static final String USER_AGENT = "User-Agent";
 
+  protected abstract String method(REQUEST request);
+
+  @Nullable
+  protected abstract URI url(REQUEST request) throws URISyntaxException;
+
+  @Nullable
+  protected String flavor(REQUEST request) {
+    // This is de facto standard nowadays, so let us use it, unless overridden
+    return "1.1";
+  }
+
+  protected abstract Integer status(RESPONSE response);
+
+  @Nullable
+  protected abstract String requestHeader(REQUEST request, String name);
+
+  @Nullable
+  protected abstract String responseHeader(RESPONSE response, String name);
+
   protected HttpClientTracer() {
     super();
   }
@@ -193,25 +212,6 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
       }
     }
   }
-
-  protected abstract String method(REQUEST request);
-
-  @Nullable
-  protected abstract URI url(REQUEST request) throws URISyntaxException;
-
-  @Nullable
-  protected String flavor(REQUEST request) {
-    // This is de facto standard nowadays, so let us use it, unless overridden
-    return "1.1";
-  }
-
-  @Nullable
-  protected abstract String requestHeader(REQUEST request, String name);
-
-  protected abstract Integer status(RESPONSE response);
-
-  @Nullable
-  protected abstract String responseHeader(RESPONSE response, String name);
 
   private String spanNameForRequest(REQUEST request) {
     if (request == null) {
