@@ -20,6 +20,6 @@ public class DemoIdGenerator implements IdGenerator {
 
   @Override
   public String generateTraceId() {
-    return String.format("%032d", spanId.incrementAndGet());
+    return String.format("%032d", traceId.incrementAndGet());
   }
 }

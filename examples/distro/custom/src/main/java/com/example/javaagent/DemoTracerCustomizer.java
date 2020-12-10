@@ -1,7 +1,7 @@
 package com.example.javaagent;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.context.propagation.DefaultContextPropagators;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.javaagent.spi.TracerCustomizer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.TracerSdkManagement;
@@ -18,25 +18,20 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 public class DemoTracerCustomizer implements TracerCustomizer {
   @Override
   public void configure(TracerSdkManagement ignore) {
-    OpenTelemetrySdk sdk = OpenTelemetrySdk.get();
-    OpenTelemetrySdk.Builder sdkBuilder = sdk.toBuilder();
-    TracerSdkManagement tracerSdkManagement = sdk.getTracerManagement();
+    OpenTelemetrySdk.Builder sdkBuilder = OpenTelemetrySdk.builder();
 
-    tracerSdkManagement.addSpanProcessor(new DemoSpanProcessor());
-    tracerSdkManagement.addSpanProcessor(SimpleSpanProcessor.builder(new DemoSpanExporter()).build());
+    sdkBuilder.addSpanProcessor(new DemoSpanProcessor());
+    sdkBuilder.addSpanProcessor(SimpleSpanProcessor.builder(new DemoSpanExporter()).build());
 
-    TraceConfig currentConfig = tracerSdkManagement.getActiveTraceConfig();
+    TraceConfig currentConfig = TraceConfig.getDefault();
     TraceConfig newConfig = currentConfig.toBuilder()
         .setSampler(new DemoSampler())
         .setMaxLengthOfAttributeValues(128)
         .build();
-    tracerSdkManagement.updateActiveTraceConfig(newConfig);
+    sdkBuilder.setTraceConfig(newConfig);
 
-    //TODO https://github.com/open-telemetry/opentelemetry-java/issues/2018
-//    TracerSdkProvider tracerSdkProvider = TracerSdkProvider.builder().setIdsGenerator(new DemoIdGenerator()).build();
-//    sdkBuilder.setTracerProvider(tracerSdkProvider);
-
-    sdkBuilder.setPropagators(DefaultContextPropagators.builder().addTextMapPropagator(new DemoPropagator()).build());
+    sdkBuilder.setIdGenerator(new DemoIdGenerator());
+    sdkBuilder.setPropagators(ContextPropagators.create(new DemoPropagator()));
 
     OpenTelemetry.set(sdkBuilder.build());
   }
