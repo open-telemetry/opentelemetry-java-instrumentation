@@ -28,7 +28,6 @@ public class WrappingStatusSettingResponseHandler<T> implements ResponseHandler<
 
   @Override
   public T handleResponse(HttpResponse response) throws IOException {
-    // TODO (trask) suppress second call to end
     tracer().end(operation, response);
     return handler.handleResponse(response);
   }

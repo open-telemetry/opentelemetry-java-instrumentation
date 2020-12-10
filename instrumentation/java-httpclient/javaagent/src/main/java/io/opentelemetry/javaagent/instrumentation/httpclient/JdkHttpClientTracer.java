@@ -84,7 +84,8 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRespo
     return throwable;
   }
 
-  // TODO (trask) how to make this fit into Operations/Tracers better?
+  // TODO (trask) need to pass in Operation here so that injection will not occur when Operation is
+  //  a no-op
   public HttpHeaders inject(HttpHeaders original) {
     Map<String, List<String>> headerMap = new HashMap<>();
 
