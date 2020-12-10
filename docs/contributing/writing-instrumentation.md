@@ -145,6 +145,6 @@ calling `getName()` would be easier to read and understand than
 this odd mix of string concatenation...but please NOTE:  **this is intentional** 
 and should be maintained.
 
-Instrumentation modules are typically loaded by the user's classloader, and this 
+Instrumentation modules are loaded by the agent's classloader, and this 
 string concatenation is an optimization that prevents the actual advice class
 from being loaded.
