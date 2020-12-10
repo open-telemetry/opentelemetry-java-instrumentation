@@ -13,7 +13,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 
 /** Tracing Request Handler. */
@@ -29,7 +29,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   public void beforeRequest(Request<?> request) {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     RequestMeta requestMeta = contextStore.get(originalRequest);
-    HttpClientOperation operation = tracer().startOperation(request, requestMeta);
+    Operation operation = tracer().startOperation(request, requestMeta);
     Scope scope = operation.makeCurrent();
     request.addHandlerContext(
         CONTEXT_SCOPE_PAIR_CONTEXT_KEY, new OperationScopePair(operation, scope));

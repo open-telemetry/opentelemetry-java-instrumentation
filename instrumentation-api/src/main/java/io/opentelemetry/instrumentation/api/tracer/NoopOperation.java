@@ -9,10 +9,10 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-class NoopHttpClientOperation implements HttpClientOperation {
-  private static final HttpClientOperation INSTANCE = new NoopHttpClientOperation();
+class NoopOperation implements Operation {
+  private static final Operation INSTANCE = new NoopOperation();
 
-  static HttpClientOperation noop() {
+  static Operation noop() {
     return INSTANCE;
   }
 

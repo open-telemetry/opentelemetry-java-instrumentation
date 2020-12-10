@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.RequestBuilderInjectAdapter.SETTER;
 
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -20,7 +20,7 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
     return TRACER;
   }
 
-  public HttpClientOperation startOperation(Request request, Request.Builder builder) {
+  public Operation startOperation(Request request, Request.Builder builder) {
     return super.startOperation(request, builder, SETTER);
   }
 

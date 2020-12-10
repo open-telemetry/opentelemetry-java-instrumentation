@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.AsyncHt
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Request;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
 
@@ -21,9 +21,8 @@ public class RequestAdvice {
       @Advice.Argument(0) Request request,
       @Advice.Argument(1) AsyncHandler<?> handler,
       @Advice.Local("otelScope") Scope scope) {
-    HttpClientOperation operation = tracer().startOperation(request);
-    InstrumentationContext.get(AsyncHandler.class, HttpClientOperation.class)
-        .put(handler, operation);
+    Operation operation = tracer().startOperation(request);
+    InstrumentationContext.get(AsyncHandler.class, Operation.class).put(handler, operation);
     scope = operation.makeCurrent();
   }
 

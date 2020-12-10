@@ -10,8 +10,8 @@ import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClient
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -22,7 +22,7 @@ public class AkkaHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResp
     return TRACER;
   }
 
-  public HttpClientOperation startOperation(HttpRequest request, AkkaHttpHeaders headers) {
+  public Operation startOperation(HttpRequest request, AkkaHttpHeaders headers) {
     return startOperation(request, headers, SETTER, -1);
   }
 

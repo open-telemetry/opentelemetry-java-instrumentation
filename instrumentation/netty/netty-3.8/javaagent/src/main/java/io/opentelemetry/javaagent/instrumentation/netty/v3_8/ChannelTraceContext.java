@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Objects;
 
@@ -21,7 +21,7 @@ public class ChannelTraceContext {
   }
 
   private Context connectionContext;
-  private HttpClientOperation operation; // used for client instrumentation
+  private Operation operation; // used for client instrumentation
   private Context context; // used for server instrumentation
 
   public Context getConnectionContext() {
@@ -32,11 +32,11 @@ public class ChannelTraceContext {
     this.connectionContext = connectionContinuation;
   }
 
-  public HttpClientOperation getOperation() {
+  public Operation getOperation() {
     return operation;
   }
 
-  public void setOperation(HttpClientOperation operation) {
+  public void setOperation(Operation operation) {
     this.operation = operation;
   }
 

@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.InjectAdapter.SETTER;
 
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
@@ -21,7 +21,7 @@ public class JaxRsClientTracer
     return TRACER;
   }
 
-  public HttpClientOperation startOperation(ClientRequestContext request) {
+  public Operation startOperation(ClientRequestContext request) {
     return super.startOperation(request, SETTER);
   }
 

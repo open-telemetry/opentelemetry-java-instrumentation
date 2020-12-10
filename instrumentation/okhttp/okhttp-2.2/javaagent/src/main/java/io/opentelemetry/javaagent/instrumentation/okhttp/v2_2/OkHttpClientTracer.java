@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.okhttp.v2_2.RequestBuil
 
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -21,7 +21,7 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Response> {
     return TRACER;
   }
 
-  public HttpClientOperation startOperation(Request request, Request.Builder builder) {
+  public Operation startOperation(Request request, Request.Builder builder) {
     return super.startOperation(request, builder, SETTER);
   }
 

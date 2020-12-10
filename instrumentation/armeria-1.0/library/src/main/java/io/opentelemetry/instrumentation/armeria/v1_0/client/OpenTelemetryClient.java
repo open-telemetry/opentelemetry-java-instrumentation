@@ -13,7 +13,7 @@ import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.logging.RequestLogProperty;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -52,7 +52,7 @@ public class OpenTelemetryClient extends SimpleDecoratingHttpClient {
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    HttpClientOperation operation = clientTracer.startOperation(ctx, requestStartTimeNanos);
+    Operation operation = clientTracer.startOperation(ctx, requestStartTimeNanos);
 
     if (operation.getSpan().isRecording()) {
       ctx.log()

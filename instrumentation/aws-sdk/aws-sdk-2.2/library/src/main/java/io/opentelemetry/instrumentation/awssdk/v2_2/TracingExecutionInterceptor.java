@@ -12,7 +12,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequ
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +33,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
-  static final ExecutionAttribute<HttpClientOperation> OPERATION_ATTRIBUTE =
+  static final ExecutionAttribute<Operation> OPERATION_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Operation");
   static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Scope");
@@ -74,7 +74,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
-    HttpClientOperation operation = tracer().startOperation(executionAttributes);
+    Operation operation = tracer().startOperation(executionAttributes);
     if (!operation.getSpan().isRecording()) {
       return;
     }
@@ -95,7 +95,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
-    HttpClientOperation operation = getOperationOrNoop(executionAttributes);
+    Operation operation = getOperationOrNoop(executionAttributes);
     if (operation.getSpan().isRecording()) {
       SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
       tracer().inject(operation, builder);
@@ -108,7 +108,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
-    HttpClientOperation operation = getOperationOrNoop(executionAttributes);
+    Operation operation = getOperationOrNoop(executionAttributes);
     tracer().onRequest(operation, context.httpRequest());
 
     SdkRequestDecorator decorator = decorator(executionAttributes);
@@ -149,7 +149,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (scope != null) {
       scope.close();
     }
-    HttpClientOperation operation = getOperationOrNoop(executionAttributes);
+    Operation operation = getOperationOrNoop(executionAttributes);
     clearAttributes(executionAttributes);
     Span span = operation.getSpan();
     onUserAgentHeaderAvailable(span, context.httpRequest());
@@ -172,7 +172,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void onExecutionFailure(
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
-    HttpClientOperation operation = getOperationOrNoop(executionAttributes);
+    Operation operation = getOperationOrNoop(executionAttributes);
     clearAttributes(executionAttributes);
     tracer().endExceptionally(operation, context.exception());
   }

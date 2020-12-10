@@ -13,8 +13,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,11 +32,11 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
 
   public AwsSdkClientTracer() {}
 
-  public HttpClientOperation startOperation(Request<?> request, RequestMeta requestMeta) {
+  public Operation startOperation(Request<?> request, RequestMeta requestMeta) {
 
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
-      return HttpClientOperation.noop();
+      return Operation.noop();
     }
     SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanNameForRequest(request));
 
@@ -65,7 +65,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
     return newOperation(context, parentContext);
   }
 
-  public void onResponse(HttpClientOperation operation, Response<?> response) {
+  public void onResponse(Operation operation, Response<?> response) {
     Span span = operation.getSpan();
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();

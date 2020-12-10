@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.tracer;
 
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.client.ClientRequestContext;
@@ -22,15 +22,15 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(ClientRequestContext requestContext) {
-    HttpClientOperation operation = tracer().startOperation(requestContext);
+    Operation operation = tracer().startOperation(requestContext);
     requestContext.setProperty(OPERATION_PROPERTY_NAME, operation);
   }
 
   @Override
   public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) {
     Object operationObj = requestContext.getProperty(OPERATION_PROPERTY_NAME);
-    if (operationObj instanceof HttpClientOperation) {
-      tracer().end((HttpClientOperation) operationObj, responseContext);
+    if (operationObj instanceof Operation) {
+      tracer().end((Operation) operationObj, responseContext);
     }
   }
 }

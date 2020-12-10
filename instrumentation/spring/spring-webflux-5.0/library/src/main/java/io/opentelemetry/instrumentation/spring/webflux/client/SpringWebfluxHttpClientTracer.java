@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -27,7 +27,7 @@ public class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientReques
 
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
-  public HttpClientOperation startOperation(ClientRequest request, ClientRequest.Builder builder) {
+  public Operation startOperation(ClientRequest request, ClientRequest.Builder builder) {
     return super.startOperation(request, builder, SETTER);
   }
 

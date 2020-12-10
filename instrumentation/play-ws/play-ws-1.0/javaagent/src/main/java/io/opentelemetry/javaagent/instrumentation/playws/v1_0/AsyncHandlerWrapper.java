@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseBodyPart;
 import play.shaded.ahc.org.asynchttpclient.HttpResponseHeaders;
@@ -17,11 +17,11 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 
 public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
   private final AsyncHandler<T> delegate;
-  private final HttpClientOperation operation;
+  private final Operation operation;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(AsyncHandler<T> delegate, HttpClientOperation operation) {
+  public AsyncHandlerWrapper(AsyncHandler<T> delegate, Operation operation) {
     this.delegate = delegate;
     this.operation = operation;
   }

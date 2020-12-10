@@ -11,7 +11,7 @@ import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Response;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import net.bytebuddy.asm.Advice;
@@ -23,9 +23,9 @@ public class ResponseAdvice {
       @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
     @SuppressWarnings("rawtypes")
-    ContextStore<AsyncHandler, HttpClientOperation> contextStore =
-        InstrumentationContext.get(AsyncHandler.class, HttpClientOperation.class);
-    HttpClientOperation operation = contextStore.get(handler);
+    ContextStore<AsyncHandler, Operation> contextStore =
+        InstrumentationContext.get(AsyncHandler.class, Operation.class);
+    Operation operation = contextStore.get(handler);
     if (operation == null) {
       return Scope.noop();
     }

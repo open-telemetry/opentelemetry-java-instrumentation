@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.spring.httpclients.RestTemplateTr
 
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.io.IOException;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -28,7 +28,7 @@ public final class RestTemplateInterceptor implements ClientHttpRequestIntercept
   @Override
   public ClientHttpResponse intercept(
       HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
-    HttpClientOperation operation = tracer().startOperation(request, request.getHeaders());
+    Operation operation = tracer().startOperation(request, request.getHeaders());
     try (Scope ignored = operation.makeCurrent()) {
       ClientHttpResponse response = execution.execute(request, body);
       tracer().end(operation, response);

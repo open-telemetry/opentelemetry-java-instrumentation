@@ -16,7 +16,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -69,7 +69,7 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request,
-        @Advice.Local("otelOperation") HttpClientOperation operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
@@ -91,7 +91,7 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
         @Advice.This HttpExt thiz,
         @Advice.Return Future<HttpResponse> responseFuture,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") HttpClientOperation operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       if (throwable == null) {
@@ -103,9 +103,9 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
   }
 
   public static class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
-    private final HttpClientOperation operation;
+    private final Operation operation;
 
-    public OnCompleteHandler(HttpClientOperation operation) {
+    public OnCompleteHandler(Operation operation) {
       this.operation = operation;
     }
 

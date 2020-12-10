@@ -7,22 +7,21 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
 
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.io.IOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 
 public class WrappingStatusSettingResponseHandler<T> implements ResponseHandler<T> {
-  final HttpClientOperation operation;
+  final Operation operation;
   final ResponseHandler<T> handler;
 
   public static <T> WrappingStatusSettingResponseHandler<T> of(
-      HttpClientOperation operation, ResponseHandler<T> handler) {
+      Operation operation, ResponseHandler<T> handler) {
     return new WrappingStatusSettingResponseHandler<>(operation, handler);
   }
 
-  public WrappingStatusSettingResponseHandler(
-      HttpClientOperation operation, ResponseHandler<T> handler) {
+  public WrappingStatusSettingResponseHandler(Operation operation, ResponseHandler<T> handler) {
     this.operation = operation;
     this.handler = handler;
   }

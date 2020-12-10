@@ -65,21 +65,21 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  protected final HttpClientOperation startOperation(
+  protected final Operation startOperation(
       REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
     return startOperation(request, request, setter);
   }
 
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  protected final <CARRIER> HttpClientOperation startOperation(
+  protected final <CARRIER> Operation startOperation(
       REQUEST request, CARRIER carrier, TextMapPropagator.Setter<CARRIER> setter) {
     return startOperation(request, carrier, setter, -1);
   }
 
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  protected final <CARRIER> HttpClientOperation startOperation(
+  protected final <CARRIER> Operation startOperation(
       REQUEST request,
       CARRIER carrier,
       TextMapPropagator.Setter<CARRIER> setter,
@@ -87,14 +87,14 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return internalStartOperation(request, carrier, setter, startTimeNanos);
   }
 
-  private <CARRIER> HttpClientOperation internalStartOperation(
+  private <CARRIER> Operation internalStartOperation(
       REQUEST request,
       CARRIER carrier,
       TextMapPropagator.Setter<CARRIER> setter,
       long startTimeNanos) {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
-      return HttpClientOperation.noop();
+      return Operation.noop();
     }
     String spanName = spanNameForRequest(request);
     SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanName, startTimeNanos);
@@ -133,15 +133,15 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
   }
 
   // TODO (trask) inline?
-  protected final HttpClientOperation newOperation(Context context, Context parentContext) {
-    return HttpClientOperation.create(context, parentContext);
+  protected final Operation newOperation(Context context, Context parentContext) {
+    return Operation.create(context, parentContext);
   }
 
   protected void onRequest(SpanBuilder spanBuilder, REQUEST request) {
     onRequest(spanBuilder::setAttribute, request);
   }
 
-  protected void onRequest(HttpClientOperation operation, REQUEST request) {
+  protected void onRequest(Operation operation, REQUEST request) {
     onRequest(operation.getSpan()::setAttribute, request);
   }
 
@@ -156,29 +156,28 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     }
   }
 
-  public void end(HttpClientOperation operation, RESPONSE response) {
+  public void end(Operation operation, RESPONSE response) {
     end(operation, response, -1);
   }
 
-  public void end(HttpClientOperation operation, RESPONSE response, long endTimeNanos) {
+  public void end(Operation operation, RESPONSE response, long endTimeNanos) {
     // TODO (trask) require response to be non-null here
     Span span = operation.getSpan();
     onResponse(span, response);
     super.end(span, endTimeNanos);
   }
 
-  public void endExceptionally(HttpClientOperation operation, Throwable throwable) {
+  public void endExceptionally(Operation operation, Throwable throwable) {
     checkNotNull(throwable);
     endExceptionally(operation, throwable, null);
   }
 
-  public void endExceptionally(
-      HttpClientOperation operation, Throwable throwable, RESPONSE response) {
+  public void endExceptionally(Operation operation, Throwable throwable, RESPONSE response) {
     endExceptionally(operation, throwable, response, -1);
   }
 
   public void endExceptionally(
-      HttpClientOperation operation, Throwable throwable, RESPONSE response, long endTimeNanos) {
+      Operation operation, Throwable throwable, RESPONSE response, long endTimeNanos) {
     Span span = operation.getSpan();
     if (response != null) {
       onResponse(span, response);
@@ -187,8 +186,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
   }
 
   /** Convenience method primarily for bytecode instrumentation. */
-  public void endMaybeExceptionally(
-      HttpClientOperation operation, RESPONSE response, Throwable throwable) {
+  public void endMaybeExceptionally(Operation operation, RESPONSE response, Throwable throwable) {
     if (throwable != null) {
       endExceptionally(operation, throwable);
     } else {

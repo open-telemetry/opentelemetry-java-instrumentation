@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -67,7 +67,7 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This ClientInvocation invocation,
-        @Advice.Local("otelOperation") HttpClientOperation operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(invocation);
       scope = operation.makeCurrent();
@@ -77,7 +77,7 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
     public static void methodExit(
         @Advice.Return Response response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") HttpClientOperation operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       tracer().endMaybeExceptionally(operation, response, throwable);
