@@ -130,6 +130,17 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     onRequest(operation.getSpan()::setAttribute, request);
   }
 
+  private void onRequest(SpanAttributeSetter span, REQUEST request) {
+    // TODO (trask) require request to be non-null here?
+    if (request != null) {
+      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
+      span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
+      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
+      setFlavor(span, request);
+      setUrl(span, request);
+    }
+  }
+
   /** Convenience method for {@link #end(Operation, Object, long)} which uses the current time. */
   public void end(Operation operation, RESPONSE response) {
     end(operation, response, -1);
@@ -197,17 +208,6 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     }
     String method = method(request);
     return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
-  }
-
-  private void onRequest(SpanAttributeSetter span, REQUEST request) {
-    // TODO (trask) require request to be non-null here?
-    if (request != null) {
-      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
-      span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
-      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
-      setFlavor(span, request);
-      setUrl(span, request);
-    }
   }
 
   private void setFlavor(SpanAttributeSetter span, REQUEST request) {
