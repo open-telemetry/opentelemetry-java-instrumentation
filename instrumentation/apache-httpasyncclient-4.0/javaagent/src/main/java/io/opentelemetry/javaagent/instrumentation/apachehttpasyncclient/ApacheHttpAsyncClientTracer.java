@@ -30,7 +30,7 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
     return TRACER;
   }
 
-  public Operation startOperation() {
+  public final Operation startOperation() {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
       return Operation.noop();

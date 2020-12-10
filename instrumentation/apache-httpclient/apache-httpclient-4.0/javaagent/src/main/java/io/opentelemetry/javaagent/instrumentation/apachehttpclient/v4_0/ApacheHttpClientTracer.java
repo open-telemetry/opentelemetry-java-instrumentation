@@ -37,7 +37,7 @@ public class ApacheHttpClientTracer extends HttpClientTracer<HttpUriRequest, Htt
   }
 
   public Operation startOperation(HttpUriRequest request) {
-    return startOperation(request, request, SETTER, -1);
+    return startOperation(request, SETTER);
   }
 
   @Override

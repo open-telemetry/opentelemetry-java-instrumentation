@@ -21,7 +21,7 @@ public class ResteasyClientTracer extends HttpClientTracer<ClientInvocation, Res
   }
 
   public Operation startOperation(ClientInvocation request) {
-    return startOperation(request, request, SETTER, -1);
+    return super.startOperation(request, SETTER);
   }
 
   @Override

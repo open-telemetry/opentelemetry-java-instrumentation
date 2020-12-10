@@ -22,7 +22,7 @@ public class JaxRsClientTracer
   }
 
   public Operation startOperation(ClientRequestContext request) {
-    return startOperation(request, request, SETTER, -1);
+    return super.startOperation(request, SETTER);
   }
 
   @Override

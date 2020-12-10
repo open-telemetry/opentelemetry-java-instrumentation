@@ -22,7 +22,7 @@ public class HttpUrlConnectionTracer extends HttpClientTracer<HttpURLConnection,
   }
 
   public Operation startOperation(HttpURLConnection request) {
-    return startOperation(request, request, SETTER, -1);
+    return super.startOperation(request, SETTER);
   }
 
   @Override

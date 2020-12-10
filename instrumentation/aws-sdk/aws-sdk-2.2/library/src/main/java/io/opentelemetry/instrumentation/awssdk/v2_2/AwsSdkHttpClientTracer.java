@@ -27,7 +27,7 @@ final class AwsSdkHttpClientTracer extends HttpClientTracer<SdkHttpRequest, SdkH
     return TRACER;
   }
 
-  public Operation startOperation(ExecutionAttributes attributes) {
+  public final Operation startOperation(ExecutionAttributes attributes) {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
       return Operation.noop();
