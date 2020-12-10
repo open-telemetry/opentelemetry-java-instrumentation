@@ -178,6 +178,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   /** Can be overridden to capture additional attributes from the response. */
   protected void onResponse(Operation operation, RESPONSE response) {
+    // TODO (trask) require response to be non-null here?
     Integer status = status(response);
     if (status != null) {
       Span span = operation.getSpan();
