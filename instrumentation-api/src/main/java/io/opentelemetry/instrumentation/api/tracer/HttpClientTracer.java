@@ -96,54 +96,28 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     if (inClientSpan(parentContext)) {
       return Operation.noop();
     }
-    String spanName = spanNameForRequest(request);
+    String spanName = spanName(request);
     SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanName, startTimeNanos);
     Context context = withClientSpan(parentContext, spanBuilder.startSpan());
     OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
     return Operation.create(context, parentContext);
   }
 
-  /**
-   * Convenience overload for {@link #spanBuilder(Context, Object, String, long)} which applies the
-   * default span name for the request.
-   *
-   * <p>The default span name is {@code HTTP &lt;method&gt;}, or {@code HTTP Request} if {@link
-   * #method(Object)} returns {@code null}.
-   */
-  protected final SpanBuilder spanBuilder(Context parentContext, REQUEST request) {
-    return spanBuilder(parentContext, request, spanNameForRequest(request), -1);
-  }
-
-  /**
-   * Convenience overload for {@link #spanBuilder(Context, Object, String, long)} which uses the
-   * current time.
-   */
-  protected final SpanBuilder spanBuilder(Context parentContext, REQUEST request, String spanName) {
-    return spanBuilder(parentContext, request, spanName, -1);
-  }
-
-  /**
-   * Helper method if a subclass needs to implement a {@code startOperation} method from scratch.
-   *
-   * <p>If a subclass wants to capture more request attributes, it should override {@link
-   * #onRequest(SpanBuilder, Object)}.
-   */
-  protected final SpanBuilder spanBuilder(
+  private SpanBuilder spanBuilder(
       Context parentContext, REQUEST request, String spanName, long startTimeNanos) {
     SpanBuilder spanBuilder =
         tracer.spanBuilder(spanName).setSpanKind(CLIENT).setParent(parentContext);
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos, NANOSECONDS);
     }
-    if (request != null) {
-      onRequest(spanBuilder::setAttribute, request);
-    }
+    onRequest(spanBuilder, request);
     return spanBuilder;
   }
 
-  /** Can be overridden to capture additional attributes from the request. */
-  // TODO (trask) is this needed? it's not overridden currently, and subclasses can always do this
-  //  in their own startOperation
+  /**
+   * This is a helper method for HttpClientTracers that need to implement their {@code
+   * startOperation} from scratch.
+   */
   protected void onRequest(SpanBuilder spanBuilder, REQUEST request) {
     onRequest(spanBuilder::setAttribute, request);
   }
@@ -203,7 +177,6 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
   }
 
   /** Can be overridden to capture additional attributes from the response. */
-  // TODO (trask) is there any point to passing in Operation here instead of Span?
   protected void onResponse(Operation operation, RESPONSE response) {
     Integer status = status(response);
     if (status != null) {
@@ -216,7 +189,8 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     }
   }
 
-  private String spanNameForRequest(REQUEST request) {
+  protected String spanName(REQUEST request) {
+    // TODO (trask) require request to be non-null here?
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }
@@ -225,6 +199,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
   }
 
   private void onRequest(SpanAttributeSetter span, REQUEST request) {
+    // TODO (trask) require request to be non-null here?
     if (request != null) {
       span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
       span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
@@ -38,7 +40,9 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
     if (inClientSpan(parentContext)) {
       return Operation.noop();
     }
-    SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanNameForRequest(request));
+    SpanBuilder spanBuilder =
+        tracer.spanBuilder(spanName(request)).setSpanKind(CLIENT).setParent(parentContext);
+    onRequest(spanBuilder, request);
 
     String awsServiceName = request.getServiceName();
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
@@ -75,7 +79,8 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
     super.onResponse(operation, response);
   }
 
-  private String spanNameForRequest(Request<?> request) {
+  @Override
+  protected String spanName(Request<?> request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }

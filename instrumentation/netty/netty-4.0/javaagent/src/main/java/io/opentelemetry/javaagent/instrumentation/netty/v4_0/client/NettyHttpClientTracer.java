@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyResponseInjectAdapter.SETTER;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -46,7 +47,9 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
 
     HttpRequest request = (HttpRequest) msg;
 
-    SpanBuilder spanBuilder = spanBuilder(parentContext, request);
+    SpanBuilder spanBuilder =
+        tracer.spanBuilder(spanName(request)).setSpanKind(CLIENT).setParent(parentContext);
+    onRequest(spanBuilder, request);
     NetPeerUtils.INSTANCE.setNetPeer(
         spanBuilder::setAttribute, (InetSocketAddress) ctx.channel().remoteAddress());
 

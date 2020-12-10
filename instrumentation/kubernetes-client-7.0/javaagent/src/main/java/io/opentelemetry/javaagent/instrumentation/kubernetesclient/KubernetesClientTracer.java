@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
@@ -31,7 +33,10 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Response> 
     }
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
     Span span =
-        spanBuilder(parentContext, request, digest.toString())
+        tracer
+            .spanBuilder(digest.toString())
+            .setSpanKind(CLIENT)
+            .setParent(parentContext)
             .setAttribute("namespace", digest.getResourceMeta().getNamespace())
             .setAttribute("name", digest.getResourceMeta().getName())
             .startSpan();
