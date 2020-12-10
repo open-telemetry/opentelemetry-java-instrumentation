@@ -27,7 +27,7 @@ final class AwsSdkHttpClientTracer extends HttpClientTracer<SdkHttpRequest, SdkH
     return TRACER;
   }
 
-  public final Operation startOperation(ExecutionAttributes attributes) {
+  public final Operation<SdkHttpResponse> startOperation(ExecutionAttributes attributes) {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
       return Operation.noop();
@@ -36,12 +36,12 @@ final class AwsSdkHttpClientTracer extends HttpClientTracer<SdkHttpRequest, SdkH
     Span span =
         tracer.spanBuilder(spanName).setSpanKind(CLIENT).setParent(parentContext).startSpan();
     Context context = withClientSpan(parentContext, span);
-    return Operation.create(context, parentContext);
+    return Operation.create(context, parentContext, this);
   }
 
   @Override
-  public void onRequest(Operation operation, SdkHttpRequest request) {
-    super.onRequest(operation, request);
+  public void onRequest(Span span, SdkHttpRequest request) {
+    super.onRequest(span, request);
   }
 
   @Override

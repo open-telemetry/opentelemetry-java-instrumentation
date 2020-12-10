@@ -66,7 +66,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(1) HttpMethod httpMethod,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelOperation") Operation<HttpMethod> operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(httpMethod);
       scope = operation.makeCurrent();
@@ -76,10 +76,10 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Argument(1) HttpMethod httpMethod,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelOperation") Operation<HttpMethod> operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      tracer().endMaybeExceptionally(operation, httpMethod, throwable);
+      operation.endMaybeExceptionally(httpMethod, throwable);
     }
   }
 }

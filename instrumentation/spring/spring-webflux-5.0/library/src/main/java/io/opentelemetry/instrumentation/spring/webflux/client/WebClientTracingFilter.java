@@ -50,14 +50,14 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     @Override
     public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
       ClientRequest.Builder builder = ClientRequest.from(request);
-      Operation operation = tracer().startOperation(request, builder);
+      Operation<ClientResponse> operation = tracer().startOperation(request, builder);
       try (Scope ignored = operation.makeCurrent()) {
         this.next
             .exchange(builder.build())
             .doOnCancel(
                 () -> {
-                  tracer().onCancel(operation);
-                  tracer().end(operation);
+                  tracer().onCancel(operation.getSpan());
+                  operation.end();
                 })
             .subscribe(new TraceWebClientSubscriber(subscriber, operation));
       }

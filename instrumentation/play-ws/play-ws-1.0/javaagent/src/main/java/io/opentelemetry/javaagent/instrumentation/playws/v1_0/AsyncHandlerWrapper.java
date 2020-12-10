@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
-
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.Operation;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
@@ -17,11 +15,11 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 
 public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
   private final AsyncHandler<T> delegate;
-  private final Operation operation;
+  private final Operation<Response> operation;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(AsyncHandler<T> delegate, Operation operation) {
+  public AsyncHandlerWrapper(AsyncHandler<T> delegate, Operation<Response> operation) {
     this.delegate = delegate;
     this.operation = operation;
   }
@@ -47,7 +45,7 @@ public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
 
   @Override
   public T onCompleted() throws Exception {
-    tracer().end(operation, builder.build());
+    operation.end(builder.build());
     try (Scope ignored = operation.makeParentCurrent()) {
       return delegate.onCompleted();
     }
@@ -55,7 +53,7 @@ public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
 
   @Override
   public void onThrowable(Throwable throwable) {
-    tracer().endExceptionally(operation, throwable);
+    operation.endExceptionally(throwable);
     try (Scope ignored = operation.makeParentCurrent()) {
       delegate.onThrowable(throwable);
     }

@@ -21,7 +21,7 @@ public class KHttpTracer extends HttpClientTracer<RequestWrapper, Response> {
     return TRACER;
   }
 
-  public Operation startOperation(RequestWrapper request, Map<String, String> headers) {
+  public Operation<Response> startOperation(RequestWrapper request, Map<String, String> headers) {
     return super.startOperation(request, headers, SETTER);
   }
 

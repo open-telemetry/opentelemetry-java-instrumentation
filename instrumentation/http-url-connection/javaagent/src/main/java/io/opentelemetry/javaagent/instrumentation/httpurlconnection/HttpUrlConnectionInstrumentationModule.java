@@ -82,7 +82,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
     public static void methodEnter(
         @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("connected") boolean connected,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelOperation") Operation<HttpUrlResponse> operation,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
@@ -114,7 +114,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         @Advice.FieldValue("responseCode") int responseCode,
         @Advice.Thrown Throwable throwable,
         @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelOperation") Operation<HttpUrlResponse> operation,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
@@ -125,12 +125,12 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
 
       if (operation.getSpan().isRecording()) {
         if (throwable != null) {
-          tracer().endExceptionally(operation, throwable);
+          operation.endExceptionally(throwable);
         } else if (methodName.equals("getInputStream") && responseCode > 0) {
           // responseCode field is sometimes not populated.
           // We can't call getResponseCode() due to some unwanted side-effects
           // (e.g. breaks getOutputStream).
-          tracer().end(operation, new HttpUrlResponse(connection, responseCode));
+          operation.end(new HttpUrlResponse(connection, responseCode));
         }
       }
     }

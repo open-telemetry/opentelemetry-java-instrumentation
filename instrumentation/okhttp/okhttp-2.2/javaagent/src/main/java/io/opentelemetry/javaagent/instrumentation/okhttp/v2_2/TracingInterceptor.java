@@ -19,16 +19,16 @@ public class TracingInterceptor implements Interceptor {
   @Override
   public Response intercept(Chain chain) throws IOException {
     Request.Builder requestBuilder = chain.request().newBuilder();
-    Operation operation = tracer().startOperation(chain.request(), requestBuilder);
+    Operation<Response> operation = tracer().startOperation(chain.request(), requestBuilder);
 
     Response response;
     try (Scope ignored = operation.makeCurrent()) {
       response = chain.proceed(requestBuilder.build());
     } catch (Throwable t) {
-      tracer().endExceptionally(operation, t);
+      operation.endExceptionally(t);
       throw t;
     }
-    tracer().end(operation, response);
+    operation.end(response);
     return response;
   }
 }

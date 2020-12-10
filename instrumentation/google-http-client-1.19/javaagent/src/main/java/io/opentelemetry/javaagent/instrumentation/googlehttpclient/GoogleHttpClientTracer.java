@@ -22,7 +22,7 @@ public class GoogleHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRe
     return TRACER;
   }
 
-  public Operation startOperation(HttpRequest request) {
+  public Operation<HttpResponse> startOperation(HttpRequest request) {
     return startOperation(request, request.getHeaders(), SETTER);
   }
 

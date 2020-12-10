@@ -32,7 +32,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     return TRACER;
   }
 
-  public Operation startOperation(
+  public Operation<HttpResponse> startOperation(
       ChannelHandlerContext ctx, MessageEvent msg, ChannelTraceContext channelTraceContext) {
 
     if (!(msg.getMessage() instanceof HttpRequest)) {
@@ -62,7 +62,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(context, request.headers(), SETTER);
-    return Operation.create(context, parentContext);
+    return Operation.create(context, parentContext, this);
   }
 
   @Override

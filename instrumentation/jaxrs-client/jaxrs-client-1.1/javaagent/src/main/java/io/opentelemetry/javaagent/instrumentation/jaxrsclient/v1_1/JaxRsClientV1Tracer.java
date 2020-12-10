@@ -20,7 +20,7 @@ public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientR
     return TRACER;
   }
 
-  public Operation startOperation(ClientRequest request) {
+  public Operation<ClientResponse> startOperation(ClientRequest request) {
     return super.startOperation(request, SETTER);
   }
 

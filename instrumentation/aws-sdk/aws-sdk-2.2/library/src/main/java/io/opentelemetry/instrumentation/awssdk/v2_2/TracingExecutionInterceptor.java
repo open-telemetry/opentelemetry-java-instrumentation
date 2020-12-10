@@ -27,13 +27,14 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpRequest;
+import software.amazon.awssdk.http.SdkHttpResponse;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
-  static final ExecutionAttribute<Operation> OPERATION_ATTRIBUTE =
+  static final ExecutionAttribute<Operation<SdkHttpResponse>> OPERATION_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Operation");
   static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Scope");
@@ -74,7 +75,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
-    Operation operation = tracer().startOperation(executionAttributes);
+    Operation<SdkHttpResponse> operation = tracer().startOperation(executionAttributes);
     executionAttributes.putAttribute(OPERATION_ATTRIBUTE, operation);
     RequestType type = ofSdkRequest(context.request());
     if (type != null) {
@@ -92,7 +93,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
-    Operation operation = getOperationOrNoop(executionAttributes);
+    Operation<SdkHttpResponse> operation = getOperationOrNoop(executionAttributes);
     SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
     tracer().inject(operation, builder);
     return builder.build();
@@ -101,8 +102,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
-    Operation operation = getOperationOrNoop(executionAttributes);
-    tracer().onRequest(operation, context.httpRequest());
+    Operation<SdkHttpResponse> operation = getOperationOrNoop(executionAttributes);
+    tracer().onRequest(operation.getSpan(), context.httpRequest());
 
     SdkRequestDecorator decorator = decorator(executionAttributes);
     Span span = operation.getSpan();
@@ -142,12 +143,12 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (scope != null) {
       scope.close();
     }
-    Operation operation = getOperationOrNoop(executionAttributes);
+    Operation<SdkHttpResponse> operation = getOperationOrNoop(executionAttributes);
     clearAttributes(executionAttributes);
     Span span = operation.getSpan();
     onUserAgentHeaderAvailable(span, context.httpRequest());
     onSdkResponse(span, context.response());
-    tracer().end(operation, context.httpResponse());
+    operation.end(context.httpResponse());
   }
 
   // Certain headers in the request like User-Agent are only available after execution.
@@ -165,9 +166,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void onExecutionFailure(
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
-    Operation operation = getOperationOrNoop(executionAttributes);
+    Operation<SdkHttpResponse> operation = getOperationOrNoop(executionAttributes);
     clearAttributes(executionAttributes);
-    tracer().endExceptionally(operation, context.exception());
+    operation.endExceptionally(context.exception());
   }
 
   private void clearAttributes(ExecutionAttributes executionAttributes) {

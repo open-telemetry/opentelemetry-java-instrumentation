@@ -67,7 +67,7 @@ public class JaxRsClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter
     public static void onEnter(
         @Advice.Argument(0) ClientRequest request,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelOperation") Operation<ClientResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(request);
       scope = operation.makeCurrent();
@@ -77,10 +77,10 @@ public class JaxRsClientInstrumentationModule extends InstrumentationModule {
     public static void onExit(
         @Advice.Return ClientResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelOperation") Operation<ClientResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      tracer().endMaybeExceptionally(operation, response, throwable);
+      operation.endMaybeExceptionally(response, throwable);
     }
   }
 }

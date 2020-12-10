@@ -79,7 +79,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This HttpRequest request,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
 
       ContextStore<HttpRequest, Operation> storage =
@@ -100,10 +100,10 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      tracer().endMaybeExceptionally(operation, response, throwable);
+      operation.endMaybeExceptionally(response, throwable);
     }
   }
 
@@ -112,7 +112,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This HttpRequest request,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(request);
       scope = operation.makeCurrent();
@@ -124,11 +124,11 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       if (throwable != null) {
-        tracer().endExceptionally(operation, throwable);
+        operation.endExceptionally(throwable);
       }
     }
   }

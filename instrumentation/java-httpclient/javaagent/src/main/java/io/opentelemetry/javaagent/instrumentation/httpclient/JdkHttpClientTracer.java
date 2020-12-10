@@ -31,7 +31,7 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRespo
     return TRACER;
   }
 
-  public Operation startOperation(HttpRequest request) {
+  public Operation<HttpResponse<?>> startOperation(HttpRequest request) {
     return super.startOperation(request, SETTER);
   }
 
@@ -66,10 +66,10 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRespo
   }
 
   @Override
-  protected void onResponse(Operation operation, HttpResponse<?> httpResponse) {
-    super.onResponse(operation, httpResponse);
+  protected void onResponse(Context context, HttpResponse<?> httpResponse) {
+    super.onResponse(context, httpResponse);
     String flavor = httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0";
-    operation.getSpan().setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
+    Span.fromContext(context).setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
   }
 
   @Override

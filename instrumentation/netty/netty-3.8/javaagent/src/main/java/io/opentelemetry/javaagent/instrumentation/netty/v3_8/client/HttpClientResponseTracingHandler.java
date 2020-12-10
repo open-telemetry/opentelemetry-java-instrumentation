@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyHttpClientTracer.tracer;
-
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -30,13 +28,13 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
-    Operation operation = channelTraceContext.getOperation();
+    Operation<HttpResponse> operation = channelTraceContext.getOperation();
     if (operation == null) {
       ctx.sendUpstream(msg);
       return;
     }
     if (msg.getMessage() instanceof HttpResponse) {
-      tracer().end(operation, (HttpResponse) msg.getMessage());
+      operation.end((HttpResponse) msg.getMessage());
     }
     // We want the callback in the scope of the parent, not the client span
     try (Scope ignored = operation.makeParentCurrent()) {

@@ -28,10 +28,11 @@ public final class RestTemplateInterceptor implements ClientHttpRequestIntercept
   @Override
   public ClientHttpResponse intercept(
       HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
-    Operation operation = tracer().startOperation(request, request.getHeaders());
+    Operation<ClientHttpResponse> operation =
+        tracer().startOperation(request, request.getHeaders());
     try (Scope ignored = operation.makeCurrent()) {
       ClientHttpResponse response = execution.execute(request, body);
-      tracer().end(operation, response);
+      operation.end(response);
       return response;
     }
   }

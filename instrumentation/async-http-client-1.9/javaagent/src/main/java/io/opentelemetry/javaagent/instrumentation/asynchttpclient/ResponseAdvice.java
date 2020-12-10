@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 
-import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.AsyncHttpClientTracer.tracer;
-
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Response;
@@ -25,12 +23,12 @@ public class ResponseAdvice {
     @SuppressWarnings("rawtypes")
     ContextStore<AsyncHandler, Operation> contextStore =
         InstrumentationContext.get(AsyncHandler.class, Operation.class);
-    Operation operation = contextStore.get(handler);
+    Operation<Response> operation = contextStore.get(handler);
     if (operation == null) {
       return Scope.noop();
     }
     contextStore.put(handler, null);
-    tracer().end(operation, response);
+    operation.end(response);
     return operation.makeParentCurrent();
   }
 
