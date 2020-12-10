@@ -67,6 +67,10 @@ public abstract class BaseTracer {
     return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
   }
 
+  protected final boolean inClientSpan(Context parentContext) {
+    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
+  }
+
   public Scope startScope(Span span) {
     return Context.current().with(span).makeCurrent();
   }

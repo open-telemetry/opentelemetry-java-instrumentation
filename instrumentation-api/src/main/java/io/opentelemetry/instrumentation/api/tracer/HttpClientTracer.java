@@ -78,10 +78,6 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return newOperation(context, parentContext);
   }
 
-  protected final boolean inClientSpan(Context parentContext) {
-    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
-  }
-
   protected final SpanBuilder spanBuilder(Context parentContext, REQUEST request) {
     return spanBuilder(parentContext, request, spanNameForRequest(request));
   }
