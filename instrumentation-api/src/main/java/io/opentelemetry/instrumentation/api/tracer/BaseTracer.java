@@ -71,6 +71,10 @@ public abstract class BaseTracer {
     return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
   }
 
+  protected final Context withClientSpan(Context parentContext, Span span) {
+    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+  }
+
   public Scope startScope(Span span) {
     return Context.current().with(span).makeCurrent();
   }

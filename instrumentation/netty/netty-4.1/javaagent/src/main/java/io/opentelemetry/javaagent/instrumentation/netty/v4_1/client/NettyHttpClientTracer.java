@@ -54,7 +54,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(context, request.headers(), SETTER);
-    return newOperation(context, parentContext);
+    return Operation.create(context, parentContext);
   }
 
   private boolean suppressOperation(Context parentContext, HttpRequest request) {

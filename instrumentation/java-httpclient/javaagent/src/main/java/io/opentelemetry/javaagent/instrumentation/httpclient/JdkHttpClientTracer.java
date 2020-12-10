@@ -66,10 +66,10 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRespo
   }
 
   @Override
-  protected void onResponse(Span span, HttpResponse<?> httpResponse) {
-    super.onResponse(span, httpResponse);
-    span.setAttribute(
-        SemanticAttributes.HTTP_FLAVOR, httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0");
+  protected void onResponse(Operation operation, HttpResponse<?> httpResponse) {
+    super.onResponse(operation, httpResponse);
+    String flavor = httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0";
+    operation.getSpan().setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
   }
 
   @Override

@@ -37,7 +37,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Response> 
             .startSpan();
     Context context = withClientSpan(parentContext, span);
     // TODO implement propagation?
-    return newOperation(context, parentContext);
+    return Operation.create(context, parentContext);
   }
 
   @Override

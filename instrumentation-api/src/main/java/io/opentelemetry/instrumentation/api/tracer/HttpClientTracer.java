@@ -29,26 +29,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
 
   public static final String DEFAULT_SPAN_NAME = "HTTP request";
 
-  protected static final String USER_AGENT = "User-Agent";
-
-  protected abstract String method(REQUEST request);
-
-  @Nullable
-  protected abstract URI url(REQUEST request) throws URISyntaxException;
-
-  @Nullable
-  protected String flavor(REQUEST request) {
-    // This is de facto standard nowadays, so let us use it, unless overridden
-    return "1.1";
-  }
-
-  protected abstract Integer status(RESPONSE response);
-
-  @Nullable
-  protected abstract String requestHeader(REQUEST request, String name);
-
-  @Nullable
-  protected abstract String responseHeader(RESPONSE response, String name);
+  private static final String USER_AGENT = "User-Agent";
 
   protected HttpClientTracer() {
     super();
@@ -58,36 +39,35 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     super(tracer);
   }
 
-  // TODO (trask) is this a good idea or no?
-  // NOTE: in general, the following methods are protected, and subclasses should expose the
-  // relevant methods as public. this is so that consumers of the tracers will only see the methods
-  // that are relevant to them
-
-  // if this resulting operation needs to be manually propagated, that should be done outside of
-  // this method
-  protected final Operation startOperation(
-      REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
-    return startOperation(request, request, setter);
+  /**
+   * Convenience overload for {@link #startOperation(Object, Object, TextMapPropagator.Setter,
+   * long)} which is applicable when the {@link TextMapPropagator.Setter} applies directly to the
+   * {@code request}, and which uses the current time.
+   */
+  protected Operation startOperation(REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
+    return startOperation(request, request, setter, -1);
   }
 
-  // if this resulting operation needs to be manually propagated, that should be done outside of
-  // this method
-  protected final <CARRIER> Operation startOperation(
+  /**
+   * Convenience overload for {@link #startOperation(Object, Object, TextMapPropagator.Setter,
+   * long)} which is applicable when the {@link TextMapPropagator.Setter} applies directly to the
+   * {@code request}.
+   */
+  protected Operation startOperation(
+      REQUEST request, TextMapPropagator.Setter<REQUEST> setter, long startTimeNanos) {
+    return startOperation(request, request, setter, startTimeNanos);
+  }
+
+  /**
+   * Convenience overload for {@link #startOperation(Object, Object, TextMapPropagator.Setter,
+   * long)} which uses the current time.
+   */
+  protected <CARRIER> Operation startOperation(
       REQUEST request, CARRIER carrier, TextMapPropagator.Setter<CARRIER> setter) {
     return startOperation(request, carrier, setter, -1);
   }
 
-  // if this resulting operation needs to be manually propagated, that should be done outside of
-  // this method
-  protected final <CARRIER> Operation startOperation(
-      REQUEST request,
-      CARRIER carrier,
-      TextMapPropagator.Setter<CARRIER> setter,
-      long startTimeNanos) {
-    return internalStartOperation(request, carrier, setter, startTimeNanos);
-  }
-
-  private <CARRIER> Operation internalStartOperation(
+  protected <CARRIER> Operation startOperation(
       REQUEST request,
       CARRIER carrier,
       TextMapPropagator.Setter<CARRIER> setter,
@@ -100,19 +80,34 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanName, startTimeNanos);
     Context context = withClientSpan(parentContext, spanBuilder.startSpan());
     OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    return newOperation(context, parentContext);
+    return Operation.create(context, parentContext);
   }
 
+  /**
+   * Convenience overload for {@link #spanBuilder(Context, Object, String, long)} which applies the
+   * default span name for the request.
+   *
+   * <p>The default span name is {@code HTTP &lt;method&gt;}, or {@code HTTP Request} if {@link
+   * #method(Object)} returns {@code null}.
+   */
   protected final SpanBuilder spanBuilder(Context parentContext, REQUEST request) {
-    return spanBuilder(parentContext, request, spanNameForRequest(request));
+    return spanBuilder(parentContext, request, spanNameForRequest(request), -1);
   }
 
-  // override onRequest() if you want to capture more request attributes
+  /**
+   * Convenience overload for {@link #spanBuilder(Context, Object, String, long)} which uses the
+   * current time.
+   */
   protected final SpanBuilder spanBuilder(Context parentContext, REQUEST request, String spanName) {
     return spanBuilder(parentContext, request, spanName, -1);
   }
 
-  // override onRequest() if you want to capture more request attributes
+  /**
+   * Helper method if a subclass needs to implement a {@code startOperation} method from scratch.
+   *
+   * <p>If a subclass wants to capture more request attributes, it should override {@link
+   * #onRequest(SpanBuilder, Object)}.
+   */
   protected final SpanBuilder spanBuilder(
       Context parentContext, REQUEST request, String spanName, long startTimeNanos) {
     SpanBuilder spanBuilder =
@@ -124,50 +119,45 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return spanBuilder;
   }
 
-  protected final Context withClientSpan(Context parentContext, Span span) {
-    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
-  }
-
-  // TODO (trask) inline?
-  protected final Operation newOperation(Context context, Context parentContext) {
-    return Operation.create(context, parentContext);
-  }
-
+  /** Can be overridden to capture additional attributes from the request. */
+  // TODO (trask) is this needed? it's not overridden currently, and subclasses can always do this
+  //  in their own startOperation
   protected void onRequest(SpanBuilder spanBuilder, REQUEST request) {
     onRequest(spanBuilder::setAttribute, request);
   }
 
+  /**
+   * This is for HttpClientTracers that do not have the request available during {@code
+   * startOperation}.
+   */
   protected void onRequest(Operation operation, REQUEST request) {
     onRequest(operation.getSpan()::setAttribute, request);
   }
 
-  private void onRequest(SpanAttributeSetter span, REQUEST request) {
-    if (request != null) {
-      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
-      span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
-      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
-
-      setFlavor(span, request);
-      setUrl(span, request);
-    }
-  }
-
+  /** Convenience method for {@link #end(Operation, Object, long)} which uses the current time. */
   public void end(Operation operation, RESPONSE response) {
     end(operation, response, -1);
   }
 
   public void end(Operation operation, RESPONSE response, long endTimeNanos) {
-    // TODO (trask) require response to be non-null here
-    Span span = operation.getSpan();
-    onResponse(span, response);
-    super.end(span, endTimeNanos);
+    // TODO (trask) require response to be non-null here?
+    onResponse(operation, response);
+    super.end(operation.getSpan(), endTimeNanos);
   }
 
+  /**
+   * Convenience method for {@link #endExceptionally(Operation, Throwable, Object, long)} which has
+   * no request, and uses the current time.
+   */
   public void endExceptionally(Operation operation, Throwable throwable) {
     checkNotNull(throwable);
-    endExceptionally(operation, throwable, null);
+    endExceptionally(operation, throwable, null, -1);
   }
 
+  /**
+   * Convenience method for {@link #endExceptionally(Operation, Throwable, Object, long)} which uses
+   * the current time.
+   */
   public void endExceptionally(Operation operation, Throwable throwable, RESPONSE response) {
     endExceptionally(operation, throwable, response, -1);
   }
@@ -176,7 +166,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
       Operation operation, Throwable throwable, RESPONSE response, long endTimeNanos) {
     Span span = operation.getSpan();
     if (response != null) {
-      onResponse(span, response);
+      onResponse(operation, response);
     }
     super.endExceptionally(span, throwable, endTimeNanos);
   }
@@ -190,13 +180,12 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     }
   }
 
-  // TODO (trask) should this and onRequest() above take Context instead of Span?
-  //  to be more generally useful somehow?
-  // TODO (trask) could make this not public for now, only 2 subclasses are using, and those uses
-  //  could be inlined into advice
-  protected void onResponse(Span span, RESPONSE response) {
+  /** Can be overridden to capture additional attributes from the response. */
+  // TODO (trask) is there any point to passing in Operation here instead of Span?
+  protected void onResponse(Operation operation, RESPONSE response) {
     Integer status = status(response);
     if (status != null) {
+      Span span = operation.getSpan();
       span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
       StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(status);
       if (statusCode == StatusCode.ERROR) {
@@ -205,17 +194,52 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     }
   }
 
+  protected abstract String method(REQUEST request);
+
+  @Nullable
+  protected abstract URI url(REQUEST request) throws URISyntaxException;
+
+  @Nullable
+  protected String flavor(REQUEST request) {
+    // This is de facto standard nowadays, so let us use it, unless overridden
+    return "1.1";
+  }
+
+  @Nullable
+  protected abstract String requestHeader(REQUEST request, String name);
+
+  protected abstract Integer status(RESPONSE response);
+
+  @Nullable
+  protected abstract String responseHeader(RESPONSE response, String name);
+
+  private String spanNameForRequest(REQUEST request) {
+    if (request == null) {
+      return DEFAULT_SPAN_NAME;
+    }
+    String method = method(request);
+    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
+  }
+
+  private void onRequest(SpanAttributeSetter span, REQUEST request) {
+    if (request != null) {
+      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
+      span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
+      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
+      setFlavor(span, request);
+      setUrl(span, request);
+    }
+  }
+
   private void setFlavor(SpanAttributeSetter span, REQUEST request) {
     String flavor = flavor(request);
     if (flavor == null) {
       return;
     }
-
     String httpProtocolPrefix = "HTTP/";
     if (flavor.startsWith(httpProtocolPrefix)) {
       flavor = flavor.substring(httpProtocolPrefix.length());
     }
-
     span.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
   }
 
@@ -227,16 +251,9 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
         span.setAttribute(SemanticAttributes.HTTP_URL, url.toString());
       }
     } catch (Exception e) {
+      // TODO why is catch needed here?
       log.debug("Error tagging url", e);
     }
-  }
-
-  private String spanNameForRequest(REQUEST request) {
-    if (request == null) {
-      return DEFAULT_SPAN_NAME;
-    }
-    String method = method(request);
-    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
   }
 
   private static void checkNotNull(Object obj) {

@@ -62,16 +62,17 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
     OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(context, request, AwsSdkInjectAdapter.INSTANCE);
-    return newOperation(context, parentContext);
+    return Operation.create(context, parentContext);
   }
 
+  @Override
   public void onResponse(Operation operation, Response<?> response) {
     Span span = operation.getSpan();
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setAttribute("aws.requestId", awsResp.getRequestId());
     }
-    super.onResponse(span, response);
+    super.onResponse(operation, response);
   }
 
   private String spanNameForRequest(Request<?> request) {
