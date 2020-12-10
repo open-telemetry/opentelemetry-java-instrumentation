@@ -45,10 +45,6 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
     delegate = AwsSdk.newInterceptor();
   }
 
-  public static void muzzleCheck() {
-    // Noop
-  }
-
   @Override
   public void beforeExecution(BeforeExecution context, ExecutionAttributes executionAttributes) {
     delegate.beforeExecution(context, executionAttributes);
