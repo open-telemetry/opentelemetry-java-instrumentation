@@ -75,9 +75,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
     Operation operation = tracer().startOperation(executionAttributes);
-    if (!operation.getSpan().isRecording()) {
-      return;
-    }
     executionAttributes.putAttribute(OPERATION_ATTRIBUTE, operation);
     RequestType type = ofSdkRequest(context.request());
     if (type != null) {
@@ -96,13 +93,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
     Operation operation = getOperationOrNoop(executionAttributes);
-    if (operation.getSpan().isRecording()) {
-      SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
-      tracer().inject(operation, builder);
-      return builder.build();
-    } else {
-      return context.httpRequest();
-    }
+    SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
+    tracer().inject(operation, builder);
+    return builder.build();
   }
 
   @Override

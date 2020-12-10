@@ -32,21 +32,11 @@ final class AwsSdkHttpClientTracer extends HttpClientTracer<SdkHttpRequest, SdkH
     if (inClientSpan(parentContext)) {
       return Operation.noop();
     }
-    Span clientSpan =
-        tracer
-            .spanBuilder(spanName(attributes))
-            .setSpanKind(CLIENT)
-            .setParent(parentContext)
-            .startSpan();
-    Context context = withClientSpan(parentContext, clientSpan);
+    String spanName = spanName(attributes);
+    Span span =
+        tracer.spanBuilder(spanName).setSpanKind(CLIENT).setParent(parentContext).startSpan();
+    Context context = withClientSpan(parentContext, span);
     return Operation.create(context, parentContext);
-  }
-
-  private String spanName(ExecutionAttributes attributes) {
-    String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
-    String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
-
-    return awsServiceName + "." + awsOperation;
   }
 
   @Override
@@ -90,5 +80,11 @@ final class AwsSdkHttpClientTracer extends HttpClientTracer<SdkHttpRequest, SdkH
 
   public void inject(Operation operation, SdkHttpRequest.Builder builder) {
     operation.inject(AwsXRayPropagator.getInstance(), builder, AwsSdkInjectAdapter.INSTANCE);
+  }
+
+  private static String spanName(ExecutionAttributes attributes) {
+    String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
+    String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
+    return awsServiceName + "." + awsOperation;
   }
 }

@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
@@ -18,7 +20,6 @@ import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.SpanAttributeSetter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,11 +131,13 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
   protected final SpanBuilder spanBuilder(
       Context parentContext, REQUEST request, String spanName, long startTimeNanos) {
     SpanBuilder spanBuilder =
-        tracer.spanBuilder(spanName).setSpanKind(Kind.CLIENT).setParent(parentContext);
+        tracer.spanBuilder(spanName).setSpanKind(CLIENT).setParent(parentContext);
     if (startTimeNanos > 0) {
-      spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
+      spanBuilder.setStartTimestamp(startTimeNanos, NANOSECONDS);
     }
-    onRequest(spanBuilder::setAttribute, request);
+    if (request != null) {
+      onRequest(spanBuilder::setAttribute, request);
+    }
     return spanBuilder;
   }
 
