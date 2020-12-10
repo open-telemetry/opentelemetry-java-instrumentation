@@ -130,6 +130,10 @@ public abstract class BaseTracer {
     return className;
   }
 
+  public void end(Operation operation) {
+    end(operation.getSpan());
+  }
+
   public void end(Span span) {
     end(span, -1);
   }

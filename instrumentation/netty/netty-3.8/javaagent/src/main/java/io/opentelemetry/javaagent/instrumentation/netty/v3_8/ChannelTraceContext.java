@@ -21,6 +21,7 @@ public class ChannelTraceContext {
   }
 
   private Context connectionContext;
+  // TODO (trask) consolidate when migrating HttpServerTracers?
   private Operation operation; // used for client instrumentation
   private Context context; // used for server instrumentation
 
