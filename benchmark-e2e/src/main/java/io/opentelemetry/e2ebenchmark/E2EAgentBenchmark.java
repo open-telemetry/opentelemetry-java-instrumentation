@@ -70,7 +70,6 @@ public class E2EAgentBenchmark {
         .withLogConsumer(new Slf4jLogConsumer(LOG))
         .withNetworkAliases("app")
         .withEnv("LISTEN_ADDRESS", "0.0.0.0:" + PORT)
-        .withEnv("AWS_REGION", "us-west-2")
         .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:55680")
         .withExposedPorts(8080);
     containers.add(app);
