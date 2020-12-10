@@ -210,6 +210,7 @@ include ":javaagent-exporters:prometheus"
 include ':benchmark'
 include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
+include ':benchmark-e2e'
 
 def setBuildFile(project) {
   if (['javaagent', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {
