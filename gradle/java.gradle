@@ -148,6 +148,14 @@ jar {
   }
 }
 
+normalization {
+  runtimeClasspath {
+    metaInf {
+      ignoreAttribute("Implementation-Version")
+    }
+  }
+}
+
 javadoc {
   options.addStringOption('Xdoclint:none', '-quiet')
 
