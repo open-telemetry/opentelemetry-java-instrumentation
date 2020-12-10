@@ -10,16 +10,16 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-class DefaultHttpClientOperation<RESULT> implements HttpClientOperation<RESULT> {
+class DefaultHttpClientOperation<RESPONSE> implements HttpClientOperation<RESPONSE> {
 
   private final Context context;
   // TODO (trask) separate interface/implementation when parentContext is not needed as memory
   //  optimization?
   private final Context parentContext;
-  private final HttpClientTracer<?, RESULT> tracer;
+  private final HttpClientTracer<?, RESPONSE> tracer;
 
   DefaultHttpClientOperation(
-      Context context, Context parentContext, HttpClientTracer<?, RESULT> tracer) {
+      Context context, Context parentContext, HttpClientTracer<?, RESPONSE> tracer) {
     this.context = context;
     this.parentContext = parentContext;
     this.tracer = tracer;
@@ -41,13 +41,13 @@ class DefaultHttpClientOperation<RESULT> implements HttpClientOperation<RESULT> 
   }
 
   @Override
-  public void end(RESULT result) {
-    end(result, -1);
+  public void end(RESPONSE response) {
+    end(response, -1);
   }
 
   @Override
-  public void end(RESULT result, long endTimeNanos) {
-    tracer.end(context, result, endTimeNanos);
+  public void end(RESPONSE response, long endTimeNanos) {
+    tracer.end(context, response, endTimeNanos);
   }
 
   @Override
@@ -56,13 +56,13 @@ class DefaultHttpClientOperation<RESULT> implements HttpClientOperation<RESULT> 
   }
 
   @Override
-  public void endExceptionally(Throwable throwable, RESULT result) {
-    endExceptionally(throwable, result, -1);
+  public void endExceptionally(Throwable throwable, RESPONSE response) {
+    endExceptionally(throwable, response, -1);
   }
 
   @Override
-  public void endExceptionally(Throwable throwable, RESULT result, long endTimeNanos) {
-    tracer.endExceptionally(context, throwable, result, endTimeNanos);
+  public void endExceptionally(Throwable throwable, RESPONSE response, long endTimeNanos) {
+    tracer.endExceptionally(context, throwable, response, endTimeNanos);
   }
 
   @Override

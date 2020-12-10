@@ -10,14 +10,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public interface HttpClientOperation<RESULT> {
+public interface HttpClientOperation<RESPONSE> {
 
-  static <RESULT> HttpClientOperation<RESULT> noop() {
+  static <RESPONSE> HttpClientOperation<RESPONSE> noop() {
     return NoopHttpClientOperation.noop();
   }
 
-  static <RESULT> HttpClientOperation<RESULT> create(
-      Context context, Context parentContext, HttpClientTracer<?, RESULT> tracer) {
+  static <RESPONSE> HttpClientOperation<RESPONSE> create(
+      Context context, Context parentContext, HttpClientTracer<?, RESPONSE> tracer) {
     return new DefaultHttpClientOperation<>(context, parentContext, tracer);
   }
 
@@ -33,9 +33,9 @@ public interface HttpClientOperation<RESULT> {
   void end();
 
   /** Convenience method for {@link #end(Object, long)} which uses the current time. */
-  void end(RESULT result);
+  void end(RESPONSE response);
 
-  void end(RESULT result, long endTimeNanos);
+  void end(RESPONSE response, long endTimeNanos);
 
   /**
    * Convenience method for {@link #endExceptionally(Throwable, Object, long)} which has no result,
@@ -47,16 +47,16 @@ public interface HttpClientOperation<RESULT> {
    * Convenience method for {@link #endExceptionally(Throwable, Object, long)} which uses the
    * current time.
    */
-  void endExceptionally(Throwable throwable, RESULT result);
+  void endExceptionally(Throwable throwable, RESPONSE response);
 
-  void endExceptionally(Throwable throwable, RESULT result, long endTimeNanos);
+  void endExceptionally(Throwable throwable, RESPONSE response, long endTimeNanos);
 
   /** Convenience method for bytecode instrumentation. */
-  default void endMaybeExceptionally(RESULT result, Throwable throwable) {
+  default void endMaybeExceptionally(RESPONSE response, Throwable throwable) {
     if (throwable != null) {
       endExceptionally(throwable);
     } else {
-      end(result);
+      end(response);
     }
   }
 
