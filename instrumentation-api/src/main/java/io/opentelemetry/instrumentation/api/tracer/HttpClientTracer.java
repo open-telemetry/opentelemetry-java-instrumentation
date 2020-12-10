@@ -58,36 +58,11 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     super(tracer);
   }
 
-  // TODO (trask) is this a good idea or no?
-  // NOTE: in general, the following methods are protected, and subclasses should expose the
-  // relevant methods as public. this is so that consumers of the tracers will only see the methods
-  // that are relevant to them
-
   // if this resulting operation needs to be manually propagated, that should be done outside of
   // this method
-  protected final Operation startOperation(
-      REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
-    return startOperation(request, request, setter);
-  }
-
-  // if this resulting operation needs to be manually propagated, that should be done outside of
-  // this method
-  protected final <CARRIER> Operation startOperation(
-      REQUEST request, CARRIER carrier, TextMapPropagator.Setter<CARRIER> setter) {
-    return startOperation(request, carrier, setter, -1);
-  }
-
-  // if this resulting operation needs to be manually propagated, that should be done outside of
-  // this method
-  protected final <CARRIER> Operation startOperation(
-      REQUEST request,
-      CARRIER carrier,
-      TextMapPropagator.Setter<CARRIER> setter,
-      long startTimeNanos) {
-    return internalStartOperation(request, carrier, setter, startTimeNanos);
-  }
-
-  private <CARRIER> Operation internalStartOperation(
+  //
+  // subclasses should expose a startOperation method that makes most sense for its users
+  protected <CARRIER> Operation startOperation(
       REQUEST request,
       CARRIER carrier,
       TextMapPropagator.Setter<CARRIER> setter,

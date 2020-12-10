@@ -22,7 +22,7 @@ public class KHttpTracer extends HttpClientTracer<RequestWrapper, Response> {
   }
 
   public Operation startOperation(RequestWrapper request, Map<String, String> headers) {
-    return super.startOperation(request, headers, SETTER);
+    return startOperation(request, headers, SETTER, -1);
   }
 
   @Override

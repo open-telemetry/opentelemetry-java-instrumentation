@@ -24,7 +24,7 @@ public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMe
   }
 
   public Operation startOperation(HttpMethod request) {
-    return super.startOperation(request, SETTER);
+    return startOperation(request, request, SETTER, -1);
   }
 
   @Override

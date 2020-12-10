@@ -28,7 +28,7 @@ public class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientReques
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
   public Operation startOperation(ClientRequest request, ClientRequest.Builder builder) {
-    return super.startOperation(request, builder, SETTER);
+    return startOperation(request, builder, SETTER, -1);
   }
 
   @Override

@@ -21,7 +21,7 @@ public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientR
   }
 
   public Operation startOperation(ClientRequest request) {
-    return super.startOperation(request, SETTER);
+    return startOperation(request, request, SETTER, -1);
   }
 
   @Override
