@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.CONTEXT_SCOPE_PAIR_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.OPERATION_SCOPE_PAIR_KEY;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -31,15 +31,14 @@ public class TracingRequestHandler extends RequestHandler2 {
     RequestMeta requestMeta = contextStore.get(originalRequest);
     Operation operation = tracer().startOperation(request, requestMeta);
     Scope scope = operation.makeCurrent();
-    request.addHandlerContext(
-        CONTEXT_SCOPE_PAIR_CONTEXT_KEY, new OperationScopePair(operation, scope));
+    request.addHandlerContext(OPERATION_SCOPE_PAIR_KEY, new OperationScopePair(operation, scope));
   }
 
   @Override
   public void afterResponse(Request<?> request, Response<?> response) {
-    OperationScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY);
+    OperationScopePair scope = request.getHandlerContext(OPERATION_SCOPE_PAIR_KEY);
     if (scope != null) {
-      request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, null);
+      request.addHandlerContext(OPERATION_SCOPE_PAIR_KEY, null);
       scope.closeScope();
       tracer().end(scope.getOperation(), response);
     }
@@ -47,9 +46,9 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void afterError(Request<?> request, Response<?> response, Exception e) {
-    OperationScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY);
+    OperationScopePair scope = request.getHandlerContext(OPERATION_SCOPE_PAIR_KEY);
     if (scope != null) {
-      request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, null);
+      request.addHandlerContext(OPERATION_SCOPE_PAIR_KEY, null);
       scope.closeScope();
       tracer().endExceptionally(scope.getOperation(), e);
     }

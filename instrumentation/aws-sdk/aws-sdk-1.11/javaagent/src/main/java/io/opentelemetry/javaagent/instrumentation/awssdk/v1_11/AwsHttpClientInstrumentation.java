@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.CONTEXT_SCOPE_PAIR_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.OPERATION_SCOPE_PAIR_KEY;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -48,9 +48,9 @@ public class AwsHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0, optional = true) Request<?> request,
         @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
-        OperationScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY);
+        OperationScopePair scope = request.getHandlerContext(OPERATION_SCOPE_PAIR_KEY);
         if (scope != null) {
-          request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, null);
+          request.addHandlerContext(OPERATION_SCOPE_PAIR_KEY, null);
           tracer().endExceptionally(scope.getOperation(), throwable);
           scope.closeScope();
         }
