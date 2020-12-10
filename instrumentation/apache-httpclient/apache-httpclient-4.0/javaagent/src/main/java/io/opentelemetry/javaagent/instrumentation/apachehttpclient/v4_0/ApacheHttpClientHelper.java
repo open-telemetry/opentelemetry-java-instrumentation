@@ -18,8 +18,7 @@ public class ApacheHttpClientHelper {
     } else if (result instanceof HttpResponse) {
       tracer().end(operation, (HttpResponse) result);
     } else {
-      // ResponseHandler was probably provided
-      tracer().end(operation, null);
+      // ended in WrappingStatusSettingResponseHandler
     }
   }
 }

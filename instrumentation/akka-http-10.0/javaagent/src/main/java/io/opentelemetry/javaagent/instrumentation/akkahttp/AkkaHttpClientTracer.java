@@ -23,7 +23,7 @@ public class AkkaHttpClientTracer extends HttpClientTracer<HttpRequest, HttpResp
   }
 
   public Operation startOperation(HttpRequest request, AkkaHttpHeaders headers) {
-    return startOperation(request, headers, SETTER, -1);
+    return startOperation(request, headers, SETTER);
   }
 
   @Override
