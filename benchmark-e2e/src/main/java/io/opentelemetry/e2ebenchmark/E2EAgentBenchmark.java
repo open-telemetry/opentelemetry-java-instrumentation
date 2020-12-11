@@ -1,5 +1,13 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.e2ebenchmark;
 
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,10 +20,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class E2EAgentBenchmark {
   private static final Logger LOG = LoggerFactory.getLogger(E2EAgentBenchmark.class);
@@ -41,8 +45,11 @@ public class E2EAgentBenchmark {
 
     // docker images
     final DockerImageName WRK_IMAGE = DockerImageName.parse("quay.io/dim/wrk:stable");
-    final DockerImageName APP_IMAGE = DockerImageName.parse("ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk8-20201204.400701583");
-    final DockerImageName OTLP_COLLECTOR_IMAGE = DockerImageName.parse("otel/opentelemetry-collector-dev:latest");
+    final DockerImageName APP_IMAGE =
+        DockerImageName.parse(
+            "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk8-20201204.400701583");
+    final DockerImageName OTLP_COLLECTOR_IMAGE =
+        DockerImageName.parse("otel/opentelemetry-collector-dev:latest");
 
     // otlp collector container
     GenericContainer<?> collector =
@@ -53,27 +60,31 @@ public class E2EAgentBenchmark {
             .withExposedPorts(55680, 13133)
             .waitingFor(Wait.forHttp("/").forPort(13133))
             .withCopyFileToContainer(
-                MountableFile.forClasspathResource("collector-config.yml"), "/etc/collector/collector-config.yml")
+                MountableFile.forClasspathResource("collector-config.yml"),
+                "/etc/collector/collector-config.yml")
             .withCommand("--config /etc/collector/collector-config.yml --log-level=DEBUG");
     containers.add(collector);
 
     // sample app container
-    GenericContainer<?> app = new GenericContainer<>(APP_IMAGE)
-        .withNetwork(Network.SHARED)
-        .withLogConsumer(new Slf4jLogConsumer(LOG))
-        .withNetworkAliases("app")
-        .withCopyFileToContainer(MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
-        .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar")
-        .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:55680")
-        .withExposedPorts(8080);
+    GenericContainer<?> app =
+        new GenericContainer<>(APP_IMAGE)
+            .withNetwork(Network.SHARED)
+            .withLogConsumer(new Slf4jLogConsumer(LOG))
+            .withNetworkAliases("app")
+            .withCopyFileToContainer(
+                MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
+            .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:55680")
+            .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar")
+            .withExposedPorts(8080);
     containers.add(app);
 
     // wrk benchmark container
-    GenericContainer<?> wrk = new GenericContainer<>(WRK_IMAGE)
-        .withNetwork(Network.SHARED)
-        .withLogConsumer(new Slf4jLogConsumer(LOG))
-        .withCreateContainerCmdModifier(it -> it.withEntrypoint("wrk"))
-        .withCommand("-t4 -c128 -d300s http://app:8080/ --latency");
+    GenericContainer<?> wrk =
+        new GenericContainer<>(WRK_IMAGE)
+            .withNetwork(Network.SHARED)
+            .withLogConsumer(new Slf4jLogConsumer(LOG))
+            .withCreateContainerCmdModifier(it -> it.withEntrypoint("wrk"))
+            .withCommand("-t4 -c128 -d300s http://app:8080/ --latency");
     containers.add(wrk);
 
     wrk.dependsOn(app, collector);
@@ -93,13 +104,19 @@ public class E2EAgentBenchmark {
   }
 
   static void printContainerMapping(GenericContainer<?> container) {
-    System.out.println(String.format(
-        "Container %s ports exposed at %s",
-        container.getDockerImageName(),
-        container.getExposedPorts().stream()
-            .map(port -> new AbstractMap.SimpleImmutableEntry<>(port,
-                "http://" + container.getContainerIpAddress() + ":" + container
-                    .getMappedPort(port)))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))));
+    System.out.println(
+        String.format(
+            "Container %s ports exposed at %s",
+            container.getDockerImageName(),
+            container.getExposedPorts().stream()
+                .map(
+                    port ->
+                        new AbstractMap.SimpleImmutableEntry<>(
+                            port,
+                            "http://"
+                                + container.getContainerIpAddress()
+                                + ":"
+                                + container.getMappedPort(port)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))));
   }
 }
