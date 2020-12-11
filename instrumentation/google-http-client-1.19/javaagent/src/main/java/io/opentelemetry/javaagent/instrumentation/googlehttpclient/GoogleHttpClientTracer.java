@@ -10,8 +10,8 @@ import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.Header
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -22,8 +22,8 @@ public class GoogleHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRe
     return TRACER;
   }
 
-  public Operation startOperation(HttpRequest request) {
-    return startOperation(request, request.getHeaders(), SETTER);
+  public Context startOperation(Context parentContext, HttpRequest request) {
+    return startOperation(parentContext, request, request.getHeaders(), SETTER);
   }
 
   @Override

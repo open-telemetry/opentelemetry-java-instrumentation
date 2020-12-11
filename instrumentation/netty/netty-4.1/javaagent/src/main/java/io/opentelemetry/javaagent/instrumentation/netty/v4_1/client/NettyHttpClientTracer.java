@@ -16,9 +16,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,20 +29,13 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     return TRACER;
   }
 
-  public Operation startOperation(ChannelHandlerContext ctx, Object msg) {
+  public Context startOperation(Context parentContext, ChannelHandlerContext ctx, Object msg) {
     if (!(msg instanceof HttpRequest)) {
-      return Operation.noop();
+      return noopContext(parentContext);
     }
-
-    Context parentContext = ctx.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
-    if (parentContext == null) {
-      parentContext = Context.current();
-    }
-
     HttpRequest request = (HttpRequest) msg;
-
     if (suppressOperation(parentContext, request)) {
-      return Operation.noop();
+      return noopContext(parentContext);
     }
 
     SpanBuilder spanBuilder =
@@ -57,7 +48,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(context, request.headers(), SETTER);
-    return Operation.create(context, parentContext);
+    return context;
   }
 
   private boolean suppressOperation(Context parentContext, HttpRequest request) {

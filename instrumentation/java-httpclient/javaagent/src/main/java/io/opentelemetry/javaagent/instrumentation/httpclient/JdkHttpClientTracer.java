@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.net.http.HttpClient.Version;
 import java.net.http.HttpHeaders;
@@ -31,8 +30,8 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRespo
     return TRACER;
   }
 
-  public Operation startOperation(HttpRequest request) {
-    return super.startOperation(request, SETTER);
+  public Context startOperation(Context parentContext, HttpRequest request) {
+    return super.startOperation(parentContext, request, SETTER);
   }
 
   @Override
@@ -66,10 +65,10 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRespo
   }
 
   @Override
-  protected void onResponse(Operation operation, HttpResponse<?> httpResponse) {
-    super.onResponse(operation, httpResponse);
+  protected void onResponse(Context context, HttpResponse<?> httpResponse) {
+    super.onResponse(context, httpResponse);
     String flavor = httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0";
-    operation.getSpan().setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
+    Span.fromContext(context).setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
   }
 
   @Override
@@ -84,8 +83,8 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRespo
     return throwable;
   }
 
-  // TODO (trask) need to pass in Operation here so that injection will not occur when Operation is
-  //  a no-op
+  // TODO (trask) need to pass in Context here so that injection will not occur when Context is
+  //  "no-op"
   public HttpHeaders inject(HttpHeaders original) {
     Map<String, List<String>> headerMap = new HashMap<>();
 

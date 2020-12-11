@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.ResteasyClientTracer.tracer;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -14,8 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -67,20 +68,20 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This ClientInvocation invocation,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(invocation);
-      scope = operation.makeCurrent();
+      context = tracer().startOperation(currentContext(), invocation);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return Response response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      tracer().endMaybeExceptionally(operation, response, throwable);
+      tracer().endMaybeExceptionally(context, response, throwable);
     }
   }
 }

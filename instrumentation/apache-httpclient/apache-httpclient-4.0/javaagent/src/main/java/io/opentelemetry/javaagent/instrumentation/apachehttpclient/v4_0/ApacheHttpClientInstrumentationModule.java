@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonList;
@@ -17,8 +18,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
@@ -149,20 +150,20 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) HttpUriRequest request,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(request);
-      scope = operation.makeCurrent();
+      context = tracer().startOperation(currentContext(), request);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      ApacheHttpClientHelper.endOperation(operation, result, throwable);
+      ApacheHttpClientHelper.endOperation(context, result, throwable);
     }
   }
 
@@ -177,14 +178,14 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
                 typing = Assigner.Typing.DYNAMIC,
                 readOnly = false)
             Object handler,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(request);
-      scope = operation.makeCurrent();
+      context = tracer().startOperation(currentContext(), request);
+      scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
-        handler = WrappingStatusSettingResponseHandler.of(operation, (ResponseHandler<?>) handler);
+        handler = WrappingStatusSettingResponseHandler.of(context, (ResponseHandler<?>) handler);
       }
     }
 
@@ -192,10 +193,10 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      ApacheHttpClientHelper.endOperation(operation, result, throwable);
+      ApacheHttpClientHelper.endOperation(context, result, throwable);
     }
   }
 
@@ -204,20 +205,20 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodEnter(
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) HttpRequest request,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(host, request);
-      scope = operation.makeCurrent();
+      context = tracer().startOperation(currentContext(), host, request);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      ApacheHttpClientHelper.endOperation(operation, result, throwable);
+      ApacheHttpClientHelper.endOperation(context, result, throwable);
     }
   }
 
@@ -233,14 +234,14 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
                 typing = Assigner.Typing.DYNAMIC,
                 readOnly = false)
             Object handler,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(host, request);
-      scope = operation.makeCurrent();
+      context = tracer().startOperation(currentContext(), host, request);
+      scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
-        handler = WrappingStatusSettingResponseHandler.of(operation, (ResponseHandler<?>) handler);
+        handler = WrappingStatusSettingResponseHandler.of(context, (ResponseHandler<?>) handler);
       }
     }
 
@@ -248,10 +249,10 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      ApacheHttpClientHelper.endOperation(operation, result, throwable);
+      ApacheHttpClientHelper.endOperation(context, result, throwable);
     }
   }
 }

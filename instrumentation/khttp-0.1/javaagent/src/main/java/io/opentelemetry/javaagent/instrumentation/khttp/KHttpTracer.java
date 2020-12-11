@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.khttp;
 
 import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpHeadersInjectAdapter.SETTER;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -21,8 +21,9 @@ public class KHttpTracer extends HttpClientTracer<RequestWrapper, Response> {
     return TRACER;
   }
 
-  public Operation startOperation(RequestWrapper request, Map<String, String> headers) {
-    return super.startOperation(request, headers, SETTER);
+  public Context startOperation(
+      Context parentContext, RequestWrapper request, Map<String, String> headers) {
+    return super.startOperation(parentContext, request, headers, SETTER);
   }
 
   @Override

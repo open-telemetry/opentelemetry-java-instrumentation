@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.spring.httpclients;
 
 import static io.opentelemetry.instrumentation.spring.httpclients.HttpHeadersInjectAdapter.SETTER;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.io.IOException;
 import java.net.URI;
 import org.springframework.http.HttpHeaders;
@@ -24,8 +24,8 @@ class RestTemplateTracer extends HttpClientTracer<HttpRequest, ClientHttpRespons
     return TRACER;
   }
 
-  public Operation startOperation(HttpRequest request, HttpHeaders headers) {
-    return super.startOperation(request, headers, SETTER);
+  public Context startOperation(Context parentContext, HttpRequest request, HttpHeaders headers) {
+    return super.startOperation(parentContext, request, headers, SETTER);
   }
 
   @Override

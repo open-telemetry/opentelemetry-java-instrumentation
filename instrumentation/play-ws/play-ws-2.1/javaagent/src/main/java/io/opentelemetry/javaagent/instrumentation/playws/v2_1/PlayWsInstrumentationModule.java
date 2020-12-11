@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -36,23 +37,25 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
     public static void methodEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler<?> asyncHandler,
-        @Advice.Local("otelOperation") Operation operation) {
-      operation = tracer().startOperation(request, request.getHeaders());
+        @Advice.Local("otelContext") Context context) {
+      Context parentContext = currentContext();
+      context = tracer().startOperation(parentContext, request, request.getHeaders());
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
         asyncHandler =
-            new StreamedAsyncHandlerWrapper<>((StreamedAsyncHandler<?>) asyncHandler, operation);
+            new StreamedAsyncHandlerWrapper<>(
+                (StreamedAsyncHandler<?>) asyncHandler, context, parentContext);
       } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
         // websocket upgrade handlers aren't supported
-        asyncHandler = new AsyncHandlerWrapper<>(asyncHandler, operation);
+        asyncHandler = new AsyncHandlerWrapper<>(asyncHandler, context, parentContext);
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Thrown Throwable throwable, @Advice.Local("otelOperation") Operation operation) {
+        @Advice.Thrown Throwable throwable, @Advice.Local("otelContext") Context context) {
       if (throwable != null) {
-        tracer().endExceptionally(operation, throwable);
+        tracer().endExceptionally(context, throwable);
       }
     }
   }

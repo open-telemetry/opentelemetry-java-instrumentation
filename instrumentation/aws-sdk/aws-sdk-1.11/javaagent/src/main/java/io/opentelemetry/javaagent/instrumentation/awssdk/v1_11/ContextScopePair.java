@@ -5,20 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 
-public class OperationScopePair {
-  private final Operation operation;
+public class ContextScopePair {
+  private final Context context;
   private final Scope scope;
 
-  public OperationScopePair(Operation operation, Scope scope) {
-    this.operation = operation;
+  public ContextScopePair(Context context, Scope scope) {
+    this.context = context;
     this.scope = scope;
   }
 
-  public Operation getOperation() {
-    return operation;
+  public Context getContext() {
+    return context;
   }
 
   public void closeScope() {

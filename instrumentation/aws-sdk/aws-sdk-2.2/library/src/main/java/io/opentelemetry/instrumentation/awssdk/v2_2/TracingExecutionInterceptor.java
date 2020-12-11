@@ -5,14 +5,13 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getOperationOrNoop;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getContext;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer.tracer;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,8 +32,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
-  static final ExecutionAttribute<Operation> OPERATION_ATTRIBUTE =
-      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Operation");
+  static final ExecutionAttribute<io.opentelemetry.context.Context> CONTEXT_ATTRIBUTE =
+      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Context");
   static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Scope");
   static final ExecutionAttribute<RequestType> REQUEST_TYPE_ATTRIBUTE =
@@ -74,8 +73,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
-    Operation operation = tracer().startOperation(executionAttributes);
-    executionAttributes.putAttribute(OPERATION_ATTRIBUTE, operation);
+    io.opentelemetry.context.Context otelContext =
+        tracer().startOperation(io.opentelemetry.context.Context.current(), executionAttributes);
+    executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, otelContext);
     RequestType type = ofSdkRequest(context.request());
     if (type != null) {
       executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, type);
@@ -85,27 +85,27 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
         .equals(ClientType.SYNC)) {
       // We can only activate context for synchronous clients, which allows downstream
       // instrumentation like Apache to know about the SDK span.
-      executionAttributes.putAttribute(SCOPE_ATTRIBUTE, operation.makeCurrent());
+      executionAttributes.putAttribute(SCOPE_ATTRIBUTE, otelContext.makeCurrent());
     }
   }
 
   @Override
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
-    Operation operation = getOperationOrNoop(executionAttributes);
+    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
-    tracer().inject(operation, builder);
+    tracer().inject(otelContext, builder);
     return builder.build();
   }
 
   @Override
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
-    Operation operation = getOperationOrNoop(executionAttributes);
-    tracer().onRequest(operation, context.httpRequest());
+    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
+    tracer().onRequest(otelContext, context.httpRequest());
 
     SdkRequestDecorator decorator = decorator(executionAttributes);
-    Span span = operation.getSpan();
+    Span span = Span.fromContext(otelContext);
     if (decorator != null) {
       decorator.decorate(span, context.request(), executionAttributes);
     }
@@ -142,12 +142,12 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (scope != null) {
       scope.close();
     }
-    Operation operation = getOperationOrNoop(executionAttributes);
+    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     clearAttributes(executionAttributes);
-    Span span = operation.getSpan();
+    Span span = Span.fromContext(otelContext);
     onUserAgentHeaderAvailable(span, context.httpRequest());
     onSdkResponse(span, context.response());
-    tracer().end(operation, context.httpResponse());
+    tracer().end(otelContext, context.httpResponse());
   }
 
   // Certain headers in the request like User-Agent are only available after execution.
@@ -165,13 +165,13 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void onExecutionFailure(
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
-    Operation operation = getOperationOrNoop(executionAttributes);
+    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     clearAttributes(executionAttributes);
-    tracer().endExceptionally(operation, context.exception());
+    tracer().endExceptionally(otelContext, context.exception());
   }
 
   private void clearAttributes(ExecutionAttributes executionAttributes) {
-    executionAttributes.putAttribute(OPERATION_ATTRIBUTE, null);
+    executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, null);
     executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, null);
   }
 }

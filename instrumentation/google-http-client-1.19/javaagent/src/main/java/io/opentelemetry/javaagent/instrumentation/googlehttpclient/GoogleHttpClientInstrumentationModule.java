@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientTracer.tracer;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -17,8 +18,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
@@ -39,7 +40,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("com.google.api.client.http.HttpRequest", Operation.class.getName());
+    return singletonMap("com.google.api.client.http.HttpRequest", Context.class.getName());
   }
 
   @Override
@@ -79,31 +80,31 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This HttpRequest request,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      ContextStore<HttpRequest, Operation> storage =
-          InstrumentationContext.get(HttpRequest.class, Operation.class);
-      operation = storage.get(request);
-      if (operation != null) {
+      ContextStore<HttpRequest, Context> storage =
+          InstrumentationContext.get(HttpRequest.class, Context.class);
+      context = storage.get(request);
+      if (context != null) {
         // this is the synchronous operation inside of an async operation, so make it current
         // and end it in method exit
-        scope = operation.makeCurrent();
+        scope = context.makeCurrent();
         return;
       }
 
-      operation = tracer().startOperation(request);
-      scope = operation.makeCurrent();
+      context = tracer().startOperation(currentContext(), request);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      tracer().endMaybeExceptionally(operation, response, throwable);
+      tracer().endMaybeExceptionally(context, response, throwable);
     }
   }
 
@@ -112,23 +113,23 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This HttpRequest request,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(request);
-      scope = operation.makeCurrent();
+      context = tracer().startOperation(currentContext(), request);
+      scope = context.makeCurrent();
       // propagating the context manually here so this instrumentation will work with and without
       // the executors instrumentation
-      InstrumentationContext.get(HttpRequest.class, Operation.class).put(request, operation);
+      InstrumentationContext.get(HttpRequest.class, Context.class).put(request, context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       if (throwable != null) {
-        tracer().endExceptionally(operation, throwable);
+        tracer().endExceptionally(context, throwable);
       }
     }
   }

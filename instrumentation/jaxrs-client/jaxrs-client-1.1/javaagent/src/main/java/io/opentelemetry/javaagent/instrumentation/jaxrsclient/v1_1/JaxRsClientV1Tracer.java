@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.Inject
 
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 
 public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientResponse> {
@@ -20,8 +20,8 @@ public class JaxRsClientV1Tracer extends HttpClientTracer<ClientRequest, ClientR
     return TRACER;
   }
 
-  public Operation startOperation(ClientRequest request) {
-    return super.startOperation(request, SETTER);
+  public Context startOperation(Context parentContext, ClientRequest request) {
+    return super.startOperation(parentContext, request, SETTER);
   }
 
   @Override

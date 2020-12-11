@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.tracer;
 
-import io.opentelemetry.instrumentation.api.tracer.Operation;
+import io.opentelemetry.context.Context;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -44,9 +44,9 @@ public class WrappedFuture<T> implements Future<T> {
     try {
       return wrapped.get();
     } catch (ExecutionException e) {
-      Object operationObj = context.getProperty(ClientTracingFilter.OPERATION_PROPERTY_NAME);
-      if (operationObj instanceof Operation) {
-        tracer().endExceptionally((Operation) operationObj, e.getCause());
+      Object prop = context.getProperty(ClientTracingFilter.CONTEXT_PROPERTY_NAME);
+      if (prop instanceof Context) {
+        tracer().endExceptionally((Context) prop, e.getCause());
       }
       throw e;
     }
@@ -58,9 +58,9 @@ public class WrappedFuture<T> implements Future<T> {
     try {
       return wrapped.get(timeout, unit);
     } catch (ExecutionException e) {
-      Object operationObj = context.getProperty(ClientTracingFilter.OPERATION_PROPERTY_NAME);
-      if (operationObj instanceof Operation) {
-        tracer().endExceptionally((Operation) operationObj, e.getCause());
+      Object prop = context.getProperty(ClientTracingFilter.CONTEXT_PROPERTY_NAME);
+      if (prop instanceof Context) {
+        tracer().endExceptionally((Context) prop, e.getCause());
       }
       throw e;
     }

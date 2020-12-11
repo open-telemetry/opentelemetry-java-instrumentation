@@ -130,8 +130,8 @@ public abstract class BaseTracer {
     return className;
   }
 
-  public void end(Operation operation) {
-    end(operation.getSpan());
+  public void end(Context context) {
+    end(Span.fromContext(context));
   }
 
   public void end(Span span) {
@@ -148,6 +148,10 @@ public abstract class BaseTracer {
 
   public void endExceptionally(Span span, Throwable throwable) {
     endExceptionally(span, throwable, -1);
+  }
+
+  public void endExceptionally(Context context, Throwable throwable, long endTimeNanos) {
+    endExceptionally(Span.fromContext(context), throwable, endTimeNanos);
   }
 
   public void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {

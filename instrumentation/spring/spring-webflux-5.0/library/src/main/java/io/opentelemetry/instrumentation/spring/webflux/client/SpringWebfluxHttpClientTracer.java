@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter.SETTER;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -28,12 +28,13 @@ public class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientReques
 
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
-  public Operation startOperation(ClientRequest request, ClientRequest.Builder builder) {
-    return super.startOperation(request, builder, SETTER);
+  public Context startOperation(
+      Context parentContext, ClientRequest request, ClientRequest.Builder builder) {
+    return super.startOperation(parentContext, request, builder, SETTER);
   }
 
-  public void onCancel(Operation operation) {
-    Span span = operation.getSpan();
+  public void onCancel(Context context) {
+    Span span = Span.fromContext(context);
     span.setAttribute("spring-webflux.event", "cancelled");
     span.setAttribute("spring-webflux.message", "The subscription was cancelled");
   }

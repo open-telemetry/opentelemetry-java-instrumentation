@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
@@ -17,8 +18,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -48,7 +50,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("java.net.HttpURLConnection", Operation.class.getName());
+    return singletonMap("java.net.HttpURLConnection", Context.class.getName());
   }
 
   public static class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
@@ -82,7 +84,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
     public static void methodEnter(
         @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("connected") boolean connected,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
@@ -96,16 +98,16 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
       // putting into storage for a couple of reasons:
       // - to start an operation in connect() and end it in getInputStream()
       // - to avoid creating new operation on multiple subsequent calls to getInputStream()
-      ContextStore<HttpURLConnection, Operation> storage =
-          InstrumentationContext.get(HttpURLConnection.class, Operation.class);
-      operation = storage.get(connection);
+      ContextStore<HttpURLConnection, Context> storage =
+          InstrumentationContext.get(HttpURLConnection.class, Context.class);
+      context = storage.get(connection);
 
-      if (operation == null) {
-        operation = tracer().startOperation(connection);
-        storage.put(connection, operation);
+      if (context == null) {
+        context = tracer().startOperation(currentContext(), connection);
+        storage.put(connection, context);
       }
 
-      scope = operation.makeCurrent();
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -114,7 +116,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         @Advice.FieldValue("responseCode") int responseCode,
         @Advice.Thrown Throwable throwable,
         @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
@@ -123,14 +125,14 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
       }
       scope.close();
 
-      if (operation.getSpan().isRecording()) {
+      if (Span.fromContext(context).isRecording()) {
         if (throwable != null) {
-          tracer().endExceptionally(operation, throwable);
+          tracer().endExceptionally(context, throwable);
         } else if (methodName.equals("getInputStream") && responseCode > 0) {
           // responseCode field is sometimes not populated.
           // We can't call getResponseCode() due to some unwanted side-effects
           // (e.g. breaks getOutputStream).
-          tracer().end(operation, new HttpUrlResponse(connection, responseCode));
+          tracer().end(context, new HttpUrlResponse(connection, responseCode));
         }
       }
     }

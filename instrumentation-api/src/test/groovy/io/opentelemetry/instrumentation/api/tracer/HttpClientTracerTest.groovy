@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
@@ -35,10 +34,9 @@ class HttpClientTracerTest extends BaseTracerTest {
   def "test onRequest"() {
     setup:
     def tracer = newTracer()
-    operation.getSpan() >> span
 
     when:
-    tracer.onRequest(operation, req)
+    tracer.onRequest(span, req)
 
     then:
     if (req) {
@@ -50,7 +48,7 @@ class HttpClientTracerTest extends BaseTracerTest {
       1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, req["User-Agent"])
       1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR, "1.1")
     }
-    0 * span._
+    0 * _
 
     where:
     req << [
@@ -63,10 +61,9 @@ class HttpClientTracerTest extends BaseTracerTest {
     setup:
     def tracer = newTracer()
     def req = [method: "test-method", url: testUrlMapped, "User-Agent": testUserAgent]
-    operation.getSpan() >> span
 
     when:
-    tracer.onRequest(operation, req)
+    tracer.onRequest(span, req)
 
     then:
     if (req) {
@@ -79,16 +76,15 @@ class HttpClientTracerTest extends BaseTracerTest {
       1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, req["User-Agent"])
       1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR, "1.1")
     }
-    0 * span._
+    0 * _
   }
 
   def "test url handling for #url"() {
     setup:
     def tracer = newTracer()
-    operation.getSpan() >> span
 
     when:
-    tracer.onRequest(operation, req)
+    tracer.onRequest(span, req)
 
     then:
     1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP")
@@ -104,7 +100,7 @@ class HttpClientTracerTest extends BaseTracerTest {
     if (port) {
       1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT, port)
     }
-    0 * span._
+    0 * _
 
     where:
     tagQueryString | url                                  | expectedUrl                          | expectedQuery | expectedFragment | hostname | port
@@ -121,20 +117,16 @@ class HttpClientTracerTest extends BaseTracerTest {
   def "test onResponse"() {
     setup:
     def tracer = newTracer()
-    operation.getSpan() >> span
 
     when:
-    tracer.onResponse(operation, resp)
+    tracer.onResponse(span, resp)
 
     then:
     if (status) {
       1 * span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, status)
-      def code = HttpStatusConverter.statusFromHttpStatus(status)
-      if (code == StatusCode.ERROR) {
-        1 * span.setStatus(code)
-      }
+      1 * span.setStatus(HttpStatusConverter.statusFromHttpStatus(status))
     }
-    0 * span._
+    0 * _
 
     where:
     status | resp

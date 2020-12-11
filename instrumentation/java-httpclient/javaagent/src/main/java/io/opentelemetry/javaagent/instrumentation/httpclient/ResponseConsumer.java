@@ -7,19 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.httpclient;
 
 import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
 
-import io.opentelemetry.instrumentation.api.tracer.Operation;
+import io.opentelemetry.context.Context;
 import java.net.http.HttpResponse;
 import java.util.function.BiConsumer;
 
 public class ResponseConsumer implements BiConsumer<HttpResponse<?>, Throwable> {
-  private final Operation operation;
+  private final Context context;
 
-  public ResponseConsumer(Operation operation) {
-    this.operation = operation;
+  public ResponseConsumer(Context context) {
+    this.context = context;
   }
 
   @Override
   public void accept(HttpResponse<?> httpResponse, Throwable throwable) {
-    tracer().endMaybeExceptionally(operation, httpResponse, throwable);
+    tracer().endMaybeExceptionally(context, httpResponse, throwable);
   }
 }

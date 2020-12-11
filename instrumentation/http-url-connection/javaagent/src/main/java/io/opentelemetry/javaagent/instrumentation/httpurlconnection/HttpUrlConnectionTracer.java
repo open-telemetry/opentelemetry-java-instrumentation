@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HeadersInjectAdapter.SETTER;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -21,8 +21,8 @@ public class HttpUrlConnectionTracer extends HttpClientTracer<HttpURLConnection,
     return TRACER;
   }
 
-  public Operation startOperation(HttpURLConnection request) {
-    return super.startOperation(request, SETTER);
+  public Context startOperation(Context parentContext, HttpURLConnection request) {
+    return super.startOperation(parentContext, request, SETTER);
   }
 
   @Override

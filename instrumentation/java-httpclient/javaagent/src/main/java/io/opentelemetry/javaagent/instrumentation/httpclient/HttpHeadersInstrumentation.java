@@ -41,7 +41,7 @@ public class HttpHeadersInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) HttpHeaders headers) {
-      // TODO (trask) need to store Operation into HttpHeaders, so that we can use it for injection,
+      // TODO (trask) need to store Context into HttpHeaders, so that we can use it for injection,
       //  otherwise injection will occur even if this http client span was suppressed
       if (Java8BytecodeBridge.currentSpan().isRecording()) {
         headers = tracer().inject(headers);

@@ -10,21 +10,26 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.Netty
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
 
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
-    Operation operation = tracer().startOperation(ctx, msg);
-    ctx.channel().attr(AttributeKeys.CLIENT_OPERATION).set(operation);
-    try (Scope ignored = operation.makeCurrent()) {
+    Context parentContext = ctx.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
+    if (parentContext == null) {
+      parentContext = Context.current();
+    }
+    Context context = tracer().startOperation(parentContext, ctx, msg);
+    ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT).set(context);
+    ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(parentContext);
+    try (Scope ignored = context.makeCurrent()) {
       ctx.write(msg, prm);
       // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
-      tracer().endExceptionally(operation, throwable);
+      tracer().endExceptionally(context, throwable);
       throw throwable;
     }
   }

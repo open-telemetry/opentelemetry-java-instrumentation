@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.tracer;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import org.reactivestreams.Subscription;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.CoreSubscriber;
@@ -23,13 +22,14 @@ public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResp
 
   final reactor.util.context.Context context;
 
-  private final Operation operation;
+  private final io.opentelemetry.context.Context tracingContext;
 
   public TraceWebClientSubscriber(
-      CoreSubscriber<? super ClientResponse> actual, Operation operation) {
+      CoreSubscriber<? super ClientResponse> actual,
+      io.opentelemetry.context.Context tracingContext) {
     this.actual = actual;
+    this.tracingContext = tracingContext;
     this.context = actual.currentContext();
-    this.operation = operation;
   }
 
   @Override
@@ -39,23 +39,26 @@ public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResp
 
   @Override
   public void onNext(ClientResponse response) {
-    tracer().end(operation, response);
-    try (Scope ignored = operation.makeParentCurrent()) {
+    tracer().end(tracingContext, response);
+    // TODO (trask) this should use parentContext
+    try (Scope ignored = tracingContext.makeCurrent()) {
       actual.onNext(response);
     }
   }
 
   @Override
   public void onError(Throwable t) {
-    tracer().endExceptionally(operation, t);
-    try (Scope ignored = operation.makeParentCurrent()) {
+    tracer().endExceptionally(tracingContext, t);
+    // TODO (trask) this should use parentContext
+    try (Scope ignored = tracingContext.makeCurrent()) {
       actual.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
-    try (Scope ignored = operation.makeParentCurrent()) {
+    // TODO (trask) this should use parentContext
+    try (Scope ignored = tracingContext.makeCurrent()) {
       actual.onComplete();
     }
   }

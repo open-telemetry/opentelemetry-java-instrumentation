@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.playws;
 
 import static io.opentelemetry.javaagent.instrumentation.playws.HeadersInjectAdapter.SETTER;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
 import play.shaded.ahc.io.netty.handler.codec.http.HttpHeaders;
@@ -22,8 +22,8 @@ public class PlayWsClientTracer extends HttpClientTracer<Request, Response> {
     return TRACER;
   }
 
-  public Operation startOperation(Request request, HttpHeaders headers) {
-    return super.startOperation(request, headers, SETTER);
+  public Context startOperation(Context parentContext, Request request, HttpHeaders headers) {
+    return super.startOperation(parentContext, request, headers, SETTER);
   }
 
   @Override

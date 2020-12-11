@@ -7,16 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
 
-import io.opentelemetry.instrumentation.api.tracer.Operation;
+import io.opentelemetry.context.Context;
 import org.apache.http.HttpResponse;
 
 public class ApacheHttpClientHelper {
 
-  public static void endOperation(Operation operation, Object result, Throwable throwable) {
+  public static void endOperation(Context context, Object result, Throwable throwable) {
     if (throwable != null) {
-      tracer().endExceptionally(operation, throwable);
+      tracer().endExceptionally(context, throwable);
     } else if (result instanceof HttpResponse) {
-      tracer().end(operation, (HttpResponse) result);
+      tracer().end(context, (HttpResponse) result);
     } else {
       // ended in WrappingStatusSettingResponseHandler
     }

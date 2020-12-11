@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.OPERATION_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.CONTEXT_ATTRIBUTE;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
+import io.opentelemetry.context.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 
@@ -45,14 +45,10 @@ public class AwsSdk {
   }
 
   /**
-   * Returns the {@link Operation} stored in the {@link ExecutionAttributes}, or {@code null} if
-   * there is no operation set.
+   * Returns the {@link Context} stored in the {@link ExecutionAttributes}, or {@code null} if there
+   * is no operation set.
    */
-  public static Operation getOperationOrNoop(ExecutionAttributes attributes) {
-    return orDefault(attributes.getAttribute(OPERATION_ATTRIBUTE), Operation.noop());
-  }
-
-  private static <T> T orDefault(T value, T defaultValue) {
-    return value != null ? value : defaultValue;
+  public static Context getContext(ExecutionAttributes attributes) {
+    return attributes.getAttribute(CONTEXT_ATTRIBUTE);
   }
 }

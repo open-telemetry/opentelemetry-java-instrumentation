@@ -6,14 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.OPERATION_SCOPE_PAIR_KEY;
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.CONTEXT_SCOPE_PAIR_KEY;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 
 /** Tracing Request Handler. */
@@ -29,28 +29,28 @@ public class TracingRequestHandler extends RequestHandler2 {
   public void beforeRequest(Request<?> request) {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     RequestMeta requestMeta = contextStore.get(originalRequest);
-    Operation operation = tracer().startOperation(request, requestMeta);
-    Scope scope = operation.makeCurrent();
-    request.addHandlerContext(OPERATION_SCOPE_PAIR_KEY, new OperationScopePair(operation, scope));
+    Context context = tracer().startOperation(Context.current(), request, requestMeta);
+    Scope scope = context.makeCurrent();
+    request.addHandlerContext(CONTEXT_SCOPE_PAIR_KEY, new ContextScopePair(context, scope));
   }
 
   @Override
   public void afterResponse(Request<?> request, Response<?> response) {
-    OperationScopePair scope = request.getHandlerContext(OPERATION_SCOPE_PAIR_KEY);
+    ContextScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_KEY);
     if (scope != null) {
-      request.addHandlerContext(OPERATION_SCOPE_PAIR_KEY, null);
+      request.addHandlerContext(CONTEXT_SCOPE_PAIR_KEY, null);
       scope.closeScope();
-      tracer().end(scope.getOperation(), response);
+      tracer().end(scope.getContext(), response);
     }
   }
 
   @Override
   public void afterError(Request<?> request, Response<?> response, Exception e) {
-    OperationScopePair scope = request.getHandlerContext(OPERATION_SCOPE_PAIR_KEY);
+    ContextScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_KEY);
     if (scope != null) {
-      request.addHandlerContext(OPERATION_SCOPE_PAIR_KEY, null);
+      request.addHandlerContext(CONTEXT_SCOPE_PAIR_KEY, null);
       scope.closeScope();
-      tracer().endExceptionally(scope.getOperation(), e);
+      tracer().endExceptionally(scope.getContext(), e);
     }
   }
 }

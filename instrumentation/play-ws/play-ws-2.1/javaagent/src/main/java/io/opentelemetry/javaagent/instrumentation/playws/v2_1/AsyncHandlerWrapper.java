@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
 import static io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientTracer.tracer;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.InetSocketAddress;
 import java.util.List;
 import javax.net.ssl.SSLSession;
@@ -22,13 +22,15 @@ import play.shaded.ahc.org.asynchttpclient.netty.request.NettyRequest;
 
 public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
   private final AsyncHandler<T> delegate;
-  private final Operation operation;
+  private final Context context;
+  private final Context parentContext;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(AsyncHandler<T> delegate, Operation operation) {
+  public AsyncHandlerWrapper(AsyncHandler delegate, Context context, Context parentContext) {
     this.delegate = delegate;
-    this.operation = operation;
+    this.context = context;
+    this.parentContext = parentContext;
   }
 
   @Override
@@ -53,16 +55,16 @@ public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
   @Override
   public T onCompleted() throws Exception {
     Response response = builder.build();
-    tracer().end(operation, response);
-    try (Scope ignored = operation.makeParentCurrent()) {
+    tracer().end(context, response);
+    try (Scope ignored = parentContext.makeCurrent()) {
       return delegate.onCompleted();
     }
   }
 
   @Override
   public void onThrowable(Throwable throwable) {
-    tracer().endExceptionally(operation, throwable);
-    try (Scope ignored = operation.makeParentCurrent()) {
+    tracer().endExceptionally(context, throwable);
+    try (Scope ignored = parentContext.makeCurrent()) {
       delegate.onThrowable(throwable);
     }
   }

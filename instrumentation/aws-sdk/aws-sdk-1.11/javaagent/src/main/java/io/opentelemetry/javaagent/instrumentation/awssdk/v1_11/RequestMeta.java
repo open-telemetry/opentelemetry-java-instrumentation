@@ -11,8 +11,8 @@ import java.util.Objects;
 public class RequestMeta {
   // Note: aws1.x sdk doesn't have any truly async clients so we can store scope in request context
   // safely.
-  public static final HandlerContextKey<OperationScopePair> OPERATION_SCOPE_PAIR_KEY =
-      new HandlerContextKey<>(RequestMeta.class.getName() + ".ContextSpanPair");
+  public static final HandlerContextKey<ContextScopePair> CONTEXT_SCOPE_PAIR_KEY =
+      new HandlerContextKey<>(RequestMeta.class.getName() + ".ContextScopePair");
 
   private String bucketName;
   private String queueUrl;

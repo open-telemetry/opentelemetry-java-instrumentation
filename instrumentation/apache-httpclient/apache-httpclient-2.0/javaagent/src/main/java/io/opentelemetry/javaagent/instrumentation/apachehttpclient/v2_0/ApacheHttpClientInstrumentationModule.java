@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.CommonsHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonList;
@@ -16,8 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -66,20 +67,20 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(1) HttpMethod httpMethod,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(httpMethod);
-      scope = operation.makeCurrent();
+      context = tracer().startOperation(currentContext(), httpMethod);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(1) HttpMethod httpMethod,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      tracer().endMaybeExceptionally(operation, httpMethod, throwable);
+      tracer().endMaybeExceptionally(context, httpMethod, throwable);
     }
   }
 }

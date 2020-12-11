@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.AsyncHt
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -22,8 +22,8 @@ public class AsyncHttpClientTracer extends HttpClientTracer<Request, Response> {
     return TRACER;
   }
 
-  public Operation startOperation(Request request) {
-    return super.startOperation(request, SETTER);
+  public Context startOperation(Context parentContext, Request request) {
+    return super.startOperation(parentContext, request, SETTER);
   }
 
   @Override

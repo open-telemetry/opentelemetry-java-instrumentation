@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
@@ -16,8 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -71,20 +72,20 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(httpRequest);
-      scope = operation.makeCurrent();
+      context = tracer().startOperation(currentContext(), httpRequest);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return HttpResponse<?> response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      tracer().endMaybeExceptionally(operation, response, throwable);
+      tracer().endMaybeExceptionally(context, response, throwable);
     }
   }
 
@@ -93,23 +94,23 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      operation = tracer().startOperation(httpRequest);
-      scope = operation.makeCurrent();
+      context = tracer().startOperation(currentContext(), httpRequest);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return(readOnly = false) CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation operation,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       if (throwable != null) {
-        tracer().endExceptionally(operation, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        future = future.whenComplete(new ResponseConsumer(operation));
+        future = future.whenComplete(new ResponseConsumer(context));
       }
     }
   }

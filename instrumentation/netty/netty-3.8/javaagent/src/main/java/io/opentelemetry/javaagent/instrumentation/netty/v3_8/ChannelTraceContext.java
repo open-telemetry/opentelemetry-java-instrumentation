@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Objects;
 
@@ -21,9 +20,8 @@ public class ChannelTraceContext {
   }
 
   private Context connectionContext;
-  // TODO (trask) consolidate when migrating HttpServerTracers?
-  private Operation operation; // used for client instrumentation
-  private Context context; // used for server instrumentation
+  private Context clientParentContext;
+  private Context context;
 
   public Context getConnectionContext() {
     return connectionContext;
@@ -33,12 +31,12 @@ public class ChannelTraceContext {
     this.connectionContext = connectionContinuation;
   }
 
-  public Operation getOperation() {
-    return operation;
+  public Context getClientParentContext() {
+    return clientParentContext;
   }
 
-  public void setOperation(Operation operation) {
-    this.operation = operation;
+  public void setClientParentContext(Context clientParentContext) {
+    this.clientParentContext = clientParentContext;
   }
 
   public Context getContext() {
@@ -59,11 +57,12 @@ public class ChannelTraceContext {
     }
     ChannelTraceContext other = (ChannelTraceContext) obj;
     return Objects.equals(connectionContext, other.connectionContext)
-        && Objects.equals(operation, other.operation);
+        && Objects.equals(clientParentContext, other.clientParentContext)
+        && Objects.equals(context, other.context);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(connectionContext, operation);
+    return Objects.hash(connectionContext, clientParentContext, context);
   }
 }

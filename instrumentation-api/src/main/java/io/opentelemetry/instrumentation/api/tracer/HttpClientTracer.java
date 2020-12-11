@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.context.ParentPropagatingContext;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.SpanAttributeSetter;
 import java.net.URI;
@@ -60,47 +61,58 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
   }
 
   /**
-   * Convenience overload for {@link #startOperation(Object, Object, TextMapPropagator.Setter,
-   * long)} which is applicable when the {@link TextMapPropagator.Setter} applies directly to the
-   * {@code request}, and which uses the current time.
+   * Convenience overload for {@link #startOperation(Context, Object, Object,
+   * TextMapPropagator.Setter, long)} which is applicable when the {@link TextMapPropagator.Setter}
+   * applies directly to the {@code request}, and which uses the current time.
    */
-  protected Operation startOperation(REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
-    return startOperation(request, request, setter, -1);
+  protected Context startOperation(
+      Context parentContext, REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
+    return startOperation(parentContext, request, request, setter, -1);
   }
 
   /**
-   * Convenience overload for {@link #startOperation(Object, Object, TextMapPropagator.Setter,
-   * long)} which is applicable when the {@link TextMapPropagator.Setter} applies directly to the
-   * {@code request}.
+   * Convenience overload for {@link #startOperation(Context, Object, Object,
+   * TextMapPropagator.Setter, long)} which is applicable when the {@link TextMapPropagator.Setter}
+   * applies directly to the {@code request}.
    */
-  protected Operation startOperation(
-      REQUEST request, TextMapPropagator.Setter<REQUEST> setter, long startTimeNanos) {
-    return startOperation(request, request, setter, startTimeNanos);
+  protected Context startOperation(
+      Context parentContext,
+      REQUEST request,
+      TextMapPropagator.Setter<REQUEST> setter,
+      long startTimeNanos) {
+    return startOperation(parentContext, request, request, setter, startTimeNanos);
   }
 
   /**
-   * Convenience overload for {@link #startOperation(Object, Object, TextMapPropagator.Setter,
-   * long)} which uses the current time.
+   * Convenience overload for {@link #startOperation(Context, Object, Object,
+   * TextMapPropagator.Setter, long)} which uses the current time.
    */
-  protected <CARRIER> Operation startOperation(
-      REQUEST request, CARRIER carrier, TextMapPropagator.Setter<CARRIER> setter) {
-    return startOperation(request, carrier, setter, -1);
+  protected <CARRIER> Context startOperation(
+      Context parentContext,
+      REQUEST request,
+      CARRIER carrier,
+      TextMapPropagator.Setter<CARRIER> setter) {
+    return startOperation(parentContext, request, carrier, setter, -1);
   }
 
-  protected <CARRIER> Operation startOperation(
+  protected <CARRIER> Context startOperation(
+      Context parentContext,
       REQUEST request,
       CARRIER carrier,
       TextMapPropagator.Setter<CARRIER> setter,
       long startTimeNanos) {
-    Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
-      return Operation.noop();
+      return noopContext(parentContext);
     }
     String spanName = spanName(request);
     SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanName, startTimeNanos);
     Context context = withClientSpan(parentContext, spanBuilder.startSpan());
     OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    return Operation.create(context, parentContext);
+    return context;
+  }
+
+  protected Context noopContext(Context parentContext) {
+    return ParentPropagatingContext.create(parentContext, parentContext.with(Span.getInvalid()));
   }
 
   private SpanBuilder spanBuilder(
@@ -126,8 +138,8 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
    * This is for HttpClientTracers that do not have the request available during {@code
    * startOperation}.
    */
-  protected void onRequest(Operation operation, REQUEST request) {
-    onRequest(operation.getSpan()::setAttribute, request);
+  protected void onRequest(Context context, REQUEST request) {
+    onRequest(Span.fromContext(context)::setAttribute, request);
   }
 
   private void onRequest(SpanAttributeSetter span, REQUEST request) {
@@ -141,58 +153,57 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     }
   }
 
-  /** Convenience method for {@link #end(Operation, Object, long)} which uses the current time. */
-  public void end(Operation operation, RESPONSE response) {
-    end(operation, response, -1);
+  /** Convenience method for {@link #end(Context, Object, long)} which uses the current time. */
+  public void end(Context context, RESPONSE response) {
+    end(context, response, -1);
   }
 
-  public void end(Operation operation, RESPONSE response, long endTimeNanos) {
+  public void end(Context context, RESPONSE response, long endTimeNanos) {
     // TODO (trask) require response to be non-null here?
-    onResponse(operation, response);
-    super.end(operation.getSpan(), endTimeNanos);
+    onResponse(context, response);
+    super.end(Span.fromContext(context), endTimeNanos);
   }
 
   /**
-   * Convenience method for {@link #endExceptionally(Operation, Throwable, Object, long)} which has
-   * no request, and uses the current time.
+   * Convenience method for {@link #endExceptionally(Context, Throwable, Object, long)} which has no
+   * request, and uses the current time.
    */
-  public void endExceptionally(Operation operation, Throwable throwable) {
+  public void endExceptionally(Context context, Throwable throwable) {
     checkNotNull(throwable);
-    endExceptionally(operation, throwable, null, -1);
+    endExceptionally(context, throwable, null, -1);
   }
 
   /**
-   * Convenience method for {@link #endExceptionally(Operation, Throwable, Object, long)} which uses
+   * Convenience method for {@link #endExceptionally(Context, Throwable, Object, long)} which uses
    * the current time.
    */
-  public void endExceptionally(Operation operation, Throwable throwable, RESPONSE response) {
-    endExceptionally(operation, throwable, response, -1);
+  public void endExceptionally(Context context, Throwable throwable, RESPONSE response) {
+    endExceptionally(context, throwable, response, -1);
   }
 
   public void endExceptionally(
-      Operation operation, Throwable throwable, RESPONSE response, long endTimeNanos) {
-    Span span = operation.getSpan();
+      Context context, Throwable throwable, RESPONSE response, long endTimeNanos) {
     if (response != null) {
-      onResponse(operation, response);
+      onResponse(context, response);
     }
-    super.endExceptionally(span, throwable, endTimeNanos);
+    super.endExceptionally(context, throwable, endTimeNanos);
   }
 
   /** Convenience method primarily for bytecode instrumentation. */
-  public void endMaybeExceptionally(Operation operation, RESPONSE response, Throwable throwable) {
+  public void endMaybeExceptionally(Context context, RESPONSE response, Throwable throwable) {
     if (throwable != null) {
-      endExceptionally(operation, throwable);
+      endExceptionally(context, throwable);
     } else {
-      end(operation, response);
+      end(context, response);
     }
   }
 
   /** Can be overridden to capture additional attributes from the response. */
-  protected void onResponse(Operation operation, RESPONSE response) {
+  protected void onResponse(Context context, RESPONSE response) {
     // TODO (trask) require response to be non-null here?
     Integer status = status(response);
     if (status != null) {
-      Span span = operation.getSpan();
+      Span span = Span.fromContext(context);
       span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
       StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(status);
       if (statusCode == StatusCode.ERROR) {

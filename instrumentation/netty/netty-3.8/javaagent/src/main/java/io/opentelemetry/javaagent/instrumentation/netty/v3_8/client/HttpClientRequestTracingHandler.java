@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyHttpClientTracer.tracer;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import org.jboss.netty.channel.Channel;
@@ -28,12 +28,20 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
   public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) {
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
-    Operation operation = tracer().startOperation(ctx, msg, channelTraceContext);
-    channelTraceContext.setOperation(operation);
-    try (Scope ignored = operation.makeCurrent()) {
+    Context parentContext = channelTraceContext.getConnectionContext();
+    if (parentContext != null) {
+      channelTraceContext.setConnectionContext(null);
+    } else {
+      parentContext = Context.current();
+    }
+    Context context = tracer().startOperation(parentContext, ctx, msg);
+    channelTraceContext.setContext(context);
+    channelTraceContext.setClientParentContext(parentContext);
+
+    try (Scope ignored = context.makeCurrent()) {
       ctx.sendDownstream(msg);
     } catch (Throwable throwable) {
-      tracer().endExceptionally(operation, throwable);
+      tracer().endExceptionally(context, throwable);
       throw throwable;
     }
   }
