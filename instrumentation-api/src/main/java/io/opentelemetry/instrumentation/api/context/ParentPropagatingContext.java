@@ -30,9 +30,9 @@ public class ParentPropagatingContext implements Context {
 
   @Override
   public <V> Context with(ContextKey<V> k1, V v1) {
-    // TODO (trask) this could return parentContext.with(), but testing to see if instrumentation
-    //  even uses this
-    throw new UnsupportedOperationException();
+    // doesn't use context, because that would allow user to propagate context downstream which we
+    // want to prevent since it has invalid span in it
+    return parentContext.with(k1, v1);
   }
 
   @Override
