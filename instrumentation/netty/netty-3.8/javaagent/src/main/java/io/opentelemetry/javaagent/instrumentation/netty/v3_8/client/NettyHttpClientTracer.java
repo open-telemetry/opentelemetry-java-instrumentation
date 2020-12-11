@@ -19,7 +19,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
@@ -31,16 +30,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
   }
 
   public Context startOperation(
-      Context parentContext, ChannelHandlerContext ctx, MessageEvent msg) {
-    if (!(msg.getMessage() instanceof HttpRequest)) {
-      return noopContext(parentContext);
-    }
-    if (inClientSpan(parentContext)) {
-      return noopContext(parentContext);
-    }
-
-    HttpRequest request = (HttpRequest) msg.getMessage();
-
+      Context parentContext, ChannelHandlerContext ctx, HttpRequest request) {
     SpanBuilder spanBuilder =
         tracer.spanBuilder(spanName(request)).setSpanKind(CLIENT).setParent(parentContext);
     onRequest(spanBuilder, request);

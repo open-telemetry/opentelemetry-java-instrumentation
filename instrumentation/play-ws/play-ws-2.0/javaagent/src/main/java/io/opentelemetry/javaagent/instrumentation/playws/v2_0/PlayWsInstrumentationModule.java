@@ -39,6 +39,10 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler<?> asyncHandler,
         @Advice.Local("otelContext") Context context) {
       Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
+
       context = tracer().startOperation(parentContext, request, request.getHeaders());
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
@@ -54,6 +58,9 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Thrown Throwable throwable, @Advice.Local("otelContext") Context context) {
+      if (context == null) {
+        return;
+      }
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);
       }

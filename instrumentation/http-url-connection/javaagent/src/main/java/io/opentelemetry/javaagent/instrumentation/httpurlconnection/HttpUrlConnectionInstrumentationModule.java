@@ -94,6 +94,10 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         // top-level HttpURLConnection calls
         return;
       }
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
 
       // putting into storage for a couple of reasons:
       // - to start an operation in connect() and end it in getInputStream()
@@ -103,7 +107,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
       context = storage.get(connection);
 
       if (context == null) {
-        context = tracer().startOperation(currentContext(), connection);
+        context = tracer().startOperation(parentContext, connection);
         storage.put(connection, context);
       }
 
@@ -119,12 +123,13 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
+      if (scope == null) {
+        return;
+      }
       scope.close();
-
       if (Span.fromContext(context).isRecording()) {
         if (throwable != null) {
           tracer().endExceptionally(context, throwable);

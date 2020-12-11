@@ -29,16 +29,8 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     return TRACER;
   }
 
-  public Context startOperation(Context parentContext, ChannelHandlerContext ctx, Object msg) {
-    if (!(msg instanceof HttpRequest)) {
-      return noopContext(parentContext);
-    }
-    if (inClientSpan(parentContext)) {
-      return noopContext(parentContext);
-    }
-
-    HttpRequest request = (HttpRequest) msg;
-
+  public Context startOperation(
+      Context parentContext, ChannelHandlerContext ctx, HttpRequest request) {
     SpanBuilder spanBuilder =
         tracer.spanBuilder(spanName(request)).setSpanKind(CLIENT).setParent(parentContext);
     onRequest(spanBuilder, request);

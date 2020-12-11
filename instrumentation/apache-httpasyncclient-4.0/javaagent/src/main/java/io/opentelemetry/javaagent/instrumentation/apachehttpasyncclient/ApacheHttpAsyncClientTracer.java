@@ -30,9 +30,6 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
   }
 
   public final Context startOperation(Context parentContext) {
-    if (inClientSpan(parentContext)) {
-      return noopContext(parentContext);
-    }
     Span clientSpan =
         tracer
             .spanBuilder(DEFAULT_SPAN_NAME)

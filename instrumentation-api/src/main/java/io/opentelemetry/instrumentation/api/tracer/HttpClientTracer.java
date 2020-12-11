@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.context.ParentPropagatingContext;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.SpanAttributeSetter;
 import java.net.URI;
@@ -60,6 +59,10 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     super(tracer);
   }
 
+  public boolean shouldStartOperation(Context parentContext) {
+    return !inClientSpan(parentContext);
+  }
+
   /**
    * Convenience overload for {@link #startOperation(Context, Object, Object,
    * TextMapPropagator.Setter, long)} which is applicable when the {@link TextMapPropagator.Setter}
@@ -101,18 +104,11 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
       CARRIER carrier,
       TextMapPropagator.Setter<CARRIER> setter,
       long startTimeNanos) {
-    if (inClientSpan(parentContext)) {
-      return noopContext(parentContext);
-    }
     String spanName = spanName(request);
     SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanName, startTimeNanos);
     Context context = withClientSpan(parentContext, spanBuilder.startSpan());
     OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
     return context;
-  }
-
-  protected Context noopContext(Context parentContext) {
-    return ParentPropagatingContext.create(parentContext, parentContext.with(Span.getInvalid()));
   }
 
   private SpanBuilder spanBuilder(

@@ -36,9 +36,6 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
   public Context startOperation(
       Context parentContext, Request<?> request, RequestMeta requestMeta) {
 
-    if (inClientSpan(parentContext)) {
-      return noopContext(parentContext);
-    }
     SpanBuilder spanBuilder =
         tracer.spanBuilder(spanName(request)).setSpanKind(CLIENT).setParent(parentContext);
     onRequest(spanBuilder, request);

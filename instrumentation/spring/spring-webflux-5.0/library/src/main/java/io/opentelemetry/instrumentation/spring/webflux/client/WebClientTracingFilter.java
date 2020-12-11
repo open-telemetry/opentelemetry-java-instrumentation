@@ -49,8 +49,12 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
 
     @Override
     public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
+      Context parentContext = Context.current();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
       ClientRequest.Builder builder = ClientRequest.from(request);
-      Context context = tracer().startOperation(Context.current(), request, builder);
+      Context context = tracer().startOperation(parentContext, request, builder);
       try (Scope ignored = context.makeCurrent()) {
         this.next
             .exchange(builder.build())

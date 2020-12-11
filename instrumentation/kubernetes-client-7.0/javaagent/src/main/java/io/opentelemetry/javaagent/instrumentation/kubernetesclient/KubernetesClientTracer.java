@@ -26,9 +26,6 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Response> 
    * KubernetesRequestDigest.
    */
   public Context startOperation(Context parentContext, Request request) {
-    if (inClientSpan(parentContext)) {
-      return noopContext(parentContext);
-    }
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
     Span span =
         tracer

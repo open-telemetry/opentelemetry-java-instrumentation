@@ -27,9 +27,6 @@ final class AwsSdkHttpClientTracer extends HttpClientTracer<SdkHttpRequest, SdkH
   }
 
   public Context startOperation(Context parentContext, ExecutionAttributes attributes) {
-    if (inClientSpan(parentContext)) {
-      return noopContext(parentContext);
-    }
     String spanName = spanName(attributes);
     Span span =
         tracer.spanBuilder(spanName).setSpanKind(CLIENT).setParent(parentContext).startSpan();

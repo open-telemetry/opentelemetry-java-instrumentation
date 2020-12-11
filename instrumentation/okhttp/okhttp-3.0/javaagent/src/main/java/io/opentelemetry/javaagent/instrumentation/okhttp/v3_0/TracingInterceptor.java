@@ -18,8 +18,13 @@ public class TracingInterceptor implements Interceptor {
 
   @Override
   public Response intercept(Chain chain) throws IOException {
+    Context parentContext = Context.current();
+    if (!tracer().shouldStartOperation(parentContext)) {
+      return chain.proceed(chain.request());
+    }
+
     Request.Builder requestBuilder = chain.request().newBuilder();
-    Context context = tracer().startOperation(Context.current(), chain.request(), requestBuilder);
+    Context context = tracer().startOperation(parentContext, chain.request(), requestBuilder);
 
     Response response;
     try (Scope ignored = context.makeCurrent()) {

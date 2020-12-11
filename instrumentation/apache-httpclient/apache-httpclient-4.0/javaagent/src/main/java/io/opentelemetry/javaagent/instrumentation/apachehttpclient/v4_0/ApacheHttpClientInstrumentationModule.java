@@ -152,7 +152,11 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Argument(0) HttpUriRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startOperation(currentContext(), request);
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
+      context = tracer().startOperation(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -162,6 +166,9 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
       ApacheHttpClientHelper.endOperation(context, result, throwable);
     }
@@ -180,7 +187,11 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
             Object handler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startOperation(currentContext(), request);
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
+      context = tracer().startOperation(parentContext, request);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
@@ -195,6 +206,9 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
       ApacheHttpClientHelper.endOperation(context, result, throwable);
     }
@@ -207,7 +221,11 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Argument(1) HttpRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startOperation(currentContext(), host, request);
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
+      context = tracer().startOperation(parentContext, host, request);
       scope = context.makeCurrent();
     }
 
@@ -217,6 +235,9 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
       ApacheHttpClientHelper.endOperation(context, result, throwable);
     }
@@ -236,7 +257,11 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
             Object handler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startOperation(currentContext(), host, request);
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
+      context = tracer().startOperation(parentContext, host, request);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
@@ -251,6 +276,9 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
       ApacheHttpClientHelper.endOperation(context, result, throwable);
     }

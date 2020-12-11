@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.Netty
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.codec.http.HttpRequest;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
@@ -18,13 +19,24 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
+    if (!(msg instanceof HttpRequest)) {
+      ctx.write(msg, prm);
+      return;
+    }
+
     Context parentContext = ctx.channel().attr(AttributeKeys.CONNECT_CONTEXT).getAndRemove();
     if (parentContext == null) {
       parentContext = Context.current();
     }
-    Context context = tracer().startOperation(parentContext, ctx, msg);
+    if (!tracer().shouldStartOperation(parentContext, (HttpRequest) msg)) {
+      ctx.write(msg, prm);
+      return;
+    }
+
+    Context context = tracer().startOperation(parentContext, ctx, (HttpRequest) msg);
     ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT).set(context);
     ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(parentContext);
+
     try (Scope ignored = context.makeCurrent()) {
       ctx.write(msg, prm);
       // span is ended normally in HttpClientResponseTracingHandler

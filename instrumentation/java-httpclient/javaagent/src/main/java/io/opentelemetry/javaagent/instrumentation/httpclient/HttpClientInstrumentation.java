@@ -74,7 +74,11 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startOperation(currentContext(), httpRequest);
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
+      context = tracer().startOperation(parentContext, httpRequest);
       scope = context.makeCurrent();
     }
 
@@ -84,6 +88,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
       tracer().endMaybeExceptionally(context, response, throwable);
     }
@@ -96,7 +103,11 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startOperation(currentContext(), httpRequest);
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
+      context = tracer().startOperation(parentContext, httpRequest);
       scope = context.makeCurrent();
     }
 
@@ -106,6 +117,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);

@@ -83,6 +83,11 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
+
       ContextStore<HttpRequest, Context> storage =
           InstrumentationContext.get(HttpRequest.class, Context.class);
       context = storage.get(request);
@@ -93,7 +98,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      context = tracer().startOperation(currentContext(), request);
+      context = tracer().startOperation(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -103,6 +108,9 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
       tracer().endMaybeExceptionally(context, response, throwable);
     }
@@ -115,7 +123,11 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.This HttpRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startOperation(currentContext(), request);
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
+      context = tracer().startOperation(parentContext, request);
       scope = context.makeCurrent();
       // propagating the context manually here so this instrumentation will work with and without
       // the executors instrumentation
@@ -127,6 +139,9 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);

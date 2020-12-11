@@ -41,6 +41,10 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
+
       context = tracer().startOperation(parentContext, request, request.getHeaders());
       scope = context.makeCurrent();
 
@@ -59,6 +63,9 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);

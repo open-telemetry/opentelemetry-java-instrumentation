@@ -70,6 +70,9 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback,
         @Advice.Local("otelContext") Context context) {
       Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
       context = tracer().startOperation(parentContext);
       requestProducer = new DelegatingRequestProducer(context, requestProducer);
       futureCallback =
@@ -79,6 +82,9 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Thrown Throwable throwable, @Advice.Local("otelContext") Context context) {
+      if (context == null) {
+        return;
+      }
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);
       }

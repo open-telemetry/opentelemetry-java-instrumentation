@@ -73,8 +73,12 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
+    io.opentelemetry.context.Context parentOtelContext = io.opentelemetry.context.Context.current();
+    if (!tracer().shouldStartOperation(parentOtelContext)) {
+      return;
+    }
     io.opentelemetry.context.Context otelContext =
-        tracer().startOperation(io.opentelemetry.context.Context.current(), executionAttributes);
+        tracer().startOperation(parentOtelContext, executionAttributes);
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, otelContext);
     RequestType type = ofSdkRequest(context.request());
     if (type != null) {
@@ -93,6 +97,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public SdkHttpRequest modifyHttpRequest(
       Context.ModifyHttpRequest context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
+    if (otelContext == null) {
+      return context.httpRequest();
+    }
     SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
     tracer().inject(otelContext, builder);
     return builder.build();
@@ -102,6 +109,9 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
+    if (otelContext == null) {
+      return;
+    }
     tracer().onRequest(otelContext, context.httpRequest());
 
     SdkRequestDecorator decorator = decorator(executionAttributes);

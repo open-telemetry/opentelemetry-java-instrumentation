@@ -28,7 +28,11 @@ public final class RestTemplateInterceptor implements ClientHttpRequestIntercept
   @Override
   public ClientHttpResponse intercept(
       HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
-    Context context = tracer().startOperation(Context.current(), request, request.getHeaders());
+    Context parentContext = Context.current();
+    if (!tracer().shouldStartOperation(parentContext)) {
+      return execution.execute(request, body);
+    }
+    Context context = tracer().startOperation(parentContext, request, request.getHeaders());
     try (Scope ignored = context.makeCurrent()) {
       ClientHttpResponse response = execution.execute(request, body);
       tracer().end(context, response);

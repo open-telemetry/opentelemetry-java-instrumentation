@@ -24,6 +24,9 @@ public class RequestAdvice {
       @Advice.Argument(1) AsyncHandler<?> handler,
       @Advice.Local("otelScope") Scope scope) {
     Context parentContext = currentContext();
+    if (!tracer().shouldStartOperation(parentContext)) {
+      return;
+    }
     Context context = tracer().startOperation(parentContext, request);
     InstrumentationContext.get(AsyncHandler.class, ContextWithParent.class)
         .put(handler, new ContextWithParent(context, parentContext));
@@ -32,6 +35,9 @@ public class RequestAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void onExit(@Advice.Local("otelScope") Scope scope) {
+    if (scope == null) {
+      return;
+    }
     scope.close();
     // span ended in ClientResponseAdvice
   }

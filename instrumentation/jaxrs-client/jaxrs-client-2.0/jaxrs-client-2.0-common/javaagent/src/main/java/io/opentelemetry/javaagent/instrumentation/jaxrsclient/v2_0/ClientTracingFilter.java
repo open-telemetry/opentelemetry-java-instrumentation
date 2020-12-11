@@ -21,7 +21,11 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(ClientRequestContext requestContext) {
-    Context context = tracer().startOperation(Context.current(), requestContext);
+    Context parentContext = Context.current();
+    if (!tracer().shouldStartOperation(parentContext)) {
+      return;
+    }
+    Context context = tracer().startOperation(parentContext, requestContext);
     requestContext.setProperty(CONTEXT_PROPERTY_NAME, context);
   }
 
