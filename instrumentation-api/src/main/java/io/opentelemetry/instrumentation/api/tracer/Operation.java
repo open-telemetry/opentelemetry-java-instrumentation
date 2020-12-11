@@ -10,15 +10,15 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public interface HttpClientOperation<RESULT> {
+public interface Operation<RESULT> {
 
-  static <RESULT> HttpClientOperation<RESULT> noop() {
-    return NoopHttpClientOperation.noop();
+  static <RESULT> Operation<RESULT> noop() {
+    return NoopOperation.noop();
   }
 
-  static <RESULT> HttpClientOperation<RESULT> create(
+  static <RESULT> Operation<RESULT> create(
       Context context, Context parentContext, HttpClientTracer<?, RESULT> tracer) {
-    return new DefaultHttpClientOperation<>(context, parentContext, tracer);
+    return new DefaultOperation<>(context, parentContext, tracer);
   }
 
   Scope makeCurrent();

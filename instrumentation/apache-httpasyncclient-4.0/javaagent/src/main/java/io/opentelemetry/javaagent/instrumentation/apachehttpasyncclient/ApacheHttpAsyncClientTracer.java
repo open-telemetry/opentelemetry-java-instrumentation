@@ -9,8 +9,8 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.http.Header;
@@ -30,10 +30,10 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
     return TRACER;
   }
 
-  public final HttpClientOperation<HttpResponse> startOperation() {
+  public final Operation<HttpResponse> startOperation() {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
-      return HttpClientOperation.noop();
+      return Operation.noop();
     }
     Span clientSpan =
         tracer
@@ -42,7 +42,7 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
             .setParent(parentContext)
             .startSpan();
     Context context = withClientSpan(parentContext, clientSpan);
-    return HttpClientOperation.create(context, parentContext, this);
+    return Operation.create(context, parentContext, this);
   }
 
   @Override

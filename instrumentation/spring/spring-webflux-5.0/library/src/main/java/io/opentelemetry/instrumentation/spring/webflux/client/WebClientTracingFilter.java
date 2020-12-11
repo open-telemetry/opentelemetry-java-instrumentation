@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.tracer;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -50,7 +50,7 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     @Override
     public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
       ClientRequest.Builder builder = ClientRequest.from(request);
-      HttpClientOperation<ClientResponse> operation = tracer().startOperation(request, builder);
+      Operation<ClientResponse> operation = tracer().startOperation(request, builder);
       try (Scope ignored = operation.makeCurrent()) {
         this.next
             .exchange(builder.build())

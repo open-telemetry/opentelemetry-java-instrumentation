@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpHeadersInjec
 import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpTracer.tracer;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.util.Map;
 import khttp.responses.Response;
 import net.bytebuddy.asm.Advice;
@@ -21,7 +21,7 @@ public class KHttpAdvice {
       @Advice.Argument(value = 0) String method,
       @Advice.Argument(value = 1) String uri,
       @Advice.Argument(value = 2, readOnly = false) Map<String, String> headers,
-      @Advice.Local("otelOperation") HttpClientOperation<Response> operation,
+      @Advice.Local("otelOperation") Operation<Response> operation,
       @Advice.Local("otelScope") Scope scope) {
     headers = asWritable(headers);
     operation = tracer().startOperation(new RequestWrapper(method, uri, headers), headers);
@@ -32,7 +32,7 @@ public class KHttpAdvice {
   public static void methodExit(
       @Advice.Return Response response,
       @Advice.Thrown Throwable throwable,
-      @Advice.Local("otelOperation") HttpClientOperation<Response> operation,
+      @Advice.Local("otelOperation") Operation<Response> operation,
       @Advice.Local("otelScope") Scope scope) {
     scope.close();
     operation.endMaybeExceptionally(response, throwable);

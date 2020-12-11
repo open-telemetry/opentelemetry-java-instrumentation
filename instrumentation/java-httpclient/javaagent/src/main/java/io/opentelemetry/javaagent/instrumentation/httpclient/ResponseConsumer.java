@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.http.HttpResponse;
 import java.util.function.BiConsumer;
 
 public class ResponseConsumer implements BiConsumer<HttpResponse<?>, Throwable> {
-  private final HttpClientOperation<HttpResponse<?>> operation;
+  private final Operation<HttpResponse<?>> operation;
 
-  public ResponseConsumer(HttpClientOperation<HttpResponse<?>> operation) {
+  public ResponseConsumer(Operation<HttpResponse<?>> operation) {
     this.operation = operation;
   }
 

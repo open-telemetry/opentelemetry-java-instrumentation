@@ -9,15 +9,14 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
 public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) {
-    HttpClientOperation<HttpResponse> operation =
-        ctx.channel().attr(AttributeKeys.CLIENT_OPERATION).get();
+    Operation<HttpResponse> operation = ctx.channel().attr(AttributeKeys.CLIENT_OPERATION).get();
     if (operation == null) {
       ctx.fireChannelRead(msg);
       return;

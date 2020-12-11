@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.HttpHeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.httpclient.Header;
@@ -23,7 +23,7 @@ public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMe
     return TRACER;
   }
 
-  public HttpClientOperation<HttpMethod> startOperation(HttpMethod request) {
+  public Operation<HttpMethod> startOperation(HttpMethod request) {
     return super.startOperation(request, SETTER);
   }
 

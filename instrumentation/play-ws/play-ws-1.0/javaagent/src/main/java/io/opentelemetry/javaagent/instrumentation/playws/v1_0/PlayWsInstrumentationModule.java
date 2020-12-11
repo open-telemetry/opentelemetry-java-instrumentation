@@ -10,7 +10,7 @@ import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -38,7 +38,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
     public static void methodEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler<?> asyncHandler,
-        @Advice.Local("otelOperation") HttpClientOperation<Response> operation,
+        @Advice.Local("otelOperation") Operation<Response> operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(request, request.getHeaders());
       scope = operation.makeCurrent();
@@ -55,7 +55,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") HttpClientOperation<Response> operation,
+        @Advice.Local("otelOperation") Operation<Response> operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       if (throwable != null) {

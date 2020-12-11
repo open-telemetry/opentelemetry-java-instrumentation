@@ -12,8 +12,8 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import java.net.InetSocketAddress;
@@ -32,11 +32,11 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     return TRACER;
   }
 
-  public HttpClientOperation<HttpResponse> startOperation(
+  public Operation<HttpResponse> startOperation(
       ChannelHandlerContext ctx, MessageEvent msg, ChannelTraceContext channelTraceContext) {
 
     if (!(msg.getMessage() instanceof HttpRequest)) {
-      return HttpClientOperation.noop();
+      return Operation.noop();
     }
 
     Context parentContext = channelTraceContext.getConnectionContext();
@@ -47,7 +47,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     }
 
     if (inClientSpan(parentContext)) {
-      return HttpClientOperation.noop();
+      return Operation.noop();
     }
 
     HttpRequest request = (HttpRequest) msg.getMessage();
@@ -62,7 +62,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(context, request.headers(), SETTER);
-    return HttpClientOperation.create(context, parentContext, this);
+    return Operation.create(context, parentContext, this);
   }
 
   @Override

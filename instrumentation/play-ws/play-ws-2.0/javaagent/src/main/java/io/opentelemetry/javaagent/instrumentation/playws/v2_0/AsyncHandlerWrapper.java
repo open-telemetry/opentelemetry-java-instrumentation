@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.InetSocketAddress;
 import java.util.List;
 import play.shaded.ahc.io.netty.channel.Channel;
@@ -19,11 +19,11 @@ import play.shaded.ahc.org.asynchttpclient.netty.request.NettyRequest;
 
 public class AsyncHandlerWrapper<T> implements AsyncHandler<T> {
   private final AsyncHandler<T> delegate;
-  private final HttpClientOperation<Response> operation;
+  private final Operation<Response> operation;
 
   private final Response.ResponseBuilder builder = new Response.ResponseBuilder();
 
-  public AsyncHandlerWrapper(AsyncHandler<T> delegate, HttpClientOperation<Response> operation) {
+  public AsyncHandlerWrapper(AsyncHandler<T> delegate, Operation<Response> operation) {
     this.delegate = delegate;
     this.operation = operation;
   }

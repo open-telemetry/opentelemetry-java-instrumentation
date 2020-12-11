@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-class DefaultHttpClientOperation<RESULT> implements HttpClientOperation<RESULT> {
+class DefaultOperation<RESULT> implements Operation<RESULT> {
 
   private final Context context;
   // TODO (trask) separate interface/implementation when parentContext is not needed as memory
@@ -18,8 +18,7 @@ class DefaultHttpClientOperation<RESULT> implements HttpClientOperation<RESULT> 
   private final Context parentContext;
   private final HttpClientTracer<?, RESULT> tracer;
 
-  DefaultHttpClientOperation(
-      Context context, Context parentContext, HttpClientTracer<?, RESULT> tracer) {
+  DefaultOperation(Context context, Context parentContext, HttpClientTracer<?, RESULT> tracer) {
     this.context = context;
     this.parentContext = parentContext;
     this.tracer = tracer;

@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.instrumentation.api.tracer.HttpClientOperation;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.Operation;
 import java.net.URI;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -26,7 +26,7 @@ public class ApacheHttpClientTracer extends HttpClientTracer<HttpUriRequest, Htt
     return TRACER;
   }
 
-  public HttpClientOperation<HttpResponse> startOperation(HttpHost host, HttpRequest request) {
+  public Operation<HttpResponse> startOperation(HttpHost host, HttpRequest request) {
     HttpUriRequest httpUriRequest;
     if (request instanceof HttpUriRequest) {
       httpUriRequest = (HttpUriRequest) request;
@@ -36,7 +36,7 @@ public class ApacheHttpClientTracer extends HttpClientTracer<HttpUriRequest, Htt
     return startOperation(httpUriRequest);
   }
 
-  public HttpClientOperation<HttpResponse> startOperation(HttpUriRequest request) {
+  public Operation<HttpResponse> startOperation(HttpUriRequest request) {
     return startOperation(request, SETTER);
   }
 
