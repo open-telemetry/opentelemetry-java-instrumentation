@@ -9,12 +9,12 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-class NoopHttpClientOperation<RESPONSE> implements HttpClientOperation<RESPONSE> {
+class NoopHttpClientOperation<RESULT> implements HttpClientOperation<RESULT> {
   private static final HttpClientOperation<Object> INSTANCE = new NoopHttpClientOperation();
 
   @SuppressWarnings("unchecked")
-  static <RESPONSE> HttpClientOperation<RESPONSE> noop() {
-    return (HttpClientOperation<RESPONSE>) INSTANCE;
+  static <RESULT> HttpClientOperation<RESULT> noop() {
+    return (HttpClientOperation<RESULT>) INSTANCE;
   }
 
   @Override
@@ -31,19 +31,19 @@ class NoopHttpClientOperation<RESPONSE> implements HttpClientOperation<RESPONSE>
   public void end() {}
 
   @Override
-  public void end(RESPONSE response) {}
+  public void end(RESULT result) {}
 
   @Override
-  public void end(RESPONSE response, long endTimeNanos) {}
+  public void end(RESULT result, long endTimeNanos) {}
 
   @Override
   public void endExceptionally(Throwable throwable) {}
 
   @Override
-  public void endExceptionally(Throwable throwable, RESPONSE response) {}
+  public void endExceptionally(Throwable throwable, RESULT result) {}
 
   @Override
-  public void endExceptionally(Throwable throwable, RESPONSE response, long endTimeNanos) {}
+  public void endExceptionally(Throwable throwable, RESULT result, long endTimeNanos) {}
 
   @Override
   public Span getSpan() {

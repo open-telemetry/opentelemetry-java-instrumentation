@@ -10,14 +10,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public interface HttpClientOperation<RESPONSE> {
+public interface HttpClientOperation<RESULT> {
 
-  static <RESPONSE> HttpClientOperation<RESPONSE> noop() {
+  static <RESULT> HttpClientOperation<RESULT> noop() {
     return NoopHttpClientOperation.noop();
   }
 
-  static <RESPONSE> HttpClientOperation<RESPONSE> create(
-      Context context, Context parentContext, HttpClientTracer<?, RESPONSE> tracer) {
+  static <RESULT> HttpClientOperation<RESULT> create(
+      Context context, Context parentContext, HttpClientTracer<?, RESULT> tracer) {
     return new DefaultHttpClientOperation<>(context, parentContext, tracer);
   }
 
@@ -33,9 +33,9 @@ public interface HttpClientOperation<RESPONSE> {
   void end();
 
   /** Convenience method for {@link #end(Object, long)} which uses the current time. */
-  void end(RESPONSE response);
+  void end(RESULT result);
 
-  void end(RESPONSE response, long endTimeNanos);
+  void end(RESULT result, long endTimeNanos);
 
   /**
    * Convenience method for {@link #endExceptionally(Throwable, Object, long)} which has no result,
@@ -47,16 +47,16 @@ public interface HttpClientOperation<RESPONSE> {
    * Convenience method for {@link #endExceptionally(Throwable, Object, long)} which uses the
    * current time.
    */
-  void endExceptionally(Throwable throwable, RESPONSE response);
+  void endExceptionally(Throwable throwable, RESULT result);
 
-  void endExceptionally(Throwable throwable, RESPONSE response, long endTimeNanos);
+  void endExceptionally(Throwable throwable, RESULT result, long endTimeNanos);
 
   /** Convenience method for bytecode instrumentation. */
-  default void endMaybeExceptionally(RESPONSE response, Throwable throwable) {
+  default void endMaybeExceptionally(RESULT result, Throwable throwable) {
     if (throwable != null) {
       endExceptionally(throwable);
     } else {
-      end(response);
+      end(result);
     }
   }
 
