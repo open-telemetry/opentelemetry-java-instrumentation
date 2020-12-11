@@ -18,6 +18,19 @@ import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO In search for a better home package
+
+/**
+ * Base class for implementing Tracers for HTTP servers. It has 3 types that must be specified by
+ * subclasses:
+ *
+ * @param <REQUEST> - The specific type for HTTP requests
+ * @param <RESPONSE> - The specific type for HTTP responses
+ * @param <CONNECTION> - The specific type of HTTP connection, used to get peer address information
+ *     and HTTP flavor. Use Void if your subclass does not need the connection for peerHostIP,
+ *     peerPort, or flavor.
+ * @param <STORAGE> - Implementation specific storage type for attaching/getting the server context.
+ *     Use Void if your subclass does not have an implementation specific storage need.
+ */
 public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> extends BaseTracer {
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
