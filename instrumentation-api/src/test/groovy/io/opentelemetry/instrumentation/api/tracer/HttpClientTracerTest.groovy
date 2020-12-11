@@ -35,9 +35,10 @@ class HttpClientTracerTest extends BaseTracerTest {
   def "test onRequest"() {
     setup:
     def tracer = newTracer()
+    operation.getSpan() >> span
 
     when:
-    tracer.onRequest(span, req)
+    tracer.onRequest(operation, req)
 
     then:
     if (req) {
@@ -49,7 +50,7 @@ class HttpClientTracerTest extends BaseTracerTest {
       1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, req["User-Agent"])
       1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR, "1.1")
     }
-    0 * _
+    0 * span._
 
     where:
     req << [
@@ -62,9 +63,10 @@ class HttpClientTracerTest extends BaseTracerTest {
     setup:
     def tracer = newTracer()
     def req = [method: "test-method", url: testUrlMapped, "User-Agent": testUserAgent]
+    operation.getSpan() >> span
 
     when:
-    tracer.onRequest(span, req)
+    tracer.onRequest(operation, req)
 
     then:
     if (req) {
@@ -77,15 +79,16 @@ class HttpClientTracerTest extends BaseTracerTest {
       1 * span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, req["User-Agent"])
       1 * span.setAttribute(SemanticAttributes.HTTP_FLAVOR, "1.1")
     }
-    0 * _
+    0 * span._
   }
 
   def "test url handling for #url"() {
     setup:
     def tracer = newTracer()
+    operation.getSpan() >> span
 
     when:
-    tracer.onRequest(span, req)
+    tracer.onRequest(operation, req)
 
     then:
     1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP")
@@ -101,7 +104,7 @@ class HttpClientTracerTest extends BaseTracerTest {
     if (port) {
       1 * span.setAttribute(SemanticAttributes.NET_PEER_PORT, port)
     }
-    0 * _
+    0 * span._
 
     where:
     tagQueryString | url                                  | expectedUrl                          | expectedQuery | expectedFragment | hostname | port
@@ -118,9 +121,10 @@ class HttpClientTracerTest extends BaseTracerTest {
   def "test onResponse"() {
     setup:
     def tracer = newTracer()
+    operation.getSpan() >> span
 
     when:
-    tracer.onResponse(span, resp)
+    tracer.onResponse(operation, resp)
 
     then:
     if (status) {
@@ -130,7 +134,7 @@ class HttpClientTracerTest extends BaseTracerTest {
         1 * span.setStatus(code)
       }
     }
-    0 * _
+    0 * span._
 
     where:
     status | resp

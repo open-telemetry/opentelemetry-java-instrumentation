@@ -115,32 +115,6 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     return spanBuilder;
   }
 
-  protected void end(Context context, RESPONSE response, long endTimeNanos) {
-    Span span = Span.fromContext(context);
-    if (response != null) {
-      onResponse(span, response);
-    }
-    super.end(span, endTimeNanos);
-  }
-
-  protected void endExceptionally(
-      Context context, Throwable throwable, RESPONSE response, long endTimeNanos) {
-    Span span = Span.fromContext(context);
-    if (response != null) {
-      onResponse(span, response);
-    }
-    super.endExceptionally(span, throwable, endTimeNanos);
-  }
-
-  protected String spanName(REQUEST request) {
-    // TODO (trask) require request to be non-null here?
-    if (request == null) {
-      return DEFAULT_SPAN_NAME;
-    }
-    String method = method(request);
-    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
-  }
-
   /**
    * This is a helper method for HttpClientTracers that need to implement their {@code
    * startOperation} from scratch.
@@ -168,17 +142,43 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     }
   }
 
+  protected void end(Context context, RESPONSE response, long endTimeNanos) {
+    if (response != null) {
+      onResponse(context, response);
+    }
+    super.end(Span.fromContext(context), endTimeNanos);
+  }
+
+  protected void endExceptionally(
+      Context context, Throwable throwable, RESPONSE response, long endTimeNanos) {
+    Span span = Span.fromContext(context);
+    if (response != null) {
+      onResponse(context, response);
+    }
+    super.endExceptionally(span, throwable, endTimeNanos);
+  }
+
   /** Can be overridden to capture additional attributes from the response. */
-  protected void onResponse(Span span, RESPONSE response) {
+  protected void onResponse(Context context, RESPONSE response) {
     // TODO (trask) require response to be non-null here?
     Integer status = status(response);
     if (status != null) {
+      Span span = Span.fromContext(context);
       span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
       StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(status);
       if (statusCode == StatusCode.ERROR) {
         span.setStatus(statusCode);
       }
     }
+  }
+
+  protected String spanName(REQUEST request) {
+    // TODO (trask) require request to be non-null here?
+    if (request == null) {
+      return DEFAULT_SPAN_NAME;
+    }
+    String method = method(request);
+    return method != null ? "HTTP " + method : DEFAULT_SPAN_NAME;
   }
 
   private void setFlavor(SpanAttributeSetter span, REQUEST request) {

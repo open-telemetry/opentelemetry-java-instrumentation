@@ -71,12 +71,13 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
   }
 
   @Override
-  protected void onResponse(Span span, Response<?> response) {
+  protected void onResponse(Context context, Response<?> response) {
+    Span span = Span.fromContext(context);
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setAttribute("aws.requestId", awsResp.getRequestId());
     }
-    super.onResponse(span, response);
+    super.onResponse(context, response);
   }
 
   @Override
