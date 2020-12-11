@@ -21,11 +21,6 @@ public class E2EAgentBenchmark {
   private static final Logger LOG = LoggerFactory.getLogger(E2EAgentBenchmark.class);
   private List<GenericContainer<?>> containers;
 
-  // configurable values
-  private String APP = System.getenv("APP_IMAGE");
-  private String PORT = System.getenv("PORT");
-  private String PATH = System.getenv("PATH");
-
   @BeforeEach
   void setUp() {
     containers = new ArrayList<>();
@@ -42,11 +37,11 @@ public class E2EAgentBenchmark {
   }
 
   private void runBenchmark() throws Exception {
-    String benchmarkCommand = "-t4 -c128 -d300s http://app:" + PORT + PATH + " --latency";
+    String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
 
     // docker images
     final DockerImageName WRK_IMAGE = DockerImageName.parse("quay.io/dim/wrk:stable");
-    final DockerImageName APP_IMAGE = DockerImageName.parse(APP);
+    final DockerImageName APP_IMAGE = DockerImageName.parse("ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk8-20201204.400701583");
     final DockerImageName OTLP_COLLECTOR_IMAGE = DockerImageName.parse("otel/opentelemetry-collector-dev:latest");
 
     // otlp collector container
@@ -67,7 +62,8 @@ public class E2EAgentBenchmark {
         .withNetwork(Network.SHARED)
         .withLogConsumer(new Slf4jLogConsumer(LOG))
         .withNetworkAliases("app")
-        .withEnv("LISTEN_ADDRESS", "0.0.0.0:" + PORT)
+        .withCopyFileToContainer(MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
+        .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar")
         .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:55680")
         .withExposedPorts(8080);
     containers.add(app);
@@ -77,7 +73,7 @@ public class E2EAgentBenchmark {
         .withNetwork(Network.SHARED)
         .withLogConsumer(new Slf4jLogConsumer(LOG))
         .withCreateContainerCmdModifier(it -> it.withEntrypoint("wrk"))
-        .withCommand(benchmarkCommand);
+        .withCommand("-t4 -c128 -d300s http://app:8080/ --latency");
     containers.add(wrk);
 
     wrk.dependsOn(app, collector);
