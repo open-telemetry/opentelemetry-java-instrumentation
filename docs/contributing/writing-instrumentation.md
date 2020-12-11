@@ -127,7 +127,7 @@ for accessing these default methods from advice.
 
 ### Why hard code advice class names?
 
-Subclasses of `InstrumentationModule` will often implement advice classes as static inner classes.
+Implementations of `TypeInstrumentation` will often implement advice classes as static inner classes.
 These classes are referred to by name in the mappings from method descriptor to advice class,
 typically in the `transform()` method.
 
