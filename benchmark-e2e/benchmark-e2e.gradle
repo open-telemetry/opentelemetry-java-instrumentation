@@ -3,9 +3,9 @@ apply from: "$rootDir/gradle/java.gradle"
 description = 'e2e benchmark'
 
 dependencies {
-  implementation deps.slf4j
-  implementation deps.testcontainers
   implementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+  implementation 'org.slf4j:slf4j-simple:1.6.1'
+  implementation 'org.testcontainers:testcontainers:1.15.0'
 }
 
 test {
