@@ -69,7 +69,7 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
@@ -91,30 +91,30 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
         @Advice.This HttpExt thiz,
         @Advice.Return Future<HttpResponse> responseFuture,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       if (throwable == null) {
         responseFuture.onComplete(new OnCompleteHandler(operation), thiz.system().dispatcher());
       } else {
-        operation.endExceptionally(throwable);
+        tracer().endExceptionally(operation, throwable);
       }
     }
   }
 
   public static class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
-    private final Operation<HttpResponse> operation;
+    private final Operation operation;
 
-    public OnCompleteHandler(Operation<HttpResponse> operation) {
+    public OnCompleteHandler(Operation operation) {
       this.operation = operation;
     }
 
     @Override
     public Void apply(Try<HttpResponse> result) {
       if (result.isSuccess()) {
-        operation.end(result.get());
+        tracer().end(operation, result.get());
       } else {
-        operation.endExceptionally(result.failed().get());
+        tracer().endExceptionally(operation, result.failed().get());
       }
       return null;
     }

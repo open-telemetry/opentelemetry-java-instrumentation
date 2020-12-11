@@ -31,7 +31,6 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 
@@ -150,7 +149,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) HttpUriRequest request,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(request);
       scope = operation.makeCurrent();
@@ -160,7 +159,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       ApacheHttpClientHelper.endOperation(operation, result, throwable);
@@ -178,7 +177,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
                 typing = Assigner.Typing.DYNAMIC,
                 readOnly = false)
             Object handler,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(request);
       scope = operation.makeCurrent();
@@ -193,7 +192,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       ApacheHttpClientHelper.endOperation(operation, result, throwable);
@@ -205,7 +204,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodEnter(
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) HttpRequest request,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(host, request);
       scope = operation.makeCurrent();
@@ -215,7 +214,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       ApacheHttpClientHelper.endOperation(operation, result, throwable);
@@ -234,7 +233,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
                 typing = Assigner.Typing.DYNAMIC,
                 readOnly = false)
             Object handler,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(host, request);
       scope = operation.makeCurrent();
@@ -249,7 +248,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       ApacheHttpClientHelper.endOperation(operation, result, throwable);

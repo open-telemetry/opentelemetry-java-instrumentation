@@ -64,8 +64,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
    * long)} which is applicable when the {@link TextMapPropagator.Setter} applies directly to the
    * {@code request}, and which uses the current time.
    */
-  protected Operation<RESPONSE> startOperation(
-      REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
+  protected Operation startOperation(REQUEST request, TextMapPropagator.Setter<REQUEST> setter) {
     return startOperation(request, request, setter, -1);
   }
 
@@ -74,7 +73,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
    * long)} which is applicable when the {@link TextMapPropagator.Setter} applies directly to the
    * {@code request}.
    */
-  protected Operation<RESPONSE> startOperation(
+  protected Operation startOperation(
       REQUEST request, TextMapPropagator.Setter<REQUEST> setter, long startTimeNanos) {
     return startOperation(request, request, setter, startTimeNanos);
   }
@@ -83,12 +82,12 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
    * Convenience overload for {@link #startOperation(Object, Object, TextMapPropagator.Setter,
    * long)} which uses the current time.
    */
-  protected <CARRIER> Operation<RESPONSE> startOperation(
+  protected <CARRIER> Operation startOperation(
       REQUEST request, CARRIER carrier, TextMapPropagator.Setter<CARRIER> setter) {
     return startOperation(request, carrier, setter, -1);
   }
 
-  protected <CARRIER> Operation<RESPONSE> startOperation(
+  protected <CARRIER> Operation startOperation(
       REQUEST request,
       CARRIER carrier,
       TextMapPropagator.Setter<CARRIER> setter,
@@ -101,7 +100,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanName, startTimeNanos);
     Context context = withClientSpan(parentContext, spanBuilder.startSpan());
     OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    return Operation.create(context, parentContext, this);
+    return Operation.create(context, parentContext);
   }
 
   private SpanBuilder spanBuilder(
@@ -127,8 +126,8 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
    * This is for HttpClientTracers that do not have the request available during {@code
    * startOperation}.
    */
-  protected void onRequest(Span span, REQUEST request) {
-    onRequest(span::setAttribute, request);
+  protected void onRequest(Operation operation, REQUEST request) {
+    onRequest(operation.getSpan()::setAttribute, request);
   }
 
   private void onRequest(SpanAttributeSetter span, REQUEST request) {
@@ -142,28 +141,58 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
     }
   }
 
-  protected void end(Context context, RESPONSE response, long endTimeNanos) {
-    if (response != null) {
-      onResponse(context, response);
-    }
-    super.end(Span.fromContext(context), endTimeNanos);
+  /** Convenience method for {@link #end(Operation, Object, long)} which uses the current time. */
+  public void end(Operation operation, RESPONSE response) {
+    end(operation, response, -1);
   }
 
-  protected void endExceptionally(
-      Context context, Throwable throwable, RESPONSE response, long endTimeNanos) {
-    Span span = Span.fromContext(context);
+  public void end(Operation operation, RESPONSE response, long endTimeNanos) {
+    // TODO (trask) require response to be non-null here?
+    onResponse(operation, response);
+    super.end(operation.getSpan(), endTimeNanos);
+  }
+
+  /**
+   * Convenience method for {@link #endExceptionally(Operation, Throwable, Object, long)} which has
+   * no request, and uses the current time.
+   */
+  public void endExceptionally(Operation operation, Throwable throwable) {
+    checkNotNull(throwable);
+    endExceptionally(operation, throwable, null, -1);
+  }
+
+  /**
+   * Convenience method for {@link #endExceptionally(Operation, Throwable, Object, long)} which uses
+   * the current time.
+   */
+  public void endExceptionally(Operation operation, Throwable throwable, RESPONSE response) {
+    endExceptionally(operation, throwable, response, -1);
+  }
+
+  public void endExceptionally(
+      Operation operation, Throwable throwable, RESPONSE response, long endTimeNanos) {
+    Span span = operation.getSpan();
     if (response != null) {
-      onResponse(context, response);
+      onResponse(operation, response);
     }
     super.endExceptionally(span, throwable, endTimeNanos);
   }
 
+  /** Convenience method primarily for bytecode instrumentation. */
+  public void endMaybeExceptionally(Operation operation, RESPONSE response, Throwable throwable) {
+    if (throwable != null) {
+      endExceptionally(operation, throwable);
+    } else {
+      end(operation, response);
+    }
+  }
+
   /** Can be overridden to capture additional attributes from the response. */
-  protected void onResponse(Context context, RESPONSE response) {
+  protected void onResponse(Operation operation, RESPONSE response) {
     // TODO (trask) require response to be non-null here?
     Integer status = status(response);
     if (status != null) {
-      Span span = Span.fromContext(context);
+      Span span = operation.getSpan();
       span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
       StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(status);
       if (statusCode == StatusCode.ERROR) {

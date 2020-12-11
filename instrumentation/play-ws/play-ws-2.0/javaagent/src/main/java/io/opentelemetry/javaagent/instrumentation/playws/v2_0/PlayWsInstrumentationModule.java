@@ -17,7 +17,6 @@ import java.util.List;
 import net.bytebuddy.asm.Advice;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.Request;
-import play.shaded.ahc.org.asynchttpclient.Response;
 import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 
@@ -37,7 +36,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
     public static void methodEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler<?> asyncHandler,
-        @Advice.Local("otelOperation") Operation<Response> operation) {
+        @Advice.Local("otelOperation") Operation operation) {
       operation = tracer().startOperation(request, request.getHeaders());
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
@@ -51,10 +50,9 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<Response> operation) {
+        @Advice.Thrown Throwable throwable, @Advice.Local("otelOperation") Operation operation) {
       if (throwable != null) {
-        operation.endExceptionally(throwable);
+        tracer().endExceptionally(operation, throwable);
       }
     }
   }

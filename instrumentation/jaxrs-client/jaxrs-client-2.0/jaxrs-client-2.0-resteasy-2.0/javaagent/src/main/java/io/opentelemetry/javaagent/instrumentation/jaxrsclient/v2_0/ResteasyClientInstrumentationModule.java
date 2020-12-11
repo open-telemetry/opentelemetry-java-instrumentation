@@ -67,7 +67,7 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This ClientInvocation invocation,
-        @Advice.Local("otelOperation") Operation<Response> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(invocation);
       scope = operation.makeCurrent();
@@ -77,10 +77,10 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
     public static void methodExit(
         @Advice.Return Response response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<Response> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      operation.endMaybeExceptionally(response, throwable);
+      tracer().endMaybeExceptionally(operation, response, throwable);
     }
   }
 }

@@ -30,7 +30,7 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
     return TRACER;
   }
 
-  public final Operation<HttpResponse> startOperation() {
+  public final Operation startOperation() {
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
       return Operation.noop();
@@ -42,7 +42,7 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
             .setParent(parentContext)
             .startSpan();
     Context context = withClientSpan(parentContext, clientSpan);
-    return Operation.create(context, parentContext, this);
+    return Operation.create(context, parentContext);
   }
 
   @Override
@@ -92,12 +92,12 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
   }
 
   @Override
-  public void onRequest(Span span, HttpRequest request) {
+  public void onRequest(Operation operation, HttpRequest request) {
     String method = method(request);
     if (method != null) {
-      span.updateName("HTTP " + method);
+      operation.getSpan().updateName("HTTP " + method);
     }
-    super.onRequest(span, request);
+    super.onRequest(operation, request);
   }
 
   private static String header(HttpMessage message, String name) {

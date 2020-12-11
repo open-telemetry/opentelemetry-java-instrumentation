@@ -10,55 +10,20 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-public interface Operation<RESULT> {
+public interface Operation {
 
-  static <RESULT> Operation<RESULT> noop() {
+  static Operation noop() {
     return NoopOperation.noop();
   }
 
-  static <RESULT> Operation<RESULT> create(
-      Context context, Context parentContext, HttpClientTracer<?, RESULT> tracer) {
-    return new DefaultOperation<>(context, parentContext, tracer);
+  static Operation create(Context context, Context parentContext) {
+    return new DefaultOperation(context, parentContext);
   }
 
   Scope makeCurrent();
 
   /** Used for running user callbacks on completion of the http client operation. */
   Scope makeParentCurrent();
-
-  /**
-   * Convenience method for {@link #end(Object, long)} which has no result, and uses the current
-   * time.
-   */
-  void end();
-
-  /** Convenience method for {@link #end(Object, long)} which uses the current time. */
-  void end(RESULT result);
-
-  void end(RESULT result, long endTimeNanos);
-
-  /**
-   * Convenience method for {@link #endExceptionally(Throwable, Object, long)} which has no result,
-   * and uses the current time.
-   */
-  void endExceptionally(Throwable throwable);
-
-  /**
-   * Convenience method for {@link #endExceptionally(Throwable, Object, long)} which uses the
-   * current time.
-   */
-  void endExceptionally(Throwable throwable, RESULT result);
-
-  void endExceptionally(Throwable throwable, RESULT result, long endTimeNanos);
-
-  /** Convenience method for bytecode instrumentation. */
-  default void endMaybeExceptionally(RESULT result, Throwable throwable) {
-    if (throwable != null) {
-      endExceptionally(throwable);
-    } else {
-      end(result);
-    }
-  }
 
   Span getSpan();
 

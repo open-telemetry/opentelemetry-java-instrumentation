@@ -34,7 +34,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
 
   public AwsSdkClientTracer() {}
 
-  public Operation<Response<?>> startOperation(Request<?> request, RequestMeta requestMeta) {
+  public Operation startOperation(Request<?> request, RequestMeta requestMeta) {
 
     Context parentContext = Context.current();
     if (inClientSpan(parentContext)) {
@@ -66,17 +66,17 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Response<?>
     OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(context, request, AwsSdkInjectAdapter.INSTANCE);
-    return Operation.create(context, parentContext, this);
+    return Operation.create(context, parentContext);
   }
 
   @Override
-  protected void onResponse(Context context, Response<?> response) {
-    Span span = Span.fromContext(context);
+  public void onResponse(Operation operation, Response<?> response) {
+    Span span = operation.getSpan();
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setAttribute("aws.requestId", awsResp.getRequestId());
     }
-    super.onResponse(context, response);
+    super.onResponse(operation, response);
   }
 
   @Override

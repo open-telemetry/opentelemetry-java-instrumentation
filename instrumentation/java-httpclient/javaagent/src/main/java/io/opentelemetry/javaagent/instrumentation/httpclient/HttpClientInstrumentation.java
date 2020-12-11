@@ -71,7 +71,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelOperation") Operation<HttpResponse<?>> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(httpRequest);
       scope = operation.makeCurrent();
@@ -81,10 +81,10 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.Return HttpResponse<?> response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<HttpResponse<?>> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      operation.endMaybeExceptionally(response, throwable);
+      tracer().endMaybeExceptionally(operation, response, throwable);
     }
   }
 
@@ -93,7 +93,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelOperation") Operation<HttpResponse<?>> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       operation = tracer().startOperation(httpRequest);
       scope = operation.makeCurrent();
@@ -103,11 +103,11 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.Return(readOnly = false) CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<HttpResponse<?>> operation,
+        @Advice.Local("otelOperation") Operation operation,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
       if (throwable != null) {
-        operation.endExceptionally(throwable);
+        tracer().endExceptionally(operation, throwable);
       } else {
         future = future.whenComplete(new ResponseConsumer(operation));
       }

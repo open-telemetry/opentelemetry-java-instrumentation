@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.api.tracer.Operation;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
-import software.amazon.awssdk.http.SdkHttpResponse;
 
 /**
  * Entrypoint to OpenTelemetry instrumentation of the AWS SDK. Register the {@link
@@ -49,7 +48,7 @@ public class AwsSdk {
    * Returns the {@link Operation} stored in the {@link ExecutionAttributes}, or {@code null} if
    * there is no operation set.
    */
-  public static Operation<SdkHttpResponse> getOperationOrNoop(ExecutionAttributes attributes) {
+  public static Operation getOperationOrNoop(ExecutionAttributes attributes) {
     return orDefault(attributes.getAttribute(OPERATION_ATTRIBUTE), Operation.noop());
   }
 

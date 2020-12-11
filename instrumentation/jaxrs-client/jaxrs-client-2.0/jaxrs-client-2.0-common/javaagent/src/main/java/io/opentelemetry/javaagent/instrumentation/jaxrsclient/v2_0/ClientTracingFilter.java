@@ -22,7 +22,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(ClientRequestContext requestContext) {
-    Operation<ClientResponseContext> operation = tracer().startOperation(requestContext);
+    Operation operation = tracer().startOperation(requestContext);
     requestContext.setProperty(OPERATION_PROPERTY_NAME, operation);
   }
 
@@ -30,7 +30,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) {
     Object operationObj = requestContext.getProperty(OPERATION_PROPERTY_NAME);
     if (operationObj instanceof Operation) {
-      ((Operation<ClientResponseContext>) operationObj).end(responseContext);
+      tracer().end((Operation) operationObj, responseContext);
     }
   }
 }

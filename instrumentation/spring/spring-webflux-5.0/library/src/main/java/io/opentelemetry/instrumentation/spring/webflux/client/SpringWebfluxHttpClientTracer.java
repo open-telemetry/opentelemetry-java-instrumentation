@@ -28,12 +28,12 @@ public class SpringWebfluxHttpClientTracer extends HttpClientTracer<ClientReques
 
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
-  public Operation<ClientResponse> startOperation(
-      ClientRequest request, ClientRequest.Builder builder) {
+  public Operation startOperation(ClientRequest request, ClientRequest.Builder builder) {
     return super.startOperation(request, builder, SETTER);
   }
 
-  public void onCancel(Span span) {
+  public void onCancel(Operation operation) {
+    Span span = operation.getSpan();
     span.setAttribute("spring-webflux.event", "cancelled");
     span.setAttribute("spring-webflux.message", "The subscription was cancelled");
   }

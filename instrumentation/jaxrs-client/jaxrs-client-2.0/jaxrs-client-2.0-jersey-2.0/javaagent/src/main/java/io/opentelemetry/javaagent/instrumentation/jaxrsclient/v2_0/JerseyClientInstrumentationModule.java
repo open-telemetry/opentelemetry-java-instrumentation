@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -72,7 +73,7 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
       if (throwable != null) {
         Object operationObj = context.getProperty(ClientTracingFilter.OPERATION_PROPERTY_NAME);
         if (operationObj instanceof Operation) {
-          ((Operation<?>) operationObj).endExceptionally(throwable);
+          tracer().endExceptionally((Operation) operationObj, throwable);
         }
       }
     }

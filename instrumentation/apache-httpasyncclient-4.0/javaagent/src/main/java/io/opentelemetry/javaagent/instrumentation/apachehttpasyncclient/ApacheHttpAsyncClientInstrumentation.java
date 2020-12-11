@@ -67,7 +67,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(2) HttpContext httpContext,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation) {
+        @Advice.Local("otelOperation") Operation operation) {
       operation = tracer().startOperation();
       requestProducer = new DelegatingRequestProducer(operation, requestProducer);
       futureCallback = new TraceContinuedFutureCallback<>(operation, httpContext, futureCallback);
@@ -75,20 +75,18 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelOperation") Operation<HttpResponse> operation) {
+        @Advice.Thrown Throwable throwable, @Advice.Local("otelOperation") Operation operation) {
       if (throwable != null) {
-        operation.endExceptionally(throwable);
+        tracer().endExceptionally(operation, throwable);
       }
     }
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    Operation<HttpResponse> operation;
+    Operation operation;
     HttpAsyncRequestProducer delegate;
 
-    public DelegatingRequestProducer(
-        Operation<HttpResponse> operation, HttpAsyncRequestProducer delegate) {
+    public DelegatingRequestProducer(Operation operation, HttpAsyncRequestProducer delegate) {
       this.operation = operation;
       this.delegate = delegate;
     }
@@ -105,7 +103,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
           OpenTelemetry.getGlobalPropagators().getTextMapPropagator(),
           request,
           HttpHeadersInjectAdapter.SETTER);
-      tracer().onRequest(operation.getSpan(), request);
+      tracer().onRequest(operation, request);
       return request;
     }
 
@@ -141,12 +139,12 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
   }
 
   public static class TraceContinuedFutureCallback<T> implements FutureCallback<T> {
-    private final Operation<HttpResponse> operation;
+    private final Operation operation;
     private final HttpContext httpContext;
     private final FutureCallback<T> delegate;
 
     public TraceContinuedFutureCallback(
-        Operation<HttpResponse> operation, HttpContext httpContext, FutureCallback<T> delegate) {
+        Operation operation, HttpContext httpContext, FutureCallback<T> delegate) {
       this.operation = operation;
       this.httpContext = httpContext;
       // Note: this can be null in real life, so we have to handle this carefully
@@ -155,7 +153,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public void completed(T result) {
-      operation.end(getResponse(httpContext));
+      tracer().end(operation, getResponse(httpContext));
       if (delegate != null) {
         try (Scope ignored = operation.makeParentCurrent()) {
           delegate.completed(result);
@@ -165,7 +163,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public void failed(Exception ex) {
-      operation.endExceptionally(ex, getResponse(httpContext));
+      tracer().endExceptionally(operation, ex, getResponse(httpContext));
       if (delegate != null) {
         try (Scope ignored = operation.makeParentCurrent()) {
           delegate.failed(ex);
@@ -175,7 +173,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public void cancelled() {
-      operation.end(getResponse(httpContext));
+      tracer().end(operation, getResponse(httpContext));
       if (delegate != null) {
         try (Scope ignored = operation.makeParentCurrent()) {
           delegate.cancelled();

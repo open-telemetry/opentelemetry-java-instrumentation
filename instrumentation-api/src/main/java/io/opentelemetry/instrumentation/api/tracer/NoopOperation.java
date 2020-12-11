@@ -9,12 +9,11 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 
-class NoopOperation<RESULT> implements Operation<RESULT> {
-  private static final Operation<Object> INSTANCE = new NoopOperation();
+class NoopOperation implements Operation {
+  private static final Operation INSTANCE = new NoopOperation();
 
-  @SuppressWarnings("unchecked")
-  static <RESULT> Operation<RESULT> noop() {
-    return (Operation<RESULT>) INSTANCE;
+  static Operation noop() {
+    return INSTANCE;
   }
 
   @Override
@@ -26,24 +25,6 @@ class NoopOperation<RESULT> implements Operation<RESULT> {
   public Scope makeParentCurrent() {
     return Scope.noop();
   }
-
-  @Override
-  public void end() {}
-
-  @Override
-  public void end(RESULT result) {}
-
-  @Override
-  public void end(RESULT result, long endTimeNanos) {}
-
-  @Override
-  public void endExceptionally(Throwable throwable) {}
-
-  @Override
-  public void endExceptionally(Throwable throwable, RESULT result) {}
-
-  @Override
-  public void endExceptionally(Throwable throwable, RESULT result, long endTimeNanos) {}
 
   @Override
   public Span getSpan() {

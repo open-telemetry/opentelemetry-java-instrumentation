@@ -21,7 +21,7 @@ public class KHttpAdvice {
       @Advice.Argument(value = 0) String method,
       @Advice.Argument(value = 1) String uri,
       @Advice.Argument(value = 2, readOnly = false) Map<String, String> headers,
-      @Advice.Local("otelOperation") Operation<Response> operation,
+      @Advice.Local("otelOperation") Operation operation,
       @Advice.Local("otelScope") Scope scope) {
     headers = asWritable(headers);
     operation = tracer().startOperation(new RequestWrapper(method, uri, headers), headers);
@@ -32,9 +32,9 @@ public class KHttpAdvice {
   public static void methodExit(
       @Advice.Return Response response,
       @Advice.Thrown Throwable throwable,
-      @Advice.Local("otelOperation") Operation<Response> operation,
+      @Advice.Local("otelOperation") Operation operation,
       @Advice.Local("otelScope") Scope scope) {
     scope.close();
-    operation.endMaybeExceptionally(response, throwable);
+    tracer().endMaybeExceptionally(operation, response, throwable);
   }
 }

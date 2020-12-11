@@ -29,7 +29,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   public void beforeRequest(Request<?> request) {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     RequestMeta requestMeta = contextStore.get(originalRequest);
-    Operation<Response<?>> operation = tracer().startOperation(request, requestMeta);
+    Operation operation = tracer().startOperation(request, requestMeta);
     Scope scope = operation.makeCurrent();
     request.addHandlerContext(OPERATION_SCOPE_PAIR_KEY, new OperationScopePair(operation, scope));
   }
@@ -40,7 +40,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     if (scope != null) {
       request.addHandlerContext(OPERATION_SCOPE_PAIR_KEY, null);
       scope.closeScope();
-      scope.getOperation().end(response);
+      tracer().end(scope.getOperation(), response);
     }
   }
 
@@ -50,7 +50,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     if (scope != null) {
       request.addHandlerContext(OPERATION_SCOPE_PAIR_KEY, null);
       scope.closeScope();
-      scope.getOperation().endExceptionally(e);
+      tracer().endExceptionally(scope.getOperation(), e);
     }
   }
 }

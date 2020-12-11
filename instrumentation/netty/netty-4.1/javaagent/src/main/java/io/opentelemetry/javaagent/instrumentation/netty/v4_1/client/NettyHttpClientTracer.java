@@ -31,7 +31,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     return TRACER;
   }
 
-  public Operation<HttpResponse> startOperation(ChannelHandlerContext ctx, Object msg) {
+  public Operation startOperation(ChannelHandlerContext ctx, Object msg) {
     if (!(msg instanceof HttpRequest)) {
       return Operation.noop();
     }
@@ -57,7 +57,7 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
     OpenTelemetry.getGlobalPropagators()
         .getTextMapPropagator()
         .inject(context, request.headers(), SETTER);
-    return Operation.create(context, parentContext, this);
+    return Operation.create(context, parentContext);
   }
 
   private boolean suppressOperation(Context parentContext, HttpRequest request) {
