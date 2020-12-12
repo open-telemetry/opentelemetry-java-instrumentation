@@ -20,7 +20,6 @@ import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -82,22 +81,17 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.This HttpRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-
-      Context parentContext = currentContext();
-      if (!tracer().shouldStartOperation(parentContext)) {
-        return;
-      }
-
-      ContextStore<HttpRequest, Context> storage =
-          InstrumentationContext.get(HttpRequest.class, Context.class);
-      context = storage.get(request);
+      context = InstrumentationContext.get(HttpRequest.class, Context.class).get(request);
       if (context != null) {
         // this is the synchronous operation inside of an async operation, so make it current
         // and end it in method exit
         scope = context.makeCurrent();
         return;
       }
-
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartOperation(parentContext)) {
+        return;
+      }
       context = tracer().startOperation(parentContext, request);
       scope = context.makeCurrent();
     }

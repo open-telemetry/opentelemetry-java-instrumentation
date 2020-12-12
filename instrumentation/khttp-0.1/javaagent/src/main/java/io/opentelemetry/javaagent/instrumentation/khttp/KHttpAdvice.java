@@ -24,10 +24,13 @@ public class KHttpAdvice {
       @Advice.Argument(value = 2, readOnly = false) Map<String, String> headers,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
+    Context parentContext = currentContext();
+    if (!tracer().shouldStartOperation(parentContext)) {
+      return;
+    }
     headers = asWritable(headers);
     context =
-        tracer()
-            .startOperation(currentContext(), new RequestWrapper(method, uri, headers), headers);
+        tracer().startOperation(parentContext, new RequestWrapper(method, uri, headers), headers);
     scope = context.makeCurrent();
   }
 
@@ -37,6 +40,9 @@ public class KHttpAdvice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
+    if (scope == null) {
+      return;
+    }
     scope.close();
     tracer().endMaybeExceptionally(context, response, throwable);
   }
