@@ -36,7 +36,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
       if (serverContext == null) {
         ctx.sendUpstream(event);
       } else {
-        try (Scope ignored = serverContext.makeCurrent()) {
+        try (Scope ignoreBased = serverContext.makeCurrent()) {
           ctx.sendUpstream(event);
         }
       }

@@ -48,6 +48,8 @@ public class NettyHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRes
   }
 
   // TODO (trask) how best to prevent people from use this one instead of the above?
+  //  should all shouldStartOperation methods take REQUEST so that they can be suppressed by REQUEST
+  //  attributes?
   @Override
   @Deprecated
   public boolean shouldStartOperation(Context parentContext) {

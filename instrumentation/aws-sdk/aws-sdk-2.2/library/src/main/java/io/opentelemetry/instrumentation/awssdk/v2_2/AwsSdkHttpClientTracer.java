@@ -33,6 +33,10 @@ final class AwsSdkHttpClientTracer extends HttpClientTracer<SdkHttpRequest, SdkH
     return withClientSpan(parentContext, span);
   }
 
+  public void inject(Context context, SdkHttpRequest.Builder builder) {
+    AwsXRayPropagator.getInstance().inject(context, builder, AwsSdkInjectAdapter.INSTANCE);
+  }
+
   @Override
   public void onRequest(Context context, SdkHttpRequest request) {
     super.onRequest(context, request);
@@ -70,11 +74,6 @@ final class AwsSdkHttpClientTracer extends HttpClientTracer<SdkHttpRequest, SdkH
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.aws-sdk";
-  }
-
-  // TODO (trask) is there more consistent way to handle this?
-  public void inject(Context context, SdkHttpRequest.Builder builder) {
-    AwsXRayPropagator.getInstance().inject(context, builder, AwsSdkInjectAdapter.INSTANCE);
   }
 
   private static String spanName(ExecutionAttributes attributes) {

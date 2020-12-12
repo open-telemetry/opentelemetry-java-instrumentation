@@ -105,21 +105,20 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
       TextMapPropagator.Setter<CARRIER> setter,
       long startTimeNanos) {
     String spanName = spanName(request);
-    SpanBuilder spanBuilder = spanBuilder(parentContext, request, spanName, startTimeNanos);
-    Context context = withClientSpan(parentContext, spanBuilder.startSpan());
-    OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
-    return context;
-  }
-
-  private SpanBuilder spanBuilder(
-      Context parentContext, REQUEST request, String spanName, long startTimeNanos) {
     SpanBuilder spanBuilder =
         tracer.spanBuilder(spanName).setSpanKind(CLIENT).setParent(parentContext);
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos, NANOSECONDS);
     }
     onRequest(spanBuilder, request);
-    return spanBuilder;
+    Context context = withClientSpan(parentContext, spanBuilder.startSpan());
+    inject(context, carrier, setter);
+    return context;
+  }
+
+  protected <CARRIER> void inject(
+      Context context, CARRIER carrier, TextMapPropagator.Setter<CARRIER> setter) {
+    OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, carrier, setter);
   }
 
   /**
@@ -131,8 +130,8 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
   }
 
   /**
-   * This is for HttpClientTracers that do not have the request available during {@code
-   * startOperation}.
+   * This is for {@code HttpClientTracer} subclasses that do not have the request available during
+   * {@code startOperation}.
    */
   protected void onRequest(Context context, REQUEST request) {
     onRequest(Span.fromContext(context)::setAttribute, request);
@@ -237,7 +236,7 @@ public abstract class HttpClientTracer<REQUEST, RESPONSE> extends BaseTracer {
         span.setAttribute(SemanticAttributes.HTTP_URL, url.toString());
       }
     } catch (Exception e) {
-      // TODO why is catch needed here?
+      // TODO is catch really needed here?
       log.debug("Error tagging url", e);
     }
   }

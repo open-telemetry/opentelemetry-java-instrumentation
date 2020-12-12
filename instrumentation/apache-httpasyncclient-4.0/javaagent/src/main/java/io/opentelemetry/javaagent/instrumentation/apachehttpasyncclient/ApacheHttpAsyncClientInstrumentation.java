@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -108,10 +107,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
       HttpRequest request = delegate.generateRequest();
-      // TODO (trask) move this into tracer?
-      OpenTelemetry.getGlobalPropagators()
-          .getTextMapPropagator()
-          .inject(context, request, HttpHeadersInjectAdapter.SETTER);
+      tracer().inject(context, request);
       tracer().onRequest(context, request);
       return request;
     }

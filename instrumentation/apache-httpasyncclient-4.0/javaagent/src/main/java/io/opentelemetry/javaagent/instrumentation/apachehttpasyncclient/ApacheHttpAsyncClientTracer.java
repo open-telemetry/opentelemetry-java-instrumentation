@@ -85,6 +85,10 @@ public class ApacheHttpAsyncClientTracer extends HttpClientTracer<HttpRequest, H
     return header(response, name);
   }
 
+  public void inject(Context context, HttpRequest request) {
+    inject(context, request, HttpHeadersInjectAdapter.SETTER);
+  }
+
   @Override
   public void onRequest(Context context, HttpRequest request) {
     String method = method(request);

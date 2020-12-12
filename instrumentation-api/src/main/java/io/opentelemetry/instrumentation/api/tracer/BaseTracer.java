@@ -67,10 +67,12 @@ public abstract class BaseTracer {
     return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
   }
 
+  // TODO (trask) make the key private
   protected final boolean inClientSpan(Context parentContext) {
     return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
   }
 
+  // TODO (trask) make the key private
   protected final Context withClientSpan(Context parentContext, Span span) {
     return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
   }
@@ -130,6 +132,7 @@ public abstract class BaseTracer {
     return className;
   }
 
+  // TODO (trask) all end methods should take Context instead of Span
   public void end(Context context) {
     end(Span.fromContext(context));
   }
@@ -160,6 +163,7 @@ public abstract class BaseTracer {
     end(span, endTimeNanos);
   }
 
+  // TODO (trask) this should take Context instead of Span also
   protected void onException(Span span, Throwable throwable) {
     Throwable unwrapped =
         throwable instanceof ExecutionException ? throwable.getCause() : throwable;

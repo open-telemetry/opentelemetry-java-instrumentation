@@ -83,8 +83,6 @@ public class JdkHttpClientTracer extends HttpClientTracer<HttpRequest, HttpRespo
     return throwable;
   }
 
-  // TODO (trask) need to pass in Context here so that injection will not occur when Context is
-  //  "no-op"
   public HttpHeaders inject(HttpHeaders original) {
     Map<String, List<String>> headerMap = new HashMap<>();
 
