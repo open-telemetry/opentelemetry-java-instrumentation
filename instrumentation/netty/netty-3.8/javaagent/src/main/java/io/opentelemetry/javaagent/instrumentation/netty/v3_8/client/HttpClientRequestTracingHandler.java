@@ -26,9 +26,10 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
   }
 
   @Override
-  public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) {
-    if (!(msg.getMessage() instanceof HttpRequest)) {
-      ctx.sendDownstream(msg);
+  public void writeRequested(ChannelHandlerContext ctx, MessageEvent event) {
+    Object message = event.getMessage();
+    if (!(message instanceof HttpRequest)) {
+      ctx.sendDownstream(event);
       return;
     }
 
@@ -41,16 +42,16 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
       parentContext = Context.current();
     }
     if (!tracer().shouldStartOperation(parentContext)) {
-      ctx.sendDownstream(msg);
+      ctx.sendDownstream(event);
       return;
     }
 
-    Context context = tracer().startOperation(parentContext, ctx, (HttpRequest) msg);
+    Context context = tracer().startOperation(parentContext, ctx, (HttpRequest) message);
     channelTraceContext.setContext(context);
     channelTraceContext.setClientParentContext(parentContext);
 
     try (Scope ignored = context.makeCurrent()) {
-      ctx.sendDownstream(msg);
+      ctx.sendDownstream(event);
     } catch (Throwable throwable) {
       tracer().endExceptionally(context, throwable);
       throw throwable;
