@@ -20,7 +20,6 @@ public class ApacheHttpAsyncClientInstrumentationModule extends InstrumentationM
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new ApacheHttpAsyncClientInstrumentation(), new ApacheHttpClientRedirectInstrumentation());
+    return asList(new ApacheHttpAsyncClientInstrumentation());
   }
 }

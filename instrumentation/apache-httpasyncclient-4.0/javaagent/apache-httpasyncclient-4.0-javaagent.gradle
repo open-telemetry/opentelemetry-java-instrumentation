@@ -10,5 +10,6 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0'
+  // 4.0 and 4.0.1 don't copy over the traceparent (etc) http headers on redirect
+  library group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0.2'
 }
