@@ -82,7 +82,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
 
   /** This method is overridden to allow other classes in this package to call it. */
   @Override
-  protected Span onRequest(Span span, Request request) {
-    return super.onRequest(span, request);
+  protected void onRequest(Span span, Request request) {
+    super.onRequest(span, request);
   }
 }
