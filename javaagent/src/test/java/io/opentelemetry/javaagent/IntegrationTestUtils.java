@@ -36,11 +36,6 @@ public class IntegrationTestUtils {
     return getAgentFieldClassloader("AGENT_CLASSLOADER");
   }
 
-  /** Returns the classloader the jmxfetch is running on. */
-  public static ClassLoader getJmxFetchClassLoader() {
-    return getAgentFieldClassloader("JMXFETCH_CLASSLOADER");
-  }
-
   private static ClassLoader getAgentFieldClassloader(String fieldName) {
     Field classloaderField = null;
     try {
