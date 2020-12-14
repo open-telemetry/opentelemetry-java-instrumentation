@@ -12,6 +12,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -59,7 +60,7 @@ public class Servlet2Advice {
       @Advice.Local("otelScope") Scope scope) {
     if (CallDepthThreadLocalMap.decrementCallDepth(Servlet2Advice.class) == 0
         && throwable != null) {
-      AppServerBridge.setThrowableToContext(throwable, Context.current());
+      AppServerBridge.setThrowableToContext(throwable, Java8BytecodeBridge.currentContext());
     }
 
     if (scope == null) {
