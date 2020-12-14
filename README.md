@@ -214,7 +214,7 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | Library/Framework                                                                                                                     | Versions                       |
 |---------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                    | 10.0+                          |
-| [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.0+                           |
+| [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.1+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Armeria](https://armeria.dev)                                                                                                        | 0.99.8+                        |
 | [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+ (not including 2.x yet)   |

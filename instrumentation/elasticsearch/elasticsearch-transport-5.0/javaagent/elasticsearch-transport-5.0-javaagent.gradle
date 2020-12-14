@@ -22,7 +22,7 @@ dependencies {
 
   // Ensure no cross interference
   testImplementation project(':instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent')
-  testImplementation project(':instrumentation:apache-httpasyncclient-4.0:javaagent')
+  testImplementation project(':instrumentation:apache-httpasyncclient-4.1:javaagent')
   testImplementation project(':instrumentation:netty:netty-4.1:javaagent')
 
   testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
