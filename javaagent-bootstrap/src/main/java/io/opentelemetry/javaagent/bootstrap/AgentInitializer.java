@@ -47,6 +47,11 @@ public class AgentInitializer {
   private static ClassLoader AGENT_CLASSLOADER = null;
 
   public static void initialize(Instrumentation inst, URL bootstrapUrl) {
+    if (AGENT_CLASSLOADER != null) {
+      // don't run initialization multiple times
+      return;
+    }
+
     startAgent(inst, bootstrapUrl);
 
     boolean appUsingCustomLogManager = isAppUsingCustomLogManager();
