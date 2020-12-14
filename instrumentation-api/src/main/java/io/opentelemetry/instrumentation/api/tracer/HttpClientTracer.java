@@ -117,7 +117,8 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   /** Convenience method primarily for bytecode instrumentation. */
-  public void endMaybeExceptionally(Context context, RESPONSE response, Throwable throwable) {
+  public void endMaybeExceptionally(
+      Context context, RESPONSE response, @Nullable Throwable throwable) {
     if (throwable != null) {
       endExceptionally(context, throwable);
     } else {
