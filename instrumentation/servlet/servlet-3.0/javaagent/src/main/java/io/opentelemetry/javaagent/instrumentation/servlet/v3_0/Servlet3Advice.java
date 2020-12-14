@@ -26,7 +26,7 @@ public class Servlet3Advice {
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Servlet3Advice.class);
+    CallDepthThreadLocalMap.incrementCallDepth(Servlet3Advice.class);
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
@@ -39,6 +39,9 @@ public class Servlet3Advice {
         scope = attachedContext.makeCurrent();
       }
 
+      // We're interested only in the very first suggested name, as this is where the initial
+      // request arrived. There are potential forward and other scenarios, where servlet path
+      // may change, but we don't want this to be reflected in the span name.
       if (!AppServerBridge.isBetterNameSuggested(attachedContext)) {
         tracer().updateServerSpanName(httpServletRequest);
         AppServerBridge.setBetterNameSuggested(attachedContext, true);
