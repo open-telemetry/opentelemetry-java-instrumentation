@@ -147,6 +147,41 @@ abstract class SpringBatchTest extends AgentTestRunner {
       }
     }
   }
+
+  def "should trace split flow job"() {
+    when:
+    runJob("splitJob")
+
+    then:
+    assertTraces(1) {
+      trace(0, 5) {
+        span(0) {
+          name "BatchJob splitJob"
+          kind INTERNAL
+        }
+        span(1) {
+          name ~/BatchJob splitJob\.splitFlowStep[12]/
+          kind INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name ~/BatchJob splitJob\.splitFlowStep[12]\.Chunk/
+          kind INTERNAL
+          childOf span(1)
+        }
+        span(3) {
+          name ~/BatchJob splitJob\.splitFlowStep[12]/
+          kind INTERNAL
+          childOf span(0)
+        }
+        span(4) {
+          name ~/BatchJob splitJob\.splitFlowStep[12]\.Chunk/
+          kind INTERNAL
+          childOf span(3)
+        }
+      }
+    }
+  }
 }
 
 class JavaConfigBatchJobTest extends SpringBatchTest implements ApplicationConfigTrait {

@@ -3,6 +3,8 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
+  <bean id="asyncTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor"/>
+
   <bean id="jobRepository"
     class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean"/>
   <bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
