@@ -37,35 +37,38 @@
 
 # <img src="https://opentelemetry.io/img/logos/opentelemetry-logo-nav.png" alt="OpenTelemetry Icon" width="45" height=""> OpenTelemetry Instrumentation for Java
 
-This project provides a Java agent JAR that can be attached to any Java 8+
-application and dynamically injects bytecode to capture telemetry from a
-number of popular libraries and frameworks.
-You can export the telemetry data in a variety of formats.
-You can also configure the agent and exporter via command line arguments
-or environment variables. The net result is the ability to gather telemetry
-data from a Java application without code changes.
+This project provides a Java agent JAR that can be attached to any Java 8+ application and
+dynamically injects bytecode to capture telemetry from a number of popular libraries and frameworks.
+You can export the telemetry data in a variety of formats. You can also configure the agent and
+exporter via command line arguments or environment variables. The net result is the ability to
+gather telemetry data from a Java application without code changes.
 
 ## Getting Started
 
-Download the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar).
+Download
+the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent-all.jar)
+.
 
-This package includes the instrumentation agent as well as
-instrumentations for all supported libraries and all available data exporters.
-The package provides a completely automatic, out-of-the-box experience.
+This package includes the instrumentation agent as well as instrumentations for all supported
+libraries and all available data exporters. The package provides a completely automatic,
+out-of-the-box experience.
 
 Enable the instrumentation agent using the `-javaagent` flag to the JVM.
+
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -jar myapp.jar
 ```
+
 By default, the OpenTelemetry Java agent uses
 [OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp)
 configured to send data to
 [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/master/receiver/otlpreceiver/README.md)
 at `localhost:55680`.
 
-Configuration parameters are passed as Java system properties (`-D` flags) or
-as environment variables. See below for a full list of environment variables. For example:
+Configuration parameters are passed as Java system properties (`-D` flags) or as environment
+variables. See below for a full list of environment variables. For example:
+
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -Dotel.exporter=zipkin \
@@ -73,6 +76,7 @@ java -javaagent:path/to/opentelemetry-javaagent-all.jar \
 ```
 
 Specify the external exporter JAR file using the `otel.exporter.jar` system property:
+
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -Dotel.exporter.jar=path/to/external-exporter.jar \
@@ -81,9 +85,8 @@ java -javaagent:path/to/opentelemetry-javaagent-all.jar \
 
 ### Configuration parameters (subject to change!)
 
-Note: These parameter names are very likely to change over time, so please check
-back here when trying out a new version! Please report any bugs or unexpected
-behavior you find.
+Note: These parameter names are very likely to change over time, so please check back here when
+trying out a new version! Please report any bugs or unexpected behavior you find.
 
 #### Exporters
 
@@ -95,7 +98,8 @@ The following configuration properties are common to all exporters:
 
 ##### OTLP exporter (both span and metric exporters)
 
-A simple wrapper for the OpenTelemetry Protocol (OTLP) span and metric exporters of opentelemetry-java.
+A simple wrapper for the OpenTelemetry Protocol (OTLP) span and metric exporters of
+opentelemetry-java.
 
 | System property              | Environment variable        | Description                                                               |
 |------------------------------|-----------------------------|---------------------------------------------------------------------------|
@@ -105,12 +109,14 @@ A simple wrapper for the OpenTelemetry Protocol (OTLP) span and metric exporters
 | otel.exporter.otlp.headers   | OTEL_EXPORTER_OTLP_HEADERS  | Key-value pairs separated by semicolons to pass as request headers        |
 | otel.exporter.otlp.timeout   | OTEL_EXPORTER_OTLP_TIMEOUT  | The maximum waiting time allowed to send each batch. Default is `1000`.   |
 
-To configure the service name for the OTLP exporter, add the `service.name` key
-to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice`.
+To configure the service name for the OTLP exporter, add the `service.name` key to the OpenTelemetry
+Resource ([see below](#opentelemetry-resource)),
+e.g. `OTEL_RESOURCE_ATTRIBUTES=service.name=myservice`.
 
 ##### Jaeger exporter
 
-A simple wrapper for the Jaeger exporter of opentelemetry-java. gRPC is currently the only supported communications protocol.
+A simple wrapper for the Jaeger exporter of opentelemetry-java. gRPC is currently the only supported
+communications protocol.
 
 | System property                   | Environment variable              | Description                                                                                            |
 |-----------------------------------|-----------------------------------|----------------------------------------------------------------------------------------------------|
@@ -119,7 +125,9 @@ A simple wrapper for the Jaeger exporter of opentelemetry-java. gRPC is currentl
 | otel.exporter.jaeger.service.name | OTEL_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                       |
 
 ##### Zipkin exporter
-A simple wrapper for the Zipkin exporter of opentelemetry-java. It sends JSON in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
+
+A simple wrapper for the Zipkin exporter of opentelemetry-java. It sends JSON
+in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
 
 | System property                   | Environment variable              | Description                                                                                                               |
 |-----------------------------------|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------|
@@ -128,6 +136,7 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It sends JSON in
 | otel.exporter.zipkin.service.name | OTEL_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                                          |
 
 ##### Prometheus exporter
+
 A simple wrapper for the Prometheus exporter of opentelemetry-java.
 
 | System property               | Environment variable          | Description                                                                        |
@@ -138,8 +147,8 @@ A simple wrapper for the Prometheus exporter of opentelemetry-java.
 
 ##### Logging exporter
 
-The logging exporter prints the name of the span along with its
-attributes to stdout. It's mainly used for testing and debugging.
+The logging exporter prints the name of the span along with its attributes to stdout. It's mainly
+used for testing and debugging.
 
 | System property              | Environment variable         | Description                                                                  |
 |------------------------------|------------------------------|------------------------------------------------------------------------------|
@@ -148,8 +157,8 @@ attributes to stdout. It's mainly used for testing and debugging.
 
 #### Propagator
 
-The propagators determine which distributed tracing header formats are used, and which baggage propagation header formats are used.
-
+The propagators determine which distributed tracing header formats are used, and which baggage
+propagation header formats are used.
 
 | System property  | Environment variable | Description                                                                                                     |
 |------------------|----------------------|-----------------------------------------------------------------------------------------------------------------|
@@ -166,7 +175,10 @@ is a representation of the entity producing telemetry.
 
 #### Peer service name
 
-The [peer service name](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes) is the name of a remote service being connected to. It corresponds to `service.name` in the [Resource](https://github.com/open-telemetry/opentelemetry-specification/tree/master/specification/resource/semantic_conventions#service) for the local service.
+The [peer service name](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes)
+is the name of a remote service being connected to. It corresponds to `service.name` in
+the [Resource](https://github.com/open-telemetry/opentelemetry-specification/tree/master/specification/resource/semantic_conventions#service)
+for the local service.
 
 | System property                     | Environment variable              | Description                                                                      |
 |------------------------------------|------------------------------------|----------------------------------------------------------------------------------|
@@ -201,20 +213,30 @@ The [peer service name](https://github.com/open-telemetry/opentelemetry-specific
 
 ##### Customizing the OpenTelemetry SDK
 
-*Customizing the SDK is highly advanced behavior and is still in the prototyping phase. It may change drastically or be removed completely. Use
-with caution*
+*Customizing the SDK is highly advanced behavior and is still in the prototyping phase. It may
+change drastically or be removed completely. Use with caution*
 
-The OpenTelemetry API exposes SPI [hooks](https://github.com/open-telemetry/opentelemetry-java/blob/master/api/src/main/java/io/opentelemetry/spi/trace/TracerProviderFactory.java)
+The OpenTelemetry API exposes
+SPI [hooks](https://github.com/open-telemetry/opentelemetry-java/blob/master/api/src/main/java/io/opentelemetry/spi/trace/TracerProviderFactory.java)
 for customizing its behavior, such as the `Resource` attached to spans or the `Sampler`.
 
-Because the automatic instrumentation runs in a different classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can provide the path to a JAR file, including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR needs to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you must specify the `io.opentelemetry.javaagent.shaded.io.opentelemetry.api.trace.spi.TraceProvider` to the name of the class that implements the SPI.
+Because the automatic instrumentation runs in a different classpath than the instrumented
+application, it is not possible for customization in the application to take advantage of this
+customization. In order to provide such customization, you can provide the path to a JAR file,
+including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR
+needs to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this
+is to use the same shading configuration as the agent
+from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39)
+. In addition, you must specify
+the `io.opentelemetry.javaagent.shaded.io.opentelemetry.api.trace.spi.TraceProvider` to the name of
+the class that implements the SPI.
 
 ## Supported Java libraries and frameworks
 
 | Library/Framework                                                                                                                     | Versions                       |
 |---------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                    | 10.0+                          |
-| [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.0+                           |
+| [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.1+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Armeria](https://armeria.dev)                                                                                                        | 0.99.8+                        |
 | [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+ (not including 2.x yet)   |
@@ -277,9 +299,11 @@ Because the automatic instrumentation runs in a different classpath than the ins
 
 ### Disabled instrumentations
 
-Some instrumentations can produce too many spans and make traces very noisy.
-For this reason, the following instrumentations are disabled by default:
-- `jdbc-datasource` which creates spans whenever the `java.sql.DataSource#getConnection` method is called.
+Some instrumentations can produce too many spans and make traces very noisy. For this reason, the
+following instrumentations are disabled by default:
+
+- `jdbc-datasource` which creates spans whenever the `java.sql.DataSource#getConnection` method is
+  called.
 
 To enable them, add the `otel.instrumentation.<name>.enabled` system property:
 `-Dotel.instrumentation.jdbc-datasource.enabled=true`
@@ -287,10 +311,9 @@ To enable them, add the `otel.instrumentation.<name>.enabled` system property:
 #### Grizzly instrumentation
 
 When you use
-[Grizzly](https://javaee.github.io/grizzly/httpserverframework.html) for
-Servlet-based applications, you get better experience from Servlet-specific
-support. As these two instrumentations conflict with each other, more generic
-instrumentation for Grizzly HTTP server is disabled by default. If needed,
+[Grizzly](https://javaee.github.io/grizzly/httpserverframework.html) for Servlet-based applications,
+you get better experience from Servlet-specific support. As these two instrumentations conflict with
+each other, more generic instrumentation for Grizzly HTTP server is disabled by default. If needed,
 you can enable it by adding the following system property:
 `-Dotel.instrumentation.grizzly.enabled=true`
 
@@ -305,46 +328,45 @@ See [Logger MDC auto-instrumentation](docs/logger-mdc-instrumentation.md)
 ## Manually instrumenting
 
 > :warning: starting with 0.6.0, and prior to version 1.0.0, `opentelemetry-javaagent-all.jar`
-only supports manual instrumentation using the `opentelemetry-api` version with the same version
-number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
-multiple (1.0.0+) versions of `opentelemetry-api`.
+only supports manual instrumentation using the `opentelemetry-api` version with the same version number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting multiple (1.0.0+) versions of `opentelemetry-api`.
 
 You'll need to add a dependency on the `opentelemetry-api` library to get started.
 
 ### Maven
 
 ```xml
-  <dependencies>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-api</artifactId>
-      <version>0.11.0</version>
-    </dependency>
-  </dependencies>
+
+<dependencies>
+  <dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-api</artifactId>
+    <version>0.11.0</version>
+  </dependency>
+</dependencies>
 ```
 
 ### Gradle
 
 ```groovy
 dependencies {
-    compile('io.opentelemetry:opentelemetry-api:0.11.0')
+  compile('io.opentelemetry:opentelemetry-api:0.11.0')
 }
 ```
 
-Now you can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
-manually instrument your Java application.
+Now you can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to manually instrument
+your Java application.
 
 ### Configure the OpenTelemetry getTracer
 
-OpenTelemetry offers a tracer to easily enable custom instrumentation
-throughout your application. See the [OpenTelemetry Java
-QuickStart](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md#tracing)
+OpenTelemetry offers a tracer to easily enable custom instrumentation throughout your application.
+See
+the [OpenTelemetry Java QuickStart](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md#tracing)
 for an example of how to configure the tracer.
 
 ### Configure a WithSpan annotation
 
-If you want to configure custom instrumentation and don't want to use the
-OpenTelemetry `getTracer` and API directly, configure a `@WithSpan`
+If you want to configure custom instrumentation and don't want to use the OpenTelemetry `getTracer`
+and API directly, configure a `@WithSpan`
 annotation. Add the trace annotation to your application's code:
 
 ```java
@@ -363,25 +385,26 @@ You'll also need to add a dependency for this annotation:
 ### Maven
 
 ```xml
-  <dependencies>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-extension-annotations</artifactId>
-      <version>0.11.0</version>
-    </dependency>
-  </dependencies>
+
+<dependencies>
+  <dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-extension-annotations</artifactId>
+    <version>0.11.0</version>
+  </dependency>
+</dependencies>
 ```
 
 ### Gradle
 
 ```groovy
 dependencies {
-    compile('io.opentelemetry:opentelemetry-extension-annotations:0.11.0')
+  compile('io.opentelemetry:opentelemetry-extension-annotations:0.11.0')
 }
 ```
 
-Each time the application invokes the annotated method, it creates a span
-that denote its duration and provides any thrown exceptions.
+Each time the application invokes the annotated method, it creates a span that denote its duration
+and provides any thrown exceptions.
 
 #### Suppressing `@WithSpan` instrumentation
 
@@ -393,15 +416,14 @@ and you want to suppress some of them without modifying the code.
 | trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods.
 Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
 
-
 ## Troubleshooting
 
 To turn on the agent's internal debug logging:
 
 `-Dotel.javaagent.debug=true`
 
-**Note**: These logs are extremely verbose. Enable debug logging only when needed.
-Debug logging negatively impacts the performance of your application.
+**Note**: These logs are extremely verbose. Enable debug logging only when needed. Debug logging
+negatively impacts the performance of your application.
 
 ## Roadmap to 1.0 (GA)
 
@@ -423,7 +445,9 @@ Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.c
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 - [Tyler Benson](https://github.com/tylerbenson), DataDog
 
-Learn more about roles in the [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md).
+Learn more about roles in
+the [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md)
+.
 
 Thanks to all the people who already contributed!
 
