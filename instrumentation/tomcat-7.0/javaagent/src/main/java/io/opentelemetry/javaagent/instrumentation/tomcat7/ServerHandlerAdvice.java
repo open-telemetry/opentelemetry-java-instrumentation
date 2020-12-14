@@ -9,11 +9,11 @@ import static io.opentelemetry.javaagent.instrumentation.tomcat7.TomcatTracer.tr
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.UnhandledServletThrowable;
+import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.asm.Advice;
+import org.apache.coyote.Adapter;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.slf4j.Logger;
@@ -25,6 +25,7 @@ public class ServerHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
+      @Advice.This Adapter itsMe,
       @Advice.Argument(0) Request request,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
@@ -34,10 +35,8 @@ public class ServerHandlerAdvice {
       return;
     }
 
-    context =
-        tracer()
-            .startServerSpan(request)
-            .with(UnhandledServletThrowable.CONTEXT_KEY, new AtomicReference<>());
+    context = tracer().startServerSpan(request, itsMe.getClass().getSimpleName());
+
     scope = context.makeCurrent();
   }
 
@@ -58,7 +57,7 @@ public class ServerHandlerAdvice {
     }
 
     Throwable throwableToReport =
-        throwable != null ? throwable : UnhandledServletThrowable.getUnhandledThrowable(context);
+        throwable != null ? throwable : AppServerBridge.getUnhandledThrowable(context);
 
     if (throwableToReport != null) {
       if (response.isCommitted()) {

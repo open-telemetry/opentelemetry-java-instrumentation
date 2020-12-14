@@ -37,7 +37,12 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> {
     errorPage.setLocation("/errorPage")
     errorPage.setErrorCode(500)
     ctx.addErrorPage(errorPage)
-    ctx.addServletMappingDecoded("/*", "testServlet");
+    ctx.addServletMappingDecoded("/errorPage", "testServlet")
+
+    // Mapping servlet to /* will result in all requests have a name of just a context.
+    ServerEndpoint.values().each {
+      ctx.addServletMappingDecoded(it.path, "testServlet");
+    }
     tomcat.start();
 
     return tomcat

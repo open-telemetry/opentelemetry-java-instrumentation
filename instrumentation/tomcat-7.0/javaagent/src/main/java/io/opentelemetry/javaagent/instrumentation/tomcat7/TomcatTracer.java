@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat7;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.URI;
 import java.util.Collections;
@@ -26,10 +27,14 @@ public class TomcatTracer extends HttpServerTracer<Request, Response, Request, R
     return TRACER;
   }
 
-  public Context startServerSpan(Request request) {
-    String spanName = request.requestURI().toString();
+  public Context startServerSpan(Request request, String adapterClassName) {
+    Context context =
+        AppServerBridge.init(startSpan(request, request, request, adapterClassName + ".service"));
 
-    return startSpan(request, request, request, spanName);
+    // context must be reattached, because it has new attributes compared to the one returned from
+    // startSpan().
+    attachServerContext(context, request);
+    return context;
   }
 
   @Override

@@ -30,14 +30,14 @@ class TomcatSmokeTest extends AppServerTest {
 
     traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
 
-    traces.countSpansByName('/this_is_not_mapped_to_any_servlet') == 1
+    traces.countSpansByName('CoyoteAdapter.service') == 1
   }
 
   @Override
   List<List<Object>> getTestParams() {
     return [
-      ["7.0.107", 8]
-        ["8.5.60", 8],
+      ["7.0.107", 8],
+      ["8.5.60", 8],
       ["8.5.60", 11],
       ["9.0.40", 8],
       ["9.0.40", 11]

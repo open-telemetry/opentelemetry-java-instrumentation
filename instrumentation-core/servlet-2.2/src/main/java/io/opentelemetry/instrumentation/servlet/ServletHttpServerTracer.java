@@ -118,12 +118,17 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return httpServletRequest.getHeader(name);
   }
 
-  private static String getSpanName(HttpServletRequest request) {
+  public static String getSpanName(HttpServletRequest request) {
     String spanName = request.getServletPath();
     String contextPath = request.getContextPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
       spanName = contextPath + spanName;
     }
     return spanName;
+  }
+
+  public void updateServerSpanName(HttpServletRequest request) {
+    log.debug("============ updateServerSpanName > " + getSpanName(request));
+    getServerSpan(request).updateName(getSpanName(request));
   }
 }
