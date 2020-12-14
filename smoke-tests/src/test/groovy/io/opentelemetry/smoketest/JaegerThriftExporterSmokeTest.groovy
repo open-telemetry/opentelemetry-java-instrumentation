@@ -5,14 +5,15 @@
 
 package io.opentelemetry.smoketest
 
-import static java.util.stream.Collectors.toSet
-
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import java.util.jar.Attributes
-import java.util.jar.JarFile
 import okhttp3.Request
 
-class JaegerExporterSmokeTest extends SmokeTest {
+import java.util.jar.Attributes
+import java.util.jar.JarFile
+
+import static java.util.stream.Collectors.toSet
+
+class JaegerThriftExporterSmokeTest extends SmokeTest {
 
   protected String getTargetImage(int jdk, String serverVersion) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20201204.400701583"
@@ -21,12 +22,12 @@ class JaegerExporterSmokeTest extends SmokeTest {
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_EXPORTER"                : "jaeger",
-      "OTEL_EXPORTER_JAEGER_ENDPOINT": "collector:14250"
+      "OTEL_EXPORTER"                : "jaeger-thrift",
+      "OTEL_EXPORTER_JAEGER_ENDPOINT": "http://collector:14268/api/traces"
     ]
   }
 
-  def "spring boot smoke test with jaeger grpc"() {
+  def "spring boot smoke test with jaeger thrift"() {
     setup:
     startTarget(11)
 

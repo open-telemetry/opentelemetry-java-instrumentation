@@ -202,6 +202,7 @@ include ':instrumentation-core:servlet-2.2'
 // exporter adapters
 include ":javaagent-exporters"
 include ":javaagent-exporters:jaeger"
+include ":javaagent-exporters:jaeger-thrift"
 include ":javaagent-exporters:logging"
 include ":javaagent-exporters:otlp"
 include ":javaagent-exporters:zipkin"
