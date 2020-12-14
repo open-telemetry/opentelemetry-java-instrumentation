@@ -113,6 +113,13 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.DB_SYSTEM.key" "cassandra"
         "$SemanticAttributes.DB_NAME.key" keyspace
         "$SemanticAttributes.DB_STATEMENT.key" statement
+        "$SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL.key" "LOCAL_ONE"
+        "$SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC.key" "datacenter1"
+        "$SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID.key" { id -> true } // not tested
+        "$SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE.key" { idempotence -> true } // not tested
+        "$SemanticAttributes.DB_CASSANDRA_PAGE_SIZE.key" 5000
+        "$SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT.key" 0
+        "$SemanticAttributes.DB_CASSANDRA_TABLE.key" { table -> (keyspace == null ? null : "users") == table }
       }
     }
   }
