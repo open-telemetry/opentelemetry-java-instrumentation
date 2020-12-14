@@ -52,8 +52,25 @@
     </b:split>
   </b:job>
 
+  <b:job id="decisionJob">
+    <b:step id="decisionStepStart" next="decision">
+      <b:tasklet ref="testTasklet"/>
+    </b:step>
+    <b:decision id="decision" decider="testDecider">
+      <b:next on="LEFT" to="decisionStepLeft"/>
+      <b:next on="RIGHT" to="decisionStepRight"/>
+    </b:decision>
+    <b:step id="decisionStepLeft">
+      <b:tasklet ref="testTasklet"/>
+    </b:step>
+    <b:step id="decisionStepRight">
+      <b:tasklet ref="testTasklet"/>
+    </b:step>
+  </b:job>
+
   <bean id="itemReader" class="springbatch.TestItemReader"/>
   <bean id="itemProcessor" class="springbatch.TestItemProcessor"/>
   <bean id="itemWriter" class="springbatch.TestItemWriter"/>
   <bean id="testTasklet" class="springbatch.TestTasklet"/>
+  <bean id="testDecider" class="springbatch.TestDecider"/>
 </beans>

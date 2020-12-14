@@ -182,6 +182,41 @@ abstract class SpringBatchTest extends AgentTestRunner {
       }
     }
   }
+
+  def "should trace job with decision"() {
+    when:
+    runJob("decisionJob")
+
+    then:
+    assertTraces(1) {
+      trace(0, 5) {
+        span(0) {
+          name "BatchJob decisionJob"
+          kind INTERNAL
+        }
+        span(1) {
+          name "BatchJob decisionJob.decisionStepStart"
+          kind INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name "BatchJob decisionJob.decisionStepStart.Chunk"
+          kind INTERNAL
+          childOf span(1)
+        }
+        span(3) {
+          name "BatchJob decisionJob.decisionStepLeft"
+          kind INTERNAL
+          childOf span(0)
+        }
+        span(4) {
+          name "BatchJob decisionJob.decisionStepLeft.Chunk"
+          kind INTERNAL
+          childOf span(3)
+        }
+      }
+    }
+  }
 }
 
 class JavaConfigBatchJobTest extends SpringBatchTest implements ApplicationConfigTrait {

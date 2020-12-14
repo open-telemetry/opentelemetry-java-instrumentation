@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import springbatch.TestDecider
 import springbatch.TestItemProcessor
 import springbatch.TestItemReader
 import springbatch.TestItemWriter
@@ -156,5 +157,38 @@ class SpringBatchApplication {
   @Bean
   AsyncTaskExecutor asyncTaskExecutor() {
     new ThreadPoolTaskExecutor()
+  }
+
+  // job with decisions
+  @Bean
+  Job decisionJob() {
+    jobs.get("decisionJob")
+      .start(decisionStepStart())
+      .next(new TestDecider())
+      .on("LEFT").to(decisionStepLeft())
+      .on("RIGHT").to(decisionStepRight())
+      .end()
+      .build()
+  }
+
+  @Bean
+  Step decisionStepStart() {
+    steps.get("decisionStepStart")
+      .tasklet(new TestTasklet())
+      .build()
+  }
+
+  @Bean
+  Step decisionStepLeft() {
+    steps.get("decisionStepLeft")
+      .tasklet(new TestTasklet())
+      .build()
+  }
+
+  @Bean
+  Step decisionStepRight() {
+    steps.get("decisionStepRight")
+      .tasklet(new TestTasklet())
+      .build()
   }
 }
