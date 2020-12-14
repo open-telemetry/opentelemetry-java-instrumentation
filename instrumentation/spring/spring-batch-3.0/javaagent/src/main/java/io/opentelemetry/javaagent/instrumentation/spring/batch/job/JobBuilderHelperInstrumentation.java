@@ -42,11 +42,10 @@ public class JobBuilderHelperInstrumentation implements TypeInstrumentation {
 
   public static class EnhanceAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.FieldValue("properties") JobBuilderHelper.CommonJobProperties properties) {
+    public static void onEnter(@Advice.This JobBuilderHelper<?> jobBuilder) {
       ContextStore<JobExecution, ContextAndScope> executionContextStore =
           InstrumentationContext.get(JobExecution.class, ContextAndScope.class);
-      properties.addJobExecutionListener(new TracingJobExecutionListener(executionContextStore));
+      jobBuilder.listener(new TracingJobExecutionListener(executionContextStore));
     }
   }
 }

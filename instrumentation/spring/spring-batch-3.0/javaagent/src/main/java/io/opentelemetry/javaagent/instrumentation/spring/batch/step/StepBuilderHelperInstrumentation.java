@@ -41,11 +41,10 @@ public class StepBuilderHelperInstrumentation implements TypeInstrumentation {
 
   public static class EnhanceAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.FieldValue("properties") StepBuilderHelper.CommonStepProperties properties) {
+    public static void onEnter(@Advice.This StepBuilderHelper<?> stepBuilder) {
       ContextStore<StepExecution, ContextAndScope> executionContextStore =
           InstrumentationContext.get(StepExecution.class, ContextAndScope.class);
-      properties.addStepExecutionListener(new TracingStepExecutionListener(executionContextStore));
+      stepBuilder.listener(new TracingStepExecutionListener(executionContextStore));
     }
   }
 }
