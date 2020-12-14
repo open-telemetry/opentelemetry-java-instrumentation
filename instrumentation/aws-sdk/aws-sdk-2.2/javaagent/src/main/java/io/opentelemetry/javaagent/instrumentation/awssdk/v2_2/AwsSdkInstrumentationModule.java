@@ -30,7 +30,8 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
       "io.opentelemetry.instrumentation.awssdk.v2_2.RequestType",
       "io.opentelemetry.instrumentation.awssdk.v2_2.SdkRequestDecorator",
       "io.opentelemetry.instrumentation.awssdk.v2_2.DbRequestDecorator",
-      "io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor"
+      "io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor",
+      "io.opentelemetry.extension.trace.propagation.AwsXRayPropagator"
     };
   }
 
