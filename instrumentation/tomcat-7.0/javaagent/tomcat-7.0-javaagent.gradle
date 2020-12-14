@@ -1,0 +1,17 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.apache.tomcat.embed"
+    module = "tomcat-embed-core"
+    // Tomcat 10 is about servlet 5.0
+    // 7.0.4 added Request.isAsync, which is needed
+    versions = "[7.0.4, 10)"
+  }
+}
+
+dependencies {
+  library group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.40'
+  implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  implementation("org.slf4j:slf4j-api:1.7.30")
+}
