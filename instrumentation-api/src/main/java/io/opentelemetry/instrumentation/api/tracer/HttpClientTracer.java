@@ -116,7 +116,9 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super.endExceptionally(span, throwable, -1);
   }
 
-  /** Convenience method primarily for bytecode instrumentation. */
+  // TODO (trask) see if we can reduce the number of end..() variants
+  //  see https://github.com/open-telemetry/opentelemetry-java-instrumentation
+  //                        /pull/1893#discussion_r542111699
   public void endMaybeExceptionally(
       Context context, RESPONSE response, @Nullable Throwable throwable) {
     if (throwable != null) {
