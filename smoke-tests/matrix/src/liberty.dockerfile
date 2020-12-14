@@ -10,8 +10,8 @@ ENV PATH=/opt/ol/wlp/bin:/opt/ol/docker/:/opt/ol/helpers/build:$PATH \
     WLP_OUTPUT_DIR=/opt/ol/wlp/output \
     WLP_SKIP_MAXPERMSIZE=true
 
-COPY --from=liberty $CONFIG $CONFIG
 COPY --from=liberty $LIBERTY $LIBERTY
+RUN ln -s /opt/ol/wlp/usr/servers/defaultServer /config
 
 COPY --chown=1001:0 liberty.xml /config/server.xml
 COPY --chown=1001:0 app.war /config/apps/

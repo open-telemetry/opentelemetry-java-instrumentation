@@ -17,11 +17,11 @@ jobs:
         with:
           java-version: 11
       - name: Build and publish artifacts
-        uses: burrunan/gradle-cache-action@v1.5
+        uses: burrunan/gradle-cache-action@v1.6
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: build final --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+          arguments: build final closeAndReleaseRepository --stacktrace -Prelease.version=${{ github.event.inputs.version }}
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}

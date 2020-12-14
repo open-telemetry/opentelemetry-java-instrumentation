@@ -26,7 +26,7 @@ class JaegerExporterSmokeTest extends SmokeTest {
     ]
   }
 
-  def "spring boot smoke test with Zipkin"() {
+  def "spring boot smoke test with jaeger grpc"() {
     setup:
     startTarget(11)
 

@@ -56,7 +56,7 @@ include ':smoke-tests'
 include ':instrumentation:akka-actor-2.5:javaagent'
 include ':instrumentation:akka-http-10.0:javaagent'
 include ':instrumentation:apache-camel-2.20:javaagent'
-include ':instrumentation:apache-httpasyncclient-4.0:javaagent'
+include ':instrumentation:apache-httpasyncclient-4.1:javaagent'
 include ':instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent'
 include ':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent'
 include ':instrumentation:armeria-1.0:javaagent'
@@ -202,6 +202,7 @@ include ':instrumentation-core:servlet-2.2'
 // exporter adapters
 include ":javaagent-exporters"
 include ":javaagent-exporters:jaeger"
+include ":javaagent-exporters:jaeger-thrift"
 include ":javaagent-exporters:logging"
 include ":javaagent-exporters:otlp"
 include ":javaagent-exporters:zipkin"

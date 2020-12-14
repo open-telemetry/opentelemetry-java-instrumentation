@@ -162,18 +162,18 @@ class Aws1ClientTest extends AgentTestRunner {
     server.lastRequest.headers.get("traceparent") != null
 
     where:
-    service      | operation           | method | path                  | handlerCount | client                                                                                                                                             | call                                                                            | additionalAttributes              | body
-    "S3"         | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build() | { client -> client.createBucket("testbucket") }                                 | ["aws.bucket.name": "testbucket"] | ""
-    "S3"         | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build() | { client -> client.getObject("someBucket", "someKey") }                         | ["aws.bucket.name": "someBucket"] | ""
-    "DynamoDBv2" | "CreateTable"       | "POST" | "/"                   | 1            | AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                            | { c -> c.createTable(new CreateTableRequest("sometable", null)) }               | ["aws.table.name": "sometable"]   | ""
-    "Kinesis"    | "DeleteStream"      | "POST" | "/"                   | 1            | AmazonKinesisClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                             | { c -> c.deleteStream(new DeleteStreamRequest().withStreamName("somestream")) } | ["aws.stream.name": "somestream"] | ""
-    "SQS"        | "CreateQueue"       | "POST" | "/"                   | 4            | AmazonSQSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { c -> c.createQueue(new CreateQueueRequest("somequeue")) }                     | ["aws.queue.name": "somequeue"]   | """
+    service      | operation         | method | path                  | handlerCount | client                                                                                                                                             | call                                                                            | additionalAttributes              | body
+    "S3"         | "CreateBucket"    | "PUT"  | "/testbucket/"        | 1            | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build() | { client -> client.createBucket("testbucket") }                                 | ["aws.bucket.name": "testbucket"] | ""
+    "S3"         | "GetObject"       | "GET"  | "/someBucket/someKey" | 1            | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build() | { client -> client.getObject("someBucket", "someKey") }                         | ["aws.bucket.name": "someBucket"] | ""
+    "DynamoDBv2" | "CreateTable"     | "POST" | "/"                   | 1            | AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                            | { c -> c.createTable(new CreateTableRequest("sometable", null)) }               | ["aws.table.name": "sometable"]   | ""
+    "Kinesis"    | "DeleteStream"    | "POST" | "/"                   | 1            | AmazonKinesisClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                             | { c -> c.deleteStream(new DeleteStreamRequest().withStreamName("somestream")) } | ["aws.stream.name": "somestream"] | ""
+    "SQS"        | "CreateQueue"     | "POST" | "/"                   | 4            | AmazonSQSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { c -> c.createQueue(new CreateQueueRequest("somequeue")) }                     | ["aws.queue.name": "somequeue"]   | """
         <CreateQueueResponse>
             <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>
             <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>
         </CreateQueueResponse>
       """
-    "SQS"        | "SendMessage"       | "POST" | "/someurl"            | 4            | AmazonSQSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { c -> c.sendMessage(new SendMessageRequest("someurl", "")) }                   | ["aws.queue.url": "someurl"]      | """
+    "SQS"        | "SendMessage"     | "POST" | "/someurl"            | 4            | AmazonSQSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { c -> c.sendMessage(new SendMessageRequest("someurl", "")) }                   | ["aws.queue.url": "someurl"]      | """
         <SendMessageResponse>
             <SendMessageResult>
                 <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>
@@ -183,14 +183,14 @@ class Aws1ClientTest extends AgentTestRunner {
             <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>
         </SendMessageResponse>
       """
-    "EC2"        | "AllocateAddress"   | "POST" | "/"                   | 4            | AmazonEC2ClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { client -> client.allocateAddress() }                                          | [:]                               | """
+    "EC2"        | "AllocateAddress" | "POST" | "/"                   | 4            | AmazonEC2ClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { client -> client.allocateAddress() }                                          | [:]                               | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
            <publicIp>192.0.2.1</publicIp>
            <domain>standard</domain>
         </AllocateAddressResponse>
       """
-    "RDS"        | "DeleteOptionGroup" | "POST" | "/"                   | 5            | AmazonRDSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()                                 | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) }          | [:]                               | """
+    "RDS" | "DeleteOptionGroup" | "POST" | "/" | (Boolean.getBoolean("testLatestDeps") ? 6 : 5) | AmazonRDSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build() | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) } | [:] | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata>
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
