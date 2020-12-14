@@ -348,7 +348,7 @@ OpenTelemetry `getTracer` and API directly, configure a `@WithSpan`
 annotation. Add the trace annotation to your application's code:
 
 ```java
-import io.opentelemetry.extension.auto.annotations.WithSpan;
+import io.opentelemetry.extension.annotations.WithSpan;
 
 public class MyClass {
   @WithSpan
