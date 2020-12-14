@@ -1,0 +1,26 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
+
+archivesBaseName = 'javaagent-exporter-jaeger-thrift'
+
+dependencies {
+  compileOnly(project(":javaagent-spi"))
+  compileOnly deps.opentelemetrySdk
+
+  annotationProcessor deps.autoservice
+  compileOnly deps.autoservice
+
+  implementation(deps.opentelemetryJaegerThrift) {
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-api'
+  }
+}
+
+jar.enabled = false
+shadowJar {
+  archiveClassifier = ''
+}
