@@ -54,4 +54,9 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
     }
     return instrumentations;
   }
+
+  protected boolean defaultEnabled() {
+    // TODO: replace this with an experimental flag
+    return false;
+  }
 }

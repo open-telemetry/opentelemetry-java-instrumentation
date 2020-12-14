@@ -17,7 +17,7 @@ public final class QueryNormalizationConfig {
 
   public static boolean isQueryNormalizationEnabled(String... instrumentationNames) {
     return Config.get()
-        .getInstrumentationBooleanProperty(
+        .isInstrumentationPropertyEnabled(
             asList(instrumentationNames), "query.normalizer.enabled", true);
   }
 

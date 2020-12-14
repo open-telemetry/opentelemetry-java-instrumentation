@@ -21,7 +21,7 @@ public final class SpringBatchInstrumentationConfig {
 
   public static boolean isTracingEnabled(String type) {
     return Config.get()
-        .getInstrumentationBooleanProperty(instrumentationNames(), type + ".enabled", true);
+        .isInstrumentationPropertyEnabled(instrumentationNames(), type + ".enabled", true);
   }
 
   private SpringBatchInstrumentationConfig() {}
