@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
