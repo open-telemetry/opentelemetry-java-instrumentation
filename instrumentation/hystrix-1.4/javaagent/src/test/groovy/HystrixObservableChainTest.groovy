@@ -22,7 +22,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
   }
 
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
-    it.setProperty("otel.instrumentation.hystrix.tags", "true")
+    it.setProperty("otel.instrumentation.hystrix.experimental-span-attributes", "true")
   }
 
   def cleanupSpec() {
