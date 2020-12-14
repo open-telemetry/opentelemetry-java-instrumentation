@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling
 
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.Context
 import io.opentelemetry.sdk.trace.ReadWriteSpan
 import spock.lang.Specification
@@ -28,7 +29,7 @@ class AddThreadDetailsSpanProcessorTest extends Specification {
     processor.onStart(Context.root(), span)
 
     then:
-    1 * span.setAttribute(AddThreadDetailsSpanProcessor.THREAD_ID, currentThreadId)
-    1 * span.setAttribute(AddThreadDetailsSpanProcessor.THREAD_NAME, currentThreadName)
+    1 * span.setAttribute(SemanticAttributes.THREAD_ID, currentThreadId)
+    1 * span.setAttribute(SemanticAttributes.THREAD_NAME, currentThreadName)
   }
 }
