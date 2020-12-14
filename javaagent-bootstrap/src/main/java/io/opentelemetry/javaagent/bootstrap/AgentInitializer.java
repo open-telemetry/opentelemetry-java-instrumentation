@@ -48,7 +48,7 @@ public class AgentInitializer {
 
   public static void initialize(Instrumentation inst, URL bootstrapUrl) {
     if (AGENT_CLASSLOADER != null) {
-      // don't run initialization multiple times
+      // don't run initialization multiple times, initialize can be called multiple times via dynamic attach
       return;
     }
 
