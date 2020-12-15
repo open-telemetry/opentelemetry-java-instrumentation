@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.config.Config
+
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
@@ -26,13 +28,17 @@ import server.TestController
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentTestRunner {
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
-    // TODO run tests both with and without experimental span attributes
-    it.setProperty("otel.instrumentation.spring-webflux.experimental-span-attributes", "true")
+  static Config previousConfig
+
+  def setupSpec() {
+    previousConfig = ConfigUtils.updateConfig {
+      // TODO run tests both with and without experimental span attributes
+      it.setProperty("otel.instrumentation.spring-webflux.experimental-span-attributes", "true")
+    }
   }
 
   def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
+    ConfigUtils.setConfig(previousConfig)
   }
 
   @TestConfiguration
