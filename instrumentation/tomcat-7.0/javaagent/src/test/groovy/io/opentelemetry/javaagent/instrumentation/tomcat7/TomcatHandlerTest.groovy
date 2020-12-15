@@ -41,16 +41,16 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> {
 
     // Mapping servlet to /* will result in all requests have a name of just a context.
     ServerEndpoint.values().each {
-      ctx.addServletMappingDecoded(it.path, "testServlet");
+      ctx.addServletMappingDecoded(it.path, "testServlet")
     }
-    tomcat.start();
+    tomcat.start()
 
     return tomcat
   }
 
   @Override
   void stopServer(Tomcat tomcat) {
-    tomcat.getServer().stop();
+    tomcat.getServer().stop()
   }
 
 }
