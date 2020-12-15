@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
@@ -22,6 +23,11 @@ import org.springframework.web.servlet.mvc.Controller;
 public class SpringWebMvcTracer extends BaseTracer {
 
   private static final SpringWebMvcTracer TRACER = new SpringWebMvcTracer();
+
+  private final boolean captureExperimentalSpanAttributes =
+      Config.get()
+          .getBooleanProperty(
+              "otel.instrumentation.spring-webmvc.experimental-span-attributes", false);
 
   public static SpringWebMvcTracer tracer() {
     return TRACER;
@@ -91,10 +97,12 @@ public class SpringWebMvcTracer extends BaseTracer {
   }
 
   private void onRender(Span span, ModelAndView mv) {
-    span.setAttribute("spring-webmvc.view.name", mv.getViewName());
-    View view = mv.getView();
-    if (view != null) {
-      span.setAttribute("spring-webmvc.view.type", spanNameForClass(view.getClass()));
+    if (captureExperimentalSpanAttributes) {
+      span.setAttribute("spring-webmvc.view.name", mv.getViewName());
+      View view = mv.getView();
+      if (view != null) {
+        span.setAttribute("spring-webmvc.view.type", spanNameForClass(view.getClass()));
+      }
     }
   }
 

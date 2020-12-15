@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.javaagent.instrumentation.spring.webflux.SpringWebfluxConfig;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
@@ -43,7 +44,9 @@ public class HandlerAdapterAdvice {
       }
 
       span.updateName(operationName);
-      span.setAttribute("spring-webflux.handler.type", handlerType);
+      if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {
+        span.setAttribute("spring-webflux.handler.type", handlerType);
+      }
 
       scope = context.makeCurrent();
     }
