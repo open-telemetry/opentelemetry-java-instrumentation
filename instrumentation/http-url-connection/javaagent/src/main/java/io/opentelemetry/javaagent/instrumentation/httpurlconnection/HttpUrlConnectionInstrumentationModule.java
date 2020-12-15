@@ -18,7 +18,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
@@ -50,7 +49,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("java.net.HttpURLConnection", Context.class.getName());
+    return singletonMap("java.net.HttpURLConnection", getClass().getName() + "$HttpUrlState");
   }
 
   public static class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
@@ -84,7 +83,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
     public static void methodEnter(
         @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("connected") boolean connected,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelHttpUrlState") HttpUrlState httpUrlState,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
@@ -99,18 +98,23 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         return;
       }
 
-      // putting into storage for a couple of reasons:
+      // using storage for a couple of reasons:
       // - to start an operation in connect() and end it in getInputStream()
-      // - to avoid creating new operation on multiple subsequent calls to getInputStream()
-      ContextStore<HttpURLConnection, Context> storage =
-          InstrumentationContext.get(HttpURLConnection.class, Context.class);
-      context = storage.get(connection);
+      // - to avoid creating a new operation on multiple subsequent calls to getInputStream()
+      ContextStore<HttpURLConnection, HttpUrlState> storage =
+          InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
+      httpUrlState = storage.get(connection);
 
-      if (context == null) {
-        context = tracer().startSpan(parentContext, connection);
-        storage.put(connection, context);
+      if (httpUrlState != null) {
+        if (!httpUrlState.finished) {
+          scope = httpUrlState.context.makeCurrent();
+        }
+        return;
       }
 
+      Context context = tracer().startSpan(parentContext, connection);
+      httpUrlState = new HttpUrlState(context);
+      storage.put(connection, httpUrlState);
       scope = context.makeCurrent();
     }
 
@@ -120,7 +124,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         @Advice.FieldValue("responseCode") int responseCode,
         @Advice.Thrown Throwable throwable,
         @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelHttpUrlState") HttpUrlState httpUrlState,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
@@ -130,16 +134,28 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         return;
       }
       scope.close();
-      if (Span.fromContext(context).isRecording()) {
-        if (throwable != null) {
-          tracer().endExceptionally(context, throwable);
-        } else if (methodName.equals("getInputStream") && responseCode > 0) {
-          // responseCode field is sometimes not populated.
-          // We can't call getResponseCode() due to some unwanted side-effects
-          // (e.g. breaks getOutputStream).
-          tracer().end(context, new HttpUrlResponse(connection, responseCode));
-        }
+
+      if (throwable != null) {
+        tracer().endExceptionally(httpUrlState.context, throwable);
+        httpUrlState.finished = true;
+      } else if (methodName.equals("getInputStream") && responseCode > 0) {
+        // responseCode field is sometimes not populated.
+        // We can't call getResponseCode() due to some unwanted side-effects
+        // (e.g. breaks getOutputStream).
+        tracer().end(httpUrlState.context, new HttpUrlResponse(connection, responseCode));
+        httpUrlState.finished = true;
       }
+    }
+  }
+
+  // everything is public since called directly from advice code
+  // (which is inlined into other packages)
+  public static class HttpUrlState {
+    public final Context context;
+    public boolean finished;
+
+    public HttpUrlState(Context context) {
+      this.context = context;
     }
   }
 }
