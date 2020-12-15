@@ -73,7 +73,7 @@ public class ApacheHttpClientTracer
 
   /** This method is overridden to allow other classes in this package to call it. */
   @Override
-  protected Span onResponse(Span span, HttpResponse httpResponse) {
-    return super.onResponse(span, httpResponse);
+  protected void onResponse(Span span, HttpResponse httpResponse) {
+    super.onResponse(span, httpResponse);
   }
 }
