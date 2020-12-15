@@ -26,8 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param <REQUEST> - The specific type for HTTP requests
  * @param <RESPONSE> - The specific type for HTTP responses
  * @param <CONNECTION> - The specific type of HTTP connection, used to get peer address information
- *     and HTTP flavor. Use Void if your subclass does not need the connection for peerHostIP,
- *     peerPort, or flavor.
+ *     and HTTP flavor.
  * @param <STORAGE> - Implementation specific storage type for attaching/getting the server context.
  *     Use Void if your subclass does not have an implementation specific storage need.
  */
