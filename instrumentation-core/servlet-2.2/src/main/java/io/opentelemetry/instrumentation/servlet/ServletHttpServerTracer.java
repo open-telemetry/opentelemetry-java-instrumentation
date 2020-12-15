@@ -92,6 +92,10 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return HttpServletRequestGetter.GETTER;
   }
 
+  public void addUnwrappedThrowable(Span span, Throwable throwable) {
+    addThrowable(span, unwrapThrowable(throwable));
+  }
+
   @Override
   protected Throwable unwrapThrowable(Throwable throwable) {
     Throwable result = throwable;

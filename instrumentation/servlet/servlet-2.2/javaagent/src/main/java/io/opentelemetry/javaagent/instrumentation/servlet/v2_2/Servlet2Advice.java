@@ -59,11 +59,14 @@ public class Servlet2Advice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    if (CallDepthThreadLocalMap.decrementCallDepth(Servlet2Advice.class) == 0
-        && throwable != null) {
-      tracer().addThrowable(Java8BytecodeBridge.currentSpan(), throwable);
-      //      AppServerBridge.setThrowableToContext(throwable,
-      // Java8BytecodeBridge.currentContext());
+    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(Servlet2Advice.class);
+
+    if (context == null) {
+      // an existing span was found
+      if (callDepth == 0 && throwable != null) {
+        tracer().addUnwrappedThrowable(Java8BytecodeBridge.currentSpan(), throwable);
+      }
+      return;
     }
 
     if (scope == null) {

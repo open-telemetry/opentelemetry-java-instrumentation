@@ -65,19 +65,19 @@ public class Servlet3Advice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
     int callDepth = CallDepthThreadLocalMap.decrementCallDepth(Servlet3Advice.class);
-    if (callDepth == 0 && throwable != null) {
-      tracer().addThrowable(Java8BytecodeBridge.currentSpan(), throwable);
+
+    if (context == null) {
+      // an existing span was found
+      if (callDepth == 0 && throwable != null) {
+        tracer().addUnwrappedThrowable(Java8BytecodeBridge.currentSpan(), throwable);
+      }
+      return;
     }
 
     if (scope == null) {
       return;
     }
     scope.close();
-
-    if (context == null) {
-      // an existing span was found
-      return;
-    }
 
     tracer().setPrincipal(context, (HttpServletRequest) request);
     if (throwable != null) {
