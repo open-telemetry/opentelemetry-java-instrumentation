@@ -30,8 +30,8 @@ public class AttributeKeys {
   public static final AttributeKey<Context> SERVER_SPAN =
       attributeKey(AttributeKeys.class.getName() + ".server-span");
 
-  public static final AttributeKey<Context> CLIENT_SPAN =
-      attributeKey(AttributeKeys.class.getName() + ".client-span");
+  public static final AttributeKey<Context> CLIENT_CONTEXT =
+      attributeKey(AttributeKeys.class.getName() + ".client-context");
 
   public static final AttributeKey<Context> CLIENT_PARENT_CONTEXT =
       attributeKey(AttributeKeys.class.getName() + ".client-parent-context");

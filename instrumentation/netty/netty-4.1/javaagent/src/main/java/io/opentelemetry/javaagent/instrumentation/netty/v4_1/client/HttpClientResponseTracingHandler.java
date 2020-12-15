@@ -19,17 +19,19 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) {
-    Attribute<Context> parentAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
-    Context parentContext = parentAttr.get();
-    Context context = ctx.channel().attr(AttributeKeys.CLIENT_SPAN).get();
+    Context context = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT).get();
+    if (context == null) {
+      ctx.fireChannelRead(msg);
+      return;
+    }
 
-    boolean finishSpan = msg instanceof HttpResponse;
-
-    if (context != null && finishSpan) {
+    if (msg instanceof HttpResponse) {
       tracer().end(context, (HttpResponse) msg);
     }
 
     // We want the callback in the scope of the parent, not the client span
+    Attribute<Context> parentAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
+    Context parentContext = parentAttr.get();
     if (parentContext != null) {
       try (Scope ignored = parentContext.makeCurrent()) {
         ctx.fireChannelRead(msg);
