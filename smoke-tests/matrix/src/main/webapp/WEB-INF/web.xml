@@ -3,6 +3,9 @@
   xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
          http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
   version="3.1">
+  <listener>
+    <listener-class>io.opentelemetry.smoketest.matrix.ExceptionRequestListener</listener-class>
+  </listener>
   <servlet>
     <servlet-name>Headers</servlet-name>
     <servlet-class>io.opentelemetry.smoketest.matrix.HeaderDumpingServlet</servlet-class>
@@ -10,6 +13,23 @@
   <servlet>
     <servlet-name>Greeting</servlet-name>
     <servlet-class>io.opentelemetry.smoketest.matrix.GreetingServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>AsyncGreeting</servlet-name>
+    <servlet-class>io.opentelemetry.smoketest.matrix.AsyncGreetingServlet</servlet-class>
+    <async-supported>true</async-supported>
+  </servlet>
+  <servlet>
+    <servlet-name>Exception</servlet-name>
+    <servlet-class>io.opentelemetry.smoketest.matrix.ExceptionServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>Forward</servlet-name>
+    <servlet-class>io.opentelemetry.smoketest.matrix.ForwardServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>Include</servlet-name>
+    <servlet-class>io.opentelemetry.smoketest.matrix.IncludeServlet</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>Jsp</servlet-name>
@@ -22,6 +42,22 @@
   <servlet-mapping>
     <servlet-name>Greeting</servlet-name>
     <url-pattern>/greeting</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AsyncGreeting</servlet-name>
+    <url-pattern>/asyncgreeting</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>Exception</servlet-name>
+    <url-pattern>/exception</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>Forward</servlet-name>
+    <url-pattern>/forward</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>Include</servlet-name>
+    <url-pattern>/include</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>Jsp</servlet-name>
