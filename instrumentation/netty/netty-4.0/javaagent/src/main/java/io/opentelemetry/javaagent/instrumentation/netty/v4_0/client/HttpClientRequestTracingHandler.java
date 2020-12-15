@@ -11,12 +11,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
-import java.net.InetSocketAddress;
 
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
@@ -37,15 +34,9 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       return;
     }
 
-    HttpRequest request = (HttpRequest) msg;
-
+    Context context = tracer().startSpan(parentContext, ctx, (HttpRequest) msg);
+    ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT).set(context);
     ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(parentContext);
-
-    Context context = tracer().startSpan(parentContext, request, request.headers());
-    // TODO (trask) move this setNetPeer() call into the Tracer
-    NetPeerUtils.INSTANCE.setNetPeer(
-        Span.fromContext(context), (InetSocketAddress) ctx.channel().remoteAddress());
-    ctx.channel().attr(AttributeKeys.CLIENT_SPAN).set(context);
 
     try (Scope ignored = context.makeCurrent()) {
       ctx.write(msg, prm);

@@ -6,13 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyResponseInjectAdapter.SETTER;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,6 +30,23 @@ public class NettyHttpClientTracer
 
   public static NettyHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public Context startSpan(Context parentContext, ChannelHandlerContext ctx, HttpRequest request) {
+    Span span =
+        tracer
+            .spanBuilder(spanNameForRequest(request))
+            .setSpanKind(CLIENT)
+            .setParent(parentContext)
+            .startSpan();
+    onRequest(span, request);
+    NetPeerUtils.INSTANCE.setNetPeer(span, (InetSocketAddress) ctx.channel().remoteAddress());
+
+    Context context = withClientSpan(parentContext, span);
+    OpenTelemetry.getGlobalPropagators()
+        .getTextMapPropagator()
+        .inject(context, request.headers(), SETTER);
+    return context;
   }
 
   @Override
@@ -61,7 +85,7 @@ public class NettyHttpClientTracer
   }
 
   @Override
-  protected Setter<HttpHeaders> getSetter() {
+  protected TextMapPropagator.Setter<HttpHeaders> getSetter() {
     return SETTER;
   }
 
