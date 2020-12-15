@@ -47,6 +47,9 @@ public class TracingStepExecutionListener implements StepExecutionListener, Orde
     return HIGHEST_PRECEDENCE;
   }
 
+  // equals() and hashCode() methods guarantee that only one instance of
+  // TracingStepExecutionListener will be present in an ordered set of listeners
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -57,6 +60,6 @@ public class TracingStepExecutionListener implements StepExecutionListener, Orde
 
   @Override
   public int hashCode() {
-    return 0;
+    return getClass().hashCode();
   }
 }

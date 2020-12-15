@@ -25,13 +25,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.configuration.xml.JobParserJobFactoryBean;
-import org.springframework.batch.core.jsr.configuration.xml.JobFactoryBean;
 
-public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
+public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    // JSR-352 XML config
-    return named("org.springframework.batch.core.jsr.configuration.xml.JobFactoryBean");
+    // Spring Batch XML config
+    return named("org.springframework.batch.core.configuration.xml.JobParserJobFactoryBean");
   }
 
   @Override
@@ -49,22 +48,23 @@ public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
 
   public static class InitAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.This JobFactoryBean jobFactory) {
-      jobFactory.setJobExecutionListeners(new Object[] {});
+    public static void onExit(@Advice.This JobParserJobFactoryBean jobFactory) {
+      jobFactory.setJobExecutionListeners(new JobExecutionListener[] {});
     }
   }
 
   public static class SetListenersAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(value = 0, readOnly = false) Object[] listeners) {
+    public static void onEnter(
+        @Advice.Argument(value = 0, readOnly = false) JobExecutionListener[] listeners) {
       ContextStore<JobExecution, ContextAndScope> executionContextStore =
           InstrumentationContext.get(JobExecution.class, ContextAndScope.class);
       JobExecutionListener tracingListener = new TracingJobExecutionListener(executionContextStore);
 
       if (listeners == null) {
-        listeners = new Object[] {tracingListener};
+        listeners = new JobExecutionListener[] {tracingListener};
       } else {
-        Object[] newListeners = new Object[listeners.length + 1];
+        JobExecutionListener[] newListeners = new JobExecutionListener[listeners.length + 1];
         newListeners[0] = tracingListener;
         System.arraycopy(listeners, 0, newListeners, 1, listeners.length);
         listeners = newListeners;

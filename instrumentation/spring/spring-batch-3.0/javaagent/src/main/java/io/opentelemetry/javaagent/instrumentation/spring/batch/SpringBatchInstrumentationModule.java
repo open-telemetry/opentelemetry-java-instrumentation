@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNa
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobBuilderHelperInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobFactoryBeanInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobParserJobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.step.StepBuilderHelperInstrumentation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -48,6 +49,7 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
     if (isTracingEnabled("job")) {
       instrumentations.add(new JobBuilderHelperInstrumentation());
       instrumentations.add(new JobFactoryBeanInstrumentation());
+      instrumentations.add(new JobParserJobFactoryBeanInstrumentation());
     }
     if (isTracingEnabled("step")) {
       instrumentations.add(new StepBuilderHelperInstrumentation());
