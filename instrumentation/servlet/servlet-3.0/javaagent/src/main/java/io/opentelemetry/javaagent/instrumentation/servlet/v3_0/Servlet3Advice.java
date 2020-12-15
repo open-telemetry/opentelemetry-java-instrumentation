@@ -43,9 +43,10 @@ public class Servlet3Advice {
       // We're interested only in the very first suggested name, as this is where the initial
       // request arrived. There are potential forward and other scenarios, where servlet path
       // may change, but we don't want this to be reflected in the span name.
-      if (!AppServerBridge.isBetterNameSuggested(attachedContext)) {
+      if (AppServerBridge.isPresent(attachedContext)
+          && !AppServerBridge.isServerSpanNameUpdatedFromServlet(attachedContext)) {
         tracer().updateServerSpanName(httpServletRequest);
-        AppServerBridge.setBetterNameSuggested(attachedContext, true);
+        AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
       }
 
       // We are inside nested servlet/filter, don't create new span
@@ -65,7 +66,7 @@ public class Servlet3Advice {
       @Advice.Local("otelScope") Scope scope) {
     int callDepth = CallDepthThreadLocalMap.decrementCallDepth(Servlet3Advice.class);
     if (callDepth == 0 && throwable != null) {
-      AppServerBridge.setThrowableToContext(throwable, Java8BytecodeBridge.currentContext());
+      tracer().addThrowable(Java8BytecodeBridge.currentSpan(), throwable);
     }
 
     if (scope == null) {

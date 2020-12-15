@@ -40,9 +40,10 @@ public class Servlet2Advice {
       // We're interested only in the very first suggested name, as this is where the initial
       // request arrived. There are potential forward and other scenarios, where servlet path
       // may change, but we don't want this to be reflected in the span name.
-      if (!AppServerBridge.isBetterNameSuggested(serverContext)) {
+      if (AppServerBridge.isPresent(serverContext)
+          && !AppServerBridge.isServerSpanNameUpdatedFromServlet(serverContext)) {
         tracer().updateServerSpanName(httpServletRequest);
-        AppServerBridge.setBetterNameSuggested(serverContext, true);
+        AppServerBridge.setServletUpdatedServerSpanName(serverContext, true);
       }
       return;
     }
@@ -60,7 +61,9 @@ public class Servlet2Advice {
       @Advice.Local("otelScope") Scope scope) {
     if (CallDepthThreadLocalMap.decrementCallDepth(Servlet2Advice.class) == 0
         && throwable != null) {
-      AppServerBridge.setThrowableToContext(throwable, Java8BytecodeBridge.currentContext());
+      tracer().addThrowable(Java8BytecodeBridge.currentSpan(), throwable);
+      //      AppServerBridge.setThrowableToContext(throwable,
+      // Java8BytecodeBridge.currentContext());
     }
 
     if (scope == null) {

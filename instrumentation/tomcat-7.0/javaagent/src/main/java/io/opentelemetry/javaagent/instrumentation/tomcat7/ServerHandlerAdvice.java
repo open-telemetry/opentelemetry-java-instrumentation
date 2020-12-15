@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.tomcat7.TomcatTracer.tr
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.asm.Advice;
@@ -56,14 +55,13 @@ public class ServerHandlerAdvice {
       return;
     }
 
-    Throwable throwableToReport =
-        throwable != null ? throwable : AppServerBridge.getUnhandledThrowable(context);
-
-    if (throwableToReport != null) {
+    if (throwable != null) {
       if (response.isCommitted()) {
-        tracer().endExceptionally(context, throwableToReport, response);
+        tracer().endExceptionally(context, throwable, response);
       } else {
-        tracer().endExceptionally(context, throwableToReport);
+        // If the response is not committed, then response headers, including response code, are
+        // not yet written to the output stream.
+        tracer().endExceptionally(context, throwable);
       }
       return;
     }
