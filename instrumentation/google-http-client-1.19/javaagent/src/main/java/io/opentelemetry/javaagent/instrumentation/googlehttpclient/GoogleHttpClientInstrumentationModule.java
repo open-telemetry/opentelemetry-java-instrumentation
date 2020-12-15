@@ -84,8 +84,9 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
 
       context = InstrumentationContext.get(HttpRequest.class, Context.class).get(request);
       if (context != null) {
-        // this is the synchronous operation inside of an async operation, so make it current
-        // and end it in method exit
+        // span was created by GoogleHttpClientAsyncAdvice instrumentation below
+        // (executeAsync ends up calling execute from a separate thread)
+        // so make it current and end it in method exit
         scope = context.makeCurrent();
         return;
       }
