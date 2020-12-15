@@ -26,11 +26,6 @@ public class SpringWebfluxHttpClientTracer
 
   private static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
 
-  private final boolean captureExperimentalSpanAttributes =
-      Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.spring-webflux.experimental-span-attributes", false);
-
   public static SpringWebfluxHttpClientTracer tracer() {
     return TRACER;
   }
@@ -38,7 +33,7 @@ public class SpringWebfluxHttpClientTracer
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
   public void onCancel(Context context) {
-    if (captureExperimentalSpanAttributes) {
+    if (captureExperimentalSpanAttributes()) {
       Span span = Span.fromContext(context);
       span.setAttribute("spring-webflux.event", "cancelled");
       span.setAttribute("spring-webflux.message", "The subscription was cancelled");
@@ -104,5 +99,13 @@ public class SpringWebfluxHttpClientTracer
     } catch (IllegalAccessException | NoSuchMethodException e) {
       return null;
     }
+  }
+
+  // TODO cache this after
+  //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/1643
+  private static boolean captureExperimentalSpanAttributes() {
+    return Config.get()
+        .getBooleanProperty(
+            "otel.instrumentation.spring-webflux.experimental-span-attributes", false);
   }
 }
