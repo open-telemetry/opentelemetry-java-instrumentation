@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.propagation.HttpTraceContext
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -32,6 +33,15 @@ import org.springframework.kafka.test.utils.KafkaTestUtils
 import spock.lang.Shared
 
 class KafkaStreamsTest extends AgentTestRunner {
+  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
+    // TODO run tests both with and without experimental span attributes
+    it.setProperty("otel.instrumentation.kafka.experimental-span-attributes", "true")
+  }
+
+  def cleanupSpec() {
+    ConfigUtils.setConfig(PREVIOUS_CONFIG)
+  }
+
   static final STREAM_PENDING = "test.pending"
   static final STREAM_PROCESSED = "test.processed"
 
@@ -150,8 +160,8 @@ class KafkaStreamsTest extends AgentTestRunner {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
-            "kafka-clients.offset" 0
-            "kafka-clients.record.queue_time_ms" { it >= 0 }
+            "kafka.offset" 0
+            "kafka.record.queue_time_ms" { it >= 0 }
           }
         }
         // STREAMING span 1
@@ -166,7 +176,7 @@ class KafkaStreamsTest extends AgentTestRunner {
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
-            "kafka-streams.offset" 0
+            "kafka.offset" 0
             "asdf" "testing"
           }
         }
@@ -195,8 +205,8 @@ class KafkaStreamsTest extends AgentTestRunner {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
-            "kafka-clients.offset" 0
-            "kafka-clients.record.queue_time_ms" { it >= 0 }
+            "kafka.offset" 0
+            "kafka.record.queue_time_ms" { it >= 0 }
             "testing" 123
           }
         }
