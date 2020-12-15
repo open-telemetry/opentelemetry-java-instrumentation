@@ -74,7 +74,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      context = tracer().startSpan(parentContext, httpMethod, httpMethod);
+      context = tracer().startSpan(parentContext, httpMethod);
       scope = context.makeCurrent();
     }
 
@@ -89,11 +89,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       }
 
       scope.close();
-      if (throwable == null) {
-        tracer().end(context, httpMethod);
-      } else {
-        tracer().endExceptionally(context, httpMethod, throwable);
-      }
+      tracer().endMaybeExceptionally(context, httpMethod, throwable);
     }
   }
 }
