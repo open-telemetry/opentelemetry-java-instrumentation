@@ -23,6 +23,8 @@ import org.springframework.kafka.test.utils.KafkaTestUtils
 class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
   static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
     it.setProperty("otel.instrumentation.kafka.client-propagation", "false")
+    // TODO run tests both with and without experimental span attributes
+    it.setProperty("otel.instrumentation.kafka.experimental-span-attributes", "true")
   }
 
   def cleanupSpec() {
@@ -97,8 +99,8 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "${SemanticAttributes.MESSAGING_KAFKA_PARTITION.key}" { it >= 0 }
-            "kafka-clients.offset" 0
-            "kafka-clients.record.queue_time_ms" { it >= 0 }
+            "kafka.offset" 0
+            "kafka.record.queue_time_ms" { it >= 0 }
           }
         }
       }

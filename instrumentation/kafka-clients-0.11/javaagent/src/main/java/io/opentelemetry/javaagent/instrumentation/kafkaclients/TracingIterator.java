@@ -32,7 +32,7 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
       Iterator<ConsumerRecord<?, ?>> delegateIterator, KafkaConsumerTracer tracer) {
     this.delegateIterator = delegateIterator;
     this.tracer = tracer;
-    this.propagationEnabled = KafkaClientConfiguration.isPropagationEnabled();
+    this.propagationEnabled = KafkaClientsConfig.isPropagationEnabled();
   }
 
   @Override

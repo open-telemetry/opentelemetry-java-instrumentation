@@ -10,11 +10,16 @@ import static io.opentelemetry.javaagent.instrumentation.kafkastreams.TextMapExt
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
 public class KafkaStreamsTracer extends BaseTracer {
   private static final KafkaStreamsTracer TRACER = new KafkaStreamsTracer();
+
+  private final boolean captureExperimentalSpanAttributes =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.kafka.experimental-span-attributes", false);
 
   public static KafkaStreamsTracer tracer() {
     return TRACER;
@@ -45,7 +50,9 @@ public class KafkaStreamsTracer extends BaseTracer {
   public void onConsume(Span span, StampedRecord record) {
     if (record != null) {
       span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, record.partition());
-      span.setAttribute("kafka-streams.offset", record.offset());
+      if (captureExperimentalSpanAttributes) {
+        span.setAttribute("kafka.offset", record.offset());
+      }
     }
   }
 

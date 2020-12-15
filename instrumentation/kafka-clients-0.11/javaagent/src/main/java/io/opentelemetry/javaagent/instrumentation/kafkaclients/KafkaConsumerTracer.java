@@ -46,7 +46,7 @@ public class KafkaConsumerTracer extends BaseTracer {
   }
 
   private Context extractParent(ConsumerRecord<?, ?> record) {
-    if (KafkaClientConfiguration.isPropagationEnabled()) {
+    if (KafkaClientsConfig.isPropagationEnabled()) {
       return extract(record.headers(), GETTER);
     } else {
       return Context.current();
@@ -60,19 +60,21 @@ public class KafkaConsumerTracer extends BaseTracer {
   public void onConsume(Span span, long startTimeMillis, ConsumerRecord<?, ?> record) {
     // TODO should we set topic + offset as messaging.message_id?
     span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, record.partition());
-    span.setAttribute("kafka-clients.offset", record.offset());
-
     if (record.value() == null) {
       span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
     }
 
-    // don't record a duration if the message was sent from an old Kafka client
-    if (record.timestampType() != TimestampType.NO_TIMESTAMP_TYPE) {
-      long produceTime = record.timestamp();
-      // this attribute shows how much time elapsed between the producer and the consumer of this
-      // message, which can be helpful for identifying queue bottlenecks
-      span.setAttribute(
-          "kafka-clients.record.queue_time_ms", Math.max(0L, startTimeMillis - produceTime));
+    if (KafkaClientsConfig.captureExperimentalSpanAttributes()) {
+      span.setAttribute("kafka.offset", record.offset());
+
+      // don't record a duration if the message was sent from an old Kafka client
+      if (record.timestampType() != TimestampType.NO_TIMESTAMP_TYPE) {
+        long produceTime = record.timestamp();
+        // this attribute shows how much time elapsed between the producer and the consumer of this
+        // message, which can be helpful for identifying queue bottlenecks
+        span.setAttribute(
+            "kafka.record.queue_time_ms", Math.max(0L, startTimeMillis - produceTime));
+      }
     }
   }
 
