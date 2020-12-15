@@ -11,7 +11,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +31,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   public AwsSdkClientTracer() {}
 
   @Override
-  public String spanNameForRequest(Request<?> request) {
+  protected String spanNameForRequest(Request<?> request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }
@@ -111,7 +111,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   }
 
   @Override
-  protected Setter<Request<?>> getSetter() {
+  protected TextMapPropagator.Setter<Request<?>> getSetter() {
     return AwsSdkInjectAdapter.INSTANCE;
   }
 

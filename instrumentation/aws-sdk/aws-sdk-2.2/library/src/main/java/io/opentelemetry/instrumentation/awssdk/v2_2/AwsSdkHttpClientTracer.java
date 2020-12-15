@@ -5,21 +5,22 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
+import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpHeaders;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
 final class AwsSdkHttpClientTracer
-    extends HttpClientTracer<SdkHttpRequest, SdkHttpRequest, SdkHttpResponse> {
+    extends HttpClientTracer<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> {
 
   private static final AwsSdkHttpClientTracer TRACER = new AwsSdkHttpClientTracer();
 
@@ -27,10 +28,15 @@ final class AwsSdkHttpClientTracer
     return TRACER;
   }
 
-  // Certain headers in the request like User-Agent are only available after execution.
-  Span afterExecution(Span span, SdkHttpRequest request) {
-    span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
-    return span;
+  public Context startSpan(Context parentContext, ExecutionAttributes attributes) {
+    String spanName = spanName(attributes);
+    Span span =
+        tracer.spanBuilder(spanName).setSpanKind(CLIENT).setParent(parentContext).startSpan();
+    return withClientSpan(parentContext, span);
+  }
+
+  public void inject(Context context, SdkHttpRequest.Builder builder) {
+    AwsXRayPropagator.getInstance().inject(context, builder, getSetter());
   }
 
   @Override
@@ -59,8 +65,8 @@ final class AwsSdkHttpClientTracer
   }
 
   @Override
-  protected Setter<SdkHttpRequest> getSetter() {
-    return null;
+  protected TextMapPropagator.Setter<SdkHttpRequest.Builder> getSetter() {
+    return AwsSdkInjectAdapter.INSTANCE;
   }
 
   private static String header(SdkHttpHeaders headers, String name) {
@@ -78,9 +84,9 @@ final class AwsSdkHttpClientTracer
     super.onRequest(span, sdkHttpRequest);
   }
 
-  public Context startSpan(Context parentContext, String name, Tracer tracer, Kind kind) {
-    Span clientSpan =
-        tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext).startSpan();
-    return parentContext.with(clientSpan).with(BaseTracer.CONTEXT_CLIENT_SPAN_KEY, clientSpan);
+  private static String spanName(ExecutionAttributes attributes) {
+    String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
+    String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
+    return awsServiceName + "." + awsOperation;
   }
 }
