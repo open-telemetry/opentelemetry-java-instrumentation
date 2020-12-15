@@ -7,13 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyHttpClientTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
-import java.net.InetSocketAddress;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
@@ -29,9 +26,10 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
   }
 
   @Override
-  public void writeRequested(ChannelHandlerContext ctx, MessageEvent msg) {
-    if (!(msg.getMessage() instanceof HttpRequest)) {
-      ctx.sendDownstream(msg);
+  public void writeRequested(ChannelHandlerContext ctx, MessageEvent event) {
+    Object message = event.getMessage();
+    if (!(message instanceof HttpRequest)) {
+      ctx.sendDownstream(event);
       return;
     }
 
@@ -46,22 +44,16 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
     }
 
     if (!tracer().shouldStartSpan(parentContext)) {
-      ctx.sendDownstream(msg);
+      ctx.sendDownstream(event);
       return;
     }
 
+    Context context = tracer().startSpan(parentContext, ctx, (HttpRequest) message);
+    channelTraceContext.setContext(context);
     channelTraceContext.setClientParentContext(parentContext);
 
-    HttpRequest request = (HttpRequest) msg.getMessage();
-
-    Context context = tracer().startSpan(parentContext, request, request.headers());
-    // TODO (trask) move this setNetPeer() call into the Tracer
-    NetPeerUtils.INSTANCE.setNetPeer(
-        Span.fromContext(context), (InetSocketAddress) ctx.getChannel().getRemoteAddress());
-    channelTraceContext.setContext(context);
-
     try (Scope ignored = context.makeCurrent()) {
-      ctx.sendDownstream(msg);
+      ctx.sendDownstream(event);
     } catch (Throwable throwable) {
       tracer().endExceptionally(context, throwable);
       throw throwable;
