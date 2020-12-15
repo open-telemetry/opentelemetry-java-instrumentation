@@ -74,8 +74,8 @@ final class AwsSdkHttpClientTracer
 
   /** This method is overridden to allow other classes in this package to call it. */
   @Override
-  protected Span onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
-    return super.onRequest(span, sdkHttpRequest);
+  protected void onRequest(Span span, SdkHttpRequest sdkHttpRequest) {
+    super.onRequest(span, sdkHttpRequest);
   }
 
   public Context startSpan(Context parentContext, String name, Tracer tracer, Kind kind) {
