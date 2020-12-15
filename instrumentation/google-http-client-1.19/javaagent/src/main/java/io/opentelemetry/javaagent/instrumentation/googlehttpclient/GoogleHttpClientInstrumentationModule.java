@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.spanFromContext;
 import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientTracer.tracer;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -19,10 +18,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -85,21 +82,19 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      ContextStore<HttpRequest, Context> contextStore =
-          InstrumentationContext.get(HttpRequest.class, Context.class);
-      context = contextStore.get(request);
-
-      if (context == null) {
-        Context parentContext = currentContext();
-        if (tracer().shouldStartSpan(parentContext)) {
-          context = tracer().startSpan(parentContext, request, request.getHeaders());
-          contextStore.put(request, context);
-          scope = context.makeCurrent();
-        }
-      } else {
-        // span was created by GoogleHttpClientAsyncAdvice instrumentation below
+      context = InstrumentationContext.get(HttpRequest.class, Context.class).get(request);
+      if (context != null) {
+        // this is the synchronous operation inside of an async operation, so make it current
+        // and end it in method exit
         scope = context.makeCurrent();
+        return;
       }
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
+      }
+      context = tracer().startSpan(parentContext, request);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -113,16 +108,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
       }
 
       scope.close();
-      if (throwable == null) {
-        tracer().end(context, response);
-      } else {
-        tracer().endExceptionally(context, response, throwable);
-      }
-      // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
-      // for a failed request.  Thus, check the response code
-      if (response != null && !response.isSuccessStatusCode()) {
-        spanFromContext(context).setStatus(StatusCode.ERROR);
-      }
+      tracer().endMaybeExceptionally(context, response, throwable);
     }
   }
 
@@ -138,15 +124,12 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      context = tracer().startSpan(parentContext, request, request.getHeaders());
+      context = tracer().startSpan(parentContext, request);
+      scope = context.makeCurrent();
 
       // propagating the context manually here so this instrumentation will work with and without
       // the executors instrumentation
-      ContextStore<HttpRequest, Context> contextStore =
-          InstrumentationContext.get(HttpRequest.class, Context.class);
-      contextStore.put(request, context);
-
-      scope = context.makeCurrent();
+      InstrumentationContext.get(HttpRequest.class, Context.class).put(request, context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
