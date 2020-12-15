@@ -46,14 +46,7 @@ public class ServerHandlerAdvice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    if (scope == null) {
-      return;
-    }
     scope.close();
-
-    if (context == null) {
-      return;
-    }
 
     if (throwable != null) {
       if (response.isCommitted()) {
