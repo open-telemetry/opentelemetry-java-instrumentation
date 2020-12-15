@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Ht
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -40,11 +39,7 @@ public class Servlet2Advice {
       // We're interested only in the very first suggested name, as this is where the initial
       // request arrived. There are potential forward and other scenarios, where servlet path
       // may change, but we don't want this to be reflected in the span name.
-      if (AppServerBridge.isPresent(serverContext)
-          && !AppServerBridge.isServerSpanNameUpdatedFromServlet(serverContext)) {
-        tracer().updateServerSpanName(httpServletRequest);
-        AppServerBridge.setServletUpdatedServerSpanName(serverContext, true);
-      }
+      tracer().updateServerSpanNameOnce(serverContext, httpServletRequest);
       return;
     }
 
@@ -61,18 +56,19 @@ public class Servlet2Advice {
       @Advice.Local("otelScope") Scope scope) {
     int callDepth = CallDepthThreadLocalMap.decrementCallDepth(Servlet2Advice.class);
 
-    if (context == null) {
-      // an existing span was found
-      if (callDepth == 0 && throwable != null) {
-        tracer().addUnwrappedThrowable(Java8BytecodeBridge.currentSpan(), throwable);
-      }
-      return;
+    if (scope != null) {
+      scope.close();
     }
 
-    if (scope == null) {
+    if (context == null && callDepth == 0 && throwable != null) {
+      // Something else is managing the context, we're in the outermost level of Servlet
+      // instrumentation and we have an uncaught throwable. Let's add it to the current span.
+      tracer().addUnwrappedThrowable(Java8BytecodeBridge.currentSpan(), throwable);
+    }
+
+    if (scope == null || context == null) {
       return;
     }
-    scope.close();
 
     tracer().setPrincipal(context, (HttpServletRequest) request);
 

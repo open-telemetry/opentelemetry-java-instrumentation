@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.URI;
@@ -131,7 +132,11 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return spanName;
   }
 
-  public void updateServerSpanName(HttpServletRequest request) {
-    getServerSpan(request).updateName(getSpanName(request));
+  public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
+    if (AppServerBridge.isPresent(attachedContext)
+        && !AppServerBridge.isServerSpanNameUpdatedFromServlet(attachedContext)) {
+      getServerSpan(request).updateName(getSpanName(request));
+      AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
+    }
   }
 }
