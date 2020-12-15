@@ -24,7 +24,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.batch.core.configuration.xml.JobParserJobFactoryBean;
 import org.springframework.batch.core.jsr.configuration.xml.JobFactoryBean;
 
 public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
