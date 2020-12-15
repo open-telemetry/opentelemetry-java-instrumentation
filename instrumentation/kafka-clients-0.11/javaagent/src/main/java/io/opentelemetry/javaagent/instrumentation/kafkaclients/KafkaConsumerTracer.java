@@ -46,7 +46,7 @@ public class KafkaConsumerTracer extends BaseTracer {
   }
 
   private Context extractParent(ConsumerRecord<?, ?> record) {
-    if (KafkaClientsConfiguration.isPropagationEnabled()) {
+    if (KafkaClientsConfig.isPropagationEnabled()) {
       return extract(record.headers(), GETTER);
     } else {
       return Context.current();
@@ -64,7 +64,7 @@ public class KafkaConsumerTracer extends BaseTracer {
       span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
     }
 
-    if (KafkaClientsConfiguration.captureExperimentalSpanAttributes()) {
+    if (KafkaClientsConfig.captureExperimentalSpanAttributes()) {
       span.setAttribute("kafka.offset", record.offset());
 
       // don't record a duration if the message was sent from an old Kafka client

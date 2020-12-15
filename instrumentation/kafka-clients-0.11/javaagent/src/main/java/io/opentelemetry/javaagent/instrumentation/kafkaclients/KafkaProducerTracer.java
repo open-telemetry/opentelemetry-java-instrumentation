@@ -36,7 +36,7 @@ public class KafkaProducerTracer extends BaseTracer {
   // value of the broker(s) is >= 2
   public boolean shouldPropagate(ApiVersions apiVersions) {
     return apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2
-        && KafkaClientsConfiguration.isPropagationEnabled();
+        && KafkaClientsConfig.isPropagationEnabled();
   }
 
   public String spanNameOnProduce(ProducerRecord<?, ?> record) {

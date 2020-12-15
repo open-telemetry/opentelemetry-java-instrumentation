@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 
-public final class KafkaClientsConfiguration {
+public final class KafkaClientsConfig {
 
   public static boolean isPropagationEnabled() {
     return Config.get().getBooleanProperty("otel.instrumentation.kafka.client-propagation", true);
@@ -18,5 +18,5 @@ public final class KafkaClientsConfiguration {
         .getBooleanProperty("otel.instrumentation.kafka.experimental-span-attributes", false);
   }
 
-  private KafkaClientsConfiguration() {}
+  private KafkaClientsConfig() {}
 }
