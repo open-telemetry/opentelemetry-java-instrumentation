@@ -30,31 +30,33 @@ public class TracingRequestHandler extends RequestHandler2 {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     RequestMeta requestMeta = contextStore.get(originalRequest);
     Context parentContext = Context.current();
-    if (tracer().shouldStartSpan(parentContext)) {
-      Context context = tracer().startSpan(parentContext, request, requestMeta);
-      Scope scope = context.makeCurrent();
-      request.addHandlerContext(
-          CONTEXT_SCOPE_PAIR_CONTEXT_KEY, new ContextScopePair(context, scope));
+    if (!tracer().shouldStartSpan(parentContext)) {
+      return;
     }
+    Context context = tracer().startSpan(parentContext, request, requestMeta);
+    Scope scope = context.makeCurrent();
+    request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, new ContextScopePair(context, scope));
   }
 
   @Override
   public void afterResponse(Request<?> request, Response<?> response) {
     ContextScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY);
-    if (scope != null) {
-      request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, null);
-      scope.closeScope();
-      tracer().end(scope.getContext(), response);
+    if (scope == null) {
+      return;
     }
+    request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, null);
+    scope.closeScope();
+    tracer().end(scope.getContext(), response);
   }
 
   @Override
   public void afterError(Request<?> request, Response<?> response, Exception e) {
     ContextScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY);
-    if (scope != null) {
-      request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, null);
-      scope.closeScope();
-      tracer().endExceptionally(scope.getContext(), response, e);
+    if (scope == null) {
+      return;
     }
+    request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, null);
+    scope.closeScope();
+    tracer().endExceptionally(scope.getContext(), e);
   }
 }
