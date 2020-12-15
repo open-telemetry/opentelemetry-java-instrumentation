@@ -128,8 +128,6 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
       context = tracer().startSpan(parentContext, request);
       scope = context.makeCurrent();
 
-      // propagating the context manually here so this instrumentation will work with and without
-      // the executors instrumentation
       InstrumentationContext.get(HttpRequest.class, Context.class).put(request, context);
     }
 
