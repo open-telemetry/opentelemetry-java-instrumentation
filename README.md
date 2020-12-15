@@ -110,22 +110,12 @@ to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL
 
 ##### Jaeger exporter
 
-A simple wrapper for the Jaeger exporter of opentelemetry-java. This exporter uses gRPC for its communications protocol.
+A simple wrapper for the Jaeger exporter of opentelemetry-java. gRPC is currently the only supported communications protocol.
 
-| System property                   | Environment variable              | Description                                                                                        |
+| System property                   | Environment variable              | Description                                                                                            |
 |-----------------------------------|-----------------------------------|----------------------------------------------------------------------------------------------------|
-| otel.exporter=jaeger              | OTEL_EXPORTER=jaeger              | Select the Jaeger exporter                                                                         |
-| otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger gRPC endpoint to connect to. Default is `localhost:14250`.                              |
-| otel.exporter.jaeger.service.name | OTEL_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                       |
-
-##### Jaeger Thrift over HTTP exporter
-
-A simple wrapper for the Jaeger exporter, but using Thrift encoded payloads over HTTP.
-
-| System property                   | Environment variable              | Description                                                                                        |
-|-----------------------------------|-----------------------------------|----------------------------------------------------------------------------------------------------|
-| otel.exporter=jaeger-thrift       | OTEL_EXPORTER=jaeger-thrift       | Select the Jaeger HTTP Thrift exporter                                                             |
-| otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger HTTP endpoint to send thrift data to.  Default is `http://localhost:14268/api/traces`.  |
+| otel.exporter=jaeger              | OTEL_EXPORTER=jaeger              | Select the Jaeger exporter                                                                          |
+| otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Default is `localhost:14250`. Currently only gRPC is supported. |
 | otel.exporter.jaeger.service.name | OTEL_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                       |
 
 ##### Zipkin exporter
