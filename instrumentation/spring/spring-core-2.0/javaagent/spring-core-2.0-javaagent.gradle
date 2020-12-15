@@ -5,7 +5,6 @@ muzzle {
     group = 'org.springframework'
     module = 'spring-core'
     versions = "[2.0,]"
-    assertInverse = true
   }
 }
 
