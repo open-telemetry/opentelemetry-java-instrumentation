@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -32,9 +33,11 @@ public class SpringWebfluxHttpClientTracer
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
   public void onCancel(Context context) {
-    Span span = Span.fromContext(context);
-    span.setAttribute("spring-webflux.event", "cancelled");
-    span.setAttribute("spring-webflux.message", "The subscription was cancelled");
+    if (captureExperimentalSpanAttributes()) {
+      Span span = Span.fromContext(context);
+      span.setAttribute("spring-webflux.event", "cancelled");
+      span.setAttribute("spring-webflux.message", "The subscription was cancelled");
+    }
   }
 
   @Override
@@ -96,5 +99,13 @@ public class SpringWebfluxHttpClientTracer
     } catch (IllegalAccessException | NoSuchMethodException e) {
       return null;
     }
+  }
+
+  // TODO cache this after
+  //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/1643
+  private static boolean captureExperimentalSpanAttributes() {
+    return Config.get()
+        .getBooleanProperty(
+            "otel.instrumentation.spring-webflux.experimental-span-attributes", false);
   }
 }
