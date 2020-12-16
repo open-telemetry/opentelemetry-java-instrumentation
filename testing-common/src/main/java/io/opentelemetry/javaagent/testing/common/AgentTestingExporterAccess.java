@@ -21,11 +21,13 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.TraceStateBuilder;
+import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.ArrayValue;
 import io.opentelemetry.proto.common.v1.InstrumentationLibrary;
 import io.opentelemetry.proto.common.v1.KeyValue;
+import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.resource.v1.Resource;
 import io.opentelemetry.proto.trace.v1.InstrumentationLibrarySpans;
 import io.opentelemetry.proto.trace.v1.ResourceSpans;
@@ -48,7 +50,8 @@ public final class AgentTestingExporterAccess {
   private static final Pattern TRACESTATE_ENTRY_DELIMITER_SPLIT_PATTERN =
       Pattern.compile("[ \t]*" + TRACESTATE_ENTRY_DELIMITER + "[ \t]*");
 
-  private static final MethodHandle getExportRequests;
+  private static final MethodHandle getSpanExportRequests;
+  private static final MethodHandle getMetricExportRequests;
   private static final MethodHandle reset;
   private static final MethodHandle forceFlushCalled;
 
@@ -58,10 +61,15 @@ public final class AgentTestingExporterAccess {
           AgentClassLoaderAccess.loadClass(
               "io.opentelemetry.javaagent.testing.exporter.AgentTestingExporterFactory");
       MethodHandles.Lookup lookup = MethodHandles.lookup();
-      getExportRequests =
+      getSpanExportRequests =
           lookup.findStatic(
               agentTestingExporterFactoryClass,
-              "getExportRequests",
+              "getSpanExportRequests",
+              MethodType.methodType(List.class));
+      getMetricExportRequests =
+          lookup.findStatic(
+              agentTestingExporterFactoryClass,
+              "getMetricExportRequests",
               MethodType.methodType(List.class));
       reset =
           lookup.findStatic(
@@ -96,9 +104,9 @@ public final class AgentTestingExporterAccess {
   public static List<SpanData> getExportedSpans() {
     final List<byte[]> exportRequests;
     try {
-      exportRequests = (List<byte[]>) getExportRequests.invokeExact();
+      exportRequests = (List<byte[]>) getSpanExportRequests.invokeExact();
     } catch (Throwable t) {
-      throw new Error("Could not invoke getExportRequests", t);
+      throw new Error("Could not invoke getSpanExportRequests", t);
     }
 
     List<ResourceSpans> allResourceSpans =
@@ -180,6 +188,30 @@ public final class AgentTestingExporterAccess {
       }
     }
     return spans;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<Metric> getExportedMetrics() {
+    final List<byte[]> exportRequests;
+    try {
+      exportRequests = (List<byte[]>) getMetricExportRequests.invokeExact();
+    } catch (Throwable t) {
+      throw new Error("Could not invoke getMetricExportRequests", t);
+    }
+
+    return exportRequests.stream()
+        .map(
+            serialized -> {
+              try {
+                return ExportMetricsServiceRequest.parseFrom(serialized);
+              } catch (InvalidProtocolBufferException e) {
+                throw new Error(e);
+              }
+            })
+        .flatMap(request -> request.getResourceMetricsList().stream())
+        .flatMap(resourceMetrics -> resourceMetrics.getInstrumentationLibraryMetricsList().stream())
+        .flatMap(ilMetrics -> ilMetrics.getMetricsList().stream())
+        .collect(Collectors.toList());
   }
 
   private static Attributes fromProto(List<KeyValue> attributes) {

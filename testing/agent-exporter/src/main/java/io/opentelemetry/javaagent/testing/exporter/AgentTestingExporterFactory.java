@@ -9,14 +9,20 @@ import java.util.List;
 
 public class AgentTestingExporterFactory {
 
-  static final OtlpInMemorySpanExporter exporter = new OtlpInMemorySpanExporter();
+  static final OtlpInMemorySpanExporter spanExporter = new OtlpInMemorySpanExporter();
+  static final OtlpInMemoryMetricExporter metricExporter = new OtlpInMemoryMetricExporter();
 
-  public static List<byte[]> getExportRequests() {
-    return exporter.getCollectedExportRequests();
+  public static List<byte[]> getSpanExportRequests() {
+    return spanExporter.getCollectedExportRequests();
+  }
+
+  public static List<byte[]> getMetricExportRequests() {
+    return metricExporter.getCollectedExportRequests();
   }
 
   public static void reset() {
-    exporter.reset();
+    spanExporter.reset();
+    metricExporter.reset();
   }
 
   public static boolean forceFlushCalled() {

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.GAUGE_DOUBLE
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.GAUGE_LONG
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.MONOTONIC_DOUBLE
@@ -15,12 +16,9 @@ import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.common.Labels
 import io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.proto.metrics.v1.Metric
 import io.opentelemetry.sdk.OpenTelemetrySdk
-import io.opentelemetry.sdk.metrics.data.MetricData
-import spock.lang.Ignore
 
-// FIXME need to read exporter metrics
-@Ignore
 class MeterTest extends AgentTestRunner {
 
   def "test counter #builderMethod bound=#bind"() {
@@ -46,7 +44,7 @@ class MeterTest extends AgentTestRunner {
     }
 
     then:
-    def metricData = findMetric(OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
+    def metricData = findMetric(TEST_WRITER.getMetrics(), instrumentationName, "test")
     metricData != null
     metricData.description == "d"
     metricData.unit == "u"
@@ -254,7 +252,7 @@ class MeterTest extends AgentTestRunner {
     point2.sum == 12.1
   }
 
-  def findMetric(Collection<MetricData> allMetrics, instrumentationName, metricName) {
+  def findMetric(Collection<Metric> allMetrics, instrumentationName, metricName) {
     for (def metric : allMetrics) {
       if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.name == metricName) {
         return metric
