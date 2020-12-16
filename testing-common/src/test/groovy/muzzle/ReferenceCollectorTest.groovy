@@ -18,12 +18,13 @@ import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class ReferenceCollectorTest extends Specification {
   def "method body creates references"() {
     setup:
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(MethodBodyAdvice.name)
+    collector.collectReferencesFromAdvice(MethodBodyAdvice.name)
     def references = collector.getReferences()
 
     expect:
@@ -69,7 +70,7 @@ class ReferenceCollectorTest extends Specification {
   def "protected ref test"() {
     setup:
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(MethodBodyAdvice.B2.name)
+    collector.collectReferencesFromAdvice(MethodBodyAdvice.B2.name)
     def references = collector.getReferences()
 
     expect:
@@ -81,7 +82,7 @@ class ReferenceCollectorTest extends Specification {
   def "ldc creates references"() {
     setup:
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(LdcAdvice.name)
+    collector.collectReferencesFromAdvice(LdcAdvice.name)
     def references = collector.getReferences()
 
     expect:
@@ -91,7 +92,7 @@ class ReferenceCollectorTest extends Specification {
   def "instanceof creates references"() {
     setup:
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(TestClasses.InstanceofAdvice.name)
+    collector.collectReferencesFromAdvice(TestClasses.InstanceofAdvice.name)
     def references = collector.getReferences()
 
     expect:
@@ -101,7 +102,7 @@ class ReferenceCollectorTest extends Specification {
   def "invokedynamic creates references"() {
     setup:
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(TestClasses.InvokeDynamicAdvice.name)
+    collector.collectReferencesFromAdvice(TestClasses.InvokeDynamicAdvice.name)
     def references = collector.getReferences()
 
     expect:
@@ -112,7 +113,7 @@ class ReferenceCollectorTest extends Specification {
   def "should create references for helper classes"() {
     when:
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(HelperAdvice.name)
+    collector.collectReferencesFromAdvice(HelperAdvice.name)
     def references = collector.getReferences()
 
     then:
@@ -146,7 +147,7 @@ class ReferenceCollectorTest extends Specification {
   def "should find all helper classes"() {
     when:
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(HelperAdvice.name)
+    collector.collectReferencesFromAdvice(HelperAdvice.name)
     def helperClasses = collector.getSortedHelperClasses()
 
     then:
@@ -163,8 +164,8 @@ class ReferenceCollectorTest extends Specification {
   def "should correctly find helper classes from multiple advice classes"() {
     when:
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(TestClasses.HelperAdvice.name)
-    collector.collectReferencesFrom(TestClasses.HelperOtherAdvice.name)
+    collector.collectReferencesFromAdvice(TestClasses.HelperAdvice.name)
+    collector.collectReferencesFromAdvice(TestClasses.HelperOtherAdvice.name)
     def helperClasses = collector.getSortedHelperClasses()
 
     then:
@@ -190,6 +191,49 @@ class ReferenceCollectorTest extends Specification {
       OtherTestHelperClasses.TestEnum.name + '$1',
       OtherTestHelperClasses.name + '$1',
     ])
+  }
+
+  @Unroll
+  def "should collect helper classes from resource file #desc"() {
+    when:
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFromResource(resource)
+
+    then: "SPI classes are collected as references"
+    def references = collector.references
+    references.keySet() == [
+      TestHelperClasses.Helper.name,
+      TestHelperClasses.HelperSuperClass.name,
+      TestHelperClasses.HelperInterface.name
+    ] as Set
+
+    then: "SPI classes are included in helper classes"
+    def helperClasses = collector.sortedHelperClasses
+    assertThatContainsInOrder helperClasses, [
+      TestHelperClasses.HelperInterface.name,
+      TestHelperClasses.Helper.name
+    ]
+    assertThatContainsInOrder helperClasses, [
+      TestHelperClasses.HelperSuperClass.name,
+      TestHelperClasses.Helper.name
+    ]
+
+    where:
+    desc                                               | resource
+    "Java SPI"                                         | "META-INF/services/test.resource.file"
+    "AWS SDK global interceptors file"                 | "software/amazon/awssdk/global/handlers/execution.interceptors"
+    "AWS SDK service interceptors file"                | "software/amazon/awssdk/services/testservice/execution.interceptors"
+    "AWS SDK service (second level) interceptors file" | "software/amazon/awssdk/services/testservice/testsubservice/execution.interceptors"
+  }
+
+  def "should ignore arbitrary resource file"() {
+    when:
+    def collector = new ReferenceCollector()
+    collector.collectReferencesFromResource("application.properties")
+
+    then:
+    collector.references.isEmpty()
+    collector.sortedHelperClasses.isEmpty()
   }
 
   private static assertHelperSuperClassMethod(Reference reference, boolean isAbstract) {
