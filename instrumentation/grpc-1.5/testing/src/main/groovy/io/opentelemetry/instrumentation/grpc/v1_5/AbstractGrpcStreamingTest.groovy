@@ -110,9 +110,9 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
           hasNoParent()
           errored false
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
-            "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
-            "${SemanticAttributes.RPC_METHOD.key()}" "Conversation"
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "Conversation"
           }
           (1..(clientMessageCount * serverMessageCount)).each {
             def messageId = it
@@ -131,11 +131,11 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
           childOf span(0)
           errored false
           attributes {
-            "${SemanticAttributes.RPC_SYSTEM.key()}" "grpc"
-            "${SemanticAttributes.RPC_SERVICE.key()}" "example.Greeter"
-            "${SemanticAttributes.RPC_METHOD.key()}" "Conversation"
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "Conversation"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
           }
           clientRange.each {
             def messageId = it

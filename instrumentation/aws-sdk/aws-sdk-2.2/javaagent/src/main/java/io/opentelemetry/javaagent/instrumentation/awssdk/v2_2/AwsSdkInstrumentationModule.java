@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNa
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -18,6 +18,21 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AwsSdkInstrumentationModule extends InstrumentationModule {
   public AwsSdkInstrumentationModule() {
     super("aws-sdk", "aws-sdk-2.2");
+  }
+
+  @Override
+  public String[] additionalHelperClassNames() {
+    return new String[] {
+      "io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.TracingExecutionInterceptor",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkInjectAdapter",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.RequestType",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.SdkRequestDecorator",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.DbRequestDecorator",
+      "io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor",
+      "io.opentelemetry.extension.trace.propagation.AwsXRayPropagator"
+    };
   }
 
   /**
@@ -40,7 +55,6 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
-        new AwsHttpClientInstrumentation(), new AwsSdkInitializationInstrumentation());
+    return Collections.singletonList(new AwsSdkInitializationInstrumentation());
   }
 }

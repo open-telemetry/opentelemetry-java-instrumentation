@@ -11,10 +11,10 @@ ext {
     // Check https://oss.jfrog.org/libs-snapshot/io/opentelemetry/ for latest snapshot version.
     // Snapshot versions are often split across versions (based on jfrog's whim and relative age of
     // each module), best to keep these separate until GA
-    opentelemetry       : '0.11.0',
-    opentelemetryOther  : '0.11.0',
-    opentelemetryAnother: '0.11.0',
-    opentelemetryContext: '0.11.0',
+    opentelemetry       : '0.12.0',
+    opentelemetryOther  : '0.12.0',
+    opentelemetryAnother: '0.12.0',
+    opentelemetryContext: '0.12.0',
 
     slf4j               : "1.7.30",
     guava               : "20.0", // Last version to support Java 7
@@ -46,6 +46,7 @@ ext {
     opentelemetryTraceProps    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetry),
     opentelemetrySdk           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetryAnother),
     opentelemetryJaeger        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-jaeger', version: versions.opentelemetryOther),
+    opentelemetryJaegerThrift  : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-jaeger-thrift', version: versions.opentelemetryOther),
     opentelemetryOtlp          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp', version: versions.opentelemetryOther),
     opentelemetryZipkin        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-zipkin', version: versions.opentelemetryOther),
     opentelemetryPrometheus    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-prometheus', version: versions.opentelemetryOther),

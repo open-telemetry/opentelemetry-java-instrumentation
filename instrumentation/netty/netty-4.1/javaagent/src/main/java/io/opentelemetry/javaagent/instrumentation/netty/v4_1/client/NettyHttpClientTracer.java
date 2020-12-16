@@ -6,13 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1.client;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyResponseInjectAdapter.SETTER;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,6 +30,23 @@ public class NettyHttpClientTracer
 
   public static NettyHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public Context startSpan(Context parentContext, ChannelHandlerContext ctx, HttpRequest request) {
+    Span span =
+        tracer
+            .spanBuilder(spanNameForRequest(request))
+            .setSpanKind(CLIENT)
+            .setParent(parentContext)
+            .startSpan();
+    onRequest(span, request);
+    NetPeerUtils.INSTANCE.setNetPeer(span, (InetSocketAddress) ctx.channel().remoteAddress());
+
+    Context context = withClientSpan(parentContext, span);
+    OpenTelemetry.getGlobalPropagators()
+        .getTextMapPropagator()
+        .inject(context, request.headers(), SETTER);
+    return context;
   }
 
   @Override
@@ -61,8 +85,35 @@ public class NettyHttpClientTracer
   }
 
   @Override
-  protected Setter<HttpHeaders> getSetter() {
+  protected TextMapPropagator.Setter<HttpHeaders> getSetter() {
     return SETTER;
+  }
+
+  public boolean shouldStartSpan(Context parentContext, HttpRequest request) {
+    if (!super.shouldStartSpan(parentContext)) {
+      return false;
+    }
+    // The AWS SDK uses Netty for asynchronous clients but constructs a request signature before
+    // beginning transport. This means we MUST suppress Netty spans we would normally create or
+    // they will inject their own trace header, which does not match what was present when the
+    // signature was computed, breaking the SDK request completely. We have not found how to
+    // cleanly propagate context from the SDK instrumentation, which executes on an application
+    // thread, to Netty instrumentation, which executes on event loops. If it's possible, it may
+    // require instrumenting internal classes. Using a header which is more or less guaranteed to
+    // always exist is arguably more stable.
+    if (request.headers().contains("amz-sdk-invocation-id")) {
+      return false;
+    }
+    return true;
+  }
+
+  // TODO (trask) how best to prevent people from use this one instead of the above?
+  //  should all shouldStartSpan methods take REQUEST so that they can be suppressed by REQUEST
+  //  attributes?
+  @Override
+  @Deprecated
+  public boolean shouldStartSpan(Context parentContext) {
+    throw new UnsupportedOperationException();
   }
 
   @Override

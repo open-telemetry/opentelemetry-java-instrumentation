@@ -1,0 +1,17 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = 'org.springframework'
+    module = 'spring-core'
+    versions = "[2.0,]"
+  }
+}
+
+dependencies {
+  library group: 'org.springframework', name: 'spring-core', version: '2.0'
+
+  // 3.0 introduces submit() methods
+  // 4.0 introduces submitListenable() methods
+  testLibrary group: 'org.springframework', name: 'spring-core', version: '4.0.0.RELEASE'
+}

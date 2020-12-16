@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -41,18 +39,10 @@ import software.amazon.awssdk.http.SdkHttpResponse;
  */
 public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
-  public static class ScopeHolder {
-    public static final ThreadLocal<Scope> CURRENT = new ThreadLocal<>();
-  }
-
   private final ExecutionInterceptor delegate;
 
   public TracingExecutionInterceptor() {
     delegate = AwsSdk.newInterceptor();
-  }
-
-  public static void muzzleCheck() {
-    // Noop
   }
 
   @Override
@@ -98,12 +88,6 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeTransmission(
       BeforeTransmission context, ExecutionAttributes executionAttributes) {
     delegate.beforeTransmission(context, executionAttributes);
-    Context parentContext = AwsSdk.getContextFromAttributes(executionAttributes);
-    if (parentContext != null) {
-      // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
-      // doesn't provide a way to run code in the same thread after transmission has been scheduled.
-      ScopeHolder.CURRENT.set(parentContext.makeCurrent());
-    }
   }
 
   @Override

@@ -7,12 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.HttpHeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import org.apache.http.Header;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpMessage;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -24,6 +26,20 @@ public class ApacheHttpClientTracer
 
   public static ApacheHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public Context startSpan(Context parentContext, HttpHost host, HttpRequest request) {
+    HttpUriRequest httpUriRequest;
+    if (request instanceof HttpUriRequest) {
+      httpUriRequest = (HttpUriRequest) request;
+    } else {
+      httpUriRequest = new HostAndRequestAsHttpUriRequest(host, request);
+    }
+    return startSpan(parentContext, httpUriRequest);
+  }
+
+  public Context startSpan(Context parentContext, HttpUriRequest request) {
+    return startSpan(parentContext, request, request);
   }
 
   @Override
@@ -57,7 +73,7 @@ public class ApacheHttpClientTracer
   }
 
   @Override
-  protected Setter<HttpUriRequest> getSetter() {
+  protected TextMapPropagator.Setter<HttpUriRequest> getSetter() {
     return SETTER;
   }
 
@@ -69,11 +85,5 @@ public class ApacheHttpClientTracer
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.apache-httpclient";
-  }
-
-  /** This method is overridden to allow other classes in this package to call it. */
-  @Override
-  protected Span onResponse(Span span, HttpResponse httpResponse) {
-    return super.onResponse(span, httpResponse);
   }
 }

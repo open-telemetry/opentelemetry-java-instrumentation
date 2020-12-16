@@ -14,6 +14,7 @@ dependencies {
 
   testImplementation project(':javaagent-exporters:otlp')
   testImplementation project(':javaagent-exporters:jaeger')
+  testImplementation project(':javaagent-exporters:jaeger-thrift')
   testImplementation project(':javaagent-exporters:logging')
   testImplementation project(':javaagent-exporters:zipkin')
   testImplementation project(':javaagent-exporters:prometheus')
@@ -22,6 +23,7 @@ dependencies {
 tasks.withType(Test).configureEach() {
   dependsOn ':javaagent-exporters:otlp:shadowJar'
   dependsOn ':javaagent-exporters:jaeger:shadowJar'
+  dependsOn ':javaagent-exporters:jaeger-thrift:shadowJar'
   dependsOn ':javaagent-exporters:logging:shadowJar'
   dependsOn ':javaagent-exporters:zipkin:shadowJar'
   dependsOn ':javaagent-exporters:prometheus:shadowJar'
@@ -30,6 +32,7 @@ tasks.withType(Test).configureEach() {
     systemProperty 'adapterRoot', "$rootDir/javaagent-exporters"
     systemProperty 'otlpExporterJar', project(':javaagent-exporters:otlp').tasks.shadowJar.archivePath
     systemProperty 'jaegerExporterJar', project(':javaagent-exporters:jaeger').tasks.shadowJar.archivePath
+    systemProperty 'jaegerThriftExporterJar', project(':javaagent-exporters:jaeger-thrift').tasks.shadowJar.archivePath
     systemProperty 'loggingExporterJar', project(':javaagent-exporters:logging').tasks.shadowJar.archivePath
     systemProperty 'zipkinExporterJar', project(':javaagent-exporters:zipkin').tasks.shadowJar.archivePath
     systemProperty 'prometheusExporterJar', project(':javaagent-exporters:prometheus').tasks.shadowJar.archivePath
@@ -44,6 +47,7 @@ dependencies {
   shadowInclude project(path: ':javaagent-exporters:logging', configuration: 'shadow')
   shadowInclude project(path: ':javaagent-exporters:otlp', configuration: 'shadow')
   shadowInclude project(path: ':javaagent-exporters:jaeger', configuration: 'shadow')
+  shadowInclude project(path: ':javaagent-exporters:jaeger-thrift', configuration: 'shadow')
   shadowInclude project(path: ':javaagent-exporters:zipkin', configuration: 'shadow')
   shadowInclude project(path: ':javaagent-exporters:prometheus', configuration: 'shadow')
 }
@@ -67,4 +71,5 @@ shadowJar {
   relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"
   relocate "io.opentelemetry.spi", "io.opentelemetry.javaagent.shaded.io.opentelemetry.spi"
   relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
+  relocate "io.opentelemetry.extension.trace.propagation", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.trace.propagation"
 }

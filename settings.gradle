@@ -55,7 +55,7 @@ include ':smoke-tests'
 include ':instrumentation:akka-actor-2.5:javaagent'
 include ':instrumentation:akka-http-10.0:javaagent'
 include ':instrumentation:apache-camel-2.20:javaagent'
-include ':instrumentation:apache-httpasyncclient-4.0:javaagent'
+include ':instrumentation:apache-httpasyncclient-4.1:javaagent'
 include ':instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent'
 include ':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent'
 include ':instrumentation:armeria-1.0:javaagent'
@@ -154,6 +154,7 @@ include ':instrumentation:okhttp:okhttp-2.2:javaagent'
 include ':instrumentation:okhttp:okhttp-3.0:javaagent'
 include ':instrumentation:opentelemetry-annotations-1.0:javaagent'
 include ':instrumentation:opentelemetry-api-1.0:javaagent'
+include ':instrumentation:opentelemetry-sdk-1.0:javaagent'
 include ':instrumentation:oshi:javaagent'
 include ':instrumentation:oshi:library'
 include ':instrumentation:play:play-2.3:javaagent'
@@ -179,6 +180,7 @@ include ':instrumentation:servlet:servlet-common:javaagent'
 include ':instrumentation:servlet:servlet-2.2:javaagent'
 include ':instrumentation:servlet:servlet-3.0:javaagent'
 include ':instrumentation:spark-2.3:javaagent'
+include ':instrumentation:spring:spring-core-2.0:javaagent'
 include ':instrumentation:spring:spring-data-1.8:javaagent'
 include ':instrumentation:spring:spring-scheduling-3.1:javaagent'
 include ':instrumentation:spring:spring-web-3.1:library'
@@ -203,6 +205,7 @@ include ':instrumentation-core:servlet-2.2'
 // exporter adapters
 include ":javaagent-exporters"
 include ":javaagent-exporters:jaeger"
+include ":javaagent-exporters:jaeger-thrift"
 include ":javaagent-exporters:logging"
 include ":javaagent-exporters:otlp"
 include ":javaagent-exporters:zipkin"

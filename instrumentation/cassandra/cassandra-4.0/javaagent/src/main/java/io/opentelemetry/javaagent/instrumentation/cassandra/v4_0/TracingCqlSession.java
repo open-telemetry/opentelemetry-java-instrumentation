@@ -23,7 +23,7 @@ import com.datastax.oss.driver.api.core.session.Request;
 import com.datastax.oss.driver.api.core.type.reflect.GenericType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
@@ -174,17 +174,17 @@ public class TracingCqlSession implements CqlSession {
   @NonNull
   public ResultSet execute(@NonNull String query) {
 
-    Span span = tracer().startSpan(session, query);
-    try (Scope ignored = tracer().startScope(span)) {
+    Context context = tracer().startSpan(Context.current(), session, query);
+    try (Scope ignored = context.makeCurrent()) {
       try {
         ResultSet resultSet = session.execute(query);
-        tracer().onResponse(span, resultSet.getExecutionInfo());
+        tracer().onResponse(context, resultSet.getExecutionInfo());
         return resultSet;
       } catch (RuntimeException e) {
-        tracer().endExceptionally(span, e);
+        tracer().endExceptionally(context, e);
         throw e;
       } finally {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }
@@ -194,17 +194,17 @@ public class TracingCqlSession implements CqlSession {
   public ResultSet execute(@NonNull Statement<?> statement) {
     String query = getQuery(statement);
 
-    Span span = tracer().startSpan(session, query);
-    try (Scope ignored = tracer().startScope(span)) {
+    Context context = tracer().startSpan(Context.current(), session, query);
+    try (Scope ignored = context.makeCurrent()) {
       try {
         ResultSet resultSet = session.execute(statement);
-        tracer().onResponse(span, resultSet.getExecutionInfo());
+        tracer().onResponse(context, resultSet.getExecutionInfo());
         return resultSet;
       } catch (RuntimeException e) {
-        tracer().endExceptionally(span, e);
+        tracer().endExceptionally(context, e);
         throw e;
       } finally {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }
@@ -214,16 +214,16 @@ public class TracingCqlSession implements CqlSession {
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull Statement<?> statement) {
     String query = getQuery(statement);
 
-    Span span = tracer().startSpan(session, query);
-    try (Scope ignored = tracer().startScope(span)) {
+    Context context = tracer().startSpan(Context.current(), session, query);
+    try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(statement);
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
             if (throwable != null) {
-              tracer().endExceptionally(span, throwable);
+              tracer().endExceptionally(context, throwable);
             } else {
-              tracer().onResponse(span, asyncResultSet.getExecutionInfo());
-              tracer().end(span);
+              tracer().onResponse(context, asyncResultSet.getExecutionInfo());
+              tracer().end(context);
             }
           });
     }
@@ -232,16 +232,16 @@ public class TracingCqlSession implements CqlSession {
   @Override
   @NonNull
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull String query) {
-    Span span = tracer().startSpan(session, query);
-    try (Scope ignored = tracer().startScope(span)) {
+    Context context = tracer().startSpan(Context.current(), session, query);
+    try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(query);
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
             if (throwable != null) {
-              tracer().endExceptionally(span, throwable);
+              tracer().endExceptionally(context, throwable);
             } else {
-              tracer().onResponse(span, asyncResultSet.getExecutionInfo());
-              tracer().end(span);
+              tracer().onResponse(context, asyncResultSet.getExecutionInfo());
+              tracer().end(context);
             }
           });
     }

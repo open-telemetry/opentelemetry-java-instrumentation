@@ -128,27 +128,28 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           errored false
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" { it.startsWith("${server.address}${path}") }
-            "${SemanticAttributes.HTTP_METHOD.key()}" "$method"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("aws-sdk-java/") }
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" { it.startsWith("${server.address}${path}") }
+            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith("aws-sdk-java/") }
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
-            "${SemanticAttributes.DB_SYSTEM.key()}" "dynamodb"
-            "${SemanticAttributes.DB_NAME.key()}" "sometable"
-            "${SemanticAttributes.DB_OPERATION.key()}" "${operation}"
+            "${SemanticAttributes.DB_SYSTEM.key}" "dynamodb"
+            "${SemanticAttributes.DB_NAME.key}" "sometable"
+            "${SemanticAttributes.DB_OPERATION.key}" "${operation}"
           }
         }
       }
     }
-    server.lastRequest.headers.get("traceparent") != null
+    server.lastRequest.headers.get("X-Amzn-Trace-Id") != null
+    server.lastRequest.headers.get("traceparent") == null
   }
 
   static dynamoDbRequestDataTable(client) {
@@ -201,14 +202,14 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           errored false
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" { it.startsWith("${server.address}${path}") }
-            "${SemanticAttributes.HTTP_METHOD.key()}" "$method"
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("aws-sdk-java/") }
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" { it.startsWith("${server.address}${path}") }
+            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith("aws-sdk-java/") }
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
@@ -226,7 +227,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         }
       }
     }
-    server.lastRequest.headers.get("traceparent") != null
+    server.lastRequest.headers.get("X-Amzn-Trace-Id") != null
+    server.lastRequest.headers.get("traceparent") == null
 
     where:
     service   | operation           | method | path                  | requestId                              | builder                 | call                                                                                             | body
@@ -289,14 +291,14 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           errored false
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" { it.startsWith("${server.address}${path}") }
-            "${SemanticAttributes.HTTP_METHOD.key()}" "$method"
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" { it.startsWith("aws-sdk-java/") }
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" { it.startsWith("${server.address}${path}") }
+            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith("aws-sdk-java/") }
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
@@ -314,7 +316,8 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         }
       }
     }
-    server.lastRequest.headers.get("traceparent") != null
+    server.lastRequest.headers.get("X-Amzn-Trace-Id") != null
+    server.lastRequest.headers.get("traceparent") == null
 
     where:
     service | operation           | method | path                  | requestId                              | builder                  | call                                                                                                                             | body
@@ -389,12 +392,12 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
           errorEvent SdkClientException, "Unable to execute HTTP request: Read timed out"
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key()}" "IP.TCP"
-            "${SemanticAttributes.NET_PEER_NAME.key()}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key()}" "$server.address/somebucket/somekey"
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "1.1"
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" "$server.address/somebucket/somekey"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "aws.service" "S3"
             "aws.operation" "GetObject"
             "aws.agent" "java-aws-sdk"

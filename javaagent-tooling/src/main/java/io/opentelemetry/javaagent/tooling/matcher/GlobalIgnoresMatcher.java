@@ -60,11 +60,15 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
     if (name.startsWith("net.bytebuddy.")
         || name.startsWith("jdk.")
         || name.startsWith("org.aspectj.")
+        || name.startsWith("datadog.")
         || name.startsWith("com.intellij.rt.debugger.")
         || name.startsWith("com.p6spy.")
         || name.startsWith("com.dynatrace.")
         || name.startsWith("com.jloadtrace.")
         || name.startsWith("com.appdynamics.")
+        || name.startsWith("com.newrelic.agent.")
+        || name.startsWith("com.newrelic.api.agent.")
+        || name.startsWith("com.nr.agent.")
         || name.startsWith("com.singularity.")
         || name.startsWith("com.jinspired.")
         || name.startsWith("org.jinspired.")) {
@@ -122,7 +126,9 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
     }
 
     if (name.startsWith("com.sun.")) {
-      if (name.startsWith("com.sun.messaging.") || name.startsWith("com.sun.jersey.api.client")) {
+      if (name.startsWith("com.sun.messaging.")
+          || name.startsWith("com.sun.jersey.api.client")
+          || name.startsWith("com.sun.appserv")) {
         return false;
       }
 

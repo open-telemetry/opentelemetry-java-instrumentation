@@ -75,6 +75,8 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
           name("/hello/{param}")
           kind SERVER
           attributes {
+            "$SemanticAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$SemanticAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
             "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
             "$SemanticAttributes.FAAS_TRIGGER.key" "http"
             "$SemanticAttributes.HTTP_METHOD.key" "GET"
@@ -105,6 +107,8 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
           name("my_function")
           kind SERVER
           attributes {
+            "$SemanticAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$SemanticAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
             "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
             "$SemanticAttributes.FAAS_TRIGGER.key" "http"
           }

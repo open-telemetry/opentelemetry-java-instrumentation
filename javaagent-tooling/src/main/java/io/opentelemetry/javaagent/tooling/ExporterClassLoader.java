@@ -33,6 +33,9 @@ public class ExporterClassLoader extends URLClassLoader {
           rule(
               "#io.opentelemetry.context",
               "#io.opentelemetry.javaagent.shaded.io.opentelemetry.context"),
+          rule(
+              "#io.opentelemetry.extension.trace.propagation",
+              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.trace.propagation"),
           rule("#java.util.logging.Logger", "#io.opentelemetry.javaagent.bootstrap.PatchLogger"),
           rule("#org.slf4j", "#io.opentelemetry.javaagent.slf4j"));
 

@@ -11,7 +11,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +31,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   public AwsSdkClientTracer() {}
 
   @Override
-  public String spanNameForRequest(Request<?> request) {
+  protected String spanNameForRequest(Request<?> request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
     }
@@ -64,12 +64,12 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   }
 
   @Override
-  public Span onResponse(Span span, Response<?> response) {
+  public void onResponse(Span span, Response<?> response) {
     if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setAttribute("aws.requestId", awsResp.getRequestId());
     }
-    return super.onResponse(span, response);
+    super.onResponse(span, response);
   }
 
   private String qualifiedOperation(String service, Class<?> operation) {
@@ -111,7 +111,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   }
 
   @Override
-  protected Setter<Request<?>> getSetter() {
+  protected TextMapPropagator.Setter<Request<?>> getSetter() {
     return AwsSdkInjectAdapter.INSTANCE;
   }
 

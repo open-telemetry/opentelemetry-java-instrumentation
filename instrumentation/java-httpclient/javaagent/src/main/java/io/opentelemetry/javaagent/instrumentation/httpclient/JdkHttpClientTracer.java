@@ -61,16 +61,14 @@ public class JdkHttpClientTracer
   }
 
   @Override
-  protected Span onResponse(Span span, HttpResponse<?> httpResponse) {
-    span = super.onResponse(span, httpResponse);
+  protected void onResponse(Span span, HttpResponse<?> httpResponse) {
+    super.onResponse(span, httpResponse);
 
     if (httpResponse != null) {
       span.setAttribute(
           SemanticAttributes.HTTP_FLAVOR,
           httpResponse.version() == Version.HTTP_1_1 ? "1.1" : "2.0");
     }
-
-    return span;
   }
 
   @Override

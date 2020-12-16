@@ -20,6 +20,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.Constants;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -66,6 +71,33 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
         ClassLoaderInstrumentation.class.getName() + "$LoadClassAdvice");
   }
 
+  public static class Holder {
+    public static final List<String> bootstrapPackagesPrefixes = findBootstrapPackagePrefixes();
+
+    /**
+     * We have to make sure that {@link
+     * io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder} is loaded from
+     * bootstrap classloader. After that we can use in {@link LoadClassAdvice}.
+     */
+    private static List<String> findBootstrapPackagePrefixes() {
+      try {
+        Class<?> holderClass =
+            Class.forName(
+                "io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder",
+                true,
+                null);
+        MethodHandle methodHandle =
+            MethodHandles.publicLookup()
+                .findStatic(
+                    holderClass, "getBoostrapPackagePrefixes", MethodType.methodType(List.class));
+        //noinspection unchecked
+        return (List<String>) methodHandle.invokeExact();
+      } catch (Throwable e) {
+        return Arrays.asList(Constants.BOOTSTRAP_PACKAGE_PREFIXES);
+      }
+    }
+  }
+
   public static class LoadClassAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Class<?> onEnter(@Advice.Argument(0) String name) {
@@ -79,12 +111,7 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
       }
 
       try {
-        // TODO (trask) need to load BootstrapPackagePrefixesHolder itself from the bootstrap class
-        //  loader, but at the same time need to be careful about re-entry due to comment above,
-        //  so for now using the old constant, which works because Constants is injected into the
-        //  class loader
-        // for (String prefix : BootstrapPackagePrefixesHolder.getBoostrapPackagePrefixes()) {
-        for (String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
+        for (String prefix : Holder.bootstrapPackagesPrefixes) {
           if (name.startsWith(prefix)) {
             try {
               return Class.forName(name, false, null);

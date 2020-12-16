@@ -9,9 +9,10 @@ import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.S
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
+import io.opentelemetry.javaagent.instrumentation.spring.webflux.SpringWebfluxConfig;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
@@ -21,10 +22,11 @@ import org.springframework.web.util.pattern.PathPattern;
 public class HandlerAdapterAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static SpanWithScope methodEnter(
-      @Advice.Argument(0) ServerWebExchange exchange, @Advice.Argument(1) Object handler) {
+  public static void methodEnter(
+      @Advice.Argument(0) ServerWebExchange exchange,
+      @Advice.Argument(1) Object handler,
+      @Advice.Local("otelScope") Scope scope) {
 
-    SpanWithScope spanWithScope = null;
     Context context = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
     if (handler != null && context != null) {
       Span span = Span.fromContext(context);
@@ -42,9 +44,11 @@ public class HandlerAdapterAdvice {
       }
 
       span.updateName(operationName);
-      span.setAttribute("handler.type", handlerType);
+      if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {
+        span.setAttribute("spring-webflux.handler.type", handlerType);
+      }
 
-      spanWithScope = new SpanWithScope(span, context.makeCurrent());
+      scope = context.makeCurrent();
     }
 
     if (context != null) {
@@ -56,20 +60,18 @@ public class HandlerAdapterAdvice {
             ServletContextPath.prepend(Context.current(), bestPattern.toString()));
       }
     }
-
-    return spanWithScope;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
       @Advice.Argument(0) ServerWebExchange exchange,
-      @Advice.Enter SpanWithScope spanWithScope,
-      @Advice.Thrown Throwable throwable) {
+      @Advice.Thrown Throwable throwable,
+      @Advice.Local("otelScope") Scope scope) {
     if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
-    if (spanWithScope != null) {
-      spanWithScope.closeScope();
+    if (scope != null) {
+      scope.close();
       // span finished in SpanFinishingSubscriber
     }
   }

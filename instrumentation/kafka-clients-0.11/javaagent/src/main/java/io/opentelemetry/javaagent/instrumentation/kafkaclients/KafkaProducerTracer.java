@@ -36,7 +36,7 @@ public class KafkaProducerTracer extends BaseTracer {
   // value of the broker(s) is >= 2
   public boolean shouldPropagate(ApiVersions apiVersions) {
     return apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2
-        && KafkaClientConfiguration.isPropagationEnabled();
+        && KafkaClientsConfig.isPropagationEnabled();
   }
 
   public String spanNameOnProduce(ProducerRecord<?, ?> record) {
@@ -50,10 +50,10 @@ public class KafkaProducerTracer extends BaseTracer {
 
     Integer partition = record.partition();
     if (partition != null) {
-      span.setAttribute("partition", partition);
+      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition);
     }
     if (record.value() == null) {
-      span.setAttribute("tombstone", true);
+      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);
     }
   }
 

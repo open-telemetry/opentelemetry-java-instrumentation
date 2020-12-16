@@ -465,21 +465,21 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         event(0) {
           eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
           attributes {
-            "${SemanticAttributes.EXCEPTION_TYPE.key()}" { it == null || it == Exception.name }
-            "${SemanticAttributes.EXCEPTION_MESSAGE.key()}" { it == null || it == EXCEPTION.body }
-            "${SemanticAttributes.EXCEPTION_STACKTRACE.key()}" { it == null || it instanceof String }
+            "${SemanticAttributes.EXCEPTION_TYPE.key}" { it == null || it == Exception.name }
+            "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { it == null || it == EXCEPTION.body }
+            "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" { it == null || it instanceof String }
           }
         }
       }
       attributes {
-        "${SemanticAttributes.NET_PEER_PORT.key()}" { it == null || it instanceof Long }
-        "${SemanticAttributes.NET_PEER_IP.key()}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.HTTP_CLIENT_IP.key()}" { it == null || it == TEST_CLIENT_IP }
-        "${SemanticAttributes.HTTP_URL.key()}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
-        "${SemanticAttributes.HTTP_METHOD.key()}" method
-        "${SemanticAttributes.HTTP_STATUS_CODE.key()}" endpoint.status
-        "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-        "${SemanticAttributes.HTTP_USER_AGENT.key()}" TEST_USER_AGENT
+        "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
+        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.HTTP_CLIENT_IP.key}" { it == null || it == TEST_CLIENT_IP }
+        "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
+        "${SemanticAttributes.HTTP_METHOD.key}" method
+        "${SemanticAttributes.HTTP_STATUS_CODE.key}" endpoint.status
+        "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+        "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
       }
     }
   }

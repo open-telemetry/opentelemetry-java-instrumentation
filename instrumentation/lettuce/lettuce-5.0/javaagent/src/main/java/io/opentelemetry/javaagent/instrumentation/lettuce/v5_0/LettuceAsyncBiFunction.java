@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import java.util.concurrent.CancellationException;
 import java.util.function.BiFunction;
 
@@ -23,19 +24,20 @@ import java.util.function.BiFunction;
 public class LettuceAsyncBiFunction<T, U extends Throwable, R>
     implements BiFunction<T, Throwable, R> {
 
-  private final Span span;
+  private final Context context;
 
-  public LettuceAsyncBiFunction(Span span) {
-    this.span = span;
+  public LettuceAsyncBiFunction(Context context) {
+    this.context = context;
   }
 
   @Override
   public R apply(T t, Throwable throwable) {
     if (throwable instanceof CancellationException) {
-      span.setAttribute("db.command.cancelled", true);
-      tracer().end(span);
+      Span span = Span.fromContext(context);
+      span.setAttribute("lettuce.command.cancelled", true);
+      tracer().end(context);
     } else {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
     }
     return null;
   }

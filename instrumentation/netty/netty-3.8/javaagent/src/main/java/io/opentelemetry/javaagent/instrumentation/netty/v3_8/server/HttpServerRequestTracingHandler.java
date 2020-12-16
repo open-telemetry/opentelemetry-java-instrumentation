@@ -26,28 +26,29 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
   }
 
   @Override
-  public void messageReceived(ChannelHandlerContext ctx, MessageEvent msg) {
+  public void messageReceived(ChannelHandlerContext ctx, MessageEvent event) {
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
-    if (!(msg.getMessage() instanceof HttpRequest)) {
+    Object message = event.getMessage();
+    if (!(message instanceof HttpRequest)) {
       Context serverContext = tracer().getServerContext(channelTraceContext);
       if (serverContext == null) {
-        ctx.sendUpstream(msg);
+        ctx.sendUpstream(event);
       } else {
         try (Scope ignored = serverContext.makeCurrent()) {
-          ctx.sendUpstream(msg);
+          ctx.sendUpstream(event);
         }
       }
       return;
     }
 
-    HttpRequest request = (HttpRequest) msg.getMessage();
+    HttpRequest request = (HttpRequest) message;
 
     Context context =
         tracer().startSpan(request, ctx.getChannel(), channelTraceContext, "netty.request");
     try (Scope ignored = context.makeCurrent()) {
-      ctx.sendUpstream(msg);
+      ctx.sendUpstream(event);
       // the span is ended normally in HttpServerResponseTracingHandler
     } catch (Throwable throwable) {
       tracer().endExceptionally(context, throwable);

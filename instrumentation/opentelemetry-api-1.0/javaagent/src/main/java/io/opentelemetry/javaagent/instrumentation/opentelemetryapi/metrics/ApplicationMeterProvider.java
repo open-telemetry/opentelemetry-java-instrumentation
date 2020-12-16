@@ -10,16 +10,20 @@ import application.io.opentelemetry.api.metrics.MeterProvider;
 
 public class ApplicationMeterProvider implements MeterProvider {
 
+  private final io.opentelemetry.api.metrics.MeterProvider agentMeterProvider;
+
+  public ApplicationMeterProvider(io.opentelemetry.api.metrics.MeterProvider agentMeterProvider) {
+    this.agentMeterProvider = agentMeterProvider;
+  }
+
   @Override
   public Meter get(String instrumentationName) {
-    return new ApplicationMeter(
-        io.opentelemetry.api.OpenTelemetry.getGlobalMeterProvider().get(instrumentationName));
+    return new ApplicationMeter(agentMeterProvider.get(instrumentationName));
   }
 
   @Override
   public Meter get(String instrumentationName, String instrumentationVersion) {
     return new ApplicationMeter(
-        io.opentelemetry.api.OpenTelemetry.getGlobalMeterProvider()
-            .get(instrumentationName, instrumentationVersion));
+        agentMeterProvider.get(instrumentationName, instrumentationVersion));
   }
 }

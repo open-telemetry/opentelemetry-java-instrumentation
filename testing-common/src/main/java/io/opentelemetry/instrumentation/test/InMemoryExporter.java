@@ -9,8 +9,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
-import io.opentelemetry.api.common.AttributeConsumer;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -41,11 +39,8 @@ public class InMemoryExporter {
     final StringBuilder attributes = new StringBuilder();
     sd.getAttributes()
         .forEach(
-            new AttributeConsumer() {
-              @Override
-              public <T> void accept(AttributeKey<T> key, T value) {
-                attributes.append(String.format("Attribute %s=%s", key, value));
-              }
+            (key, value) -> {
+              attributes.append(String.format("Attribute %s=%s", key, value));
             });
     return attributes.toString();
   }

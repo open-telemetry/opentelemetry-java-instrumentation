@@ -5,9 +5,6 @@ on:
     # strange schedule to reduce the risk of DDOS GitHub infra
     - cron: "24 3 * * *"
   workflow_dispatch:
-  push:
-    branches:
-      - master
 
 jobs:
   build:
@@ -21,7 +18,7 @@ jobs:
           java-version: 11
 
       - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.5
+        uses: burrunan/gradle-cache-action@v1.6
         with:
           job-id: jdk11
 
@@ -40,7 +37,7 @@ jobs:
         continue-on-error: true
         env:
           CIMATE_PROJECT_ID: mz1jo49x
-          CIMATE_CI_KEY: "PR / jdk11"
+          CIMATE_CI_KEY: "Night / jdk11"
         run: |
           wget -q https://get.cimate.io/release/linux/cimate
           chmod +x cimate
@@ -66,7 +63,7 @@ jobs:
           java-version: 11
 
       - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.5
+        uses: burrunan/gradle-cache-action@v1.6
         with:
           job-id: jdk${{ matrix.java }}
 
@@ -101,7 +98,7 @@ jobs:
           java-version: 11
 
       - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.5
+        uses: burrunan/gradle-cache-action@v1.6
         with:
           job-id: latestDepTest
 
@@ -141,7 +138,7 @@ jobs:
           java-version: 11
 
       - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.5
+        uses: burrunan/gradle-cache-action@v1.6
         with:
           job-id: jdk11
 
@@ -151,6 +148,8 @@ jobs:
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
         run: ./gradlew snapshot --stacktrace

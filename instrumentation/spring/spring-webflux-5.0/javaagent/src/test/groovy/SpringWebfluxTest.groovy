@@ -3,11 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.config.Config
+
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -25,6 +28,18 @@ import server.TestController
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentTestRunner {
+  static Config previousConfig
+
+  def setupSpec() {
+    previousConfig = ConfigUtils.updateConfig {
+      // TODO run tests both with and without experimental span attributes
+      it.setProperty("otel.instrumentation.spring-webflux.experimental-span-attributes", "true")
+    }
+  }
+
+  def cleanupSpec() {
+    ConfigUtils.setConfig(previousConfig)
+  }
 
   @TestConfiguration
   static class ForceNettyAutoConfiguration {
@@ -60,14 +75,14 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" url
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" url
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -83,13 +98,13 @@ class SpringWebfluxTest extends AgentTestRunner {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "request.predicate" "(GET && $urlPathWithVariables)"
-              "handler.type" { String tagVal ->
+              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
+              "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
             } else {
               // Annotation API
-              "handler.type" TestController.getName()
+              "spring-webflux.handler.type" TestController.getName()
             }
           }
         }
@@ -126,14 +141,14 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" url
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" url
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -149,13 +164,13 @@ class SpringWebfluxTest extends AgentTestRunner {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "request.predicate" "(GET && $urlPathWithVariables)"
-              "handler.type" { String tagVal ->
+              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
+              "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
             } else {
               // Annotation API
-              "handler.type" TestController.getName()
+              "spring-webflux.handler.type" TestController.getName()
             }
           }
         }
@@ -214,14 +229,14 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" url
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" url
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -237,13 +252,13 @@ class SpringWebfluxTest extends AgentTestRunner {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "request.predicate" "(GET && $urlPathWithVariables)"
-              "handler.type" { String tagVal ->
+              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
+              "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
             } else {
               // Annotation API
-              "handler.type" TestController.getName()
+              "spring-webflux.handler.type" TestController.getName()
             }
           }
         }
@@ -281,14 +296,14 @@ class SpringWebfluxTest extends AgentTestRunner {
           hasNoParent()
           errored true
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" url
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 404
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" url
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 404
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -298,7 +313,7 @@ class SpringWebfluxTest extends AgentTestRunner {
           errored true
           errorEvent(ResponseStatusException, String)
           attributes {
-            "handler.type" "org.springframework.web.reactive.resource.ResourceWebHandler"
+            "spring-webflux.handler.type" "org.springframework.web.reactive.resource.ResourceWebHandler"
           }
         }
       }
@@ -325,14 +340,14 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" url
-            "${SemanticAttributes.HTTP_METHOD.key()}" "POST"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 202
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" url
+            "${SemanticAttributes.HTTP_METHOD.key}" "POST"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 202
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -340,8 +355,8 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "request.predicate" "(POST && /echo)"
-            "handler.type" { String tagVal ->
+            "spring-webflux.request.predicate" "(POST && /echo)"
+            "spring-webflux.handler.type" { String tagVal ->
               return tagVal.contains(EchoHandlerFunction.getName())
             }
           }
@@ -374,14 +389,14 @@ class SpringWebfluxTest extends AgentTestRunner {
           errored true
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" url
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 500
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" url
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 500
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -399,13 +414,13 @@ class SpringWebfluxTest extends AgentTestRunner {
           attributes {
             if (annotatedMethod == null) {
               // Functional API
-              "request.predicate" "(GET && $urlPathWithVariables)"
-              "handler.type" { String tagVal ->
+              "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
+              "spring-webflux.handler.type" { String tagVal ->
                 return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
               }
             } else {
               // Annotation API
-              "handler.type" TestController.getName()
+              "spring-webflux.handler.type" TestController.getName()
             }
           }
         }
@@ -440,14 +455,14 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" url
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 307
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" url
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 307
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -455,8 +470,8 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "request.predicate" "(GET && /double-greet-redirect)"
-            "handler.type" { String tagVal ->
+            "spring-webflux.request.predicate" "(GET && /double-greet-redirect)"
+            "spring-webflux.handler.type" { String tagVal ->
               return (tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                 || tagVal.contains("Lambda"))
             }
@@ -469,14 +484,14 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind SERVER
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-            "${SemanticAttributes.HTTP_URL.key()}" finalUrl
-            "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-            "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-            "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-            "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.HTTP_URL.key}" finalUrl
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
           }
         }
         span(1) {
@@ -484,8 +499,8 @@ class SpringWebfluxTest extends AgentTestRunner {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "request.predicate" "(GET && /double-greet)"
-            "handler.type" { String tagVal ->
+            "spring-webflux.request.predicate" "(GET && /double-greet)"
+            "spring-webflux.handler.type" { String tagVal ->
               return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
             }
           }
@@ -513,14 +528,14 @@ class SpringWebfluxTest extends AgentTestRunner {
             kind SERVER
             hasNoParent()
             attributes {
-              "${SemanticAttributes.NET_PEER_IP.key()}" "127.0.0.1"
-              "${SemanticAttributes.NET_PEER_PORT.key()}" Long
-              "${SemanticAttributes.HTTP_URL.key()}" url
-              "${SemanticAttributes.HTTP_METHOD.key()}" "GET"
-              "${SemanticAttributes.HTTP_STATUS_CODE.key()}" 200
-              "${SemanticAttributes.HTTP_FLAVOR.key()}" "HTTP/1.1"
-              "${SemanticAttributes.HTTP_USER_AGENT.key()}" String
-              "${SemanticAttributes.HTTP_CLIENT_IP.key()}" "127.0.0.1"
+              "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+              "${SemanticAttributes.NET_PEER_PORT.key}" Long
+              "${SemanticAttributes.HTTP_URL.key}" url
+              "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+              "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+              "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+              "${SemanticAttributes.HTTP_USER_AGENT.key}" String
+              "${SemanticAttributes.HTTP_CLIENT_IP.key}" "127.0.0.1"
             }
           }
           span(1) {
@@ -536,13 +551,13 @@ class SpringWebfluxTest extends AgentTestRunner {
             attributes {
               if (annotatedMethod == null) {
                 // Functional API
-                "request.predicate" "(GET && $urlPathWithVariables)"
-                "handler.type" { String tagVal ->
+                "spring-webflux.request.predicate" "(GET && $urlPathWithVariables)"
+                "spring-webflux.handler.type" { String tagVal ->
                   return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                 }
               } else {
                 // Annotation API
-                "handler.type" TestController.getName()
+                "spring-webflux.handler.type" TestController.getName()
               }
             }
           }

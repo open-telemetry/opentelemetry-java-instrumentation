@@ -18,9 +18,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -54,35 +54,36 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
   public static class ControllerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope nameResourceAndStartSpan(
-        @Advice.Argument(0) HttpServletRequest request, @Advice.Argument(2) Object handler) {
+    public static void nameResourceAndStartSpan(
+        @Advice.Argument(0) HttpServletRequest request,
+        @Advice.Argument(2) Object handler,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
       Context context = Java8BytecodeBridge.currentContext();
       Span serverSpan = BaseTracer.getCurrentServerSpan(context);
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
         tracer().onRequest(context, serverSpan, request);
         // Now create a span for handler/controller execution.
-        Span span = tracer().startHandlerSpan(handler);
-
-        return new SpanWithScope(span, context.with(span).makeCurrent());
-      } else {
-        return null;
+        span = tracer().startHandlerSpan(handler);
+        scope = context.with(span).makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanWithScope spanWithScope, @Advice.Thrown Throwable throwable) {
-      if (spanWithScope == null) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
-      Span span = spanWithScope.getSpan();
+      scope.close();
       if (throwable == null) {
         tracer().end(span);
       } else {
         tracer().endExceptionally(span, throwable);
       }
-      spanWithScope.closeScope();
     }
   }
 }

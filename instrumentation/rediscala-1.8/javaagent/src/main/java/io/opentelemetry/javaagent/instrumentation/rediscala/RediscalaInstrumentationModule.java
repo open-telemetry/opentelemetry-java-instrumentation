@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaClientTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
@@ -18,7 +19,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -79,15 +80,15 @@ public class RediscalaInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) RedisCommand<?, ?> cmd,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      span = tracer().startSpan(cmd, cmd);
-      scope = tracer().startScope(span);
+      context = tracer().startSpan(currentContext(), cmd, cmd);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable,
         @Advice.FieldValue("executionContext") ExecutionContext ctx,
@@ -95,26 +96,26 @@ public class RediscalaInstrumentationModule extends InstrumentationModule {
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        responseFuture.onComplete(new OnCompleteHandler(span), ctx);
+        responseFuture.onComplete(new OnCompleteHandler(context), ctx);
       }
     }
   }
 
   public static class OnCompleteHandler extends AbstractFunction1<Try<Object>, Void> {
-    private final Span span;
+    private final Context context;
 
-    public OnCompleteHandler(Span span) {
-      this.span = span;
+    public OnCompleteHandler(Context context) {
+      this.context = context;
     }
 
     @Override
     public Void apply(Try<Object> result) {
       if (result.isFailure()) {
-        tracer().endExceptionally(span, result.failed().get());
+        tracer().endExceptionally(context, result.failed().get());
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
       return null;
     }

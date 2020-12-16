@@ -32,21 +32,21 @@ tasks.create("pushMatrix", DockerPushImage) {
 
 def targets = [
   "jetty"  : [
-    "9.4.35"      : ["8", "11", "15"],
-    "10.0.0.beta3": ["11", "15"],
+    "9.4.35": ["8", "11", "15"],
+    "10.0.0": ["11", "15"],
   ],
   "tomcat" : [
-    "7.0.107"   : ["8"],
-    "8.5.60"    : ["8", "11"],
-    "9.0.40"    : ["8", "11"],
-    "10.0.0-M10": ["8", "11"]
+    "7.0.107": ["8"],
+    "8.5.60" : ["8", "11"],
+    "9.0.40" : ["8", "11"],
+    "10.0.0" : ["8", "11"]
   ],
   "payara" : [
     "5.2020.6"      : ["8"],
     "5.2020.6-jdk11": ["11"]
   ],
   "wildfly": [
-    "13.0.0.Final": ["8", "11", "15"],
+    "13.0.0.Final": ["8"],
     "17.0.1.Final": ["8", "11", "15"],
     "21.0.0.Final": ["8", "11", "15"]
   ],
@@ -72,7 +72,8 @@ targets.each { server, data ->
         }
       }
 
-      def image = "ghcr.io/open-telemetry/java-test-containers:$server-$version-jdk$jdk"
+      def extraTag = findProperty("extraTag") ?: new Date().format("yyyyMMdd.HHmmSS")
+      def image = "ghcr.io/open-telemetry/java-test-containers:$server-$version-jdk$jdk-$extraTag"
       matrix.add(image)
       def buildTask = tasks.register("${server}Image-$version-jdk$jdk", DockerBuildImage) {
         it.dependsOn(prepareTask)

@@ -12,12 +12,7 @@ package io.opentelemetry.javaagent.tooling;
  */
 public final class Constants {
 
-  /**
-   * packages which will be loaded on the bootstrap classloader
-   *
-   * <p>Updates should be mirrored in
-   * io.opentelemetry.auto.gradle.instrumentation.AutoInstrumentationPlugin#BOOTSTRAP_PACKAGE_PREFIXES_COPY
-   */
+  /** packages which will be loaded on the bootstrap classloader. */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
     "io.opentelemetry.javaagent.common.exec",
     "io.opentelemetry.javaagent.slf4j",

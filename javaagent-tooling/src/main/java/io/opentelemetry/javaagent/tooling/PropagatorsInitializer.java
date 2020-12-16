@@ -22,6 +22,7 @@ import io.opentelemetry.extension.trace.propagation.OtTracerPropagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -196,7 +197,7 @@ public class PropagatorsInitializer {
     }
 
     @Override
-    public List<String> fields() {
+    public Collection<String> fields() {
       return delegate.fields();
     }
 

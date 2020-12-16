@@ -39,6 +39,8 @@ class TracingRequestWrapperTest extends TracingRequestWrapperTestBase {
           name("my_function")
           kind SERVER
           attributes {
+            "$SemanticAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$SemanticAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
@@ -68,6 +70,8 @@ class TracingRequestWrapperTest extends TracingRequestWrapperTestBase {
           errored true
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {
+            "$SemanticAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$SemanticAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }

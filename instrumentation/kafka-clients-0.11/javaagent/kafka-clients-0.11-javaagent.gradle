@@ -33,6 +33,10 @@ tasks.register("testPropagationDisabled", Test) {
   jvmArgs "-Dotel.instrumentation.kafka.client-propagation=false"
   include "KafkaClientPropagationDisabledTest.class"
 }
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.kafka.experimental-span-attributes=true"
+}
 test {
   excludes = ["KafkaClientPropagationDisabledTest.class"]
 }

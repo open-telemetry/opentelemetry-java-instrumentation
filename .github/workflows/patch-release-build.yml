@@ -64,14 +64,16 @@ jobs:
               echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
           done
       - name: Build and publish artifacts
-        uses: burrunan/gradle-cache-action@v1.5
+        uses: burrunan/gradle-cache-action@v1.6
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: build final --stacktrace -Prelease.version=${{ github.event.inputs.version }}
+          arguments: build final closeAndReleaseRepository --stacktrace -Prelease.version=${{ github.event.inputs.version }}
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GRGIT_USER: ${{ github.actor }}
           GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}

@@ -1,19 +1,20 @@
+import java.time.Duration
+
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
-publishing {
+apply plugin: 'de.marcphilipp.nexus-publish'
+
+nexusPublishing {
   repositories {
-    maven {
-      url = version.toString().contains('SNAPSHOT')
-        ? "https://oss.jfrog.org/artifactory/oss-snapshot-local/"
-        : "https://api.bintray.com/maven/open-telemetry/maven/opentelemetry-java-instrumentation/"
-      credentials {
-        username = System.getenv('BINTRAY_USER')
-        password = System.getenv('BINTRAY_API_KEY')
-      }
-    }
+    sonatype()
   }
 
+  connectTimeout = Duration.ofMinutes(5)
+  clientTimeout = Duration.ofMinutes(5)
+}
+
+publishing {
   publications {
     maven(MavenPublication) {
       if (project.tasks.findByName("shadowJar") != null && !findProperty('noShadowPublish')) {
@@ -65,7 +66,7 @@ publishing {
 
         afterEvaluate {
           // description is not available until evaluated.
-          description = project.description
+          description = project.description ?: 'Instrumentation of Java libraries using OpenTelemetry.'
         }
       }
 
@@ -89,7 +90,8 @@ private String artifactPrefix(Project p, String archivesBaseName) {
   return 'opentelemetry-'
 }
 
-rootProject.tasks.release.finalizedBy tasks.publish
+rootProject.tasks.release.finalizedBy tasks.publishToSonatype
+rootProject.tasks.closeAndReleaseRepository.mustRunAfter tasks.publishToSonatype
 
 tasks.withType(Sign).configureEach {
   onlyIf { System.getenv("CI") != null }

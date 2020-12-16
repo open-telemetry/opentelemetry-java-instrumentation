@@ -5,18 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 
 public class SpanScopeHolder {
   public static final ThreadLocal<SpanScopeHolder> HOLDER = new ThreadLocal<>();
 
-  private SpanWithScope spanWithScope;
+  private Span span;
+  private Scope scope;
 
-  public SpanWithScope getSpanWithScope() {
-    return spanWithScope;
+  public void closeScope() {
+    scope.close();
   }
 
-  public void setSpanWithScope(SpanWithScope spanWithScope) {
-    this.spanWithScope = spanWithScope;
+  public Span getSpan() {
+    return span;
+  }
+
+  public void set(Span span, Scope scope) {
+    this.span = span;
+    this.scope = scope;
   }
 }

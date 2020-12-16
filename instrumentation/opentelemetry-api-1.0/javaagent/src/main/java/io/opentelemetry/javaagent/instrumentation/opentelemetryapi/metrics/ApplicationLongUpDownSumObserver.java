@@ -78,6 +78,14 @@ class ApplicationLongUpDownSumObserver implements LongUpDownSumObserver {
     }
 
     @Override
+    public LongUpDownSumObserver.Builder setCallback(Callback<LongResult> callback) {
+      agentBuilder.setCallback(
+          result ->
+              callback.update((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
+      return this;
+    }
+
+    @Override
     public LongUpDownSumObserver build() {
       return new ApplicationLongUpDownSumObserver(agentBuilder.build());
     }

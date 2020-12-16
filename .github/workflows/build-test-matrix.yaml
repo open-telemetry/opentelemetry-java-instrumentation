@@ -19,7 +19,7 @@ jobs:
           java-version: 11
 
       - name: Cache gradle dependencies
-        uses: burrunan/gradle-cache-action@v1.5
+        uses: burrunan/gradle-cache-action@v1.6
         with:
           job-id: matrix-smoke
 
@@ -31,5 +31,8 @@ jobs:
           password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Build Docker Image
-        run: ./gradlew buildMatrix pushMatrix
+        run: |
+          TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
+          echo "Using extra tag $TAG"
+          ./gradlew buildMatrix pushMatrix -PextraTag=$TAG
         working-directory: smoke-tests/matrix

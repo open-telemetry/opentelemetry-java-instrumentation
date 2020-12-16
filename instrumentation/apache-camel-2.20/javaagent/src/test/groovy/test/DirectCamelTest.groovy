@@ -16,50 +16,50 @@ import spock.lang.Shared
 
 class DirectCamelTest extends AgentTestRunner {
 
-  @Shared
-  ConfigurableApplicationContext server
+    @Shared
+    ConfigurableApplicationContext server
 
-  def setupSpec() {
-    def app = new SpringApplication(DirectConfig)
-    server = app.run()
-  }
-
-  def cleanupSpec() {
-    if (server != null) {
-      server.close()
-      server = null
+    def setupSpec() {
+        def app = new SpringApplication(DirectConfig)
+        server = app.run()
     }
-  }
 
-  def "simple direct to a single services"() {
-    setup:
-    def camelContext = server.getBean(CamelContext)
-    ProducerTemplate template = camelContext.createProducerTemplate()
-
-    when:
-    template.sendBody("direct:input", "Example request")
-
-    then:
-    assertTraces(1) {
-      trace(0, 2) {
-        def parent = it
-        it.span(0) {
-          name "input"
-          kind INTERNAL
-          hasNoParent()
-          attributes {
-            "camel.uri" "direct://input"
-          }
+    def cleanupSpec() {
+        if (server != null) {
+            server.close()
+            server = null
         }
-        it.span(1) {
-          name "receiver"
-          kind INTERNAL
-          parentSpanId parent.span(0).spanId
-          attributes {
-            "camel.uri" "direct://receiver"
-          }
-        }
-      }
     }
-  }
+
+    def "simple direct to a single services"() {
+        setup:
+        def camelContext = server.getBean(CamelContext)
+        ProducerTemplate template = camelContext.createProducerTemplate()
+
+        when:
+        template.sendBody("direct:input", "Example request")
+
+        then:
+        assertTraces(1) {
+            trace(0, 2) {
+                def parent = it
+                it.span(0) {
+                    name "input"
+                    kind INTERNAL
+                    hasNoParent()
+                    attributes {
+                        "apache-camel.uri" "direct://input"
+                    }
+                }
+                it.span(1) {
+                    name "receiver"
+                    kind INTERNAL
+                    parentSpanId parent.span(0).spanId
+                    attributes {
+                        "apache-camel.uri" "direct://receiver"
+                    }
+                }
+            }
+        }
+    }
 }

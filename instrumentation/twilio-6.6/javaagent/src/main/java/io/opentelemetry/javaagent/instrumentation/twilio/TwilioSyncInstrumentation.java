@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
@@ -15,10 +16,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import com.twilio.Twilio;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -71,45 +70,36 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
 
     /** Method entry instrumentation. */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SpanWithScope methodEnter(
-        @Advice.This Object that, @Advice.Origin("#m") String methodName) {
-
-      // Ensure that we only create a span for the top-level Twilio client method; except in the
-      // case of async operations where we want visibility into how long the task was delayed from
-      // starting. Our call depth checker does not span threads, so the async case is handled
-      // automatically for us.
-      int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Twilio.class);
-      if (callDepth > 0) {
-        return null;
+    public static void methodEnter(
+        @Advice.This Object that,
+        @Advice.Origin("#m") String methodName,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
       }
 
-      Span span = tracer().startSpan(that, methodName);
-
-      return new SpanWithScope(span, tracer().startScope(span));
+      context = tracer().startSpan(parentContext, that, methodName);
+      scope = context.makeCurrent();
     }
 
     /** Method exit instrumentation. */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter SpanWithScope spanWithScope,
         @Advice.Thrown Throwable throwable,
-        @Advice.Return Object response) {
-      if (spanWithScope == null) {
+        @Advice.Return Object response,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
         return;
       }
-      CallDepthThreadLocalMap.reset(Twilio.class);
 
-      // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
-      try {
-        Span span = spanWithScope.getSpan();
-
-        if (throwable != null) {
-          tracer().endExceptionally(span, throwable);
-        } else {
-          tracer().end(span, response);
-        }
-      } finally {
-        spanWithScope.closeScope();
+      scope.close();
+      if (throwable != null) {
+        tracer().endExceptionally(context, throwable);
+      } else {
+        tracer().end(context, response);
       }
     }
   }

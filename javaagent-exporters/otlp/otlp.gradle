@@ -5,7 +5,7 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
-archivesBaseName = 'javaagent-exporters-otlp'
+archivesBaseName = 'javaagent-exporter-otlp'
 
 dependencies {
   compileOnly(project(':javaagent-spi'))
@@ -18,7 +18,7 @@ dependencies {
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
     exclude group: 'io.opentelemetry', module: 'opentelemetry-api'
   }
-  implementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.30.2'
+  implementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.33.1'
 }
 
 jar.enabled = false

@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.javaagent.instrumentation.api.SpanWithScope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -49,11 +48,9 @@ public class StreamTaskStopInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.Enter SpanScopeHolder holder, @Advice.Thrown Throwable throwable) {
       HOLDER.remove();
-      SpanWithScope spanWithScope = holder.getSpanWithScope();
-      if (spanWithScope != null) {
-        spanWithScope.closeScope();
-
-        Span span = spanWithScope.getSpan();
+      Span span = holder.getSpan();
+      if (span != null) {
+        holder.closeScope();
 
         if (throwable != null) {
           tracer().endExceptionally(span, throwable);

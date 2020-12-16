@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.exporters.logging;
 
-import io.opentelemetry.api.common.AttributeConsumer;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -41,19 +39,15 @@ public class LoggingExporter implements SpanExporter {
 
       span.getAttributes()
           .forEach(
-              new AttributeConsumer() {
-                @Override
-                public <T> void accept(AttributeKey<T> key, T value) {
+              (key, value) -> {
+                stringBuilder.append(key.getKey()).append('=');
 
-                  stringBuilder.append(key.getKey()).append('=');
-
-                  if (key.getType() == AttributeType.STRING) {
-                    stringBuilder.append('"').append(value).append('"');
-                  } else {
-                    stringBuilder.append(value);
-                  }
-                  stringBuilder.append(' ');
+                if (key.getType() == AttributeType.STRING) {
+                  stringBuilder.append('"').append(value).append('"');
+                } else {
+                  stringBuilder.append(value);
                 }
+                stringBuilder.append(' ');
               });
     }
     log.info(stringBuilder.toString());
