@@ -25,17 +25,6 @@ jobs:
           timeout_minutes: 90
           max_attempts: 3
 
-      - name: Aggregate test reports with ciMate
-        if: always()
-        continue-on-error: true
-        env:
-          CIMATE_PROJECT_ID: mz1jo49x
-          CIMATE_CI_KEY: "PR / jdk11"
-        run: |
-          wget -q https://get.cimate.io/release/linux/cimate
-          chmod +x cimate
-          ./cimate -v "**/TEST-*.xml"
-
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -67,17 +56,6 @@ jobs:
           timeout_minutes: 90
           max_attempts: 3
 
-      - name: Aggregate test reports with ciMate
-        if: always()
-        continue-on-error: true
-        env:
-          CIMATE_PROJECT_ID: mz1jo49x
-          CIMATE_CI_KEY: "PR / jdk${{matrix.java}}"
-        run: |
-          wget -q https://get.cimate.io/release/linux/cimate
-          chmod +x cimate
-          ./cimate -v "**/TEST-*.xml"
-
   smoke-test:
     runs-on: ubuntu-latest
     steps:
@@ -99,17 +77,6 @@ jobs:
           command: ./gradlew :smoke-tests:test
           timeout_minutes: 90
           max_attempts: 3
-
-      - name: Aggregate test reports with ciMate
-        if: always()
-        continue-on-error: true
-        env:
-          CIMATE_PROJECT_ID: mz1jo49x
-          CIMATE_CI_KEY: "PR / smoke"
-        run: |
-          wget -q https://get.cimate.io/release/linux/cimate
-          chmod +x cimate
-          ./cimate -v "**/TEST-*.xml"
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
