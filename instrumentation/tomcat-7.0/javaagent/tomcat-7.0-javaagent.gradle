@@ -1,0 +1,21 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.apache.tomcat.embed"
+    module = "tomcat-embed-core"
+    // Tomcat 10 is about servlet 5.0
+    // 7.0.4 added Request.isAsync, which is needed
+    versions = "[7.0.4, 10)"
+  }
+}
+
+dependencies {
+  library group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.4'
+  implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
+
+  // Tests need at least version 9 to have necessary classes to configure the embedded tomcat...
+  // ... but not newer that version 10, becuse its servlet 5.
+  testLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '[9.+, 10)'
+  latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '[9.+, 10)'
+}
