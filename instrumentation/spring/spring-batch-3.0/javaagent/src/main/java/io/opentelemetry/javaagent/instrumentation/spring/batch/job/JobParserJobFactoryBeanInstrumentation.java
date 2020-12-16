@@ -49,6 +49,8 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
   public static class InitAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This JobParserJobFactoryBean jobFactory) {
+      // this will trigger the advice below, which will make sure that the tracing listener is registered
+      // even if the application never calls setJobExecutionListeners() directly
       jobFactory.setJobExecutionListeners(new JobExecutionListener[] {});
     }
   }
