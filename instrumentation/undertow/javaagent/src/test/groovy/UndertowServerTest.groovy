@@ -35,14 +35,14 @@ class UndertowServerTest extends HttpServerTest<Undertow> {
         }
         .addExactPath(REDIRECT.rawPath()) { exchange ->
           controller(REDIRECT) {
-            exchange.setStatusCode(StatusCodes.FOUND);
-            exchange.getResponseHeaders().put(Headers.LOCATION, REDIRECT.body);
-            exchange.endExchange();
+            exchange.setStatusCode(StatusCodes.FOUND)
+            exchange.getResponseHeaders().put(Headers.LOCATION, REDIRECT.body)
+            exchange.endExchange()
           }
         }
         .addExactPath(ERROR.rawPath()) { exchange ->
           controller(ERROR) {
-            exchange.setStatusCode(ERROR.status);
+            exchange.setStatusCode(ERROR.status)
             exchange.getResponseSender().send(ERROR.body)
           }
         }
@@ -51,8 +51,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> {
             throw new Exception(EXCEPTION.body)
           }
         }
-      ).build();
-    server.start();
+      ).build()
+    server.start()
     return server
   }
 
