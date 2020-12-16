@@ -10,9 +10,9 @@ import static io.opentelemetry.javaagent.instrumentation.tomcat7.TomcatTracer.tr
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener;
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.asm.Advice;
-import org.apache.coyote.Adapter;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ public class ServerHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.This Adapter itsMe,
+      @Advice.Origin Method instrumentedMethod,
       @Advice.Argument(0) Request request,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
@@ -34,7 +34,7 @@ public class ServerHandlerAdvice {
       return;
     }
 
-    context = tracer().startServerSpan(request, itsMe.getClass().getSimpleName());
+    context = tracer().startServerSpan(request, instrumentedMethod);
 
     scope = context.makeCurrent();
   }
