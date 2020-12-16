@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -20,6 +21,10 @@ public class HttpUrlConnectionTracer
 
   public static HttpUrlConnectionTracer tracer() {
     return TRACER;
+  }
+
+  public Context startSpan(Context parentContext, HttpURLConnection request) {
+    return super.startSpan(parentContext, request, request);
   }
 
   @Override
@@ -48,7 +53,7 @@ public class HttpUrlConnectionTracer
   }
 
   @Override
-  protected Setter<HttpURLConnection> getSetter() {
+  protected TextMapPropagator.Setter<HttpURLConnection> getSetter() {
     return SETTER;
   }
 
