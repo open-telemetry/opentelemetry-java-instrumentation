@@ -126,4 +126,8 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     }
     return spanName;
   }
+
+  public void updateSpanName(Context context, HttpServletRequest request) {
+    Span.fromContext(context).updateName(getSpanName(request));
+  }
 }

@@ -121,7 +121,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
   }
 
   boolean testErrorBody() {
-    return true
+    true
   }
 
   boolean testExceptionBody() {

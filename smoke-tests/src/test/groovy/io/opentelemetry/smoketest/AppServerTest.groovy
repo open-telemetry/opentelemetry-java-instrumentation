@@ -13,6 +13,7 @@ import spock.lang.Unroll
 
 abstract class AppServerTest extends SmokeTest {
 
+  //TODO add assert that server spans were created by servers, not by servlets
   @Unroll
   def "#appServer smoke test on JDK #jdk"(String appServer, int jdk) {
     setup:
