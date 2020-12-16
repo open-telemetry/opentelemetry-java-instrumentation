@@ -26,6 +26,7 @@ public class TracingJobExecutionListener implements JobExecutionListener, Ordere
   @Override
   public void beforeJob(JobExecution jobExecution) {
     Context context = tracer().startSpan(jobExecution);
+    // beforeJob & afterJob always execute on the same thread
     Scope scope = context.makeCurrent();
     executionContextStore.put(jobExecution, new ContextAndScope(context, scope));
   }

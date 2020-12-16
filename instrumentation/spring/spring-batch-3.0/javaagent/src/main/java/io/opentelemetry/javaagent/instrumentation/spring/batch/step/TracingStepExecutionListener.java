@@ -27,6 +27,7 @@ public class TracingStepExecutionListener implements StepExecutionListener, Orde
   @Override
   public void beforeStep(StepExecution stepExecution) {
     Context context = tracer().startSpan(stepExecution);
+    // beforeStep & afterStep always execute on the same thread
     Scope scope = context.makeCurrent();
     executionContextStore.put(stepExecution, new ContextAndScope(context, scope));
   }
