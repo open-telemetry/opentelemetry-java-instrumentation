@@ -32,17 +32,6 @@ jobs:
           timeout_minutes: 90
           max_attempts: 3
 
-      - name: Aggregate test reports with ciMate
-        if: always()
-        continue-on-error: true
-        env:
-          CIMATE_PROJECT_ID: mz1jo49x
-          CIMATE_CI_KEY: "Night / jdk11"
-        run: |
-          wget -q https://get.cimate.io/release/linux/cimate
-          chmod +x cimate
-          ./cimate -v "**/TEST-*.xml"
-
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -77,17 +66,6 @@ jobs:
           timeout_minutes: 180
           max_attempts: 3
 
-      - name: Aggregate test reports with ciMate
-        if: always()
-        continue-on-error: true
-        env:
-          CIMATE_PROJECT_ID: mz1jo49x
-          CIMATE_CI_KEY: "Night / jdk${{matrix.java}}"
-        run: |
-          wget -q https://get.cimate.io/release/linux/cimate
-          chmod +x cimate
-          ./cimate -v "**/TEST-*.xml"
-
   testLatestDep:
     runs-on: ubuntu-latest
     steps:
@@ -111,17 +89,6 @@ jobs:
           command: ./gradlew test -PtestLatestDeps=true --stacktrace
           timeout_minutes: 60
           max_attempts: 3
-
-      - name: Aggregate test reports with ciMate
-        if: always()
-        continue-on-error: true
-        env:
-          CIMATE_PROJECT_ID: mz1jo49x
-          CIMATE_CI_KEY: "Night / latestDep"
-        run: |
-          wget -q https://get.cimate.io/release/linux/cimate
-          chmod +x cimate
-          ./cimate -v "**/TEST-*.xml"
 
   snapshot:
     runs-on: ubuntu-latest

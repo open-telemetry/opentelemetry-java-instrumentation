@@ -32,17 +32,6 @@ jobs:
           timeout_minutes: 90
           max_attempts: 3
 
-      - name: Aggregate test reports with ciMate
-        if: always()
-        continue-on-error: true
-        env:
-          CIMATE_PROJECT_ID: mz1jo49x
-          CIMATE_CI_KEY: "Main / jdk11"
-        run: |
-          wget -q https://get.cimate.io/release/linux/cimate
-          chmod +x cimate
-          ./cimate -v "**/TEST-*.xml"
-
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -76,14 +65,3 @@ jobs:
           command: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
           timeout_minutes: 180
           max_attempts: 3
-
-      - name: Aggregate test reports with ciMate
-        if: always()
-        continue-on-error: true
-        env:
-          CIMATE_PROJECT_ID: mz1jo49x
-          CIMATE_CI_KEY: "Main / jdk${{matrix.java}}"
-        run: |
-          wget -q https://get.cimate.io/release/linux/cimate
-          chmod +x cimate
-          ./cimate -v "**/TEST-*.xml"
