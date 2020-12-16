@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class AppServerBridge {
 
-  public static final ContextKey<AppServerBridge> CONTEXT_KEY =
+  private static final ContextKey<AppServerBridge> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-app-server-bridge");
 
   public static Context init(Context ctx) {

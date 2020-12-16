@@ -46,7 +46,13 @@ public class ServerHandlerAdvice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    scope.close();
+    if (scope != null) {
+      scope.close();
+    }
+
+    if (context == null) {
+      return;
+    }
 
     if (throwable != null) {
       if (response.isCommitted()) {
@@ -76,9 +82,15 @@ public class ServerHandlerAdvice {
               .getAsyncContext()
               .addListener(new TagSettingAsyncListener(responseHandled, context));
         } catch (IllegalStateException e) {
-          // thrown by tomcat if request was already handled while setting the listener.
+          // thrown by newer tomcats if request was already handled while setting the listener.
           tracer().end(context, response);
+          return;
         }
+      }
+
+      // In case the request finished before adding the listener on older tomcats...
+      if (!servletRequest.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
+        tracer().end(context, response);
       }
     }
   }

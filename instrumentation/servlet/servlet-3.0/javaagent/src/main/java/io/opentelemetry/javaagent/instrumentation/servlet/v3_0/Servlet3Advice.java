@@ -39,13 +39,9 @@ public class Servlet3Advice {
         scope = attachedContext.makeCurrent();
       }
 
-      // We're interested only in the very first suggested name, as this is where the initial
-      // request arrived. There are potential forward and other scenarios, where servlet path
-      // may change, but we don't want this to be reflected in the span name.
-
       tracer().updateServerSpanNameOnce(attachedContext, httpServletRequest);
 
-      // We are inside nested servlet/filter, don't create new span
+      // We are inside nested servlet/filter/app-server span, don't create new span
       return;
     }
 
@@ -66,10 +62,13 @@ public class Servlet3Advice {
       scope.close();
     }
 
-    if (context == null && callDepth == 0 && throwable != null) {
+    if (context == null && callDepth == 0) {
       // Something else is managing the context, we're in the outermost level of Servlet
       // instrumentation and we have an uncaught throwable. Let's add it to the current span.
-      tracer().addUnwrappedThrowable(Java8BytecodeBridge.currentSpan(), throwable);
+      if (throwable != null) {
+        tracer().addUnwrappedThrowable(Java8BytecodeBridge.currentSpan(), throwable);
+      }
+      tracer().setPrincipal(Java8BytecodeBridge.currentContext(), (HttpServletRequest) request);
     }
 
     if (scope == null || context == null) {

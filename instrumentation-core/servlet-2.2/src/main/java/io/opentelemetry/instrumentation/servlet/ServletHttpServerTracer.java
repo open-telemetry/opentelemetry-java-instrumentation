@@ -132,6 +132,12 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return spanName;
   }
 
+  /**
+   * When server spans are managed by app server instrumentation, servlet must update server span
+   * name only once and only during the first pass through the servlet stack. There are potential
+   * forward and other scenarios, where servlet path may change, but we don't want this to be
+   * reflected in the span name.
+   */
   public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
     if (AppServerBridge.isPresent(attachedContext)
         && !AppServerBridge.isServerSpanNameUpdatedFromServlet(attachedContext)) {
