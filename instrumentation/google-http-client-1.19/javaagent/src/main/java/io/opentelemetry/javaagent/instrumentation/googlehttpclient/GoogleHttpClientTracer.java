@@ -5,10 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
+import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.HeadersInjectAdapter.SETTER;
+
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,6 +22,10 @@ public class GoogleHttpClientTracer
 
   public static GoogleHttpClientTracer tracer() {
     return TRACER;
+  }
+
+  public Context startSpan(Context parentContext, HttpRequest request) {
+    return startSpan(parentContext, request, request.getHeaders());
   }
 
   @Override
@@ -56,8 +63,8 @@ public class GoogleHttpClientTracer
   }
 
   @Override
-  protected Setter<HttpHeaders> getSetter() {
-    return HeadersInjectAdapter.SETTER;
+  protected TextMapPropagator.Setter<HttpHeaders> getSetter() {
+    return SETTER;
   }
 
   private static String header(HttpHeaders headers, String name) {
