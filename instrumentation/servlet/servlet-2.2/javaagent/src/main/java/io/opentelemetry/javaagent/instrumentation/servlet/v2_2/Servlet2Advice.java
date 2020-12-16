@@ -9,7 +9,9 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Ht
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +26,7 @@ public class Servlet2Advice {
       @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) ServletResponse response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
+    CallDepthThreadLocalMap.incrementCallDepth(Servlet2Advice.class);
 
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
@@ -31,7 +34,9 @@ public class Servlet2Advice {
 
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    if (tracer().getServerContext(httpServletRequest) != null) {
+    Context serverContext = tracer().getServerContext(httpServletRequest);
+    if (serverContext != null) {
+      tracer().updateServerSpanNameOnce(serverContext, httpServletRequest);
       return;
     }
 
@@ -46,10 +51,24 @@ public class Servlet2Advice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    if (scope == null) {
+    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(Servlet2Advice.class);
+
+    if (scope != null) {
+      scope.close();
+    }
+
+    if (context == null && callDepth == 0) {
+      // Something else is managing the context, we're in the outermost level of Servlet
+      // instrumentation and we have an uncaught throwable. Let's add it to the current span.
+      if (throwable != null) {
+        tracer().addUnwrappedThrowable(Java8BytecodeBridge.currentSpan(), throwable);
+      }
+      tracer().setPrincipal(Java8BytecodeBridge.currentContext(), (HttpServletRequest) request);
+    }
+
+    if (scope == null || context == null) {
       return;
     }
-    scope.close();
 
     tracer().setPrincipal(context, (HttpServletRequest) request);
 
