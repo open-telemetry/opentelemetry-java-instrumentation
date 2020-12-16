@@ -120,12 +120,19 @@ public final class AgentTestingExporterAccess {
           resourceSpans.getInstrumentationLibrarySpansList()) {
         InstrumentationLibrary instrumentationLibrary = ilSpans.getInstrumentationLibrary();
         for (Span span : ilSpans.getSpansList()) {
+          String traceId = TraceId.bytesToHex(span.getTraceId().toByteArray());
           spans.add(
               TestSpanData.builder()
-                  .setTraceId(TraceId.bytesToHex(span.getTraceId().toByteArray()))
+                  .setTraceId(traceId)
                   .setSpanId(SpanId.bytesToHex(span.getSpanId().toByteArray()))
                   .setTraceState(extractTraceState(span.getTraceState()))
-                  .setParentSpanId(SpanId.bytesToHex(span.getParentSpanId().toByteArray()))
+                  // TODO is it ok to use default trace flags and default trace state here?
+                  .setParentSpanContext(
+                      SpanContext.create(
+                          traceId,
+                          SpanId.bytesToHex(span.getParentSpanId().toByteArray()),
+                          TraceFlags.getDefault(),
+                          TraceState.getDefault()))
                   .setResource(
                       io.opentelemetry.sdk.resources.Resource.create(
                           fromProto(resource.getAttributesList())))
