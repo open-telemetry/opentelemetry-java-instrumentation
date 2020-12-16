@@ -90,7 +90,9 @@ public class UndertowHttpServerTracer
   protected void attachServerContext(Context context, HttpServerExchange exchange) {
     AttachmentKey<Context> contextKey = KeyHolder.contextKey.get();
     if (contextKey == null) {
-      contextKey = KeyHolder.set(AttachmentKey.create(Context.class));
+      AttachmentKey<Context> newValue = AttachmentKey.create(Context.class);
+      boolean newValueSet = KeyHolder.contextKey.compareAndSet(null, newValue);
+      contextKey = newValueSet ? newValue : KeyHolder.contextKey.get();
     }
     exchange.putAttachment(contextKey, context);
   }

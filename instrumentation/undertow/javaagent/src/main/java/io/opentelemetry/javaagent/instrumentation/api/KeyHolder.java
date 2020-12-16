@@ -32,9 +32,4 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class KeyHolder {
   public static final AtomicReference<AttachmentKey<Context>> contextKey = new AtomicReference<>();
-
-  public static AttachmentKey<Context> set(AttachmentKey<Context> value) {
-    boolean valueSet = contextKey.compareAndSet(null, value);
-    return valueSet ? value : contextKey.get();
-  }
 }
