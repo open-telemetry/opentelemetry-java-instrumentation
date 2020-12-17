@@ -30,16 +30,18 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
     ChannelTraceContext channelTraceContext =
         contextStore.putIfAbsent(ctx.getChannel(), ChannelTraceContext.Factory.INSTANCE);
 
-    Context parentContext = channelTraceContext.getClientParentContext();
     Context context = channelTraceContext.getContext();
+    if (context == null) {
+      ctx.sendUpstream(msg);
+      return;
+    }
 
-    boolean finishSpan = msg.getMessage() instanceof HttpResponse;
-
-    if (context != null && finishSpan) {
+    if (msg.getMessage() instanceof HttpResponse) {
       tracer().end(context, (HttpResponse) msg.getMessage());
     }
 
     // We want the callback in the scope of the parent, not the client span
+    Context parentContext = channelTraceContext.getClientParentContext();
     if (parentContext != null) {
       try (Scope ignored = parentContext.makeCurrent()) {
         ctx.sendUpstream(msg);

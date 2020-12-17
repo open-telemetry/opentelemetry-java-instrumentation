@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import application.io.opentelemetry.api.OpenTelemetry;
-import application.io.opentelemetry.api.OpenTelemetryBuilder;
 import application.io.opentelemetry.api.metrics.MeterProvider;
 import application.io.opentelemetry.api.trace.TracerProvider;
 import application.io.opentelemetry.context.propagation.ContextPropagators;
@@ -51,13 +50,5 @@ public class ApplicationOpenTelemetry implements OpenTelemetry {
   @Override
   public ContextPropagators getPropagators() {
     return applicationContextPropagators;
-  }
-
-  @Override
-  public OpenTelemetryBuilder<?> toBuilder() {
-    return OpenTelemetry.builder()
-        .setTracerProvider(applicationTracerProvider)
-        .setMeterProvider(applicationMeterProvider)
-        .setPropagators(applicationContextPropagators);
   }
 }

@@ -45,10 +45,6 @@ public class KHttpAdvice {
     }
 
     scope.close();
-    if (throwable == null) {
-      tracer().end(context, response);
-    } else {
-      tracer().endExceptionally(context, response, throwable);
-    }
+    tracer().endMaybeExceptionally(context, response, throwable);
   }
 }

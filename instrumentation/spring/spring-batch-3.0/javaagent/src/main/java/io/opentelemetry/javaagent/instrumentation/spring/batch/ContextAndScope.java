@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
+package io.opentelemetry.javaagent.instrumentation.spring.batch;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-public class ContextScopePair {
+public final class ContextAndScope {
   private final Context context;
   private final Scope scope;
 
-  public ContextScopePair(Context context, Scope scope) {
+  public ContextAndScope(Context context, Scope scope) {
     this.context = context;
     this.scope = scope;
   }

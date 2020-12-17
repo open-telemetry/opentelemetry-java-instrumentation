@@ -110,7 +110,7 @@ public class ApacheHttpAsyncClientTracer
 
   /** This method is overridden to allow other classes in this package to call it. */
   @Override
-  public Span onRequest(Span span, HttpRequest httpRequest) {
-    return super.onRequest(span, httpRequest);
+  protected void onRequest(Span span, HttpRequest httpRequest) {
+    super.onRequest(span, httpRequest);
   }
 }

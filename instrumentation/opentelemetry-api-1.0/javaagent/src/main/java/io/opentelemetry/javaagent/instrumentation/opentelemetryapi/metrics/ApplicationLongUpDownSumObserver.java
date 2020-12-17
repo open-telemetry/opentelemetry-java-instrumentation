@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
 import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.LongUpDownSumObserver;
-import io.opentelemetry.api.metrics.AsynchronousInstrument;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
+import java.util.function.Consumer;
 
 class ApplicationLongUpDownSumObserver implements LongUpDownSumObserver {
 
@@ -19,24 +19,18 @@ class ApplicationLongUpDownSumObserver implements LongUpDownSumObserver {
     this.agentLongUpDownSumObserver = agentLongUpDownSumObserver;
   }
 
-  @Override
-  public void setCallback(Callback<LongResult> metricUpdater) {
-    agentLongUpDownSumObserver.setCallback(new AgentResultLongUpDownSumObserver(metricUpdater));
-  }
-
   static class AgentResultLongUpDownSumObserver
-      implements AsynchronousInstrument.Callback<
-          io.opentelemetry.api.metrics.LongUpDownSumObserver.LongResult> {
+      implements Consumer<io.opentelemetry.api.metrics.LongUpDownSumObserver.LongResult> {
 
-    private final Callback<LongResult> metricUpdater;
+    private final Consumer<LongResult> metricUpdater;
 
-    protected AgentResultLongUpDownSumObserver(Callback<LongResult> metricUpdater) {
+    protected AgentResultLongUpDownSumObserver(Consumer<LongResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(io.opentelemetry.api.metrics.LongUpDownSumObserver.LongResult result) {
-      metricUpdater.update(new ApplicationResultLongUpDownSumObserver(result));
+    public void accept(io.opentelemetry.api.metrics.LongUpDownSumObserver.LongResult result) {
+      metricUpdater.accept(new ApplicationResultLongUpDownSumObserver(result));
     }
   }
 
@@ -78,10 +72,10 @@ class ApplicationLongUpDownSumObserver implements LongUpDownSumObserver {
     }
 
     @Override
-    public LongUpDownSumObserver.Builder setCallback(Callback<LongResult> callback) {
-      agentBuilder.setCallback(
+    public LongUpDownSumObserver.Builder setUpdater(Consumer<LongResult> callback) {
+      agentBuilder.setUpdater(
           result ->
-              callback.update((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
+              callback.accept((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
       return this;
     }
 

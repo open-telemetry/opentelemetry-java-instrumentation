@@ -157,7 +157,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      context = tracer().startSpan(parentContext, request, request);
+      context = tracer().startSpan(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -194,12 +194,12 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      context = tracer().startSpan(parentContext, request, request);
+      context = tracer().startSpan(parentContext, request);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
-        handler = new WrappingStatusSettingResponseHandler(context, (ResponseHandler) handler);
+        handler = new WrappingStatusSettingResponseHandler(context, (ResponseHandler<?>) handler);
       }
     }
 
@@ -230,13 +230,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      HttpUriRequest httpUriRequest;
-      if (request instanceof HttpUriRequest) {
-        httpUriRequest = (HttpUriRequest) request;
-      } else {
-        httpUriRequest = new HostAndRequestAsHttpUriRequest(host, request);
-      }
-      context = tracer().startSpan(parentContext, httpUriRequest, httpUriRequest);
+      context = tracer().startSpan(parentContext, host, request);
       scope = context.makeCurrent();
     }
 
@@ -274,18 +268,12 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         return;
       }
 
-      HttpUriRequest httpUriRequest;
-      if (request instanceof HttpUriRequest) {
-        httpUriRequest = (HttpUriRequest) request;
-      } else {
-        httpUriRequest = new HostAndRequestAsHttpUriRequest(host, request);
-      }
-      context = tracer().startSpan(parentContext, httpUriRequest, httpUriRequest);
+      context = tracer().startSpan(parentContext, host, request);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
-        handler = new WrappingStatusSettingResponseHandler(context, (ResponseHandler) handler);
+        handler = new WrappingStatusSettingResponseHandler(context, (ResponseHandler<?>) handler);
       }
     }
 

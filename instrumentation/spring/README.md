@@ -712,7 +712,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.extensions.auto.annotations.WithSpan;
+import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 

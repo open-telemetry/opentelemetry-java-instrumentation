@@ -19,8 +19,8 @@ public class AttributeKeys {
   public static final AttributeKey<Context> SERVER_SPAN =
       AttributeKey.valueOf(AttributeKeys.class, "server-span");
 
-  public static final AttributeKey<Context> CLIENT_SPAN =
-      AttributeKey.valueOf(AttributeKeys.class, "client-span");
+  public static final AttributeKey<Context> CLIENT_CONTEXT =
+      AttributeKey.valueOf(AttributeKeys.class, "client-context");
 
   public static final AttributeKey<Context> CLIENT_PARENT_CONTEXT =
       AttributeKey.valueOf(AttributeKeys.class, "client-parent-context");

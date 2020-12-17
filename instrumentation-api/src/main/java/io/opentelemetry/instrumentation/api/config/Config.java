@@ -133,17 +133,22 @@ public abstract class Config {
 
   public boolean isInstrumentationEnabled(
       Iterable<String> instrumentationNames, boolean defaultEnabled) {
+    return isInstrumentationPropertyEnabled(instrumentationNames, "enabled", defaultEnabled);
+  }
+
+  public boolean isInstrumentationPropertyEnabled(
+      Iterable<String> instrumentationNames, String suffix, boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
     for (String name : instrumentationNames) {
-      boolean configEnabled =
-          getBooleanProperty("otel.instrumentation." + name + ".enabled", defaultEnabled);
+      String propertyName = String.format("otel.instrumentation.%s.%s", name, suffix);
+      boolean enabled = getBooleanProperty(propertyName, defaultEnabled);
 
       if (defaultEnabled) {
-        anyEnabled &= configEnabled;
+        anyEnabled &= enabled;
       } else {
-        anyEnabled |= configEnabled;
+        anyEnabled |= enabled;
       }
     }
     return anyEnabled;

@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Ht
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.ServletRequest;
@@ -25,6 +26,7 @@ public class Servlet3Advice {
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
+    CallDepthThreadLocalMap.incrementCallDepth(Servlet3Advice.class);
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
@@ -33,18 +35,19 @@ public class Servlet3Advice {
 
     Context attachedContext = tracer().getServerContext(httpServletRequest);
     if (attachedContext != null) {
-      if (tracer().needsRescoping(attachedContext)) {
+      if (Servlet3HttpServerTracer.needsRescoping(attachedContext)) {
         scope = attachedContext.makeCurrent();
       }
 
-      // We are inside nested servlet/filter, don't create new span
+      tracer().updateServerSpanNameOnce(attachedContext, httpServletRequest);
+      // We are inside nested servlet/filter/app-server span, don't create new span
       return;
     }
 
     Context parentContext = Java8BytecodeBridge.currentContext();
     if (parentContext != null && Java8BytecodeBridge.spanFromContext(parentContext).isRecording()) {
-
-      tracer().updateSpanName(Java8BytecodeBridge.currentContext(), httpServletRequest);
+      tracer().updateServerSpanNameOnce(parentContext, httpServletRequest);
+      // We are inside nested servlet/filter/app-server span, don't create new span
       return;
     }
 
@@ -59,13 +62,22 @@ public class Servlet3Advice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    if (scope == null) {
-      return;
-    }
-    scope.close();
+    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(Servlet3Advice.class);
 
-    if (context == null) {
-      // an existing span was found
+    if (scope != null) {
+      scope.close();
+    }
+
+    if (context == null && callDepth == 0) {
+      // Something else is managing the context, we're in the outermost level of Servlet
+      // instrumentation and we have an uncaught throwable. Let's add it to the current span.
+      if (throwable != null) {
+        tracer().addUnwrappedThrowable(Java8BytecodeBridge.currentSpan(), throwable);
+      }
+      tracer().setPrincipal(Java8BytecodeBridge.currentContext(), (HttpServletRequest) request);
+    }
+
+    if (scope == null || context == null) {
       return;
     }
 

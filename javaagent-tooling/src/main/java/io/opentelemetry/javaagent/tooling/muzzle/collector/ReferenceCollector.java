@@ -7,18 +7,24 @@ package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate.isInstrumentationClass;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singleton;
 
+import com.google.common.base.Strings;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URLConnection;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -26,16 +32,59 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.regex.Pattern;
 import net.bytebuddy.jar.asm.ClassReader;
 
 /**
  * {@link LinkedHashMap} is used for reference map to guarantee a deterministic order of iteration,
  * so that bytecode generated based on it would also be deterministic.
+ *
+ * <p>This class is only called at compile time by the {@link MuzzleCodeGenerationPlugin} ByteBuddy
+ * plugin.
  */
 public class ReferenceCollector {
   private final Map<String, Reference> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
   private final Set<String> visitedClasses = new HashSet<>();
+
+  /**
+   * If passed {@code resource} path points to an SPI file (either Java {@link
+   * java.util.ServiceLoader} or AWS SDK {@code ExecutionInterceptor}) reads the file and adds every
+   * implementation as a reference, traversing the graph of classes until a non-instrumentation
+   * (external) class is encountered.
+   *
+   * @param resource path to the resource file, same as in {@link ClassLoader#getResource(String)}
+   * @see io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate
+   */
+  public void collectReferencesFromResource(String resource) {
+    if (!isSpiFile(resource)) {
+      return;
+    }
+
+    List<String> spiImplementations = new ArrayList<>();
+    try (InputStream stream = getResourceStream(resource)) {
+      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, UTF_8));
+      while (reader.ready()) {
+        String line = reader.readLine();
+        if (!Strings.isNullOrEmpty(line)) {
+          spiImplementations.add(line);
+        }
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException("Error reading resource " + resource, e);
+    }
+
+    visitClassesAndCollectReferences(spiImplementations, false);
+  }
+
+  private static final Pattern AWS_SDK_SERVICE_INTERCEPTOR_SPI =
+      Pattern.compile("software/amazon/awssdk/services/\\w+(/\\w+)?/execution.interceptors");
+
+  private boolean isSpiFile(String resource) {
+    return resource.startsWith("META-INF/services/")
+        || resource.equals("software/amazon/awssdk/global/handlers/execution.interceptors")
+        || AWS_SDK_SERVICE_INTERCEPTOR_SPI.matcher(resource).matches();
+  }
 
   /**
    * Traverse a graph of classes starting from {@code adviceClassName} and collect all references to
@@ -44,17 +93,17 @@ public class ReferenceCollector {
    * <p>The graph of classes is traversed until a non-instrumentation (external) class is
    * encountered.
    *
-   * <p>This class is only called at compile time by the {@link MuzzleCodeGenerationPlugin}
-   * ByteBuddy plugin.
-   *
    * @param adviceClassName Starting point for generating references.
    * @see io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate
    */
-  public void collectReferencesFrom(String adviceClassName) {
-    Queue<String> instrumentationQueue = new ArrayDeque<>();
-    instrumentationQueue.add(adviceClassName);
+  public void collectReferencesFromAdvice(String adviceClassName) {
+    visitClassesAndCollectReferences(singleton(adviceClassName), true);
+  }
 
-    boolean isAdviceClass = true;
+  private void visitClassesAndCollectReferences(
+      Collection<String> startingClasses, boolean startsFromAdviceClass) {
+    Queue<String> instrumentationQueue = new ArrayDeque<>(startingClasses);
+    boolean isAdviceClass = startsFromAdviceClass;
 
     while (!instrumentationQueue.isEmpty()) {
       String visitedClassName = instrumentationQueue.remove();
@@ -90,13 +139,15 @@ public class ReferenceCollector {
   }
 
   private static InputStream getClassFileStream(String className) throws IOException {
+    return getResourceStream(Utils.getResourceName(className));
+  }
+
+  private static InputStream getResourceStream(String resource) throws IOException {
     URLConnection connection =
         checkNotNull(
-                ReferenceCollector.class
-                    .getClassLoader()
-                    .getResource(Utils.getResourceName(className)),
-                "Couldn't find class file %s",
-                className)
+                ReferenceCollector.class.getClassLoader().getResource(resource),
+                "Couldn't find resource %s",
+                resource)
             .openConnection();
 
     // Since the JarFile cache is not per class loader, but global with path as key, using cache may

@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.URI;
@@ -92,6 +93,10 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return HttpServletRequestGetter.GETTER;
   }
 
+  public void addUnwrappedThrowable(Span span, Throwable throwable) {
+    addThrowable(span, unwrapThrowable(throwable));
+  }
+
   @Override
   protected Throwable unwrapThrowable(Throwable throwable) {
     Throwable result = throwable;
@@ -127,7 +132,17 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return spanName;
   }
 
-  public void updateSpanName(Context context, HttpServletRequest request) {
-    Span.fromContext(context).updateName(getSpanName(request));
+  /**
+   * When server spans are managed by app server instrumentation, servlet must update server span
+   * name only once and only during the first pass through the servlet stack. There are potential
+   * forward and other scenarios, where servlet path may change, but we don't want this to be
+   * reflected in the span name.
+   */
+  public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
+    if (AppServerBridge.isPresent(attachedContext)
+        && !AppServerBridge.isServerSpanNameUpdatedFromServlet(attachedContext)) {
+      getServerSpan(request).updateName(getSpanName(request));
+      AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
+    }
   }
 }

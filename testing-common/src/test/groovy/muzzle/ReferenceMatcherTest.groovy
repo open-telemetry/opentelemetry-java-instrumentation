@@ -47,7 +47,7 @@ class ReferenceMatcherTest extends Specification {
   def "match safe classpaths"() {
     setup:
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(MethodBodyAdvice.name)
+    collector.collectReferencesFromAdvice(MethodBodyAdvice.name)
     Reference[] refs = collector.getReferences().values().toArray(new Reference[0])
     def refMatcher = new ReferenceMatcher(refs)
 
@@ -85,7 +85,7 @@ class ReferenceMatcherTest extends Specification {
       (ClassLoader) null)
 
     def collector = new ReferenceCollector()
-    collector.collectReferencesFrom(MethodBodyAdvice.name)
+    collector.collectReferencesFromAdvice(MethodBodyAdvice.name)
     Reference[] refs = collector.getReferences().values().toArray(new Reference[0])
 
     def refMatcher1 = new ReferenceMatcher(refs)
