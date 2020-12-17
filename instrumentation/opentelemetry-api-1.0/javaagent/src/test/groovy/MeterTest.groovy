@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.DOUBLE_GAUGE
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.DOUBLE_SUM
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.LONG_GAUGE
@@ -15,7 +16,6 @@ import application.io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.metrics.data.MetricData
-
 import java.util.function.Consumer
 
 class MeterTest extends AgentTestRunner {

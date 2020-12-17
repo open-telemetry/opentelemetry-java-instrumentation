@@ -14,11 +14,10 @@ import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import java.nio.charset.Charset
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import spock.lang.Shared
-
-import java.nio.charset.Charset
 
 class TracingRequestStreamWrapperTest extends InstrumentationSpecification implements InstrumentationTestTrait {
 

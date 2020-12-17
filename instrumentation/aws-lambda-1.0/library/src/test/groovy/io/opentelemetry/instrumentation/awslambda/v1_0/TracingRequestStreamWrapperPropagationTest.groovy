@@ -17,11 +17,10 @@ import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.extension.trace.propagation.B3Propagator
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import java.nio.charset.Charset
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import spock.lang.Shared
-
-import java.nio.charset.Charset
 
 class TracingRequestStreamWrapperPropagationTest extends InstrumentationSpecification implements InstrumentationTestTrait {
 
