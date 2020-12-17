@@ -10,14 +10,13 @@ import com.google.common.base.Predicates
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.propagation.HttpTraceContext
-import io.opentelemetry.context.propagation.DefaultContextPropagators
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
+import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.junit.Before
 import spock.lang.Specification
-
 /**
  * A spock test runner which automatically initializes an in-memory exporter that can be used to
  * verify traces.
@@ -34,10 +33,8 @@ abstract class InstrumentationTestRunner extends Specification {
     //  propagator configuration
     if (OpenTelemetry.getGlobalPropagators().getTextMapPropagator().getClass().getSimpleName() == "NoopTextMapPropagator") {
       // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
-      AgentTestRunner.setGlobalPropagators(
-        DefaultContextPropagators.builder()
-          .addTextMapPropagator(HttpTraceContext.getInstance())
-          .build())
+      OpenTelemetry.setGlobalPropagators(
+        ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
     }
     OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(TEST_WRITER)
   }

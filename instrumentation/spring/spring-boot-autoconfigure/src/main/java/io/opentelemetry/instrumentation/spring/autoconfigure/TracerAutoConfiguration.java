@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.MultiSpanProcessor;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
@@ -58,7 +57,7 @@ public class TracerAutoConfiguration {
             .collect(Collectors.toList());
 
     OpenTelemetrySdk.getGlobalTracerManagement()
-        .addSpanProcessor(MultiSpanProcessor.create(spanProcessors));
+        .addSpanProcessor(SpanProcessor.composite(spanProcessors));
   }
 
   private void setSampler(TracerProperties tracerProperties) {

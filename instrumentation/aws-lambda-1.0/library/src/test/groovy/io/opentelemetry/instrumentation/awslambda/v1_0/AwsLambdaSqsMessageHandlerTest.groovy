@@ -10,11 +10,12 @@ import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
+import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import io.opentelemetry.api.trace.propagation.HttpTraceContext
-import io.opentelemetry.context.propagation.DefaultContextPropagators
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
+import io.opentelemetry.context.propagation.ContextPropagators
+import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 
@@ -22,11 +23,11 @@ class AwsLambdaSqsMessageHandlerTest extends InstrumentationSpecification implem
 
   // Lambda instrumentation requires XRay propagator to be enabled.
   static {
-    def propagators = DefaultContextPropagators.builder()
-      .addTextMapPropagator(HttpTraceContext.instance)
-      .addTextMapPropagator(AwsXRayPropagator.instance)
-      .build()
-    AgentTestRunner.setGlobalPropagators(propagators)
+    def propagators = ContextPropagators.create(
+      TextMapPropagator.composite(
+        W3CTraceContextPropagator.instance,
+        AwsXRayPropagator.instance))
+    OpenTelemetry.setGlobalPropagators(propagators)
   }
 
   private static final String AWS_TRACE_HEADER1 = "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1"

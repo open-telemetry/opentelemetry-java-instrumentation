@@ -10,22 +10,23 @@ import static io.opentelemetry.api.trace.Span.Kind.SERVER
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.github.stefanbirkner.systemlambda.SystemLambda
+import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import io.opentelemetry.api.trace.propagation.HttpTraceContext
-import io.opentelemetry.context.propagation.DefaultContextPropagators
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
+import io.opentelemetry.context.propagation.ContextPropagators
+import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 
 abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecification {
 
   // Lambda instrumentation requires XRay propagator to be enabled.
   static {
-    def propagators = DefaultContextPropagators.builder()
-      .addTextMapPropagator(HttpTraceContext.instance)
-      .addTextMapPropagator(AwsXRayPropagator.instance)
-      .build()
-    AgentTestRunner.setGlobalPropagators(propagators)
+    def propagators = ContextPropagators.create(
+      TextMapPropagator.composite(
+        W3CTraceContextPropagator.instance,
+        AwsXRayPropagator.instance))
+    OpenTelemetry.setGlobalPropagators(propagators)
   }
 
   protected static String doHandleRequest(String input, Context context) {
