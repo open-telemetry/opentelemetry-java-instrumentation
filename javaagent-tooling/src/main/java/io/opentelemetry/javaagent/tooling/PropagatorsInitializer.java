@@ -10,16 +10,14 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.api.trace.propagation.HttpTraceContext;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.context.propagation.DefaultContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import io.opentelemetry.extension.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extension.trace.propagation.OtTracerPropagator;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,17 +62,15 @@ public class PropagatorsInitializer {
     if (propagatorIds.size() == 0) {
       // TODO this is probably temporary until default propagators are supplied by SDK
       //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
-      setGlobalPropagators(
-          DefaultContextPropagators.builder()
-              .addTextMapPropagator(HttpTraceContext.getInstance())
-              .addTextMapPropagator(W3CBaggagePropagator.getInstance())
-              .build());
+      OpenTelemetry.setGlobalPropagators(
+          ContextPropagators.create(
+              TextMapPropagator.composite(
+                  W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance())));
       return;
     }
 
-    DefaultContextPropagators.Builder propagatorsBuilder = DefaultContextPropagators.builder();
-
     List<Propagator> propagators = new ArrayList<>(propagatorIds.size());
+    List<TextMapPropagator> textMapPropagators = new ArrayList<>();
 
     for (String propagatorId : propagatorIds) {
       Propagator propagator = TEXTMAP_PROPAGATORS.get(propagatorId);
@@ -86,24 +82,13 @@ public class PropagatorsInitializer {
       }
     }
     if (propagators.size() > 1) {
-      propagatorsBuilder.addTextMapPropagator(new MultiPropagator(propagators));
+      textMapPropagators.add(new MultiPropagator(propagators));
     } else if (propagators.size() == 1) {
-      propagatorsBuilder.addTextMapPropagator(propagators.get(0));
+      textMapPropagators.add(propagators.get(0));
     }
     // Register it in the global propagators:
-    setGlobalPropagators(propagatorsBuilder.build());
-  }
-
-  // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
-  public static void setGlobalPropagators(ContextPropagators propagators) {
-    OpenTelemetry.set(
-        OpenTelemetrySdk.builder()
-            .setResource(OpenTelemetrySdk.get().getResource())
-            .setClock(OpenTelemetrySdk.get().getClock())
-            .setMeterProvider(OpenTelemetry.getGlobalMeterProvider())
-            .setTracerProvider(unobfuscate(OpenTelemetry.getGlobalTracerProvider()))
-            .setPropagators(propagators)
-            .build());
+    OpenTelemetry.setGlobalPropagators(
+        ContextPropagators.create(TextMapPropagator.composite(textMapPropagators)));
   }
 
   private static TracerProvider unobfuscate(TracerProvider tracerProvider) {
@@ -175,7 +160,7 @@ public class PropagatorsInitializer {
     B3("b3", B3Propagator.getInstance(), false),
     B3_MULTI("b3multi", B3Propagator.builder().injectMultipleHeaders().build(), false),
     OT_TRACER("ottracer", OtTracerPropagator.getInstance(), false),
-    TRACE_CONTEXT("tracecontext", HttpTraceContext.getInstance(), false),
+    TRACE_CONTEXT("tracecontext", W3CTraceContextPropagator.getInstance(), false),
     XRAY("xray", AwsXRayPropagator.getInstance(), false);
 
     private final String id;

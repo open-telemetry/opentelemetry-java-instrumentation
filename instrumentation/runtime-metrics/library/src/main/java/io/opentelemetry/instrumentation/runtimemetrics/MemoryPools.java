@@ -65,46 +65,45 @@ public final class MemoryPools {
             .longUpDownSumObserverBuilder("runtime.jvm.memory.area")
             .setDescription("Bytes of a given JVM memory area.")
             .setUnit("By")
+            .setUpdater(
+                resultLongObserver -> {
+                  observeHeap(resultLongObserver, memoryBean.getHeapMemoryUsage());
+                  observeNonHeap(resultLongObserver, memoryBean.getNonHeapMemoryUsage());
+                })
             .build();
-    areaMetric.setCallback(
-        resultLongObserver -> {
-          observeHeap(resultLongObserver, memoryBean.getHeapMemoryUsage());
-          observeNonHeap(resultLongObserver, memoryBean.getNonHeapMemoryUsage());
-        });
   }
 
   /** Register only the "pool" observers. */
   public static void registerMemoryPoolObservers() {
     List<MemoryPoolMXBean> poolBeans = ManagementFactory.getMemoryPoolMXBeans();
     Meter meter = OpenTelemetry.getGlobalMeter(MemoryPools.class.getName());
-    final LongUpDownSumObserver poolMetric =
-        meter
-            .longUpDownSumObserverBuilder("runtime.jvm.memory.pool")
-            .setDescription("Bytes of a given JVM memory pool.")
-            .setUnit("By")
-            .build();
-    final List<Labels> usedLabelSets = new ArrayList<>(poolBeans.size());
-    final List<Labels> committedLabelSets = new ArrayList<>(poolBeans.size());
-    final List<Labels> maxLabelSets = new ArrayList<>(poolBeans.size());
-    for (final MemoryPoolMXBean pool : poolBeans) {
+    List<Labels> usedLabelSets = new ArrayList<>(poolBeans.size());
+    List<Labels> committedLabelSets = new ArrayList<>(poolBeans.size());
+    List<Labels> maxLabelSets = new ArrayList<>(poolBeans.size());
+    for (MemoryPoolMXBean pool : poolBeans) {
       usedLabelSets.add(Labels.of(TYPE_LABEL_KEY, USED, POOL_LABEL_KEY, pool.getName()));
       committedLabelSets.add(Labels.of(TYPE_LABEL_KEY, COMMITTED, POOL_LABEL_KEY, pool.getName()));
       maxLabelSets.add(Labels.of(TYPE_LABEL_KEY, MAX, POOL_LABEL_KEY, pool.getName()));
     }
-    poolMetric.setCallback(
-        resultLongObserver -> {
-          for (int i = 0; i < poolBeans.size(); i++) {
-            MemoryUsage poolUsage = poolBeans.get(i).getUsage();
-            if (poolUsage != null) {
-              observe(
-                  resultLongObserver,
-                  poolUsage,
-                  usedLabelSets.get(i),
-                  committedLabelSets.get(i),
-                  maxLabelSets.get(i));
-            }
-          }
-        });
+    meter
+        .longUpDownSumObserverBuilder("runtime.jvm.memory.pool")
+        .setDescription("Bytes of a given JVM memory pool.")
+        .setUnit("By")
+        .setUpdater(
+            resultLongObserver -> {
+              for (int i = 0; i < poolBeans.size(); i++) {
+                MemoryUsage poolUsage = poolBeans.get(i).getUsage();
+                if (poolUsage != null) {
+                  observe(
+                      resultLongObserver,
+                      poolUsage,
+                      usedLabelSets.get(i),
+                      committedLabelSets.get(i),
+                      maxLabelSets.get(i));
+                }
+              }
+            })
+        .build();
   }
 
   /** Register all observers provided by this module. */

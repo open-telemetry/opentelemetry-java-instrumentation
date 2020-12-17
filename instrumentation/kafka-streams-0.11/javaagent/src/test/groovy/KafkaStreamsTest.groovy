@@ -8,7 +8,7 @@ import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import io.opentelemetry.api.trace.propagation.HttpTraceContext
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.instrumentation.test.AgentTestRunner
@@ -216,7 +216,7 @@ class KafkaStreamsTest extends AgentTestRunner {
     def headers = received.headers()
     headers.iterator().hasNext()
     def traceparent = new String(headers.headers("traceparent").iterator().next().value())
-    Context context = new HttpTraceContext().extract(Context.root(), "", new TextMapPropagator.Getter<String>() {
+    Context context = W3CTraceContextPropagator.instance.extract(Context.root(), "", new TextMapPropagator.Getter<String>() {
       @Override
       Iterable<String> keys(String carrier) {
         return Collections.singleton("traceparent")

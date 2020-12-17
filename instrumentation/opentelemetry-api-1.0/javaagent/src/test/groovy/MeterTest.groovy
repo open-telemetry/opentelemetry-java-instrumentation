@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.GAUGE_DOUBLE
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.GAUGE_LONG
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.MONOTONIC_DOUBLE
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.MONOTONIC_LONG
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.NON_MONOTONIC_DOUBLE
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.NON_MONOTONIC_LONG
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.DOUBLE_GAUGE
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.DOUBLE_SUM
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.LONG_GAUGE
+import static io.opentelemetry.sdk.metrics.data.MetricData.Type.LONG_SUM
 import static io.opentelemetry.sdk.metrics.data.MetricData.Type.SUMMARY
 
 import application.io.opentelemetry.api.OpenTelemetry
@@ -17,6 +15,7 @@ import application.io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.metrics.data.MetricData
+import java.util.function.Consumer
 
 class MeterTest extends AgentTestRunner {
 
@@ -61,14 +60,14 @@ class MeterTest extends AgentTestRunner {
 
     where:
     builderMethod                | bind  | value1 | value2 | expectedValue | expectedType
-    "longCounterBuilder"         | false | 5      | 6      | 11            | MONOTONIC_LONG
-    "longCounterBuilder"         | true  | 5      | 6      | 11            | MONOTONIC_LONG
-    "longUpDownCounterBuilder"   | false | 5      | 6      | 11            | NON_MONOTONIC_LONG
-    "longUpDownCounterBuilder"   | true  | 5      | 6      | 11            | NON_MONOTONIC_LONG
-    "doubleCounterBuilder"       | false | 5.5    | 6.6    | 12.1          | MONOTONIC_DOUBLE
-    "doubleCounterBuilder"       | true  | 5.5    | 6.6    | 12.1          | MONOTONIC_DOUBLE
-    "doubleUpDownCounterBuilder" | false | 5.5    | 6.6    | 12.1          | NON_MONOTONIC_DOUBLE
-    "doubleUpDownCounterBuilder" | true  | 5.5    | 6.6    | 12.1          | NON_MONOTONIC_DOUBLE
+    "longCounterBuilder"         | false | 5      | 6      | 11            | LONG_SUM
+    "longCounterBuilder"         | true  | 5      | 6      | 11            | LONG_SUM
+    "longUpDownCounterBuilder"   | false | 5      | 6      | 11            | LONG_SUM
+    "longUpDownCounterBuilder"   | true  | 5      | 6      | 11            | LONG_SUM
+    "doubleCounterBuilder"       | false | 5.5    | 6.6    | 12.1          | DOUBLE_SUM
+    "doubleCounterBuilder"       | true  | 5.5    | 6.6    | 12.1          | DOUBLE_SUM
+    "doubleUpDownCounterBuilder" | false | 5.5    | 6.6    | 12.1          | DOUBLE_SUM
+    "doubleUpDownCounterBuilder" | true  | 5.5    | 6.6    | 12.1          | DOUBLE_SUM
   }
 
   def "test recorder #builderMethod bound=#bind"() {
@@ -127,50 +126,50 @@ class MeterTest extends AgentTestRunner {
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
-      .build()
     if (builderMethod == "longSumObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.LongResult>() {
+      instrument.setUpdater(new Consumer<AsynchronousInstrument.LongResult>() {
         @Override
-        void update(AsynchronousInstrument.LongResult resultLongSumObserver) {
+        void accept(AsynchronousInstrument.LongResult resultLongSumObserver) {
           resultLongSumObserver.observe(123, Labels.of("q", "r"))
         }
       })
     } else if (builderMethod == "longUpDownSumObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.LongResult>() {
+      instrument.setUpdater(new Consumer<AsynchronousInstrument.LongResult>() {
         @Override
-        void update(AsynchronousInstrument.LongResult resultLongUpDownSumObserver) {
+        void accept(AsynchronousInstrument.LongResult resultLongUpDownSumObserver) {
           resultLongUpDownSumObserver.observe(123, Labels.of("q", "r"))
         }
       })
     } else if (builderMethod == "longValueObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.LongResult>() {
+      instrument.setUpdater(new Consumer<AsynchronousInstrument.LongResult>() {
         @Override
-        void update(AsynchronousInstrument.LongResult resultLongObserver) {
+        void accept(AsynchronousInstrument.LongResult resultLongObserver) {
           resultLongObserver.observe(123, Labels.of("q", "r"))
         }
       })
     } else if (builderMethod == "doubleSumObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.DoubleResult>() {
+      instrument.setUpdater(new Consumer<AsynchronousInstrument.DoubleResult>() {
         @Override
-        void update(AsynchronousInstrument.DoubleResult resultDoubleSumObserver) {
+        void accept(AsynchronousInstrument.DoubleResult resultDoubleSumObserver) {
           resultDoubleSumObserver.observe(1.23, Labels.of("q", "r"))
         }
       })
     } else if (builderMethod == "doubleUpDownSumObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.DoubleResult>() {
+      instrument.setUpdater(new Consumer<AsynchronousInstrument.DoubleResult>() {
         @Override
-        void update(AsynchronousInstrument.DoubleResult resultDoubleUpDownSumObserver) {
+        void accept(AsynchronousInstrument.DoubleResult resultDoubleUpDownSumObserver) {
           resultDoubleUpDownSumObserver.observe(1.23, Labels.of("q", "r"))
         }
       })
     } else if (builderMethod == "doubleValueObserverBuilder") {
-      instrument.setCallback(new AsynchronousInstrument.Callback<AsynchronousInstrument.DoubleResult>() {
+      instrument.setUpdater(new Consumer<AsynchronousInstrument.DoubleResult>() {
         @Override
-        void update(AsynchronousInstrument.DoubleResult resultDoubleObserver) {
+        void accept(AsynchronousInstrument.DoubleResult resultDoubleObserver) {
           resultDoubleObserver.observe(1.23, Labels.of("q", "r"))
         }
       })
     }
+    instrument.build()
 
     then:
     def metricData = findMetric(OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics(), instrumentationName, "test")
@@ -191,12 +190,12 @@ class MeterTest extends AgentTestRunner {
 
     where:
     builderMethod                    | valueMethod | expectedType
-    "longSumObserverBuilder"         | "value"     | MONOTONIC_LONG
-    "longUpDownSumObserverBuilder"   | "value"     | NON_MONOTONIC_LONG
-    "longValueObserverBuilder"       | "sum"       | GAUGE_LONG
-    "doubleSumObserverBuilder"       | "value"     | MONOTONIC_DOUBLE
-    "doubleUpDownSumObserverBuilder" | "value"     | NON_MONOTONIC_DOUBLE
-    "doubleValueObserverBuilder"     | "sum"       | GAUGE_DOUBLE
+    "longSumObserverBuilder"         | "value"     | LONG_SUM
+    "longUpDownSumObserverBuilder"   | "value"     | LONG_SUM
+    "longValueObserverBuilder"       | "sum"       | LONG_GAUGE
+    "doubleSumObserverBuilder"       | "value"     | DOUBLE_SUM
+    "doubleUpDownSumObserverBuilder" | "value"     | DOUBLE_SUM
+    "doubleValueObserverBuilder"     | "sum"       | DOUBLE_GAUGE
   }
 
   def "test batch recorder"() {
@@ -229,7 +228,7 @@ class MeterTest extends AgentTestRunner {
     metricData != null
     metricData.description == "d"
     metricData.unit == "u"
-    metricData.type == MONOTONIC_LONG
+    metricData.type == LONG_SUM
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
     metricData.points.size() == 1

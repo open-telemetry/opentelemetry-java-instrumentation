@@ -6,15 +6,15 @@
 package io.opentelemetry.javaagent.spi;
 
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.sdk.trace.TracerSdkManagement;
-import io.opentelemetry.sdk.trace.TracerSdkProvider;
+import io.opentelemetry.sdk.trace.SdkTracerManagement;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 
 /**
  * A service provider to allow programmatic customization of the tracing configuration. It will be
- * executed after the SDK has initialized a {@link TracerSdkProvider}. This means that not only can
- * the provided {@link TracerSdkProvider} be configured e.g. by calling {@link
- * TracerSdkProvider#updateActiveTraceConfig(TraceConfig)}, but static methods on {@link
+ * executed after the SDK has initialized a {@link SdkTracerProvider}. This means that not only can
+ * the provided {@link SdkTracerProvider} be configured e.g. by calling {@link
+ * SdkTracerProvider#updateActiveTraceConfig(TraceConfig)}, but static methods on {@link
  * io.opentelemetry.api.OpenTelemetry}, e.g., {@link
  * io.opentelemetry.api.OpenTelemetry#setGlobalPropagators(ContextPropagators)} can be used as well.
  *
@@ -24,6 +24,6 @@ import io.opentelemetry.sdk.trace.config.TraceConfig;
  */
 public interface TracerCustomizer {
 
-  /** Callback executed after the initial {@link TracerSdkProvider} has been initialized. */
-  void configure(TracerSdkManagement tracerManagement);
+  /** Callback executed after the initial {@link SdkTracerProvider} has been initialized. */
+  void configure(SdkTracerManagement tracerManagement);
 }
