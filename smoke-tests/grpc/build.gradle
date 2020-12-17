@@ -20,13 +20,14 @@ repositories {
 
 dependencies {
   implementation platform("io.grpc:grpc-bom:1.33.1")
+  implementation platform("io.opentelemetry:opentelemetry-bom:0.13.0-SNAPSHOT")
   implementation platform("org.apache.logging.log4j:log4j-bom:2.13.3")
 
   implementation "io.grpc:grpc-netty-shaded"
   implementation "io.grpc:grpc-protobuf"
   implementation "io.grpc:grpc-stub"
-  implementation "io.opentelemetry:opentelemetry-proto:0.12.0"
-  implementation "io.opentelemetry:opentelemetry-extension-annotations:0.12.0"
+  implementation "io.opentelemetry:opentelemetry-proto"
+  implementation "io.opentelemetry:opentelemetry-extension-annotations"
   implementation "org.apache.logging.log4j:log4j-core"
 
   runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl")
