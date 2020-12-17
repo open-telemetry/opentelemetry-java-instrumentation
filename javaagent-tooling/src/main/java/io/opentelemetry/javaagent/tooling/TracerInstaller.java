@@ -14,8 +14,8 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.export.MetricProducer;
+import io.opentelemetry.sdk.trace.SdkTracerManagement;
 import io.opentelemetry.sdk.trace.SpanProcessor;
-import io.opentelemetry.sdk.trace.TracerSdkManagement;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -193,7 +193,7 @@ public class TracerInstaller {
   }
 
   private static void configure(Properties config) {
-    TracerSdkManagement tracerManagement = OpenTelemetrySdk.getGlobalTracerManagement();
+    SdkTracerManagement tracerManagement = OpenTelemetrySdk.getGlobalTracerManagement();
 
     // Register additional thread details logging span processor
     tracerManagement.addSpanProcessor(new AddThreadDetailsSpanProcessor());

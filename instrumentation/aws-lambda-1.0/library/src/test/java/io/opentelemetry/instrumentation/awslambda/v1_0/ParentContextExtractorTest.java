@@ -8,12 +8,12 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.DefaultContextPropagators;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
-import io.opentelemetry.instrumentation.test.AgentTestRunner;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -30,10 +30,7 @@ class ParentContextExtractorTest {
             "0000000000000456",
             "X-B3-Sampled",
             "true");
-    AgentTestRunner.setGlobalPropagators(
-        DefaultContextPropagators.builder()
-            .addTextMapPropagator(B3Propagator.getInstance())
-            .build());
+    OpenTelemetry.setGlobalPropagators(ContextPropagators.create(B3Propagator.getInstance()));
 
     // when
     Context context = ParentContextExtractor.fromHttpHeaders(headers);

@@ -22,13 +22,13 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.api.DefaultOpenTelemetry");
+    return named("application.io.opentelemetry.api.GlobalOpenTelemetry");
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
-        isMethod().and(isStatic()).and(named("getGlobalOpenTelemetry")).and(takesArguments(0)),
+        isMethod().and(isStatic()).and(named("get")).and(takesArguments(0)),
         OpenTelemetryInstrumentation.class.getName() + "$GetGlobalOpenTelemetryAdvice");
   }
 

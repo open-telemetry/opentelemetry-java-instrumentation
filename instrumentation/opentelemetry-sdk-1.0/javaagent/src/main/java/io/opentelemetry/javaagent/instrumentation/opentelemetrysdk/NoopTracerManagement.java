@@ -6,14 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetrysdk;
 
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.trace.SdkTracerManagement;
 import io.opentelemetry.sdk.trace.SpanProcessor;
-import io.opentelemetry.sdk.trace.TracerSdkManagement;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NoopTracerManagement implements TracerSdkManagement {
+public class NoopTracerManagement implements SdkTracerManagement {
 
   private static final Logger log = LoggerFactory.getLogger(NoopTracerManagement.class);
 

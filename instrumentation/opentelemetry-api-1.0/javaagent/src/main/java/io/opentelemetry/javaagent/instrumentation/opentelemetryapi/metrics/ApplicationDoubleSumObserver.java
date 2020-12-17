@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
 import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.DoubleSumObserver;
-import io.opentelemetry.api.metrics.AsynchronousInstrument;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
+import java.util.function.Consumer;
 
 class ApplicationDoubleSumObserver implements DoubleSumObserver {
 
@@ -19,24 +19,18 @@ class ApplicationDoubleSumObserver implements DoubleSumObserver {
     this.agentDoubleSumObserver = agentDoubleSumObserver;
   }
 
-  @Override
-  public void setCallback(Callback<DoubleResult> metricUpdater) {
-    agentDoubleSumObserver.setCallback(new AgentResultDoubleSumObserver(metricUpdater));
-  }
-
   static class AgentResultDoubleSumObserver
-      implements AsynchronousInstrument.Callback<
-          io.opentelemetry.api.metrics.DoubleSumObserver.DoubleResult> {
+      implements Consumer<io.opentelemetry.api.metrics.DoubleSumObserver.DoubleResult> {
 
-    private final Callback<DoubleResult> metricUpdater;
+    private final Consumer<DoubleResult> metricUpdater;
 
-    protected AgentResultDoubleSumObserver(Callback<DoubleResult> metricUpdater) {
+    protected AgentResultDoubleSumObserver(Consumer<DoubleResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(io.opentelemetry.api.metrics.DoubleSumObserver.DoubleResult result) {
-      metricUpdater.update(new ApplicationResultDoubleSumObserver(result));
+    public void accept(io.opentelemetry.api.metrics.DoubleSumObserver.DoubleResult result) {
+      metricUpdater.accept(new ApplicationResultDoubleSumObserver(result));
     }
   }
 
@@ -77,10 +71,10 @@ class ApplicationDoubleSumObserver implements DoubleSumObserver {
     }
 
     @Override
-    public DoubleSumObserver.Builder setCallback(Callback<DoubleResult> callback) {
-      agentBuilder.setCallback(
+    public DoubleSumObserver.Builder setUpdater(Consumer<DoubleResult> callback) {
+      agentBuilder.setUpdater(
           result ->
-              callback.update((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
+              callback.accept((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
       return this;
     }
 
