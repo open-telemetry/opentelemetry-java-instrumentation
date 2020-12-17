@@ -175,7 +175,7 @@ public class AgentInstaller {
      * logging facility.
      */
     boolean appUsingCustomLogManager = isAppUsingCustomLogManager();
-    if (AgentInitializer.isJavaBefore9WithJfr() && appUsingCustomLogManager) {
+    if (isJavaBefore9WithJfr() && appUsingCustomLogManager) {
       log.debug("Custom logger detected. Delaying Agent Tracer initialization.");
       registerClassLoadCallback(
           "java.util.logging.LogManager",
@@ -503,6 +503,17 @@ public class AgentInstaller {
     }
 
     return false;
+  }
+
+  private static boolean isJavaBefore9WithJfr() {
+    if (!AgentInitializer.isJavaBefore9()) {
+      return false;
+    }
+    // FIXME: this is quite a hack because there maybe jfr classes on classpath somehow that have
+    // nothing to do with JDK but this should be safe because only thing this does is to delay
+    // tracer install
+    String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
+    return Thread.currentThread().getContextClassLoader().getResource(jfrClassResourceName) != null;
   }
 
   private AgentInstaller() {}

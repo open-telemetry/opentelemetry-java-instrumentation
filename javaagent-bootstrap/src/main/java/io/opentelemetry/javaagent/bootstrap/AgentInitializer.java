@@ -149,18 +149,7 @@ public class AgentInitializer {
     return false;
   }
 
-  private static boolean isJavaBefore9() {
+  public static boolean isJavaBefore9() {
     return System.getProperty("java.version").startsWith("1.");
-  }
-
-  public static boolean isJavaBefore9WithJfr() {
-    if (!isJavaBefore9()) {
-      return false;
-    }
-    // FIXME: this is quite a hack because there maybe jfr classes on classpath somehow that have
-    // nothing to do with JDK but this should be safe because only thing this does is to delay
-    // tracer install
-    String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
-    return Thread.currentThread().getContextClassLoader().getResource(jfrClassResourceName) != null;
   }
 }
