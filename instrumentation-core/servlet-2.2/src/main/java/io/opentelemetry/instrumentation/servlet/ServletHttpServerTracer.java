@@ -141,7 +141,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
     if (AppServerBridge.isPresent(attachedContext)
         && !AppServerBridge.isServerSpanNameUpdatedFromServlet(attachedContext)) {
-      getServerSpan(request).updateName(getSpanName(request));
+      Span.fromContext(attachedContext).updateName(getSpanName(request));
       AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
     }
   }

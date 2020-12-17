@@ -76,7 +76,7 @@ public class UndertowInstrumentationModule extends InstrumentationModule {
           return;
         }
 
-        Context context = tracer().startSpan(exchange, exchange, exchange, method);
+        Context context = tracer().startServerSpan(exchange, method);
         scope = context.makeCurrent();
 
         exchange.addExchangeCompleteListener(new EndSpanListener(context));

@@ -7,10 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.api.KeyHolder;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.AttachmentKey;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -26,6 +28,16 @@ public class UndertowHttpServerTracer
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.undertow";
+  }
+
+  public Context startServerSpan(HttpServerExchange exchange, Method instrumentedMethod) {
+    Context context =
+        AppServerBridge.init(startSpan(exchange, exchange, exchange, instrumentedMethod));
+
+    // context must be reattached, because it has new attributes compared to the one returned from
+    // startSpan().
+    attachServerContext(context, exchange);
+    return context;
   }
 
   @Override
