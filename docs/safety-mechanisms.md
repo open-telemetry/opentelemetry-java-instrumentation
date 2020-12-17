@@ -1,8 +1,8 @@
 # OpenTelemetry Java Agent Safety Mechanisms
 
 This document outlines the safety mechanisms we have in place to have confidence
-that the Java agent can be attached with a very low chance of affecting a user's
-app in a negative way, for example introducing crashes.
+that the Java agent can be attached to a user's application with a very low chance of
+affecting it negatively, for example introducing crashes.
 
 ## Instrumentation tests
 
