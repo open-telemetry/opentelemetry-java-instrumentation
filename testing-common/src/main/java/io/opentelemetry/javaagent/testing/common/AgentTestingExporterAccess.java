@@ -27,19 +27,23 @@ import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.ArrayValue;
 import io.opentelemetry.proto.common.v1.InstrumentationLibrary;
 import io.opentelemetry.proto.common.v1.KeyValue;
+import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
 import io.opentelemetry.proto.metrics.v1.Metric;
+import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
 import io.opentelemetry.proto.resource.v1.Resource;
 import io.opentelemetry.proto.trace.v1.InstrumentationLibrarySpans;
 import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Status;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -191,7 +195,7 @@ public final class AgentTestingExporterAccess {
   }
 
   @SuppressWarnings("unchecked")
-  public static List<Metric> getExportedMetrics() {
+  public static List<MetricData> getExportedMetrics() {
     final List<byte[]> exportRequests;
     try {
       exportRequests = (List<byte[]>) getMetricExportRequests.invokeExact();
@@ -199,19 +203,40 @@ public final class AgentTestingExporterAccess {
       throw new Error("Could not invoke getMetricExportRequests", t);
     }
 
-    return exportRequests.stream()
-        .map(
-            serialized -> {
-              try {
-                return ExportMetricsServiceRequest.parseFrom(serialized);
-              } catch (InvalidProtocolBufferException e) {
-                throw new Error(e);
-              }
-            })
-        .flatMap(request -> request.getResourceMetricsList().stream())
-        .flatMap(resourceMetrics -> resourceMetrics.getInstrumentationLibraryMetricsList().stream())
-        .flatMap(ilMetrics -> ilMetrics.getMetricsList().stream())
-        .collect(Collectors.toList());
+    List<ResourceMetrics> allResourceMetrics =
+        exportRequests.stream()
+            .map(
+                serialized -> {
+                  try {
+                    return ExportMetricsServiceRequest.parseFrom(serialized);
+                  } catch (InvalidProtocolBufferException e) {
+                    throw new Error(e);
+                  }
+                })
+            .flatMap(request -> request.getResourceMetricsList().stream())
+            .collect(Collectors.toList());
+    List<MetricData> metrics = new ArrayList<>();
+    for (ResourceMetrics resourceMetrics : allResourceMetrics) {
+      Resource resource = resourceMetrics.getResource();
+      for (InstrumentationLibraryMetrics ilMetrics :
+          resourceMetrics.getInstrumentationLibraryMetricsList()) {
+        InstrumentationLibrary instrumentationLibrary = ilMetrics.getInstrumentationLibrary();
+        for (Metric metric : ilMetrics.getMetricsList()) {
+          metrics.add(
+              MetricData.create(
+                  io.opentelemetry.sdk.resources.Resource.create(
+                      fromProto(resource.getAttributesList())),
+                  InstrumentationLibraryInfo.create(
+                      instrumentationLibrary.getName(), instrumentationLibrary.getVersion()),
+                  metric.getName(),
+                  metric.getDescription(),
+                  metric.getUnit(),
+                  MetricData.Type.GAUGE_DOUBLE, // FIXME
+                  Collections.emptySet())); // FIXME
+        }
+      }
+    }
+    return metrics;
   }
 
   private static Attributes fromProto(List<KeyValue> attributes) {

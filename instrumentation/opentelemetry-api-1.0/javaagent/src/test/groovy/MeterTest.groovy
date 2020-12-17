@@ -16,7 +16,7 @@ import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.common.Labels
 import io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.proto.metrics.v1.Metric
+import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics
 import io.opentelemetry.sdk.OpenTelemetrySdk
 
 class MeterTest extends AgentTestRunner {
@@ -252,9 +252,9 @@ class MeterTest extends AgentTestRunner {
     point2.sum == 12.1
   }
 
-  def findMetric(Collection<Metric> allMetrics, instrumentationName, metricName) {
+  def findMetric(Collection<InstrumentationLibraryMetrics> allMetrics, instrumentationName, metricName) {
     for (def metric : allMetrics) {
-      if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.name == metricName) {
+      if (metric.instrumentationLibrary.name == instrumentationName && metric.name == metricName) {
         return metric
       }
     }
