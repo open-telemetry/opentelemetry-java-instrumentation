@@ -11,7 +11,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
-import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +51,7 @@ public class InMemoryExporter {
     return groupTraces(spans);
   }
 
-  public List<InstrumentationLibraryMetrics> getMetrics() {
+  public List<MetricData> getMetrics() {
     // TODO (trask) do these need grouping?
     return AgentTestingExporterAccess.getExportedMetrics();
   }
