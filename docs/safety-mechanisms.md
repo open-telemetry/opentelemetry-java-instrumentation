@@ -76,3 +76,10 @@ All packages are moved into a subdirectory `inst` and all classes are renamed fr
 `.classdata`, ensuring applications with any sort of automatic classpath scanning will not find
 agent classes. The agent classloader understands this convention and unobfuscates when loading
 classes.
+
+## Smoke tests
+
+We run docker-based smoke tests which have simple instrumented apps running under various JVMs
+and application servers. In particular, application servers sometimes have fragile behavior using
+internal details of the JVM which an agent can cause problems with. Smoke tests ensure compatibility
+with a wide variety of application servers.
