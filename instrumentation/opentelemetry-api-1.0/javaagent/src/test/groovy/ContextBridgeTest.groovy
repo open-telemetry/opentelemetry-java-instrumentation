@@ -4,6 +4,8 @@
  */
 
 import application.io.opentelemetry.api.OpenTelemetry
+import application.io.opentelemetry.api.baggage.Baggage
+import application.io.opentelemetry.api.baggage.BaggageEntryMetadata
 import application.io.opentelemetry.api.trace.Span
 import application.io.opentelemetry.context.Context
 import application.io.opentelemetry.context.ContextKey
@@ -75,6 +77,56 @@ class ContextBridgeTest extends AgentTestRunner {
           io.opentelemetry.api.trace.Span.current().spanContext.spanIdAsHexString == applicationSpan2.spanContext.spanIdAsHexString
           io.opentelemetry.api.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan2.spanContext.traceIdAsHexString
           io.opentelemetry.api.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.traceIdAsHexString
+        }
+      }
+    }
+  }
+
+  def "agent and application share baggage"() {
+    expect:
+    def applicationBaggage = Baggage.builder()
+      .put("food", "cheese")
+      .put("country", "japan", BaggageEntryMetadata.create("asia"))
+      .build()
+
+    applicationBaggage.makeCurrent().withCloseable {
+      def agentBaggage = io.opentelemetry.api.baggage.Baggage.current()
+      agentBaggage.asMap().with {
+        println it
+        size() == 2
+        get("food").value == "cheese"
+        get("food").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.empty()
+        get("country").value == "japan"
+        get("country").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.create("asia")
+      }
+
+      agentBaggage = io.opentelemetry.api.baggage.Baggage.builder()
+        .put("country", "italy", io.opentelemetry.api.baggage.BaggageEntryMetadata.create("europe"))
+        .build()
+      agentBaggage.makeCurrent().withCloseable {
+        def updatedApplicationBaggage = Baggage.current()
+        updatedApplicationBaggage.asMap().with {
+          println it
+          size() == 2
+          get("food").value == "cheese"
+          get("food").entryMetadata == BaggageEntryMetadata.empty()
+          get("country").value == "italy"
+          get("country").entryMetadata == BaggageEntryMetadata.create("europe")
+        }
+
+        applicationBaggage = applicationBaggage.toBuilder()
+          .put("food", "cabbage")
+          .build()
+        applicationBaggage.makeCurrent().withCloseable {
+          agentBaggage = io.opentelemetry.api.baggage.Baggage.current()
+          agentBaggage.asMap().with {
+            println it
+            size() == 2
+            get("food").value == "cabbage"
+            get("food").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.empty()
+            get("country").value == "japan"
+            get("country").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.create("asia")
+          }
         }
       }
     }
