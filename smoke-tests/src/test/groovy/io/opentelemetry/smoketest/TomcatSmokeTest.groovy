@@ -10,7 +10,7 @@ import okhttp3.Request
 
 class TomcatSmokeTest extends AppServerTest {
 
-  protected String getTargetImage(int jdk, String serverVersion) {
+  protected String getTargetImage(String jdk, String serverVersion) {
     "ghcr.io/open-telemetry/java-test-containers:tomcat-${serverVersion}-jdk$jdk-20201207.405832649"
   }
 

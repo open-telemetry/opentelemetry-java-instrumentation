@@ -46,13 +46,19 @@ abstract class SmokeTest extends Specification {
   @Shared
   protected GenericContainer target
 
-  protected abstract String getTargetImage(int jdk, String serverVersion)
+  protected abstract String getTargetImage(String jdk, String serverVersion)
 
   /**
    * Subclasses can override this method to customise target application's environment
    */
   protected Map<String, String> getExtraEnv() {
     return Collections.emptyMap()
+  }
+
+  /**
+   * Subclasses can override this method to customise target application's environment
+   */
+  protected void customizeContainer(GenericContainer container) {
   }
 
   @Shared
@@ -81,6 +87,10 @@ abstract class SmokeTest extends Specification {
   }
 
   def startTarget(int jdk, String serverVersion = null) {
+    startTarget(String.valueOf(jdk), serverVersion)
+  }
+
+  def startTarget(String jdk, String serverVersion = null) {
     def output = new ToStringConsumer()
     target = new GenericContainer<>(getTargetImage(jdk, serverVersion))
       .withExposedPorts(8080)
@@ -93,6 +103,7 @@ abstract class SmokeTest extends Specification {
       .withEnv("OTEL_BSP_SCHEDULE_DELAY_MILLIS", "10")
       .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:55680")
       .withEnv(extraEnv)
+    customizeContainer(target)
 
     WaitStrategy waitStrategy = getWaitStrategy()
     if (waitStrategy != null) {

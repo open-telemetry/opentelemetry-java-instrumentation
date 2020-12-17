@@ -123,8 +123,16 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return httpServletRequest.getHeader(name);
   }
 
-  private static String getSpanName(HttpServletRequest request) {
+  public static String getSpanName(HttpServletRequest request) {
     String spanName = request.getServletPath();
+    String pathInfo = request.getPathInfo();
+    // getServletPath() returns "" when request doesn't target any servlet or
+    // when it targets servlet mapped to /*
+    // for example websphere liberty does not use a servlet for static content so
+    // requests for static files will have "" for servlet path
+    if (pathInfo != null && spanName.isEmpty()) {
+      spanName = pathInfo;
+    }
     String contextPath = request.getContextPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
       spanName = contextPath + spanName;
@@ -141,8 +149,15 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
     if (AppServerBridge.isPresent(attachedContext)
         && !AppServerBridge.isServerSpanNameUpdatedFromServlet(attachedContext)) {
-      getServerSpan(request).updateName(getSpanName(request));
+      updateSpanName(request);
       AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
+    }
+  }
+
+  public void updateSpanName(HttpServletRequest request) {
+    Span span = getServerSpan(request);
+    if (span != null) {
+      span.updateName(getSpanName(request));
     }
   }
 }

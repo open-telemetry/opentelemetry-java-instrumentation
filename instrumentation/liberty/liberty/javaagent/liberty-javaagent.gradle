@@ -1,0 +1,8 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+dependencies {
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+
+  implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  compileOnly project(':instrumentation:liberty:compile-stub')
+}
