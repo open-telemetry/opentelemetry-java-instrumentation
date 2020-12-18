@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.common.collect.Iterables;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
