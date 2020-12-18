@@ -203,7 +203,6 @@ public class AgentContextStorage implements ContextStorage {
         Baggage applicationBaggage = (Baggage) v1;
         io.opentelemetry.api.baggage.Baggage agentBaggage =
             BaggageBridging.toAgent(applicationBaggage);
-        System.out.println(((Baggage) v1).asMap());
         return new AgentContextWrapper(
             agentContext.with(AGENT_BAGGAGE_CONTEXT_KEY, agentBaggage), applicationContext);
       }

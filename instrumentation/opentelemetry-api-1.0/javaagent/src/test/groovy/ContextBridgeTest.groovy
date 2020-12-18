@@ -92,7 +92,6 @@ class ContextBridgeTest extends AgentTestRunner {
     applicationBaggage.makeCurrent().withCloseable {
       def agentBaggage = io.opentelemetry.api.baggage.Baggage.current()
       agentBaggage.asMap().with {
-        println it
         size() == 2
         get("food").value == "cheese"
         get("food").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.empty()
@@ -120,7 +119,6 @@ class ContextBridgeTest extends AgentTestRunner {
         applicationBaggage.makeCurrent().withCloseable {
           agentBaggage = io.opentelemetry.api.baggage.Baggage.current()
           agentBaggage.asMap().with {
-            println it
             size() == 2
             get("food").value == "cabbage"
             get("food").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.empty()
