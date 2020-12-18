@@ -68,6 +68,8 @@ public class ByteBuddyPluginConfigurator {
 
       if (compile != null) {
         Task languageTask = createLanguageTask(compile, taskName + language);
+        // We also process resources for SPI classes.
+        languageTask.dependsOn(sourceSet.getProcessResourcesTaskName());
         byteBuddyTask.dependsOn(languageTask);
       }
     }
