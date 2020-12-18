@@ -10,7 +10,6 @@ muzzle {
 
 dependencies {
   implementation project(':instrumentation:oshi:library')
-  implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics'
 
   library group: 'com.github.oshi', name: 'oshi-core', version: '5.3.1'
 }
