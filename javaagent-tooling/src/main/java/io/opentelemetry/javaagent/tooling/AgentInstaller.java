@@ -402,12 +402,6 @@ public class AgentInstaller {
         return true;
       }
 
-      if (cl == null) {
-        String name = c.getName();
-        List<String> prefixes = BootstrapPackagePrefixesHolder.getBoostrapPackagePrefixes();
-        return prefixes.stream().anyMatch(prefix -> name.startsWith(prefix));
-      }
-
       return false;
     }
   }
