@@ -11,6 +11,7 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.job.builder.FlowBuilder
 import org.springframework.batch.core.job.flow.Flow
 import org.springframework.batch.core.job.flow.support.SimpleFlow
+import org.springframework.batch.core.partition.support.Partitioner
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
@@ -23,6 +24,8 @@ import springbatch.TestDecider
 import springbatch.TestItemProcessor
 import springbatch.TestItemReader
 import springbatch.TestItemWriter
+import springbatch.TestPartitionedItemReader
+import springbatch.TestPartitioner
 import springbatch.TestTasklet
 
 @Configuration
@@ -33,6 +36,27 @@ class SpringBatchApplication {
   JobBuilderFactory jobs
   @Autowired
   StepBuilderFactory steps
+
+  // common
+  @Bean
+  ItemReader<String> itemReader() {
+    new TestItemReader()
+  }
+
+  @Bean
+  ItemProcessor<String, Integer> itemProcessor() {
+    new TestItemProcessor()
+  }
+
+  @Bean
+  ItemWriter<Integer> itemWriter() {
+    new TestItemWriter()
+  }
+
+  @Bean
+  AsyncTaskExecutor asyncTaskExecutor() {
+    new ThreadPoolTaskExecutor()
+  }
 
   // simple tasklet job
   @Bean
@@ -73,21 +97,6 @@ class SpringBatchApplication {
       .processor(itemProcessor())
       .writer(itemWriter())
       .build()
-  }
-
-  @Bean
-  ItemReader<String> itemReader() {
-    new TestItemReader()
-  }
-
-  @Bean
-  ItemProcessor<String, Integer> itemProcessor() {
-    new TestItemProcessor()
-  }
-
-  @Bean
-  ItemWriter<Integer> itemWriter() {
-    new TestItemWriter()
   }
 
   // job using a flow
@@ -154,11 +163,6 @@ class SpringBatchApplication {
       .build()
   }
 
-  @Bean
-  AsyncTaskExecutor asyncTaskExecutor() {
-    new ThreadPoolTaskExecutor()
-  }
-
   // job with decisions
   @Bean
   Job decisionJob() {
@@ -190,5 +194,43 @@ class SpringBatchApplication {
     steps.get("decisionStepRight")
       .tasklet(new TestTasklet())
       .build()
+  }
+
+  // partitioned job
+  @Bean
+  Job partitionedJob() {
+    jobs.get("partitionedJob")
+      .start(partitionManagerStep())
+      .build()
+  }
+
+  @Bean
+  Step partitionManagerStep() {
+    steps.get("partitionManagerStep")
+      .partitioner("partitionWorkerStep", partitioner())
+      .step(partitionWorkerStep())
+      .gridSize(2)
+      .taskExecutor(asyncTaskExecutor())
+      .build()
+  }
+
+  @Bean
+  Partitioner partitioner() {
+    new TestPartitioner()
+  }
+
+  @Bean
+  Step partitionWorkerStep() {
+    steps.get("partitionWorkerStep")
+      .chunk(5)
+      .reader(partitionedItemReader())
+      .processor(itemProcessor())
+      .writer(itemWriter())
+      .build()
+  }
+
+  @Bean
+  ItemReader<String> partitionedItemReader() {
+    new TestPartitionedItemReader()
   }
 }
