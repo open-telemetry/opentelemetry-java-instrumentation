@@ -480,7 +480,7 @@ public class AgentInstaller {
         return true;
       }
 
-      return HelperInjector.isInjectedClass(c));
+      return HelperInjector.isInjectedClass(c);
     }
   }
 
