@@ -18,6 +18,10 @@ dependencies {
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
     exclude group: 'io.opentelemetry', module: 'opentelemetry-api'
   }
+  implementation(deps.opentelemetryOtlpMetrics) {
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+    exclude group: 'io.opentelemetry', module: 'opentelemetry-api'
+  }
   implementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.33.1'
 }
 

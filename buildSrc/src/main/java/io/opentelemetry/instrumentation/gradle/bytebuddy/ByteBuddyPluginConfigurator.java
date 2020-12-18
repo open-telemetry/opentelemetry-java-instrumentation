@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.gradle.bytebuddy;
 
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +47,16 @@ public class ByteBuddyPluginConfigurator {
     this.project = project;
     this.sourceSet = sourceSet;
     this.pluginClassName = pluginClassName;
-    this.inputClasspath = inputClasspath;
+
+    // add build resources dir to classpath if it's present
+    File resourcesDir = sourceSet.getOutput().getResourcesDir();
+    this.inputClasspath =
+        resourcesDir == null
+            ? inputClasspath
+            : ImmutableList.<File>builder()
+                .addAll(inputClasspath)
+                .add(sourceSet.getOutput().getResourcesDir())
+                .build();
   }
 
   public void configure() {
@@ -58,6 +68,8 @@ public class ByteBuddyPluginConfigurator {
 
       if (compile != null) {
         Task languageTask = createLanguageTask(compile, taskName + language);
+        // We also process resources for SPI classes.
+        languageTask.dependsOn(sourceSet.getProcessResourcesTaskName());
         byteBuddyTask.dependsOn(languageTask);
       }
     }

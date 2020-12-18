@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
 import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.LongSumObserver;
-import io.opentelemetry.api.metrics.AsynchronousInstrument;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
+import java.util.function.Consumer;
 
 class ApplicationLongSumObserver implements LongSumObserver {
 
@@ -19,24 +19,18 @@ class ApplicationLongSumObserver implements LongSumObserver {
     this.agentLongSumObserver = agentLongSumObserver;
   }
 
-  @Override
-  public void setCallback(Callback<LongResult> metricUpdater) {
-    agentLongSumObserver.setCallback(new AgentResultLongSumObserver(metricUpdater));
-  }
-
   static class AgentResultLongSumObserver
-      implements AsynchronousInstrument.Callback<
-          io.opentelemetry.api.metrics.LongSumObserver.LongResult> {
+      implements Consumer<io.opentelemetry.api.metrics.LongSumObserver.LongResult> {
 
-    private final Callback<LongResult> metricUpdater;
+    private final Consumer<LongResult> metricUpdater;
 
-    protected AgentResultLongSumObserver(Callback<LongResult> metricUpdater) {
+    protected AgentResultLongSumObserver(Consumer<LongResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(io.opentelemetry.api.metrics.LongSumObserver.LongResult result) {
-      metricUpdater.update(new ApplicationResultLongSumObserver(result));
+    public void accept(io.opentelemetry.api.metrics.LongSumObserver.LongResult result) {
+      metricUpdater.accept(new ApplicationResultLongSumObserver(result));
     }
   }
 
@@ -77,10 +71,10 @@ class ApplicationLongSumObserver implements LongSumObserver {
     }
 
     @Override
-    public LongSumObserver.Builder setCallback(Callback<LongResult> callback) {
-      agentBuilder.setCallback(
+    public LongSumObserver.Builder setUpdater(Consumer<LongResult> callback) {
+      agentBuilder.setUpdater(
           result ->
-              callback.update((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
+              callback.accept((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
       return this;
     }
 

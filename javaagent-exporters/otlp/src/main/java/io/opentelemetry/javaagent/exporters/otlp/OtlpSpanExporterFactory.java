@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.exporters.otlp;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.exporter.otlp.OtlpGrpcSpanExporter;
+import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Arrays;

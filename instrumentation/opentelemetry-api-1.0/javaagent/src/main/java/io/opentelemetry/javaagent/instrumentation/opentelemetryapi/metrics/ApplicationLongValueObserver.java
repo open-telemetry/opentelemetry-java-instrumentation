@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.LongValueObserver;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
+import java.util.function.Consumer;
 
 class ApplicationLongValueObserver implements LongValueObserver {
 
@@ -18,24 +19,18 @@ class ApplicationLongValueObserver implements LongValueObserver {
     this.agentLongValueObserver = agentLongValueObserver;
   }
 
-  @Override
-  public void setCallback(Callback<LongResult> metricUpdater) {
-    agentLongValueObserver.setCallback(new AgentResultLongValueObserver(metricUpdater));
-  }
-
   public static class AgentResultLongValueObserver
-      implements io.opentelemetry.api.metrics.AsynchronousInstrument.Callback<
-          io.opentelemetry.api.metrics.LongValueObserver.LongResult> {
+      implements Consumer<io.opentelemetry.api.metrics.LongValueObserver.LongResult> {
 
-    private final Callback<LongResult> metricUpdater;
+    private final Consumer<LongResult> metricUpdater;
 
-    public AgentResultLongValueObserver(Callback<LongResult> metricUpdater) {
+    public AgentResultLongValueObserver(Consumer<LongResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(io.opentelemetry.api.metrics.LongValueObserver.LongResult result) {
-      metricUpdater.update(new ApplicationResultLongValueObserver(result));
+    public void accept(io.opentelemetry.api.metrics.LongValueObserver.LongResult result) {
+      metricUpdater.accept(new ApplicationResultLongValueObserver(result));
     }
   }
 
@@ -76,10 +71,10 @@ class ApplicationLongValueObserver implements LongValueObserver {
     }
 
     @Override
-    public LongValueObserver.Builder setCallback(Callback<LongResult> callback) {
-      agentBuilder.setCallback(
+    public LongValueObserver.Builder setUpdater(Consumer<LongResult> callback) {
+      agentBuilder.setUpdater(
           result ->
-              callback.update((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
+              callback.accept((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
       return this;
     }
 

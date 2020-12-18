@@ -17,13 +17,13 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
-import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
+import io.opentelemetry.javaagent.spi.ComponentInstaller;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +67,8 @@ public class AgentInstaller {
 
   public static void installBytebuddyAgent(Instrumentation inst) {
     if (Config.get().getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
-      installBytebuddyAgent(inst, false);
+      Iterable<ComponentInstaller> componentInstallers = loadComponentProviders();
+      installBytebuddyAgent(inst, false, componentInstallers);
     } else {
       log.debug("Tracing is disabled, not installing instrumentations.");
     }
@@ -83,30 +84,10 @@ public class AgentInstaller {
   public static ResettableClassFileTransformer installBytebuddyAgent(
       Instrumentation inst,
       boolean skipAdditionalLibraryMatcher,
+      Iterable<ComponentInstaller> componentInstallers,
       AgentBuilder.Listener... listeners) {
 
-    ClassLoader savedContextClassLoader = Thread.currentThread().getContextClassLoader();
-    try {
-      // calling (shaded) OpenTelemetry.getGlobalTracerProvider() with context class loader set to
-      // the
-      // agent class loader, so that SPI finds the agent's (isolated) SDK, and (shaded)
-      // OpenTelemetry registers it, and then when instrumentation calls (shaded)
-      // OpenTelemetry.getGlobalTracerProvider() later, they get back the agent's (isolated) SDK
-      //
-      // but if we don't trigger this early registration, then if instrumentation is the first to
-      // call (shaded) OpenTelemetry.getGlobalTracerProvider(), then SPI can't see the agent class
-      // loader,
-      // and so (shaded) OpenTelemetry registers the no-op TracerFactory, and it cannot be replaced
-      // later
-      Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader());
-      OpenTelemetry.getGlobalTracerProvider();
-    } finally {
-      Thread.currentThread().setContextClassLoader(savedContextClassLoader);
-    }
-
-    OpenTelemetrySdkAccess.internalSetForceFlush(
-        (timeout, unit) ->
-            OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(timeout, unit));
+    installComponentsBeforeByteBuddy(componentInstallers);
 
     INSTRUMENTATION = inst;
 
@@ -162,7 +143,51 @@ public class AgentInstaller {
 
     agentBuilder = customizeByteBuddyAgent(agentBuilder);
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
-    return agentBuilder.installOn(inst);
+    ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
+    installComponentsAfterByteBuddy(componentInstallers);
+    return resettableClassFileTransformer;
+  }
+
+  private static void installComponentsBeforeByteBuddy(
+      Iterable<ComponentInstaller> componentInstallers) {
+    Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader());
+    for (ComponentInstaller componentInstaller : componentInstallers) {
+      componentInstaller.beforeByteBuddyAgent();
+    }
+  }
+
+  private static void installComponentsAfterByteBuddy(
+      Iterable<ComponentInstaller> componentInstallers) {
+    /*
+     * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
+     *
+     * JMXFetch uses jre bootstrap classes which touch this class. This means applications which require a custom log
+     * manager may not have a chance to set the global log manager if jmxfetch runs first. JMXFetch will incorrectly
+     * set the global log manager in cases where the app sets the log manager system property or when the log manager
+     * class is not on the system classpath.
+     *
+     * Our solution is to delay the initialization of jmxfetch when we detect a custom log manager being used.
+     *
+     * Once we see the LogManager class loading, it's safe to start jmxfetch because the application is already setting
+     * the global log manager and jmxfetch won't be able to touch it due to classloader locking.
+     */
+
+    /*
+     * Similar thing happens with AgentTracer on (at least) zulu-8 because it uses OkHttp which indirectly loads JFR
+     * events which in turn loads LogManager. This is not a problem on newer JDKs because there JFR uses different
+     * logging facility.
+     */
+    boolean appUsingCustomLogManager = isAppUsingCustomLogManager();
+    if (isJavaBefore9WithJfr() && appUsingCustomLogManager) {
+      log.debug("Custom logger detected. Delaying Agent Tracer initialization.");
+      registerClassLoadCallback(
+          "java.util.logging.LogManager",
+          new InstallComponentAfterByteBuddyCallback(componentInstallers));
+    } else {
+      for (ComponentInstaller componentInstaller : componentInstallers) {
+        componentInstaller.afterByteBuddyAgent();
+      }
+    }
   }
 
   private static AgentBuilder customizeByteBuddyAgent(AgentBuilder agentBuilder) {
@@ -172,6 +197,10 @@ public class AgentInstaller {
       agentBuilder = agentCustomizer.customize(agentBuilder);
     }
     return agentBuilder;
+  }
+
+  private static Iterable<ComponentInstaller> loadComponentProviders() {
+    return ServiceLoader.load(ComponentInstaller.class, AgentInstaller.class.getClassLoader());
   }
 
   private static Iterable<ByteBuddyAgentCustomizer> loadByteBuddyAgentCustomizers() {
@@ -342,6 +371,59 @@ public class AgentInstaller {
     }
   }
 
+  protected static class InstallComponentAfterByteBuddyCallback extends ClassLoadCallBack {
+
+    private final Iterable<ComponentInstaller> componentInstallers;
+
+    protected InstallComponentAfterByteBuddyCallback(
+        Iterable<ComponentInstaller> componentInstallers) {
+      this.componentInstallers = componentInstallers;
+    }
+
+    @Override
+    public String getName() {
+      return componentInstallers.getClass().getName();
+    }
+
+    @Override
+    public void execute() {
+      for (ComponentInstaller componentInstaller : componentInstallers) {
+        componentInstaller.afterByteBuddyAgent();
+      }
+    }
+  }
+
+  protected abstract static class ClassLoadCallBack implements Runnable {
+
+    @Override
+    public void run() {
+      /*
+       * This callback is called from within bytecode transformer. This can be a problem if callback tries
+       * to load classes being transformed. To avoid this we start a thread here that calls the callback.
+       * This seems to resolve this problem.
+       */
+      Thread thread =
+          new Thread(
+              new Runnable() {
+                @Override
+                public void run() {
+                  try {
+                    execute();
+                  } catch (Exception e) {
+                    log.error("Failed to run class loader callback {}", getName(), e);
+                  }
+                }
+              });
+      thread.setName("agent-startup-" + getName());
+      thread.setDaemon(true);
+      thread.start();
+    }
+
+    public abstract String getName();
+
+    public abstract void execute();
+  }
+
   private static class ClassLoadListener implements AgentBuilder.Listener {
     @Override
     public void onDiscovery(
@@ -398,12 +480,65 @@ public class AgentInstaller {
         return true;
       }
 
-      if (HelperInjector.isInjectedClass(c)) {
-        return true;
-      }
+      return HelperInjector.isInjectedClass(c));
+    }
+  }
 
+  /**
+   * Search for java or agent-tracer sysprops which indicate that a custom log manager will be used.
+   * Also search for any app classes known to set a custom log manager.
+   *
+   * @return true if we detect a custom log manager being used.
+   */
+  private static boolean isAppUsingCustomLogManager() {
+    String tracerCustomLogManSysprop = "otel.app.customlogmanager";
+    String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
+    String customLogManagerEnv =
+        System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase());
+
+    if (customLogManagerProp != null || customLogManagerEnv != null) {
+      log.debug("Prop - customlogmanager: " + customLogManagerProp);
+      log.debug("Env - customlogmanager: " + customLogManagerEnv);
+      // Allow setting to skip these automatic checks:
+      return Boolean.parseBoolean(customLogManagerProp)
+          || Boolean.parseBoolean(customLogManagerEnv);
+    }
+
+    String jbossHome = System.getenv("JBOSS_HOME");
+    if (jbossHome != null) {
+      log.debug("Env - jboss: " + jbossHome);
+      // JBoss/Wildfly is known to set a custom log manager after startup.
+      // Originally we were checking for the presence of a jboss class,
+      // but it seems some non-jboss applications have jboss classes on the classpath.
+      // This would cause jmxfetch initialization to be delayed indefinitely.
+      // Checking for an environment variable required by jboss instead.
+      return true;
+    }
+
+    String logManagerProp = System.getProperty("java.util.logging.manager");
+    if (logManagerProp != null) {
+      boolean onSysClasspath =
+          ClassLoader.getSystemResource(logManagerProp.replaceAll("\\.", "/") + ".class") != null;
+      log.debug("Prop - logging.manager: " + logManagerProp);
+      log.debug("logging.manager on system classpath: " + onSysClasspath);
+      // Some applications set java.util.logging.manager but never actually initialize the logger.
+      // Check to see if the configured manager is on the system classpath.
+      // If so, it should be safe to initialize jmxfetch which will setup the log manager.
+      return !onSysClasspath;
+    }
+
+    return false;
+  }
+
+  private static boolean isJavaBefore9WithJfr() {
+    if (!AgentInitializer.isJavaBefore9()) {
       return false;
     }
+    // FIXME: this is quite a hack because there maybe jfr classes on classpath somehow that have
+    // nothing to do with JDK but this should be safe because only thing this does is to delay
+    // tracer install
+    String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
+    return Thread.currentThread().getContextClassLoader().getResource(jfrClassResourceName) != null;
   }
 
   private AgentInstaller() {}
