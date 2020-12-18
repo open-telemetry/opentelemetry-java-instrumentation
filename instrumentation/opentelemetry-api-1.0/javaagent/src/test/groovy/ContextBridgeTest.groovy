@@ -105,7 +105,6 @@ class ContextBridgeTest extends AgentTestRunner {
       agentBaggage.makeCurrent().withCloseable {
         def updatedApplicationBaggage = Baggage.current()
         updatedApplicationBaggage.asMap().with {
-          println it
           size() == 2
           get("food").value == "cheese"
           get("food").entryMetadata == BaggageEntryMetadata.empty()
