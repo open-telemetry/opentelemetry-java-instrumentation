@@ -13,6 +13,9 @@ import org.springframework.batch.repeat.RepeatStatus
 class TestTasklet implements Tasklet {
   @Override
   RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+    if (chunkContext.stepContext.stepExecution.jobParameters.getLong("fail") == 1) {
+      throw new RuntimeException("fail")
+    }
     RepeatStatus.FINISHED
   }
 }

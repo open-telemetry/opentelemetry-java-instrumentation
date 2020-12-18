@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatc
 import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.StepBuilderInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobBuilderHelperInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobParserJobFactoryBeanInstrumentation;
@@ -40,6 +41,7 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
         "io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope";
     context.put("org.springframework.batch.core.JobExecution", contextAndScope);
     context.put("org.springframework.batch.core.StepExecution", contextAndScope);
+    context.put("org.springframework.batch.core.scope.context.ChunkContext", contextAndScope);
     return context;
   }
 
@@ -53,6 +55,9 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
     }
     if (isTracingEnabled("step")) {
       instrumentations.add(new StepBuilderHelperInstrumentation());
+    }
+    if (isTracingEnabled("chunk")) {
+      instrumentations.add(new StepBuilderInstrumentation());
     }
     return instrumentations;
   }
