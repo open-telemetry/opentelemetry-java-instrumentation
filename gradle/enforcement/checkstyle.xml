@@ -262,7 +262,7 @@
     <module name="AbbreviationAsWordInName">
       <property name="ignoreFinal" value="false"/>
       <!-- modified from default to support KHttp -->
-      <property name="allowedAbbreviationLength" value="10"/>
+      <property name="allowedAbbreviationLength" value="1"/>
       <property name="tokens"
         value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, ANNOTATION_DEF, ANNOTATION_FIELD_DEF,
                     PARAMETER_DEF, VARIABLE_DEF, METHOD_DEF, PATTERN_VARIABLE_DEF, RECORD_DEF,
