@@ -25,13 +25,13 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 public class E2EAgentBenchmark {
-  private static String app = System.getenv("APP_IMAGE");
+  private static String APP_NAME = System.getenv().getOrDefault("APP_IMAGE", "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk8-20201204.400701583");
 
   private List<GenericContainer<?>> containers;
   private static final Logger LOG = LoggerFactory.getLogger(E2EAgentBenchmark.class);
 
   // docker images
-  private static final DockerImageName APP_IMAGE = DockerImageName.parse(app);
+  private static final DockerImageName APP_IMAGE = DockerImageName.parse(APP_NAME);
   private static final DockerImageName OTLP_COLLECTOR_IMAGE =
       DockerImageName.parse("otel/opentelemetry-collector-dev:latest");
   private static final DockerImageName WRK_IMAGE = DockerImageName.parse("quay.io/dim/wrk:stable");
@@ -52,11 +52,6 @@ public class E2EAgentBenchmark {
   }
 
   private void runBenchmark() throws Exception {
-    if (app == null || app.equals("")) {
-      // setting default image to benchmark
-      app = "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk8-20201204.400701583";
-    }
-
     String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
 
     // otlp collector container
