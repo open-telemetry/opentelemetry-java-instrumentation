@@ -273,6 +273,7 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [RxJava](https://github.com/ReactiveX/RxJava)                                                                                         | 1.0+                           |
 | [Servlet](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/package-summary.html)                                           | 2.2+                           |
 | [Spark Web Framework](https://github.com/perwendel/spark)                                                                             | 2.3+                           |
+| [Spring Batch](https://spring.io/projects/spring-batch)                                                                               | 3.0+                           |
 | [Spring Data](https://spring.io/projects/spring-data)                                                                                 | 1.8+                           |
 | [Spring Scheduling](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html)       | 3.1+                           |
 | [Spring Web MVC](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html)     | 3.1+                           |
