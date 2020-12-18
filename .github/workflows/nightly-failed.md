@@ -1,6 +1,7 @@
 ---
-title: Nightly build failed
+title: Nightly build #{{ env.GITHUB_RUN_NUMBER }} failed
 assignees: iNikem
 labels: bug, area:build, priority:p1
 ---
-Nightly job failed. Please take a look and fix it ASAP
+<a href="https://github.com/{{ env.GITHUB_REPOSITORY }}/actions/runs/{{ env.GITHUB_RUN_ID }}">
+Nightly build #{{ env.GITHUB_RUN_NUMBER }}</a> failed. Please take a look and fix it ASAP.
