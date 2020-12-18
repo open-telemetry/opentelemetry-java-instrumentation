@@ -207,15 +207,11 @@ def isJavaVersionAllowed(JavaVersion version) {
 def testJavaVersion = rootProject.findProperty('testJavaVersion')
 if (testJavaVersion != null) {
   def requestedJavaVersion = JavaVersion.toVersion(testJavaVersion)
-  def gradleJavaVersion = JavaVersion.current()
-
-  if (gradleJavaVersion != requestedJavaVersion) {
-    tasks.withType(Test).all {
-      javaLauncher = javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(requestedJavaVersion.majorVersion)
-      }
-      enabled = isJavaVersionAllowed(requestedJavaVersion)
+  tasks.withType(Test).all {
+    javaLauncher = javaToolchains.launcherFor {
+      languageVersion = JavaLanguageVersion.of(requestedJavaVersion.majorVersion)
     }
+    enabled = isJavaVersionAllowed(requestedJavaVersion)
   }
 } else {
   // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
