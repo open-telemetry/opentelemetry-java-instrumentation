@@ -12,8 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
+import com.google.common.collect.Iterables;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
+import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
@@ -96,7 +98,7 @@ public class AgentInstaller {
         new AgentBuilder.Default()
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-            .with(AgentBuilder.RedefinitionStrategy.DiscoveryStrategy.Reiterating.INSTANCE)
+            .with(new RedefinitionDiscoveryStrategy())
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
             .with(new ClassLoadListener())
@@ -116,7 +118,7 @@ public class AgentInstaller {
       agentBuilder =
           agentBuilder
               .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-              .with(AgentBuilder.RedefinitionStrategy.DiscoveryStrategy.Reiterating.INSTANCE)
+              .with(new RedefinitionDiscoveryStrategy())
               .with(new RedefinitionLoggingListener())
               .with(new TransformLoggingListener());
     }
@@ -456,6 +458,28 @@ public class AgentInstaller {
           }
         }
       }
+    }
+  }
+
+  private static class RedefinitionDiscoveryStrategy
+      implements AgentBuilder.RedefinitionStrategy.DiscoveryStrategy {
+    private static final AgentBuilder.RedefinitionStrategy.DiscoveryStrategy delegate =
+        AgentBuilder.RedefinitionStrategy.DiscoveryStrategy.Reiterating.INSTANCE;
+
+    @Override
+    public Iterable<Iterable<Class<?>>> resolve(Instrumentation instrumentation) {
+      // filter out our agent classes and injected helper classes
+      return Iterables.transform(
+          delegate.resolve(instrumentation), i -> Iterables.filter(i, c -> !isIgnored(c)));
+    }
+
+    private static boolean isIgnored(Class<?> c) {
+      ClassLoader cl = c.getClassLoader();
+      if (cl != null && cl.getClass() == AgentClassLoader.class) {
+        return true;
+      }
+
+      return HelperInjector.isInjectedClass(c);
     }
   }
 
