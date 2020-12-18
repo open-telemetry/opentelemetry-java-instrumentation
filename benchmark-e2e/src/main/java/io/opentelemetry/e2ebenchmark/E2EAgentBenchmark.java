@@ -25,7 +25,7 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 public class E2EAgentBenchmark {
-  private static String APP_NAME = System.getenv().getOrDefault("APP_IMAGE", "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk8-20201204.400701583");
+  private static final String APP_NAME = System.getenv().getOrDefault("APP_IMAGE", "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk8-20201204.400701583");
 
   private List<GenericContainer<?>> containers;
   private static final Logger LOG = LoggerFactory.getLogger(E2EAgentBenchmark.class);
