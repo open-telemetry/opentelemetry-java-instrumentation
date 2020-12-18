@@ -24,5 +24,10 @@ public final class SpringBatchInstrumentationConfig {
         .isInstrumentationPropertyEnabled(instrumentationNames(), type + ".enabled", true);
   }
 
+  public static boolean shouldCreateRootSpanForChunk() {
+    return Config.get()
+        .isInstrumentationPropertyEnabled(instrumentationNames(), "chunk.root-span", false);
+  }
+
   private SpringBatchInstrumentationConfig() {}
 }
