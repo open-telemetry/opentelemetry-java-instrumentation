@@ -19,10 +19,13 @@ tasks.withType(Test) {
   jvmArgs '-Dotel.instrumentation.spring-batch.enabled=true'
 }
 test {
-  excludes = ["*ChunkRootSpanTest.class"]
+  filter {
+    excludeTestsMatching '*ChunkRootSpanTest'
+  }
 }
-tasks.register("testWithChunkRootSpan", Test) {
+test.finalizedBy(tasks.register("testChunkRootSpan", Test) {
+  filter {
+    includeTestsMatching '*ChunkRootSpanTest'
+  }
   jvmArgs '-Dotel.instrumentation.spring-batch.chunk.root-span=true'
-  include "*ChunkRootSpanTest.class"
-}
-test.finalizedBy(testWithChunkRootSpan)
+})

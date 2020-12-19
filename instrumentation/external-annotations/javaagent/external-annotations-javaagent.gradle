@@ -24,16 +24,21 @@ dependencies {
   }
 }
 
-tasks.register("testIncludeProperty", Test) {
-  jvmArgs "-Dotel.instrumentation.external-annotations.include=package.Class\$Name;OuterClass\$InterestingMethod"
-  include "ConfiguredTraceAnnotationsTest.class"
-}
-tasks.register("testExcludeMethodsProperty", Test) {
-  jvmArgs "-Dotel.instrumentation.external-annotations.exclude-methods=TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
-  include "TracedMethodsExclusionTest.class"
-}
 test {
-  excludes = ["ConfiguredTraceAnnotationsTest.class", "TracedMethodsExclusionTest.class"]
+  filter {
+    excludeTestsMatching 'ConfiguredTraceAnnotationsTest'
+    excludeTestsMatching 'TracedMethodsExclusionTest'
+  }
 }
-test.dependsOn(testIncludeProperty)
-test.dependsOn(testExcludeMethodsProperty)
+test.finalizedBy(tasks.register("testIncludeProperty", Test) {
+  filter {
+    includeTestsMatching 'ConfiguredTraceAnnotationsTest'
+  }
+  jvmArgs "-Dotel.instrumentation.external-annotations.include=package.Class\$Name;OuterClass\$InterestingMethod"
+})
+test.finalizedBy(tasks.register("testExcludeMethodsProperty", Test) {
+  filter {
+    includeTestsMatching 'TracedMethodsExclusionTest'
+  }
+  jvmArgs "-Dotel.instrumentation.external-annotations.exclude-methods=TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
+})
