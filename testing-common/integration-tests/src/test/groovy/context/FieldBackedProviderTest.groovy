@@ -5,12 +5,6 @@
 
 package context
 
-import static context.ContextTestInstrumentationModule.IncorrectCallUsageKeyClass
-import static context.ContextTestInstrumentationModule.IncorrectContextClassUsageKeyClass
-import static context.ContextTestInstrumentationModule.IncorrectKeyClassUsageKeyClass
-import static context.ContextTestInstrumentationModule.KeyClass
-import static context.ContextTestInstrumentationModule.UntransformableKeyClass
-
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.instrumentation.util.gc.GcUtils
@@ -22,28 +16,27 @@ import java.lang.reflect.Modifier
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.BiFunction
 import java.util.function.Function
+import library.IncorrectCallUsageKeyClass
+import library.IncorrectContextClassUsageKeyClass
+import library.IncorrectKeyClassUsageKeyClass
+import library.KeyClass
+import library.UntransformableKeyClass
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.sf.cglib.proxy.Enhancer
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
 import spock.lang.Ignore
-import spock.lang.Requires
 
-// FIXME (trask)
-@Ignore
 class FieldBackedProviderTest extends AgentTestRunner {
-
-  static {
-    System.setProperty("otel.instrumentation.context-test-instrumentation.enabled", "true")
-  }
 
   @Override
   protected List<BiFunction<String, Throwable, Boolean>> skipErrorConditions() {
     return [
       new BiFunction<String, Throwable, Boolean>() {
         @Override
-        Boolean apply(String s, Throwable throwable) {
-          return typeName.startsWith(ContextTestInstrumentationModule.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected.")
+        Boolean apply(String typeName, Throwable throwable) {
+          return typeName.startsWith('library.Incorrect') &&
+            throwable.getMessage().startsWith("Incorrect Context Api Usage detected.")
         }
       }
     ]
@@ -53,8 +46,8 @@ class FieldBackedProviderTest extends AgentTestRunner {
   protected List<Function<String, Boolean>> skipTransformationConditions() {
     return Collections.singletonList(new Function<String, Boolean>() {
       @Override
-      Boolean apply(String s) {
-        return s != null && s.endsWith("UntransformableKeyClass")
+      Boolean apply(String typeName) {
+        return typeName != null && typeName.endsWith("UntransformableKeyClass")
       }
     })
   }
@@ -177,6 +170,8 @@ class FieldBackedProviderTest extends AgentTestRunner {
     new AtomicReference(new UntransformableKeyClass()) | _
   }
 
+  // FIXME (trask)
+  @Ignore
   def "context classes are retransform safe"() {
     when:
     ByteBuddyAgent.getInstrumentation().retransformClasses(KeyClass)
@@ -189,6 +184,8 @@ class FieldBackedProviderTest extends AgentTestRunner {
     new UntransformableKeyClass().incrementContextCount() == 1
   }
 
+  // FIXME (trask)
+  @Ignore
   // NB: This test will fail if some other agent is also running that modifies the class structure
   // in a way that is incompatible with redefining the class back to its original bytecode.
   // A likely culprit is jacoco if you start seeing failure here due to a change make sure jacoco
@@ -221,58 +218,4 @@ class FieldBackedProviderTest extends AgentTestRunner {
   }
 }
 
-/**
- * Make sure that fields not get injected into the class if it is disabled via system properties.
- *
- * Unfortunately we cannot set system properties here early enough for AgentTestRunner to see.
- * Instead we have to configure this via Gradle. Ideally we should not have to do this.
- */
-@Requires({ "false" == System.getProperty("otel.javaagent.runtime.context.field.injection") })
-class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
 
-  static {
-    System.setProperty("otel.instrumentation.context-test-instrumentation.enabled", "true")
-  }
-
-  @Override
-  protected List<BiFunction<String, Throwable, Boolean>> skipErrorConditions() {
-    return [
-      new BiFunction<String, Throwable, Boolean>() {
-        @Override
-        Boolean apply(String typeName, Throwable throwable) {
-          return typeName.startsWith(ContextTestInstrumentationModule.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected.")
-        }
-      }
-    ]
-  }
-
-  def "Check that structure is not modified when structure modification is disabled"() {
-    setup:
-    def keyClass = ContextTestInstrumentationModule.DisabledKeyClass
-    boolean hasField = false
-    for (Field field : keyClass.getDeclaredFields()) {
-      if (field.getName().startsWith("__opentelemetry")) {
-        hasField = true
-        break
-      }
-    }
-
-    boolean hasMarkerInterface = false
-    boolean hasAccessorInterface = false
-    for (Class inter : keyClass.getInterfaces()) {
-      if (inter.getName() == 'io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker') {
-        hasMarkerInterface = true
-      }
-      if (inter.getName().startsWith('io.opentelemetry.javaagent.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
-        hasAccessorInterface = true
-      }
-    }
-
-    expect:
-    hasField == false
-    hasMarkerInterface == false
-    hasAccessorInterface == false
-    keyClass.newInstance().isInstrumented() == true
-  }
-
-}

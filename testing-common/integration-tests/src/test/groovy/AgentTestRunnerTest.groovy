@@ -3,30 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.google.common.reflect.ClassPath
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.javaagent.tooling.Constants
 import java.util.concurrent.TimeoutException
-import spock.lang.Ignore
+import org.slf4j.LoggerFactory
 
-// FIXME (trask)
-@Ignore
 class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
-
-  def setupSpec() {
-    Config.INSTANCE = Config.create([
-      "otel.javaagent.exclude-classes": "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass"
-    ])
-  }
-
-  def cleanupSpec() {
-    Config.INSTANCE = Config.DEFAULT
-  }
 
   def "classpath setup"() {
     setup:
@@ -67,33 +55,9 @@ class AgentTestRunnerTest extends AgentTestRunner {
 
   def "logging works"() {
     when:
-    org.slf4j.LoggerFactory.getLogger(AgentTestRunnerTest).debug("hello")
+    LoggerFactory.getLogger(AgentTestRunnerTest).debug("hello")
     then:
     noExceptionThrown()
-  }
-
-  def "excluded classes are not instrumented"() {
-    when:
-    runUnderTrace("parent") {
-      subject.run()
-    }
-
-    then:
-    !TRANSFORMED_CLASSES_NAMES.contains(subject.class.name)
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          name "parent"
-        }
-      }
-    }
-
-    where:
-    subject                                                | _
-    new config.exclude.SomeClass()                         | _
-    new config.exclude.SomeClass.NestedClass()             | _
-    new config.exclude.packagename.SomeClass()             | _
-    new config.exclude.packagename.SomeClass.NestedClass() | _
   }
 
   def "test unblocked by completed span"() {

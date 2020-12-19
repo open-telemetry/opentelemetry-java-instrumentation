@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import library.KeyClass;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -37,23 +38,28 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  protected String[] additionalHelperClassNames() {
+    return new String[] {getClass().getName() + "$Context"};
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ContextTestInstrumentation());
   }
 
   @Override
   public Map<String, String> contextStore() {
-    Map<String, String> store = new HashMap<>(2);
-    store.put(getClass().getName() + "$KeyClass", getClass().getName() + "$Context");
-    store.put(getClass().getName() + "$UntransformableKeyClass", getClass().getName() + "$Context");
-    store.put(getClass().getName() + "$DisabledKeyClass", getClass().getName() + "$Context");
+    Map<String, String> store = new HashMap<>(3);
+    store.put("library.KeyClass", getClass().getName() + "$Context");
+    store.put("library.UntransformableKeyClass", getClass().getName() + "$Context");
+    store.put("library.DisabledKeyClass", getClass().getName() + "$Context");
     return store;
   }
 
   public static class ContextTestInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
-      return nameStartsWith(ContextTestInstrumentationModule.class.getName() + "$");
+      return nameStartsWith("library.");
     }
 
     @Override
@@ -87,10 +93,14 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodExit
     public static void methodExit(
         @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-      ContextStore<KeyClass, Context> contextStore =
-          InstrumentationContext.get(KeyClass.class, Context.class);
-      Context context = contextStore.putIfAbsent(thiz, new Context());
-      contextCount = ++context.count;
+      try {
+        ContextStore<KeyClass, Context> contextStore =
+            InstrumentationContext.get(KeyClass.class, Context.class);
+        Context context = contextStore.putIfAbsent(thiz, new Context());
+        contextCount = ++context.count;
+      } catch (Throwable t) {
+        t.printStackTrace();
+      }
     }
   }
 
@@ -161,96 +171,8 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
   }
 
   public static class Context {
-    public static final ContextStore.Factory<Context> FACTORY =
-        new ContextStore.Factory<Context>() {
-          @Override
-          public Context create() {
-            return new Context();
-          }
-        };
+    public static final ContextStore.Factory<Context> FACTORY = Context::new;
 
-    int count = 0;
-  }
-
-  public static class KeyClass {
-    public boolean isInstrumented() {
-      // implementation replaced with test instrumentation
-      return false;
-    }
-
-    public int incrementContextCount() {
-      // implementation replaced with test instrumentation
-      return -1;
-    }
-
-    public int incrementContextCountWithFactory() {
-      // implementation replaced with test instrumentation
-      return -1;
-    }
-
-    public int getContextCount() {
-      // implementation replaced with test instrumentation
-      return -1;
-    }
-
-    public void putContextCount(int value) {
-      // implementation replaced with test instrumentation
-    }
-
-    public void removeContextCount() {
-      // implementation replaced with test instrumentation
-    }
-  }
-
-  /**
-   * A class which will not be transformed by our instrumentation due to {@link
-   * FieldBackedProviderTest#skipTransformationConditions()}.
-   */
-  public static class UntransformableKeyClass extends KeyClass {
-    @Override
-    public boolean isInstrumented() {
-      return false;
-    }
-  }
-
-  /** A class that is used that field injection can be disabled. */
-  public static class DisabledKeyClass extends KeyClass {
-    @Override
-    public boolean isInstrumented() {
-      return false;
-    }
-  }
-
-  public static class IncorrectKeyClassUsageKeyClass {
-    public boolean isInstrumented() {
-      return false;
-    }
-
-    public int incorrectKeyClassUsage() {
-      // instrumentation will not apply to this class because advice incorrectly uses context api
-      return -1;
-    }
-  }
-
-  public static class IncorrectContextClassUsageKeyClass {
-    public boolean isInstrumented() {
-      return false;
-    }
-
-    public int incorrectContextClassUsage() {
-      // instrumentation will not apply to this class because advice incorrectly uses context api
-      return -1;
-    }
-  }
-
-  public static class IncorrectCallUsageKeyClass {
-    public boolean isInstrumented() {
-      return false;
-    }
-
-    public int incorrectCallUsage() {
-      // instrumentation will not apply to this class because advice incorrectly uses context api
-      return -1;
-    }
+    public int count = 0;
   }
 }

@@ -47,6 +47,8 @@ include ':javaagent-api'
 include ':testing:agent-exporter'
 include ':testing:agent-for-testing'
 include ':testing-common'
+include ':testing-common:integration-tests'
+include ':testing-common:library-for-integration-tests'
 include ':utils:test-utils'
 
 // smoke tests

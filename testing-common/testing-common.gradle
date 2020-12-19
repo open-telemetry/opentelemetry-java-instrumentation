@@ -51,15 +51,9 @@ dependencies {
   testImplementation project(':javaagent-tooling')
   testImplementation project(':instrumentation:external-annotations:javaagent')
 
-  testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'
-  // test instrumenting java 1.1 bytecode
-  //TODO do we want this?
-  testImplementation group: 'net.sf.jt400', name: 'jt400', version: '6.1'
-
   // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
   testAnnotationProcessor deps.autoservice
   testCompileOnly deps.autoservice
 }
-
 
 javadoc.enabled = false

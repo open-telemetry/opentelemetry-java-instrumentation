@@ -1,0 +1,37 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+dependencies {
+  library project(':testing-common:library-for-integration-tests')
+
+  testCompileOnly project(':instrumentation-api')
+  testCompileOnly project(':javaagent-api')
+  testImplementation(project(':javaagent-tooling'))
+
+  testImplementation deps.opentelemetryExtAnnotations
+
+  testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'
+
+  // test instrumenting java 1.1 bytecode
+  // TODO do we want this?
+  testImplementation group: 'net.sf.jt400', name: 'jt400', version: '6.1'
+}
+
+test {
+  filter {
+    excludeTestsMatching 'context.FieldBackedProviderTest'
+    excludeTestsMatching 'context.FieldInjectionDisabledTest'
+  }
+}
+test.finalizedBy(tasks.register("testFieldBackedProvider", Test) {
+  filter {
+    includeTestsMatching 'context.FieldBackedProviderTest'
+  }
+  jvmArgs '-Dotel.instrumentation.context-test-instrumentation.enabled=true'
+})
+test.finalizedBy(tasks.register("testFieldInjectionDisabled", Test) {
+  filter {
+    includeTestsMatching 'context.FieldInjectionDisabledTest'
+  }
+  jvmArgs '-Dotel.instrumentation.context-test-instrumentation.enabled=true'
+  jvmArgs '-Dotel.javaagent.runtime.context.field.injection=false'
+})
