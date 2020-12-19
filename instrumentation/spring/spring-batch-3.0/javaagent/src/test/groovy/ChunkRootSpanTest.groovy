@@ -4,8 +4,6 @@
  */
 
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.setConfig
-import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.updateConfigAndResetInstrumentation
 import static java.util.Collections.emptyMap
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
@@ -79,47 +77,18 @@ abstract class ChunkRootSpanTest extends AgentTestRunner {
 }
 
 class JavaConfigChunkRootSpanTest extends ChunkRootSpanTest implements ApplicationConfigTrait {
-  static final PREVIOUS_CONFIG = updateConfigAndResetInstrumentation({
-    it.setProperty("otel.instrumentation.spring-batch.enabled", "true")
-    it.setProperty("otel.instrumentation.spring-batch.chunk.root-span", "true")
-  })
-
   @Override
   ConfigurableApplicationContext createApplicationContext() {
     new AnnotationConfigApplicationContext(SpringBatchApplication)
   }
-
-  @Override
-  def additionalCleanup() {
-    setConfig(PREVIOUS_CONFIG)
-  }
 }
 
 class XmlConfigChunkRootSpanTest extends ChunkRootSpanTest implements ApplicationConfigTrait {
-  static final PREVIOUS_CONFIG = updateConfigAndResetInstrumentation({
-    it.setProperty("otel.instrumentation.spring-batch.enabled", "true")
-    it.setProperty("otel.instrumentation.spring-batch.chunk.root-span", "true")
-  })
-
   @Override
   ConfigurableApplicationContext createApplicationContext() {
     new ClassPathXmlApplicationContext("spring-batch.xml")
   }
-
-  @Override
-  def additionalCleanup() {
-    setConfig(PREVIOUS_CONFIG)
-  }
 }
 
 class JsrConfigChunkRootSpanTest extends ChunkRootSpanTest implements JavaxBatchConfigTrait {
-  static final PREVIOUS_CONFIG = updateConfigAndResetInstrumentation({
-    it.setProperty("otel.instrumentation.spring-batch.enabled", "true")
-    it.setProperty("otel.instrumentation.spring-batch.chunk.root-span", "true")
-  })
-
-  @Override
-  def additionalCleanup() {
-    setConfig(PREVIOUS_CONFIG)
-  }
 }

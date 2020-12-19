@@ -54,3 +54,8 @@ dependencies {
   latestDepTestLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.+'
   latestDepTestLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.+'
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs '-Dotel.instrumentation.spring-webflux.experimental-span-attributes=true'
+}

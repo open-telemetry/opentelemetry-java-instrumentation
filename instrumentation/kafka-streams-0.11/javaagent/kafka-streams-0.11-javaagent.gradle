@@ -33,3 +33,8 @@ dependencies {
   latestDepTestLibrary group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '2.2.+'
   latestDepTestLibrary group: 'org.assertj', name: 'assertj-core', version: '3.+'
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.kafka.experimental-span-attributes=true"
+}

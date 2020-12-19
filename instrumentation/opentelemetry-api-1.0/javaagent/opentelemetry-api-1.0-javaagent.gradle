@@ -28,8 +28,8 @@ dependencies {
   // @WithSpan annotation is used to generate spans in ContextBridgeTest
   testImplementation deps.opentelemetryExtAnnotations
   testInstrumentation project(':instrumentation:opentelemetry-annotations-1.0:javaagent')
+}
 
-  tasks.withType(Test) {
-    jvmArgs '-Dotel.trace.annotated.methods.exclude=io.opentelemetry.test.annotation.TracedWithSpan[ignored]'
-  }
+tasks.withType(Test) {
+  jvmArgs '-Dotel.trace.annotated.methods.exclude=io.opentelemetry.test.annotation.TracedWithSpan[ignored]'
 }

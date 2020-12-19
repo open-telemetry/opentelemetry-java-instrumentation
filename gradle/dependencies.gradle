@@ -40,6 +40,7 @@ ext {
     opentelemetryKotlin        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-kotlin', version: versions.opentelemetry),
     opentelemetryTraceProps    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetry),
     opentelemetrySdk           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry),
+    opentelemetrySdkMetrics    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics', version: versions.opentelemetryAlpha),
     opentelemetryJaeger        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-jaeger', version: versions.opentelemetry),
     opentelemetryJaegerThrift  : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-jaeger-thrift', version: versions.opentelemetry),
     opentelemetryOtlp          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp', version: versions.opentelemetry),

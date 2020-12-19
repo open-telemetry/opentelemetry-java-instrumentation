@@ -14,3 +14,13 @@ dependencies {
 
   testImplementation group: 'javax.inject', name: 'javax.inject', version: '1'
 }
+
+tasks.withType(Test) {
+  // FIXME (trask) only apply to JavaConfigChunkRootSpanTest, XmlConfigChunkRootSpanTest, JsrConfigChunkRootSpanTest
+  jvmArgs '-Dotel.instrumentation.spring-batch.enabled=true'
+  jvmArgs '-Dotel.instrumentation.spring-batch.chunk.root-span=true'
+
+  // FIXME (trask) only apply to JavaConfigBatchJobTest, XmlConfigBatchJobTest, JsrConfigBatchJobTest
+  jvmArgs '-Dotel.instrumentation.spring-batch.enabled=true'
+}
+

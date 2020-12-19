@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -29,14 +29,6 @@ import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
 
 class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    // TODO run tests both with and without experimental span attributes
-    it.setProperty("otel.instrumentation.kafka.experimental-span-attributes", "true")
-  }
-
-  def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   def "test kafka produce and consume"() {
     setup:
