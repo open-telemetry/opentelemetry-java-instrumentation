@@ -9,7 +9,7 @@ import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.exporter.otlp.OtlpGrpcMetricExporter;
+import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse;
 import io.opentelemetry.proto.collector.metrics.v1.MetricsServiceGrpc;
@@ -81,9 +81,9 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
   }
 
   @Override
-  public void shutdown() {
+  public CompletableResultCode shutdown() {
     collector.shutdown();
-    delegate.shutdown();
+    return delegate.shutdown();
   }
 
   private class InMemoryOtlpCollector extends MetricsServiceGrpc.MetricsServiceImplBase {

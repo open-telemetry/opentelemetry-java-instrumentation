@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
 
 import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.DoubleValueObserver;
-import io.opentelemetry.api.metrics.AsynchronousInstrument;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
+import java.util.function.Consumer;
 
 class ApplicationDoubleValueObserver implements DoubleValueObserver {
 
@@ -19,24 +19,18 @@ class ApplicationDoubleValueObserver implements DoubleValueObserver {
     this.agentDoubleValueObserver = agentDoubleValueObserver;
   }
 
-  @Override
-  public void setCallback(Callback<DoubleResult> metricUpdater) {
-    agentDoubleValueObserver.setCallback(new AgentResultDoubleValueObserver(metricUpdater));
-  }
-
   static class AgentResultDoubleValueObserver
-      implements AsynchronousInstrument.Callback<
-          io.opentelemetry.api.metrics.DoubleValueObserver.DoubleResult> {
+      implements Consumer<io.opentelemetry.api.metrics.DoubleValueObserver.DoubleResult> {
 
-    private final Callback<DoubleResult> metricUpdater;
+    private final Consumer<DoubleResult> metricUpdater;
 
-    protected AgentResultDoubleValueObserver(Callback<DoubleResult> metricUpdater) {
+    protected AgentResultDoubleValueObserver(Consumer<DoubleResult> metricUpdater) {
       this.metricUpdater = metricUpdater;
     }
 
     @Override
-    public void update(io.opentelemetry.api.metrics.DoubleValueObserver.DoubleResult result) {
-      metricUpdater.update(new ApplicationResultDoubleValueObserver(result));
+    public void accept(io.opentelemetry.api.metrics.DoubleValueObserver.DoubleResult result) {
+      metricUpdater.accept(new ApplicationResultDoubleValueObserver(result));
     }
   }
 
@@ -78,10 +72,10 @@ class ApplicationDoubleValueObserver implements DoubleValueObserver {
     }
 
     @Override
-    public DoubleValueObserver.Builder setCallback(Callback<DoubleResult> callback) {
-      agentBuilder.setCallback(
+    public DoubleValueObserver.Builder setUpdater(Consumer<DoubleResult> callback) {
+      agentBuilder.setUpdater(
           result ->
-              callback.update((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
+              callback.accept((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));
       return this;
     }
 

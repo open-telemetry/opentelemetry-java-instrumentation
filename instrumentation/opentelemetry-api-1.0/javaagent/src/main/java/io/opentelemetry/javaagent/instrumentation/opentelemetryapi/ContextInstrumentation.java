@@ -30,7 +30,7 @@ public class ContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.context.DefaultContext");
+    return named("application.io.opentelemetry.context.ArrayBasedContext");
   }
 
   @Override

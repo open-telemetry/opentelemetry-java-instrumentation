@@ -48,6 +48,8 @@ public class HelperInjector implements Transformer {
         }
       };
 
+  private static final WeakMap<Class<?>, Boolean> injectedClasses = newWeakMap();
+
   private final String requestingName;
 
   private final Set<String> helperClassNames;
@@ -132,6 +134,8 @@ public class HelperInjector implements Transformer {
           } else {
             classes = injectClassLoader(classLoader, classnameToBytes);
           }
+
+          classes.values().forEach(c -> injectedClasses.put(c, Boolean.TRUE));
 
           // All agent helper classes are in the unnamed module
           // And there's exactly one unnamed module per classloader
@@ -232,5 +236,9 @@ public class HelperInjector implements Transformer {
     if (!deleted) {
       file.deleteOnExit();
     }
+  }
+
+  public static boolean isInjectedClass(Class<?> c) {
+    return injectedClasses.containsKey(c);
   }
 }

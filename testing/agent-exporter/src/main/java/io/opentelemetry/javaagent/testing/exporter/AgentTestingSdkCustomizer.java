@@ -9,7 +9,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.spi.TracerCustomizer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
-import io.opentelemetry.sdk.trace.TracerSdkManagement;
+import io.opentelemetry.sdk.trace.SdkTracerManagement;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import java.util.Collections;
 
@@ -25,7 +25,7 @@ public class AgentTestingSdkCustomizer implements TracerCustomizer {
   }
 
   @Override
-  public void configure(TracerSdkManagement tracerManagement) {
+  public void configure(SdkTracerManagement tracerManagement) {
     tracerManagement.addSpanProcessor(spanProcessor);
     IntervalMetricReader.builder()
         .setExportIntervalMillis(100)

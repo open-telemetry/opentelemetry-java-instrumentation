@@ -13,8 +13,6 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.MetricData.DoublePoint;
 import io.opentelemetry.sdk.metrics.data.MetricData.LongPoint;
 import io.opentelemetry.sdk.metrics.data.MetricData.Point;
-import io.opentelemetry.sdk.metrics.data.MetricData.SummaryPoint;
-import io.opentelemetry.sdk.metrics.data.MetricData.Type;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.util.Collection;
@@ -55,18 +53,15 @@ public class AbstractMetricsTest {
         assertThat(metricData.getType()).isEqualTo(type);
         if (checkNonZeroValue) {
           for (Point point : metricData.getPoints()) {
-            if (metricData.getType() == Type.NON_MONOTONIC_LONG) {
+            if (point instanceof LongPoint) {
               LongPoint longPoint = (LongPoint) point;
               assertThat(longPoint.getValue()).isGreaterThan(0);
-            } else if (metricData.getType() == Type.NON_MONOTONIC_DOUBLE) {
+            } else if (point instanceof DoublePoint) {
               DoublePoint doublePoint = (DoublePoint) point;
               assertThat(doublePoint.getValue()).isGreaterThan(0.0);
-            } else if (metricData.getType() == Type.SUMMARY) {
-              SummaryPoint summaryPoint = (SummaryPoint) point;
+            } else if (point instanceof MetricData.DoubleSummaryPoint) {
+              MetricData.DoubleSummaryPoint summaryPoint = (MetricData.DoubleSummaryPoint) point;
               assertThat(summaryPoint.getSum()).isGreaterThan(0.0);
-            } else if (metricData.getType() == Type.GAUGE_DOUBLE) {
-              DoublePoint doublePoint = (DoublePoint) point;
-              assertThat(doublePoint.getValue()).isGreaterThan(0.0);
             } else {
               Assertions.fail("unexpected type " + metricData.getType());
             }
@@ -95,7 +90,9 @@ public class AbstractMetricsTest {
     }
 
     @Override
-    public void shutdown() {}
+    public CompletableResultCode shutdown() {
+      return CompletableResultCode.ofSuccess();
+    }
 
     public void waitForData() throws InterruptedException {
       latch.await(1, TimeUnit.SECONDS);

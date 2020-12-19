@@ -110,12 +110,22 @@ to the OpenTelemetry Resource ([see below](#opentelemetry-resource)), e.g. `OTEL
 
 ##### Jaeger exporter
 
-A simple wrapper for the Jaeger exporter of opentelemetry-java. gRPC is currently the only supported communications protocol.
+A simple wrapper for the Jaeger exporter of opentelemetry-java. This exporter uses gRPC for its communications protocol.
 
-| System property                   | Environment variable              | Description                                                                                            |
+| System property                   | Environment variable              | Description                                                                                        |
 |-----------------------------------|-----------------------------------|----------------------------------------------------------------------------------------------------|
-| otel.exporter=jaeger              | OTEL_EXPORTER=jaeger              | Select the Jaeger exporter                                                                          |
-| otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger endpoint to connect to. Default is `localhost:14250`. Currently only gRPC is supported. |
+| otel.exporter=jaeger              | OTEL_EXPORTER=jaeger              | Select the Jaeger exporter                                                                         |
+| otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger gRPC endpoint to connect to. Default is `localhost:14250`.                              |
+| otel.exporter.jaeger.service.name | OTEL_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                       |
+
+##### Jaeger Thrift over HTTP exporter
+
+A simple wrapper for the Jaeger exporter, but using Thrift encoded payloads over HTTP.
+
+| System property                   | Environment variable              | Description                                                                                        |
+|-----------------------------------|-----------------------------------|----------------------------------------------------------------------------------------------------|
+| otel.exporter=jaeger-thrift       | OTEL_EXPORTER=jaeger-thrift       | Select the Jaeger HTTP Thrift exporter                                                             |
+| otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger HTTP endpoint to send thrift data to.  Default is `http://localhost:14268/api/traces`.  |
 | otel.exporter.jaeger.service.name | OTEL_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                       |
 
 ##### Zipkin exporter
@@ -263,6 +273,7 @@ Because the automatic instrumentation runs in a different classpath than the ins
 | [RxJava](https://github.com/ReactiveX/RxJava)                                                                                         | 1.0+                           |
 | [Servlet](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/package-summary.html)                                           | 2.2+                           |
 | [Spark Web Framework](https://github.com/perwendel/spark)                                                                             | 2.3+                           |
+| [Spring Batch](https://spring.io/projects/spring-batch)                                                                               | 3.0+                           |
 | [Spring Data](https://spring.io/projects/spring-data)                                                                                 | 1.8+                           |
 | [Spring Scheduling](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html)       | 3.1+                           |
 | [Spring Web MVC](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html)     | 3.1+                           |

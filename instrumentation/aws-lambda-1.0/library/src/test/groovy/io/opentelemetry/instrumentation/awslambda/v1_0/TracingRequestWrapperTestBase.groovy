@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
 import com.amazonaws.services.lambda.runtime.Context
-import io.opentelemetry.context.propagation.DefaultContextPropagators
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.extension.trace.propagation.B3Propagator
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.InstrumentationTestRunner
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
@@ -32,8 +32,7 @@ class TracingRequestWrapperTestBase extends InstrumentationSpecification impleme
     context.getAwsRequestId() >> "1-22-333"
     context.getInvokedFunctionArn() >> "arn:aws:lambda:us-east-1:123456789:function:test"
 
-    InstrumentationTestRunner.setGlobalPropagators(DefaultContextPropagators.builder()
-      .addTextMapPropagator(B3Propagator.getInstance()).build())
+    OpenTelemetry.setGlobalPropagators(ContextPropagators.create(B3Propagator.getInstance()))
   }
 
   def setLambda(handler, wrapperClass) {

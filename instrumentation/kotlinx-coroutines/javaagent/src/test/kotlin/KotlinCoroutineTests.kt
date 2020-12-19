@@ -14,11 +14,10 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.channels.actor
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.channels.toChannel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.selects.select
@@ -39,14 +38,9 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
       }
     }
 
-    val actor = actor<Int> {
-      consumeEach {
-        tracedChild("consume_$it")
-      }
+    producer.consumeAsFlow().collect {
+      tracedChild("consume_$it")
     }
-
-    producer.toChannel(actor)
-    actor.close()
   }
 
   fun tracePreventedByCancellation() {

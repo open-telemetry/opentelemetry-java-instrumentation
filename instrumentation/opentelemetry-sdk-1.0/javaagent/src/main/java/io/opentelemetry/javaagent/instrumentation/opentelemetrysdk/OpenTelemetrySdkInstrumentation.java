@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import io.opentelemetry.sdk.trace.TracerSdkManagement;
+import io.opentelemetry.sdk.trace.SdkTracerManagement;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -45,7 +45,7 @@ public class OpenTelemetrySdkInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Return(readOnly = false) TracerSdkManagement management) {
+    public static void methodExit(@Advice.Return(readOnly = false) SdkTracerManagement management) {
       NoopTracerManagement.logCannotUseTracerManagementWarning();
       management = NoopTracerManagement.INSTANCE;
     }

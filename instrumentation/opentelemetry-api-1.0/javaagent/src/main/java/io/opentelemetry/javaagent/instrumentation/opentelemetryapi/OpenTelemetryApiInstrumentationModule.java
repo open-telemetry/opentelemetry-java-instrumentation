@@ -21,7 +21,6 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new BaggageUtilsInstrumentation(),
         new ContextInstrumentation(),
         new ContextStorageInstrumentation(),
         new OpenTelemetryInstrumentation(),

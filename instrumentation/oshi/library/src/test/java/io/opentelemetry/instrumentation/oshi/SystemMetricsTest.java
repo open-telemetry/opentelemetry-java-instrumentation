@@ -19,14 +19,14 @@ public class SystemMetricsTest extends AbstractMetricsTest {
     testMetricExporter.waitForData();
     intervalMetricReader.shutdown();
 
-    verify("system.memory.usage", "By", Type.NON_MONOTONIC_LONG, true);
-    verify("system.memory.utilization", "1", Type.GAUGE_DOUBLE, true);
+    verify("system.memory.usage", "By", Type.LONG_SUM, true);
+    verify("system.memory.utilization", "1", Type.DOUBLE_GAUGE, true);
 
-    verify("system.network.io", "By", Type.MONOTONIC_LONG, false);
-    verify("system.network.packets", "packets", Type.MONOTONIC_LONG, false);
-    verify("system.network.errors", "errors", Type.MONOTONIC_LONG, false);
+    verify("system.network.io", "By", Type.LONG_SUM, false);
+    verify("system.network.packets", "packets", Type.LONG_SUM, false);
+    verify("system.network.errors", "errors", Type.LONG_SUM, false);
 
-    verify("system.disk.io", "By", Type.MONOTONIC_LONG, false);
-    verify("system.disk.operations", "operations", Type.MONOTONIC_LONG, false);
+    verify("system.disk.io", "By", Type.LONG_SUM, false);
+    verify("system.disk.operations", "operations", Type.LONG_SUM, false);
   }
 }

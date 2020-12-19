@@ -56,7 +56,7 @@ public abstract class AgentTestRunner extends Specification {
     System.setProperty("otel.threadPropagationDebugger", "true");
     System.setProperty("otel.internal.failOnContextLeak", "true");
     // always print muzzle warnings
-    System.setProperty("io.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher", "true");
+    System.setProperty("io.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher", "warn");
   }
 
   /**
@@ -64,7 +64,7 @@ public abstract class AgentTestRunner extends Specification {
    *
    * <p>Before the start of each test the reported traces will be reset.
    */
-  public static final InMemoryExporter TEST_WRITER;
+  public static final InMemoryExporter TEST_WRITER = new InMemoryExporter();
 
   protected static final Tracer TEST_TRACER;
 
@@ -72,7 +72,6 @@ public abstract class AgentTestRunner extends Specification {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
 
-    TEST_WRITER = new InMemoryExporter();
     TEST_TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
   }
 

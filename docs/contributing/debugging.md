@@ -24,7 +24,7 @@ Thread.dumpStack()
 #### Agent initialization code
 
 If you want to debug agent initialization code (e.g. `OpenTelemetryAgent`, `AgentInitializer`,
-`AgentInstaller`, `TracerInstaller`, etc.) then it's important to specify the `-agentlib:` JVM arg
+`AgentInstaller`, `OpenTelemetryInstaller`, etc.) then it's important to specify the `-agentlib:` JVM arg
 before the `-javaagent:` JVM arg and use `suspend=y` (see full example below).
 
 #### Enabling debugging

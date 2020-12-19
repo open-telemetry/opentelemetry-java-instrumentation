@@ -16,6 +16,7 @@ dependencies {
   implementation project(':javaagent-tooling')
   implementation deps.opentelemetryProto
   implementation deps.opentelemetryOtlp
+  implementation deps.opentelemetryOtlpMetrics
   implementation group: 'io.grpc', name: 'grpc-testing', version: '1.33.1'
 
   // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation

@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static java.util.Collections.emptyList;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
@@ -43,7 +44,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -223,7 +223,7 @@ public final class AgentTestingExporterAccess {
         InstrumentationLibrary instrumentationLibrary = ilMetrics.getInstrumentationLibrary();
         for (Metric metric : ilMetrics.getMetricsList()) {
           metrics.add(
-              MetricData.create(
+              MetricData.createDoubleGauge(
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
                   InstrumentationLibraryInfo.create(
@@ -231,8 +231,7 @@ public final class AgentTestingExporterAccess {
                   metric.getName(),
                   metric.getDescription(),
                   metric.getUnit(),
-                  MetricData.Type.GAUGE_DOUBLE, // FIXME
-                  Collections.emptySet())); // FIXME
+                  MetricData.DoubleGaugeData.create(emptyList()))); // FIXME (trask) populate data
         }
       }
     }
