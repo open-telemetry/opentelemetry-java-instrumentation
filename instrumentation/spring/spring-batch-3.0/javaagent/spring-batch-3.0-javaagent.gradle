@@ -16,11 +16,13 @@ dependencies {
 }
 
 tasks.withType(Test) {
-  // FIXME (trask) only apply to JavaConfigChunkRootSpanTest, XmlConfigChunkRootSpanTest, JsrConfigChunkRootSpanTest
-  jvmArgs '-Dotel.instrumentation.spring-batch.enabled=true'
-  jvmArgs '-Dotel.instrumentation.spring-batch.chunk.root-span=true'
-
-  // FIXME (trask) only apply to JavaConfigBatchJobTest, XmlConfigBatchJobTest, JsrConfigBatchJobTest
   jvmArgs '-Dotel.instrumentation.spring-batch.enabled=true'
 }
-
+test {
+  excludes = ["*ChunkRootSpanTest.class"]
+}
+tasks.register("testWithChunkRootSpan", Test) {
+  jvmArgs '-Dotel.instrumentation.spring-batch.chunk.root-span=true'
+  include "*ChunkRootSpanTest.class"
+}
+test.finalizedBy(testWithChunkRootSpan)

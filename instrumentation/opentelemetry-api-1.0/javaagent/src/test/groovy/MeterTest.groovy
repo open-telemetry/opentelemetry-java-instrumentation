@@ -17,7 +17,10 @@ import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.metrics.data.MetricData
 import java.util.function.Consumer
+import spock.lang.Ignore
 
+// FIXME (trask)
+@Ignore
 class MeterTest extends AgentTestRunner {
 
   def "test counter #builderMethod bound=#bind"() {
