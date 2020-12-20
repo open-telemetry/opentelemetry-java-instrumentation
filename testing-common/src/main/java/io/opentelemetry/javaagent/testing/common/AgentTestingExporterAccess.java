@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -351,8 +350,18 @@ public final class AgentTestingExporterAccess {
                     createLabels(point.getLabelsList()),
                     point.getCount(),
                     point.getSum(),
-                    emptyList())) // FIXME (trask) support percentiles
+                    getValues(point)))
         .collect(toList());
+  }
+
+  private static List<MetricData.ValueAtPercentile> getValues(DoubleHistogramDataPoint point) {
+    List<MetricData.ValueAtPercentile> values = new ArrayList<>();
+    for (int i = 0; i < point.getExplicitBoundsCount(); i++) {
+      values.add(
+          MetricData.ValueAtPercentile.create(
+              point.getExplicitBounds(i), point.getBucketCounts(i)));
+    }
+    return values;
   }
 
   private static MetricData.AggregationTemporality getTemporality(
