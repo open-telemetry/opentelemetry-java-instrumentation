@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.oshi
 
+import static java.util.concurrent.TimeUnit.SECONDS
+
+import com.google.common.base.Stopwatch
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import oshi.PlatformEnum
 import oshi.SystemInfo
@@ -17,9 +20,25 @@ class OshiTest extends AgentTestRunner {
 
     expect:
     platform != null
-    // TODO(anuraaga): To check metrics for an agent test, we need to actually export and retrieve
-    // them.
-    // Collection<MetricData> metrics = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer().collectAllMetrics()
-    // metrics.size() == 7
+    // TODO (trask) is this the instrumentation library name we want?
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.disk.io") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.disk.operations") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.memory.usage") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.memory.utilization") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.network.errors") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.network.io") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.network.packets") != null
+  }
+
+  def findMetric(instrumentationName, metricName) {
+    Stopwatch stopwatch = Stopwatch.createStarted()
+    while (stopwatch.elapsed(SECONDS) < 10) {
+      def allMetrics = TEST_WRITER.getMetrics()
+      for (def metric : allMetrics) {
+        if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.name == metricName) {
+          return metric
+        }
+      }
+    }
   }
 }
