@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.test;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
@@ -19,7 +17,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -36,15 +33,7 @@ import spock.lang.Specification;
  * writer.
  *
  * <p>To use, write a regular spock test, but extend this class instead of {@link
- * spock.lang.Specification}. <br>
- * This will cause the following to occur before test startup:
- *
- * <ul>
- *   <li>All {@link io.opentelemetry.javaagent.tooling.InstrumentationModule}s on the test classpath
- *       will be applied. Matching preloaded classes will be retransformed.
- *   <li>{@link AgentTestRunner#TEST_WRITER} will be registered with the global tracer and available
- *       in an initialized state.
- * </ul>
+ * spock.lang.Specification}.
  */
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 public abstract class AgentTestRunner extends Specification {
@@ -156,19 +145,7 @@ public abstract class AgentTestRunner extends Specification {
               options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
           @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           Closure spec) {
-    InMemoryExporterAssert.assertTraces(
-        TEST_WRITER, size, Predicates.<List<SpanData>>alwaysFalse(), spec);
-  }
-
-  public static void assertTracesWithFilter(
-      int size,
-      Predicate<List<SpanData>> excludes,
-      @ClosureParams(
-              value = SimpleType.class,
-              options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
-          @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
-          Closure spec) {
-    InMemoryExporterAssert.assertTraces(TEST_WRITER, size, excludes, spec);
+    InMemoryExporterAssert.assertTraces(TEST_WRITER::getTraces, size, spec);
   }
 
   protected static String getClassName(Class clazz) {

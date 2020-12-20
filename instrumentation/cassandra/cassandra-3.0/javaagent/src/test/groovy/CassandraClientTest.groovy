@@ -15,12 +15,12 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.time.Duration
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
-import spock.util.concurrent.BlockingVariable
 
 class CassandraClientTest extends AgentTestRunner {
   private static final Logger log = LoggerFactory.getLogger(CassandraClientTest)
@@ -86,20 +86,18 @@ class CassandraClientTest extends AgentTestRunner {
 
   def "test async"() {
     setup:
-    def callbackExecuted = new BlockingVariable()
+    def callbackExecuted = new AtomicBoolean()
     Session session = cluster.connect(keyspace)
     runUnderTrace("parent") {
       def future = session.executeAsync(statement)
       future.addListener({ ->
         runUnderTrace("callbackListener") {
-          // No-op span
+          callbackExecuted.set(true)
         }
-        callbackExecuted.set(true)
       }, executor)
     }
 
     expect:
-    callbackExecuted.get()
     assertTraces(keyspace ? 2 : 1) {
       if (keyspace) {
         trace(0, 1) {

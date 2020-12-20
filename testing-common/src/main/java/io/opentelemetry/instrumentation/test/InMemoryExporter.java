@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.test;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
+
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.TreeTraverser;
 import io.opentelemetry.api.trace.SpanId;
@@ -14,37 +16,15 @@ import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class InMemoryExporter {
-
-  private static final Logger log = LoggerFactory.getLogger(InMemoryExporter.class);
-
-  // not using span startEpochNanos since that is not strictly increasing so can lead to ties
-  private final Map<String, Integer> spanOrders = new ConcurrentHashMap<>();
-  private final AtomicInteger nextSpanOrder = new AtomicInteger();
-
-  private volatile boolean forceFlushCalled;
-
-  private String printSpanAttributes(SpanData sd) {
-    final StringBuilder attributes = new StringBuilder();
-    sd.getAttributes()
-        .forEach(
-            (key, value) -> {
-              attributes.append(String.format("Attribute %s=%s", key, value));
-            });
-    return attributes.toString();
-  }
 
   public List<List<SpanData>> getTraces() {
     List<SpanData> spans = AgentTestingExporterAccess.getExportedSpans();
@@ -52,7 +32,7 @@ public class InMemoryExporter {
   }
 
   public List<MetricData> getMetrics() {
-    // TODO (trask) do these need grouping?
+    // TODO do these need grouping?
     return AgentTestingExporterAccess.getExportedMetrics();
   }
 
@@ -68,75 +48,51 @@ public class InMemoryExporter {
     return traces;
   }
 
-  public void waitForTraces(int number) throws InterruptedException, TimeoutException {
-    waitForTraces(number, Predicates.<List<SpanData>>alwaysFalse());
+  public List<List<SpanData>> waitForTraces(int number)
+      throws InterruptedException, TimeoutException {
+    return waitForTraces(this::getTraces, number);
   }
 
-  public List<List<SpanData>> waitForTraces(int number, Predicate<List<SpanData>> excludes)
+  public static List<List<SpanData>> waitForTraces(
+      Supplier<List<List<SpanData>>> supplier, int number)
       throws InterruptedException, TimeoutException {
-    if (number == 0) {
-      return getFilteredTraces(excludes);
-    }
-    // Wait for returned spans to stabilize.
-    int previousNumSpans = -1;
-    int numStableAttempts = 0;
-    for (int attempt = 0; attempt < 2000; attempt++) {
-      int numSpans = AgentTestingExporterAccess.getExportedSpans().size();
-      if (numSpans != 0) {
-        if (numSpans == previousNumSpans) {
-          numStableAttempts++;
-          if (numStableAttempts == 5) {
-            break;
-          }
-        } else {
-          previousNumSpans = numSpans;
-          numStableAttempts = 0;
-        }
-      }
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    List<List<SpanData>> allTraces = supplier.get();
+    List<List<SpanData>> completeAndFilteredTraces =
+        allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
+    while (completeAndFilteredTraces.size() < number && stopwatch.elapsed(SECONDS) < 20) {
+      completeAndFilteredTraces =
+          allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
       Thread.sleep(10);
     }
-    List<List<SpanData>> traces = getFilteredTraces(excludes);
-    if (traces.size() < number) {
+    if (completeAndFilteredTraces.size() < number) {
       throw new TimeoutException(
           "Timeout waiting for "
               + number
               + " completed/filtered trace(s), found "
-              + traces.size()
+              + completeAndFilteredTraces.size()
               + " completed/filtered trace(s) and "
-              + traces.size()
+              + allTraces.size()
               + " total trace(s): "
-              + traces);
+              + allTraces);
     }
-    return traces;
-  }
-
-  private List<List<SpanData>> getFilteredTraces(Predicate<List<SpanData>> excludes) {
-    List<List<SpanData>> traces = new ArrayList<>();
-    for (List<SpanData> trace : getTraces()) {
-      if (!excludes.apply(trace)) {
-        traces.add(trace);
-      }
-    }
-    return traces;
+    return completeAndFilteredTraces;
   }
 
   public void clear() {
     AgentTestingExporterAccess.reset();
   }
 
-  public boolean forceFlushCalled() {
-    return forceFlushCalled;
-  }
-
   // must be called under tracesLock
   private static void sortTraces(List<List<SpanData>> traces) {
-    Collections.sort(traces, Comparator.comparingLong(InMemoryExporter::getMinSpanOrder));
+    traces.sort(Comparator.comparingLong(InMemoryExporter::getMinSpanOrder));
   }
 
   private static long getMinSpanOrder(List<SpanData> spans) {
     return spans.stream().mapToLong(SpanData::getStartEpochNanos).min().orElse(0);
   }
 
+  @SuppressWarnings("UnstableApiUsage")
   private static List<SpanData> sort(List<SpanData> trace) {
 
     Map<String, Node> lookup = new HashMap<>();
@@ -185,7 +141,21 @@ public class InMemoryExporter {
   }
 
   private static void sortOneLevel(List<Node> nodes) {
-    Collections.sort(nodes, Comparator.comparingLong(node -> node.span.getStartEpochNanos()));
+    nodes.sort(Comparator.comparingLong(node -> node.span.getStartEpochNanos()));
+  }
+
+  // trace is completed if root span is present
+  private static boolean isCompleted(List<SpanData> trace) {
+    for (SpanData span : trace) {
+      if (!SpanId.isValid(span.getParentSpanId())) {
+        return true;
+      }
+      if (span.getParentSpanId().equals("0000000000000456")) {
+        // this is a special parent id that some tests use
+        return true;
+      }
+    }
+    return false;
   }
 
   private static class Node {

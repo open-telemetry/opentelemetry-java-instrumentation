@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.test.asserts
 
 import static TraceAssert.assertTrace
 
-import com.google.common.base.Predicate
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.instrumentation.test.InMemoryExporter
 import io.opentelemetry.sdk.trace.data.SpanData
+import java.util.function.Supplier
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
 import org.spockframework.runtime.ConditionNotSatisfiedError
@@ -19,28 +19,22 @@ import org.spockframework.runtime.model.TextPosition
 
 class InMemoryExporterAssert {
   private final List<List<SpanData>> traces
+  private final Supplier<List<List<SpanData>>> supplier
 
   private final Set<Integer> assertedIndexes = new HashSet<>()
 
-  private InMemoryExporterAssert(List<List<SpanData>> traces) {
+  private InMemoryExporterAssert(List<List<SpanData>> traces, Supplier<List<List<SpanData>>> supplier) {
     this.traces = traces
+    this.supplier = supplier
   }
 
-  static void assertTraces(InMemoryExporter writer, int expectedSize,
-                           final Predicate<List<SpanData>> excludes,
-                           @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.ListWriterAssert'])
-                           @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    def traces = writer.waitForTraces(expectedSize, excludes)
-    assertTraces(traces, expectedSize, excludes, spec)
-  }
-
-  static void assertTraces(List<List<SpanData>> traces, int expectedSize,
-                           final Predicate<List<SpanData>> excludes,
+  static void assertTraces(Supplier<List<List<SpanData>>> supplier, int expectedSize,
                            @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.ListWriterAssert'])
                            @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     try {
+      def traces = InMemoryExporter.waitForTraces(supplier, expectedSize)
       assert traces.size() == expectedSize
-      def asserter = new InMemoryExporterAssert(traces)
+      def asserter = new InMemoryExporterAssert(traces, supplier)
       def clone = (Closure) spec.clone()
       clone.delegate = asserter
       clone.resolveStrategy = Closure.DELEGATE_FIRST
@@ -77,7 +71,7 @@ class InMemoryExporterAssert {
       throw new ArrayIndexOutOfBoundsException(index)
     }
     assertedIndexes.add(index)
-    assertTrace(traces, traces[index][0].traceId, expectedSize, spec)
+    assertTrace(supplier, traces[index][0].traceId, expectedSize, spec)
   }
 
   // this doesn't provide any functionality, just a self-documenting marker

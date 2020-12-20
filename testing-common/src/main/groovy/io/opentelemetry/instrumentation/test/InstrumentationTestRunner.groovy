@@ -5,12 +5,10 @@
 
 package io.opentelemetry.instrumentation.test
 
-import com.google.common.base.Predicate
-import com.google.common.base.Predicates
+
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.TracerProvider
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -21,9 +19,7 @@ import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.ReadWriteSpan
 import io.opentelemetry.sdk.trace.ReadableSpan
 import io.opentelemetry.sdk.trace.SpanProcessor
-import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
-import java.lang.reflect.Method
 import org.junit.Before
 import spock.lang.Specification
 
@@ -47,6 +43,7 @@ abstract class InstrumentationTestRunner extends Specification {
       OpenTelemetry.setGlobalPropagators(
         ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
     }
+    // TODO (trask) can we add 2 span processors here and not delegate?
     def delegate = SimpleSpanProcessor.builder(testExporter).build()
     OpenTelemetrySdk.getGlobalTracerManagement()
       .addSpanProcessor(new SpanProcessor() {
@@ -89,73 +86,17 @@ abstract class InstrumentationTestRunner extends Specification {
     forceFlushCalled = false
   }
 
-  protected boolean forceFlushCalled() {
+  protected static boolean forceFlushCalled() {
     return forceFlushCalled
   }
 
-  protected void assertTraces(
+  protected static void assertTraces(
     final int size,
     @ClosureParams(
       value = SimpleType,
       options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
-    InMemoryExporterAssert.assertTraces(
-      getTraces(size), size, Predicates.<List<SpanData>> alwaysFalse(), spec)
-  }
-
-  protected void assertTracesWithFilter(
-    final int size,
-    final Predicate<List<SpanData>> excludes,
-    @ClosureParams(
-      value = SimpleType,
-      options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
-    final Closure spec) {
-    InMemoryExporterAssert.assertTraces(getTraces(size), size, excludes, spec)
-  }
-
-  private static List<List<SpanData>> getTraces(int size) {
-    if (size == 0) {
-      return InMemoryExporter.groupTraces(testExporter.getFinishedSpanItems())
-    }
-
-    // Wait for returned spans to stabilize.
-    int previousNumSpans = -1
-    for (int attempt = 0; attempt < 2000; attempt++) {
-      int numSpans = testExporter.getFinishedSpanItems().size()
-      if (numSpans != 0 && numSpans == previousNumSpans) {
-        break
-      }
-      previousNumSpans = numSpans
-      Thread.sleep(10)
-    }
-
-    return InMemoryExporter.groupTraces(testExporter.getFinishedSpanItems())
-  }
-
-  // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
-  static void setGlobalPropagators(ContextPropagators propagators) {
-    OpenTelemetry.set(
-      OpenTelemetrySdk.builder()
-        .setResource(OpenTelemetrySdk.get().getResource())
-        .setClock(OpenTelemetrySdk.get().getClock())
-        .setMeterProvider(OpenTelemetry.getGlobalMeterProvider())
-        .setTracerProvider(unobfuscate(OpenTelemetry.getGlobalTracerProvider()))
-        .setPropagators(propagators)
-        .build())
-  }
-
-  private static TracerProvider unobfuscate(TracerProvider tracerProvider) {
-    if (tracerProvider.getClass().getName().endsWith("TracerSdkProvider")) {
-      return tracerProvider
-    }
-    try {
-      Method unobfuscate = tracerProvider.getClass().getDeclaredMethod("unobfuscate")
-      unobfuscate.setAccessible(true)
-      return (TracerProvider) unobfuscate.invoke(tracerProvider)
-    } catch (Throwable t) {
-      return tracerProvider
-    }
+    InMemoryExporterAssert.assertTraces({ testExporter.getFinishedSpanItems() }, size, spec)
   }
 }

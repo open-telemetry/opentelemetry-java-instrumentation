@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.test
 
-import com.google.common.base.Predicate
+
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
-import io.opentelemetry.sdk.trace.data.SpanData
 
 /**
  * A trait which initializes instrumentation library tests, including a test span exporter. All
@@ -57,17 +56,6 @@ trait InstrumentationTestTrait {
                     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
                     final Closure spec) {
     instrumentationTestRunner.assertTraces(size, spec)
-  }
-
-  void assertTracesWithFilter(
-    final int size,
-    final Predicate<List<SpanData>> excludes,
-    @ClosureParams(
-      value = SimpleType,
-      options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
-    final Closure spec) {
-    instrumentationTestRunner.assertTracesWithFilter(size, spec)
   }
 
   static class InstrumentationTestRunnerImpl extends InstrumentationTestRunner {}

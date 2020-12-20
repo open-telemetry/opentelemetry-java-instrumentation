@@ -12,6 +12,7 @@ import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.TimeUnit
+import java.util.function.Supplier
 
 class TraceAssert {
   private final List<SpanData> spans
@@ -22,7 +23,7 @@ class TraceAssert {
     this.spans = spans
   }
 
-  static void assertTrace(List<List<SpanData>> traces, String traceId, int expectedSize,
+  static void assertTrace(Supplier<List<List<SpanData>>> traces, String traceId, int expectedSize,
                           @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.TraceAssert'])
                           @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def spans = getTrace(traces, traceId)
@@ -30,6 +31,8 @@ class TraceAssert {
     while (spans.size() < expectedSize && stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
       Thread.sleep(10)
       spans = getTrace(traces, traceId)
+      println spans.size()
+      println expectedSize
     }
     assert spans.size() == expectedSize
     def asserter = new TraceAssert(spans)
@@ -67,17 +70,12 @@ class TraceAssert {
     span(index, spec)
   }
 
-  // this doesn't provide any functionality, just a self-documenting marker
-  void sortSpans(Closure callback) {
-    callback.call()
-  }
-
   void assertSpansAllVerified() {
     assert assertedIndexes.size() == spans.size()
   }
 
-  private static List<SpanData> getTrace(List<List<SpanData>> traces, String traceId) {
-    for (List<SpanData> trace : traces) {
+  private static List<SpanData> getTrace(Supplier<List<List<SpanData>>> traces, String traceId) {
+    for (List<SpanData> trace : traces.get()) {
       if (trace[0].traceId == traceId) {
         return trace
       }
