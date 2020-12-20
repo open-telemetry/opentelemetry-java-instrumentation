@@ -25,7 +25,6 @@ import net.bytebuddy.agent.ByteBuddyAgent
 import net.sf.cglib.proxy.Enhancer
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
-import spock.lang.Ignore
 
 class FieldBackedProviderTest extends AgentTestRunner {
 
@@ -170,10 +169,9 @@ class FieldBackedProviderTest extends AgentTestRunner {
     new AtomicReference(new UntransformableKeyClass()) | _
   }
 
-  // FIXME (trask)
-  @Ignore
   def "context classes are retransform safe"() {
     when:
+    ByteBuddyAgent.install()
     ByteBuddyAgent.getInstrumentation().retransformClasses(KeyClass)
     ByteBuddyAgent.getInstrumentation().retransformClasses(UntransformableKeyClass)
 
@@ -184,14 +182,13 @@ class FieldBackedProviderTest extends AgentTestRunner {
     new UntransformableKeyClass().incrementContextCount() == 1
   }
 
-  // FIXME (trask)
-  @Ignore
   // NB: This test will fail if some other agent is also running that modifies the class structure
   // in a way that is incompatible with redefining the class back to its original bytecode.
   // A likely culprit is jacoco if you start seeing failure here due to a change make sure jacoco
   // exclusion is working.
   def "context classes are redefine safe"() {
     when:
+    ByteBuddyAgent.install()
     ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(KeyClass, ClasspathUtils.convertToByteArray(KeyClass)))
     ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(UntransformableKeyClass, ClasspathUtils.convertToByteArray(UntransformableKeyClass)))
 
