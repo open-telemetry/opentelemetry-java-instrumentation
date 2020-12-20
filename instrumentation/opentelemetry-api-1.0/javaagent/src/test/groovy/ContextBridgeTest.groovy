@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.baggage.BaggageEntryMetadata
@@ -13,7 +14,6 @@ import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
-import spock.lang.Ignore
 
 class ContextBridgeTest extends AgentTestRunner {
 
@@ -123,52 +123,27 @@ class ContextBridgeTest extends AgentTestRunner {
     }
   }
 
-  // FIXME (trask)
-  @Ignore
-  def "agent and application share baggage"() {
+  def "agent propagates application's baggage"() {
     expect:
-    def applicationBaggage = Baggage.builder()
-      .put("food", "cheese")
-      .put("country", "japan", BaggageEntryMetadata.create("asia"))
-      .build()
-
-    applicationBaggage.makeCurrent().withCloseable {
-      def agentBaggage = io.opentelemetry.api.baggage.Baggage.current()
-      agentBaggage.asMap().with {
-        size() == 2
-        get("food").value == "cheese"
-        get("food").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.empty()
-        get("country").value == "japan"
-        get("country").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.create("asia")
-      }
-
-      agentBaggage = io.opentelemetry.api.baggage.Baggage.builder()
-        .put("country", "italy", io.opentelemetry.api.baggage.BaggageEntryMetadata.create("europe"))
-        .build()
-      agentBaggage.makeCurrent().withCloseable {
-        def updatedApplicationBaggage = Baggage.current()
-        updatedApplicationBaggage.asMap().with {
-          size() == 2
-          get("food").value == "cheese"
-          get("food").entryMetadata == BaggageEntryMetadata.empty()
-          get("country").value == "italy"
-          get("country").entryMetadata == BaggageEntryMetadata.create("europe")
+    def testBaggage = Baggage.builder().put("cat", "yes").build()
+    testBaggage.makeCurrent().withCloseable {
+      Executors.newSingleThreadExecutor().submit({
+        Baggage.current().asMap().with {
+          size() == 1
+          get("cat").value == "yes"
+          get("cat").entryMetadata == BaggageEntryMetadata.empty()
         }
-
-        applicationBaggage = applicationBaggage.toBuilder()
-          .put("food", "cabbage")
-          .build()
-        applicationBaggage.makeCurrent().withCloseable {
-          agentBaggage = io.opentelemetry.api.baggage.Baggage.current()
-          agentBaggage.asMap().with {
-            size() == 2
-            get("food").value == "cabbage"
-            get("food").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.empty()
-            get("country").value == "japan"
-            get("country").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.create("asia")
-          }
-        }
-      }
+      }).get()
     }
   }
+
+  // TODO (trask)
+  // more tests are needed here, not sure how to implement, probably need to write some test
+  // instrumentation to help test, similar to :testing-common:integration-tests
+  //
+  // * "application propagates agent's baggage"
+  // * "agent uses application's span"
+  // * "application uses agent's span" (this is covered above by "application propagates agent's span")
+  // * "agent uses application's baggage"
+  // * "application uses agent's baggage"
 }
