@@ -10,10 +10,13 @@ import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.common.Labels;
+import io.opentelemetry.api.common.LabelsBuilder;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
@@ -28,7 +31,14 @@ import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.ArrayValue;
 import io.opentelemetry.proto.common.v1.InstrumentationLibrary;
 import io.opentelemetry.proto.common.v1.KeyValue;
+import io.opentelemetry.proto.common.v1.StringKeyValue;
+import io.opentelemetry.proto.metrics.v1.AggregationTemporality;
+import io.opentelemetry.proto.metrics.v1.DoubleDataPoint;
+import io.opentelemetry.proto.metrics.v1.DoubleHistogramDataPoint;
+import io.opentelemetry.proto.metrics.v1.DoubleSum;
 import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
+import io.opentelemetry.proto.metrics.v1.IntDataPoint;
+import io.opentelemetry.proto.metrics.v1.IntSum;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
 import io.opentelemetry.proto.resource.v1.Resource;
@@ -44,9 +54,10 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 
 public final class AgentTestingExporterAccess {
   private static final char TRACESTATE_KEY_VALUE_DELIMITER = '=';
@@ -124,7 +135,7 @@ public final class AgentTestingExporterAccess {
                   }
                 })
             .flatMap(request -> request.getResourceSpansList().stream())
-            .collect(Collectors.toList());
+            .collect(toList());
     List<SpanData> spans = new ArrayList<>();
     for (ResourceSpans resourceSpans : allResourceSpans) {
       Resource resource = resourceSpans.getResource();
@@ -165,7 +176,7 @@ public final class AgentTestingExporterAccess {
                                       fromProto(event.getAttributesList()),
                                       event.getDroppedAttributesCount()
                                           + event.getAttributesCount()))
-                          .collect(Collectors.toList()))
+                          .collect(toList()))
                   .setStatus(fromProto(span.getStatus()))
                   .setKind(fromProto(span.getKind()))
                   .setLinks(
@@ -180,7 +191,7 @@ public final class AgentTestingExporterAccess {
                                           extractTraceState(link.getTraceState())),
                                       fromProto(link.getAttributesList()),
                                       link.getDroppedAttributesCount() + link.getAttributesCount()))
-                          .collect(Collectors.toList()))
+                          .collect(toList()))
                   // OTLP doesn't have hasRemoteParent
                   .setHasEnded(true)
                   .setTotalRecordedEvents(span.getEventsCount() + span.getDroppedEventsCount())
@@ -214,7 +225,7 @@ public final class AgentTestingExporterAccess {
                   }
                 })
             .flatMap(request -> request.getResourceMetricsList().stream())
-            .collect(Collectors.toList());
+            .collect(toList());
     List<MetricData> metrics = new ArrayList<>();
     for (ResourceMetrics resourceMetrics : allResourceMetrics) {
       Resource resource = resourceMetrics.getResource();
@@ -223,19 +234,138 @@ public final class AgentTestingExporterAccess {
         InstrumentationLibrary instrumentationLibrary = ilMetrics.getInstrumentationLibrary();
         for (Metric metric : ilMetrics.getMetricsList()) {
           metrics.add(
-              MetricData.createDoubleGauge(
+              createMetricData(
+                  metric,
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
                   InstrumentationLibraryInfo.create(
-                      instrumentationLibrary.getName(), instrumentationLibrary.getVersion()),
-                  metric.getName(),
-                  metric.getDescription(),
-                  metric.getUnit(),
-                  MetricData.DoubleGaugeData.create(emptyList()))); // FIXME (trask) populate data
+                      instrumentationLibrary.getName(), instrumentationLibrary.getVersion())));
         }
       }
     }
     return metrics;
+  }
+
+  @NotNull
+  private static MetricData createMetricData(
+      Metric metric,
+      io.opentelemetry.sdk.resources.Resource resource,
+      InstrumentationLibraryInfo instrumentationLibraryInfo) {
+    switch (metric.getDataCase()) {
+      case INT_GAUGE:
+        return MetricData.createLongGauge(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            MetricData.LongGaugeData.create(
+                getIntPoints(metric.getIntGauge().getDataPointsList())));
+      case DOUBLE_GAUGE:
+        return MetricData.createDoubleGauge(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            MetricData.DoubleGaugeData.create(
+                getDoublePoints(metric.getDoubleGauge().getDataPointsList())));
+      case INT_SUM:
+        IntSum intSum = metric.getIntSum();
+        return MetricData.createLongSum(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            MetricData.LongSumData.create(
+                intSum.getIsMonotonic(),
+                getTemporality(intSum.getAggregationTemporality()),
+                getIntPoints(metric.getIntSum().getDataPointsList())));
+      case DOUBLE_SUM:
+        DoubleSum doubleSum = metric.getDoubleSum();
+        return MetricData.createDoubleSum(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            MetricData.DoubleSumData.create(
+                doubleSum.getIsMonotonic(),
+                getTemporality(doubleSum.getAggregationTemporality()),
+                getDoublePoints(metric.getDoubleSum().getDataPointsList())));
+      case DOUBLE_HISTOGRAM:
+        return MetricData.createDoubleSummary(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            MetricData.DoubleSummaryData.create(
+                getDoubleHistogramDataPoints(metric.getDoubleHistogram().getDataPointsList())));
+      default:
+        throw new AssertionError("Unexpected metric data: " + metric.getDataCase());
+    }
+  }
+
+  private static Labels createLabels(List<StringKeyValue> stringKeyValues) {
+    LabelsBuilder labelsBuilder = Labels.builder();
+    for (StringKeyValue stringKeyValue : stringKeyValues) {
+      labelsBuilder.put(stringKeyValue.getKey(), stringKeyValue.getValue());
+    }
+    return labelsBuilder.build();
+  }
+
+  private static List<MetricData.Point> getIntPoints(List<IntDataPoint> points) {
+    return points.stream()
+        .map(
+            point ->
+                MetricData.LongPoint.create(
+                    point.getStartTimeUnixNano(),
+                    point.getTimeUnixNano(),
+                    createLabels(point.getLabelsList()),
+                    point.getValue()))
+        .collect(toList());
+  }
+
+  private static List<MetricData.Point> getDoublePoints(List<DoubleDataPoint> points) {
+    return points.stream()
+        .map(
+            point ->
+                MetricData.DoublePoint.create(
+                    point.getStartTimeUnixNano(),
+                    point.getTimeUnixNano(),
+                    createLabels(point.getLabelsList()),
+                    point.getValue()))
+        .collect(toList());
+  }
+
+  private static Collection<MetricData.Point> getDoubleHistogramDataPoints(
+      List<DoubleHistogramDataPoint> dataPointsList) {
+    return dataPointsList.stream()
+        .map(
+            point ->
+                MetricData.DoubleSummaryPoint.create(
+                    point.getStartTimeUnixNano(),
+                    point.getTimeUnixNano(),
+                    createLabels(point.getLabelsList()),
+                    point.getCount(),
+                    point.getSum(),
+                    emptyList())) // FIXME (trask) support percentiles
+        .collect(toList());
+  }
+
+  private static MetricData.AggregationTemporality getTemporality(
+      AggregationTemporality aggregationTemporality) {
+    switch (aggregationTemporality) {
+      case AGGREGATION_TEMPORALITY_CUMULATIVE:
+        return MetricData.AggregationTemporality.CUMULATIVE;
+      case AGGREGATION_TEMPORALITY_DELTA:
+        return MetricData.AggregationTemporality.DELTA;
+      default:
+        throw new IllegalStateException(
+            "Unexpected aggregation temporality: " + aggregationTemporality);
+    }
   }
 
   private static Attributes fromProto(List<KeyValue> attributes) {
@@ -266,28 +396,24 @@ public final class AgentTestingExporterAccess {
                       stringArrayKey(key),
                       array.getValuesList().stream()
                           .map(AnyValue::getStringValue)
-                          .collect(Collectors.toList()));
+                          .collect(toList()));
                   break;
                 case BOOL_VALUE:
                   converted.put(
                       booleanArrayKey(key),
-                      array.getValuesList().stream()
-                          .map(AnyValue::getBoolValue)
-                          .collect(Collectors.toList()));
+                      array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
                   break;
                 case INT_VALUE:
                   converted.put(
                       longArrayKey(key),
-                      array.getValuesList().stream()
-                          .map(AnyValue::getIntValue)
-                          .collect(Collectors.toList()));
+                      array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
                   break;
                 case DOUBLE_VALUE:
                   converted.put(
                       doubleArrayKey(key),
                       array.getValuesList().stream()
                           .map(AnyValue::getDoubleValue)
-                          .collect(Collectors.toList()));
+                          .collect(toList()));
                   break;
                 case VALUE_NOT_SET:
                   break;
