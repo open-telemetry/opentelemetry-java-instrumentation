@@ -119,6 +119,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
     "/child/call"  | new JavaInterfaces.ChildClassOnInterface()
     // TODO: uncomment when we drop support for Java 7
     // "/child/invoke"  | new JavaInterfaces.DefaultChildClassOnInterface()
+
     className = getClassName(obj.class)
   }
 

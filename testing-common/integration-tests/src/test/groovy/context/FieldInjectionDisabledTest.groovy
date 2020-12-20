@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package context
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
