@@ -19,9 +19,10 @@ public class LibertyHttpServerTracer extends Servlet3HttpServerTracer {
 
   @Override
   public Context startSpan(HttpServletRequest request) {
-    // using request URI as span name as server isn't ready for calling request.getServletPath()
+    // using request method as span name as server isn't ready for calling request.getServletPath()
     // span name will be updated a bit later when calling request.getServletPath() works
-    Context context = startSpan(request, request, request, request.getRequestURI());
+    // see LibertyUpdateSpanAdvice
+    Context context = startSpan(request, request, request, "HTTP " + request.getMethod());
     String contextPath = request.getContextPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
       context = context.with(ServletContextPath.CONTEXT_KEY, contextPath);

@@ -4,5 +4,7 @@ dependencies {
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
 
   implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  // liberty jars are not available as a maven dependency so we compile against
+  // stub classes
   compileOnly project(':instrumentation:liberty:compile-stub')
 }

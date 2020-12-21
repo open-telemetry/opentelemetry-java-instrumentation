@@ -57,9 +57,13 @@ public class ThreadLocalContext {
   /**
    * Test whether span should be updated.
    *
-   * @return true when span should be update, false when span was already updated
+   * @return true when span should be update, false when span was already updated or span wasn't
+   *     started
    */
   public boolean updateSpan() {
+    if (!started) {
+      return false;
+    }
     boolean b = updated;
     updated = true;
     return !b;

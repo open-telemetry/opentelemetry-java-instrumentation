@@ -105,5 +105,8 @@ public class LibertyDispatcherTracer
   }
 
   @Override
-  protected void attachServerContext(Context context, Void none) {}
+  protected void attachServerContext(Context context, Void none) {
+    // This advice is only used when server didn't find matching application or got an internal
+    // error. Nothing that is called within this advice should require access to the span.
+  }
 }

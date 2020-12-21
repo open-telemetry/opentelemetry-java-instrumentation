@@ -35,7 +35,9 @@ public class LibertyHttpDispatcherLinkAdvice {
     LibertyConnectionWrapper connectionWrapper =
         new LibertyConnectionWrapper(httpDispatcherLink, isc.getRequest());
     context =
-        tracer().startSpan(requestWrapper, connectionWrapper, null, requestWrapper.getRequestUri());
+        tracer()
+            .startSpan(
+                requestWrapper, connectionWrapper, null, "HTTP " + requestWrapper.getMethod());
     scope = context.makeCurrent();
   }
 

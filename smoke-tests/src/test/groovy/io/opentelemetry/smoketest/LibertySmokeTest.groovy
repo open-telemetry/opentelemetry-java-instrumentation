@@ -58,7 +58,7 @@ class LibertySmokeTest extends AppServerTest {
     traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
 
     and: "Expected span names"
-    traces.countSpansByName('/app/hello.txt') == 1
+    traces.countSpansByName('HTTP GET') == 1
 
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1
@@ -97,7 +97,7 @@ class LibertySmokeTest extends AppServerTest {
     traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
 
     and: "Expected span names"
-    traces.countSpansByName('/app/file-that-does-not-exist') == 1
+    traces.countSpansByName('HTTP GET') == 1
 
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1
@@ -136,7 +136,7 @@ class LibertySmokeTest extends AppServerTest {
     traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
 
     and: "Expected span names"
-    traces.countSpansByName('/app/WEB-INF/web.xml') == 1
+    traces.countSpansByName('HTTP GET') == 1
 
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1
@@ -217,7 +217,7 @@ class LibertySmokeTest extends AppServerTest {
     traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
 
     and: "Expected span names"
-    traces.countSpansByName('/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless') == 1
+    traces.countSpansByName('HTTP GET') == 1
 
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1

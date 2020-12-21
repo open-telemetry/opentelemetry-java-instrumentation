@@ -20,6 +20,20 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * Instrumenting request handling in liberty.
+ *
+ * <ul>
+ *   <li>On entry to WebApp.handleRequest remember request.
+ *   <li>On call to WebApp.isForbidden (called from WebApp.handleRequest) start span based on
+ *       remembered request. We don't start span immediately at the start or handleRequest because
+ *       HttpServletRequest isn't usable yet.
+ *   <li>On exit from WebAppDispatcherContext.setPathElements (called from WebApp.handleRequest)
+ *       update span name. We don't do it before because before this method is called we can't use
+ *       HttpServletRequest.getServletPath.
+ *   <li>On exit from WebApp.handleRequest close the span.
+ * </ul>
+ */
 @AutoService(InstrumentationModule.class)
 public class LibertyInstrumentationModule extends InstrumentationModule {
 
