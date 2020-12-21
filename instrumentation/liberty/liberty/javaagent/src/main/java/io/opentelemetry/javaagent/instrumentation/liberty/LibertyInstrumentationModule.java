@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Instrumenting request handling in liberty.
+ * Instrumenting request handling in Liberty.
  *
  * <ul>
  *   <li>On entry to WebApp.handleRequest remember request.
