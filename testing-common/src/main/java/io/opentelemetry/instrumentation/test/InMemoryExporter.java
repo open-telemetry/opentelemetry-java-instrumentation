@@ -58,25 +58,24 @@ public class InMemoryExporter {
       throws InterruptedException, TimeoutException {
     Stopwatch stopwatch = Stopwatch.createStarted();
     List<List<SpanData>> allTraces = supplier.get();
-    List<List<SpanData>> completeAndFilteredTraces =
+    List<List<SpanData>> completeTraces =
         allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
-    while (completeAndFilteredTraces.size() < number && stopwatch.elapsed(SECONDS) < 20) {
-      completeAndFilteredTraces =
-          allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
+    while (completeTraces.size() < number && stopwatch.elapsed(SECONDS) < 20) {
+      completeTraces = allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
       Thread.sleep(10);
     }
-    if (completeAndFilteredTraces.size() < number) {
+    if (completeTraces.size() < number) {
       throw new TimeoutException(
           "Timeout waiting for "
               + number
-              + " completed/filtered trace(s), found "
-              + completeAndFilteredTraces.size()
-              + " completed/filtered trace(s) and "
+              + " completed trace(s), found "
+              + completeTraces.size()
+              + " completed trace(s) and "
               + allTraces.size()
               + " total trace(s): "
               + allTraces);
     }
-    return completeAndFilteredTraces;
+    return completeTraces;
   }
 
   public void clear() {

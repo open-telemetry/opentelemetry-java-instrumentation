@@ -4,11 +4,11 @@
  */
 
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.Scope
@@ -24,7 +24,7 @@ class TracerTest extends AgentTestRunner {
     testSpan.setAttribute("long", 2)
     testSpan.setAttribute("double", 3.0)
     testSpan.setAttribute("boolean", true)
-    testSpan.setStatus(StatusCode.ERROR)
+    testSpan.setStatus(ERROR)
     testSpan.end()
 
     then:
@@ -32,9 +32,9 @@ class TracerTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           name "test"
-          kind io.opentelemetry.api.trace.Span.Kind.PRODUCER
+          kind PRODUCER
           hasNoParent()
-          status io.opentelemetry.api.trace.StatusCode.ERROR
+          status ERROR
           attributes {
             "string" "1"
             "long" 2

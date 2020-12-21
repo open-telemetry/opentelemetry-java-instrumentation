@@ -128,10 +128,6 @@ public class TestAgentListener implements AgentBuilder.Listener {
 
   /** Used to signal that a transformation was intentionally aborted and is not an error. */
   private static class AbortTransformationException extends RuntimeException {
-    public AbortTransformationException() {
-      super();
-    }
-
     public AbortTransformationException(String message) {
       super(message);
     }

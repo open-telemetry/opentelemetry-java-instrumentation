@@ -57,7 +57,6 @@ public class AgentInstaller {
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
   private static volatile Instrumentation INSTRUMENTATION;
-  private static volatile ResettableClassFileTransformer ACTIVE_TRANSFORMER;
 
   public static Instrumentation getInstrumentation() {
     return INSTRUMENTATION;

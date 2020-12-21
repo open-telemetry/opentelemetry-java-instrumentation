@@ -21,6 +21,8 @@ test {
     excludeTestsMatching 'context.FieldBackedProviderTest'
     excludeTestsMatching 'context.FieldInjectionDisabledTest'
   }
+  // this is needed for AgentTestRunnerTest
+  jvmArgs '-Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass$NestedClass'
 }
 test.finalizedBy(tasks.register("testFieldBackedProvider", Test) {
   filter {

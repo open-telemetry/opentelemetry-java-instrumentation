@@ -60,6 +60,37 @@ class AgentTestRunnerTest extends AgentTestRunner {
     noExceptionThrown()
   }
 
+  def "excluded classes are not instrumented"() {
+    when:
+    runUnderTrace("parent") {
+      subject.run()
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, spanName ? 2 : 1) {
+        span(0) {
+          name "parent"
+        }
+        if (spanName) {
+          span(1) {
+            name spanName
+            childOf span(0)
+          }
+        }
+      }
+    }
+
+    where:
+    subject                                                | spanName
+    new config.SomeClass()                                 | "SomeClass.run"
+    new config.SomeClass.NestedClass()                     | "NestedClass.run"
+    new config.exclude.SomeClass()                         | null
+    new config.exclude.SomeClass.NestedClass()             | null
+    new config.exclude.packagename.SomeClass()             | null
+    new config.exclude.packagename.SomeClass.NestedClass() | null
+  }
+
   def "test unblocked by completed span"() {
     setup:
     runUnderTrace("parent") {
