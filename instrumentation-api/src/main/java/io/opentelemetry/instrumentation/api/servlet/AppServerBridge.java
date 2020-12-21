@@ -71,7 +71,7 @@ public class AppServerBridge {
    *
    * @return class used as a key in CallDepthThreadLocalMap for counting servlet invocation depth
    */
-  public static Class<?> getServletKey() {
+  public static Class<?> getCallDepthKey() {
     class Key {}
 
     return Key.class;

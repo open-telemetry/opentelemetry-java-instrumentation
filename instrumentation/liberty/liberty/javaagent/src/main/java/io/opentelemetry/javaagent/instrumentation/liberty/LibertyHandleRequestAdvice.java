@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
+@SuppressWarnings("unused")
 public class LibertyHandleRequestAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

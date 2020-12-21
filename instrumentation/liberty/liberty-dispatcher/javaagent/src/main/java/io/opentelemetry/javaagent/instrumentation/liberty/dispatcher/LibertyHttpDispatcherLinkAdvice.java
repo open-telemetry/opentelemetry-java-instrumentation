@@ -17,10 +17,11 @@ import net.bytebuddy.asm.Advice;
 /**
  * Instrumenting
  * https://github.com/OpenLiberty/open-liberty/blob/master/dev/com.ibm.ws.transport.http/src/com/ibm/ws/http/dispatcher/internal/channel/HttpDispatcherLink.java
- * We instrument sendResponse method that is called when - no application has been deployed under
- * requested context root - something goes horribly wrong and server responds with Internal Server
+ * We instrument sendResponse method that is called when no application has been deployed under
+ * requested context root or something goes horribly wrong and server responds with Internal Server
  * Error
  */
+@SuppressWarnings("unused")
 public class LibertyHttpDispatcherLinkAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -29,10 +30,12 @@ public class LibertyHttpDispatcherLinkAdvice {
       @Advice.FieldValue("isc") HttpInboundServiceContextImpl isc,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    LibertyRequestWrapper lrw = new LibertyRequestWrapper(httpDispatcherLink, isc.getRequest());
-    LibertyConnectionWrapper lcw =
+    LibertyRequestWrapper requestWrapper =
+        new LibertyRequestWrapper(httpDispatcherLink, isc.getRequest());
+    LibertyConnectionWrapper connectionWrapper =
         new LibertyConnectionWrapper(httpDispatcherLink, isc.getRequest());
-    context = tracer().startSpan(lrw, lcw, null, lrw.getRequestUri());
+    context =
+        tracer().startSpan(requestWrapper, connectionWrapper, null, requestWrapper.getRequestUri());
     scope = context.makeCurrent();
   }
 
@@ -48,19 +51,14 @@ public class LibertyHttpDispatcherLinkAdvice {
     }
     scope.close();
 
-    if (context == null) {
-      // an existing span was found
-      return;
-    }
-
-    LibertyResponseWrapper lrw = new LibertyResponseWrapper(statusCode);
+    LibertyResponseWrapper responseWrapper = new LibertyResponseWrapper(statusCode);
 
     Throwable t = failure != null ? failure : throwable;
     if (t != null) {
-      tracer().endExceptionally(context, t, lrw);
+      tracer().endExceptionally(context, t, responseWrapper);
       return;
     }
 
-    tracer().end(context, lrw);
+    tracer().end(context, responseWrapper);
   }
 }

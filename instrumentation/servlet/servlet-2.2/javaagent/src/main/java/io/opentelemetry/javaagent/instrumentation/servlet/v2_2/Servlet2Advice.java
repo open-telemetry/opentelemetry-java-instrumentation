@@ -27,7 +27,7 @@ public class Servlet2Advice {
       @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) ServletResponse response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    CallDepthThreadLocalMap.incrementCallDepth(AppServerBridge.getServletKey());
+    CallDepthThreadLocalMap.incrementCallDepth(AppServerBridge.getCallDepthKey());
 
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
@@ -52,7 +52,7 @@ public class Servlet2Advice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(AppServerBridge.getServletKey());
+    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(AppServerBridge.getCallDepthKey());
 
     if (scope != null) {
       scope.close();

@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import net.bytebuddy.asm.Advice;
 
+@SuppressWarnings("unused")
 public class LibertyStartSpanAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.liberty.LibertyHttpServ
 
 import net.bytebuddy.asm.Advice;
 
+@SuppressWarnings("unused")
 public class LibertyUpdateSpanAdvice {
 
   @Advice.OnMethodExit(suppress = Throwable.class)

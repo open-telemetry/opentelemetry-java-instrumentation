@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public class LibertyDispatcherTracer
     extends HttpServerTracer<
-        LibertyRequestWrapper, LibertyResponseWrapper, LibertyConnectionWrapper, Object> {
+        LibertyRequestWrapper, LibertyResponseWrapper, LibertyConnectionWrapper, Void> {
   private static final Logger log = LoggerFactory.getLogger(LibertyDispatcherTracer.class);
   private static final LibertyDispatcherTracer TRACER = new LibertyDispatcherTracer();
 
@@ -26,7 +26,7 @@ public class LibertyDispatcherTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.liberty.dispatcher";
+    return "io.opentelemetry.javaagent.liberty-dispatcher";
   }
 
   @Override
@@ -100,10 +100,10 @@ public class LibertyDispatcherTracer
   }
 
   @Override
-  public @Nullable Context getServerContext(Object o) {
+  public @Nullable Context getServerContext(Void none) {
     return null;
   }
 
   @Override
-  protected void attachServerContext(Context context, Object o) {}
+  protected void attachServerContext(Context context, Void none) {}
 }
