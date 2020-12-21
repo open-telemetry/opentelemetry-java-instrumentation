@@ -26,11 +26,6 @@ import java.util.stream.Collectors;
 
 public class InMemoryExporter {
 
-  public List<List<SpanData>> getTraces() {
-    List<SpanData> spans = AgentTestingExporterAccess.getExportedSpans();
-    return groupTraces(spans);
-  }
-
   public List<MetricData> getMetrics() {
     // TODO do these need grouping?
     return AgentTestingExporterAccess.getExportedMetrics();
@@ -50,18 +45,17 @@ public class InMemoryExporter {
 
   public List<List<SpanData>> waitForTraces(int number)
       throws InterruptedException, TimeoutException {
-    return waitForTraces(this::getTraces, number);
+    return waitForTraces(AgentTestingExporterAccess::getExportedSpans, number);
   }
 
-  public static List<List<SpanData>> waitForTraces(
-      Supplier<List<List<SpanData>>> supplier, int number)
+  public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
       throws InterruptedException, TimeoutException {
     Stopwatch stopwatch = Stopwatch.createStarted();
-    List<List<SpanData>> allTraces = supplier.get();
+    List<List<SpanData>> allTraces = groupTraces(supplier.get());
     List<List<SpanData>> completeTraces =
         allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
     while (completeTraces.size() < number && stopwatch.elapsed(SECONDS) < 20) {
-      allTraces = supplier.get();
+      allTraces = groupTraces(supplier.get());
       completeTraces = allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
       Thread.sleep(10);
     }

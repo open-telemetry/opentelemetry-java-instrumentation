@@ -145,7 +145,7 @@ public abstract class AgentTestRunner extends Specification {
               options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
           @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           Closure spec) {
-    InMemoryExporterAssert.assertTraces(TEST_WRITER::getTraces, size, spec);
+    InMemoryExporterAssert.assertTraces(AgentTestingExporterAccess::getExportedSpans, size, spec);
   }
 
   protected static String getClassName(Class clazz) {

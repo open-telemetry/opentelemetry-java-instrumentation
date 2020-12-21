@@ -19,22 +19,22 @@ import org.spockframework.runtime.model.TextPosition
 
 class InMemoryExporterAssert {
   private final List<List<SpanData>> traces
-  private final Supplier<List<List<SpanData>>> supplier
+  private final Supplier<List<SpanData>> spanSupplier
 
   private final Set<Integer> assertedIndexes = new HashSet<>()
 
-  private InMemoryExporterAssert(List<List<SpanData>> traces, Supplier<List<List<SpanData>>> supplier) {
+  private InMemoryExporterAssert(List<List<SpanData>> traces, Supplier<List<SpanData>> spanSupplier) {
     this.traces = traces
-    this.supplier = supplier
+    this.spanSupplier = spanSupplier
   }
 
-  static void assertTraces(Supplier<List<List<SpanData>>> supplier, int expectedSize,
+  static void assertTraces(Supplier<List<SpanData>> spanSupplier, int expectedSize,
                            @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.ListWriterAssert'])
                            @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     try {
-      def traces = InMemoryExporter.waitForTraces(supplier, expectedSize)
+      def traces = InMemoryExporter.waitForTraces(spanSupplier, expectedSize)
       assert traces.size() == expectedSize
-      def asserter = new InMemoryExporterAssert(traces, supplier)
+      def asserter = new InMemoryExporterAssert(traces, spanSupplier)
       def clone = (Closure) spec.clone()
       clone.delegate = asserter
       clone.resolveStrategy = Closure.DELEGATE_FIRST
@@ -71,11 +71,11 @@ class InMemoryExporterAssert {
       throw new ArrayIndexOutOfBoundsException(index)
     }
     assertedIndexes.add(index)
-    assertTrace(supplier, traces[index][0].traceId, expectedSize, spec)
+    assertTrace(spanSupplier, traces[index][0].traceId, expectedSize, spec)
   }
 
   // this doesn't provide any functionality, just a self-documenting marker
-  void sortTraces(Closure callback) {
+  static void sortTraces(Closure callback) {
     callback.call()
   }
 
