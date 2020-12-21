@@ -26,6 +26,10 @@ import java.util.stream.Collectors;
 
 public class InMemoryExporter {
 
+  public List<List<SpanData>> getTraces() {
+    return groupTraces(AgentTestingExporterAccess.getExportedSpans());
+  }
+
   public List<MetricData> getMetrics() {
     // TODO do these need grouping?
     return AgentTestingExporterAccess.getExportedMetrics();
