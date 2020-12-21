@@ -49,10 +49,6 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
-    if (name.startsWith("net.sf.cglib.")) {
-      return !name.equals("net.sf.cglib.core.internal.LoadingCache$2");
-    }
-
     if (name.startsWith("org.springframework.")) {
       if (name.startsWith("org.springframework.aop.")
           || name.startsWith("org.springframework.cache.")
