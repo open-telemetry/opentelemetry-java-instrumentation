@@ -61,6 +61,7 @@ public class InMemoryExporter {
     List<List<SpanData>> completeTraces =
         allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
     while (completeTraces.size() < number && stopwatch.elapsed(SECONDS) < 20) {
+      allTraces = supplier.get();
       completeTraces = allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
       Thread.sleep(10);
     }
