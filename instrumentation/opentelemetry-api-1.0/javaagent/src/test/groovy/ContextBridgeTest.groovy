@@ -3,14 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.baggage.Baggage
-import io.opentelemetry.api.baggage.BaggageEntryMetadata
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 
@@ -123,17 +124,21 @@ class ContextBridgeTest extends AgentTestRunner {
   }
 
   def "agent propagates application's baggage"() {
-    expect:
+    when:
     def testBaggage = Baggage.builder().put("cat", "yes").build()
+    def ref = new AtomicReference<Baggage>()
+    def latch = new CountDownLatch(1)
     testBaggage.makeCurrent().withCloseable {
       Executors.newSingleThreadExecutor().submit({
-        Baggage.current().asMap().with {
-          size() == 1
-          get("cat").value == "yes"
-          get("cat").entryMetadata == BaggageEntryMetadata.empty()
-        }
+        ref.set(Baggage.current())
+        latch.countDown()
       }).get()
     }
+
+    then:
+    latch.await()
+    ref.get().size() == 1
+    ref.get().getEntryValue("cat") == "yes"
   }
 
   // TODO (trask)
