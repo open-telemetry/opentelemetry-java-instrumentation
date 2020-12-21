@@ -24,14 +24,14 @@ import net.bytebuddy.matcher.ElementMatcher;
  * Instrumenting request handling in Liberty.
  *
  * <ul>
- *   <li>On entry to WebApp.handleRequest remember request.
+ *   <li>On entry to WebApp.handleRequest remember request. {@link LibertyHandleRequestAdvice}
  *   <li>On call to WebApp.isForbidden (called from WebApp.handleRequest) start span based on
  *       remembered request. We don't start span immediately at the start or handleRequest because
- *       HttpServletRequest isn't usable yet.
+ *       HttpServletRequest isn't usable yet. {@link LibertyStartSpanAdvice}
  *   <li>On exit from WebAppDispatcherContext.setPathElements (called from WebApp.handleRequest)
  *       update span name. We don't do it before because before this method is called we can't use
- *       HttpServletRequest.getServletPath.
- *   <li>On exit from WebApp.handleRequest close the span.
+ *       HttpServletRequest.getServletPath. {@link LibertyUpdateSpanAdvice}
+ *   <li>On exit from WebApp.handleRequest close the span. {@link LibertyHandleRequestAdvice}
  * </ul>
  */
 @AutoService(InstrumentationModule.class)
