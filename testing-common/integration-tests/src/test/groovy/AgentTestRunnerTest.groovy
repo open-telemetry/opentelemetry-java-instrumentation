@@ -12,6 +12,9 @@ import io.opentelemetry.javaagent.tooling.Constants
 import java.util.concurrent.TimeoutException
 import org.slf4j.LoggerFactory
 
+// this test is run using
+//   -Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass$NestedClass
+// (see integration-tests.gradle)
 class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
 

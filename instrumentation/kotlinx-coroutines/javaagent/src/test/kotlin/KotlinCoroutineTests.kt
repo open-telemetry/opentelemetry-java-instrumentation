@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
-import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -26,8 +26,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 
 class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
-  // Java8BytecodeBridge is needed in order to support Kotlin which generally targets Java 6 bytecode
-  val tracer: Tracer = Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
+  val tracer: Tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
 
   fun tracedAcrossChannels() = runTest {
 

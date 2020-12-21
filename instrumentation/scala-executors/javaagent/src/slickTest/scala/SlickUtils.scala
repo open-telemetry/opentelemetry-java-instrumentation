@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 import slick.jdbc.H2Profile.api._
@@ -11,9 +12,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 class SlickUtils {
-  // Java8BytecodeBridge is needed in order to support Scala 2.11 which targets Java 6 bytecode
-  val tracer: Tracer =
-    Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
+  val tracer: Tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
 
   import SlickUtils._
 

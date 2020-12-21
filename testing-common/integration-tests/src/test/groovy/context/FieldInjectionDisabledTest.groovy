@@ -10,12 +10,10 @@ import java.lang.reflect.Field
 import java.util.function.BiFunction
 import library.DisabledKeyClass
 
-/**
- * Make sure that fields not get injected into the class if it is disabled via system properties.
- *
- * Unfortunately we cannot set system properties here early enough for AgentTestRunner to see.
- * Instead we have to configure this via Gradle. Ideally we should not have to do this.
- */
+// this test is run using:
+//   -Dotel.javaagent.runtime.context.field.injection=false
+//   -Dotel.instrumentation.context-test-instrumentation.enabled=true
+// (see integration-tests.gradle)
 class FieldInjectionDisabledTest extends AgentTestRunner {
 
   @Override

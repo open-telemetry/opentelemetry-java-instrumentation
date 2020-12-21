@@ -26,6 +26,9 @@ import net.sf.cglib.proxy.Enhancer
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
 
+// this test is run using
+//   -Dotel.instrumentation.context-test-instrumentation.enabled=true
+// (see integration-tests.gradle)
 class FieldBackedProviderTest extends AgentTestRunner {
 
   @Override

@@ -43,41 +43,9 @@ abstract class InstrumentationTestRunner extends Specification {
       OpenTelemetry.setGlobalPropagators(
         ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
     }
-    // TODO (trask) can we add 2 span processors here and not delegate?
-    def delegate = SimpleSpanProcessor.builder(testExporter).build()
+    OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(new FlushTrackingSpanProcessor())
     OpenTelemetrySdk.getGlobalTracerManagement()
-      .addSpanProcessor(new SpanProcessor() {
-        @Override
-        void onStart(Context parentContext, ReadWriteSpan span) {
-          delegate.onStart(parentContext, span)
-        }
-
-        @Override
-        boolean isStartRequired() {
-          return delegate.isStartRequired()
-        }
-
-        @Override
-        void onEnd(ReadableSpan span) {
-          delegate.onEnd(span)
-        }
-
-        @Override
-        boolean isEndRequired() {
-          return delegate.isEndRequired()
-        }
-
-        @Override
-        CompletableResultCode shutdown() {
-          return delegate.shutdown()
-        }
-
-        @Override
-        CompletableResultCode forceFlush() {
-          forceFlushCalled = true
-          return delegate.forceFlush()
-        }
-      })
+      .addSpanProcessor(SimpleSpanProcessor.builder(testExporter).build())
   }
 
   @Before
@@ -98,5 +66,31 @@ abstract class InstrumentationTestRunner extends Specification {
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
     final Closure spec) {
     InMemoryExporterAssert.assertTraces({ testExporter.getFinishedSpanItems() }, size, spec)
+  }
+
+  static class FlushTrackingSpanProcessor implements SpanProcessor {
+    @Override
+    void onStart(Context parentContext, ReadWriteSpan span) {
+    }
+
+    @Override
+    boolean isStartRequired() {
+      return false
+    }
+
+    @Override
+    void onEnd(ReadableSpan span) {
+    }
+
+    @Override
+    boolean isEndRequired() {
+      return false
+    }
+
+    @Override
+    CompletableResultCode forceFlush() {
+      forceFlushCalled = true
+      return CompletableResultCode.ofSuccess()
+    }
   }
 }

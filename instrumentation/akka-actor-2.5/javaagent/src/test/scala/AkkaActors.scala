@@ -6,6 +6,7 @@
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 
@@ -13,8 +14,7 @@ import scala.concurrent.duration._
 
 // ! == send-message
 object AkkaActors {
-  val tracer: Tracer =
-    Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
+  val tracer: Tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
 
   val system: ActorSystem = ActorSystem("helloAkka")
 

@@ -32,8 +32,6 @@ class TraceAssert {
     while (spans.size() < expectedSize && stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
       Thread.sleep(10)
       spans = getTrace(spanSupplier, traceId)
-      println spans.size()
-      println expectedSize
     }
     assert spans.size() == expectedSize
     def asserter = new TraceAssert(spans)

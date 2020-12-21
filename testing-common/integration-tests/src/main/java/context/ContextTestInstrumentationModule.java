@@ -93,14 +93,10 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodExit
     public static void methodExit(
         @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-      try {
-        ContextStore<KeyClass, Context> contextStore =
-            InstrumentationContext.get(KeyClass.class, Context.class);
-        Context context = contextStore.putIfAbsent(thiz, new Context());
-        contextCount = ++context.count;
-      } catch (Throwable t) {
-        t.printStackTrace();
-      }
+      ContextStore<KeyClass, Context> contextStore =
+          InstrumentationContext.get(KeyClass.class, Context.class);
+      Context context = contextStore.putIfAbsent(thiz, new Context());
+      contextCount = ++context.count;
     }
   }
 
