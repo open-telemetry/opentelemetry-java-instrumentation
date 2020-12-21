@@ -396,42 +396,41 @@ public final class AgentTestingExporterAccess {
           converted.put(key, value.getDoubleValue());
           break;
         case ARRAY_VALUE:
-          {
-            ArrayValue array = value.getArrayValue();
-            if (array.getValuesCount() != 0) {
-              switch (array.getValues(0).getValueCase()) {
-                case STRING_VALUE:
-                  converted.put(
-                      stringArrayKey(key),
-                      array.getValuesList().stream()
-                          .map(AnyValue::getStringValue)
-                          .collect(toList()));
-                  break;
-                case BOOL_VALUE:
-                  converted.put(
-                      booleanArrayKey(key),
-                      array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
-                  break;
-                case INT_VALUE:
-                  converted.put(
-                      longArrayKey(key),
-                      array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
-                  break;
-                case DOUBLE_VALUE:
-                  converted.put(
-                      doubleArrayKey(key),
-                      array.getValuesList().stream()
-                          .map(AnyValue::getDoubleValue)
-                          .collect(toList()));
-                  break;
-                case VALUE_NOT_SET:
-                  break;
-              }
+          ArrayValue array = value.getArrayValue();
+          if (array.getValuesCount() != 0) {
+            switch (array.getValues(0).getValueCase()) {
+              case STRING_VALUE:
+                converted.put(
+                    stringArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getStringValue).collect(toList()));
+                break;
+              case BOOL_VALUE:
+                converted.put(
+                    booleanArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
+                break;
+              case INT_VALUE:
+                converted.put(
+                    longArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
+                break;
+              case DOUBLE_VALUE:
+                converted.put(
+                    doubleArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
+                break;
+              case VALUE_NOT_SET:
+                break;
+              default:
+                throw new IllegalStateException(
+                    "Unexpected attribute: " + array.getValues(0).getValueCase());
             }
-            break;
           }
+          break;
         case VALUE_NOT_SET:
           break;
+        default:
+          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
       }
     }
     return converted.build();
