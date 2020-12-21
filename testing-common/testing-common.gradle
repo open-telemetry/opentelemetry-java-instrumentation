@@ -1,19 +1,5 @@
 apply from: "$rootDir/gradle/java.gradle"
 
-minimumBranchCoverage = 0.5
-minimumInstructionCoverage = 0.5
-excludedClassesCoverage += [
-  'io.opentelemetry.instrumentation.test.asserts.*Assert*',
-  'io.opentelemetry.instrumentation.test.base.*',
-  'io.opentelemetry.instrumentation.test.log.*',
-  'io.opentelemetry.instrumentation.test.AgentTestRunner',
-  'io.opentelemetry.instrumentation.test.InstrumentationTestRunner',
-  'io.opentelemetry.instrumentation.test.InMemoryExporter.*',
-  'io.opentelemetry.instrumentation.test.utils.*',
-  // Avoid applying jacoco instrumentation to classes instrumented by tested agent
-  'context.ContextTestInstrumentation**',
-]
-
 dependencies {
   api deps.guava
   api deps.spock
