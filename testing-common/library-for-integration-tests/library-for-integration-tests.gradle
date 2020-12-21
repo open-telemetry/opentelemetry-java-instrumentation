@@ -1,1 +1,5 @@
 apply plugin: 'java-library'
+
+compileJava {
+  options.release.set(8)
+}
