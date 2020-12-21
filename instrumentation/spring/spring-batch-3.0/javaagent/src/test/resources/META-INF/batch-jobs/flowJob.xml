@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job id="flowJob" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+  <flow id="flow">
+    <step id="flowStep1" next="flowStep2">
+      <batchlet ref="jsr.TestBatchlet"/>
+    </step>
+    <step id="flowStep2">
+      <batchlet ref="jsr.TestBatchlet"/>
+    </step>
+  </flow>
+</job>
