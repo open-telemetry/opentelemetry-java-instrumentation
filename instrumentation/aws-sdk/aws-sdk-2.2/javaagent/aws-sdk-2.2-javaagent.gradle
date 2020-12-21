@@ -9,9 +9,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(':instrumentation:aws-sdk:aws-sdk-2.2:library')) {
-    exclude group: 'io.opentelemetry', module: 'opentelemetry-extension-trace-propagators'
-  }
+  implementation project(':instrumentation:aws-sdk:aws-sdk-2.2:library')
 
   library group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
 
@@ -19,6 +17,4 @@ dependencies {
   // Make sure these don't add HTTP headers
   testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
   testImplementation project(':instrumentation:netty:netty-4.1:javaagent')
-
-  testImplementation deps.opentelemetryTraceProps
 }
