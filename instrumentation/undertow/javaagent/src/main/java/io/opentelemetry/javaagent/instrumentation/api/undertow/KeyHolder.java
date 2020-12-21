@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api;
+package io.opentelemetry.javaagent.instrumentation.api.undertow;
 
-import io.opentelemetry.context.Context;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.AttachmentKey;
 import java.util.IdentityHashMap;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Undertow's {@link HttpServerExchange} uses {@link AttachmentKey} as a key for storing arbitrary
@@ -31,5 +31,5 @@ import java.util.concurrent.atomic.AtomicReference;
  * key.
  */
 public class KeyHolder {
-  public static final AtomicReference<AttachmentKey<Context>> contextKey = new AtomicReference<>();
+  public static final ConcurrentMap<Class<?>, Object> contextKeys = new ConcurrentHashMap<>();
 }

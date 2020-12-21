@@ -37,16 +37,16 @@ public class UndertowInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("io.undertow.server.HttpHandler");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HandlerInstrumentation());
   }
 
   public static class HandlerInstrumentation implements TypeInstrumentation {
+
+    @Override
+    public ElementMatcher.Junction<ClassLoader> classLoaderOptimization() {
+      return hasClassesNamed("io.undertow.server.HttpHandler");
+    }
 
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {

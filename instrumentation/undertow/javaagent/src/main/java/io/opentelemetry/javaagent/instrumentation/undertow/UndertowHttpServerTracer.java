@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
-import io.opentelemetry.javaagent.instrumentation.api.KeyHolder;
+import io.opentelemetry.javaagent.instrumentation.api.undertow.KeyHolder;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.AttachmentKey;
 import java.lang.reflect.Method;
@@ -40,9 +40,11 @@ public class UndertowHttpServerTracer
     return context;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public @Nullable Context getServerContext(HttpServerExchange exchange) {
-    AttachmentKey<Context> contextKey = KeyHolder.contextKey.get();
+    AttachmentKey<Context> contextKey =
+        (AttachmentKey<Context>) KeyHolder.contextKeys.get(AttachmentKey.class);
     if (contextKey == null) {
       return null;
     }
@@ -98,14 +100,13 @@ public class UndertowHttpServerTracer
     return exchange.getStatusCode();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   protected void attachServerContext(Context context, HttpServerExchange exchange) {
-    AttachmentKey<Context> contextKey = KeyHolder.contextKey.get();
-    if (contextKey == null) {
-      AttachmentKey<Context> newValue = AttachmentKey.create(Context.class);
-      boolean newValueSet = KeyHolder.contextKey.compareAndSet(null, newValue);
-      contextKey = newValueSet ? newValue : KeyHolder.contextKey.get();
-    }
+    AttachmentKey<Context> contextKey =
+        (AttachmentKey<Context>)
+            KeyHolder.contextKeys.computeIfAbsent(
+                AttachmentKey.class, key -> AttachmentKey.create(Context.class));
     exchange.putAttachment(contextKey, context);
   }
 }
