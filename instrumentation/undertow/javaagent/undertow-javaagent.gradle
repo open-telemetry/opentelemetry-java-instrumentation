@@ -1,0 +1,13 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "io.undertow"
+    module = 'undertow-core'
+    versions = "[2.0.0.Final,)"
+  }
+}
+
+dependencies {
+  library "io.undertow:undertow-core:2.0.0.Final"
+}

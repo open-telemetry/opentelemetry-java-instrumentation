@@ -40,7 +40,13 @@ public class Servlet3Advice {
       }
 
       tracer().updateServerSpanNameOnce(attachedContext, httpServletRequest);
+      // We are inside nested servlet/filter/app-server span, don't create new span
+      return;
+    }
 
+    Context parentContext = Java8BytecodeBridge.currentContext();
+    if (parentContext != null && Java8BytecodeBridge.spanFromContext(parentContext).isRecording()) {
+      tracer().updateServerSpanNameOnce(parentContext, httpServletRequest);
       // We are inside nested servlet/filter/app-server span, don't create new span
       return;
     }
