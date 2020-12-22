@@ -1,0 +1,10 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+// liberty and liberty-dispatcher are loaded into different class loaders
+// liberty module has access to servlet api while liberty-dispatcher does not
+
+dependencies {
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+
+  implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
+}
