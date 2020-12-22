@@ -25,6 +25,18 @@
     </b:step>
   </b:job>
 
+  <b:job id="flowJob">
+    <b:flow id="flow" parent="parentFlow"/>
+  </b:job>
+  <b:flow id="parentFlow">
+    <b:step id="flowStep1" next="flowStep2">
+      <b:tasklet ref="testTasklet"/>
+    </b:step>
+    <b:step id="flowStep2">
+      <b:tasklet ref="testTasklet"/>
+    </b:step>
+  </b:flow>
+
   <bean id="itemReader" class="springbatch.TestItemReader"/>
   <bean id="itemProcessor" class="springbatch.TestItemProcessor"/>
   <bean id="itemWriter" class="springbatch.TestItemWriter"/>

@@ -199,6 +199,7 @@ include ':instrumentation:spymemcached-2.12:javaagent'
 include ':instrumentation:struts-2.3:javaagent'
 include ':instrumentation:tomcat-7.0:javaagent'
 include ':instrumentation:twilio-6.6:javaagent'
+include ':instrumentation:undertow:javaagent'
 include ':instrumentation:vertx-web-3.0'
 include ':instrumentation:vertx-reactive-3.5:javaagent'
 
@@ -218,6 +219,7 @@ include ":javaagent-exporters:prometheus"
 include ':benchmark'
 include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
+include ':benchmark-e2e'
 
 def setBuildFile(project) {
   if (['javaagent', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {

@@ -35,8 +35,9 @@ dependencies {
 
   implementation project(':javaagent-bootstrap')
   implementation project(':javaagent-api')
+  api project(':javaagent-spi')
   implementation project(':instrumentation-api')
-  implementation(project(':javaagent-tooling')) {
+  api(project(':javaagent-tooling')) {
     // including :opentelemetry-sdk-shaded-for-testing above instead
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
   }

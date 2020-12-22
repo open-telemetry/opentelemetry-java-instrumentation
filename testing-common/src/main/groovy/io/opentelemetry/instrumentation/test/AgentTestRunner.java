@@ -17,18 +17,17 @@ import groovy.transform.stc.SimpleType;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.instrumentation.test.utils.ConfigUtils;
+import io.opentelemetry.javaagent.spi.ComponentInstaller;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -71,7 +70,7 @@ public abstract class AgentTestRunner extends Specification {
     System.setProperty("otel.threadPropagationDebugger", "true");
     System.setProperty("otel.internal.failOnContextLeak", "true");
     // always print muzzle warnings
-    System.setProperty("io.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher", "true");
+    System.setProperty("io.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher", "warn");
   }
 
   /**
@@ -79,7 +78,9 @@ public abstract class AgentTestRunner extends Specification {
    *
    * <p>Before the start of each test the reported traces will be reset.
    */
-  public static final InMemoryExporter TEST_WRITER;
+  public static final InMemoryExporter TEST_WRITER = new InMemoryExporter();
+
+  private static final ComponentInstaller COMPONENT_INSTALLER;
 
   protected static final Tracer TEST_TRACER;
 
@@ -101,21 +102,7 @@ public abstract class AgentTestRunner extends Specification {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
 
-    TEST_WRITER = new InMemoryExporter();
-    // TODO this is probably temporary until default propagators are supplied by SDK
-    //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
-    //  currently checking against no-op implementation so that it won't override aws-lambda
-    //  propagator configuration
-    if (OpenTelemetry.getGlobalPropagators()
-        .getTextMapPropagator()
-        .getClass()
-        .getSimpleName()
-        .equals("NoopTextMapPropagator")) {
-      // Workaround https://github.com/open-telemetry/opentelemetry-java/pull/2096
-      OpenTelemetry.setGlobalPropagators(
-          ContextPropagators.create(W3CTraceContextPropagator.getInstance()));
-    }
-    OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(TEST_WRITER);
+    COMPONENT_INSTALLER = new TestOpenTelemetryInstaller(TEST_WRITER);
     TEST_TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
   }
 
@@ -172,7 +159,8 @@ public abstract class AgentTestRunner extends Specification {
 
     if (activeTransformer == null) {
       activeTransformer =
-          AgentInstaller.installBytebuddyAgent(INSTRUMENTATION, true, TEST_LISTENER);
+          AgentInstaller.installBytebuddyAgent(
+              INSTRUMENTATION, true, Collections.singleton(COMPONENT_INSTALLER), TEST_LISTENER);
     }
     TEST_LISTENER.activateTest(this);
   }

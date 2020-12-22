@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context;
 
+import application.io.opentelemetry.api.baggage.Baggage;
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.ContextKey;
 import application.io.opentelemetry.context.ContextStorage;
 import application.io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.baggage.BaggageBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.lang.reflect.Field;
 import org.slf4j.Logger;
@@ -25,7 +27,7 @@ import org.slf4j.LoggerFactory;
  * wrapper which accesses into this stored concrete context.
  *
  * <p>This storage also makes sure that OpenTelemetry objects are shared within the context. To do
- * this, it recognizes the keys for OpenTelemetry objects (e.g, {@link Span}, Baggage (WIP)) and
+ * this, it recognizes the keys for OpenTelemetry objects (e.g, {@link Span}, {@link Baggage}) and
  * always stores and retrieves them from the agent context, even when accessed from the application.
  * All other accesses are to the concrete application context.
  */
@@ -53,15 +55,19 @@ public class AgentContextStorage implements ContextStorage {
       AGENT_SPAN_CONTEXT_KEY;
   static final ContextKey<Span> APPLICATION_SPAN_CONTEXT_KEY;
 
+  static final io.opentelemetry.context.ContextKey<io.opentelemetry.api.baggage.Baggage>
+      AGENT_BAGGAGE_CONTEXT_KEY;
+  static final ContextKey<Baggage> APPLICATION_BAGGAGE_CONTEXT_KEY;
+
   static {
     io.opentelemetry.context.ContextKey<io.opentelemetry.api.trace.Span> agentSpanContextKey;
     try {
-      Class<?> tracingContextUtils = Class.forName("io.opentelemetry.api.trace.SpanContextKey");
-      Field contextSpanKeyField = tracingContextUtils.getDeclaredField("KEY");
-      contextSpanKeyField.setAccessible(true);
+      Class<?> spanContextKey = Class.forName("io.opentelemetry.api.trace.SpanContextKey");
+      Field spanContextKeyField = spanContextKey.getDeclaredField("KEY");
+      spanContextKeyField.setAccessible(true);
       agentSpanContextKey =
           (io.opentelemetry.context.ContextKey<io.opentelemetry.api.trace.Span>)
-              contextSpanKeyField.get(null);
+              spanContextKeyField.get(null);
     } catch (Throwable t) {
       agentSpanContextKey = null;
     }
@@ -69,15 +75,41 @@ public class AgentContextStorage implements ContextStorage {
 
     ContextKey<Span> applicationSpanContextKey;
     try {
-      Class<?> tracingContextUtils =
+      Class<?> spanContextKey =
           Class.forName("application.io.opentelemetry.api.trace.SpanContextKey");
-      Field contextSpanKeyField = tracingContextUtils.getDeclaredField("KEY");
-      contextSpanKeyField.setAccessible(true);
-      applicationSpanContextKey = (ContextKey<Span>) contextSpanKeyField.get(null);
+      Field spanContextKeyField = spanContextKey.getDeclaredField("KEY");
+      spanContextKeyField.setAccessible(true);
+      applicationSpanContextKey = (ContextKey<Span>) spanContextKeyField.get(null);
     } catch (Throwable t) {
       applicationSpanContextKey = null;
     }
     APPLICATION_SPAN_CONTEXT_KEY = applicationSpanContextKey;
+
+    io.opentelemetry.context.ContextKey<io.opentelemetry.api.baggage.Baggage>
+        agentBaggageContextKey;
+    try {
+      Class<?> baggageContextKey = Class.forName("io.opentelemetry.api.baggage.BaggageContextKey");
+      Field baggageContextKeyField = baggageContextKey.getDeclaredField("KEY");
+      baggageContextKeyField.setAccessible(true);
+      agentBaggageContextKey =
+          (io.opentelemetry.context.ContextKey<io.opentelemetry.api.baggage.Baggage>)
+              baggageContextKeyField.get(null);
+    } catch (Throwable t) {
+      agentBaggageContextKey = null;
+    }
+    AGENT_BAGGAGE_CONTEXT_KEY = agentBaggageContextKey;
+
+    ContextKey<Baggage> applicationBaggageContextKey;
+    try {
+      Class<?> baggageContextKey =
+          Class.forName("application.io.opentelemetry.api.baggage.BaggageContextKey");
+      Field baggageContextKeyField = baggageContextKey.getDeclaredField("KEY");
+      baggageContextKeyField.setAccessible(true);
+      applicationBaggageContextKey = (ContextKey<Baggage>) baggageContextKeyField.get(null);
+    } catch (Throwable t) {
+      applicationBaggageContextKey = null;
+    }
+    APPLICATION_BAGGAGE_CONTEXT_KEY = applicationBaggageContextKey;
   }
 
   @Override
@@ -142,6 +174,17 @@ public class AgentContextStorage implements ContextStorage {
         V value = (V) applicationSpan;
         return value;
       }
+      if (key == APPLICATION_BAGGAGE_CONTEXT_KEY) {
+        io.opentelemetry.api.baggage.Baggage agentBaggage =
+            agentContext.get(AGENT_BAGGAGE_CONTEXT_KEY);
+        if (agentBaggage == null) {
+          return null;
+        }
+        Baggage applicationBaggage = BaggageBridging.toApplication(agentBaggage);
+        @SuppressWarnings("unchecked")
+        V value = (V) applicationBaggage;
+        return value;
+      }
       return applicationContext.get(key);
     }
 
@@ -156,9 +199,14 @@ public class AgentContextStorage implements ContextStorage {
         return new AgentContextWrapper(
             agentContext.with(AGENT_SPAN_CONTEXT_KEY, agentSpan), applicationContext);
       }
+      if (k1 == APPLICATION_BAGGAGE_CONTEXT_KEY) {
+        Baggage applicationBaggage = (Baggage) v1;
+        io.opentelemetry.api.baggage.Baggage agentBaggage =
+            BaggageBridging.toAgent(applicationBaggage);
+        return new AgentContextWrapper(
+            agentContext.with(AGENT_BAGGAGE_CONTEXT_KEY, agentBaggage), applicationContext);
+      }
       return new AgentContextWrapper(agentContext, applicationContext.with(k1, v1));
     }
   }
-
-  static class SpanContextKeys {}
 }

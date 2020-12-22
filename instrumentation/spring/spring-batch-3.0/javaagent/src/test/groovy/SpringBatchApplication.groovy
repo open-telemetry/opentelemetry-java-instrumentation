@@ -8,10 +8,13 @@ import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory
+import org.springframework.batch.core.job.builder.FlowBuilder
+import org.springframework.batch.core.job.flow.Flow
+import org.springframework.batch.core.job.flow.support.SimpleFlow
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
-import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import springbatch.TestItemProcessor
@@ -22,48 +25,50 @@ import springbatch.TestTasklet
 @Configuration
 @EnableBatchProcessing
 class SpringBatchApplication {
+
+  @Autowired
+  JobBuilderFactory jobs
+  @Autowired
+  StepBuilderFactory steps
+
+  // simple tasklet job
   @Bean
-  Job taskletJob(@Qualifier("step") Step taskletStep, JobBuilderFactory jobBuilderFactory) {
-    jobBuilderFactory.get("taskletJob")
-      .start(taskletStep)
+  Job taskletJob() {
+    jobs.get("taskletJob")
+      .start(step())
       .build()
   }
 
   @Bean
-  Step step(StepBuilderFactory stepBuilderFactory) {
-    stepBuilderFactory.get("step")
+  Step step() {
+    steps.get("step")
+      .tasklet(new TestTasklet())
+      .build()
+  }
+
+  // 2-step tasklet + chunked items job
+  @Bean
+  Job itemsAndTaskletJob() {
+    jobs.get("itemsAndTaskletJob")
+      .start(itemStep())
+      .next(taskletStep())
+      .build()
+  }
+
+  @Bean
+  Step taskletStep() {
+    steps.get("taskletStep")
       .tasklet(new TestTasklet())
       .build()
   }
 
   @Bean
-  Job itemsAndTaskletJob(@Qualifier("itemStep") Step itemStep,
-                         @Qualifier("taskletStep") Step taskletStep,
-                         JobBuilderFactory jobBuilderFactory) {
-    jobBuilderFactory.get("itemsAndTaskletJob")
-      .flow(itemStep)
-      .next(taskletStep)
-      .end()
-      .build()
-  }
-
-  @Bean
-  Step taskletStep(StepBuilderFactory stepBuilderFactory) {
-    stepBuilderFactory.get("taskletStep")
-      .tasklet(new TestTasklet())
-      .build()
-  }
-
-  @Bean
-  Step itemStep(ItemReader<String> itemReader,
-                ItemProcessor<String, Integer> itemProcessor,
-                ItemWriter<Integer> itemWriter,
-                StepBuilderFactory stepBuilderFactory) {
-    stepBuilderFactory.get("itemStep")
+  Step itemStep() {
+    steps.get("itemStep")
       .chunk(5)
-      .reader(itemReader)
-      .processor(itemProcessor)
-      .writer(itemWriter)
+      .reader(itemReader())
+      .processor(itemProcessor())
+      .writer(itemWriter())
       .build()
   }
 
@@ -80,5 +85,37 @@ class SpringBatchApplication {
   @Bean
   ItemWriter<Integer> itemWriter() {
     new TestItemWriter()
+  }
+
+  // job using a flow
+  @Bean
+  Job flowJob() {
+    jobs.get("flowJob")
+      .start(flow())
+      .build()
+      .build()
+  }
+
+  @Bean
+  Flow flow() {
+    new FlowBuilder<SimpleFlow>("flow")
+      .start(flowStep1())
+      .on("*")
+      .to(flowStep2())
+      .build()
+  }
+
+  @Bean
+  Step flowStep1() {
+    steps.get("flowStep1")
+      .tasklet(new TestTasklet())
+      .build()
+  }
+
+  @Bean
+  Step flowStep2() {
+    steps.get("flowStep2")
+      .tasklet(new TestTasklet())
+      .build()
   }
 }

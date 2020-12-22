@@ -58,7 +58,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
     Http.get(system).singleRequest(null, materializer)
 
     then:
-    thrown NullPointerException
+    def e = thrown NullPointerException
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -66,7 +66,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
           name "HTTP request"
           kind CLIENT
           errored true
-          errorEvent(NullPointerException)
+          errorEvent(NullPointerException, e.getMessage())
         }
       }
     }

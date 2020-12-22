@@ -120,23 +120,6 @@ dependencies {
   testImplementation deps.testLogging
   testImplementation group: 'info.solidsoft.spock', name: 'spock-global-unroll', version: '0.5.1'
   testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
-
-  constraints {
-    // need to pin the opentelemetry-sdk transitive dependency versions explicitly, otherwise the
-    // latest snapshots are used, because the opentelemetry-sdk snapshot pom references these
-    // transitive dependencies using the generic SNAPSHOT instead of a specific snapshot
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-api-trace', version: '0.13.0-20201217.041746-88'
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-api-metrics', version: '0.13.0-alpha-20201217.041746-1'
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-context', version: versions.opentelemetryContext
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetryOther
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetryOther
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-baggage', version: versions.opentelemetryOther
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-common', version: '0.13.0-20201217.041753-92'
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-otproto', version: '0.13.0-20201217.041755-92'
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics', version: '0.13.0-alpha-20201217.041756-1'
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-trace', version: '0.13.0-20201217.041757-92'
-  }
 }
 
 jar {
@@ -207,15 +190,11 @@ def isJavaVersionAllowed(JavaVersion version) {
 def testJavaVersion = rootProject.findProperty('testJavaVersion')
 if (testJavaVersion != null) {
   def requestedJavaVersion = JavaVersion.toVersion(testJavaVersion)
-  def gradleJavaVersion = JavaVersion.current()
-
-  if (gradleJavaVersion != requestedJavaVersion) {
-    tasks.withType(Test).all {
-      javaLauncher = javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(requestedJavaVersion.majorVersion)
-      }
-      enabled = isJavaVersionAllowed(requestedJavaVersion)
+  tasks.withType(Test).all {
+    javaLauncher = javaToolchains.launcherFor {
+      languageVersion = JavaLanguageVersion.of(requestedJavaVersion.majorVersion)
     }
+    enabled = isJavaVersionAllowed(requestedJavaVersion)
   }
 } else {
   // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
