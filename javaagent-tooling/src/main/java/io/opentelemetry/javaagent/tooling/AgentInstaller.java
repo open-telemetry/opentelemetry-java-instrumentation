@@ -147,6 +147,11 @@ public class AgentInstaller {
     agentBuilder = customizeByteBuddyAgent(agentBuilder);
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
+    try {
+      Class.forName("io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper");
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
     installComponentsAfterByteBuddy(componentInstallers);
     return resettableClassFileTransformer;
   }

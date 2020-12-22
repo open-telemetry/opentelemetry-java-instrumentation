@@ -57,7 +57,8 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       return false;
     }
 
-    if (name.startsWith("net.bytebuddy.")
+    if (name.startsWith("org.gradle.")
+        || name.startsWith("net.bytebuddy.")
         || name.startsWith("jdk.")
         || name.startsWith("org.aspectj.")
         || name.startsWith("datadog.")
