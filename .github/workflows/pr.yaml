@@ -24,7 +24,7 @@ jobs:
       - name: Build
         uses: nick-invision/retry@v2.2.0
         with:
-          command: ./gradlew check --no-build-cache --stacktrace -x :smoke-tests:test
+          command: ./gradlew check --stacktrace -x :smoke-tests:test
           timeout_minutes: 90
           max_attempts: 3
 
@@ -65,7 +65,7 @@ jobs:
       - name: Test
         uses: nick-invision/retry@v2.2.0
         with:
-          command: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --no-build-cache --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+          command: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
           timeout_minutes: 90
           max_attempts: 3
 
