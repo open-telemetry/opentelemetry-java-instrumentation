@@ -150,6 +150,12 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       delegate.close();
     }
 
+    /**
+     * Exposes context associated with the client invocation. Extending instrumentations can use
+     * this to access client span.
+     *
+     * @return context associated with the invocation.
+     */
     public Context getContext() {
       return context;
     }
