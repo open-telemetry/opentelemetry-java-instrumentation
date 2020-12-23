@@ -21,14 +21,9 @@ CopySpec isolateSpec(Collection<Jar> shadowJarTasks) {
     from({ shadowJarTasks.collect { zipTree(it.archiveFile) } }) {
       // important to keep prefix 'inst' short, as it is prefixed to lots of strings in runtime mem
       into 'inst'
-      exclude 'io/opentelemetry/javaagent/instrumentation/api/**/*.class'
       rename '(^.*)\\.class$', '$1.classdata'
       // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
       rename '^LICENSE$', 'LICENSE.renamed'
-    }
-    //This allows every instrumentation to have their own classes that should go to bootstrap classloader
-    from({ shadowJarTasks.collect { zipTree(it.archiveFile) } }) {
-      include 'io/opentelemetry/javaagent/instrumentation/api/**/*.class'
     }
   }
 }
