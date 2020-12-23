@@ -24,9 +24,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JettyInstrumentationModule extends InstrumentationModule {
+public class JettyHandlerInstrumentationModule extends InstrumentationModule {
 
-  public JettyInstrumentationModule() {
+  public JettyHandlerInstrumentationModule() {
     super("jetty", "jetty-8.0");
   }
 
