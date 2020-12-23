@@ -112,6 +112,11 @@ dependencies {
 
 tasks.withType(Test).configureEach {
   jvmArgs "-Dotel.javaagent.debug=true"
+  // the debug level logging in this class occurs frequently (and under class file transform),
+  // which can lead gradle to deadlock sporadically when it triggers a class to load while holding
+  // a lock, and then (because gradle hijacks System.out), it gets called from inside of the class
+  // file transform, and then tries to grab a different lock
+  jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.javaagent.tooling.context.FieldBackedProvider=info"
 
   doFirst {
     // Defining here to allow jacoco to be first on the command line.
