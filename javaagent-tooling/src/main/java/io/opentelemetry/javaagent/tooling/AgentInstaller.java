@@ -63,6 +63,7 @@ public class AgentInstaller {
   }
 
   static {
+    addByteBuddyRawSetting();
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(loadBootstrapPackagePrefixes());
     // WeakMap is used by other classes below, so we need to register the provider first.
     AgentTooling.registerWeakMapProvider();
@@ -92,8 +93,6 @@ public class AgentInstaller {
     installComponentsBeforeByteBuddy(componentInstallers);
 
     INSTRUMENTATION = inst;
-
-    addByteBuddyRawSetting();
 
     FieldBackedProvider.resetContextMatchers();
 
