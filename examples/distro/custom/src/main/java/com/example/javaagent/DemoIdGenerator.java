@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Custom {@link IdGenerator} which provides span and trace ids.
  *
- * @see io.opentelemetry.sdk.trace.TracerSdkProvider
+ * @see io.opentelemetry.sdk.trace.SdkTracerProvider
  * @see DemoTracerCustomizer
  */
 public class DemoIdGenerator implements IdGenerator {
