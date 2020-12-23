@@ -18,8 +18,19 @@ jobs:
         with:
           job-id: jdk11
 
+      - name: Start deadlock detector
+        run: .github/scripts/deadlock-detector.sh
+
       - name: Build
         run: ./gradlew check --stacktrace -x :smoke-tests:test
+
+      - name: Upload deadlock detector artifacts
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: deadlock-detector-build
+          path: /tmp/deadlock-detector-*
+          if-no-files-found: ignore
 
   test:
     runs-on: ubuntu-latest
@@ -45,8 +56,19 @@ jobs:
         with:
           job-id: jdk${{ matrix.java }}
 
+      - name: Start deadlock detector
+        run: .github/scripts/deadlock-detector.sh
+
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+
+      - name: Upload deadlock detector artifacts
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: deadlock-detector-test-${{ matrix.java }}
+          path: /tmp/deadlock-detector-*
+          if-no-files-found: ignore
 
   smoke-test:
     runs-on: ubuntu-latest
