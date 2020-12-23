@@ -62,4 +62,18 @@ public class AppServerBridge {
       appServerBridge.servletUpdatedServerSpanName.set(value);
     }
   }
+
+  /**
+   * Class used as key in CallDepthThreadLocalMap for counting servlet invocation depth in
+   * Servlet3Advice and Servlet2Advice. We can not use helper classes like Servlet3Advice and
+   * Servlet2Advice for determining call depth of server invocation because they can be injected
+   * into multiple class loaders.
+   *
+   * @return class used as a key in CallDepthThreadLocalMap for counting servlet invocation depth
+   */
+  public static Class<?> getCallDepthKey() {
+    class Key {}
+
+    return Key.class;
+  }
 }

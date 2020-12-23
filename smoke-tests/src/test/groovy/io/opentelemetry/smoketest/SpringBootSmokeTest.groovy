@@ -16,7 +16,7 @@ import spock.lang.Unroll
 
 class SpringBootSmokeTest extends SmokeTest {
 
-  protected String getTargetImage(int jdk, String serverVersion) {
+  protected String getTargetImage(String jdk, String serverVersion) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20201217.427450994"
   }
 

@@ -1,0 +1,34 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:55680
+
+exporters:
+  logging:
+    loglevel: info
+
+processors:
+  batch:
+  queued_retry:
+
+extensions:
+  health_check:
+
+service:
+  extensions: health_check
+  pipelines:
+    traces:
+      processors:
+        - batch
+      receivers:
+        - otlp
+      exporters:
+        - logging
+    metrics:
+      processors:
+        - batch
+      receivers:
+        - otlp
+      exporters:
+        - logging

@@ -123,8 +123,11 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return httpServletRequest.getHeader(name);
   }
 
-  private static String getSpanName(HttpServletRequest request) {
+  public static String getSpanName(HttpServletRequest request) {
     String spanName = request.getServletPath();
+    if (spanName.isEmpty()) {
+      return "HTTP " + request.getMethod();
+    }
     String contextPath = request.getContextPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
       spanName = contextPath + spanName;
@@ -141,8 +144,16 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
     if (AppServerBridge.isPresent(attachedContext)
         && !AppServerBridge.isServerSpanNameUpdatedFromServlet(attachedContext)) {
-      getServerSpan(request).updateName(getSpanName(request));
+      updateSpanName(Span.fromContext(attachedContext), request);
       AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
     }
+  }
+
+  public void updateSpanName(HttpServletRequest request) {
+    updateSpanName(getServerSpan(request), request);
+  }
+
+  private static void updateSpanName(Span span, HttpServletRequest request) {
+    span.updateName(getSpanName(request));
   }
 }

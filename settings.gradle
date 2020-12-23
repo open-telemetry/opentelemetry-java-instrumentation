@@ -135,6 +135,9 @@ include ':instrumentation:lettuce:lettuce-common:javaagent'
 include ':instrumentation:lettuce:lettuce-4.0:javaagent'
 include ':instrumentation:lettuce:lettuce-5.0:javaagent'
 include ':instrumentation:lettuce:lettuce-5.1:javaagent'
+include ':instrumentation:liberty:compile-stub'
+include ':instrumentation:liberty:liberty:javaagent'
+include ':instrumentation:liberty:liberty-dispatcher:javaagent'
 include ':instrumentation:log4j:log4j-1.2:javaagent'
 include ':instrumentation:log4j:log4j-2.7:javaagent'
 include ':instrumentation:log4j:log4j-2.13.2:javaagent'
@@ -200,6 +203,7 @@ include ':instrumentation:spymemcached-2.12:javaagent'
 include ':instrumentation:struts-2.3:javaagent'
 include ':instrumentation:tomcat-7.0:javaagent'
 include ':instrumentation:twilio-6.6:javaagent'
+include ':instrumentation:undertow:javaagent'
 include ':instrumentation:vertx-web-3.0'
 include ':instrumentation:vertx-reactive-3.5:javaagent'
 
@@ -219,6 +223,7 @@ include ":javaagent-exporters:prometheus"
 include ':benchmark'
 include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
+include ':benchmark-e2e'
 
 def setBuildFile(project) {
   // javaagent-unittests modules are needed until those projects have library modules

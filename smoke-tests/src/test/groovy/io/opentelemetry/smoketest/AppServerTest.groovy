@@ -13,10 +13,13 @@ import spock.lang.Unroll
 
 abstract class AppServerTest extends SmokeTest {
 
+  //TODO add assert that server spans were created by servers, not by servlets
   @Unroll
-  def "#appServer smoke test on JDK #jdk"(String appServer, int jdk) {
+  def "#appServer smoke test on JDK #jdk"(String appServer, String jdk) {
     setup:
-    startTarget(jdk, appServer)
+    if (!skipStartTarget()) {
+      startTarget(jdk, appServer)
+    }
     String url = "http://localhost:${target.getMappedPort(8080)}/app/greeting"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
@@ -56,7 +59,9 @@ abstract class AppServerTest extends SmokeTest {
       .isPresent()
 
     cleanup:
-    stopTarget()
+    if (!skipStartTarget()) {
+      stopTarget()
+    }
 
     where:
     [appServer, jdk] << getTestParams()
@@ -64,4 +69,8 @@ abstract class AppServerTest extends SmokeTest {
 
   abstract List<List<Object>> getTestParams()
 
+  // override to start server only once for all tests
+  boolean skipStartTarget() {
+    false
+  }
 }

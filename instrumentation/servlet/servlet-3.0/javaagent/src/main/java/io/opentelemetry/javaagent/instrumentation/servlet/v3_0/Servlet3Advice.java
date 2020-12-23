@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Ht
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,7 +27,7 @@ public class Servlet3Advice {
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    CallDepthThreadLocalMap.incrementCallDepth(Servlet3Advice.class);
+    CallDepthThreadLocalMap.incrementCallDepth(AppServerBridge.getCallDepthKey());
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
@@ -40,7 +41,13 @@ public class Servlet3Advice {
       }
 
       tracer().updateServerSpanNameOnce(attachedContext, httpServletRequest);
+      // We are inside nested servlet/filter/app-server span, don't create new span
+      return;
+    }
 
+    Context parentContext = Java8BytecodeBridge.currentContext();
+    if (parentContext != null && Java8BytecodeBridge.spanFromContext(parentContext).isRecording()) {
+      tracer().updateServerSpanNameOnce(parentContext, httpServletRequest);
       // We are inside nested servlet/filter/app-server span, don't create new span
       return;
     }
@@ -56,7 +63,7 @@ public class Servlet3Advice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(Servlet3Advice.class);
+    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(AppServerBridge.getCallDepthKey());
 
     if (scope != null) {
       scope.close();

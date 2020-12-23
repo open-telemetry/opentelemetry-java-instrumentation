@@ -153,7 +153,7 @@ Because OpenTelemetry API has many common default methods (e.g. `Span.current()`
 the `javaagent-api` artifact has a class `Java8BytecodeBridge` which provides static methods
 for accessing these default methods from advice.
 
-### Why hard code advice class names?
+#### Why hard code advice class names?
 
 Implementations of `TypeInstrumentation` will often implement advice classes as static inner classes.
 These classes are referred to by name in the mappings from method descriptor to advice class,
@@ -176,3 +176,20 @@ and should be maintained.
 Instrumentation modules are loaded by the agent's classloader, and this
 string concatenation is an optimization that prevents the actual advice class
 from being loaded.
+
+#### Instrumenting code that is not available as a maven dependency
+
+If instrumented server or library jar isn't available from a maven repository you can create a
+module with stub classes that define only the methods that you need for writing the integration.
+Methods in stub class can just `throw new UnsupportedOperationException()` these classes are only
+used to compile the advice classes and won't be packaged into agent. During runtime real classes
+from instrumented server or library will be used.
+
+Create a module called `compile-stub` and add `compile-stub.gradle` with following content
+```
+apply from: "$rootDir/gradle/java.gradle"
+```
+In javaagent module add compile only dependency with
+```
+compileOnly project(':instrumentation:xxx:compile-stub')
+```
