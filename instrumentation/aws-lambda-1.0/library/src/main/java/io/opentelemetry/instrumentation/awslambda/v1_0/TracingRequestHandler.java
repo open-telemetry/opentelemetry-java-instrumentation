@@ -24,11 +24,21 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O> {
 
+  private static final long DEFAULT_FLUSH_TIMEOUT_SECONDS = 1;
+
   private final AwsLambdaTracer tracer;
+  private final long flushTimeout;
+
+  /** Creates a new {@link TracingRequestHandler} which traces using the default {@link Tracer}. */
+  protected TracingRequestHandler(long flushTimeout) {
+    this.tracer = new AwsLambdaTracer();
+    this.flushTimeout = flushTimeout;
+  }
 
   /** Creates a new {@link TracingRequestHandler} which traces using the default {@link Tracer}. */
   protected TracingRequestHandler() {
     this.tracer = new AwsLambdaTracer();
+    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
   }
 
   /**
@@ -36,6 +46,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
    */
   protected TracingRequestHandler(Tracer tracer) {
     this.tracer = new AwsLambdaTracer(tracer);
+    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
   }
 
   /**
@@ -44,6 +55,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
    */
   protected TracingRequestHandler(AwsLambdaTracer tracer) {
     this.tracer = tracer;
+    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
   }
 
   private Map<String, String> getHeaders(I input) {
@@ -71,7 +83,9 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
       } else {
         tracer.end(span);
       }
-      OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
+      OpenTelemetrySdk.getGlobalTracerManagement()
+          .forceFlush()
+          .join(flushTimeout, TimeUnit.SECONDS);
     }
   }
 

@@ -23,7 +23,19 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class TracingRequestStreamHandler implements RequestStreamHandler {
 
+  private static final long DEFAULT_FLUSH_TIMEOUT_SECONDS = 1;
+
   private final AwsLambdaTracer tracer;
+  private final long flushTimeout;
+
+  /**
+   * Creates a new {@link TracingRequestStreamHandler} which traces using the default {@link
+   * Tracer}.
+   */
+  protected TracingRequestStreamHandler(long flushTimeout) {
+    this.tracer = new AwsLambdaTracer();
+    this.flushTimeout = flushTimeout;
+  }
 
   /**
    * Creates a new {@link TracingRequestStreamHandler} which traces using the default {@link
@@ -31,6 +43,7 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
    */
   protected TracingRequestStreamHandler() {
     this.tracer = new AwsLambdaTracer();
+    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
   }
 
   /**
@@ -39,6 +52,7 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
    */
   protected TracingRequestStreamHandler(Tracer tracer) {
     this.tracer = new AwsLambdaTracer(tracer);
+    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
   }
 
   /**
@@ -47,6 +61,7 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
    */
   protected TracingRequestStreamHandler(AwsLambdaTracer tracer) {
     this.tracer = tracer;
+    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
   }
 
   @Override
@@ -60,7 +75,9 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
       doHandleRequest(proxyRequest.freshStream(), new OutputStreamWrapper(output, span), context);
     } catch (Throwable t) {
       tracer.endExceptionally(span, t);
-      OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
+      OpenTelemetrySdk.getGlobalTracerManagement()
+          .forceFlush()
+          .join(flushTimeout, TimeUnit.SECONDS);
       throw t;
     }
   }

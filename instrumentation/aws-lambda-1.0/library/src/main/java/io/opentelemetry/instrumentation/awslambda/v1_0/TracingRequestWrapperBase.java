@@ -15,6 +15,10 @@ import java.lang.reflect.Method;
  */
 abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, O> {
 
+  protected TracingRequestWrapperBase() {
+    super(WrapperConfiguration.flushTimeout());
+  }
+
   // visible for testing
   static WrappedLambda WRAPPED_LAMBDA = WrappedLambda.fromConfiguration();
 

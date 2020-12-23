@@ -22,6 +22,10 @@ public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
   // visible for testing
   static WrappedLambda WRAPPED_LAMBDA = WrappedLambda.fromConfiguration();
 
+  public TracingRequestStreamWrapper() {
+    super(WrapperConfiguration.flushTimeout());
+  }
+
   @Override
   protected void doHandleRequest(InputStream inputStream, OutputStream output, Context context)
       throws IOException {
