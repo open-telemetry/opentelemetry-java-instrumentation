@@ -6,20 +6,15 @@ affecting it negatively, for example introducing crashes.
 
 ## Instrumentation tests
 
-All instrumentation are written with instrumentation tests - these can be considered
-the unit tests of this project. Instrumentation tests invoke bytecode manipulation to
-actually rewrite classes similar to how the agent would in a normal app. By then
-exercising the instrumented library in a way a user would, for example by issuing
-requests from an HTTP client, we can assert on the spans that should be generated, including
-their semantic attributes. A problem in the instrumentation will generally cause
-spans to be reported incorrectly or not reported at all, and we can find these situations
-with the instrumentation tests.
+All instrumentation are written with instrumentation tests - these can be considered the unit tests
+of this project.
 
-Note: the instrumentation tests have significant differences from when run against a
-normal app with `-javaagent`, in particular, our usual shading is not applied which
-can cause false positives. We have work in progress to actually run tests with `-javaagent`
-after applying our shading, in which case these tests will run almost identically to
-a normal app and eliminate false positives. https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/1643
+Instrumentation tests are run using a shaded `-javaagent` in order to perform the same bytecode
+instrumentation as when the agent is run against a normal app.
+By then exercising the instrumented library in a way a user would, for example by issuing requests
+from an HTTP client, we can assert on the spans that should be generated, including their semantic
+attributes. A problem in the instrumentation will generally cause spans to be reported incorrectly
+or not reported at all, and we can find these situations with the instrumentation tests.
 
 ## Latest dep tests
 

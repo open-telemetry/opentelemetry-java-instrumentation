@@ -77,12 +77,12 @@ only depend on the OpenTelemetry API, `instrumentation-common`, and the instrume
 [instrumentation-library.gradle](../../gradle/instrumentation-library.gradle) needs to be applied to
 configure build tooling for the library.
 
-## Writing unit tests
+## Writing instrumentation tests
 
-Once the instrumentation is completed, we add unit tests to the `testing` module. Tests will
+Once the instrumentation is completed, we add tests to the `testing` module. Tests will
 generally apply to both library and agent instrumentation, with the only difference being how a client
 or server is initialized. In a library test, there will be code calling into the instrumentation API,
-while in an agent test, it will generally just use the underlying library's API as is. Create unit tests in an
+while in an agent test, it will generally just use the underlying library's API as is. Create tests in an
 abstract class with an abstract method that returns an instrumented object like a client. The class
 should itself extend from `InstrumentationSpecification` to be recognized by Spock and include helper
 methods for assertions.
@@ -100,11 +100,11 @@ Now that we have working instrumentation, we can implement agent instrumentation
 do not have to modify their apps to use it. Make sure the `javaagent` submodule has a dependency on the
 `library` submodule and a test dependency on the `testing` submodule. Agent instrumentation defines
 classes to match against to generate bytecode for. You will often match against the class you used
-in the unit test for library instrumentation, for example the builder of a client. And then you could
+in the test for library instrumentation, for example the builder of a client. And then you could
 match against the method that creates the builder, for example its constructor. Agent instrumentation
 can inject byte code to be run after the constructor returns, which would invoke e.g.,
 `registerInterceptor` and initialize the instrumentation. Often, the code inside the byte code
-decorator will be identical to the one in the unit test you wrote above - the agent does the work for
+decorator will be identical to the one in the test you wrote above - the agent does the work for
 initializing the instrumentation library, so a user doesn't have to.
 
 With that written, let's add tests for the agent instrumentation. We basically want to ensure that
@@ -112,6 +112,34 @@ the instrumentation works without the user knowing about the instrumentation. Ad
 the base class you wrote earlier, but in this, create a client using none of the APIs in our project,
 only the ones offered by the library. Implement the `AgentTestRunner` trait for common setup logic,
 and try running. All the tests should pass for agent instrumentation too.
+
+Note that all the tests inside the `javaagent` module will be run using the shaded `-javaagent`
+in order to perform the same bytecode instrumentation as when the agent is run against a normal app.
+This means that the javaagent instrumentation will be inside the javaagent (inside of the
+`AgentClassLoader`) and will not be directly accessible to your test code. See the next section in
+case you need to write unit tests that directly access the javaagent instrumentation.
+
+## Writing Java agent unit tests
+
+As mentioned above, tests in the `javaagent` module cannot access the javaagent instrumentation
+classes directly. 
+
+Ideally javaagent instrumentation is just a thin wrapper over library instrumentation, and so there
+is no need to write unit tests that directly access the javaagent instrumentation classes.
+
+If you still want to write a unit test against javaagent instrumentation, add another module
+named `javaagent-unittests`. Continuing with the example above:
+
+```
+instrumentation ->
+    ...
+    yarpc-1.0 ->
+        javaagent
+            yarpc-1.0-javaagent.gradle
+        javaagent-unittest
+            yarpc-1.0-javaagent-unittest.gradle
+        ...
+```
 
 ### Java agent instrumentation gotchas
 
