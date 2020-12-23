@@ -122,7 +122,7 @@ case you need to write unit tests that directly access the javaagent instrumenta
 ## Writing Java agent unit tests
 
 As mentioned above, tests in the `javaagent` module cannot access the javaagent instrumentation
-classes directly. 
+classes directly.
 
 Ideally javaagent instrumentation is just a thin wrapper over library instrumentation, and so there
 is no need to write unit tests that directly access the javaagent instrumentation classes.
