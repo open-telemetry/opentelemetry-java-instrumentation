@@ -9,7 +9,7 @@ affecting it negatively, for example introducing crashes.
 All instrumentation are written with instrumentation tests - these can be considered the unit tests
 of this project.
 
-Instrumentation tests are run using a shaded `-javaagent` in order to perform the same bytecode
+Instrumentation tests are run using a fully shaded `-javaagent` in order to perform the same bytecode
 instrumentation as when the agent is run against a normal app.
 By then exercising the instrumented library in a way a user would, for example by issuing requests
 from an HTTP client, we can assert on the spans that should be generated, including their semantic
