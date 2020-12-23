@@ -98,10 +98,7 @@ shadowJar {
 }
 
 tasks.withType(Test).configureEach {
-  // Multi-threaded logging seems to be causing deadlocks with Gradle's log capture.
-  //  jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug"
-  //  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
-  jvmArgs "-Dnet.bytebuddy.raw=true"
+  jvmArgs "-Dotel.javaagent.debug=true"
   jvmArgs "-javaagent:${project(":testing:agent-for-testing").buildDir}/libs/javaagent-for-testing.jar"
   jvmArgs "-Dotel.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dinternal.testing.disable.global.library.ignores=true"

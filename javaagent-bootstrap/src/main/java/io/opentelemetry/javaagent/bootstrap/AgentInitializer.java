@@ -31,8 +31,8 @@ public class AgentInitializer {
       "'[opentelemetry.auto.trace 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
   private static final String SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY =
       "io.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel";
-  private static final String SIMPLE_LOGGER_MUZZLE_LOG_LEVEL_PROPERTY =
-      "io.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher";
+  private static final String SIMPLE_LOGGER_PREFIX =
+      "io.opentelemetry.javaagent.slf4j.simpleLogger.log.";
 
   private static final Logger log;
 
@@ -80,9 +80,15 @@ public class AgentInitializer {
 
     if (isDebugMode()) {
       setSystemPropertyDefault(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY, "DEBUG");
+      // suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
+      setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "io.perfmark.PerfMark", "INFO");
+      setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "io.grpc.Context", "INFO");
+      setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "io.grpc.internal.ServerImplBuilder", "INFO");
+      setSystemPropertyDefault(
+          SIMPLE_LOGGER_PREFIX + "io.grpc.internal.ManagedChannelImplBuilder", "INFO");
     } else {
       // by default muzzle warnings are turned off
-      setSystemPropertyDefault(SIMPLE_LOGGER_MUZZLE_LOG_LEVEL_PROPERTY, "OFF");
+      setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "muzzleMatcher", "OFF");
     }
   }
 
