@@ -95,8 +95,8 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    Context context;
-    HttpAsyncRequestProducer delegate;
+    private final Context context;
+    private final HttpAsyncRequestProducer delegate;
 
     public DelegatingRequestProducer(Context context, HttpAsyncRequestProducer delegate) {
       this.context = context;
@@ -148,6 +148,16 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public void close() throws IOException {
       delegate.close();
+    }
+
+    /**
+     * Exposes context associated with the client invocation. Extending instrumentations can use
+     * this to access client span.
+     *
+     * @return context associated with the invocation.
+     */
+    public Context getContext() {
+      return context;
     }
   }
 
