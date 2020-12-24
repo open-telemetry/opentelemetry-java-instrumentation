@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.test
 
-import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf
 import static net.bytebuddy.matcher.ElementMatchers.isMethod
 import static net.bytebuddy.matcher.ElementMatchers.named
 

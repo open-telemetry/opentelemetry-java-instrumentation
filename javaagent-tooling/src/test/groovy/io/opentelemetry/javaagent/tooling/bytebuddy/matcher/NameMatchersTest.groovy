@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import io.opentelemetry.javaagent.tooling.matcher.NameMatchers
+
 import net.bytebuddy.description.NamedElement
 import spock.lang.Specification
 
