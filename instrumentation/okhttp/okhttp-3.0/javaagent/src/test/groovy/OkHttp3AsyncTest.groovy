@@ -43,7 +43,8 @@ class OkHttp3AsyncTest extends OkHttp3Test {
         latch.countDown()
       }
     })
-    latch.await(20, SECONDS)
+    // need to wait a while for tests of the connection timeout (20 seconds led to failures in CI)
+    latch.await(30, SECONDS)
     if (exRef.get() != null) {
       throw exRef.get()
     }
