@@ -10,10 +10,12 @@ import java.time.Duration
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.containers.wait.strategy.WaitStrategy
 
+@AppServer(version = "5.2020.6", jdk = "8")
+@AppServer(version = "5.2020.6-jdk11", jdk = "11")
 class GlassFishSmokeTest extends AppServerTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:payara-${serverVersion}-jdk$jdk-20201207.405832649"
+    "ghcr.io/open-telemetry/java-test-containers:payara-${serverVersion}-jdk$jdk-20201215.422527843"
   }
 
   @Override
@@ -29,10 +31,7 @@ class GlassFishSmokeTest extends AppServerTest {
   }
 
   @Override
-  List<List<Object>> getTestParams() {
-    return [
-      ["5.2020.6", 8],
-      ["5.2020.6-jdk11", 11]
-    ]
+  protected String getSpanName(String path) {
+    return path
   }
 }

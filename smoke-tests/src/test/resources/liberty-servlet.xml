@@ -1,0 +1,12 @@
+<server description="Sample Liberty server">
+  <variable name="default.http.port" defaultValue="8080"/>
+
+  <featureManager>
+    <feature>servlet-4.0</feature>
+  </featureManager>
+
+  <webApplication location="app.war" contextRoot="/app" />
+  <mpMetrics authentication="false"/>
+
+  <httpEndpoint host="*" httpPort="${default.http.port}" id="defaultHttpEndpoint"/>
+</server>

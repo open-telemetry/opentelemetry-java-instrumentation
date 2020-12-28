@@ -7,16 +7,29 @@ package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.trace.v1.Span
 import okhttp3.Request
+import spock.lang.Unroll
 
+@AppServer(version = "13.0.0.Final", jdk = "8")
+@AppServer(version = "17.0.1.Final", jdk = "11")
+@AppServer(version = "21.0.0.Final", jdk = "11")
 class WildflySmokeTest extends AppServerTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:wildfly-${serverVersion}-jdk$jdk-20201207.405832649"
+    "ghcr.io/open-telemetry/java-test-containers:wildfly-${serverVersion}-jdk$jdk-20201215.422527843"
   }
 
+  @Override
+  protected String getSpanName(String path) {
+    switch (path) {
+      case "/app/WEB-INF/web.xml":
+      case "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless":
+        return "DisallowedMethodsHandler.handleRequest"
+    }
+    return path
+  }
+
+  @Unroll
   def "JSP smoke test on WildFly"() {
-    setup:
-    startTarget(11, "21.0.0.Final")
     String url = "http://localhost:${target.getMappedPort(8080)}/app/jsp"
     def request = new Request.Builder().url(url).get().build()
 
@@ -33,15 +46,7 @@ class WildflySmokeTest extends AppServerTest {
 
     traces.countSpansByName('/app/jsp') == 1
 
-  }
-
-  @Override
-  List<List<Object>> getTestParams() {
-    //TODO introduce new configuration parameter to run all permutations of appServer/jdk
-    return [
-      ["13.0.0.Final", 8],
-      ["17.0.1.Final", 11],
-      ["21.0.0.Final", 11]
-    ]
+    where:
+    [appServer, jdk] << getTestParams()
   }
 }
