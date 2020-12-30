@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 public final class OpenTelemetrySdkAccess {
 
   /**
-   * Interface matching {@link io.opentelemetry.sdk.trace.TracerSdkProvider#forceFlush()} to allow
+   * Interface matching {@link io.opentelemetry.sdk.trace.SdkTracerManagement#forceFlush()} to allow
    * holding a reference to it.
    */
   public interface ForceFlusher {
