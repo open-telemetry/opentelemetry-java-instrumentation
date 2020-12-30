@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SERVLET_EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
@@ -24,6 +25,7 @@ import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.Callable
+import javax.servlet.ServletException
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -132,11 +134,24 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     true
   }
 
+  boolean testServletException() {
+    false
+  }
+
+  boolean testRedirect() {
+    true
+  }
+
+  boolean testError() {
+    true
+  }
+
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
     REDIRECT("redirect", 302, "/redirected"),
     ERROR("error-status", 500, "controller error"), // "error" is a special path for some frameworks
-    EXCEPTION("exception", 500, "controller exception"),
+    EXCEPTION("exception", 500, "controller exception", Exception),
+    SERVLET_EXCEPTION("servlet-exception", 500, "controller exception", ServletException),
     NOT_FOUND("notFound", 404, "not found"),
 
     // TODO: add tests for the following cases:
@@ -155,15 +170,17 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     final String fragment
     final int status
     final String body
+    final Class exceptionClass
     final Boolean errored
 
-    ServerEndpoint(String uri, int status, String body) {
+    ServerEndpoint(String uri, int status, String body, Class exceptionClass = null) {
       this.uriObj = URI.create(uri)
       this.path = uriObj.path
       this.query = uriObj.query
       this.fragment = uriObj.fragment
       this.status = status
       this.body = body
+      this.exceptionClass = exceptionClass
       this.errored = status >= 400
     }
 
@@ -282,6 +299,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test redirect"() {
     setup:
+    assumeTrue(testRedirect())
     def request = request(REDIRECT, method, body).build()
     def response = client.newCall(request).execute()
 
@@ -301,6 +319,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test error"() {
     setup:
+    assumeTrue(testError())
     def request = request(ERROR, method, body).build()
     def response = client.newCall(request).execute()
 
@@ -332,6 +351,23 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
     and:
     assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body, response)
+
+    where:
+    method = "GET"
+    body = null
+  }
+
+  def "test servlet exception"() {
+    setup:
+    assumeTrue(testServletException())
+    def request = request(SERVLET_EXCEPTION, method, body).build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.code() == SERVLET_EXCEPTION.status
+
+    and:
+    assertTheTraces(1, null, null, method, SERVLET_EXCEPTION, SERVLET_EXCEPTION.body, response)
 
     where:
     method = "GET"
@@ -402,9 +438,9 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
           }
           if (endpoint != NOT_FOUND) {
             if (hasHandlerSpan()) {
-              controllerSpan(it, spanIndex++, span(1), errorMessage)
+              controllerSpan(it, spanIndex++, span(1), errorMessage, endpoint.exceptionClass)
             } else {
-              controllerSpan(it, spanIndex++, span(0), errorMessage)
+              controllerSpan(it, spanIndex++, span(0), errorMessage, endpoint.exceptionClass)
             }
             if (hasRenderSpan(endpoint)) {
               renderSpan(it, spanIndex++, span(0), method, endpoint)
@@ -422,12 +458,12 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
   }
 
-  void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null) {
+  void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
     trace.span(index) {
       name "controller"
       errored errorMessage != null
       if (errorMessage) {
-        errorEvent(Exception, errorMessage)
+        errorEvent(exceptionClass, errorMessage)
       }
       childOf((SpanData) parent)
     }
@@ -461,12 +497,12 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
       } else {
         hasNoParent()
       }
-      if (endpoint == EXCEPTION && !hasHandlerSpan()) {
+      if ((endpoint == EXCEPTION || endpoint == SERVLET_EXCEPTION) && !hasHandlerSpan()) {
         event(0) {
           eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
           attributes {
-            "${SemanticAttributes.EXCEPTION_TYPE.key}" { it == null || it == Exception.name }
-            "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { it == null || it == EXCEPTION.body }
+            "${SemanticAttributes.EXCEPTION_TYPE.key}" { it == null || it == endpoint.exceptionClass.name }
+            "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { it == null || it == endpoint.body }
             "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" { it == null || it instanceof String }
           }
         }
