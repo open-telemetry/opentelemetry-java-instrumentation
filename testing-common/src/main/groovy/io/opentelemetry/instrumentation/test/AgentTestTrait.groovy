@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.test
 
-import com.google.common.base.Predicate
+
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
-import io.opentelemetry.sdk.trace.data.SpanData
 
 /**
  * A trait which initializes agent tests, including bytecode manipulation and a test span exporter.
@@ -36,7 +35,6 @@ trait AgentTestTrait {
   }
 
   def cleanupSpec() {
-    agentTestRunner.cleanUpAfterTests()
     AgentTestRunner.agentCleanup()
 
     childCleanupSpec()
@@ -67,17 +65,6 @@ trait AgentTestTrait {
                     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
                     final Closure spec) {
     AgentTestRunner.assertTraces(size, spec)
-  }
-
-  void assertTracesWithFilter(
-    final int size,
-    final Predicate<List<SpanData>> excludes,
-    @ClosureParams(
-      value = SimpleType,
-      options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
-    final Closure spec) {
-    AgentTestRunner.assertTracesWithFilter(size, excludes, spec)
   }
 
   static class AgentTestRunnerImpl extends AgentTestRunner {}

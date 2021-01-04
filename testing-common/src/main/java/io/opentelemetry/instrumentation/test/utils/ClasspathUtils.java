@@ -11,7 +11,6 @@ import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.ClassPath;
-import io.opentelemetry.javaagent.tooling.Utils;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -43,8 +42,7 @@ public class ClasspathUtils {
   public static byte[] convertToByteArray(Class<?> clazz) throws IOException {
     InputStream inputStream = null;
     try {
-      inputStream =
-          clazz.getClassLoader().getResourceAsStream(Utils.getResourceName(clazz.getName()));
+      inputStream = clazz.getClassLoader().getResourceAsStream(getResourceName(clazz.getName()));
       return convertToByteArray(inputStream);
     } finally {
       if (inputStream != null) {
@@ -100,7 +98,7 @@ public class ClasspathUtils {
     Manifest manifest = new Manifest();
     JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
     for (Class<?> clazz : classes) {
-      addToJar(Utils.getResourceName(clazz.getName()), convertToByteArray(clazz), target);
+      addToJar(getResourceName(clazz.getName()), convertToByteArray(clazz), target);
     }
     target.close();
 
@@ -175,6 +173,15 @@ public class ClasspathUtils {
       }
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(e);
+    }
+  }
+
+  /** com.foo.Bar to com/foo/Bar.class */
+  private static String getResourceName(String className) {
+    if (!className.endsWith(".class")) {
+      return className.replace('.', '/') + ".class";
+    } else {
+      return className;
     }
   }
 }

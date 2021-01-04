@@ -5,3 +5,7 @@ muzzle {
     coreJdk()
   }
 }
+
+tasks.withType(Test) {
+  jvmArgs "-Dotel.instrumentation.executors.include=ExecutorInstrumentationTest\$CustomThreadPoolExecutor"
+}

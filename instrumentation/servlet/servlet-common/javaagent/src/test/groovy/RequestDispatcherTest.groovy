@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import javax.servlet.ServletException
@@ -18,7 +16,6 @@ class RequestDispatcherTest extends AgentTestRunner {
 
   def request = Mock(HttpServletRequest)
   def response = Mock(HttpServletResponse)
-  def mockContext = Context.root().with(Mock(Span))
   def dispatcher = new RequestDispatcherUtils(request, response)
 
   def "test dispatch no-parent"() {
@@ -27,7 +24,6 @@ class RequestDispatcherTest extends AgentTestRunner {
     dispatcher.include("")
 
     then:
-    2 * request.getAttribute(CONTEXT_ATTRIBUTE)
     assertTraces(2) {
       trace(0, 1) {
         basicSpan(it, 0, "forward-child")
@@ -36,9 +32,6 @@ class RequestDispatcherTest extends AgentTestRunner {
         basicSpan(it, 0, "include-child")
       }
     }
-
-    and:
-    0 * _
   }
 
   def "test dispatcher #method with parent"() {
@@ -48,7 +41,6 @@ class RequestDispatcherTest extends AgentTestRunner {
     }
 
     then:
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE)
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
@@ -59,14 +51,6 @@ class RequestDispatcherTest extends AgentTestRunner {
         basicSpan(it, 2, "$operation-child", span(1))
       }
     }
-
-    then:
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
-    then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "TestDispatcher.$operation" })
-    then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, mockContext)
-    0 * _
 
     where:
     operation | method
@@ -80,18 +64,19 @@ class RequestDispatcherTest extends AgentTestRunner {
 
   def "test dispatcher #method with parent from request attribute"() {
     setup:
-    def mockContext = null
+    Context context
     runUnderTrace("parent") {
-      mockContext = Context.current()
+      context = Context.current()
     }
 
     when:
     runUnderTrace("notParent") {
-      dispatcher."$method"(target)
+      context.makeCurrent().withCloseable {
+        dispatcher."$method"(target)
+      }
     }
 
     then:
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
     assertTraces(2) {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
@@ -105,12 +90,6 @@ class RequestDispatcherTest extends AgentTestRunner {
         basicSpan(it, 0, "notParent")
       }
     }
-
-    then:
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "TestDispatcher.$operation" })
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "parent" })
-    0 * _
 
     where:
     operation | method
@@ -136,7 +115,6 @@ class RequestDispatcherTest extends AgentTestRunner {
     def th = thrown(ServletException)
     th == ex
 
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE)
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, ex)
@@ -149,14 +127,6 @@ class RequestDispatcherTest extends AgentTestRunner {
         basicSpan(it, 2, "$operation-child", span(1))
       }
     }
-
-    then:
-    1 * request.getAttribute(CONTEXT_ATTRIBUTE) >> mockContext
-    then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, { Span.fromContext(it).name == "TestDispatcher.$operation" })
-    then:
-    1 * request.setAttribute(CONTEXT_ATTRIBUTE, mockContext)
-    0 * _
 
     where:
     operation | method

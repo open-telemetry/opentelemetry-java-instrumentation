@@ -22,3 +22,6 @@ dependencies {
   latestDepTestLibrary group: 'org.apache.derby', name: 'derby', version: '10.14.+'
 }
 
+tasks.withType(Test) {
+  jvmArgs "-Dotel.instrumentation.jdbc-datasource.enabled=true"
+}

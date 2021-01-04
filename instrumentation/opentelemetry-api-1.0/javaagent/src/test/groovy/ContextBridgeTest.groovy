@@ -3,192 +3,150 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import application.io.opentelemetry.api.OpenTelemetry
-import application.io.opentelemetry.api.baggage.Baggage
-import application.io.opentelemetry.api.baggage.BaggageEntryMetadata
-import application.io.opentelemetry.api.trace.Span
-import application.io.opentelemetry.context.Context
-import application.io.opentelemetry.context.ContextKey
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.baggage.Baggage
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.context.Context
+import io.opentelemetry.context.ContextKey
+import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 
 class ContextBridgeTest extends AgentTestRunner {
 
   private static final ContextKey<String> ANIMAL = ContextKey.named("animal")
 
-  private static final io.opentelemetry.context.ContextKey<String> FOOD =
-    io.opentelemetry.context.ContextKey.named("food")
-  private static final io.opentelemetry.context.ContextKey<String> COUNTRY =
-    io.opentelemetry.context.ContextKey.named("country")
-
-  def "agent and application mix"() {
-    expect:
-    def agentContext = io.opentelemetry.context.Context.current().with(COUNTRY, "japan")
-    io.opentelemetry.context.Context.current().get(COUNTRY) == null
-    agentContext.makeCurrent().withCloseable {
-      io.opentelemetry.context.Context.current().get(COUNTRY) == "japan"
-      Context.current().with(ANIMAL, "cat").makeCurrent().withCloseable {
-        Context.current().get(ANIMAL) == "cat"
-        io.opentelemetry.context.Context.current().get(COUNTRY) == "japan"
-
-        def agentContext2 = io.opentelemetry.context.Context.current().with(FOOD, "cheese")
-        io.opentelemetry.context.Context.current().get(FOOD) == null
-        agentContext2.makeCurrent().withCloseable {
-          io.opentelemetry.context.Context.current().get(FOOD) == "cheese"
-          io.opentelemetry.context.Context.current().get(COUNTRY) == "japan"
-          Context.current().get(ANIMAL) == "cat"
-        }
-      }
-    }
-  }
-
-  // The difference between "standard" context interop and our bridge is that with normal interop,
-  // keys are still isolated completely. We have special logic to share the same data for our known
-  // types like span.
-  def "agent and application share span"() {
+  def "agent propagates application's context"() {
     when:
-    def applicationTracer = OpenTelemetry.getGlobalTracer("test")
-    def agentTracer = io.opentelemetry.api.OpenTelemetry.getGlobalTracer("test")
+    def context = Context.current().with(ANIMAL, "cat")
+    def captured = new AtomicReference<String>()
+    context.makeCurrent().withCloseable {
+      Executors.newSingleThreadExecutor().submit({
+        captured.set(Context.current().get(ANIMAL))
+      }).get()
+    }
 
     then:
-    !Span.current().spanContext.isValid()
-    !io.opentelemetry.api.trace.Span.current().spanContext.isValid()
-
-    def applicationSpan = applicationTracer.spanBuilder("test1").startSpan()
-    applicationSpan.spanContext.isValid()
-    applicationSpan.makeCurrent().withCloseable {
-      Span.current().spanContext.spanIdAsHexString == applicationSpan.spanContext.spanIdAsHexString
-      io.opentelemetry.api.trace.Span.current().spanContext.spanIdAsHexString == applicationSpan.spanContext.spanIdAsHexString
-
-      def agentSpan = agentTracer.spanBuilder("test2").startSpan()
-      agentSpan.makeCurrent().withCloseable {
-        Span.current().spanContext.spanIdAsHexString == agentSpan.spanContext.spanIdAsHexString
-        Span.current().spanContext.traceIdAsHexString == agentSpan.spanContext.spanIdAsHexString
-        Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.spanIdAsHexString
-        io.opentelemetry.api.trace.Span.current().spanContext.spanIdAsHexString == agentSpan.spanContext.spanIdAsHexString
-        io.opentelemetry.api.trace.Span.current().spanContext.traceIdAsHexString == agentSpan.spanContext.traceIdAsHexString
-        io.opentelemetry.api.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.traceIdAsHexString
-
-        def applicationSpan2 = applicationTracer.spanBuilder("test3").startSpan()
-        applicationSpan2.makeCurrent().withCloseable {
-          Span.current().spanContext.spanIdAsHexString == applicationSpan2.spanContext.spanIdAsHexString
-          Span.current().spanContext.traceIdAsHexString == applicationSpan2.spanContext.spanIdAsHexString
-          Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.spanIdAsHexString
-          io.opentelemetry.api.trace.Span.current().spanContext.spanIdAsHexString == applicationSpan2.spanContext.spanIdAsHexString
-          io.opentelemetry.api.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan2.spanContext.traceIdAsHexString
-          io.opentelemetry.api.trace.Span.current().spanContext.traceIdAsHexString == applicationSpan.spanContext.traceIdAsHexString
-        }
-      }
-    }
+    captured.get() == "cat"
   }
 
-  def "agent and application share baggage"() {
-    expect:
-    def applicationBaggage = Baggage.builder()
-      .put("food", "cheese")
-      .put("country", "japan", BaggageEntryMetadata.create("asia"))
-      .build()
-
-    applicationBaggage.makeCurrent().withCloseable {
-      def agentBaggage = io.opentelemetry.api.baggage.Baggage.current()
-      agentBaggage.asMap().with {
-        size() == 2
-        get("food").value == "cheese"
-        get("food").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.empty()
-        get("country").value == "japan"
-        get("country").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.create("asia")
-      }
-
-      agentBaggage = io.opentelemetry.api.baggage.Baggage.builder()
-        .put("country", "italy", io.opentelemetry.api.baggage.BaggageEntryMetadata.create("europe"))
-        .build()
-      agentBaggage.makeCurrent().withCloseable {
-        def updatedApplicationBaggage = Baggage.current()
-        updatedApplicationBaggage.asMap().with {
-          size() == 2
-          get("food").value == "cheese"
-          get("food").entryMetadata == BaggageEntryMetadata.empty()
-          get("country").value == "italy"
-          get("country").entryMetadata == BaggageEntryMetadata.create("europe")
-        }
-
-        applicationBaggage = applicationBaggage.toBuilder()
-          .put("food", "cabbage")
-          .build()
-        applicationBaggage.makeCurrent().withCloseable {
-          agentBaggage = io.opentelemetry.api.baggage.Baggage.current()
-          agentBaggage.asMap().with {
-            size() == 2
-            get("food").value == "cabbage"
-            get("food").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.empty()
-            get("country").value == "japan"
-            get("country").entryMetadata == io.opentelemetry.api.baggage.BaggageEntryMetadata.create("asia")
-          }
-        }
-      }
-    }
-  }
-
-  def "agent wraps"() {
-    expect:
-    def agentContext = io.opentelemetry.context.Context.current().with(COUNTRY, "japan")
-    agentContext.makeCurrent().withCloseable {
-      Context.current().with(ANIMAL, "cat").makeCurrent().withCloseable {
-        io.opentelemetry.context.Context.current().get(COUNTRY) == "japan"
-        Context.current().get(ANIMAL) == "cat"
-
-        def agentValue = new AtomicReference<String>()
-        def applicationValue = new AtomicReference<String>()
-        Runnable runnable = {
-          agentValue.set(io.opentelemetry.context.Context.current().get(COUNTRY))
-          applicationValue.set(Context.current().get(ANIMAL))
-        }
-
-        runnable.run()
-        agentValue.get() == null
-        applicationValue.get() == null
-
-        def ctx = io.opentelemetry.context.Context.current()
-        // Simulate another thread by remounting root
+  def "application propagates agent's context"() {
+    when:
+    new Runnable() {
+      @WithSpan("test")
+      @Override
+      void run() {
+        // using @WithSpan above to make the agent generate a context
+        // and then using manual propagation below to verify that context can be propagated by user
+        def context = Context.current()
         Context.root().makeCurrent().withCloseable {
-          io.opentelemetry.context.Context.root().makeCurrent().withCloseable {
-            ctx.wrap(runnable).run()
+          Span.current().setAttribute("dog", "no")
+          context.makeCurrent().withCloseable {
+            Span.current().setAttribute("cat", "yes")
           }
         }
-        agentValue.get() == "japan"
-        applicationValue.get() == "cat"
+      }
+    }.run()
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "test"
+          hasNoParent()
+          attributes {
+            "cat" "yes"
+          }
+        }
       }
     }
   }
 
-  def "application wraps"() {
-    expect:
-    def agentContext = io.opentelemetry.context.Context.current().with(COUNTRY, "japan")
-    agentContext.makeCurrent().withCloseable {
-      Context.current().with(ANIMAL, "cat").makeCurrent().withCloseable {
-        io.opentelemetry.context.Context.current().get(COUNTRY) == "japan"
-        Context.current().get(ANIMAL) == "cat"
+  def "agent propagates application's span"() {
+    when:
+    def tracer = OpenTelemetry.getGlobalTracer("test")
 
-        def agentValue = new AtomicReference<String>()
-        def applicationValue = new AtomicReference<String>()
-        Runnable runnable = {
-          agentValue.set(io.opentelemetry.context.Context.current().get(COUNTRY))
-          applicationValue.set(Context.current().get(ANIMAL))
+    def testSpan = tracer.spanBuilder("test").startSpan()
+    testSpan.makeCurrent().withCloseable {
+      Executors.newSingleThreadExecutor().submit({
+        Span.current().setAttribute("cat", "yes")
+      }).get()
+    }
+    testSpan.end()
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "test"
+          hasNoParent()
+          attributes {
+            "cat" "yes"
+          }
         }
+      }
+    }
+  }
 
-        agentValue.get() == null
-        applicationValue.get() == null
-
-        def ctx = Context.current()
-        // Simulate another thread by remounting root
+  def "application propagates agent's span"() {
+    when:
+    new Runnable() {
+      @WithSpan("test")
+      @Override
+      void run() {
+        // using @WithSpan above to make the agent generate a span
+        // and then using manual propagation below to verify that span can be propagated by user
+        def span = Span.current()
         Context.root().makeCurrent().withCloseable {
-          io.opentelemetry.context.Context.root().makeCurrent().withCloseable {
-            ctx.wrap(runnable).run()
+          Span.current().setAttribute("dog", "no")
+          span.makeCurrent().withCloseable {
+            Span.current().setAttribute("cat", "yes")
           }
         }
-        agentValue.get() == "japan"
-        applicationValue.get() == "cat"
+      }
+    }.run()
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "test"
+          hasNoParent()
+          attributes {
+            "cat" "yes"
+          }
+        }
       }
     }
   }
+
+  def "agent propagates application's baggage"() {
+    when:
+    def testBaggage = Baggage.builder().put("cat", "yes").build()
+    def ref = new AtomicReference<Baggage>()
+    def latch = new CountDownLatch(1)
+    testBaggage.makeCurrent().withCloseable {
+      Executors.newSingleThreadExecutor().submit({
+        ref.set(Baggage.current())
+        latch.countDown()
+      }).get()
+    }
+
+    then:
+    latch.await()
+    ref.get().size() == 1
+    ref.get().getEntryValue("cat") == "yes"
+  }
+
+  // TODO (trask)
+  // more tests are needed here, not sure how to implement, probably need to write some test
+  // instrumentation to help test, similar to :testing-common:integration-tests
+  //
+  // * "application propagates agent's baggage"
+  // * "agent uses application's span"
+  // * "application uses agent's span" (this is covered above by "application propagates agent's span")
+  // * "agent uses application's baggage"
+  // * "application uses agent's baggage"
 }

@@ -20,7 +20,7 @@ dependencies {
   testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   // ensures jedis-1.4 instrumentation does not load with jedis 3.0+ by failing
   // the tests in the event it does. The tests will end up with double spans
-  testImplementation project(':instrumentation:jedis:jedis-1.4:javaagent')
+  testInstrumentation project(':instrumentation:jedis:jedis-1.4:javaagent')
 
   testLibrary group: 'redis.clients', name: 'jedis', version: '3.+'
 }

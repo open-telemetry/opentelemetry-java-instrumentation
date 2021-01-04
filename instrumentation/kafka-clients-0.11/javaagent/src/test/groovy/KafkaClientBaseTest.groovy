@@ -22,9 +22,8 @@ abstract class KafkaClientBaseTest extends AgentTestRunner {
 
   protected static final SHARED_TOPIC = "shared.topic"
 
-  protected isPropagationEnabled() {
-    return true
-  }
+  private static final boolean propagationEnabled = Boolean.parseBoolean(
+    System.getProperty("otel.instrumentation.kafka.client-propagation", "true"))
 
   @Rule
   KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, SHARED_TOPIC)
@@ -73,7 +72,7 @@ abstract class KafkaClientBaseTest extends AgentTestRunner {
     // check that the message was received
     def received = records.poll(5, TimeUnit.SECONDS)
 
-    received.headers().iterator().hasNext() == isPropagationEnabled()
+    received.headers().iterator().hasNext() == propagationEnabled
 
     cleanup:
     producerFactory.stop()

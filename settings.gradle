@@ -32,10 +32,8 @@ buildCache {
 rootProject.name = 'opentelemetry-java-instrumentation'
 
 // agent projects
-include ':opentelemetry-sdk-shaded-for-testing'
 include ':opentelemetry-api-shaded-for-instrumenting'
 include ':opentelemetry-ext-annotations-shaded-for-instrumenting'
-include ':opentelemetry-sdk-shaded-for-instrumenting'
 include ':javaagent-bootstrap'
 include ':javaagent-spi'
 include ':javaagent-tooling'
@@ -46,8 +44,11 @@ include ':instrumentation-api'
 include ':javaagent-api'
 
 // misc
-include ':testing-bootstrap'
+include ':testing:agent-exporter'
+include ':testing:agent-for-testing'
 include ':testing-common'
+include ':testing-common:integration-tests'
+include ':testing-common:library-for-integration-tests'
 include ':utils:test-utils'
 
 // smoke tests
@@ -91,6 +92,7 @@ include ':instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent'
 include ':instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent'
 include ':instrumentation:executors:javaagent'
 include ':instrumentation:external-annotations:javaagent'
+include ':instrumentation:external-annotations:javaagent-unittests'
 include ':instrumentation:finatra-2.9:javaagent'
 include ':instrumentation:geode-1.4:javaagent'
 include ':instrumentation:google-http-client-1.19:javaagent'
@@ -117,6 +119,7 @@ include ':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-common:
 include ':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-jersey-2.0:javaagent'
 include ':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-resteasy-2.0:javaagent'
 include ':instrumentation:jdbc:javaagent'
+include ':instrumentation:jdbc:javaagent-unittests'
 include ':instrumentation:jedis:jedis-1.4:javaagent'
 include ':instrumentation:jedis:jedis-3.0:javaagent'
 include ':instrumentation:jetty-8.0:javaagent'
@@ -127,6 +130,7 @@ include ':instrumentation:kafka-streams-0.11:javaagent'
 include ':instrumentation:khttp-0.1:javaagent'
 include ':instrumentation:kotlinx-coroutines:javaagent'
 include ':instrumentation:kubernetes-client-7.0:javaagent'
+include ':instrumentation:kubernetes-client-7.0:javaagent-unittests'
 include ':instrumentation:lettuce:lettuce-common:javaagent'
 include ':instrumentation:lettuce:lettuce-4.0:javaagent'
 include ':instrumentation:lettuce:lettuce-5.0:javaagent'
@@ -222,7 +226,9 @@ include ':benchmark-integration:jetty-perftest'
 include ':benchmark-e2e'
 
 def setBuildFile(project) {
-  if (['javaagent', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {
+  // javaagent-unittests modules are needed until those projects have library modules
+  // at which time those unittests can be moved to the library modules
+  if (['javaagent', 'javaagent-unittests', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {
     project.buildFileName = "${project.projectDir.parentFile.name}-${project.projectDir.name}.gradle"
   } else {
     project.buildFileName = "${project.name}.gradle"

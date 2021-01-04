@@ -29,9 +29,9 @@ dependencies {
   implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common:javaagent')
 
   // Ensure no cross interference
-  testImplementation project(':instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent')
-  testImplementation project(':instrumentation:apache-httpasyncclient-4.1:javaagent')
-  testImplementation project(':instrumentation:netty:netty-4.1:javaagent')
+  testInstrumentation project(':instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent')
+  testInstrumentation project(':instrumentation:apache-httpasyncclient-4.1:javaagent')
+  testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
 
   testLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.0.0'
 

@@ -3,19 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import java.util.concurrent.CountDownLatch
-
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge
+import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 
+import java.util.concurrent.CountDownLatch
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
 
 class ScalaConcurrentTests {
-  // Java8BytecodeBridge is needed in order to support Scala 2.11 which targets Java 6 bytecode
-  val tracer: Tracer =
-    Java8BytecodeBridge.getGlobalTracer("io.opentelemetry.auto")
+  val tracer: Tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
 
   /** @return Number of expected spans in the trace */
   def traceWithFutureAndCallbacks() {

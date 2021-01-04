@@ -25,11 +25,11 @@ dependencies {
 
   implementation project(':instrumentation:elasticsearch:elasticsearch-rest-common:javaagent')
 
-  testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
-  testImplementation project(':instrumentation:apache-httpasyncclient-4.1:javaagent')
+  testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
+  testInstrumentation project(':instrumentation:apache-httpasyncclient-4.1:javaagent')
   //TODO: review the following claim, we are not using embedded ES anymore
   // Netty is used, but it adds complexity to the tests since we're using embedded ES.
-  //testImplementation project(':instrumentation:netty:netty-4.1:javaagent')
+  //testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
 
   testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'

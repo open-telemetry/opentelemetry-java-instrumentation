@@ -9,21 +9,12 @@ import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.test.annotation.TracedWithSpan
 
 /**
  * This test verifies that auto instrumentation supports {@link io.opentelemetry.extension.annotations.WithSpan} contrib annotation.
  */
 class WithSpanInstrumentationTest extends AgentTestRunner {
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.instrumentation.opentelemetry-annotations.exclude-methods",
-      "${TracedWithSpan.name}[ignored]")
-  }
-
-  def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   def "should derive automatic name"() {
     setup:

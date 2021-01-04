@@ -16,3 +16,7 @@ dependencies {
   testImplementation deps.scala
   testImplementation group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
 }
+
+tasks.withType(Test) {
+  jvmArgs '-Dotel.instrumentation.akka-actor.enabled=true'
+}

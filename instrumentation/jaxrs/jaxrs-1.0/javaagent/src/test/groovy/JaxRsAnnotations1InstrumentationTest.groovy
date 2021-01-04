@@ -6,9 +6,6 @@
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.javaagent.instrumentation.api.WeakMap
-import io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxRsAnnotationsTracer
-import java.lang.reflect.Method
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -40,9 +37,8 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
     }
   }
 
-  def "span named '#name' from annotations on class when is not root span"() {
+  def "span named '#paramName' from annotations on class when is not root span"() {
     setup:
-    def startingCacheSize = spanNames.size()
     runUnderServerTrace("test") {
       obj.call()
     }
@@ -64,8 +60,6 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
         }
       }
     }
-    spanNames.size() == startingCacheSize + 1
-    spanNames.get(obj.class).size() == 1
 
     when: "multiple calls to the same method"
     runUnderServerTrace("test") {
@@ -74,8 +68,6 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
       }
     }
     then: "doesn't increase the cache size"
-    spanNames.size() == startingCacheSize + 1
-    spanNames.get(obj.class).size() == 1
 
     where:
     paramName      | obj
@@ -129,10 +121,6 @@ class JaxRsAnnotations1InstrumentationTest extends AgentTestRunner {
     // "/child/invoke"  | new JavaInterfaces.DefaultChildClassOnInterface()
 
     className = getClassName(obj.class)
-
-    // JavaInterfaces classes are loaded on a different classloader, so we need to find the right cache instance.
-    decorator = obj.class.classLoader.loadClass(JaxRsAnnotationsTracer.name).getMethod("tracer").invoke(null)
-    spanNames = (WeakMap<Class, Map<Method, String>>) decorator.spanNames
   }
 
   def "no annotations has no effect"() {

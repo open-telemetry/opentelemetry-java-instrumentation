@@ -15,6 +15,15 @@ dependencies {
   implementation project(':instrumentation:netty:netty-4.1:javaagent')
 
   testLibrary group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
+
+  // Need to force version of Guava older than opentelemetry-sdk's implicit dependency to have one
+  // that is compatible with ratpack.
+  testImplementation("com.google.guava:guava") {
+    version {
+      strictly("20.0")
+    }
+  }
+
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
     testImplementation group: 'com.sun.activation', name: 'jakarta.activation', version: '1.2.2'
   }

@@ -7,8 +7,16 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 
 
 dependencies {
-  testImplementation project(':instrumentation:servlet:servlet-3.0:javaagent')
-  testImplementation project(':instrumentation:grizzly-2.0:javaagent')
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:grizzly-2.0:javaagent')
+
+  // Need to force version of Guava older than opentelemetry-sdk's implicit dependency to have one
+  // that is compatible with Grizzly.
+  testImplementation("com.google.guava:guava") {
+    version {
+      strictly("20.0")
+    }
+  }
 
   testLibrary group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '4.0'
 }

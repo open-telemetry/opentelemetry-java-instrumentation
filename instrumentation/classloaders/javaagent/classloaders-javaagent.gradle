@@ -5,3 +5,11 @@ dependencies {
 
   testImplementation project(':javaagent-bootstrap')
 }
+
+// TODO (trask) ResourceInjectionTest is sort of hybrid integration/unit test
+//  maybe cleaner turning it into integration test with its own test instrumentation,
+//  similar to :testing-common:integration-tests
+//  then wouldn't need this shadowJar and wouldn't need HelperInjectorAccess
+shadowJar {
+  from("src/test/resources/")
+}

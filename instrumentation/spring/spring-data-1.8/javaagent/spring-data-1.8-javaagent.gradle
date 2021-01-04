@@ -30,7 +30,7 @@ dependencies {
   testLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
 
   // JPA dependencies
-  testImplementation project(':instrumentation:jdbc:javaagent')
+  testInstrumentation project(':instrumentation:jdbc:javaagent')
   testImplementation group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
   testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
   testImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'

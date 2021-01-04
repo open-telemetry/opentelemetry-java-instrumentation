@@ -54,6 +54,10 @@ See [Writing instrumentation](docs/contributing/writing-instrumentation.md)
 
 See [Understanding the javaagent components](docs/contributing/javaagent-jar-components.md)
 
+### Understanding the javaagent instrumentation testing components
+
+See [Understanding the javaagent instrumentation testing components](docs/contributing/javaagent-test-infra.md)
+
 ### Debugging
 
 See [Debugging](docs/contributing/debugging.md)

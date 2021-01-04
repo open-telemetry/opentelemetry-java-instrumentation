@@ -9,11 +9,12 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import io.opentelemetry.instrumentation.awslambda.v1_0.AbstractAwsLambdaRequestHandlerTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess
 
 class AwsLambdaTest extends AbstractAwsLambdaRequestHandlerTest implements AgentTestTrait {
 
   def cleanup() {
-    assert testWriter.forceFlushCalled()
+    assert AgentTestingExporterAccess.forceFlushCalled()
   }
 
   static class TestRequestHandler implements RequestHandler<String, String> {

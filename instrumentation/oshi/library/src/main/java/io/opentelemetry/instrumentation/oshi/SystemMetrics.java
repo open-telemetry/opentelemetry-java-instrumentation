@@ -25,7 +25,8 @@ public class SystemMetrics {
 
   /** Register observers for system metrics. */
   public static void registerObservers() {
-    Meter meter = OpenTelemetry.getGlobalMeterProvider().get(SystemMetrics.class.getName());
+    Meter meter =
+        OpenTelemetry.getGlobalMeterProvider().get("io.opentelemetry.instrumentation.oshi");
     SystemInfo systemInfo = new SystemInfo();
     HardwareAbstractionLayer hal = systemInfo.getHardware();
 

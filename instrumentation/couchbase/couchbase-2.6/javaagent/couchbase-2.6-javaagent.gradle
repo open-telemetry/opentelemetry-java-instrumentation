@@ -21,7 +21,7 @@ dependencies {
 
   library group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
 
-  testImplementation project(':instrumentation:couchbase:couchbase-2.0:javaagent')
+  testInstrumentation project(':instrumentation:couchbase:couchbase-2.0:javaagent')
   testImplementation project(':instrumentation:couchbase:couchbase-testing')
 
   testLibrary group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1.0.RELEASE'

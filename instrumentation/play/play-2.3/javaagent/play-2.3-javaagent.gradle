@@ -30,7 +30,7 @@ dependencies {
   // here.
   compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.3.0'
 
-  testImplementation project(':instrumentation:netty:netty-3.8:javaagent')
+  testInstrumentation project(':instrumentation:netty:netty-3.8:javaagent')
 
   testLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.0'
   testLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.0') {

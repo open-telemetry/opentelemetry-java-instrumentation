@@ -4,11 +4,8 @@
  */
 
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.setConfig
-import static io.opentelemetry.instrumentation.test.utils.ConfigUtils.updateConfigAndResetInstrumentation
 import static java.util.Collections.emptyMap
 
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.springframework.batch.core.JobParameter
 import org.springframework.context.ConfigurableApplicationContext
@@ -153,14 +150,6 @@ abstract class SpringBatchTest extends AgentTestRunner {
 }
 
 class JavaConfigBatchJobTest extends SpringBatchTest implements ApplicationConfigTrait {
-  static final Config PREVIOUS_CONFIG = updateConfigAndResetInstrumentation {
-    it.setProperty("otel.instrumentation.spring-batch.enabled", "true")
-  }
-
-  def additionalCleanup() {
-    setConfig(PREVIOUS_CONFIG)
-  }
-
   @Override
   ConfigurableApplicationContext createApplicationContext() {
     new AnnotationConfigApplicationContext(SpringBatchApplication)
@@ -168,14 +157,6 @@ class JavaConfigBatchJobTest extends SpringBatchTest implements ApplicationConfi
 }
 
 class XmlConfigBatchJobTest extends SpringBatchTest implements ApplicationConfigTrait {
-  static final Config PREVIOUS_CONFIG = updateConfigAndResetInstrumentation {
-    it.setProperty("otel.instrumentation.spring-batch.enabled", "true")
-  }
-
-  def additionalCleanup() {
-    setConfig(PREVIOUS_CONFIG)
-  }
-
   @Override
   ConfigurableApplicationContext createApplicationContext() {
     new ClassPathXmlApplicationContext("spring-batch.xml")
@@ -183,11 +164,4 @@ class XmlConfigBatchJobTest extends SpringBatchTest implements ApplicationConfig
 }
 
 class JsrConfigBatchJobTest extends SpringBatchTest implements JavaxBatchConfigTrait {
-  static final Config PREVIOUS_CONFIG = updateConfigAndResetInstrumentation {
-    it.setProperty("otel.instrumentation.spring-batch.enabled", "true")
-  }
-
-  def additionalCleanup() {
-    setConfig(PREVIOUS_CONFIG)
-  }
 }

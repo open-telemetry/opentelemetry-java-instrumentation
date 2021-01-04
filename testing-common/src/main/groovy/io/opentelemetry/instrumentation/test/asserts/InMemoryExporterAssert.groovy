@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.test.asserts
 
 import static TraceAssert.assertTrace
 
-import com.google.common.base.Predicate
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.instrumentation.test.InMemoryExporter
 import io.opentelemetry.sdk.trace.data.SpanData
+import java.util.function.Supplier
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
 import org.spockframework.runtime.ConditionNotSatisfiedError
@@ -19,23 +19,22 @@ import org.spockframework.runtime.model.TextPosition
 
 class InMemoryExporterAssert {
   private final List<List<SpanData>> traces
-  private final InMemoryExporter writer
+  private final Supplier<List<SpanData>> spanSupplier
 
   private final Set<Integer> assertedIndexes = new HashSet<>()
 
-  private InMemoryExporterAssert(List<List<SpanData>> traces, InMemoryExporter writer) {
+  private InMemoryExporterAssert(List<List<SpanData>> traces, Supplier<List<SpanData>> spanSupplier) {
     this.traces = traces
-    this.writer = writer
+    this.spanSupplier = spanSupplier
   }
 
-  static void assertTraces(InMemoryExporter writer, int expectedSize,
-                           final Predicate<List<SpanData>> excludes,
+  static void assertTraces(Supplier<List<SpanData>> spanSupplier, int expectedSize,
                            @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.ListWriterAssert'])
                            @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     try {
-      def traces = writer.waitForTraces(expectedSize, excludes)
+      def traces = InMemoryExporter.waitForTraces(spanSupplier, expectedSize)
       assert traces.size() == expectedSize
-      def asserter = new InMemoryExporterAssert(traces, writer)
+      def asserter = new InMemoryExporterAssert(traces, spanSupplier)
       def clone = (Closure) spec.clone()
       clone.delegate = asserter
       clone.resolveStrategy = Closure.DELEGATE_FIRST
@@ -72,11 +71,11 @@ class InMemoryExporterAssert {
       throw new ArrayIndexOutOfBoundsException(index)
     }
     assertedIndexes.add(index)
-    assertTrace(writer, traces[index][0].traceId, expectedSize, spec)
+    assertTrace(spanSupplier, traces[index][0].traceId, expectedSize, spec)
   }
 
   // this doesn't provide any functionality, just a self-documenting marker
-  void sortTraces(Closure callback) {
+  static void sortTraces(Closure callback) {
     callback.call()
   }
 

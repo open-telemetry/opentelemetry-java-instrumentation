@@ -1,0 +1,5 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  testImplementation project(':instrumentation:jdbc:javaagent')
+}

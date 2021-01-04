@@ -13,7 +13,7 @@ muzzle {
 dependencies {
   library group: 'com.sparkjava', name: 'spark-core', version: '2.3'
 
-  testImplementation project(':instrumentation:jetty-8.0:javaagent')
+  testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
 
   testLibrary group: 'com.sparkjava', name: 'spark-core', version: '2.4'
 }

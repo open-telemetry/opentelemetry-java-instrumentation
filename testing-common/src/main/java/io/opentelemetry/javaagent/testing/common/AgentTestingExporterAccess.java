@@ -1,0 +1,489 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.testing.common;
+
+import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static java.util.stream.Collectors.toList;
+
+import com.google.protobuf.InvalidProtocolBufferException;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.common.Labels;
+import io.opentelemetry.api.common.LabelsBuilder;
+import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanId;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceId;
+import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.api.trace.TraceStateBuilder;
+import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
+import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.proto.common.v1.AnyValue;
+import io.opentelemetry.proto.common.v1.ArrayValue;
+import io.opentelemetry.proto.common.v1.InstrumentationLibrary;
+import io.opentelemetry.proto.common.v1.KeyValue;
+import io.opentelemetry.proto.common.v1.StringKeyValue;
+import io.opentelemetry.proto.metrics.v1.AggregationTemporality;
+import io.opentelemetry.proto.metrics.v1.DoubleDataPoint;
+import io.opentelemetry.proto.metrics.v1.DoubleHistogramDataPoint;
+import io.opentelemetry.proto.metrics.v1.DoubleSum;
+import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
+import io.opentelemetry.proto.metrics.v1.IntDataPoint;
+import io.opentelemetry.proto.metrics.v1.IntSum;
+import io.opentelemetry.proto.metrics.v1.Metric;
+import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
+import io.opentelemetry.proto.resource.v1.Resource;
+import io.opentelemetry.proto.trace.v1.InstrumentationLibrarySpans;
+import io.opentelemetry.proto.trace.v1.ResourceSpans;
+import io.opentelemetry.proto.trace.v1.Span;
+import io.opentelemetry.proto.trace.v1.Status;
+import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.trace.TestSpanData;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.regex.Pattern;
+import org.jetbrains.annotations.NotNull;
+
+public final class AgentTestingExporterAccess {
+  private static final char TRACESTATE_KEY_VALUE_DELIMITER = '=';
+  private static final char TRACESTATE_ENTRY_DELIMITER = ',';
+  private static final Pattern TRACESTATE_ENTRY_DELIMITER_SPLIT_PATTERN =
+      Pattern.compile("[ \t]*" + TRACESTATE_ENTRY_DELIMITER + "[ \t]*");
+
+  private static final MethodHandle getSpanExportRequests;
+  private static final MethodHandle getMetricExportRequests;
+  private static final MethodHandle reset;
+  private static final MethodHandle forceFlushCalled;
+
+  static {
+    try {
+      Class<?> agentTestingExporterFactoryClass =
+          AgentClassLoaderAccess.loadClass(
+              "io.opentelemetry.javaagent.testing.exporter.AgentTestingExporterFactory");
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      getSpanExportRequests =
+          lookup.findStatic(
+              agentTestingExporterFactoryClass,
+              "getSpanExportRequests",
+              MethodType.methodType(List.class));
+      getMetricExportRequests =
+          lookup.findStatic(
+              agentTestingExporterFactoryClass,
+              "getMetricExportRequests",
+              MethodType.methodType(List.class));
+      reset =
+          lookup.findStatic(
+              agentTestingExporterFactoryClass, "reset", MethodType.methodType(void.class));
+      forceFlushCalled =
+          lookup.findStatic(
+              agentTestingExporterFactoryClass,
+              "forceFlushCalled",
+              MethodType.methodType(boolean.class));
+    } catch (Exception e) {
+      throw new Error("Error accessing fields with reflection.", e);
+    }
+  }
+
+  public static void reset() {
+    try {
+      reset.invokeExact();
+    } catch (Throwable t) {
+      throw new Error("Could not invoke reset", t);
+    }
+  }
+
+  public static boolean forceFlushCalled() {
+    try {
+      return (boolean) forceFlushCalled.invokeExact();
+    } catch (Throwable t) {
+      throw new Error("Could not invoke forceFlushCalled", t);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<SpanData> getExportedSpans() {
+    final List<byte[]> exportRequests;
+    try {
+      exportRequests = (List<byte[]>) getSpanExportRequests.invokeExact();
+    } catch (Throwable t) {
+      throw new Error("Could not invoke getSpanExportRequests", t);
+    }
+
+    List<ResourceSpans> allResourceSpans =
+        exportRequests.stream()
+            .map(
+                serialized -> {
+                  try {
+                    return ExportTraceServiceRequest.parseFrom(serialized);
+                  } catch (InvalidProtocolBufferException e) {
+                    throw new Error(e);
+                  }
+                })
+            .flatMap(request -> request.getResourceSpansList().stream())
+            .collect(toList());
+    List<SpanData> spans = new ArrayList<>();
+    for (ResourceSpans resourceSpans : allResourceSpans) {
+      Resource resource = resourceSpans.getResource();
+      for (InstrumentationLibrarySpans ilSpans :
+          resourceSpans.getInstrumentationLibrarySpansList()) {
+        InstrumentationLibrary instrumentationLibrary = ilSpans.getInstrumentationLibrary();
+        for (Span span : ilSpans.getSpansList()) {
+          String traceId = TraceId.bytesToHex(span.getTraceId().toByteArray());
+          spans.add(
+              TestSpanData.builder()
+                  .setTraceId(traceId)
+                  .setSpanId(SpanId.bytesToHex(span.getSpanId().toByteArray()))
+                  .setTraceState(extractTraceState(span.getTraceState()))
+                  // TODO is it ok to use default trace flags and default trace state here?
+                  .setParentSpanContext(
+                      SpanContext.create(
+                          traceId,
+                          SpanId.bytesToHex(span.getParentSpanId().toByteArray()),
+                          TraceFlags.getDefault(),
+                          TraceState.getDefault()))
+                  .setResource(
+                      io.opentelemetry.sdk.resources.Resource.create(
+                          fromProto(resource.getAttributesList())))
+                  .setInstrumentationLibraryInfo(
+                      InstrumentationLibraryInfo.create(
+                          instrumentationLibrary.getName(), instrumentationLibrary.getVersion()))
+                  .setName(span.getName())
+                  .setStartEpochNanos(span.getStartTimeUnixNano())
+                  .setEndEpochNanos(span.getEndTimeUnixNano())
+                  .setAttributes(fromProto(span.getAttributesList()))
+                  .setEvents(
+                      span.getEventsList().stream()
+                          .map(
+                              event ->
+                                  SpanData.Event.create(
+                                      event.getTimeUnixNano(),
+                                      event.getName(),
+                                      fromProto(event.getAttributesList()),
+                                      event.getDroppedAttributesCount()
+                                          + event.getAttributesCount()))
+                          .collect(toList()))
+                  .setStatus(fromProto(span.getStatus()))
+                  .setKind(fromProto(span.getKind()))
+                  .setLinks(
+                      span.getLinksList().stream()
+                          .map(
+                              link ->
+                                  SpanData.Link.create(
+                                      SpanContext.create(
+                                          TraceId.bytesToHex(link.getTraceId().toByteArray()),
+                                          SpanId.bytesToHex(link.getSpanId().toByteArray()),
+                                          TraceFlags.getDefault(),
+                                          extractTraceState(link.getTraceState())),
+                                      fromProto(link.getAttributesList()),
+                                      link.getDroppedAttributesCount() + link.getAttributesCount()))
+                          .collect(toList()))
+                  // OTLP doesn't have hasRemoteParent
+                  .setHasEnded(true)
+                  .setTotalRecordedEvents(span.getEventsCount() + span.getDroppedEventsCount())
+                  .setTotalRecordedLinks(span.getLinksCount() + span.getDroppedLinksCount())
+                  .setTotalAttributeCount(
+                      span.getAttributesCount() + span.getDroppedAttributesCount())
+                  .build());
+        }
+      }
+    }
+    return spans;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static List<MetricData> getExportedMetrics() {
+    final List<byte[]> exportRequests;
+    try {
+      exportRequests = (List<byte[]>) getMetricExportRequests.invokeExact();
+    } catch (Throwable t) {
+      throw new Error("Could not invoke getMetricExportRequests", t);
+    }
+
+    List<ResourceMetrics> allResourceMetrics =
+        exportRequests.stream()
+            .map(
+                serialized -> {
+                  try {
+                    return ExportMetricsServiceRequest.parseFrom(serialized);
+                  } catch (InvalidProtocolBufferException e) {
+                    throw new Error(e);
+                  }
+                })
+            .flatMap(request -> request.getResourceMetricsList().stream())
+            .collect(toList());
+    List<MetricData> metrics = new ArrayList<>();
+    for (ResourceMetrics resourceMetrics : allResourceMetrics) {
+      Resource resource = resourceMetrics.getResource();
+      for (InstrumentationLibraryMetrics ilMetrics :
+          resourceMetrics.getInstrumentationLibraryMetricsList()) {
+        InstrumentationLibrary instrumentationLibrary = ilMetrics.getInstrumentationLibrary();
+        for (Metric metric : ilMetrics.getMetricsList()) {
+          metrics.add(
+              createMetricData(
+                  metric,
+                  io.opentelemetry.sdk.resources.Resource.create(
+                      fromProto(resource.getAttributesList())),
+                  InstrumentationLibraryInfo.create(
+                      instrumentationLibrary.getName(), instrumentationLibrary.getVersion())));
+        }
+      }
+    }
+    return metrics;
+  }
+
+  @NotNull
+  private static MetricData createMetricData(
+      Metric metric,
+      io.opentelemetry.sdk.resources.Resource resource,
+      InstrumentationLibraryInfo instrumentationLibraryInfo) {
+    switch (metric.getDataCase()) {
+      case INT_GAUGE:
+        return MetricData.createLongGauge(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            MetricData.LongGaugeData.create(
+                getIntPoints(metric.getIntGauge().getDataPointsList())));
+      case DOUBLE_GAUGE:
+        return MetricData.createDoubleGauge(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            MetricData.DoubleGaugeData.create(
+                getDoublePoints(metric.getDoubleGauge().getDataPointsList())));
+      case INT_SUM:
+        IntSum intSum = metric.getIntSum();
+        return MetricData.createLongSum(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            MetricData.LongSumData.create(
+                intSum.getIsMonotonic(),
+                getTemporality(intSum.getAggregationTemporality()),
+                getIntPoints(metric.getIntSum().getDataPointsList())));
+      case DOUBLE_SUM:
+        DoubleSum doubleSum = metric.getDoubleSum();
+        return MetricData.createDoubleSum(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            MetricData.DoubleSumData.create(
+                doubleSum.getIsMonotonic(),
+                getTemporality(doubleSum.getAggregationTemporality()),
+                getDoublePoints(metric.getDoubleSum().getDataPointsList())));
+      case DOUBLE_HISTOGRAM:
+        return MetricData.createDoubleSummary(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            MetricData.DoubleSummaryData.create(
+                getDoubleHistogramDataPoints(metric.getDoubleHistogram().getDataPointsList())));
+      default:
+        throw new AssertionError("Unexpected metric data: " + metric.getDataCase());
+    }
+  }
+
+  private static Labels createLabels(List<StringKeyValue> stringKeyValues) {
+    LabelsBuilder labelsBuilder = Labels.builder();
+    for (StringKeyValue stringKeyValue : stringKeyValues) {
+      labelsBuilder.put(stringKeyValue.getKey(), stringKeyValue.getValue());
+    }
+    return labelsBuilder.build();
+  }
+
+  private static List<MetricData.Point> getIntPoints(List<IntDataPoint> points) {
+    return points.stream()
+        .map(
+            point ->
+                MetricData.LongPoint.create(
+                    point.getStartTimeUnixNano(),
+                    point.getTimeUnixNano(),
+                    createLabels(point.getLabelsList()),
+                    point.getValue()))
+        .collect(toList());
+  }
+
+  private static List<MetricData.Point> getDoublePoints(List<DoubleDataPoint> points) {
+    return points.stream()
+        .map(
+            point ->
+                MetricData.DoublePoint.create(
+                    point.getStartTimeUnixNano(),
+                    point.getTimeUnixNano(),
+                    createLabels(point.getLabelsList()),
+                    point.getValue()))
+        .collect(toList());
+  }
+
+  private static Collection<MetricData.Point> getDoubleHistogramDataPoints(
+      List<DoubleHistogramDataPoint> dataPointsList) {
+    return dataPointsList.stream()
+        .map(
+            point ->
+                MetricData.DoubleSummaryPoint.create(
+                    point.getStartTimeUnixNano(),
+                    point.getTimeUnixNano(),
+                    createLabels(point.getLabelsList()),
+                    point.getCount(),
+                    point.getSum(),
+                    getValues(point)))
+        .collect(toList());
+  }
+
+  private static List<MetricData.ValueAtPercentile> getValues(DoubleHistogramDataPoint point) {
+    List<MetricData.ValueAtPercentile> values = new ArrayList<>();
+    for (int i = 0; i < point.getExplicitBoundsCount(); i++) {
+      values.add(
+          MetricData.ValueAtPercentile.create(
+              point.getExplicitBounds(i), point.getBucketCounts(i)));
+    }
+    return values;
+  }
+
+  private static MetricData.AggregationTemporality getTemporality(
+      AggregationTemporality aggregationTemporality) {
+    switch (aggregationTemporality) {
+      case AGGREGATION_TEMPORALITY_CUMULATIVE:
+        return MetricData.AggregationTemporality.CUMULATIVE;
+      case AGGREGATION_TEMPORALITY_DELTA:
+        return MetricData.AggregationTemporality.DELTA;
+      default:
+        throw new IllegalStateException(
+            "Unexpected aggregation temporality: " + aggregationTemporality);
+    }
+  }
+
+  private static Attributes fromProto(List<KeyValue> attributes) {
+    AttributesBuilder converted = Attributes.builder();
+    for (KeyValue attribute : attributes) {
+      String key = attribute.getKey();
+      AnyValue value = attribute.getValue();
+      switch (value.getValueCase()) {
+        case STRING_VALUE:
+          converted.put(key, value.getStringValue());
+          break;
+        case BOOL_VALUE:
+          converted.put(key, value.getBoolValue());
+          break;
+        case INT_VALUE:
+          converted.put(key, value.getIntValue());
+          break;
+        case DOUBLE_VALUE:
+          converted.put(key, value.getDoubleValue());
+          break;
+        case ARRAY_VALUE:
+          ArrayValue array = value.getArrayValue();
+          if (array.getValuesCount() != 0) {
+            switch (array.getValues(0).getValueCase()) {
+              case STRING_VALUE:
+                converted.put(
+                    stringArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getStringValue).collect(toList()));
+                break;
+              case BOOL_VALUE:
+                converted.put(
+                    booleanArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
+                break;
+              case INT_VALUE:
+                converted.put(
+                    longArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
+                break;
+              case DOUBLE_VALUE:
+                converted.put(
+                    doubleArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
+                break;
+              case VALUE_NOT_SET:
+                break;
+              default:
+                throw new IllegalStateException(
+                    "Unexpected attribute: " + array.getValues(0).getValueCase());
+            }
+          }
+          break;
+        case VALUE_NOT_SET:
+          break;
+        default:
+          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
+      }
+    }
+    return converted.build();
+  }
+
+  private static SpanData.Status fromProto(Status status) {
+    final StatusCode code;
+    switch (status.getCode()) {
+      case STATUS_CODE_OK:
+        code = StatusCode.OK;
+        break;
+      case STATUS_CODE_ERROR:
+        code = StatusCode.ERROR;
+        break;
+      default:
+        code = StatusCode.UNSET;
+        break;
+    }
+    return SpanData.Status.create(code, status.getMessage());
+  }
+
+  private static Kind fromProto(Span.SpanKind kind) {
+    switch (kind) {
+      case SPAN_KIND_INTERNAL:
+        return Kind.INTERNAL;
+      case SPAN_KIND_SERVER:
+        return Kind.SERVER;
+      case SPAN_KIND_CLIENT:
+        return Kind.CLIENT;
+      case SPAN_KIND_PRODUCER:
+        return Kind.PRODUCER;
+      case SPAN_KIND_CONSUMER:
+        return Kind.CONSUMER;
+      default:
+        return Kind.INTERNAL;
+    }
+  }
+
+  private static TraceState extractTraceState(String traceStateHeader) {
+    if (traceStateHeader.isEmpty()) {
+      return TraceState.getDefault();
+    }
+    TraceStateBuilder traceStateBuilder = TraceState.builder();
+    String[] listMembers = TRACESTATE_ENTRY_DELIMITER_SPLIT_PATTERN.split(traceStateHeader);
+    // Iterate in reverse order because when call builder set the elements is added in the
+    // front of the list.
+    for (int i = listMembers.length - 1; i >= 0; i--) {
+      String listMember = listMembers[i];
+      int index = listMember.indexOf(TRACESTATE_KEY_VALUE_DELIMITER);
+      traceStateBuilder.set(listMember.substring(0, index), listMember.substring(index + 1));
+    }
+    return traceStateBuilder.build();
+  }
+
+  private AgentTestingExporterAccess() {}
+}

@@ -30,9 +30,9 @@ dependencies {
   testImplementation project(':instrumentation:play-ws:play-ws-testing')
 
   // These are to ensure cross compatibility
-  testImplementation project(':instrumentation:netty:netty-4.0:javaagent')
-  testImplementation project(':instrumentation:netty:netty-4.1:javaagent')
-  testImplementation project(':instrumentation:akka-http-10.0:javaagent')
+  testInstrumentation project(':instrumentation:netty:netty-4.0:javaagent')
+  testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
+  testInstrumentation project(':instrumentation:akka-http-10.0:javaagent')
 
   latestDepTestLibrary group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.+'
 }

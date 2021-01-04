@@ -1,9 +1,9 @@
 // common gradle file for instrumentation
 import io.opentelemetry.instrumentation.gradle.bytebuddy.ByteBuddyPluginConfigurator
 
-apply plugin: 'io.opentelemetry.javaagent.instrumentation-instrumentation'
 apply plugin: 'net.bytebuddy.byte-buddy'
 apply plugin: 'muzzle'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 ext {
   packageInAgentBundle = true
@@ -23,28 +23,24 @@ if (projectDir.name == 'javaagent') {
 
 afterEvaluate {
   dependencies {
-    implementation project(':instrumentation-api')
-    implementation project(':javaagent-api')
+    compileOnly project(':instrumentation-api')
+    compileOnly project(':javaagent-api')
+    compileOnly project(':javaagent-bootstrap')
     // Apply common dependencies for instrumentation.
-    implementation(project(':javaagent-tooling')) {
-      // OpenTelemetry SDK is not needed for compilation, and :opentelemetry-sdk-shaded-for-testing
-      // is brought in for tests by project(:testing-common) below
+    compileOnly(project(':javaagent-tooling')) {
+      // OpenTelemetry SDK is not needed for compilation
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
     }
-    implementation deps.bytebuddy
+    compileOnly deps.bytebuddy
     annotationProcessor deps.autoservice
-    implementation deps.autoservice
-    implementation deps.slf4j
+    compileOnly deps.autoservice
+    compileOnly deps.slf4j
 
-    // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
-    testImplementation project(':instrumentation:executors:javaagent')
-    // FIXME: we should enable this, but currently this fails tests for google http client
-    //testImplementation project(':instrumentation:http-url-connection:javaagent')
-    testImplementation project(':instrumentation:classloaders:javaagent')
+    testImplementation deps.opentelemetryApi
 
     testImplementation project(':testing-common')
     testAnnotationProcessor deps.autoservice
-    testImplementation deps.autoservice
+    testCompileOnly deps.autoservice
     testImplementation project(':utils:test-utils')
 
     testImplementation deps.testcontainers
@@ -54,4 +50,64 @@ afterEvaluate {
   new ByteBuddyPluginConfigurator(project, sourceSets.main, pluginName,
     project(':javaagent-tooling').configurations.instrumentationMuzzle + configurations.runtimeClasspath
   ).configure()
+}
+
+configurations {
+  testInstrumentation
+}
+
+shadowJar {
+  configurations = [project.configurations.runtimeClasspath, project.configurations.testInstrumentation]
+  mergeServiceFiles()
+
+  archiveFileName = 'agent-testing.jar'
+
+  // rewrite library instrumentation dependencies
+  relocate "io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation"
+
+  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'io.opentelemetry.javaagent.slf4j'
+  // rewrite dependencies calling Logger.getLogger
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.javaagent.bootstrap.PatchLogger'
+
+  // prevents conflict with library instrumentation
+  relocate 'io.opentelemetry.instrumentation.api', 'io.opentelemetry.javaagent.shaded.instrumentation.api'
+
+  // relocate OpenTelemetry API usage
+  relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"
+  relocate "io.opentelemetry.spi", "io.opentelemetry.javaagent.shaded.io.opentelemetry.spi"
+  relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
+
+  // relocate OpenTelemetry extensions
+  relocate "io.opentelemetry.extension.kotlin", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.kotlin"
+  relocate "io.opentelemetry.extension.trace.propagation", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.trace.propagation"
+
+  // this is for instrumentation on opentelemetry-api itself
+  relocate "application.io.opentelemetry", "io.opentelemetry"
+}
+
+tasks.withType(Test).configureEach {
+  jvmArgs "-Dotel.javaagent.debug=true"
+  jvmArgs "-javaagent:${project(":testing:agent-for-testing").buildDir}/libs/javaagent-for-testing.jar"
+  jvmArgs "-Dotel.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
+  jvmArgs "-Dinternal.testing.disable.global.library.ignores=true"
+
+  dependsOn shadowJar
+  dependsOn ":testing:agent-for-testing:shadowJar"
+
+  // The sources are packaged into the testing jar so we need to make sure to exclude from the test
+  // classpath, which automatically inherits them, to ensure our shaded versions are used.
+  classpath = classpath.filter {
+    if (file("$buildDir/resources/main").equals(it) || file("$buildDir/classes/java/main").equals(it)) {
+      return false
+    }
+    return true
+  }
+}
+
+configurations.configureEach {
+  if (it.name.toLowerCase().endsWith('testruntimeclasspath')) {
+    // Added by agent, don't let Gradle bring it in when running tests.
+    exclude module: 'javaagent-bootstrap'
+  }
 }

@@ -21,10 +21,10 @@ dependencies {
 
   implementation project(':instrumentation:hibernate:hibernate-common:javaagent')
 
-  testImplementation project(':instrumentation:jdbc:javaagent')
+  testInstrumentation project(':instrumentation:jdbc:javaagent')
   // Added to ensure cross compatibility:
-  testImplementation project(':instrumentation:hibernate:hibernate-4.0:javaagent')
-  testImplementation project(':instrumentation:hibernate:hibernate-4.3:javaagent')
+  testInstrumentation project(':instrumentation:hibernate:hibernate-4.0:javaagent')
+  testInstrumentation project(':instrumentation:hibernate:hibernate-4.3:javaagent')
 
   testLibrary group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.SP1'
   testImplementation group: 'org.hibernate', name: 'hibernate-annotations', version: '3.4.0.GA'

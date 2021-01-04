@@ -12,10 +12,21 @@ muzzle {
 dependencies {
   compileOnly group: 'org.glassfish.grizzly', name: 'grizzly-http', version: '2.0'
 
+  // Need to force version of Guava older than opentelemetry-sdk's implicit dependency to have one
+  // that is compatible with Grizzly.
+  testImplementation("com.google.guava:guava") {
+    version {
+      strictly("20.0")
+    }
+  }
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
   testImplementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
   testLibrary group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.0'
 
   latestDepTestLibrary group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.+'
   latestDepTestLibrary group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.+'
+}
+
+tasks.withType(Test) {
+  jvmArgs "-Dotel.instrumentation.grizzly.enabled=true"
 }

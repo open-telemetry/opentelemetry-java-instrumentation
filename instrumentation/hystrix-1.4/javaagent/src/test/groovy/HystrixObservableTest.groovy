@@ -10,28 +10,12 @@ import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import rx.Observable
 import rx.schedulers.Schedulers
 
 class HystrixObservableTest extends AgentTestRunner {
-  static {
-    // Disable so failure testing below doesn't inadvertently change the behavior.
-    System.setProperty("hystrix.command.default.circuitBreaker.enabled", "false")
-
-    // Uncomment for debugging:
-    // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
-  }
-
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
-    it.setProperty("otel.instrumentation.hystrix.experimental-span-attributes", "true")
-  }
-
-  def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   def "test command #action"() {
     setup:
@@ -62,7 +46,6 @@ class HystrixObservableTest extends AgentTestRunner {
     }
 
     expect:
-    TRANSFORMED_CLASSES_NAMES.contains("HystrixObservableTest\$1")
     result == "Hello!"
 
     assertTraces(1) {
@@ -157,7 +140,6 @@ class HystrixObservableTest extends AgentTestRunner {
     }
 
     expect:
-    TRANSFORMED_CLASSES_NAMES.contains("HystrixObservableTest\$2")
     result == "Fallback!"
 
     assertTraces(1) {
@@ -254,7 +236,6 @@ class HystrixObservableTest extends AgentTestRunner {
     }
 
     then:
-    TRANSFORMED_CLASSES_NAMES.contains("HystrixObservableTest\$3")
     def err = thrown HystrixRuntimeException
     err.cause instanceof IllegalArgumentException
 

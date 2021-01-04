@@ -8,28 +8,12 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 import com.netflix.hystrix.HystrixCommand
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import spock.lang.Timeout
 
 @Timeout(10)
 class HystrixTest extends AgentTestRunner {
-  static {
-    // Disable so failure testing below doesn't inadvertently change the behavior.
-    System.setProperty("hystrix.command.default.circuitBreaker.enabled", "false")
-
-    // Uncomment for debugging:
-    // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
-  }
-
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
-    it.setProperty("otel.instrumentation.hystrix.experimental-span-attributes", "true")
-  }
-
-  def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   def "test command #action"() {
     setup:
@@ -48,7 +32,6 @@ class HystrixTest extends AgentTestRunner {
       operation(command)
     }
     expect:
-    TRANSFORMED_CLASSES_NAMES.contains("HystrixTest\$1")
     result == "Hello!"
 
     assertTraces(1) {
@@ -111,7 +94,6 @@ class HystrixTest extends AgentTestRunner {
       operation(command)
     }
     expect:
-    TRANSFORMED_CLASSES_NAMES.contains("HystrixTest\$2")
     result == "Fallback!"
 
     assertTraces(1) {

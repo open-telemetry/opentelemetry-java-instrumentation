@@ -1,0 +1,8 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  testImplementation project(':instrumentation-api')
+  testImplementation project(':javaagent-tooling')
+  testImplementation deps.bytebuddy
+  testImplementation project(':instrumentation:external-annotations:javaagent')
+}

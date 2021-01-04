@@ -7,5 +7,9 @@ dependencies {
   // see the comment in opentelemetry-api-1.0.gradle for more details
   compileOnly project(path: ':opentelemetry-ext-annotations-shaded-for-instrumenting', configuration: 'shadow')
 
-  testImplementation project(path: ':opentelemetry-ext-annotations-shaded-for-instrumenting', configuration: 'shadow')
+  testImplementation deps.opentelemetryExtAnnotations
+}
+
+test {
+  jvmArgs "-Dotel.instrumentation.opentelemetry-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]"
 }

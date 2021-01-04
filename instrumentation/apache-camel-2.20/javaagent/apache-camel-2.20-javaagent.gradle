@@ -21,8 +21,8 @@ dependencies {
   testLibrary group: 'org.apache.camel', name: 'camel-jaxb-starter', version: '2.20.1'
   testLibrary group: 'org.apache.camel', name: 'camel-undertow', version: '2.20.1'
 
-  testImplementation project(':instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent')
-  testImplementation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent')
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
 
   testImplementation group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
 

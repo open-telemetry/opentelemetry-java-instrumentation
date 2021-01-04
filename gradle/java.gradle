@@ -26,7 +26,8 @@ def applyCodeCoverage = !(
     project.path == ":javaagent" ||
     project.path == ":load-generator" ||
     project.path.startsWith(":benchmark") ||
-    project.path.startsWith(":instrumentation"))
+    project.path.startsWith(":instrumentation") ||
+    project.path.startsWith(":testing-common"))
 
 if (applyCodeCoverage) {
   apply from: "$rootDir/gradle/jacoco.gradle"

@@ -1,0 +1,62 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  compileOnly(project(':javaagent-spi'))
+  compileOnly(deps.bytebuddy)
+  compileOnly(deps.opentelemetrySdk)
+  compileOnly(deps.slf4j)
+
+  annotationProcessor deps.autoservice
+  compileOnly deps.autoservice
+
+  implementation project(':javaagent-tooling')
+  implementation deps.opentelemetryProto
+  implementation deps.opentelemetryOtlp
+  implementation deps.opentelemetryOtlpMetrics
+  implementation group: 'io.grpc', name: 'grpc-testing', version: '1.33.1'
+
+  // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
+  implementation project(':instrumentation:executors:javaagent')
+  // FIXME: we should enable this, but currently this fails tests for google http client
+  //testImplementation project(':instrumentation:http-url-connection:javaagent')
+  implementation project(':instrumentation:classloaders:javaagent')
+
+  // Many tests use OpenTelemetry API calls, e.g., via TraceUtils.runUnderTrace
+  implementation project(':instrumentation:opentelemetry-annotations-1.0:javaagent')
+  // TODO (trask) is full OTel API interop needed, or is @WithSpan enough?
+  implementation project(':instrumentation:opentelemetry-api-1.0:javaagent')
+}
+
+jar.enabled = false
+shadowJar {
+  archiveFileName = 'testing-agent-classloader.jar'
+
+  mergeServiceFiles()
+
+  exclude '**/module-info.class'
+
+  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'io.opentelemetry.javaagent.slf4j'
+
+  // rewrite library instrumentation dependencies
+  relocate "io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation"
+
+  // rewrite dependencies calling Logger.getLogger
+  relocate 'java.util.logging.Logger', 'io.opentelemetry.javaagent.bootstrap.PatchLogger'
+
+  // relocate OpenTelemetry API usage
+  relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"
+  relocate "io.opentelemetry.spi", "io.opentelemetry.javaagent.shaded.io.opentelemetry.spi"
+  relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
+
+  // relocate OpenTelemetry extensions
+  relocate "io.opentelemetry.extension.kotlin", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.kotlin"
+  relocate "io.opentelemetry.extension.trace.propagation", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.trace.propagation"
+
+  // this is for instrumentation on opentelemetry-api itself
+  relocate "application.io.opentelemetry", "io.opentelemetry"
+}

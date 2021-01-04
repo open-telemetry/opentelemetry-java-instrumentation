@@ -1,7 +1,6 @@
 ### Understanding the javaagent components
 
-OpenTelemetry Auto Instrumentation java agent's jar can logically be divided
-into 3 parts:
+The javaagent jar can logically be divided into 3 parts:
 
 * Modules that live in the system class loader
 * Modules that live in the bootstrap class loader

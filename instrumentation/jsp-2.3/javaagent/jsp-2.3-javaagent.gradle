@@ -15,7 +15,7 @@ dependencies {
   compileOnly group: 'javax.servlet.jsp', name: 'javax.servlet.jsp-api', version: '2.3.0'
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 
-  testImplementation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   // using tomcat 7.0.37 because there seems to be some issues with Tomcat's jar scanning in versions < 7.0.37
   // https://stackoverflow.com/questions/23484098/org-apache-tomcat-util-bcel-classfile-classformatexception-invalid-byte-tag-in
   testLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.37'
@@ -27,4 +27,13 @@ dependencies {
   latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.+'
   latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.+'
   latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '9.+'
+}
+
+tasks.withType(Test) {
+  // skip jar scanning using environment variables:
+  // http://tomcat.apache.org/tomcat-7.0-doc/config/systemprops.html#JAR_Scanning
+  // having this set allows us to test with old versions of the tomcat api since
+  // JarScanFilter did not exist in the tomcat 7 api
+  jvmArgs '-Dorg.apache.catalina.startup.ContextConfig.jarsToSkip=*'
+  jvmArgs '-Dorg.apache.catalina.startup.TldConfig.jarsToSkip=*'
 }

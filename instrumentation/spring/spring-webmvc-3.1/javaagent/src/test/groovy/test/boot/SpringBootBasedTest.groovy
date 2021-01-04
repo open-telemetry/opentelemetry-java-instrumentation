@@ -18,7 +18,6 @@ import com.google.common.collect.ImmutableMap
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import okhttp3.FormBody
 import okhttp3.RequestBody
@@ -27,14 +26,6 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.web.servlet.view.RedirectView
 
 class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext> {
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfig {
-    // TODO run tests both with and without experimental span attributes
-    it.setProperty("otel.instrumentation.spring-webmvc.experimental-span-attributes", "true")
-  }
-
-  def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   @Override
   ConfigurableApplicationContext startServer(int port) {

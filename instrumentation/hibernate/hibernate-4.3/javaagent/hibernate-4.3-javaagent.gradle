@@ -14,10 +14,10 @@ dependencies {
 
   implementation project(':instrumentation:hibernate:hibernate-common:javaagent')
 
-  testImplementation project(':instrumentation:jdbc:javaagent')
+  testInstrumentation project(':instrumentation:jdbc:javaagent')
   // Added to ensure cross compatibility:
-  testImplementation project(':instrumentation:hibernate:hibernate-3.3:javaagent')
-  testImplementation project(':instrumentation:hibernate:hibernate-4.0:javaagent')
+  testInstrumentation project(':instrumentation:hibernate:hibernate-3.3:javaagent')
+  testInstrumentation project(':instrumentation:hibernate:hibernate-4.0:javaagent')
 
   testLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
   testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'

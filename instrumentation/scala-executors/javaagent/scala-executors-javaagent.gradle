@@ -30,7 +30,9 @@ dependencies {
 
   latestDepTestLibrary group: 'org.scala-lang', name: 'scala-library', version: '2.11.+'
 
-  slickTestImplementation project(':instrumentation:jdbc:javaagent')
+  testInstrumentation project(':instrumentation:jdbc:javaagent')
+
+  slickTestImplementation project(':testing-common')
   slickTestImplementation deps.scala
   slickTestImplementation group: 'com.typesafe.slick', name: 'slick_2.11', version: '3.2.0'
   slickTestImplementation group: 'com.h2database', name: 'h2', version: '1.4.197'

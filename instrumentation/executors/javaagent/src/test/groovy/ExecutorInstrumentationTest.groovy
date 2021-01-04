@@ -6,7 +6,6 @@
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.AbstractExecutorService
@@ -26,13 +25,6 @@ import java.util.concurrent.TimeoutException
 import spock.lang.Shared
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.instrumentation.executors.include", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
-  }
-
-  def cleanupSpec() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   @Shared
   def executeRunnable = { e, c -> e.execute((Runnable) c) }

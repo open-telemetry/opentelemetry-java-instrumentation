@@ -21,6 +21,7 @@ dependencies {
   implementation deps.opentelemetryApi
   implementation deps.opentelemetryContext
   implementation deps.opentelemetrySdk
+  implementation deps.opentelemetryKotlin
   implementation deps.opentelemetryTraceProps
   implementation(deps.opentelemetryResources) {
     // exclude sdk-common to avoid bumping guava version
@@ -45,12 +46,10 @@ test {
     excludeTestsMatching 'HelperInjectionTest'
   }
 }
-
 // Needs a fresh classloader.
 // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/919
-def testHelperInjection = tasks.register('testHelperInjection', Test) {
+test.finalizedBy(tasks.register('testHelperInjection', Test) {
   filter {
     includeTestsMatching 'HelperInjectionTest'
   }
-}
-test.dependsOn(testHelperInjection)
+})

@@ -75,6 +75,13 @@ import org.slf4j.LoggerFactory;
  */
 public class FieldBackedProvider implements InstrumentationContextProvider {
 
+  // IMPORTANT: the logging in this class is performed at TRACE level instead of DEBUG level
+  //
+  // BECAUSE: logging in this class occurs frequently and under class file transform,
+  // which can lead gradle to deadlock sporadically when gradle triggers a class to load
+  // while it is holding a lock, and then (because gradle hijacks System.out),
+  // gradle is called from inside of the class file transform,
+  // and then gradle tries to grab a different lock (and then add multiple threads)
   private static final Logger log = LoggerFactory.getLogger(FieldBackedProvider.class);
 
   /**
@@ -198,7 +205,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                         .equals(owner)
                     && CONTEXT_GET_METHOD.getName().equals(name)
                     && Type.getMethodDescriptor(CONTEXT_GET_METHOD).equals(descriptor)) {
-                  log.debug("Found context-store access in {}", instrumenterClass.getName());
+                  log.trace("Found context-store access in {}", instrumenterClass.getName());
                   /*
                   The idea here is that the rest if this method visitor collects last three instructions in `insnStack`
                   variable. Once we get here we check if those last three instructions constitute call that looks like
@@ -214,7 +221,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     TypeDescription contextStoreImplementationClass =
                         getContextStoreImplementation(keyClassName, contextClassName);
                     if (log.isDebugEnabled()) {
-                      log.debug(
+                      log.trace(
                           "Rewriting context-store map fetch for instrumenter {}: {} -> {}",
                           instrumenterClass.getName(),
                           keyClassName,
@@ -373,11 +380,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
          */
         synchronized (INSTALLED_CONTEXT_MATCHERS) {
           if (INSTALLED_CONTEXT_MATCHERS.contains(entry)) {
-            log.debug("Skipping builder for {} {}", instrumenterClass.getName(), entry);
+            log.trace("Skipping builder for {} {}", instrumenterClass.getName(), entry);
             continue;
           }
 
-          log.debug("Making builder for {} {}", instrumenterClass.getName(), entry);
+          log.trace("Making builder for {} {}", instrumenterClass.getName(), entry);
           INSTALLED_CONTEXT_MATCHERS.add(entry);
 
           /*

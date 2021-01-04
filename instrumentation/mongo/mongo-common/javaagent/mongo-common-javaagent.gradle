@@ -1,5 +1,17 @@
-apply from: "$rootDir/gradle/instrumentation.gradle"
+// not applying $rootDir/gradle/instrumentation.gradle because that brings running tests with agent
+// infrastructure, and this module only wants to run unit tests
+
+group = 'io.opentelemetry.javaagent.instrumentation'
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
-  library group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
+  compileOnly project(':instrumentation-api')
+  compileOnly project(':javaagent-api')
+  compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
+
+  testImplementation project(':instrumentation-api')
+  testImplementation project(':javaagent-api')
+  testImplementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
 }

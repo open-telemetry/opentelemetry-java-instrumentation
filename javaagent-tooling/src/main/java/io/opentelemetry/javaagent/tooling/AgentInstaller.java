@@ -49,6 +49,12 @@ public class AgentInstaller {
   private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
   private static final String EXCLUDED_CLASSES_CONFIG = "otel.javaagent.exclude-classes";
 
+  // We set this system property when running the agent with unit tests to allow verifying that we
+  // don't ignore libraries that we actually attempt to instrument. It means either the list is
+  // wrong or a type matcher is.
+  private static final String DISABLE_GLOBAL_LIBRARY_IGNORES_FOR_TEST =
+      "internal.testing.disable.global.library.ignores";
+
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
   private static volatile Instrumentation INSTRUMENTATION;
 
@@ -57,6 +63,7 @@ public class AgentInstaller {
   }
 
   static {
+    addByteBuddyRawSetting();
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(loadBootstrapPackagePrefixes());
     // WeakMap is used by other classes below, so we need to register the provider first.
     AgentTooling.registerWeakMapProvider();
@@ -67,7 +74,7 @@ public class AgentInstaller {
   public static void installBytebuddyAgent(Instrumentation inst) {
     if (Config.get().getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
       Iterable<ComponentInstaller> componentInstallers = loadComponentProviders();
-      installBytebuddyAgent(inst, false, componentInstallers);
+      installBytebuddyAgent(inst, componentInstallers);
     } else {
       log.debug("Tracing is disabled, not installing instrumentations.");
     }
@@ -81,16 +88,11 @@ public class AgentInstaller {
    * @return the agent's class transformer
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
-      Instrumentation inst,
-      boolean skipAdditionalLibraryMatcher,
-      Iterable<ComponentInstaller> componentInstallers,
-      AgentBuilder.Listener... listeners) {
+      Instrumentation inst, Iterable<ComponentInstaller> componentInstallers) {
 
     installComponentsBeforeByteBuddy(componentInstallers);
 
     INSTRUMENTATION = inst;
-
-    addByteBuddyRawSetting();
 
     FieldBackedProvider.resetContextMatchers();
 
@@ -109,7 +111,9 @@ public class AgentInstaller {
             .ignore(any(), skipClassLoader());
 
     ignoredAgentBuilder =
-        ignoredAgentBuilder.or(globalIgnoresMatcher(skipAdditionalLibraryMatcher));
+        ignoredAgentBuilder.or(
+            globalIgnoresMatcher(
+                Config.get().getBooleanProperty(DISABLE_GLOBAL_LIBRARY_IGNORES_FOR_TEST, false)));
 
     ignoredAgentBuilder = ignoredAgentBuilder.or(matchesConfiguredExcludes());
 
@@ -121,10 +125,6 @@ public class AgentInstaller {
               .with(new RedefinitionDiscoveryStrategy())
               .with(new RedefinitionLoggingListener())
               .with(new TransformLoggingListener());
-    }
-
-    for (AgentBuilder.Listener listener : listeners) {
-      agentBuilder = agentBuilder.with(listener);
     }
 
     int numInstrumenters = 0;

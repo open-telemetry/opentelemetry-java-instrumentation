@@ -98,17 +98,17 @@ class SpringTemplateJms1Test extends AgentTestRunner {
     receivedMessage.text == "responded!"
     assertTraces(4) {
       trace(0, 1) {
-        producerSpan(it, 0, destinationType, destinationName)
-      }
-      trace(1, 1) {
         consumerSpan(it, 0, destinationType, destinationName, msgId.get(), null, "receive")
       }
+      trace(1, 1) {
+        producerSpan(it, 0, destinationType, destinationName)
+      }
       trace(2, 1) {
-        // receive doesn't propagate the trace, so this is a root
-        producerSpan(it, 0, "queue", "(temporary)")
+        consumerSpan(it, 0, "queue", "(temporary)", receivedMessage.getJMSMessageID(), null, "receive")
       }
       trace(3, 1) {
-        consumerSpan(it, 0, "queue", "(temporary)", receivedMessage.getJMSMessageID(), null, "receive")
+        // receive doesn't propagate the trace, so this is a root
+        producerSpan(it, 0, "queue", "(temporary)")
       }
     }
 

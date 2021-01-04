@@ -38,3 +38,7 @@ dependencies {
 
   testImplementation project(':instrumentation:aws-lambda-1.0:testing')
 }
+
+tasks.withType(Test) {
+  jvmArgs '-Dotel.propagators=tracecontext,xray'
+}

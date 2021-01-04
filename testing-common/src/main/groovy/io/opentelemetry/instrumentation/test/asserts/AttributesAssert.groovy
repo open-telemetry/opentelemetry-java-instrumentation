@@ -60,6 +60,13 @@ class AttributesAssert {
     Set<String> allAttributes = new TreeSet<>(attributes.keySet())
     Set<String> unverifiedAttributes = new TreeSet(allAttributes)
     unverifiedAttributes.removeAll(assertedAttributes)
+
+    // Don't need to verify thread details.
+    assertedAttributes.add("thread.id")
+    unverifiedAttributes.remove("thread.id")
+    assertedAttributes.add("thread.name")
+    unverifiedAttributes.remove("thread.name")
+
     // The first and second condition in the assert are exactly the same
     // but both are included in order to provide better context in the error message.
     // containsAll because tests may assert more attributes than span actually has

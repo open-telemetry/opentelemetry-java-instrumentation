@@ -12,7 +12,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
-import io.opentelemetry.instrumentation.test.utils.ConfigUtils
 import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -30,13 +29,6 @@ import test.TestConnection
 import test.TestDriver
 
 class JdbcInstrumentationTest extends AgentTestRunner {
-  static final PREVIOUS_CONFIG = ConfigUtils.updateConfigAndResetInstrumentation {
-    it.setProperty("otel.instrumentation.jdbc-datasource.enabled", "true")
-  }
-
-  def specCleanup() {
-    ConfigUtils.setConfig(PREVIOUS_CONFIG)
-  }
 
   @Shared
   def dbName = "jdbcUnitTest"
