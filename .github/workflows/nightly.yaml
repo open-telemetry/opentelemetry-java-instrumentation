@@ -23,7 +23,7 @@ jobs:
           job-id: jdk11
 
       - name: Build
-        uses: nick-invision/retry@v2.2.0
+        uses: nick-invision/retry@v2.3.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
@@ -57,7 +57,7 @@ jobs:
           job-id: jdk${{ matrix.java }}
 
       - name: Test
-        uses: nick-invision/retry@v2.2.0
+        uses: nick-invision/retry@v2.3.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
@@ -81,7 +81,7 @@ jobs:
           job-id: latestDepTest
 
       - name: Test
-        uses: nick-invision/retry@v2.2.0
+        uses: nick-invision/retry@v2.3.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
