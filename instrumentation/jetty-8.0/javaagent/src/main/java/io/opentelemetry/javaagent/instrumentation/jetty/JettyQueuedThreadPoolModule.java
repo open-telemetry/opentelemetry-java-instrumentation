@@ -58,7 +58,6 @@ public class JettyQueuedThreadPoolModule extends InstrumentationModule {
       Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
 
       transformers.put(
-          // org.eclipse.jetty.util.thread.QueuedThreadPool
           named("dispatch").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
           JettyQueuedThreadPoolModule.class.getName() + "$SetExecuteRunnableStateAdvice");
       return transformers;
