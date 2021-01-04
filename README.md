@@ -2,11 +2,11 @@
 
 <p align="center">
   <strong>
-    <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation#getting-started">Getting Started<a/>
+    <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation#getting-started">Getting Started</a>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="https://github.com/open-telemetry/community#special-interest-groups">Getting Involved<a/>
+    <a href="https://github.com/open-telemetry/community#special-interest-groups">Getting Involved</a>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="https://gitter.im/open-telemetry/opentelemetry-java-instrumentation">Getting In Touch<a/>
+    <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions">Getting In Touch</a>
   </strong>
 </p>
 

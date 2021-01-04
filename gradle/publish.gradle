@@ -53,8 +53,8 @@ publishing {
         developers {
           developer {
             id = 'opentelemetry'
-            name = 'OpenTelemetry Gitter'
-            url = 'https://gitter.im/open-telemetry/opentelemetry-java-instrumentation'
+            name = 'OpenTelemetry'
+            url = 'https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions'
           }
         }
 
