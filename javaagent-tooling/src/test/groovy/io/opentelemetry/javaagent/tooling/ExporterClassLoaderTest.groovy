@@ -220,7 +220,7 @@ class ExporterClassLoaderTest extends Specification {
     return className.replace('.', '/') + ".class"
   }
 
-  static class ParentClassLoader extends URLClassLoader {
+  private static class ParentClassLoader extends URLClassLoader {
 
     ParentClassLoader() {
       super()
