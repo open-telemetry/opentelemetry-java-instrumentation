@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling
 
+import groovy.transform.CompileStatic
 import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory
 import io.opentelemetry.sdk.metrics.export.MetricExporter
@@ -220,6 +221,7 @@ class ExporterClassLoaderTest extends Specification {
     return className.replace('.', '/') + ".class"
   }
 
+  @CompileStatic
   private static class ParentClassLoader extends URLClassLoader {
 
     ParentClassLoader() {
