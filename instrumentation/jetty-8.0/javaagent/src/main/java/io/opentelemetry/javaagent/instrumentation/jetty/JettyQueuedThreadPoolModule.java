@@ -49,11 +49,6 @@ public class JettyQueuedThreadPoolModule extends InstrumentationModule {
   public static class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<ClassLoader> classLoaderOptimization() {
-      return any();
-    }
-
-    @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.eclipse.jetty.util.thread.QueuedThreadPool");
     }
