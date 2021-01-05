@@ -44,6 +44,7 @@ public class Servlet2Advice {
     context = tracer().startSpan(httpServletRequest);
     scope = context.makeCurrent();
     // reset response status from previous request
+    // (some servlet containers reuse response objects to reduce memory allocations)
     InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, null);
   }
 
