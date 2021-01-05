@@ -29,9 +29,6 @@ class TestServlet3 {
       if (servletPath == null) {
         servletPath = req.servletPath
       }
-      if (servletPath.contains("exception")) {
-        System.err.println(servletPath)
-      }
       HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(servletPath)
       HttpServerTest.controller(endpoint) {
         resp.contentType = "text/plain"
