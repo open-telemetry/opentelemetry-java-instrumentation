@@ -40,7 +40,7 @@ public class AppServerTestRunner extends Sputnik {
   public void run(RunNotifier notifier) {
     // run tests for all app servers
     try {
-      for (AppServer a : appServers) {
+      for (AppServer appServer : appServers) {
         runningAppServer.put(testClass, a);
         super.run(notifier);
       }
