@@ -51,20 +51,23 @@ class MulticastDirectCamelTest extends AgentTestRunner {
             "apache-camel.uri" "direct://input"
           }
         }
-        it.span(1) {
-          name "second"
-          kind INTERNAL
-          parentSpanId parent.span(0).spanId
-          attributes {
-            "apache-camel.uri" "direct://second"
-          }
-        }
-        it.span(2) {
+        // there is no strict ordering of "first" and "second" span
+        def indexOfFirst = span(1).name == "first" ? 1 : 2
+        def indexOfSecond = span(1).name == "second" ? 1 : 2
+        it.span(indexOfFirst) {
           name "first"
           kind INTERNAL
           parentSpanId parent.span(0).spanId
           attributes {
             "apache-camel.uri" "direct://first"
+          }
+        }
+        it.span(indexOfSecond) {
+          name "second"
+          kind INTERNAL
+          parentSpanId parent.span(0).spanId
+          attributes {
+            "apache-camel.uri" "direct://second"
           }
         }
       }
