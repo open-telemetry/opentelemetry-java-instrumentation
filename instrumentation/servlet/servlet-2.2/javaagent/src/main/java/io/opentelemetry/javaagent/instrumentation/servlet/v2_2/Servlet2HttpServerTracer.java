@@ -23,4 +23,9 @@ public class Servlet2HttpServerTracer extends ServletHttpServerTracer<ResponseWi
   protected int responseStatus(ResponseWithStatus responseWithStatus) {
     return responseWithStatus.getStatus();
   }
+
+  @Override
+  protected boolean isResponseCommitted(ResponseWithStatus responseWithStatus) {
+    return responseWithStatus.getResponse().isCommitted();
+  }
 }

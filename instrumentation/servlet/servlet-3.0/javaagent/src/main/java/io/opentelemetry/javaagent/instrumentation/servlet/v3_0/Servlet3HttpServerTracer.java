@@ -36,22 +36,8 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   }
 
   @Override
-  public void endExceptionally(
-      Context context, Throwable throwable, HttpServletResponse response, long timestamp) {
-    if (response.isCommitted()) {
-      super.endExceptionally(context, throwable, response, timestamp);
-    } else {
-      // passing null response to super, in order to capture as 500 / INTERNAL, due to servlet spec
-      // https://javaee.github.io/servlet-spec/downloads/servlet-4.0/servlet-4_0_FINAL.pdf:
-      // "If a servlet generates an error that is not handled by the error page mechanism as
-      // described above, the container must ensure to send a response with status 500."
-      super.endExceptionally(context, throwable, null, timestamp);
-    }
-  }
-
-  @Override
-  public void end(Context context, HttpServletResponse response, long timestamp) {
-    super.end(context, response, timestamp);
+  protected boolean isResponseCommitted(HttpServletResponse response) {
+    return response.isCommitted();
   }
 
   public void onTimeout(Context context, long timeout) {
