@@ -3,11 +3,11 @@ ext.skipPublish = true
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
-  library project(':testing-common:library-for-integration-tests')
+  implementation project(':testing-common:library-for-integration-tests')
 
   testCompileOnly project(':instrumentation-api')
   testCompileOnly project(':javaagent-api')
-  testImplementation(project(':javaagent-tooling'))
+  testCompileOnly project(':javaagent-tooling')
 
   testImplementation deps.opentelemetryExtAnnotations
 
