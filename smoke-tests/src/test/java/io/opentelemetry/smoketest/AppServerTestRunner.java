@@ -74,7 +74,7 @@ public class AppServerTestRunner extends Sputnik {
   // used for ignoring tests defined in base class that are expected to fail
   // on currently running server
   public static Class<?> currentTestClass() {
-    Class<?> c = currentTestClass.get();
+    Class<?> testClass = currentTestClass.get();
     if (c == null) {
       throw new IllegalStateException("Current test class is not set");
     }
