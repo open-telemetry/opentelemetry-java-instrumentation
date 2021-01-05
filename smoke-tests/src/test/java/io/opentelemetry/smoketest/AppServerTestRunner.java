@@ -63,7 +63,7 @@ public class AppServerTestRunner extends Sputnik {
   // expose currently running app server
   // used to get current server and jvm version inside the test class
   public static AppServer currentAppServer(Class<?> testClass) {
-    AppServer a = runningAppServer.get(testClass);
+    AppServer appServer = runningAppServer.get(testClass);
     if (a == null) {
       throw new IllegalStateException("Test not running for " + testClass);
     }
