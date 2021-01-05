@@ -16,7 +16,9 @@ import javax.ws.rs.Path
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.glassfish.grizzly.http.server.HttpHandler
 import org.glassfish.grizzly.http.server.HttpServer
+import org.glassfish.grizzly.http.server.Request
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
 import org.glassfish.jersey.server.ResourceConfig
 
@@ -27,7 +29,12 @@ class GrizzlyTest extends HttpServerTest<HttpServer> {
     ResourceConfig rc = new ResourceConfig()
     rc.register(SimpleExceptionMapper)
     rc.register(ServiceResource)
-    GrizzlyHttpServerFactory.createHttpServer(new URI("http://localhost:$port"), rc)
+
+    def server = GrizzlyHttpServerFactory.createHttpServer(new URI("http://localhost:$port"), rc, false)
+    server.getServerConfiguration().addHttpHandler(new ExceptionHttpHandler(), "/exception")
+    server.start()
+
+    return server
   }
 
   @Override
@@ -80,15 +87,6 @@ class GrizzlyTest extends HttpServerTest<HttpServer> {
         Response.status(ERROR.status).entity(ERROR.body).build()
       }
     }
-
-    @GET
-    @Path("exception")
-    Response exception() {
-      controller(EXCEPTION) {
-        throw new Exception(EXCEPTION.body)
-      }
-      return null
-    }
   }
 
   @Override
@@ -96,9 +94,18 @@ class GrizzlyTest extends HttpServerTest<HttpServer> {
     return "HttpCodecFilter.handleRead"
   }
 
+  static class ExceptionHttpHandler extends HttpHandler {
+
+    @Override
+    void service(Request request, org.glassfish.grizzly.http.server.Response response) throws Exception {
+      controller(EXCEPTION) {
+        throw new Exception(EXCEPTION.body)
+      }
+    }
+  }
+
   @Override
-  boolean testException() {
-    // TODO(anuraaga): https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
+  boolean testExceptionBody() {
+    false
   }
 }
