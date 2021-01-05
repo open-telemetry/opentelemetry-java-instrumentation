@@ -8,7 +8,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SERVLET_EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -20,11 +19,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   @Override
   URI buildAddress() {
     return new URI("http://localhost:$port$contextPath/")
-  }
-
-  @Override
-  boolean testServletException() {
-    testException()
   }
 
   // FIXME: Add authentication tests back in...
@@ -44,7 +38,6 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
     addServlet(context, QUERY_PARAM.path, servlet)
     addServlet(context, ERROR.path, servlet)
     addServlet(context, EXCEPTION.path, servlet)
-    addServlet(context, SERVLET_EXCEPTION.path, servlet)
     addServlet(context, REDIRECT.path, servlet)
     addServlet(context, AUTH_REQUIRED.path, servlet)
   }

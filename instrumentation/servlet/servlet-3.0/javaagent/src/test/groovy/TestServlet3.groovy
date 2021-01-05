@@ -7,7 +7,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
-import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SERVLET_EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import groovy.servlet.AbstractHttpServlet
@@ -48,8 +47,6 @@ class TestServlet3 {
             resp.sendError(endpoint.status, endpoint.body)
             break
           case EXCEPTION:
-            throw new Exception(endpoint.body)
-          case SERVLET_EXCEPTION:
             throw new ServletException(endpoint.body)
         }
       }
