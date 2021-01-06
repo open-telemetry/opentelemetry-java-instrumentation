@@ -50,7 +50,7 @@ class CassandraClientTest extends AgentTestRunner {
   }
 
   def cleanupSpec() {
-    cluster.close()
+    cluster?.close()
     cassandra.stop()
   }
 
