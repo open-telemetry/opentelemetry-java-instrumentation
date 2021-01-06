@@ -43,6 +43,9 @@ public class Servlet2Advice {
 
     context = tracer().startSpan(httpServletRequest);
     scope = context.makeCurrent();
+    // reset response status from previous request
+    // (some servlet containers reuse response objects to reduce memory allocations)
+    InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, null);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -73,11 +76,15 @@ public class Servlet2Advice {
 
     tracer().setPrincipal(context, (HttpServletRequest) request);
 
+    int responseStatusCode = HttpServletResponse.SC_OK;
     Integer responseStatus =
         InstrumentationContext.get(ServletResponse.class, Integer.class).get(response);
+    if (responseStatus != null) {
+      responseStatusCode = responseStatus;
+    }
 
     ResponseWithStatus responseWithStatus =
-        new ResponseWithStatus((HttpServletResponse) response, responseStatus);
+        new ResponseWithStatus((HttpServletResponse) response, responseStatusCode);
     if (throwable == null) {
       tracer().end(context, responseWithStatus);
     } else {
