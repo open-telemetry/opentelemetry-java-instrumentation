@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.servlet;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -23,7 +28,8 @@ public class ServletHttpServerTracerTest {
   void testGetSpanName_nullSpanName() {
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getServletPath()).thenReturn(null);
-    assertThatThrownBy(() -> ServletHttpServerTracer.getSpanName(request)).isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> ServletHttpServerTracer.getSpanName(request))
+        .isInstanceOf(NullPointerException.class);
   }
 
   @Test
