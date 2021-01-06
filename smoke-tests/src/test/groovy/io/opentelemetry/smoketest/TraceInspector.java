@@ -77,6 +77,10 @@ public class TraceInspector {
     return (int) getSpanStream().filter(it -> it.getKind().equals(spanKind)).count();
   }
 
+  protected int countSpans() {
+    return (int) getSpanStream().count();
+  }
+
   public int size() {
     return traces.size();
   }

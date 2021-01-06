@@ -133,6 +133,7 @@ abstract class SmokeTest extends Specification {
   def cleanupSpec() {
     backend.stop()
     collector.stop()
+    network.close()
   }
 
   protected static Stream<AnyValue> findResourceAttribute(Collection<ExportTraceServiceRequest> traces,
