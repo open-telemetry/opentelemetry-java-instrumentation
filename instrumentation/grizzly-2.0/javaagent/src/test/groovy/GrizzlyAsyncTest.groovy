@@ -31,6 +31,12 @@ class GrizzlyAsyncTest extends GrizzlyTest {
     GrizzlyHttpServerFactory.createHttpServer(new URI("http://localhost:$port"), rc)
   }
 
+  @Override
+  boolean testException() {
+    // justification: exception is handled by jersey
+    false
+  }
+
   @Path("/")
   static class AsyncServiceResource {
     private ExecutorService executor = Executors.newSingleThreadExecutor()

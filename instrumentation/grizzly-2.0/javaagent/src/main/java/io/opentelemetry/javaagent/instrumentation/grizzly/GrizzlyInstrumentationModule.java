@@ -24,7 +24,8 @@ public class GrizzlyInstrumentationModule extends InstrumentationModule {
         new DefaultFilterChainInstrumentation(),
         new FilterInstrumentation(),
         new HttpCodecFilterInstrumentation(),
-        new HttpServerFilterInstrumentation());
+        new HttpServerFilterInstrumentation(),
+        new HttpHandlerInstrumentation());
   }
 
   @Override

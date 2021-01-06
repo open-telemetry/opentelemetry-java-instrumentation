@@ -17,9 +17,15 @@ abstract class GrizzlyIOStrategyTest extends GrizzlyTest {
     ResourceConfig rc = new ResourceConfig()
     rc.register(SimpleExceptionMapper)
     rc.register(ServiceResource)
-    def server = GrizzlyHttpServerFactory.createHttpServer(new URI("http://localhost:$port"), rc)
+
+    def server = GrizzlyHttpServerFactory.createHttpServer(new URI("http://localhost:$port"), rc, false)
+    // Default in NIOTransportBuilder is WorkerThreadIOStrategy, so don't need to retest that.
     server.getListener("grizzly").getTransport().setIOStrategy(strategy())
-    // Default in NIOTransportBuilder is WorkerThreadIOStrategy, so don't need to retest that.s
+    // jersey doesn't propagate exceptions up to the grizzly handler
+    // so we use a standalone HttpHandler to test exception capture
+    server.getServerConfiguration().addHttpHandler(new ExceptionHttpHandler(), "/exception")
+    server.start()
+
     return server
   }
 
