@@ -33,9 +33,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JettyHandlerInstrumentationModule extends InstrumentationModule {
+public class JettyInstrumentationModule extends InstrumentationModule {
 
-  public JettyHandlerInstrumentationModule() {
+  public JettyInstrumentationModule() {
     super("jetty", "jetty-8.0");
   }
 
@@ -98,7 +98,7 @@ public class JettyHandlerInstrumentationModule extends InstrumentationModule {
 
       transformers.put(
           named("dispatch").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
-          JettyHandlerInstrumentationModule.class.getName() + "$SetExecuteRunnableStateAdvice");
+          JettyInstrumentationModule.class.getName() + "$SetExecuteRunnableStateAdvice");
       return transformers;
     }
   }
