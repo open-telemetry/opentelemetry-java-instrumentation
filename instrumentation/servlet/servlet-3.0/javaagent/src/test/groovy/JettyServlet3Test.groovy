@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import javax.servlet.Servlet
+import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
@@ -21,6 +22,11 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
   @Override
   boolean testNotFound() {
     false
+  }
+
+  @Override
+  Class<?> expectedExceptionClass() {
+    ServletException
   }
 
   @Override
@@ -123,55 +129,53 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
   }
 }
 
-// FIXME: not working right now...
-//class JettyServlet3TestForward extends JettyDispatchTest {
-//  @Override
-//  Class<Servlet> servlet() {
-//    TestServlet3.Sync // dispatch to sync servlet
-//  }
-//
-//  @Override
-//  boolean testNotFound() {
-//    false
-//  }
-//
-//  @Override
-//  protected void setupServlets(ServletContextHandler context) {
-//    super.setupServlets(context)
-//
-//    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Forward)
-//    addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Forward)
-//    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Forward)
-//    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Forward)
-//    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
-//    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
-//  }
-//}
+class JettyServlet3TestForward extends JettyDispatchTest {
+  @Override
+  Class<Servlet> servlet() {
+    TestServlet3.Sync // dispatch to sync servlet
+  }
 
-// FIXME: not working right now...
-//class JettyServlet3TestInclude extends JettyDispatchTest {
-//  @Override
-//  Class<Servlet> servlet() {
-//    TestServlet3.Sync // dispatch to sync servlet
-//  }
-//
-//  @Override
-//  boolean testNotFound() {
-//    false
-//  }
-//
-//  @Override
-//  protected void setupServlets(ServletContextHandler context) {
-//    super.setupServlets(context)
-//
-//    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Include)
-//    addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Include)
-//    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Include)
-//    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
-//    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Include)
-//    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Include)
-//  }
-//}
+  @Override
+  protected void setupServlets(ServletContextHandler context) {
+    super.setupServlets(context)
+
+    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
+  }
+}
+
+class JettyServlet3TestInclude extends JettyDispatchTest {
+  @Override
+  Class<Servlet> servlet() {
+    TestServlet3.Sync // dispatch to sync servlet
+  }
+
+  @Override
+  boolean testRedirect() {
+    false
+  }
+
+  @Override
+  boolean testError() {
+    false
+  }
+
+  @Override
+  protected void setupServlets(ServletContextHandler context) {
+    super.setupServlets(context)
+
+    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + QUERY_PARAM.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Include)
+  }
+}
 
 
 class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {

@@ -12,6 +12,8 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import groovy.servlet.AbstractHttpServlet
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import java.util.concurrent.Phaser
+import javax.servlet.RequestDispatcher
+import javax.servlet.ServletException
 import javax.servlet.annotation.WebServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -22,7 +24,11 @@ class TestServlet3 {
   static class Sync extends AbstractHttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
-      HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(req.servletPath)
+      String servletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH)
+      if (servletPath == null) {
+        servletPath = req.servletPath
+      }
+      HttpServerTest.ServerEndpoint endpoint = HttpServerTest.ServerEndpoint.forPath(servletPath)
       HttpServerTest.controller(endpoint) {
         resp.contentType = "text/plain"
         switch (endpoint) {
@@ -41,7 +47,7 @@ class TestServlet3 {
             resp.sendError(endpoint.status, endpoint.body)
             break
           case EXCEPTION:
-            throw new Exception(endpoint.body)
+            throw new ServletException(endpoint.body)
         }
       }
     }

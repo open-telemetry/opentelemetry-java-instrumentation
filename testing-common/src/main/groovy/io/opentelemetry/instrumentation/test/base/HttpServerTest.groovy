@@ -132,6 +132,18 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     true
   }
 
+  Class<?> expectedExceptionClass() {
+    Exception
+  }
+
+  boolean testRedirect() {
+    true
+  }
+
+  boolean testError() {
+    true
+  }
+
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
     REDIRECT("redirect", 302, "/redirected"),
@@ -282,6 +294,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test redirect"() {
     setup:
+    assumeTrue(testRedirect())
     def request = request(REDIRECT, method, body).build()
     def response = client.newCall(request).execute()
 
@@ -301,6 +314,7 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
 
   def "test error"() {
     setup:
+    assumeTrue(testError())
     def request = request(ERROR, method, body).build()
     def response = client.newCall(request).execute()
 
@@ -402,9 +416,9 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
           }
           if (endpoint != NOT_FOUND) {
             if (hasHandlerSpan()) {
-              controllerSpan(it, spanIndex++, span(1), errorMessage)
+              controllerSpan(it, spanIndex++, span(1), errorMessage, expectedExceptionClass())
             } else {
-              controllerSpan(it, spanIndex++, span(0), errorMessage)
+              controllerSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
             }
             if (hasRenderSpan(endpoint)) {
               renderSpan(it, spanIndex++, span(0), method, endpoint)
@@ -422,12 +436,12 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
     }
   }
 
-  void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null) {
+  void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
     trace.span(index) {
       name "controller"
       errored errorMessage != null
       if (errorMessage) {
-        errorEvent(Exception, errorMessage)
+        errorEvent(exceptionClass, errorMessage)
       }
       childOf((SpanData) parent)
     }
@@ -465,8 +479,8 @@ abstract class HttpServerTest<SERVER> extends AgentTestRunner {
         event(0) {
           eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
           attributes {
-            "${SemanticAttributes.EXCEPTION_TYPE.key}" { it == null || it == Exception.name }
-            "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { it == null || it == EXCEPTION.body }
+            "${SemanticAttributes.EXCEPTION_TYPE.key}" { it == null || it == expectedExceptionClass().name }
+            "${SemanticAttributes.EXCEPTION_MESSAGE.key}" { it == null || it == endpoint.body }
             "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" { it == null || it instanceof String }
           }
         }

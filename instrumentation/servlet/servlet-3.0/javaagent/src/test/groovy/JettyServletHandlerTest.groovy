@@ -4,6 +4,7 @@
  */
 
 import javax.servlet.Servlet
+import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
@@ -51,5 +52,10 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
   @Override
   boolean testNotFound() {
     false
+  }
+
+  @Override
+  Class<?> expectedExceptionClass() {
+    ServletException
   }
 }
