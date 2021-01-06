@@ -140,15 +140,15 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   }
 
   public static String getSpanName(HttpServletRequest request) {
-    String spanName = request.getServletPath();
-    if (spanName.isEmpty()) {
+    String servletPath = request.getServletPath();
+    if (servletPath.isEmpty()) {
       return "HTTP " + request.getMethod();
     }
     String contextPath = request.getContextPath();
-    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
-      spanName = contextPath + spanName;
+    if (contextPath == null || contextPath.isEmpty() || contextPath.equals("/")) {
+      return servletPath;
     }
-    return spanName;
+    return contextPath + servletPath;
   }
 
   /**
