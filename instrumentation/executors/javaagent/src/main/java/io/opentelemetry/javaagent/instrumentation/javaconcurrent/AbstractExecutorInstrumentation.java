@@ -88,7 +88,8 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
         "java.util.concurrent.ForkJoinPool",
         "java.util.concurrent.ScheduledThreadPoolExecutor",
         "java.util.concurrent.ThreadPoolExecutor",
-        "org.eclipse.jetty.util.thread.QueuedThreadPool",
+        "org.eclipse.jetty.util.thread.QueuedThreadPool", // dispatch() is covered in the jetty
+        // module
         "org.eclipse.jetty.util.thread.ReservedThreadExecutor",
         "org.glassfish.grizzly.threadpool.GrizzlyExecutorService",
         "play.api.libs.streams.Execution$trampoline$",
