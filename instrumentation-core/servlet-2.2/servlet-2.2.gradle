@@ -7,4 +7,8 @@ dependencies {
   implementation deps.slf4j
 
   compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
+
+  testImplementation group: 'javax.servlet', name: 'servlet-api', version: '2.2'
+  testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
+  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
 }
