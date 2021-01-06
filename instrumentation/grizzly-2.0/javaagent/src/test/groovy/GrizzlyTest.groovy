@@ -31,6 +31,8 @@ class GrizzlyTest extends HttpServerTest<HttpServer> {
     rc.register(ServiceResource)
 
     def server = GrizzlyHttpServerFactory.createHttpServer(new URI("http://localhost:$port"), rc, false)
+    // jersey doesn't propagate exceptions up to the grizzly handler
+    // so we use a standalone HttpHandler to test exception capture
     server.getServerConfiguration().addHttpHandler(new ExceptionHttpHandler(), "/exception")
     server.start()
 
