@@ -5,12 +5,13 @@
 
 package io.opentelemetry.smoketest
 
+import static org.junit.Assume.assumeTrue
+
 import io.opentelemetry.proto.trace.v1.Span
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 import okhttp3.Request
 import org.junit.runner.RunWith
-import spock.lang.IgnoreIf
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -32,10 +33,27 @@ abstract class AppServerTest extends SmokeTest {
     stopTarget()
   }
 
+  boolean testSmoke() {
+    true
+  }
+
+  boolean testAsyncSmoke() {
+    true
+  }
+
+  boolean testException() {
+    true
+  }
+
+  boolean testRequestWebInfWebXml() {
+    true
+  }
+
   //TODO add assert that server spans were created by servers, not by servlets
   @Unroll
-  @IgnoreIf({ AppServerTestRunner.currentTestClass() == JettySmokeTest })
   def "#appServer smoke test on JDK #jdk"(String appServer, String jdk) {
+    assumeTrue(testSmoke())
+
     String url = "http://localhost:${target.getMappedPort(8080)}/app/greeting"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
@@ -158,8 +176,9 @@ abstract class AppServerTest extends SmokeTest {
   }
 
   @Unroll
-  @IgnoreIf({ AppServerTestRunner.currentTestClass() == GlassFishSmokeTest })
   def "#appServer test request for WEB-INF/web.xml on JDK #jdk"(String appServer, String jdk) {
+    assumeTrue(testRequestWebInfWebXml())
+
     String url = "http://localhost:${target.getMappedPort(8080)}/app/WEB-INF/web.xml"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
@@ -198,8 +217,9 @@ abstract class AppServerTest extends SmokeTest {
   }
 
   @Unroll
-  @IgnoreIf({ AppServerTestRunner.currentTestClass() == JettySmokeTest })
   def "#appServer test request with error JDK #jdk"(String appServer, String jdk) {
+    assumeTrue(testException())
+
     String url = "http://localhost:${target.getMappedPort(8080)}/app/exception"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
@@ -280,8 +300,9 @@ abstract class AppServerTest extends SmokeTest {
   }
 
   @Unroll
-  @IgnoreIf({ AppServerTestRunner.currentTestClass() == JettySmokeTest })
   def "#appServer async smoke test on JDK #jdk"(String appServer, String jdk) {
+    assumeTrue(testAsyncSmoke())
+
     String url = "http://localhost:${target.getMappedPort(8080)}/app/asyncgreeting"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)

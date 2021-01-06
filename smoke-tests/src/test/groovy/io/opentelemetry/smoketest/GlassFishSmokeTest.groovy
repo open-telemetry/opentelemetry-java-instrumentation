@@ -34,4 +34,10 @@ class GlassFishSmokeTest extends AppServerTest {
   protected String getSpanName(String path) {
     return path
   }
+
+  @Override
+  boolean testRequestWebInfWebXml() {
+    false
+  }
+
 }

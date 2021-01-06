@@ -30,6 +30,21 @@ class JettySmokeTest extends AppServerTest {
     return getJettySpanName()
   }
 
+  @Override
+  boolean testSmoke() {
+    false
+  }
+
+  @Override
+  boolean testAsyncSmoke() {
+    false
+  }
+
+  @Override
+  boolean testException() {
+    false
+  }
+
   @Unroll
   def "#appServer smoke test on JDK #jdk"(String appServer, String jdk) {
     String url = "http://localhost:${target.getMappedPort(8080)}/app/greeting"

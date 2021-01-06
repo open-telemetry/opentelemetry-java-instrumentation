@@ -8,7 +8,6 @@ package io.opentelemetry.smoketest;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.model.InitializationError;
 import org.spockframework.runtime.Sputnik;
@@ -23,7 +22,6 @@ import org.spockframework.runtime.Sputnik;
 public class AppServerTestRunner extends Sputnik {
   private static final Map<Class<?>, AppServer> runningAppServer =
       Collections.synchronizedMap(new HashMap<>());
-  private static final ThreadLocal<Class<?>> currentTestClass = new ThreadLocal<>();
   private final Class<?> testClass;
   private final AppServer[] appServers;
 
@@ -41,7 +39,7 @@ public class AppServerTestRunner extends Sputnik {
     // run tests for all app servers
     try {
       for (AppServer appServer : appServers) {
-        runningAppServer.put(testClass, a);
+        runningAppServer.put(testClass, appServer);
         super.run(notifier);
       }
     } finally {
@@ -49,35 +47,13 @@ public class AppServerTestRunner extends Sputnik {
     }
   }
 
-  @Override
-  public Description getDescription() {
-    //
-    currentTestClass.set(testClass);
-    try {
-      return super.getDescription();
-    } finally {
-      currentTestClass.remove();
-    }
-  }
-
   // expose currently running app server
   // used to get current server and jvm version inside the test class
   public static AppServer currentAppServer(Class<?> testClass) {
     AppServer appServer = runningAppServer.get(testClass);
-    if (a == null) {
+    if (appServer == null) {
       throw new IllegalStateException("Test not running for " + testClass);
     }
-    return a;
-  }
-
-  // expose current test class
-  // used for ignoring tests defined in base class that are expected to fail
-  // on currently running server
-  public static Class<?> currentTestClass() {
-    Class<?> testClass = currentTestClass.get();
-    if (c == null) {
-      throw new IllegalStateException("Current test class is not set");
-    }
-    return c;
+    return appServer;
   }
 }
