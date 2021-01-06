@@ -23,9 +23,9 @@ abstract class AppServerTest extends SmokeTest {
   String serverVersion
 
   def setupSpec() {
-    AppServer a = AppServerTestRunner.currentAppServer(this.getClass())
-    serverVersion = a.version()
-    jdk = a.jdk()
+    def appServer = AppServerTestRunner.currentAppServer(this.getClass())
+    serverVersion = appServer.version()
+    jdk = appServer.jdk()
     startTarget(jdk, serverVersion)
   }
 
