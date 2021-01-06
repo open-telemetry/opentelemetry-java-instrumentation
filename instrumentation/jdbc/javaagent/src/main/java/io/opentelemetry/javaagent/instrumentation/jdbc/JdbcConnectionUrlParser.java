@@ -683,34 +683,22 @@ public enum JdbcConnectionUrlParser {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE
-            .doParse(jdbcUrl, builder)
-            .system("hsqldb")
-            .subtype("hsql");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system("hsqldb").subtype("hsql");
       } else if (hsqlUrl.startsWith("hsqls:")) {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE
-            .doParse(jdbcUrl, builder)
-            .system("hsqldb")
-            .subtype("hsqls");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system("hsqldb").subtype("hsqls");
       } else if (hsqlUrl.startsWith("http:")) {
         if (dbInfo.getPort() == null) {
           builder.port(80);
         }
-        return MODIFIED_URL_LIKE
-            .doParse(jdbcUrl, builder)
-            .system("hsqldb")
-            .subtype("http");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system("hsqldb").subtype("http");
       } else if (hsqlUrl.startsWith("https:")) {
         if (dbInfo.getPort() == null) {
           builder.port(443);
         }
-        return MODIFIED_URL_LIKE
-            .doParse(jdbcUrl, builder)
-            .system("hsqldb")
-            .subtype("https");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system("hsqldb").subtype("https");
       } else {
         builder.subtype("mem").host(null).port(null);
         instance = hsqlUrl;
