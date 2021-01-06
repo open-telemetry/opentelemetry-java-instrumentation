@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import io.opentelemetry.api.trace.attributes.SemanticAttributes.DbSystemValues;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.CommandWithArgs;
 import java.net.InetSocketAddress;
@@ -39,7 +39,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
 
   @Override
   protected String dbSystem(Connection connection) {
-    return DbSystem.REDIS;
+    return DbSystemValues.REDIS;
   }
 
   @Override

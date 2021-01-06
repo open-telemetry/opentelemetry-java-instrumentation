@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes.DbSystemValues;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -98,7 +98,7 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
 
   @Override
   protected String dbSystem(RedisConnection connection) {
-    return DbSystem.REDIS;
+    return DbSystemValues.REDIS;
   }
 
   @Override

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.DbInfo.DEFAULT;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
-import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -624,13 +624,13 @@ public enum JdbcConnectionUrlParser {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.H2).subtype("tcp");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystemValues.H2).subtype("tcp");
       } else if (h2Url.startsWith("ssl:")) {
         DbInfo dbInfo = builder.build();
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.H2).subtype("ssl");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystemValues.H2).subtype("ssl");
       } else {
         builder.subtype("file").host(null).port(null);
         int propLoc = h2Url.indexOf(";");
@@ -651,6 +651,8 @@ public enum JdbcConnectionUrlParser {
     private static final String DEFAULT_USER = "SA";
     private static final int DEFAULT_PORT = 9001;
 
+    // TODO(anuraaga): Replace dbsystem with semantic convention
+    // https://github.com/open-telemetry/opentelemetry-specification/pull/1321
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       String instance = null;
@@ -681,22 +683,34 @@ public enum JdbcConnectionUrlParser {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("hsql");
+        return MODIFIED_URL_LIKE
+            .doParse(jdbcUrl, builder)
+            .system("hsqldb")
+            .subtype("hsql");
       } else if (hsqlUrl.startsWith("hsqls:")) {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("hsqls");
+        return MODIFIED_URL_LIKE
+            .doParse(jdbcUrl, builder)
+            .system("hsqldb")
+            .subtype("hsqls");
       } else if (hsqlUrl.startsWith("http:")) {
         if (dbInfo.getPort() == null) {
           builder.port(80);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("http");
+        return MODIFIED_URL_LIKE
+            .doParse(jdbcUrl, builder)
+            .system("hsqldb")
+            .subtype("http");
       } else if (hsqlUrl.startsWith("https:")) {
         if (dbInfo.getPort() == null) {
           builder.port(443);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).system(DbSystem.HSQLDB).subtype("https");
+        return MODIFIED_URL_LIKE
+            .doParse(jdbcUrl, builder)
+            .system("hsqldb")
+            .subtype("https");
       } else {
         builder.subtype("mem").host(null).port(null);
         instance = hsqlUrl;
@@ -939,27 +953,27 @@ public enum JdbcConnectionUrlParser {
     switch (type) {
       case "as400": // IBM AS400 Database
       case "db2": // IBM Db2
-        return DbSystem.DB2;
+        return DbSystemValues.DB2;
       case "derby": // Apache Derby
-        return DbSystem.DERBY;
+        return DbSystemValues.DERBY;
       case "h2": // H2 Database
-        return DbSystem.H2;
+        return DbSystemValues.H2;
       case "hsqldb": // Hyper SQL Database
-        return DbSystem.HSQLDB;
+        return "hsqldb";
       case "mariadb": // MariaDB
-        return DbSystem.MARIADB;
+        return DbSystemValues.MARIADB;
       case "mysql": // MySQL
-        return DbSystem.MYSQL;
+        return DbSystemValues.MYSQL;
       case "oracle": // Oracle Database
-        return DbSystem.ORACLE;
+        return DbSystemValues.ORACLE;
       case "postgresql": // PostgreSQL
-        return DbSystem.POSTGRESQL;
+        return DbSystemValues.POSTGRESQL;
       case "jtds": // jTDS - the pure Java JDBC 3.0 driver for Microsoft SQL Server
       case "microsoft":
       case "sqlserver": // Microsoft SQL Server
-        return DbSystem.MSSQL;
+        return DbSystemValues.MSSQL;
       default:
-        return DbSystem.OTHER_SQL; // Unknown DBMS
+        return DbSystemValues.OTHER_SQL; // Unknown DBMS
     }
   }
 }
