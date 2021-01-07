@@ -43,7 +43,7 @@ public class AttributeKeys {
    * while the Attribute class is loaded by a third class loader and used internally for the
    * cassandra driver.
    */
-  private static <T> AttributeKey<T> attributeKey(String key) {
+  public static <T> AttributeKey<T> attributeKey(String key) {
     ConcurrentMap<String, AttributeKey<?>> classLoaderMap =
         map.computeIfAbsent(AttributeKey.class.getClassLoader(), mapSupplier);
     if (classLoaderMap.containsKey(key)) {
