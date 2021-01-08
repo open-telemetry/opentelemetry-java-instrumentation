@@ -10,8 +10,8 @@ import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.Couchbas
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes.DbSystemValues;
 import io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe;
-import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import java.lang.reflect.Method;
 import rx.Observable;
 
@@ -43,7 +43,7 @@ public class CouchbaseOnSubscribe<T> extends TracedOnSubscribe<T> {
 
   @Override
   protected void decorateSpan(Span span) {
-    span.setAttribute(SemanticAttributes.DB_SYSTEM, DbSystem.COUCHBASE);
+    span.setAttribute(SemanticAttributes.DB_SYSTEM, DbSystemValues.COUCHBASE);
     span.setAttribute(SemanticAttributes.DB_NAME, bucket);
     span.setAttribute(SemanticAttributes.DB_STATEMENT, query);
   }

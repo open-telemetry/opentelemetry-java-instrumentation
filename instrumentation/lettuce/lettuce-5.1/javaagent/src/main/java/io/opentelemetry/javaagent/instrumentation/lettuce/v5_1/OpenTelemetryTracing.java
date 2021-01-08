@@ -18,10 +18,10 @@ import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.attributes.SemanticAttributes;
+import io.opentelemetry.api.trace.attributes.SemanticAttributes.DbSystemValues;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.SpanAttributeSetter;
-import io.opentelemetry.javaagent.instrumentation.api.db.DbSystem;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -165,7 +165,7 @@ public enum OpenTelemetryTracing implements Tracing {
               .spanBuilder("redis")
               .setSpanKind(Kind.CLIENT)
               .setParent(parent)
-              .setAttribute(SemanticAttributes.DB_SYSTEM, DbSystem.REDIS);
+              .setAttribute(SemanticAttributes.DB_SYSTEM, DbSystemValues.REDIS);
     }
 
     @Override
