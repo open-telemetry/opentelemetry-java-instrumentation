@@ -9,7 +9,8 @@ public final class WrapperConfiguration {
 
   private WrapperConfiguration() {}
 
-  public static final String OTEL_LAMBDA_FLUSH_TIMEOUT_ENV_KEY = "OTEL_LAMBDA_FLUSH_TIMEOUT";
+  public static final String OTEL_LAMBDA_FLUSH_TIMEOUT_ENV_KEY =
+      "OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT";
   public static final long OTEL_LAMBDA_FLUSH_TIMEOUT_DEFAULT = 1;
 
   public static final long flushTimeout() {

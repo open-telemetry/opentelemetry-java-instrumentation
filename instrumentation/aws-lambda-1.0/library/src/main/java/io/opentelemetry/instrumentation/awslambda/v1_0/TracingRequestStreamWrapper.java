@@ -13,9 +13,9 @@ import java.io.OutputStream;
 
 /**
  * Wrapper for {@link TracingRequestStreamHandler}. Allows for wrapping a regular lambda, enabling
- * single span tracing. Main lambda class should be configured as env property OTEL_LAMBDA_HANDLER
- * in package.ClassName::methodName format. Lambda class must implement {@link
- * RequestStreamHandler}.
+ * single span tracing. Main lambda class should be configured as env property
+ * OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER in package.ClassName::methodName format. Lambda class
+ * must implement {@link RequestStreamHandler}.
  */
 public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
 

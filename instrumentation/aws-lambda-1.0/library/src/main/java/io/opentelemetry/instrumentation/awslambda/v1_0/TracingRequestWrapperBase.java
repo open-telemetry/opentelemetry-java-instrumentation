@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 
 /**
  * Base abstract wrapper for {@link TracingRequestHandler}. Provides: - delegation to a lambda via
- * env property OTEL_LAMBDA_HANDLER in package.ClassName::methodName format
+ * env property OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER in package.ClassName::methodName format
  */
 abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, O> {
 
