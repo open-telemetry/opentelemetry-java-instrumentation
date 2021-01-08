@@ -55,6 +55,35 @@ class PropagatorsInitializerTest {
   }
 
   @Test
+  void initialize_preconfiguredSameAsId() {
+    List<String> ids = singletonList("jaeger");
+    AtomicReference<ContextPropagators> seen = new AtomicReference<>();
+    Consumer<ContextPropagators> setter = seen::set;
+    Supplier<TextMapPropagator> preconfigured = () -> PropagatorsInitializer.Propagator.JAEGER;
+
+    PropagatorsInitializer.initializePropagators(ids, preconfigured, setter);
+
+    assertThat(seen.get().getTextMapPropagator()).isSameAs(PropagatorsInitializer.Propagator.JAEGER);
+  }
+
+  @Test
+  void initialize_preconfiguredDuplicatedInIds() {
+    List<String> ids = Arrays.asList("b3", "jaeger", "b3");
+    AtomicReference<ContextPropagators> seen = new AtomicReference<>();
+    Consumer<ContextPropagators> setter = seen::set;
+    Supplier<TextMapPropagator> preconfigured = () -> PropagatorsInitializer.Propagator.JAEGER;
+
+    PropagatorsInitializer.initializePropagators(ids, preconfigured, setter);
+
+    assertThat(seen.get().getTextMapPropagator())
+        .extracting("textPropagators")
+        .isInstanceOfSatisfying(TextMapPropagator[].class, p -> assertThat(p).containsExactlyInAnyOrder(
+            PropagatorsInitializer.Propagator.B3,
+            PropagatorsInitializer.Propagator.JAEGER
+        ));
+  }
+
+  @Test
   void initialize_justOneId() {
     List<String> ids = singletonList("jaeger");
     AtomicReference<ContextPropagators> seen = new AtomicReference<>();

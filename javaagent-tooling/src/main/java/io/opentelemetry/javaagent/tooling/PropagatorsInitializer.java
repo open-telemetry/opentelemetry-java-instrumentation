@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -104,7 +104,7 @@ public class PropagatorsInitializer {
     return ContextPropagators.create(TextMapPropagator.composite(
             textMapPropagators.stream()
                 .filter(propagator -> propagator != TextMapPropagator.noop())
-                .collect(toList())
+                .collect(toSet())
         ));
   }
 
