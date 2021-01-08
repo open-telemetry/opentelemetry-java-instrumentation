@@ -36,6 +36,8 @@ dependencies {
   implementation deps.slf4j
 
   testImplementation project(':testing-common')
+  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
+  testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
 
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.implementation

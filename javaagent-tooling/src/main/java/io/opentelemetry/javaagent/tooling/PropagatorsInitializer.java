@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -18,13 +18,13 @@ import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import io.opentelemetry.extension.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extension.trace.propagation.OtTracerPropagator;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,19 +58,30 @@ public class PropagatorsInitializer {
    * </ul>
    */
   public static void initializePropagators(List<String> propagatorIds) {
-    /* Only override the default propagators *if* the user specified any. */
+    initializePropagators(propagatorIds, () -> GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator(),
+        p -> GlobalOpenTelemetry.get().setPropagators(p));
+  }
+
+  //exists for testing
+  static void initializePropagators(List<String> propagatorIds, Supplier<TextMapPropagator> preconfiguredPropagator,
+      Consumer<ContextPropagators> globalSetter) {
+    ContextPropagators propagators = createPropagators(propagatorIds, preconfiguredPropagator.get());
+    // Register it in the global propagators:
+    globalSetter.accept(propagators);
+  }
+
+  private static ContextPropagators createPropagators(List<String> propagatorIds, TextMapPropagator preconfiguredPropagator) {
+    /* Only override the default propagators *if* the caller specified any. */
     if (propagatorIds.size() == 0) {
       // TODO this is probably temporary until default propagators are supplied by SDK
       //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
-      OpenTelemetry.setGlobalPropagators(
-          ContextPropagators.create(
-              TextMapPropagator.composite(
-                  W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance())));
-      return;
+      return createPropagatorsRemovingNoops(Arrays.asList(preconfiguredPropagator,
+          W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance()));
     }
 
     List<Propagator> propagators = new ArrayList<>(propagatorIds.size());
     List<TextMapPropagator> textMapPropagators = new ArrayList<>();
+    textMapPropagators.add(preconfiguredPropagator);
 
     for (String propagatorId : propagatorIds) {
       Propagator propagator = TEXTMAP_PROPAGATORS.get(propagatorId);
@@ -82,73 +93,19 @@ public class PropagatorsInitializer {
       }
     }
     if (propagators.size() > 1) {
-      textMapPropagators.add(new MultiPropagator(propagators));
+      textMapPropagators.addAll(propagators);
     } else if (propagators.size() == 1) {
       textMapPropagators.add(propagators.get(0));
     }
-    // Register it in the global propagators:
-    OpenTelemetry.setGlobalPropagators(
-        ContextPropagators.create(TextMapPropagator.composite(textMapPropagators)));
+    return createPropagatorsRemovingNoops(textMapPropagators);
   }
 
-  private static TracerProvider unobfuscate(TracerProvider tracerProvider) {
-    if (tracerProvider.getClass().getName().endsWith("TracerSdkProvider")) {
-      return tracerProvider;
-    }
-    try {
-      Method unobfuscate = tracerProvider.getClass().getDeclaredMethod("unobfuscate");
-      unobfuscate.setAccessible(true);
-      return (TracerProvider) unobfuscate.invoke(tracerProvider);
-    } catch (Throwable t) {
-      return tracerProvider;
-    }
-  }
-
-  static class MultiPropagator implements TextMapPropagator {
-    private final List<Propagator> propagators;
-    private final List<String> fields;
-
-    private MultiPropagator(List<Propagator> propagators) {
-      this.propagators = propagators;
-
-      Set<String> fields = new LinkedHashSet<>();
-      for (Propagator propagator : propagators) {
-        fields.addAll(propagator.delegate.fields());
-      }
-      this.fields = new ArrayList<>(fields);
-    }
-
-    @Override
-    public List<String> fields() {
-      return fields;
-    }
-
-    @Override
-    public <C> void inject(Context context, C carrier, Setter<C> setter) {
-      for (Propagator propagator : propagators) {
-        propagator.inject(context, carrier, setter);
-      }
-    }
-
-    @Override
-    public <C> Context extract(Context context, C carrier, Getter<C> getter) {
-      boolean spanContextExtracted = false;
-      for (int i = propagators.size() - 1; i >= 0; i--) {
-        Propagator propagator = propagators.get(i);
-        if (!propagator.alwaysRun() && spanContextExtracted) {
-          continue;
-        }
-        context = propagator.extract(context, carrier, getter);
-        if (!spanContextExtracted) {
-          spanContextExtracted = isSpanContextExtracted(context);
-        }
-      }
-      return context;
-    }
-
-    private static boolean isSpanContextExtracted(Context context) {
-      return Span.fromContextOrNull(context) != null;
-    }
+  private static ContextPropagators createPropagatorsRemovingNoops(List<TextMapPropagator> textMapPropagators) {
+    return ContextPropagators.create(TextMapPropagator.composite(
+            textMapPropagators.stream()
+                .filter(propagator -> propagator != TextMapPropagator.noop())
+                .collect(toList())
+        ));
   }
 
   enum Propagator implements TextMapPropagator {
