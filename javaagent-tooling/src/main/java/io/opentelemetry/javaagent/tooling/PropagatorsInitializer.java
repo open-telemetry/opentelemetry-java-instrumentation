@@ -58,25 +58,34 @@ public class PropagatorsInitializer {
    * </ul>
    */
   public static void initializePropagators(List<String> propagatorIds) {
-    initializePropagators(propagatorIds, () -> GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator(),
+    initializePropagators(
+        propagatorIds,
+        () -> GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator(),
         p -> GlobalOpenTelemetry.get().setPropagators(p));
   }
 
-  //exists for testing
-  static void initializePropagators(List<String> propagatorIds, Supplier<TextMapPropagator> preconfiguredPropagator,
+  // exists for testing
+  static void initializePropagators(
+      List<String> propagatorIds,
+      Supplier<TextMapPropagator> preconfiguredPropagator,
       Consumer<ContextPropagators> globalSetter) {
-    ContextPropagators propagators = createPropagators(propagatorIds, preconfiguredPropagator.get());
+    ContextPropagators propagators =
+        createPropagators(propagatorIds, preconfiguredPropagator.get());
     // Register it in the global propagators:
     globalSetter.accept(propagators);
   }
 
-  private static ContextPropagators createPropagators(List<String> propagatorIds, TextMapPropagator preconfiguredPropagator) {
+  private static ContextPropagators createPropagators(
+      List<String> propagatorIds, TextMapPropagator preconfiguredPropagator) {
     /* Only override the default propagators *if* the caller specified any. */
     if (propagatorIds.size() == 0) {
       // TODO this is probably temporary until default propagators are supplied by SDK
       //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
-      return createPropagatorsRemovingNoops(Arrays.asList(preconfiguredPropagator,
-          W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance()));
+      return createPropagatorsRemovingNoops(
+          Arrays.asList(
+              preconfiguredPropagator,
+              W3CTraceContextPropagator.getInstance(),
+              W3CBaggagePropagator.getInstance()));
     }
 
     List<Propagator> propagators = new ArrayList<>(propagatorIds.size());
@@ -100,12 +109,13 @@ public class PropagatorsInitializer {
     return createPropagatorsRemovingNoops(textMapPropagators);
   }
 
-  private static ContextPropagators createPropagatorsRemovingNoops(List<TextMapPropagator> textMapPropagators) {
-    return ContextPropagators.create(TextMapPropagator.composite(
+  private static ContextPropagators createPropagatorsRemovingNoops(
+      List<TextMapPropagator> textMapPropagators) {
+    return ContextPropagators.create(
+        TextMapPropagator.composite(
             textMapPropagators.stream()
                 .filter(propagator -> propagator != TextMapPropagator.noop())
-                .collect(toSet())
-        ));
+                .collect(toSet())));
   }
 
   enum Propagator implements TextMapPropagator {

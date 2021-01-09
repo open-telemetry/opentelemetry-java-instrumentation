@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.tooling;
 
 import static java.util.Collections.emptyList;
@@ -29,10 +34,13 @@ class PropagatorsInitializerTest {
 
     assertThat(seen.get().getTextMapPropagator())
         .extracting("textPropagators")
-        .isInstanceOfSatisfying(TextMapPropagator[].class, p -> assertThat(p).containsExactlyInAnyOrder(
-            W3CTraceContextPropagator.getInstance(),
-            W3CBaggagePropagator.getInstance()
-        ));
+        .isInstanceOfSatisfying(
+            TextMapPropagator[].class,
+            p ->
+                assertThat(p)
+                    .containsExactlyInAnyOrder(
+                        W3CTraceContextPropagator.getInstance(),
+                        W3CBaggagePropagator.getInstance()));
   }
 
   @Test
@@ -47,11 +55,14 @@ class PropagatorsInitializerTest {
 
     assertThat(seen.get().getTextMapPropagator())
         .extracting("textPropagators")
-        .isInstanceOfSatisfying(TextMapPropagator[].class, p -> assertThat(p).containsExactlyInAnyOrder(
-            W3CTraceContextPropagator.getInstance(),
-            W3CBaggagePropagator.getInstance(),
-            mockPropagator
-        ));
+        .isInstanceOfSatisfying(
+            TextMapPropagator[].class,
+            p ->
+                assertThat(p)
+                    .containsExactlyInAnyOrder(
+                        W3CTraceContextPropagator.getInstance(),
+                        W3CBaggagePropagator.getInstance(),
+                        mockPropagator));
   }
 
   @Test
@@ -63,7 +74,8 @@ class PropagatorsInitializerTest {
 
     PropagatorsInitializer.initializePropagators(ids, preconfigured, setter);
 
-    assertThat(seen.get().getTextMapPropagator()).isSameAs(PropagatorsInitializer.Propagator.JAEGER);
+    assertThat(seen.get().getTextMapPropagator())
+        .isSameAs(PropagatorsInitializer.Propagator.JAEGER);
   }
 
   @Test
@@ -77,10 +89,13 @@ class PropagatorsInitializerTest {
 
     assertThat(seen.get().getTextMapPropagator())
         .extracting("textPropagators")
-        .isInstanceOfSatisfying(TextMapPropagator[].class, p -> assertThat(p).containsExactlyInAnyOrder(
-            PropagatorsInitializer.Propagator.B3,
-            PropagatorsInitializer.Propagator.JAEGER
-        ));
+        .isInstanceOfSatisfying(
+            TextMapPropagator[].class,
+            p ->
+                assertThat(p)
+                    .containsExactlyInAnyOrder(
+                        PropagatorsInitializer.Propagator.B3,
+                        PropagatorsInitializer.Propagator.JAEGER));
   }
 
   @Test
@@ -92,7 +107,8 @@ class PropagatorsInitializerTest {
 
     PropagatorsInitializer.initializePropagators(ids, preconfigured, setter);
 
-    assertThat(seen.get().getTextMapPropagator()).isSameAs(PropagatorsInitializer.Propagator.JAEGER);
+    assertThat(seen.get().getTextMapPropagator())
+        .isSameAs(PropagatorsInitializer.Propagator.JAEGER);
   }
 
   @Test
@@ -106,7 +122,13 @@ class PropagatorsInitializerTest {
 
     assertThat(seen.get().getTextMapPropagator())
         .extracting("textPropagators")
-        .isInstanceOfSatisfying(TextMapPropagator[].class, p -> assertThat(p).containsExactlyInAnyOrder(PropagatorsInitializer.Propagator.B3, PropagatorsInitializer.Propagator.JAEGER));
+        .isInstanceOfSatisfying(
+            TextMapPropagator[].class,
+            p ->
+                assertThat(p)
+                    .containsExactlyInAnyOrder(
+                        PropagatorsInitializer.Propagator.B3,
+                        PropagatorsInitializer.Propagator.JAEGER));
   }
 
   @Test
@@ -122,10 +144,13 @@ class PropagatorsInitializerTest {
 
     assertThat(seen.get().getTextMapPropagator())
         .extracting("textPropagators")
-        .isInstanceOfSatisfying(TextMapPropagator[].class, p -> assertThat(p).containsExactlyInAnyOrder(
-            mockPreconfigured,
-            PropagatorsInitializer.Propagator.JAEGER,
-            PropagatorsInitializer.Propagator.XRAY
-        ));
+        .isInstanceOfSatisfying(
+            TextMapPropagator[].class,
+            p ->
+                assertThat(p)
+                    .containsExactlyInAnyOrder(
+                        mockPreconfigured,
+                        PropagatorsInitializer.Propagator.JAEGER,
+                        PropagatorsInitializer.Propagator.XRAY));
   }
 }
