@@ -79,7 +79,10 @@ java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -jar myapp.jar
 ```
 
-### Configuration parameters (subject to change!)
+Learn how to add custom instrumentation in the [Manually Instrumenting](#manually-instrumenting)
+section.
+
+## Configuration parameters (subject to change!)
 
 Note: These parameter names are very likely to change over time, so please check
 back here when trying out a new version! Please report any bugs or unexpected
@@ -219,6 +222,96 @@ for customizing its behavior, such as the `Resource` attached to spans or the `S
 
 Because the automatic instrumentation runs in a different classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can provide the path to a JAR file, including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR needs to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you must specify the `io.opentelemetry.javaagent.shaded.io.opentelemetry.api.trace.spi.TraceProvider` to the name of the class that implements the SPI.
 
+## Manually instrumenting
+
+> :warning: starting with 0.6.0, and prior to version 1.0.0, `opentelemetry-javaagent-all.jar`
+only supports manual instrumentation using the `opentelemetry-api` version with the same version
+number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
+multiple (1.0.0+) versions of `opentelemetry-api`.
+
+You'll need to add a dependency on the `opentelemetry-api` library to get started; if you intend to
+use the `@WithSpan` annotation, also include the `opentelemetry-extension-annotations` dependency.
+
+### Maven
+
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
+      <version>0.11.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-extension-annotations</artifactId>
+      <version>0.11.0</version>
+    </dependency>
+  </dependencies>
+```
+
+### Gradle
+
+```groovy
+dependencies {
+    implementation('io.opentelemetry:opentelemetry-api:0.11.0')
+    implementation('io.opentelemetry:opentelemetry-extension-annotations:0.11.0')
+}
+```
+
+### Adding attributes to the current span
+
+A common need when instrumenting an application is to capture additional application-specific or
+business-specific information as additional attributes to an existing span from the automatic
+instrumentation. Grab the current span with `Span.current()` and use the `setAttribute()`
+methods:
+
+```java
+import io.opentelemetry.api.trace.Span;
+
+// ...
+
+Span span = Span.current();
+span.setAttribute(..., ...);
+```
+
+### Creating spans around methods with `@WithSpan`
+
+Another common situation is to capture a span around an existing first-party code method. The
+`@WithSpan` annotation makes this straightforward:
+
+```java
+import io.opentelemetry.extension.annotations.WithSpan;
+
+public class MyClass {
+  @WithSpan
+  public void MyLogic() {
+      <...>
+  }
+}
+```
+
+Each time the application invokes the annotated method, it creates a span that denote its duration
+and provides any thrown exceptions. Unless specified as an argument to the annotation, the span name
+will be `<className>.<methodName>`.
+
+#### Suppressing `@WithSpan` instrumentation
+
+Suppressing `@WithSpan` is useful if you have code that is over-instrumented using `@WithSpan`
+and you want to suppress some of them without modifying the code.
+
+| System property                 | Environment variable            | Purpose                                                                                                                                  |
+|---------------------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods.
+Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
+
+### Creating spans manually with a Tracer
+
+OpenTelemetry offers a tracer to easily enable custom instrumentation throughout your application.
+See the [OpenTelemetry Java
+QuickStart](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md#tracing)
+for an example of how to configure the tracer and use the Tracer, Scope and Span interfaces to
+instrument your application.
+
 ## Supported libraries, frameworks, and application servers
 
 These are the supported libraries and frameworks:
@@ -327,98 +420,6 @@ See [Suppressing specific auto-instrumentation](docs/suppressing-instrumentation
 ### Logger MDC auto-instrumentation
 
 See [Logger MDC auto-instrumentation](docs/logger-mdc-instrumentation.md)
-
-## Manually instrumenting
-
-> :warning: starting with 0.6.0, and prior to version 1.0.0, `opentelemetry-javaagent-all.jar`
-only supports manual instrumentation using the `opentelemetry-api` version with the same version
-number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
-multiple (1.0.0+) versions of `opentelemetry-api`.
-
-You'll need to add a dependency on the `opentelemetry-api` library to get started.
-
-### Maven
-
-```xml
-  <dependencies>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-api</artifactId>
-      <version>0.11.0</version>
-    </dependency>
-  </dependencies>
-```
-
-### Gradle
-
-```groovy
-dependencies {
-    compile('io.opentelemetry:opentelemetry-api:0.11.0')
-}
-```
-
-Now you can use the OpenTelemetry `getTracer` or the `@WithSpan` annotation to
-manually instrument your Java application.
-
-### Configure the OpenTelemetry getTracer
-
-OpenTelemetry offers a tracer to easily enable custom instrumentation
-throughout your application. See the [OpenTelemetry Java
-QuickStart](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md#tracing)
-for an example of how to configure the tracer.
-
-### Configure a WithSpan annotation
-
-If you want to configure custom instrumentation and don't want to use the
-OpenTelemetry `getTracer` and API directly, configure a `@WithSpan`
-annotation. Add the trace annotation to your application's code:
-
-```java
-import io.opentelemetry.extension.annotations.WithSpan;
-
-public class MyClass {
-  @WithSpan
-  public void MyLogic() {
-      <...>
-  }
-}
-```
-
-You'll also need to add a dependency for this annotation:
-
-### Maven
-
-```xml
-  <dependencies>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-extension-annotations</artifactId>
-      <version>0.11.0</version>
-    </dependency>
-  </dependencies>
-```
-
-### Gradle
-
-```groovy
-dependencies {
-    compile('io.opentelemetry:opentelemetry-extension-annotations:0.11.0')
-}
-```
-
-Each time the application invokes the annotated method, it creates a span
-that denote its duration and provides any thrown exceptions.
-
-#### Suppressing `@WithSpan` instrumentation
-
-Suppressing `@WithSpan` is useful if you have code that is over-instrumented using `@WithSpan`
-and you want to suppress some of them without modifying the code.
-
-| System property                 | Environment variable            | Purpose                                                                                                                                  |
-|---------------------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods.
-Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
-
 
 ## Troubleshooting
 
