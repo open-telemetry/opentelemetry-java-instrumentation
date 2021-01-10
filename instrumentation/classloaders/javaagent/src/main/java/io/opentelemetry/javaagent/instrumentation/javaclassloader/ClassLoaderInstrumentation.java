@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.javaclassloader;
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedNoneOf;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.NameMatchers.namedNoneOf;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;

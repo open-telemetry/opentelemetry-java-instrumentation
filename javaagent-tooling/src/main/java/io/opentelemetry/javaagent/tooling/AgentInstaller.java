@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.skipClassLoader;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.javaagent.tooling.matcher.GlobalIgnoresMatcher.globalIgnoresMatcher;
-import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.none;
@@ -23,6 +22,7 @@ import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
 import io.opentelemetry.javaagent.spi.ComponentInstaller;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
+import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatcher;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -108,7 +108,7 @@ public class AgentInstaller {
             // FIXME: we cannot enable it yet due to BB/JVM bug, see
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
-            .ignore(any(), skipClassLoader());
+            .ignore(any(), GlobalClassloaderIgnoresMatcher.skipClassLoader());
 
     ignoredAgentBuilder =
         ignoredAgentBuilder.or(

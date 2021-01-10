@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.context;
 
-import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.instrumentation.api.config.Config;

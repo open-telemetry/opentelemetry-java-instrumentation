@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
-import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
 
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;

@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.hystrix;
 
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL;
 import static io.opentelemetry.javaagent.instrumentation.hystrix.HystrixTracer.tracer;
-import static io.opentelemetry.javaagent.tooling.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.tooling.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
