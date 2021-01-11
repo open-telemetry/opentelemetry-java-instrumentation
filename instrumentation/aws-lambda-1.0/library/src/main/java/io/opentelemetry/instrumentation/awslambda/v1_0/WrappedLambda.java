@@ -17,7 +17,8 @@ import java.util.Optional;
 /** Model for wrapped lambda function (object, class, method). */
 class WrappedLambda {
 
-  public static final String OTEL_LAMBDA_HANDLER_ENV_KEY = "OTEL_LAMBDA_HANDLER";
+  public static final String OTEL_LAMBDA_HANDLER_ENV_KEY =
+      "OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER";
 
   private final Object targetObject;
   private final Class<?> targetClass;
