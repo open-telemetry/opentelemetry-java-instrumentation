@@ -3,6 +3,8 @@ apply from: "$rootDir/gradle/java.gradle"
 dependencies {
   api deps.guava
   api deps.spock
+  api deps.slf4j
+  api deps.testLogging
 
   api deps.opentelemetryApi
   api deps.opentelemetrySdk
@@ -15,8 +17,6 @@ dependencies {
 
   implementation deps.bytebuddy
   implementation deps.bytebuddyagent
-  implementation deps.slf4j
-  implementation deps.testLogging
   implementation deps.opentelemetryExtAnnotations
 
   api group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.0'
@@ -32,7 +32,7 @@ dependencies {
 
   api deps.groovy
 
-  testImplementation project(':instrumentation-api')
+  api project(':instrumentation-api')
   testImplementation project(':javaagent-api')
   testImplementation project(':javaagent-tooling')
   testImplementation project(':instrumentation:external-annotations:javaagent')

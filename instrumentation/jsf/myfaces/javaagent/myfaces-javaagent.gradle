@@ -1,0 +1,26 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.apache.myfaces.core"
+    module = "myfaces-impl"
+    versions = "[2.2,3)"
+    extraDependency "jakarta.el:jakarta.el-api:3.0.3"
+  }
+}
+
+dependencies {
+  library group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '2.3.7'
+  library group: 'jakarta.el', name: 'jakarta.el-api', version: '3.0.3'
+
+  implementation project(':instrumentation:jsf:jsf-common:javaagent')
+
+  testImplementation project(':instrumentation:jsf:jsf-testing-common')
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+
+  testImplementation "javax.xml.bind:jaxb-api:2.2.11"
+  testImplementation "com.sun.xml.bind:jaxb-core:2.2.11"
+  testImplementation "com.sun.xml.bind:jaxb-impl:2.2.11"
+
+  latestDepTestLibrary group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '[2+, 3)'
+}

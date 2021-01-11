@@ -129,7 +129,8 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
     if (name.startsWith("com.sun.")) {
       if (name.startsWith("com.sun.messaging.")
           || name.startsWith("com.sun.jersey.api.client")
-          || name.startsWith("com.sun.appserv")) {
+          || name.startsWith("com.sun.appserv")
+          || name.startsWith("com.sun.faces")) {
         return false;
       }
 

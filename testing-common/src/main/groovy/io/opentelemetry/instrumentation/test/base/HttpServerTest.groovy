@@ -15,74 +15,19 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
-import ch.qos.logback.classic.Level
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
-import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.Callable
 import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import spock.lang.Shared
 import spock.lang.Unroll
 
 @Unroll
-abstract class HttpServerTest<SERVER> extends AgentTestRunner {
-
-  public static final Logger SERVER_LOGGER = LoggerFactory.getLogger("http-server")
-  static {
-    ((ch.qos.logback.classic.Logger) SERVER_LOGGER).setLevel(Level.DEBUG)
-  }
-  protected static final String TEST_CLIENT_IP = "1.1.1.1"
-  protected static final String TEST_USER_AGENT = "test-user-agent"
-
-  @Shared
-  SERVER server
-  @Shared
-  OkHttpClient client = OkHttpUtils.client()
-  @Shared
-  int port
-  @Shared
-  URI address
-
-  def setupSpec() {
-    withRetryOnAddressAlreadyInUse({
-      setupSpecUnderRetry()
-    })
-  }
-
-  def setupSpecUnderRetry() {
-    port = PortUtils.randomOpenPort()
-    address = buildAddress()
-    server = startServer(port)
-    println getClass().name + " http server started at: http://localhost:$port" + getContextPath()
-  }
-
-  URI buildAddress() {
-    return new URI("http://localhost:$port" + getContextPath() + "/")
-  }
-
-  abstract SERVER startServer(int port)
-
-  def cleanupSpec() {
-    if (server == null) {
-      println getClass().name + " can't stop null server"
-      return
-    }
-    stopServer(server)
-    server = null
-    println getClass().name + " http server stopped at: http://localhost:$port/"
-  }
-
-  abstract void stopServer(SERVER server)
+abstract class HttpServerTest<SERVER> extends AbstractHttpServerTest<SERVER> {
 
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return endpoint == PATH_PARAM ? getContextPath() + "/path/:id/param" : endpoint.resolvePath(address).path
