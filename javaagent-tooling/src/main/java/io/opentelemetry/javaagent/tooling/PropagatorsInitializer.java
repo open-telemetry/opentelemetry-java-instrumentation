@@ -88,23 +88,17 @@ public class PropagatorsInitializer {
               W3CBaggagePropagator.getInstance()));
     }
 
-    List<Propagator> propagators = new ArrayList<>(propagatorIds.size());
     List<TextMapPropagator> textMapPropagators = new ArrayList<>();
     textMapPropagators.add(preconfiguredPropagator);
 
     for (String propagatorId : propagatorIds) {
       Propagator propagator = TEXTMAP_PROPAGATORS.get(propagatorId);
       if (propagator != null) {
-        propagators.add(propagator);
+        textMapPropagators.add(propagator);
         log.info("Added " + propagatorId + " propagator");
       } else {
         log.warn("No matching propagator for " + propagatorId);
       }
-    }
-    if (propagators.size() > 1) {
-      textMapPropagators.addAll(propagators);
-    } else if (propagators.size() == 1) {
-      textMapPropagators.add(propagators.get(0));
     }
     return createPropagatorsRemovingNoops(textMapPropagators);
   }

@@ -29,7 +29,7 @@ class PropagatorsInitializerTest {
   TextMapPropagator mockPreconfigured;
 
   @BeforeEach
-  void setup(){
+  void setup() {
     seen = new AtomicReference<>();
     mockPreconfigured = mock(TextMapPropagator.class);
   }
