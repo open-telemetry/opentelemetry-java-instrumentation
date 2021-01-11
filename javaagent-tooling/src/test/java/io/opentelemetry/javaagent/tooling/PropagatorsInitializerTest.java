@@ -20,14 +20,23 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class PropagatorsInitializerTest {
 
+  AtomicReference<ContextPropagators> seen;
+  TextMapPropagator mockPreconfigured;
+
+  @BeforeEach
+  void setup(){
+    seen = new AtomicReference<>();
+    mockPreconfigured = mock(TextMapPropagator.class);
+  }
+
   @Test
   void initialize_noIdsPassedNotPreconfigured() {
     List<String> ids = emptyList();
-    AtomicReference<ContextPropagators> seen = new AtomicReference<>();
     Consumer<ContextPropagators> setter = seen::set;
 
     PropagatorsInitializer.initializePropagators(ids, TextMapPropagator::noop, setter);
@@ -46,7 +55,6 @@ class PropagatorsInitializerTest {
   @Test
   void initialize_noIdsPassedWithPreconfigured() {
     List<String> ids = emptyList();
-    AtomicReference<ContextPropagators> seen = new AtomicReference<>();
     Consumer<ContextPropagators> setter = seen::set;
     TextMapPropagator mockPropagator = mock(TextMapPropagator.class);
     Supplier<TextMapPropagator> preconfigured = () -> mockPropagator;
@@ -68,7 +76,6 @@ class PropagatorsInitializerTest {
   @Test
   void initialize_preconfiguredSameAsId() {
     List<String> ids = singletonList("jaeger");
-    AtomicReference<ContextPropagators> seen = new AtomicReference<>();
     Consumer<ContextPropagators> setter = seen::set;
     Supplier<TextMapPropagator> preconfigured = () -> PropagatorsInitializer.Propagator.JAEGER;
 
@@ -81,7 +88,6 @@ class PropagatorsInitializerTest {
   @Test
   void initialize_preconfiguredDuplicatedInIds() {
     List<String> ids = Arrays.asList("b3", "jaeger", "b3");
-    AtomicReference<ContextPropagators> seen = new AtomicReference<>();
     Consumer<ContextPropagators> setter = seen::set;
     Supplier<TextMapPropagator> preconfigured = () -> PropagatorsInitializer.Propagator.JAEGER;
 
@@ -101,7 +107,6 @@ class PropagatorsInitializerTest {
   @Test
   void initialize_justOneId() {
     List<String> ids = singletonList("jaeger");
-    AtomicReference<ContextPropagators> seen = new AtomicReference<>();
     Consumer<ContextPropagators> setter = seen::set;
     Supplier<TextMapPropagator> preconfigured = TextMapPropagator::noop;
 
@@ -114,7 +119,6 @@ class PropagatorsInitializerTest {
   @Test
   void initialize_idsWithNoPreconfigured() {
     List<String> ids = Arrays.asList("b3", "unknown-but-no-harm-done", "jaeger");
-    AtomicReference<ContextPropagators> seen = new AtomicReference<>();
     Consumer<ContextPropagators> setter = seen::set;
     Supplier<TextMapPropagator> preconfigured = TextMapPropagator::noop;
 
@@ -134,9 +138,7 @@ class PropagatorsInitializerTest {
   @Test
   void initialize_idsAndPreconfigured() {
     List<String> ids = Arrays.asList("jaeger", "xray");
-    AtomicReference<ContextPropagators> seen = new AtomicReference<>();
     Consumer<ContextPropagators> setter = seen::set;
-    TextMapPropagator mockPreconfigured = mock(TextMapPropagator.class);
     when(mockPreconfigured.fields()).thenReturn(singletonList("mocked"));
     Supplier<TextMapPropagator> preconfigured = () -> mockPreconfigured;
 
