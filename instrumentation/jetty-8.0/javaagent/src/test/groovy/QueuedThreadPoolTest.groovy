@@ -3,18 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static org.junit.Assume.assumeTrue
+
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.instrumentation.jetty.JavaLambdaMaker
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.eclipse.jetty.util.thread.QueuedThreadPool
-
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 class QueuedThreadPoolTest extends AgentTestRunner {
 
   def "QueueThreadPool 'dispatch' propagates"() {
     setup:
     def pool = new QueuedThreadPool()
+    // run test only if QueuedThreadPool has dispatch method
+    // dispatch method was removed in jetty 9.1
+    assumeTrue(pool.metaClass.getMetaMethod("dispatch", Runnable) != null)
     pool.start()
 
     new Runnable() {
@@ -51,6 +55,9 @@ class QueuedThreadPoolTest extends AgentTestRunner {
   def "QueueThreadPool 'dispatch' propagates lambda"() {
     setup:
     def pool = new QueuedThreadPool()
+    // run test only if QueuedThreadPool has dispatch method
+    // dispatch method was removed in jetty 9.1
+    assumeTrue(pool.metaClass.getMetaMethod("dispatch", Runnable) != null)
     pool.start()
 
     JavaAsyncChild child = new JavaAsyncChild(true, true)
