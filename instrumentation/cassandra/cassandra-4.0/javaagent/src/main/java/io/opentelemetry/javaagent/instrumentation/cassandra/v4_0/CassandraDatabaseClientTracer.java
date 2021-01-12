@@ -72,6 +72,10 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     span.setAttribute(
         SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL,
         config.getString(DefaultDriverOption.REQUEST_CONSISTENCY));
+    // may be overwritten by statement, but take the default for now
+    span.setAttribute(
+        SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE,
+        config.getBoolean(DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE));
     return span;
   }
 
@@ -107,7 +111,10 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     if (statement.getPageSize() > 0) {
       span.setAttribute(SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, statement.getPageSize());
     }
-    span.setAttribute(SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE, isIdempotent(statement));
+    // override connection default if present
+    if (statement.isIdempotent() != null) {
+      span.setAttribute(SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE, statement.isIdempotent());
+    }
   }
 
   @Override
@@ -120,12 +127,6 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     }
     if (e != null && e.getExecutionInfo() != null) {
       onResponse(context, e.getExecutionInfo());
-    } else {
-      // reset default query parameters to null if execution info isn't found.
-      // this could mean that the default parameters were not used but we wouldn't know.
-      Span span = Span.fromContext(context);
-      span.setAttribute(SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, null);
-      span.setAttribute(SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL, null);
     }
     super.endExceptionally(context, throwable);
   }
@@ -137,9 +138,5 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     if (table != null) {
       span.setAttribute(SemanticAttributes.DB_CASSANDRA_TABLE, table);
     }
-  }
-
-  private static boolean isIdempotent(Statement<?> statement) {
-    return Boolean.TRUE.equals(statement.isIdempotent());
   }
 }
