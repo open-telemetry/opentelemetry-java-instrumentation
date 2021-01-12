@@ -42,6 +42,8 @@ public class AttributeKeys {
    * prevents an issue with Apache Atlas project were this class loaded by multiple class loaders,
    * while the Attribute class is loaded by a third class loader and used internally for the
    * cassandra driver.
+   *
+   * <p>Keep this API public for vendor instrumentations
    */
   public static <T> AttributeKey<T> attributeKey(String key) {
     ConcurrentMap<String, AttributeKey<?>> classLoaderMap =
