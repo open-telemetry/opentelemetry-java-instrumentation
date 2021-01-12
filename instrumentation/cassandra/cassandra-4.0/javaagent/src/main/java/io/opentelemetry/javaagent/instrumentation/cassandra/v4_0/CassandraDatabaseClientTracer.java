@@ -108,7 +108,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     }
   }
 
-  /** use this method instead of {@link #endExceptionally(Context, Throwable)} */
+  /** Use this method instead of {@link #endExceptionally(Context, Throwable)}. */
   public void endExceptionally(Context context, final Throwable throwable, CqlSession cqlSession) {
     DriverException e = null;
     if (throwable instanceof DriverException) {
@@ -122,7 +122,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     super.endExceptionally(context, throwable);
   }
 
-  /** use {@link #endExceptionally(Context, Throwable, CqlSession)} */
+  /** Use {@link #endExceptionally(Context, Throwable, CqlSession)}. */
   @Override
   public void endExceptionally(Context context, final Throwable throwable) {
     throw new IllegalStateException(
