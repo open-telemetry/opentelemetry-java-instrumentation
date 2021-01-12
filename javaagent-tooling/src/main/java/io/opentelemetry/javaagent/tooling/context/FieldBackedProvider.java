@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
  *       adding context storage field
  *   <li>Injecting a Dynamic Class created from {@link ContextStoreImplementationTemplate} to use
  *       injected field or fall back to a static map
- *   <li>Rewritting calls to the context-store to access the specific dynamic {@link
+ *   <li>Rewriting calls to the context-store to access the specific dynamic {@link
  *       ContextStoreImplementationTemplate}
  * </ol>
  *
@@ -607,8 +607,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   }
 
   /**
-   * Generate an 'implementation' of a context store classfor given key class name and context class
-   * name.
+   * Generate an 'implementation' of a context store class for given key class name and context
+   * class name.
    *
    * @param keyClassName key class name
    * @param contextClassName context class name
@@ -1013,22 +1013,22 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     return DYNAMIC_CLASSES_PACKAGE
         + getClass().getSimpleName()
         + "$ContextStore$"
-        + Utils.converToInnerClassName(keyClassName)
+        + Utils.convertToInnerClassName(keyClassName)
         + "$"
-        + Utils.converToInnerClassName(contextClassName);
+        + Utils.convertToInnerClassName(contextClassName);
   }
 
   private String getContextAccessorInterfaceName(String keyClassName, String contextClassName) {
     return DYNAMIC_CLASSES_PACKAGE
         + getClass().getSimpleName()
         + "$ContextAccessor$"
-        + Utils.converToInnerClassName(keyClassName)
+        + Utils.convertToInnerClassName(keyClassName)
         + "$"
-        + Utils.converToInnerClassName(contextClassName);
+        + Utils.convertToInnerClassName(contextClassName);
   }
 
   private static String getContextFieldName(String keyClassName) {
-    return "__opentelemetryContext$" + Utils.converToInnerClassName(keyClassName);
+    return "__opentelemetryContext$" + Utils.convertToInnerClassName(keyClassName);
   }
 
   private static String getContextGetterName(String keyClassName) {

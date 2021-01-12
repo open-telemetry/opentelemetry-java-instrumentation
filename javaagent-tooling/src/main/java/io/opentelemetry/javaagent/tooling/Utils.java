@@ -69,9 +69,9 @@ public class Utils {
    * '.'s with '$'s.
    *
    * @param className class named to be converted
-   * @return convertd name
+   * @return converted name
    */
-  public static String converToInnerClassName(String className) {
+  public static String convertToInnerClassName(String className) {
     return className.replaceAll("\\.", "\\$");
   }
 

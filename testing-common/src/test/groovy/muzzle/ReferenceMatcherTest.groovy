@@ -225,7 +225,7 @@ class ReferenceMatcherTest extends Specification {
     getMismatchClassSet(mismatches) == [MissingMethod] as Set
   }
 
-  def "should fail helper classes that does not implement all abstract methods - even if emtpy abstract class reference exists"() {
+  def "should fail helper classes that does not implement all abstract methods - even if empty abstract class reference exists"() {
     given:
     def emptySuperClassRef = new Reference.Builder(TestHelperClasses.HelperSuperClass.name)
       .build()

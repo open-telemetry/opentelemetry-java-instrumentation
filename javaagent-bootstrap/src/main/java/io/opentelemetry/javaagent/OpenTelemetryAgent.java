@@ -204,7 +204,7 @@ public class OpenTelemetryAgent {
   /**
    * Main entry point.
    *
-   * @param args command line agruments
+   * @param args command line arguments
    */
   public static void main(String... args) {
     try {

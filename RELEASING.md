@@ -66,7 +66,7 @@ git checkout upstream/v1.2.x
 Apply cherrypicks manually and commit. It is ok to apply multiple cherrypicks in a single commit.
 Use a commit message such as "Manual cherrypick for commits commithash1, commithash2".
 
-After commiting the change, push to your fork's branch.
+After committing the change, push to your fork's branch.
 
 ```
 git push origin v1.2.x

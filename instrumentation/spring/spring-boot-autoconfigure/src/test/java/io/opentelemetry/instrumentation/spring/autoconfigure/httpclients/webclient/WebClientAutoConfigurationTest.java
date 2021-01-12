@@ -23,7 +23,7 @@ class WebClientAutoConfigurationTest {
                   TracerAutoConfiguration.class, WebClientAutoConfiguration.class));
 
   @Test
-  @DisplayName("when httpclients are ENABLED should initialize WebClientBeanPostProccesor bean")
+  @DisplayName("when httpclients are ENABLED should initialize WebClientBeanPostProcessor bean")
   void httpClientsEnabled() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=true")
@@ -38,7 +38,7 @@ class WebClientAutoConfigurationTest {
 
   @Test
   @DisplayName(
-      "when httpclients are DISABLED should NOT initialize WebClientBeanPostProccesor bean")
+      "when httpclients are DISABLED should NOT initialize WebClientBeanPostProcessor bean")
   void disabledProperty() {
     this.contextRunner
         .withPropertyValues("opentelemetry.trace.httpclients.enabled=false")
@@ -50,7 +50,7 @@ class WebClientAutoConfigurationTest {
 
   @Test
   @DisplayName(
-      "when httpclients enabled property is MISSING should initialize WebClientBeanPostProccesor bean")
+      "when httpclients enabled property is MISSING should initialize WebClientBeanPostProcessor bean")
   void noProperty() {
     this.contextRunner.run(
         (context) -> {

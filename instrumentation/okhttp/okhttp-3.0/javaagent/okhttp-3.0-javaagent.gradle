@@ -10,7 +10,7 @@ muzzle {
 }
 
 /*
-Note: there is a bit of dependency exclusion magic goin on.
+Note: there is a bit of dependency exclusion magic going on.
 We have to exclude all transitive dependencies on 'okhttp' because we would like to force
 specific version. We cannot use . Unfortunately we cannot just force version on
 a dependency because this doesn't work well with version ranges - it doesn't select latest.

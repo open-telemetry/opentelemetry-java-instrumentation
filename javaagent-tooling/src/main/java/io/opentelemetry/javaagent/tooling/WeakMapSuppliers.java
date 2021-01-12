@@ -19,7 +19,7 @@ class WeakMapSuppliers {
   // Jar Size:
   // * `WeakConcurrentMap`: small
   // * `Guava`: large, but we may use other features, like immutable collections - and we already
-  //          ship Guava as part of distribution now, so using Guava for this doesn’t increase size.
+  //          ship Guava as part of distribution now, so using Guava for this doesn't increase size.
   // Must go on bootstrap classpath:
   // * `WeakConcurrentMap`: version conflict is unlikely, so we can directly inject for now
   // * `Guava`: need to implement shadow copy (might eventually be necessary for other dependencies)
