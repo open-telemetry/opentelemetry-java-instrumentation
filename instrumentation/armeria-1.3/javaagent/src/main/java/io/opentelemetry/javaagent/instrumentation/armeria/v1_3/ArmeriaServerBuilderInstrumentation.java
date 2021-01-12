@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.linecorp.armeria.server.ServerBuilder;
-import com.linecorp.armeria.server.metric.PrometheusExpositionServiceBuilder;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
 import java.util.Map;
@@ -37,10 +36,6 @@ public class ArmeriaServerBuilderInstrumentation implements TypeInstrumentation 
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.This ServerBuilder builder) {
       builder.decorator(ArmeriaDecorators.SERVER_DECORATOR);
-    }
-
-    public static void muzzleCheck(PrometheusExpositionServiceBuilder builder) {
-      builder.build();
     }
   }
 }
