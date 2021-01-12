@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.Cassandr
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.DriverException;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -107,6 +108,26 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
       span.setAttribute(SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, statement.getPageSize());
     }
     span.setAttribute(SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE, isIdempotent(statement));
+  }
+
+  @Override
+  public void endExceptionally(Context context, final Throwable throwable) {
+    DriverException e = null;
+    if (throwable instanceof DriverException) {
+      e = (DriverException) throwable;
+    } else if (throwable.getCause() instanceof DriverException) {
+      e = (DriverException) throwable.getCause();
+    }
+    if (e != null && e.getExecutionInfo() != null) {
+      onResponse(context, e.getExecutionInfo());
+    } else {
+      // reset default query parameters to null if execution info isn't found.
+      // this could mean that the default parameters were not used but we wouldn't know.
+      Span span = Span.fromContext(context);
+      span.setAttribute(SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, null);
+      span.setAttribute(SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL, null);
+    }
+    super.endExceptionally(context, throwable);
   }
 
   @Override
