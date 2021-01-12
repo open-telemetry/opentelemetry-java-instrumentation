@@ -59,27 +59,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     return null;
   }
 
-  @Override
-  protected Span onConnection(Span span, CqlSession cqlSession) {
-    span = super.onConnection(span, cqlSession);
-    DriverExecutionProfile config = cqlSession.getContext().getConfig().getDefaultProfile();
-    // may be overwritten by statement, but take the default for now
-    int pageSize = config.getInt(DefaultDriverOption.REQUEST_PAGE_SIZE);
-    if (pageSize > 0) {
-      span.setAttribute(SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, pageSize);
-    }
-    // may be overwritten by statement, but take the default for now
-    span.setAttribute(
-        SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL,
-        config.getString(DefaultDriverOption.REQUEST_CONSISTENCY));
-    // may be overwritten by statement, but take the default for now
-    span.setAttribute(
-        SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE,
-        config.getBoolean(DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE));
-    return span;
-  }
-
-  public void onResponse(Context context, ExecutionInfo executionInfo) {
+  public void onResponse(Context context, CqlSession cqlSession, ExecutionInfo executionInfo) {
     Span span = Span.fromContext(context);
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
@@ -101,24 +81,35 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
         executionInfo.getSpeculativeExecutionCount());
 
     Statement<?> statement = executionInfo.getStatement();
-    // override connection default if present
+    DriverExecutionProfile config = cqlSession.getContext().getConfig().getDefaultProfile();
     if (statement.getConsistencyLevel() != null) {
       span.setAttribute(
           SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL,
           statement.getConsistencyLevel().name());
+    } else {
+      span.setAttribute(
+          SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL,
+          config.getString(DefaultDriverOption.REQUEST_CONSISTENCY));
     }
-    // override connection default if present
     if (statement.getPageSize() > 0) {
       span.setAttribute(SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, statement.getPageSize());
+    } else {
+      int pageSize = config.getInt(DefaultDriverOption.REQUEST_PAGE_SIZE);
+      if (pageSize > 0) {
+        span.setAttribute(SemanticAttributes.DB_CASSANDRA_PAGE_SIZE, pageSize);
+      }
     }
-    // override connection default if present
     if (statement.isIdempotent() != null) {
       span.setAttribute(SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE, statement.isIdempotent());
+    } else {
+      span.setAttribute(
+          SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE,
+          config.getBoolean(DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE));
     }
   }
 
-  @Override
-  public void endExceptionally(Context context, final Throwable throwable) {
+  /** use this method instead of {@link #endExceptionally(Context, Throwable)} */
+  public void endExceptionally(Context context, final Throwable throwable, CqlSession cqlSession) {
     DriverException e = null;
     if (throwable instanceof DriverException) {
       e = (DriverException) throwable;
@@ -126,9 +117,16 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
       e = (DriverException) throwable.getCause();
     }
     if (e != null && e.getExecutionInfo() != null) {
-      onResponse(context, e.getExecutionInfo());
+      onResponse(context, cqlSession, e.getExecutionInfo());
     }
     super.endExceptionally(context, throwable);
+  }
+
+  /** use {@link #endExceptionally(Context, Throwable, CqlSession)} */
+  @Override
+  public void endExceptionally(Context context, final Throwable throwable) {
+    throw new IllegalStateException(
+        "use the endExceptionally method with a CqlSession in CassandraDatabaseClientTracer");
   }
 
   @Override
