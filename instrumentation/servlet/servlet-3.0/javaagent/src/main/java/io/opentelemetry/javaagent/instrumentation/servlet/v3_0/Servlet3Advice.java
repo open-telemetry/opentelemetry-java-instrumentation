@@ -70,12 +70,13 @@ public class Servlet3Advice {
     }
 
     if (context == null && callDepth == 0) {
+      Context currentContext = Java8BytecodeBridge.currentContext();
       // Something else is managing the context, we're in the outermost level of Servlet
       // instrumentation and we have an uncaught throwable. Let's add it to the current span.
       if (throwable != null) {
-        tracer().addUnwrappedThrowable(Java8BytecodeBridge.currentSpan(), throwable);
+        tracer().addUnwrappedThrowable(currentContext, throwable);
       }
-      tracer().setPrincipal(Java8BytecodeBridge.currentContext(), (HttpServletRequest) request);
+      tracer().setPrincipal(currentContext, (HttpServletRequest) request);
     }
 
     if (scope == null || context == null) {
