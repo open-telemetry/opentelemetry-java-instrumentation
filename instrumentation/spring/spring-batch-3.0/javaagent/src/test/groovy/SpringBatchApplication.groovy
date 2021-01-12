@@ -17,6 +17,8 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.task.AsyncTaskExecutor
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import springbatch.TestItemProcessor
 import springbatch.TestItemReader
 import springbatch.TestItemWriter
@@ -117,5 +119,42 @@ class SpringBatchApplication {
     steps.get("flowStep2")
       .tasklet(new TestTasklet())
       .build()
+  }
+
+  // split job
+  @Bean
+  Job splitJob() {
+    jobs.get("splitJob")
+      .start(splitFlowStep1())
+      .split(asyncTaskExecutor())
+      .add(splitFlow2())
+      .build()
+      .build()
+  }
+
+  @Bean
+  Step splitFlowStep1() {
+    steps.get("splitFlowStep1")
+      .tasklet(new TestTasklet())
+      .build()
+  }
+
+  @Bean
+  Flow splitFlow2() {
+    new FlowBuilder<SimpleFlow>("splitFlow2")
+      .start(splitFlowStep2())
+      .build()
+  }
+
+  @Bean
+  Step splitFlowStep2() {
+    steps.get("splitFlowStep2")
+      .tasklet(new TestTasklet())
+      .build()
+  }
+
+  @Bean
+  AsyncTaskExecutor asyncTaskExecutor() {
+    new ThreadPoolTaskExecutor()
   }
 }

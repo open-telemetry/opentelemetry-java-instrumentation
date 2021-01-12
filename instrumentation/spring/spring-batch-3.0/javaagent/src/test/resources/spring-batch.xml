@@ -37,6 +37,21 @@
     </b:step>
   </b:flow>
 
+  <b:job id="splitJob">
+    <b:split id="split" task-executor="asyncTaskExecutor">
+      <b:flow>
+        <b:step id="splitFlowStep1">
+          <b:tasklet ref="testTasklet"/>
+        </b:step>
+      </b:flow>
+      <b:flow>
+        <b:step id="splitFlowStep2">
+          <b:tasklet ref="testTasklet"/>
+        </b:step>
+      </b:flow>
+    </b:split>
+  </b:job>
+
   <bean id="itemReader" class="springbatch.TestItemReader"/>
   <bean id="itemProcessor" class="springbatch.TestItemProcessor"/>
   <bean id="itemWriter" class="springbatch.TestItemWriter"/>
