@@ -29,7 +29,7 @@ class TracerAutoConfigurationTest {
   private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
 
   @Test
-  @DisplayName("when Application Context contains Tracer bean should NOT initalize otelTracer")
+  @DisplayName("when Application Context contains Tracer bean should NOT initialize otelTracer")
   void customTracer() {
     this.contextRunner
         .withUserConfiguration(CustomTracerConfiguration.class)
@@ -43,7 +43,7 @@ class TracerAutoConfigurationTest {
 
   @Test
   @DisplayName("when Application Context DOES NOT contain Tracer bean should initialize otelTracer")
-  void initalizeTracer() {
+  void initializeTracer() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(TracerAutoConfiguration.class))
         .run(

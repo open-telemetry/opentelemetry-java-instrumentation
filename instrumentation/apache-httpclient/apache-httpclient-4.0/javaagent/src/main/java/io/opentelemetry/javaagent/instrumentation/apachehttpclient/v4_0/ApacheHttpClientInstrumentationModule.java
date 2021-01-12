@@ -62,7 +62,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
       // There are 8 execute(...) methods.  Depending on the version, they may or may not delegate
-      // to eachother. Thus, all methods need to be instrumented.  Because of argument position and
+      // to each other. Thus, all methods need to be instrumented.  Because of argument position and
       // type, some methods can share the same advice class.  The call depth tracking ensures only 1
       // span is created
 

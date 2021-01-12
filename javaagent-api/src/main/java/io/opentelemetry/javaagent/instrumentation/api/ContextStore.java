@@ -30,7 +30,7 @@ public interface ContextStore<K, C> {
   /**
    * Get context given the key.
    *
-   * @param key the key to looup
+   * @param key the key to lookup
    * @return context object
    */
   C get(K key);

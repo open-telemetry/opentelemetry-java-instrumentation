@@ -159,7 +159,7 @@ Implementations of `TypeInstrumentation` will often implement advice classes as 
 These classes are referred to by name in the mappings from method descriptor to advice class,
 typically in the `transform()` method.
 
-For instance, this `MyInstrumentationModule` defines a single advice that mathches
+For instance, this `MyInstrumentationModule` defines a single advice that matches
 on a single `execute` method:
 
 ```

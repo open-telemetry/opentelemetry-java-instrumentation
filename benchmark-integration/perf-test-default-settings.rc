@@ -7,7 +7,7 @@ test_time_seconds=90
 test_num_connections=5
 test_num_threads=5
 
-# endpoionts to test
+# endpoints to test
 declare -A endpoints
 endpoints['<1MS']='http://localhost:8080/work'
 endpoints['1MS']='http://localhost:8080/work?workTimeMillis=1'

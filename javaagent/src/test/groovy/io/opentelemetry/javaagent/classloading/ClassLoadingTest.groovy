@@ -65,7 +65,7 @@ class ClassLoadingTest extends Specification {
     }
   }
 
-  def "make sure that ByteBuddy reads classes's bytes only once"() {
+  def "make sure that ByteBuddy reads the class bytes only once"() {
     setup:
     CountingClassLoader loader = new CountingClassLoader(classpath)
 

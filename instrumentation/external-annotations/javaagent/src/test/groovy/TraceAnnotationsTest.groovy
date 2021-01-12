@@ -87,7 +87,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     }
   }
 
-  def "test annonymous class annotations"() {
+  def "test anonymous class annotations"() {
     setup:
     // Test anonymous classes with package.
     SayTracedHello.fromCallable()

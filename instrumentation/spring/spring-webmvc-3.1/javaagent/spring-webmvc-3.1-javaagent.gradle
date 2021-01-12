@@ -28,7 +28,7 @@ dependencies {
 //  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.4'
 
   testImplementation(project(':testing-common')) {
-    exclude(module: 'jetty-server') // incompatable servlet api
+    exclude(module: 'jetty-server') // incompatible servlet api
   }
 
   // Include servlet instrumentation for verifying the tomcat requests

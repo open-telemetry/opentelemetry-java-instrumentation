@@ -19,7 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class WebMvcTracingFilter extends OncePerRequestFilter implements Ordered {
 
   private static final String FILTER_CLASS = "WebMVCTracingFilter";
-  private static final String FILTER_METHOD = "doFilterInteral";
+  private static final String FILTER_METHOD = "doFilterInternal";
   private final SpringWebMvcServerTracer tracer;
 
   public WebMvcTracingFilter(Tracer tracer) {

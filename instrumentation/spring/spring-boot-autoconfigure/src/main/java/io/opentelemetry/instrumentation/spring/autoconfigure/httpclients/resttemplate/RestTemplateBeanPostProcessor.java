@@ -35,7 +35,7 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
 
     List<ClientHttpRequestInterceptor> restTemplateInterceptors = restTemplate.getInterceptors();
     if (restTemplateInterceptors.stream()
-        .noneMatch(inteceptor -> inteceptor instanceof RestTemplateInterceptor)) {
+        .noneMatch(interceptor -> interceptor instanceof RestTemplateInterceptor)) {
       restTemplateInterceptors.add(0, new RestTemplateInterceptor(tracer));
     }
   }

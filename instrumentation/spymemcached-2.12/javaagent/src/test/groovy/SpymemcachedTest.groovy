@@ -63,7 +63,7 @@ class SpymemcachedTest extends AgentTestRunner {
 
   ReentrantLock queueLock
   MemcachedClient memcached
-  MemcachedClient locableMemcached
+  MemcachedClient lockableMemcached
   MemcachedClient timingoutMemcached
 
   def setup() {
@@ -90,7 +90,7 @@ class SpymemcachedTest extends AgentTestRunner {
       .setProtocol(BINARY)
       .setOpQueueFactory(lockableQueueFactory)
       .build()
-    locableMemcached = new MemcachedClient(lockableConnectionFactory, Arrays.asList(memcachedAddress))
+    lockableMemcached = new MemcachedClient(lockableConnectionFactory, Arrays.asList(memcachedAddress))
 
     ConnectionFactory timingoutConnectionFactory = (new ConnectionFactoryBuilder())
       .setListenerExecutorService(listenerExecutorService)
@@ -154,7 +154,7 @@ class SpymemcachedTest extends AgentTestRunner {
     when:
     runUnderTrace(parentOperation) {
       queueLock.lock()
-      locableMemcached.asyncGet(key("test-get")).cancel(true)
+      lockableMemcached.asyncGet(key("test-get")).cancel(true)
       queueLock.unlock()
     }
 
@@ -225,7 +225,7 @@ class SpymemcachedTest extends AgentTestRunner {
     when:
     runUnderTrace(parentOperation) {
       queueLock.lock()
-      assert locableMemcached.set(key("test-set-cancel"), expiration, "bar").cancel()
+      assert lockableMemcached.set(key("test-set-cancel"), expiration, "bar").cancel()
       queueLock.unlock()
     }
 

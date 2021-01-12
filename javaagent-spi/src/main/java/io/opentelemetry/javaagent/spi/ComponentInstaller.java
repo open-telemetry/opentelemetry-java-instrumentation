@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.spi;
 /**
  * {@link ComponentInstaller} can be used to install any implementation providers that are used by
  * instrumentations. For instance Java agent uses this to install OpenTelemetry SDK. The
- * instrumentation uses shaded OpenTelemetry API that lives in the bootstrap classlaoder and the
+ * instrumentation uses shaded OpenTelemetry API that lives in the bootstrap classloader and the
  * implementation (SDK) is installed via service loader from agent's classloader. This way the
  * application does not have a direct access to the OpenTelemetry SDK classes. The same approach can
  * be done for other APIs used by custom instrumentations.
