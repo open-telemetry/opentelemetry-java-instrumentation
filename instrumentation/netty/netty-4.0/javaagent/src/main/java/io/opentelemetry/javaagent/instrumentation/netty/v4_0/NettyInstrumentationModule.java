@@ -21,6 +21,8 @@ public class NettyInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new ChannelFutureListenerInstrumentation(), new NettyChannelPipelineInstrumentation());
+        new ChannelFutureListenerInstrumentation(),
+        new NettyChannelPipelineInstrumentation(),
+        new AbstractChannelHandlerContextInstrumentation());
   }
 }
