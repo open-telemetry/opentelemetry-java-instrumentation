@@ -204,9 +204,9 @@ abstract class SmokeTest extends Specification {
     m.matches() ? Stream.of(m.group("traceId")) : Stream.empty() as Stream<String>
   }
 
-  protected static boolean isVersionLogged(ToStringConsumer output) {
+  protected static boolean isVersionLogged(ToStringConsumer output, String version) {
     output.toUtf8String().lines()
-      .filter({ it.contains("opentelemetry-javaagent - version:") })
+      .filter({ it.contains("opentelemetry-javaagent - version: " + version) })
       .findFirst()
       .isPresent()
   }
