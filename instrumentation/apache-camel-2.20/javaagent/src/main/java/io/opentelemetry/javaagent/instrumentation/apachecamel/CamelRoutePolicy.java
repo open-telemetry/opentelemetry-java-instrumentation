@@ -61,10 +61,8 @@ final class CamelRoutePolicy extends RoutePolicySupport {
       SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(route.getEndpoint());
       Span span = spanOnExchangeBegin(route, exchange, sd);
       sd.pre(span, exchange, route.getEndpoint(), CamelDirection.INBOUND);
-      ActiveSpanManager.activate(exchange, span);
-      if (LOG.isTraceEnabled()) {
-        LOG.trace("[Route start] Receiver span started " + span);
-      }
+      ActiveSpanManager.activate(exchange, span, CamelDirection.INBOUND);
+      LOG.debug("[Route start] Receiver span started {}", span);
     } catch (Throwable t) {
       LOG.warn("Failed to capture tracing data", t);
     }
@@ -76,14 +74,13 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     try {
       Span span = ActiveSpanManager.getSpan(exchange);
       if (span != null) {
-        if (LOG.isTraceEnabled()) {
-          LOG.trace("[Route finished] Receiver span finished " + span);
-        }
+
+        LOG.debug("[Route finished] Receiver span finished {}", span);
         SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(route.getEndpoint());
         sd.post(span, exchange, route.getEndpoint());
         ActiveSpanManager.deactivate(exchange);
       } else {
-        LOG.warn("Could not find managed span for exchange=" + exchange);
+        LOG.warn("Could not find managed span for exchange={}", exchange);
       }
     } catch (Throwable t) {
       LOG.warn("Failed to capture tracing data", t);
