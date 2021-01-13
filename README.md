@@ -1,5 +1,5 @@
 ---
- 
+
 <p align="center">
   <strong>
     <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation#getting-started">Getting Started</a>
