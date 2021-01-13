@@ -6,7 +6,7 @@ provides.
 - Bundled exporters
   - OTLP
   - Jaeger gRPC
-  - Jaeger Thrift
+  - Jaeger Thrift (considering to remove in https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1973)
   - Logging
   - Zipkin
 - Bundled propagators
@@ -21,6 +21,7 @@ provides.
     - OpenTelemetry SDK initialized in Agent classloader
   - Shading of instrumentation libraries when used in agent
   - API bridge for application usage of API to access the Agent classloader's SDK
+    - API bridge not applied if user brings incompatible API version, preventing linkage errors (similar to safety mechanism below)
 - [Safety mechanisms](./safety-mechanisms.md) to prevent application linkage errors
   - Collect all references from instrumentation to library and only apply instrumentation if they exist in application
   - Verify above at compile time
