@@ -203,4 +203,11 @@ abstract class SmokeTest extends Specification {
     def m = TRACE_ID_PATTERN.matcher(log)
     m.matches() ? Stream.of(m.group("traceId")) : Stream.empty() as Stream<String>
   }
+
+  protected static boolean isVersionLogged(ToStringConsumer output) {
+    output.toUtf8String().lines()
+      .filter({ it.contains("opentelemetry-javaagent - version:") })
+      .findFirst()
+      .isPresent()
+  }
 }

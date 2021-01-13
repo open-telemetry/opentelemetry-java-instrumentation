@@ -47,6 +47,9 @@ class SpringBootSmokeTest extends SmokeTest {
       .findAny()
       .isPresent()
 
+    then: "javaagent logs its version on startup"
+    isVersionLogged(output)
+
     then: "correct traceIds are logged via MDC instrumentation"
     def loggedTraceIds = getLoggedTraceIds(output)
     def spanTraceIds = getSpanStream(traces)
