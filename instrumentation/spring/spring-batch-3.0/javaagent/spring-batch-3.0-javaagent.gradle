@@ -23,11 +23,19 @@ tasks.withType(Test) {
 test {
   filter {
     excludeTestsMatching '*ChunkRootSpanTest'
+    excludeTestsMatching '*ItemLevelSpanTest'
   }
+  jvmArgs '-Dotel.instrumentation.spring-batch.item.enabled=false'
 }
 test.finalizedBy(tasks.register("testChunkRootSpan", Test) {
   filter {
     includeTestsMatching '*ChunkRootSpanTest'
   }
   jvmArgs '-Dotel.instrumentation.spring-batch.chunk.root-span=true'
+  jvmArgs '-Dotel.instrumentation.spring-batch.item.enabled=false'
+}).finalizedBy(tasks.register("testItemLevelSpan", Test) {
+  filter {
+    includeTestsMatching '*ItemLevelSpanTest'
+  }
+  jvmArgs '-Dotel.instrumentation.spring-batch.item.enabled=true'
 })

@@ -11,6 +11,10 @@ import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMa
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.StepBuilderInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.spring.batch.item.ChunkOrientedTaskletInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.spring.batch.item.JsrChunkProcessorInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.spring.batch.item.SimpleChunkProcessorInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.spring.batch.item.SimpleChunkProviderInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobBuilderHelperInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobParserJobFactoryBeanInstrumentation;
@@ -58,6 +62,12 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
     }
     if (isTracingEnabled("chunk")) {
       instrumentations.add(new StepBuilderInstrumentation());
+    }
+    if (isTracingEnabled("item")) {
+      instrumentations.add(new ChunkOrientedTaskletInstrumentation());
+      instrumentations.add(new SimpleChunkProviderInstrumentation());
+      instrumentations.add(new SimpleChunkProcessorInstrumentation());
+      instrumentations.add(new JsrChunkProcessorInstrumentation());
     }
     return instrumentations;
   }
