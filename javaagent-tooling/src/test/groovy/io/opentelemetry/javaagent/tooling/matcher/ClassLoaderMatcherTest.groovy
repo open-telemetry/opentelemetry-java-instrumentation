@@ -3,22 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.test
+package io.opentelemetry.javaagent.tooling.matcher
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher
 import io.opentelemetry.javaagent.tooling.ExporterClassLoader
 import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatcher
+import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider
 import spock.lang.Specification
 
 class ClassLoaderMatcherTest extends Specification {
+
+  private final IgnoreMatcherProvider matcherProvider = [classloader: {cl -> IgnoreMatcherProvider.Result.DEFAULT}] as IgnoreMatcherProvider
 
   def "skips agent classloader"() {
     setup:
     URL root = new URL("file://")
     URLClassLoader agentLoader = new AgentClassLoader(root, null, null)
     expect:
-    GlobalClassloaderIgnoresMatcher.skipClassLoader().matches(agentLoader)
+    GlobalClassloaderIgnoresMatcher.skipClassLoader(matcherProvider).matches(agentLoader)
   }
 
   def "skips exporter classloader"() {
@@ -26,19 +29,25 @@ class ClassLoaderMatcherTest extends Specification {
     URL url = new URL("file://")
     URLClassLoader exporterLoader = new ExporterClassLoader(url, null)
     expect:
-    GlobalClassloaderIgnoresMatcher.skipClassLoader().matches(exporterLoader)
+    GlobalClassloaderIgnoresMatcher.skipClassLoader(matcherProvider).matches(exporterLoader)
   }
 
   def "does not skip empty classloader"() {
     setup:
     ClassLoader emptyLoader = new ClassLoader() {}
     expect:
-    !GlobalClassloaderIgnoresMatcher.skipClassLoader().matches(emptyLoader)
+    !GlobalClassloaderIgnoresMatcher.skipClassLoader(matcherProvider).matches(emptyLoader)
   }
 
   def "does not skip bootstrap classloader"() {
     expect:
-    !GlobalClassloaderIgnoresMatcher.skipClassLoader().matches(null)
+    !GlobalClassloaderIgnoresMatcher.skipClassLoader(matcherProvider).matches(null)
+  }
+
+  def "skip bootstrap classloader"() {
+    IgnoreMatcherProvider skipBootstrapClMatcherProvider = [classloader: {cl -> cl == null ? IgnoreMatcherProvider.Result.IGNORE : IgnoreMatcherProvider.Result.DEFAULT}] as IgnoreMatcherProvider
+    expect:
+    GlobalClassloaderIgnoresMatcher.skipClassLoader(skipBootstrapClMatcherProvider).matches(null)
   }
 
   def "AgentClassLoader class name is hardcoded in ClassLoaderMatcher"() {
