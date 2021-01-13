@@ -29,3 +29,8 @@ so that we can try to come up with a better solution to address your need.
 | System property                | Environment variable           | Purpose                                                                                           |
 |--------------------------------|--------------------------------|---------------------------------------------------------------------------------------------------|
 | otel.javaagent.exclude-classes | OTEL_JAVAAGENT_EXCLUDE_CLASSES | Suppresses all instrumentation for specific classes, format is "my.package.MyClass,my.package2.*" |
+
+## Enable manual instrumentation only
+
+You can suppress all auto instrumentations but have support for manual instrumentation with `@WithSpan` and normal API interactions by using
+`-Dotel.instrumentation.default-enabled=false -Dotel.instrumentation.opentelemetry-annotations.enabled=true`
