@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job id="decisionJob" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+  <step id="decisionStepStart" next="decision">
+    <batchlet ref="jsr.TestBatchlet"/>
+  </step>
+  <decision id="decision" ref="jsr.TestDecider">
+    <next on="LEFT" to="decisionStepLeft"/>
+    <next on="LEFT" to="decisionStepRight"/>
+  </decision>
+  <step id="decisionStepLeft">
+    <batchlet ref="jsr.TestBatchlet"/>
+  </step>
+  <step id="decisionStepRight">
+    <batchlet ref="jsr.TestBatchlet"/>
+  </step>
+</job>
