@@ -18,10 +18,26 @@ public class AppServerBridge {
   private static final ContextKey<AppServerBridge> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-app-server-bridge");
 
+  /**
+   * Attach AppServerBridge to context.
+   *
+   * @param ctx server context
+   * @return new context with AppServerBridge attached.
+   */
   public static Context init(Context ctx) {
     return init(ctx, true);
   }
 
+  /**
+   * Attach AppServerBridge to context.
+   *
+   * @param ctx server context
+   * @param shouldRecordException whether servlet integration should record exception thrown during
+   *     servlet invocation in server span. Use <code>false</code> on servers where exceptions
+   *     thrown during servlet invocation are propagated to the method where server span is closed
+   *     and can be added to server span there and <code>true</code> otherwise.
+   * @return new context with AppServerBridge attached.
+   */
   public static Context init(Context ctx, boolean shouldRecordException) {
     return ctx.with(AppServerBridge.CONTEXT_KEY, new AppServerBridge(shouldRecordException));
   }
@@ -42,7 +58,7 @@ public class AppServerBridge {
    * @return <code>true</code>, if the server span name should be updated by servlet integration, or
    *     <code>false</code> otherwise.
    */
-  public static boolean shouldUpdatedServerSpanName(Context ctx) {
+  public static boolean shouldUpdateServerSpanName(Context ctx) {
     AppServerBridge appServerBridge = ctx.get(AppServerBridge.CONTEXT_KEY);
     if (appServerBridge != null) {
       return !appServerBridge.servletUpdatedServerSpanName.get();
@@ -63,7 +79,7 @@ public class AppServerBridge {
   }
 
   /**
-   * Returns true, if servlet integration should record exception thrown during servlet integration
+   * Returns true, if servlet integration should record exception thrown during servlet invocation
    * in server span. This method should return <code>false</code> on servers where exceptions thrown
    * during servlet invocation are propagated to the method where server span is closed and can be
    * added to server span there and <code>true</code> otherwise.

@@ -160,7 +160,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
    * reflected in the span name.
    */
   public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
-    if (AppServerBridge.shouldUpdatedServerSpanName(attachedContext)) {
+    if (AppServerBridge.shouldUpdateServerSpanName(attachedContext)) {
       updateSpanName(Span.fromContext(attachedContext), request);
       AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
     }
