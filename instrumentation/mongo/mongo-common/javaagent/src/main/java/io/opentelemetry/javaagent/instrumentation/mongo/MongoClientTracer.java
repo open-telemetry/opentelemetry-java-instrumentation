@@ -119,7 +119,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
       asList("ordered", "insert", "count", "find", "create");
 
   private JsonWriterSettings createJsonWriterSettings(int maxNormalizedQueryLength) {
-    JsonWriterSettings settings = new JsonWriterSettings(false);
+    JsonWriterSettings settings = null;
     try {
       // The static JsonWriterSettings.builder() method was introduced in the 3.5 release
       Optional<Method> buildMethod =
@@ -154,6 +154,17 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
       }
     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ignored) {
     }
+    if (settings == null) {
+      try {
+        settings =
+            JsonWriterSettings.class.getDeclaredConstructor(Boolean.class).newInstance(false);
+      } catch (InstantiationException
+          | IllegalAccessException
+          | InvocationTargetException
+          | NoSuchMethodException ignored) {
+      }
+    }
+
     return settings;
   }
 
