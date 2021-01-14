@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import io.opentelemetry.sdk.metrics.data.MetricData.Type;
+import io.opentelemetry.sdk.metrics.data.MetricDataType;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +19,7 @@ public class ProcessMetricsTest extends AbstractMetricsTest {
     testMetricExporter.waitForData();
     intervalMetricReader.shutdown();
 
-    verify("runtime.java.memory", "bytes", Type.LONG_SUM, true);
-    verify("runtime.java.cpu_time", "seconds", Type.DOUBLE_GAUGE, true);
+    verify("runtime.java.memory", "bytes", MetricDataType.LONG_SUM, true);
+    verify("runtime.java.cpu_time", "seconds", MetricDataType.DOUBLE_GAUGE, true);
   }
 }

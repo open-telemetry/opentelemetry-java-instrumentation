@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.struts2;
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ActionProxy;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 public class Struts2Tracer extends BaseTracer {
 

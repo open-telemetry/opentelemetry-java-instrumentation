@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import io.opentelemetry.sdk.metrics.data.MetricData.Type;
+import io.opentelemetry.sdk.metrics.data.MetricDataType;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import org.junit.jupiter.api.Test;
 
@@ -19,14 +19,14 @@ public class SystemMetricsTest extends AbstractMetricsTest {
     testMetricExporter.waitForData();
     intervalMetricReader.shutdown();
 
-    verify("system.memory.usage", "By", Type.LONG_SUM, true);
-    verify("system.memory.utilization", "1", Type.DOUBLE_GAUGE, true);
+    verify("system.memory.usage", "By", MetricDataType.LONG_SUM, true);
+    verify("system.memory.utilization", "1", MetricDataType.DOUBLE_GAUGE, true);
 
-    verify("system.network.io", "By", Type.LONG_SUM, false);
-    verify("system.network.packets", "packets", Type.LONG_SUM, false);
-    verify("system.network.errors", "errors", Type.LONG_SUM, false);
+    verify("system.network.io", "By", MetricDataType.LONG_SUM, false);
+    verify("system.network.packets", "packets", MetricDataType.LONG_SUM, false);
+    verify("system.network.errors", "errors", MetricDataType.LONG_SUM, false);
 
-    verify("system.disk.io", "By", Type.LONG_SUM, false);
-    verify("system.disk.operations", "operations", Type.LONG_SUM, false);
+    verify("system.disk.io", "By", MetricDataType.LONG_SUM, false);
+    verify("system.disk.operations", "operations", MetricDataType.LONG_SUM, false);
   }
 }

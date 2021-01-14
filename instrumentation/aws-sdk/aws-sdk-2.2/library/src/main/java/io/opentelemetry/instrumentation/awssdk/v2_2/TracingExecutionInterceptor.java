@@ -10,8 +10,8 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTrace
 import static io.opentelemetry.instrumentation.awssdk.v2_2.RequestType.ofSdkRequest;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;

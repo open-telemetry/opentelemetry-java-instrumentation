@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import static io.opentelemetry.instrumentation.awslambda.v1_0.MapUtils.lowercaseMap;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.Collections;
@@ -16,7 +16,7 @@ import java.util.Map;
 public class ParentContextExtractor {
 
   static Context fromHttpHeaders(Map<String, String> headers) {
-    return OpenTelemetry.getGlobalPropagators()
+    return GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
         .extract(
             io.opentelemetry.context.Context.current(), lowercaseMap(headers), MapGetter.INSTANCE);
@@ -26,7 +26,7 @@ public class ParentContextExtractor {
   static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 
   static Context fromXRayHeader(String parentHeader) {
-    return OpenTelemetry.getGlobalPropagators()
+    return GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
         .extract(
             Context.current(),

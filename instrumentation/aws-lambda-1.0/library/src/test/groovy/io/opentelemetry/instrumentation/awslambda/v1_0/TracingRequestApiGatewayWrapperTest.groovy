@@ -13,7 +13,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.google.common.collect.ImmutableMap
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.extension.trace.propagation.B3Propagator
 

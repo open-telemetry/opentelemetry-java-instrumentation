@@ -5,20 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators;
 import static io.opentelemetry.api.trace.Span.Kind.CONSUMER;
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER;
 import static io.opentelemetry.javaagent.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.javaagent.instrumentation.jms.MessageInjectAdapter.SETTER;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -55,7 +54,9 @@ public class JmsTracer extends BaseTracer {
       // TODO use BaseTracer.extract() which has context leak detection
       //  (and fix the context leak that it is currently detecting when running Jms2Test)
       Context context =
-          getGlobalPropagators().getTextMapPropagator().extract(Context.root(), message, GETTER);
+          GlobalOpenTelemetry.getPropagators()
+              .getTextMapPropagator()
+              .extract(Context.root(), message, GETTER);
       SpanContext spanContext = Span.fromContext(context).getSpanContext();
       if (spanContext.isValid()) {
         spanBuilder.setParent(context);
@@ -75,7 +76,7 @@ public class JmsTracer extends BaseTracer {
 
   public Scope startProducerScope(Span span, Message message) {
     Context context = Context.current().with(span);
-    OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, message, SETTER);
+    GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, message, SETTER);
     return context.makeCurrent();
   }
 

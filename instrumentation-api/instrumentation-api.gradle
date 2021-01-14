@@ -6,6 +6,7 @@ apply from: "$rootDir/gradle/publish.gradle"
 dependencies {
   api deps.opentelemetryApi
   api deps.opentelemetryContext
+  api deps.opentelemetrySemConv
   implementation deps.slf4j
 
   compileOnly deps.autoValueAnnotations

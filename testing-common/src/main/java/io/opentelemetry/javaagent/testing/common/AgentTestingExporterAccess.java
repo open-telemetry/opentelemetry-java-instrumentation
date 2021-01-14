@@ -31,7 +31,6 @@ import io.opentelemetry.proto.common.v1.ArrayValue;
 import io.opentelemetry.proto.common.v1.InstrumentationLibrary;
 import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.common.v1.StringKeyValue;
-import io.opentelemetry.proto.metrics.v1.AggregationTemporality;
 import io.opentelemetry.proto.metrics.v1.DoubleDataPoint;
 import io.opentelemetry.proto.metrics.v1.DoubleHistogramDataPoint;
 import io.opentelemetry.proto.metrics.v1.DoubleSum;
@@ -46,9 +45,22 @@ import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Status;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
+import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
+import io.opentelemetry.sdk.metrics.data.DoubleGaugeData;
+import io.opentelemetry.sdk.metrics.data.DoublePoint;
+import io.opentelemetry.sdk.metrics.data.DoubleSumData;
+import io.opentelemetry.sdk.metrics.data.DoubleSummaryData;
+import io.opentelemetry.sdk.metrics.data.DoubleSummaryPoint;
+import io.opentelemetry.sdk.metrics.data.LongGaugeData;
+import io.opentelemetry.sdk.metrics.data.LongPoint;
+import io.opentelemetry.sdk.metrics.data.LongSumData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.data.ValueAtPercentile;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
+import io.opentelemetry.sdk.trace.data.EventData;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -169,7 +181,7 @@ public final class AgentTestingExporterAccess {
                       span.getEventsList().stream()
                           .map(
                               event ->
-                                  SpanData.Event.create(
+                                  EventData.create(
                                       event.getTimeUnixNano(),
                                       event.getName(),
                                       fromProto(event.getAttributesList()),
@@ -182,7 +194,7 @@ public final class AgentTestingExporterAccess {
                       span.getLinksList().stream()
                           .map(
                               link ->
-                                  SpanData.Link.create(
+                                  LinkData.create(
                                       SpanContext.create(
                                           TraceId.bytesToHex(link.getTraceId().toByteArray()),
                                           SpanId.bytesToHex(link.getSpanId().toByteArray()),
@@ -258,8 +270,7 @@ public final class AgentTestingExporterAccess {
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            MetricData.LongGaugeData.create(
-                getIntPoints(metric.getIntGauge().getDataPointsList())));
+            LongGaugeData.create(getIntPoints(metric.getIntGauge().getDataPointsList())));
       case DOUBLE_GAUGE:
         return MetricData.createDoubleGauge(
             resource,
@@ -267,8 +278,7 @@ public final class AgentTestingExporterAccess {
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            MetricData.DoubleGaugeData.create(
-                getDoublePoints(metric.getDoubleGauge().getDataPointsList())));
+            DoubleGaugeData.create(getDoublePoints(metric.getDoubleGauge().getDataPointsList())));
       case INT_SUM:
         IntSum intSum = metric.getIntSum();
         return MetricData.createLongSum(
@@ -277,7 +287,7 @@ public final class AgentTestingExporterAccess {
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            MetricData.LongSumData.create(
+            LongSumData.create(
                 intSum.getIsMonotonic(),
                 getTemporality(intSum.getAggregationTemporality()),
                 getIntPoints(metric.getIntSum().getDataPointsList())));
@@ -289,7 +299,7 @@ public final class AgentTestingExporterAccess {
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            MetricData.DoubleSumData.create(
+            DoubleSumData.create(
                 doubleSum.getIsMonotonic(),
                 getTemporality(doubleSum.getAggregationTemporality()),
                 getDoublePoints(metric.getDoubleSum().getDataPointsList())));
@@ -300,7 +310,7 @@ public final class AgentTestingExporterAccess {
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            MetricData.DoubleSummaryData.create(
+            DoubleSummaryData.create(
                 getDoubleHistogramDataPoints(metric.getDoubleHistogram().getDataPointsList())));
       default:
         throw new AssertionError("Unexpected metric data: " + metric.getDataCase());
@@ -315,11 +325,11 @@ public final class AgentTestingExporterAccess {
     return labelsBuilder.build();
   }
 
-  private static List<MetricData.Point> getIntPoints(List<IntDataPoint> points) {
+  private static List<LongPoint> getIntPoints(List<IntDataPoint> points) {
     return points.stream()
         .map(
             point ->
-                MetricData.LongPoint.create(
+                LongPoint.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     createLabels(point.getLabelsList()),
@@ -327,11 +337,11 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static List<MetricData.Point> getDoublePoints(List<DoubleDataPoint> points) {
+  private static List<DoublePoint> getDoublePoints(List<DoubleDataPoint> points) {
     return points.stream()
         .map(
             point ->
-                MetricData.DoublePoint.create(
+                DoublePoint.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     createLabels(point.getLabelsList()),
@@ -339,12 +349,12 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static Collection<MetricData.Point> getDoubleHistogramDataPoints(
+  private static Collection<DoubleSummaryPoint> getDoubleHistogramDataPoints(
       List<DoubleHistogramDataPoint> dataPointsList) {
     return dataPointsList.stream()
         .map(
             point ->
-                MetricData.DoubleSummaryPoint.create(
+                DoubleSummaryPoint.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     createLabels(point.getLabelsList()),
@@ -354,23 +364,21 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static List<MetricData.ValueAtPercentile> getValues(DoubleHistogramDataPoint point) {
-    List<MetricData.ValueAtPercentile> values = new ArrayList<>();
+  private static List<ValueAtPercentile> getValues(DoubleHistogramDataPoint point) {
+    List<ValueAtPercentile> values = new ArrayList<>();
     for (int i = 0; i < point.getExplicitBoundsCount(); i++) {
-      values.add(
-          MetricData.ValueAtPercentile.create(
-              point.getExplicitBounds(i), point.getBucketCounts(i)));
+      values.add(ValueAtPercentile.create(point.getExplicitBounds(i), point.getBucketCounts(i)));
     }
     return values;
   }
 
-  private static MetricData.AggregationTemporality getTemporality(
-      AggregationTemporality aggregationTemporality) {
+  private static AggregationTemporality getTemporality(
+      io.opentelemetry.proto.metrics.v1.AggregationTemporality aggregationTemporality) {
     switch (aggregationTemporality) {
       case AGGREGATION_TEMPORALITY_CUMULATIVE:
-        return MetricData.AggregationTemporality.CUMULATIVE;
+        return AggregationTemporality.CUMULATIVE;
       case AGGREGATION_TEMPORALITY_DELTA:
-        return MetricData.AggregationTemporality.DELTA;
+        return AggregationTemporality.DELTA;
       default:
         throw new IllegalStateException(
             "Unexpected aggregation temporality: " + aggregationTemporality);
@@ -436,7 +444,7 @@ public final class AgentTestingExporterAccess {
     return converted.build();
   }
 
-  private static SpanData.Status fromProto(Status status) {
+  private static StatusData fromProto(Status status) {
     final StatusCode code;
     switch (status.getCode()) {
       case STATUS_CODE_OK:
@@ -449,7 +457,7 @@ public final class AgentTestingExporterAccess {
         code = StatusCode.UNSET;
         break;
     }
-    return SpanData.Status.create(code, status.getMessage());
+    return StatusData.create(code, status.getMessage());
   }
 
   private static Kind fromProto(Span.SpanKind kind) {

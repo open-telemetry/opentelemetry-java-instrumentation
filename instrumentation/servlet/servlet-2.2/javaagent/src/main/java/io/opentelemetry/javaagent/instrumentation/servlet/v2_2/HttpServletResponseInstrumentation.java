@@ -27,7 +27,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 /**
  * Class <code>javax.servlet.http.HttpServletResponse</code> got method <code>getStatus</code> only
  * in Servlet specification version 3.0. This means that we cannot set {@link
- * io.opentelemetry.api.trace.attributes.SemanticAttributes#HTTP_STATUS_CODE} attribute on the
+ * io.opentelemetry.semconv.trace.attributes.SemanticAttributes#HTTP_STATUS_CODE} attribute on the
  * created span using just response object.
  *
  * <p>This instrumentation intercepts status setting methods from Servlet 2.0 specification and

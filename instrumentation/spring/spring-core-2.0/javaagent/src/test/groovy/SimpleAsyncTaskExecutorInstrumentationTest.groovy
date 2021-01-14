@@ -6,7 +6,7 @@
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
@@ -68,7 +68,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest extends AgentTestRunner {
 }
 
 class AsyncTask implements Runnable, Callable<Object> {
-  private static final TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
+  private static final TRACER = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
 
   final latch = new CountDownLatch(1)
   boolean startSpan

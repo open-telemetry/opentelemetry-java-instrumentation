@@ -20,7 +20,7 @@ import com.linecorp.armeria.server.ServerBuilder
 import com.linecorp.armeria.server.ServiceRequestContext
 import com.linecorp.armeria.testing.junit4.server.ServerRule
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import java.util.function.Function
 import spock.lang.Shared

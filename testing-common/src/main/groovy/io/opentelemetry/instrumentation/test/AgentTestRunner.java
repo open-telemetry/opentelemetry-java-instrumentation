@@ -11,7 +11,7 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
@@ -61,7 +61,7 @@ public abstract class AgentTestRunner extends Specification {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
 
-    TEST_TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
+    TEST_TRACER = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto");
   }
 
   protected static Tracer getTestTracer() {

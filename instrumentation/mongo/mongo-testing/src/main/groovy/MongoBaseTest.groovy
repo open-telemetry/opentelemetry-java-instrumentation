@@ -13,7 +13,7 @@ import de.flapdoodle.embed.mongo.config.MongodConfigBuilder
 import de.flapdoodle.embed.mongo.config.Net
 import de.flapdoodle.embed.mongo.distribution.Version
 import de.flapdoodle.embed.process.runtime.Network
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.PortUtils

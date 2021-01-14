@@ -5,5 +5,6 @@ apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
   compileOnly deps.opentelemetrySdk
+  compileOnly deps.opentelemetrySdkMetrics
   compileOnly deps.bytebuddy
 }

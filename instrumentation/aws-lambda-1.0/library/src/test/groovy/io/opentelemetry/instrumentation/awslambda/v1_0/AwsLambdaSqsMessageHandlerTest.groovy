@@ -11,11 +11,11 @@ import static io.opentelemetry.api.trace.Span.Kind.SERVER
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.context.propagation.TextMapPropagator
-import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator
+import io.opentelemetry.extension.trace.propagation.AwsXrayPropagator
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 
@@ -26,7 +26,7 @@ class AwsLambdaSqsMessageHandlerTest extends InstrumentationSpecification implem
     def propagators = ContextPropagators.create(
       TextMapPropagator.composite(
         W3CTraceContextPropagator.instance,
-        AwsXRayPropagator.instance))
+        AwsXrayPropagator.instance))
     OpenTelemetry.setGlobalPropagators(propagators)
   }
 

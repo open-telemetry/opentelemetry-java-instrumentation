@@ -12,9 +12,9 @@ import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 public class AwsLambdaMessageTracer extends BaseTracer {
 

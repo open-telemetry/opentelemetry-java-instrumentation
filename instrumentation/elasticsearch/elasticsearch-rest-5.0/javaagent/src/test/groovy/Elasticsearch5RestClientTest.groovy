@@ -7,7 +7,7 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 import groovy.json.JsonSlurper
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig

@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import org.elasticsearch.client.Response;
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
@@ -66,7 +66,7 @@ class ContextBridgeTest extends AgentTestRunner {
 
   def "agent propagates application's span"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
 
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.makeCurrent().withCloseable {

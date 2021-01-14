@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
-import static io.opentelemetry.api.trace.attributes.SemanticAttributes.HTTP_METHOD;
-import static io.opentelemetry.api.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
-import static io.opentelemetry.api.trace.attributes.SemanticAttributes.HTTP_URL;
-import static io.opentelemetry.api.trace.attributes.SemanticAttributes.HTTP_USER_AGENT;
 import static io.opentelemetry.instrumentation.awslambda.v1_0.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambda.v1_0.MapUtils.lowercaseMap;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_URL;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_USER_AGENT;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;

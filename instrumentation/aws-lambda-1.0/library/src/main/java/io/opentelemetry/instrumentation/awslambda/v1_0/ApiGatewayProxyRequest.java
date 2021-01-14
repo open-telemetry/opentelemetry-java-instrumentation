@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import static io.opentelemetry.instrumentation.awslambda.v1_0.HeadersFactory.ofStream;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +24,7 @@ abstract class ApiGatewayProxyRequest {
   // for every request.
   private static boolean noHttpPropagationNeeded() {
     Collection<String> fields =
-        OpenTelemetry.getGlobalPropagators().getTextMapPropagator().fields();
+        GlobalOpenTelemetry.getPropagators().getTextMapPropagator().fields();
     return fields.isEmpty() || xrayPropagationFieldsOnly(fields);
   }
 

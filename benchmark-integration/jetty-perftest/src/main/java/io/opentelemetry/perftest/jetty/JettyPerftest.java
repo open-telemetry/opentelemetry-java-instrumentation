@@ -5,7 +5,7 @@
 
 package io.opentelemetry.perftest.jetty;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
@@ -25,7 +25,7 @@ public class JettyPerftest {
   private static final Server jettyServer = new Server(PORT);
   private static final ServletContextHandler servletContext = new ServletContextHandler();
 
-  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto");
 
   public static void main(String[] args) throws Exception {
     servletContext.addServlet(PerfServlet.class, PATH);

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.GlobalMetricsProvider;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.spi.ComponentInstaller;
@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory;
 import io.opentelemetry.javaagent.spi.exporter.MetricServer;
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.export.MetricProducer;
@@ -45,25 +46,6 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
   private static final List<String> DEFAULT_EXPORTERS = Collections.singletonList("otlp");
 
   @Override
-  public void beforeByteBuddyAgent() {
-    // calling (shaded) OpenTelemetry.getGlobalTracerProvider() with context class loader set to
-    // the
-    // agent class loader, so that SPI finds the agent's (isolated) SDK, and (shaded)
-    // OpenTelemetry registers it, and then when instrumentation calls (shaded)
-    // OpenTelemetry.getGlobalTracerProvider() later, they get back the agent's (isolated) SDK
-    //
-    // but if we don't trigger this early registration, then if instrumentation is the first to
-    // call (shaded) OpenTelemetry.getGlobalTracerProvider(), then SPI can't see the agent class
-    // loader,
-    // and so (shaded) OpenTelemetry registers the no-op TracerFactory, and it cannot be replaced
-    // later
-    OpenTelemetry.getGlobalTracerProvider();
-    OpenTelemetrySdkAccess.internalSetForceFlush(
-        (timeout, unit) ->
-            OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(timeout, unit));
-  }
-
-  @Override
   public void afterByteBuddyAgent() {
     installAgentTracer();
   }
@@ -71,6 +53,16 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
   /** Register agent tracer if no agent tracer is already registered. */
   @SuppressWarnings("unused")
   public static synchronized void installAgentTracer() {
+    // TODO(anuraaga): Replace with opentelemetry-sdk-extension-autoconfigure
+    OpenTelemetrySdk.builder()
+        .setPropagators(
+            PropagatorsInitializer.initializePropagators(
+                Config.get().getListProperty(PROPAGATORS_CONFIG)))
+        .buildAndRegisterGlobal();
+    OpenTelemetrySdkAccess.internalSetForceFlush(
+        (timeout, unit) ->
+            OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(timeout, unit));
+
     if (Config.get().getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
       Properties config = Config.get().asJavaProperties();
 
@@ -86,8 +78,6 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
     } else {
       log.info("Tracing is disabled.");
     }
-
-    PropagatorsInitializer.initializePropagators(Config.get().getListProperty(PROPAGATORS_CONFIG));
   }
 
   private static synchronized void installExporters(List<String> exporters, Properties config) {
@@ -188,8 +178,7 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
     IntervalMetricReader.builder()
         .readProperties(config)
         .setMetricExporter(metricExporter)
-        .setMetricProducers(
-            Collections.singleton(OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer()))
+        .setMetricProducers(Collections.singleton((SdkMeterProvider) GlobalMetricsProvider.get()))
         .build();
     log.info("Installed metric exporter: " + metricExporter.getClass().getName());
   }
@@ -203,7 +192,7 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
   }
 
   private static void installMetricServer(MetricServer metricServer, Properties config) {
-    MetricProducer metricProducer = OpenTelemetrySdk.getGlobalMeterProvider().getMetricProducer();
+    MetricProducer metricProducer = (SdkMeterProvider) GlobalMetricsProvider.get();
     metricServer.start(metricProducer, config);
     log.info("Installed metric server: " + metricServer.getClass().getName());
   }

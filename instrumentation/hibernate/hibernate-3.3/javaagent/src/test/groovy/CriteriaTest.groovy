@@ -6,7 +6,7 @@
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.hibernate.Criteria
 import org.hibernate.Session
 import org.hibernate.criterion.Order

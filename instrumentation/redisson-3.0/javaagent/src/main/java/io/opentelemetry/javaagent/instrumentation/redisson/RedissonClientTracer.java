@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes.DbSystemValues;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;

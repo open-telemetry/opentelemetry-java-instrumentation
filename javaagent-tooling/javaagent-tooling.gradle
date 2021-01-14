@@ -21,6 +21,7 @@ dependencies {
   implementation deps.opentelemetryApi
   implementation deps.opentelemetryContext
   implementation deps.opentelemetrySdk
+  implementation deps.opentelemetrySdkMetrics
   implementation deps.opentelemetryKotlin
   implementation deps.opentelemetryTraceProps
   implementation(deps.opentelemetryResources) {

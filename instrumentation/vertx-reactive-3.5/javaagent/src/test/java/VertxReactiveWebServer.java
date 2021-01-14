@@ -5,7 +5,7 @@
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -34,7 +34,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private static final Logger log = LoggerFactory.getLogger(VertxReactiveWebServer.class);
 
-  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("test");
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
   private static JDBCClient client;

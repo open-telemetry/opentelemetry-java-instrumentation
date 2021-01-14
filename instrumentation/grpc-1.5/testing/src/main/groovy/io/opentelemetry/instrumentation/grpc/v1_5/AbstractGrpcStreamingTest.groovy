@@ -16,7 +16,7 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.grpc.stub.StreamObserver
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import java.util.concurrent.CopyOnWriteArrayList

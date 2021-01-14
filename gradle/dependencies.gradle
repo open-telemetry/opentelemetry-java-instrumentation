@@ -8,8 +8,8 @@ configurations.all {
 
 ext {
   versions = [
-    opentelemetry     : '0.13.1',
-    opentelemetryAlpha: "0.13.1-alpha",
+    opentelemetry     : '0.14.1',
+    opentelemetryAlpha: "0.14.1-alpha",
 
     slf4j             : "1.7.30",
     guava             : "20.0", // Last version to support Java 7
@@ -35,6 +35,7 @@ ext {
   deps = [
     // OpenTelemetry
     opentelemetryApi           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry),
+    opentelemetryApiMetrics    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api-metrics', version: versions.opentelemetryAlpha),
     opentelemetryExtAnnotations: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-annotations', version: versions.opentelemetry),
     opentelemetryContext       : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-context', version: versions.opentelemetry),
     opentelemetryKotlin        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-kotlin', version: versions.opentelemetry),
@@ -46,11 +47,12 @@ ext {
     opentelemetryOtlp          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp', version: versions.opentelemetry),
     opentelemetryOtlpMetrics   : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp-metrics', version: versions.opentelemetryAlpha),
     opentelemetryZipkin        : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-zipkin', version: versions.opentelemetry),
-    opentelemetryPrometheus    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-prometheus', version: versions.opentelemetry),
+    opentelemetryPrometheus    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-prometheus', version: versions.opentelemetryAlpha),
     opentelemetryLogging       : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-logging', version: versions.opentelemetry),
     opentelemetryProto         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetry),
     opentelemetryResources     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-resources', version: versions.opentelemetry),
     opentelemetrySdkTesting    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-testing', version: versions.opentelemetry),
+    opentelemetrySemConv       : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-semconv', version: versions.opentelemetry),
 
     // General
     slf4j                      : "org.slf4j:slf4j-api:${versions.slf4j}",

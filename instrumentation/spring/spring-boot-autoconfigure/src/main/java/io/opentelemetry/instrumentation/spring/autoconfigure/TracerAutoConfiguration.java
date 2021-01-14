@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SpanProcessor;
@@ -37,7 +37,7 @@ public class TracerAutoConfiguration {
   public Tracer otelTracer(
       TracerProperties tracerProperties, ObjectProvider<List<SpanExporter>> spanExportersProvider)
       throws Exception {
-    Tracer tracer = OpenTelemetry.getGlobalTracer(tracerProperties.getName());
+    Tracer tracer = GlobalOpenTelemetry.getTracer(tracerProperties.getName());
 
     List<SpanExporter> spanExporters = spanExportersProvider.getIfAvailable();
     if (spanExporters == null || spanExporters.isEmpty()) {

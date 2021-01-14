@@ -10,7 +10,7 @@ import com.lambdaworks.redis.RedisClient
 import com.lambdaworks.redis.RedisConnectionException
 import com.lambdaworks.redis.api.StatefulConnection
 import com.lambdaworks.redis.api.sync.RedisCommands
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import redis.embedded.RedisServer

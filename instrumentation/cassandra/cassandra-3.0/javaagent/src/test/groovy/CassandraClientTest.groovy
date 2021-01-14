@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData

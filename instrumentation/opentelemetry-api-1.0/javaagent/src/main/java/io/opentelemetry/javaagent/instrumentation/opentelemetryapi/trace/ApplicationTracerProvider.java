@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
 import application.io.opentelemetry.api.trace.Tracer;
 import application.io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 
 public class ApplicationTracerProvider implements TracerProvider {
 
@@ -25,7 +26,6 @@ public class ApplicationTracerProvider implements TracerProvider {
   @Override
   public Tracer get(String instrumentationName, String instrumentationVersion) {
     return new ApplicationTracer(
-        io.opentelemetry.api.OpenTelemetry.getGlobalTracerProvider()
-            .get(instrumentationName, instrumentationVersion));
+        GlobalOpenTelemetry.getTracerProvider().get(instrumentationName, instrumentationVersion));
   }
 }

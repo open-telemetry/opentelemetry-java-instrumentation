@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.DOUBLE_GAUGE
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.DOUBLE_SUM
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.LONG_GAUGE
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.LONG_SUM
-import static io.opentelemetry.sdk.metrics.data.MetricData.Type.SUMMARY
+import static io.opentelemetry.sdk.metrics.data.MetricDataType.DOUBLE_GAUGE
+import static io.opentelemetry.sdk.metrics.data.MetricDataType.DOUBLE_SUM
+import static io.opentelemetry.sdk.metrics.data.MetricDataType.LONG_GAUGE
+import static io.opentelemetry.sdk.metrics.data.MetricDataType.LONG_SUM
+import static io.opentelemetry.sdk.metrics.data.MetricDataType.SUMMARY
 import static java.util.concurrent.TimeUnit.SECONDS
 
 import com.google.common.base.Stopwatch
-import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.common.Labels
 import io.opentelemetry.api.metrics.AsynchronousInstrument
+import io.opentelemetry.api.metrics.GlobalMetricsProvider
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.function.Consumer
 
@@ -25,7 +25,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = GlobalMetricsProvider.getMeter(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -76,7 +76,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = GlobalMetricsProvider.getMeter(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -122,7 +122,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = GlobalMetricsProvider.getMeter(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -204,7 +204,7 @@ class MeterTest extends AgentTestRunner {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = OpenTelemetry.getGlobalMeterProvider().get(instrumentationName, "1.2.3")
+    def meter = GlobalMetricsProvider.getMeter(instrumentationName, "1.2.3")
     def longCounter = meter.longCounterBuilder("test")
       .setDescription("d")
       .setUnit("u")

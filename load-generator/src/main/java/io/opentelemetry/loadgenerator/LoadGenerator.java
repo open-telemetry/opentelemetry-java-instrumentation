@@ -6,7 +6,7 @@
 package io.opentelemetry.loadgenerator;
 
 import com.google.common.util.concurrent.RateLimiter;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
@@ -22,7 +22,7 @@ import picocli.CommandLine.Option;
     description = "Generates traces and spans at a specified rate")
 public class LoadGenerator implements Callable<Integer> {
 
-  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto");
 
   @Option(names = "--rate", required = true, description = "rate, per second, to generate traces")
   private int rate;

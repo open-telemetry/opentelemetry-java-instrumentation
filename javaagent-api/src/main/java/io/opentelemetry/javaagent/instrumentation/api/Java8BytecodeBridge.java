@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.api;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
@@ -36,11 +37,11 @@ public final class Java8BytecodeBridge {
   }
 
   public static ContextPropagators getGlobalPropagators() {
-    return OpenTelemetry.getGlobalPropagators();
+    return GlobalOpenTelemetry.getPropagators();
   }
 
   /** Calls {@link OpenTelemetry#getGlobalTracer(String)}. */
   public static Tracer getGlobalTracer(String name) {
-    return OpenTelemetry.getGlobalTracer(name);
+    return GlobalOpenTelemetry.getTracer(name);
   }
 }

@@ -2,8 +2,11 @@ apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
 
 dependencies {
+  implementation deps.opentelemetryApiMetrics
+
   library group: 'com.github.oshi', name: 'oshi-core', version: '5.3.1'
 
+  testImplementation deps.opentelemetrySdkMetrics
   testImplementation project(':testing-common')
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
 }

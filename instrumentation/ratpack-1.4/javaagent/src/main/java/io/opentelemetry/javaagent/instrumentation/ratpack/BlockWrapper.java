@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -18,7 +18,7 @@ public class BlockWrapper implements Block {
   private static final Logger log = LoggerFactory.getLogger(BlockWrapper.class);
 
   private static final Tracer TRACER =
-      OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.ratpack-1.4");
+      GlobalOpenTelemetry.getTracer("io.opentelemetry.auto.ratpack-1.4");
 
   private final Block delegate;
   private final Context parentContext;

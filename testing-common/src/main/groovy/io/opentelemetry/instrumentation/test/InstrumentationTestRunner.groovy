@@ -5,10 +5,8 @@
 
 package io.opentelemetry.instrumentation.test
 
-
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -18,11 +16,11 @@ import io.opentelemetry.sdk.common.CompletableResultCode
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.ReadWriteSpan
 import io.opentelemetry.sdk.trace.ReadableSpan
+import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.SpanProcessor
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import org.junit.Before
 import spock.lang.Specification
-
 /**
  * A spock test runner which automatically initializes an in-memory exporter that can be used to
  * verify traces.
@@ -39,13 +37,13 @@ abstract class InstrumentationTestRunner extends Specification {
     //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
     //  currently checking against no-op implementation so that it won't override aws-lambda
     //  propagator configuration
-    if (OpenTelemetry.getGlobalPropagators().getTextMapPropagator().getClass().getSimpleName() == "NoopTextMapPropagator") {
-      OpenTelemetry.setGlobalPropagators(
-        ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-    }
-    OpenTelemetrySdk.getGlobalTracerManagement().addSpanProcessor(new FlushTrackingSpanProcessor())
-    OpenTelemetrySdk.getGlobalTracerManagement()
-      .addSpanProcessor(SimpleSpanProcessor.builder(testExporter).build())
+    OpenTelemetrySdk.builder()
+      .setTracerProvider(SdkTracerProvider.builder()
+        .addSpanProcessor(new FlushTrackingSpanProcessor())
+        .addSpanProcessor(SimpleSpanProcessor.create(testExporter))
+        .build())
+      .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+      .buildAndRegisterGlobal()
   }
 
   @Before

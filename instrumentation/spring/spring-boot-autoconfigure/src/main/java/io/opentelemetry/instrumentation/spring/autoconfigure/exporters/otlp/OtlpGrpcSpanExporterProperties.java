@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
-import static io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter.DEFAULT_DEADLINE_MS;
 import static io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter.DEFAULT_ENDPOINT;
+import static io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter.DEFAULT_TIMEOUT_MS;
 
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -26,7 +26,7 @@ public final class OtlpGrpcSpanExporterProperties {
   private boolean enabled = true;
   private String serviceName = "unknown";
   private String endpoint = DEFAULT_ENDPOINT;
-  private Duration spanTimeout = Duration.ofMillis(DEFAULT_DEADLINE_MS);
+  private Duration spanTimeout = Duration.ofMillis(DEFAULT_TIMEOUT_MS);
 
   public boolean isEnabled() {
     return enabled;

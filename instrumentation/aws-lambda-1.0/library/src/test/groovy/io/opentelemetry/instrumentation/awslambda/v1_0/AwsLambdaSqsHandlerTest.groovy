@@ -12,7 +12,7 @@ import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.context.propagation.TextMapPropagator
-import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator
+import io.opentelemetry.extension.trace.propagation.AwsXrayPropagator
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 
 class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements InstrumentationTestTrait {
@@ -20,7 +20,7 @@ class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements
   // Lambda instrumentation requires XRay propagator to be enabled.
   static {
     def propagators = ContextPropagators.create(
-      TextMapPropagator.composite(W3CTraceContextPropagator.instance, AwsXRayPropagator.instance))
+      TextMapPropagator.composite(W3CTraceContextPropagator.instance, AwsXrayPropagator.instance))
     OpenTelemetry.setGlobalPropagators(propagators)
   }
 

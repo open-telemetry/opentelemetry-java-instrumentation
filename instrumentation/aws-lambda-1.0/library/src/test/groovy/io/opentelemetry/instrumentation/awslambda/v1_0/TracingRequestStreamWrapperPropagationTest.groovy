@@ -12,7 +12,7 @@ import com.amazonaws.services.lambda.runtime.RequestStreamHandler
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.extension.trace.propagation.B3Propagator
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification

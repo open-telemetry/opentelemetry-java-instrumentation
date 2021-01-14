@@ -1,6 +1,9 @@
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
 dependencies {
+  implementation deps.opentelemetryApiMetrics
+
+  testImplementation deps.opentelemetrySdkMetrics
   testImplementation project(':testing-common')
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
 }

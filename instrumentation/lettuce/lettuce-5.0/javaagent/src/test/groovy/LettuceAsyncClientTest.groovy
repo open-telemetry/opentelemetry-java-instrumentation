@@ -15,7 +15,7 @@ import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.protocol.AsyncCommand
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import java.util.concurrent.CancellationException

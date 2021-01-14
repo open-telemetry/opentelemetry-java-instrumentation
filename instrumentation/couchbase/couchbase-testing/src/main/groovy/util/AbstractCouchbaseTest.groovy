@@ -17,7 +17,7 @@ import com.couchbase.mock.Bucket
 import com.couchbase.mock.BucketConfiguration
 import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.PortUtils
