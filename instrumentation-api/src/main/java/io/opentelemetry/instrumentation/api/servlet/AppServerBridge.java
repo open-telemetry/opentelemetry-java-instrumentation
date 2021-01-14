@@ -35,7 +35,7 @@ public class AppServerBridge {
 
   /**
    * Returns true, if servlet integration should update server span name. After server span name has
-   * been update with <code>setServletUpdatedServerSpanName</code> this method will return <code>
+   * been updated with <code>setServletUpdatedServerSpanName</code> this method will return <code>
    * false</code>.
    *
    * @param ctx server context
