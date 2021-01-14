@@ -72,6 +72,7 @@ public class AgentInstaller {
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
+    logVersionInfo();
     if (Config.get().getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
       Iterable<ComponentInstaller> componentInstallers = loadComponentProviders();
       installBytebuddyAgent(inst, componentInstallers);
@@ -538,6 +539,12 @@ public class AgentInstaller {
     // tracer install
     String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
     return Thread.currentThread().getContextClassLoader().getResource(jfrClassResourceName) != null;
+  }
+
+  private static void logVersionInfo() {
+    VersionLogger.logAllVersions();
+    log.debug(
+        AgentInstaller.class.getName() + " loaded on " + AgentInstaller.class.getClassLoader());
   }
 
   private AgentInstaller() {}

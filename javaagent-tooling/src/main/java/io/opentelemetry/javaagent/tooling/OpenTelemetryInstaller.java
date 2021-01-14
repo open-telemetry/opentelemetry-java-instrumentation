@@ -241,11 +241,4 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
     tracerManagement.updateActiveTraceConfig(
         activeTraceConfig.toBuilder().readProperties(config).build());
   }
-
-  @SuppressWarnings("unused")
-  public static void logVersionInfo() {
-    VersionLogger.logAllVersions();
-    log.debug(
-        AgentInstaller.class.getName() + " loaded on " + AgentInstaller.class.getClassLoader());
-  }
 }
