@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-  implementation platform("io.opentelemetry:opentelemetry-bom:0.13.1")
+  implementation platform("io.opentelemetry:opentelemetry-bom:0.14.1")
 
   implementation 'org.springframework.boot:spring-boot-starter-web'
   implementation 'io.opentelemetry:opentelemetry-extension-annotations'
