@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
   implementation platform("io.grpc:grpc-bom:1.33.1")
-  implementation platform("io.opentelemetry:opentelemetry-bom:0.13.1")
+  implementation platform("io.opentelemetry:opentelemetry-bom:0.14.1")
   implementation platform("org.apache.logging.log4j:log4j-bom:2.13.3")
 
   implementation "io.grpc:grpc-netty-shaded"
