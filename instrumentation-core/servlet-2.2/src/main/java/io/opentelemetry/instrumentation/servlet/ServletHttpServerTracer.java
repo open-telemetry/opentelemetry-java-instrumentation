@@ -109,8 +109,10 @@ public abstract class ServletHttpServerTracer<RESPONSE>
     return HttpServletRequestGetter.GETTER;
   }
 
-  public void addUnwrappedThrowable(Span span, Throwable throwable) {
-    addThrowable(span, unwrapThrowable(throwable));
+  public void addUnwrappedThrowable(Context context, Throwable throwable) {
+    if (AppServerBridge.shouldRecordException(context)) {
+      addThrowable(Span.fromContext(context), unwrapThrowable(throwable));
+    }
   }
 
   @Override
@@ -158,8 +160,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
    * reflected in the span name.
    */
   public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
-    if (AppServerBridge.isPresent(attachedContext)
-        && !AppServerBridge.isServerSpanNameUpdatedFromServlet(attachedContext)) {
+    if (AppServerBridge.shouldUpdateServerSpanName(attachedContext)) {
       updateSpanName(Span.fromContext(attachedContext), request);
       AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
     }
