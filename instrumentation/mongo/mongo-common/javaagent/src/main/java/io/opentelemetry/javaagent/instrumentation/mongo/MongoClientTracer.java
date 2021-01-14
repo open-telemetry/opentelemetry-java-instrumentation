@@ -156,8 +156,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     }
     if (settings == null) {
       try {
-        settings =
-            JsonWriterSettings.class.getConstructor(Boolean.TYPE).newInstance(false);
+        settings = JsonWriterSettings.class.getConstructor(Boolean.TYPE).newInstance(false);
       } catch (InstantiationException
           | IllegalAccessException
           | InvocationTargetException
