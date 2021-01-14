@@ -6,9 +6,7 @@
 package io.opentelemetry.javaagent.tooling.matcher
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader
-import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher
 import io.opentelemetry.javaagent.tooling.ExporterClassLoader
-import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatcher
 import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider
 import spock.lang.Specification
 
