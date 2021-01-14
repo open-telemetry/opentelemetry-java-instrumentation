@@ -98,6 +98,7 @@ abstract class BaseJsfTest extends AbstractHttpServerTest<Server> {
         basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
       }
     }
+    TEST_WRITER.clear()
 
     when:
     // extract parameters needed to post back form
@@ -110,8 +111,6 @@ abstract class BaseJsfTest extends AbstractHttpServerTest<Server> {
     jsessionid != null
 
     when:
-    TEST_WRITER.clear()
-
     // use the session created for first request
     def url2 = HttpUrl.get(address.resolve("greeting.jsf;jsessionid=" + jsessionid)).newBuilder().build()
     // set up form parameter for post
@@ -159,6 +158,7 @@ abstract class BaseJsfTest extends AbstractHttpServerTest<Server> {
         basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
       }
     }
+    TEST_WRITER.clear()
 
     when:
     // extract parameters needed to post back form
@@ -171,8 +171,6 @@ abstract class BaseJsfTest extends AbstractHttpServerTest<Server> {
     jsessionid != null
 
     when:
-    TEST_WRITER.clear()
-
     // use the session created for first request
     def url2 = HttpUrl.get(address.resolve("greeting.jsf;jsessionid=" + jsessionid)).newBuilder().build()
     // set up form parameter for post
