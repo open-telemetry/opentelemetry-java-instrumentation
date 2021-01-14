@@ -30,16 +30,13 @@ public class ProcessActionAdvice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    if (span == null) {
-      return;
-    }
     if (scope != null) {
       scope.close();
-    }
-    if (throwable != null) {
-      tracer().endExceptionally(span, throwable);
-    } else {
-      tracer().end(span);
+      if (throwable != null) {
+        tracer().endExceptionally(span, throwable);
+      } else {
+        tracer().end(span);
+      }
     }
   }
 }
