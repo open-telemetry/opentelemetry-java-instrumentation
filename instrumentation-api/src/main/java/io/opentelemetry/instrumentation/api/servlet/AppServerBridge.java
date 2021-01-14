@@ -86,7 +86,7 @@ public class AppServerBridge {
    *
    * @param ctx server context
    * @return <code>true</code>, if servlet integration should record exception thrown during servlet
-   *     integration in server span, or <code>false</code> otherwise.
+   *     invocation in server span, or <code>false</code> otherwise.
    */
   public static boolean shouldRecordException(Context ctx) {
     AppServerBridge appServerBridge = ctx.get(AppServerBridge.CONTEXT_KEY);
