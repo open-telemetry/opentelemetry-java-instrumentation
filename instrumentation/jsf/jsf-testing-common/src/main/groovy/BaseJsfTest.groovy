@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.AbstractHttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
-import javax.servlet.Servlet
 import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.Request
@@ -17,7 +16,6 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import org.eclipse.jetty.annotations.AnnotationConfiguration
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
 import org.jsoup.Jsoup
@@ -62,10 +60,6 @@ abstract class BaseJsfTest extends AbstractHttpServerTest<Server> {
   @Override
   String getContextPath() {
     return "/jetty-context"
-  }
-
-  void addServlet(ServletContextHandler servletContext, String path, Class<Servlet> servlet) {
-    servletContext.addServlet(servlet, path)
   }
 
   def "test hello"() {
