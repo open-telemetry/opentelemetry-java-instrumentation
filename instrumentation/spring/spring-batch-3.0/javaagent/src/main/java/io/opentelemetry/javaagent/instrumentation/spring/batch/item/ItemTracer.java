@@ -10,9 +10,6 @@ import static io.opentelemetry.api.trace.Span.Kind.INTERNAL;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
-import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.batch.core.scope.context.ChunkContext;
 
@@ -29,10 +26,10 @@ public class ItemTracer extends BaseTracer {
   // that makes it quite safe to store the current chunk context in a thread local and use it in
   // each item span
 
-  private final ThreadLocal<WeakReference<ChunkContext>> currentChunk = new ThreadLocal<>();
+  private final ThreadLocal<ChunkContext> currentChunk = new ThreadLocal<>();
 
   public void startChunk(ChunkContext chunkContext) {
-    currentChunk.set(new WeakReference<>(chunkContext));
+    currentChunk.set(chunkContext);
   }
 
   public void endChunk() {
@@ -56,8 +53,7 @@ public class ItemTracer extends BaseTracer {
 
   @Nullable
   private Context startItemSpan(String itemOperationName) {
-    ChunkContext chunkContext =
-        Optional.ofNullable(currentChunk.get()).map(Reference::get).orElse(null);
+    ChunkContext chunkContext = currentChunk.get();
     if (chunkContext == null) {
       return null;
     }
