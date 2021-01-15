@@ -61,18 +61,9 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
         @Advice.This MongoClientSettings.Builder builder,
         @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
 
-      if (!commandListeners.isEmpty()
-          && commandListeners
-              .get(commandListeners.size() - 1)
-              .getClass()
-              .getName()
-              .startsWith("io.opentelemetry.")) {
-        // we'll replace it, since it could be the 3.x async driver which is bundled with driver 4
-        commandListeners.remove(commandListeners.size() - 1);
-      }
-
       for (CommandListener commandListener : commandListeners) {
         if (commandListener instanceof TracingCommandListener) {
+          // prevent double registration
           return;
         }
       }
