@@ -14,7 +14,7 @@ dependencies {
   library group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '2.3.7'
   library group: 'jakarta.el', name: 'jakarta.el-api', version: '3.0.3'
 
-  implementation project(':instrumentation:jsf:jsf-common:javaagent')
+  implementation project(':instrumentation:jsf:jsf-common:library')
 
   testImplementation project(':instrumentation:jsf:jsf-testing-common')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')

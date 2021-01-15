@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.mojarra;
 
-import io.opentelemetry.javaagent.instrumentation.jsf.JsfTracer;
+import io.opentelemetry.instrumentation.jsf.JsfTracer;
 
 public class MojarraTracer extends JsfTracer {
   private static final MojarraTracer TRACER = new MojarraTracer();

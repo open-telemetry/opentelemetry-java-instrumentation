@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.myfaces;
 
-import io.opentelemetry.javaagent.instrumentation.jsf.JsfTracer;
+import io.opentelemetry.instrumentation.jsf.JsfTracer;
 import javax.el.ELException;
 
 public class MyFacesTracer extends JsfTracer {

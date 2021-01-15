@@ -52,7 +52,7 @@ muzzle {
 dependencies {
   library group: 'org.glassfish', name: 'jakarta.faces', version: '2.3.12'
 
-  implementation project(':instrumentation:jsf:jsf-common:javaagent')
+  implementation project(':instrumentation:jsf:jsf-common:library')
 
   testImplementation project(':instrumentation:jsf:jsf-testing-common')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
