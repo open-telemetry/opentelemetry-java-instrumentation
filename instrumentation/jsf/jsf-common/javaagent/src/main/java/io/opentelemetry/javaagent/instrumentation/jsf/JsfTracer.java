@@ -19,30 +19,19 @@ import javax.faces.event.ActionEvent;
 
 public abstract class JsfTracer extends BaseTracer {
 
-  private static String getSpanName(String expressionString) {
-    String result = expressionString;
-    if (result.startsWith("#{")) {
-      result = result.substring(2);
-    }
-
-    if (result.endsWith("}")) {
-      result = result.substring(0, result.length() - 1);
-    }
-
-    if (result.contains("(") && result.contains(")")) {
-      result = result.replaceAll("\\(.*?\\)", "()");
-    }
-
-    return result;
-  }
-
   public Span startSpan(ActionEvent event) {
+    // https://jakarta.ee/specifications/faces/2.3/apidocs/index.html?javax/faces/component/ActionSource2.html
+    // ActionSource2 was added in JSF 1.2 and is implemented by components that have an action
+    // attribute such as a button or a link
     if (event.getComponent() instanceof ActionSource2) {
       ActionSource2 actionSource = (ActionSource2) event.getComponent();
       if (actionSource.getActionExpression() != null) {
+        // either an el expression in the form #{bean.method()} or navigation case name
         String expressionString = actionSource.getActionExpression().getExpressionString();
-        String spanName = getSpanName(expressionString);
-        return tracer.spanBuilder(spanName).startSpan();
+        // start span only if it an expression
+        if (expressionString.startsWith("#{") || expressionString.startsWith("${")) {
+          return tracer.spanBuilder(expressionString).startSpan();
+        }
       }
     }
 

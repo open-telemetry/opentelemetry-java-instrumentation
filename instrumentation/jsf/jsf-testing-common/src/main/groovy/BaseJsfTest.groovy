@@ -80,6 +80,24 @@ abstract class BaseJsfTest extends AbstractHttpServerTest<Server> {
     }
   }
 
+  def "test hello with faces url"() {
+    setup:
+    def url = HttpUrl.get(address.resolve("faces/hello.xhtml")).newBuilder().build()
+    def request = request(url, "GET", null).build()
+    Response response = client.newCall(request).execute()
+
+    expect:
+    response.code() == 200
+    response.body().string().trim() == "Hello"
+
+    and:
+    assertTraces(1) {
+      trace(0, 1) {
+        basicSpan(it, 0, getContextPath() + "/hello.xhtml", null)
+      }
+    }
+  }
+
   def "test greeting"() {
     // we need to display the page first before posting data to it
     setup:
@@ -135,7 +153,7 @@ abstract class BaseJsfTest extends AbstractHttpServerTest<Server> {
     assertTraces(1) {
       trace(0, 2) {
         basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
-        handlerSpan(it, 1, span(0), "greetingForm.submit")
+        handlerSpan(it, 1, span(0), "#{greetingForm.submit}")
       }
     }
   }
@@ -192,7 +210,7 @@ abstract class BaseJsfTest extends AbstractHttpServerTest<Server> {
     assertTraces(1) {
       trace(0, 2) {
         basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null, new Exception("submit exception"))
-        handlerSpan(it, 1, span(0), "greetingForm.submit", new Exception("submit exception"))
+        handlerSpan(it, 1, span(0), "#{greetingForm.submit}", new Exception("submit exception"))
       }
     }
   }
