@@ -13,8 +13,6 @@ import javax.faces.FacesException;
 import javax.faces.component.ActionSource2;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
-import javax.faces.el.EvaluationException;
-import javax.faces.el.MethodNotFoundException;
 import javax.faces.event.ActionEvent;
 
 public abstract class JsfTracer extends BaseTracer {
@@ -58,14 +56,10 @@ public abstract class JsfTracer extends BaseTracer {
 
   @Override
   protected Throwable unwrapThrowable(Throwable throwable) {
-    if (throwable instanceof FacesException) {
-      Throwable cause = throwable.getCause();
-      if (cause instanceof EvaluationException && cause.getCause() != null) {
-        throwable = cause.getCause();
-      } else if (cause instanceof MethodNotFoundException) {
-        throwable = cause;
-      }
+    while (throwable.getCause() != null && throwable instanceof FacesException) {
+      throwable = throwable.getCause();
     }
+
     return super.unwrapThrowable(throwable);
   }
 }

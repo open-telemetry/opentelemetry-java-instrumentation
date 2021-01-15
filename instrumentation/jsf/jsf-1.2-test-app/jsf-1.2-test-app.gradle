@@ -1,0 +1,7 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  compileOnly group: 'javax.faces', name: 'jsf-api', version: '1.2'
+
+  api project(':instrumentation:jsf:jsf-testing-common')
+}

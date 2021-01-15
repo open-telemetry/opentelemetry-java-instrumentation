@@ -1,3 +1,4 @@
+package tmp
 /*
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
@@ -10,7 +11,7 @@ import javax.servlet.ServletException
 import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 
-class ExceptionFilter implements Filter {
+class ExceptionFilter implements Filter{
   @Override
   void init(FilterConfig filterConfig) throws ServletException {
   }
@@ -21,14 +22,12 @@ class ExceptionFilter implements Filter {
       chain.doFilter(request, response)
     } catch (Exception exception) {
       // to ease testing unwrap our exception to root cause
-      Exception tmp = exception
-      while (tmp.getCause() != null) {
-        tmp = tmp.getCause()
+      if (exception.getMessage().contains("submit exception")) {
+        while (exception.getCause() != null) {
+          exception = exception.getCause()
+        }
+        throw exception
       }
-      if (tmp.getMessage() != null && tmp.getMessage().contains("submit exception")) {
-        throw tmp
-      }
-      throw exception
     }
   }
 

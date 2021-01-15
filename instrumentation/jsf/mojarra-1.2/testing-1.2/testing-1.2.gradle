@@ -1,0 +1,16 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+ext {
+  packageInAgentBundle = false
+}
+
+dependencies {
+  implementation group: 'javax.faces', name: 'jsf-impl', version: '1.2-20'
+  implementation group: 'javax.faces', name: 'jsf-api', version: '1.2'
+  implementation group: 'com.sun.facelets', name: 'jsf-facelets', version: '1.1.14'
+
+  implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  implementation project(':instrumentation:jsf:mojarra-1.2:javaagent')
+
+  testImplementation project(':instrumentation:jsf:jsf-1.2-test-app')
+}
