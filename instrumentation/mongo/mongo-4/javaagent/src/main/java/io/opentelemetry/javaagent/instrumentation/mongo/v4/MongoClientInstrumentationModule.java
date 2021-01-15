@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mongo.v4;
+package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
