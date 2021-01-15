@@ -49,6 +49,9 @@ public abstract class JsfTracer extends BaseTracer {
       return;
     }
 
+    // JSF spec 7.6.2
+    // view id is a context relative path to the web application resource that produces the view,
+    // such as a JSP page or a Facelets page.
     String viewId = uiViewRoot.getViewId();
     serverSpan.updateName(ServletContextPath.prepend(context, viewId));
   }
