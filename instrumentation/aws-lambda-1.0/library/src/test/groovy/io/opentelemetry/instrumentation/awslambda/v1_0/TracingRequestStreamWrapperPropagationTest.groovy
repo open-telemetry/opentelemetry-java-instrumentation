@@ -11,10 +11,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.extension.trace.propagation.B3Propagator
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 import java.nio.charset.Charset
@@ -52,7 +49,6 @@ class TracingRequestStreamWrapperPropagationTest extends InstrumentationSpecific
   TracingRequestStreamWrapper wrapper
 
   def childSetup() {
-    OpenTelemetry.setGlobalPropagators(ContextPropagators.create(B3Propagator.getInstance()))
     environmentVariables.set(WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY, "io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestStreamWrapperPropagationTest\$TestRequestHandler::handleRequest")
     TracingRequestStreamWrapper.WRAPPED_LAMBDA = WrappedLambda.fromConfiguration()
     wrapper = new TracingRequestStreamWrapper()
@@ -67,7 +63,7 @@ class TracingRequestStreamWrapperPropagationTest extends InstrumentationSpecific
     String content =
       "{" +
         "\"headers\" : {" +
-        "\"X-B3-TraceId\": \"4fd0b6131f19f39af59518d127b0cafe\", \"X-B3-SpanId\": \"0000000000000456\", \"X-B3-Sampled\": \"true\"" +
+        "\"traceparent\": \"00-4fd0b6131f19f39af59518d127b0cafe-0000000000000456-01\"" +
         "}," +
         "\"body\" : \"hello\"" +
         "}"
@@ -100,7 +96,7 @@ class TracingRequestStreamWrapperPropagationTest extends InstrumentationSpecific
     String content =
       "{" +
         "\"headers\" : {" +
-        "\"X-B3-TraceId\": \"4fd0b6131f19f39af59518d127b0cafe\", \"X-B3-SpanId\": \"0000000000000456\", \"X-B3-Sampled\": \"true\"" +
+        "\"traceparent\": \"00-4fd0b6131f19f39af59518d127b0cafe-0000000000000456-01\"" +
         "}," +
         "\"body\" : \"bye\"" +
         "}"

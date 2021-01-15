@@ -18,7 +18,7 @@ subprojects {
                 bytebuddy           : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: versions.bytebuddy),
                 bytebuddyagent      : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: versions.bytebuddy),
                 autoservice         : [
-                        dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'),
+                        dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc7'),
                         dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.8'),
                         // These are the last versions that support guava 20.0.  Upgrading has odd interactions with shadow.
                         dependencies.create(group: 'com.google.guava', name: 'guava', version: "${versions.guava}"),

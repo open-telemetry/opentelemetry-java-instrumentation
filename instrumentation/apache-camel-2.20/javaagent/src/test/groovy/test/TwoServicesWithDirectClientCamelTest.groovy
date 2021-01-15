@@ -76,7 +76,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
 
         then:
         assertTraces(1) {
-            trace(0, 8) {
+            trace(0, 6) {
                 it.span(0) {
                     name "input"
                     kind INTERNAL
@@ -95,19 +95,6 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
                     }
                 }
                 it.span(2) {
-                    name "HTTP POST"
-                    kind CLIENT
-                    attributes {
-                        "$SemanticAttributes.HTTP_METHOD.key" "POST"
-                        "$SemanticAttributes.HTTP_URL.key" "http://localhost:$portOne/serviceOne"
-                        "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
-                        "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-                        "$SemanticAttributes.NET_PEER_PORT.key" portOne
-                        "$SemanticAttributes.NET_TRANSPORT.key" "IP.TCP"
-                        "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
-                    }
-                }
-                it.span(3) {
                     name "/serviceOne"
                     kind SERVER
                     attributes {
@@ -117,7 +104,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
                         "apache-camel.uri" "http://0.0.0.0:$portOne/serviceOne"
                     }
                 }
-                it.span(4) {
+                it.span(3) {
                     name "POST"
                     kind CLIENT
                     attributes {
@@ -127,21 +114,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
                         "apache-camel.uri" "http://0.0.0.0:$portTwo/serviceTwo"
                     }
                 }
-                it.span(5) {
-                    name "HTTP POST"
-                    kind CLIENT
-                    attributes {
-                        "$SemanticAttributes.HTTP_METHOD.key" "POST"
-                        "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
-                        "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
-                        "$SemanticAttributes.NET_PEER_NAME.key" "0.0.0.0"
-                        "$SemanticAttributes.NET_PEER_PORT.key" portTwo
-                        "$SemanticAttributes.NET_TRANSPORT.key" "IP.TCP"
-                        "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
-                        "$SemanticAttributes.HTTP_USER_AGENT.key" "Jakarta Commons-HttpClient/3.1"
-                    }
-                }
-                it.span(6) {
+                it.span(4) {
                     name "/serviceTwo"
                     kind SERVER
                     attributes {
@@ -156,7 +129,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
 
                     }
                 }
-                it.span(7) {
+                it.span(5) {
                     name "/serviceTwo"
                     kind INTERNAL
                     attributes {

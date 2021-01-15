@@ -62,11 +62,9 @@ final class CamelEventNotifier extends EventNotifierSupport {
     Span span = CamelTracer.TRACER.startSpan(name, sd.getInitiatorSpanKind());
     sd.pre(span, ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
     CamelPropagationUtil.injectParent(Context.current(), ese.getExchange().getIn().getHeaders());
-    ActiveSpanManager.activate(ese.getExchange(), span);
+    ActiveSpanManager.activate(ese.getExchange(), span, CamelDirection.OUTBOUND);
 
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("[Exchange sending] Initiator span started " + span);
-    }
+    LOG.debug("[Exchange sending] Initiator span started: {}", span);
   }
 
   /** Camel finished sending (outbound). Finish span and remove it from CAMEL holder. */
@@ -79,13 +77,11 @@ final class CamelEventNotifier extends EventNotifierSupport {
 
     Span span = ActiveSpanManager.getSpan(ese.getExchange());
     if (span != null) {
-      if (LOG.isTraceEnabled()) {
-        LOG.trace("[Exchange sent] Initiator span finished " + span);
-      }
+      LOG.debug("[Exchange sent] Initiator span finished: {}", span);
       sd.post(span, ese.getExchange(), ese.getEndpoint());
       ActiveSpanManager.deactivate(ese.getExchange());
     } else {
-      LOG.warn("Could not find managed span for exchange " + ese.getExchange());
+      LOG.warn("Could not find managed span for exchange: {}", ese.getExchange());
     }
   }
 

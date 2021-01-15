@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
 import io.opentelemetry.javaagent.spi.ComponentInstaller;
+import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatcher;
@@ -29,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -72,6 +74,7 @@ public class AgentInstaller {
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
+    logVersionInfo();
     if (Config.get().getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
       Iterable<ComponentInstaller> componentInstallers = loadComponentProviders();
       installBytebuddyAgent(inst, componentInstallers);
@@ -96,6 +99,10 @@ public class AgentInstaller {
 
     FieldBackedProvider.resetContextMatchers();
 
+    IgnoreMatcherProvider ignoreMatcherProvider = loadIgnoreMatcherProvider();
+    log.debug(
+        "Ignore matcher provider {} will be used", ignoreMatcherProvider.getClass().getName());
+
     AgentBuilder.Ignored ignoredAgentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
@@ -108,12 +115,13 @@ public class AgentInstaller {
             // FIXME: we cannot enable it yet due to BB/JVM bug, see
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
-            .ignore(any(), GlobalClassloaderIgnoresMatcher.skipClassLoader());
+            .ignore(any(), GlobalClassloaderIgnoresMatcher.skipClassLoader(ignoreMatcherProvider));
 
     ignoredAgentBuilder =
         ignoredAgentBuilder.or(
             globalIgnoresMatcher(
-                Config.get().getBooleanProperty(DISABLE_GLOBAL_LIBRARY_IGNORES_FOR_TEST, false)));
+                Config.get().getBooleanProperty(DISABLE_GLOBAL_LIBRARY_IGNORES_FOR_TEST, false),
+                ignoreMatcherProvider));
 
     ignoredAgentBuilder = ignoredAgentBuilder.or(matchesConfiguredExcludes());
 
@@ -200,6 +208,17 @@ public class AgentInstaller {
 
   private static Iterable<ComponentInstaller> loadComponentProviders() {
     return ServiceLoader.load(ComponentInstaller.class, AgentInstaller.class.getClassLoader());
+  }
+
+  private static IgnoreMatcherProvider loadIgnoreMatcherProvider() {
+    ServiceLoader<IgnoreMatcherProvider> ignoreMatcherProviders =
+        ServiceLoader.load(IgnoreMatcherProvider.class, AgentInstaller.class.getClassLoader());
+
+    Iterator<IgnoreMatcherProvider> iterator = ignoreMatcherProviders.iterator();
+    if (iterator.hasNext()) {
+      return iterator.next();
+    }
+    return new NoopIgnoreMatcherProvider();
   }
 
   private static Iterable<ByteBuddyAgentCustomizer> loadByteBuddyAgentCustomizers() {
@@ -538,6 +557,24 @@ public class AgentInstaller {
     // tracer install
     String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
     return Thread.currentThread().getContextClassLoader().getResource(jfrClassResourceName) != null;
+  }
+
+  private static void logVersionInfo() {
+    VersionLogger.logAllVersions();
+    log.debug(
+        AgentInstaller.class.getName() + " loaded on " + AgentInstaller.class.getClassLoader());
+  }
+
+  private static class NoopIgnoreMatcherProvider implements IgnoreMatcherProvider {
+    @Override
+    public Result classloader(ClassLoader classLoader) {
+      return Result.DEFAULT;
+    }
+
+    @Override
+    public Result type(TypeDescription target) {
+      return Result.DEFAULT;
+    }
   }
 
   private AgentInstaller() {}

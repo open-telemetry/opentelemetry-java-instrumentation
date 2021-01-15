@@ -25,13 +25,14 @@ public class LoggingExporter implements SpanExporter {
   public CompletableResultCode export(Collection<SpanData> list) {
     StringBuilder stringBuilder = new StringBuilder();
     for (SpanData span : list) {
-
+      stringBuilder.setLength(0);
       if (!prefix.isEmpty()) {
         stringBuilder.append(prefix).append(" ");
       }
       stringBuilder
+          .append("'")
           .append(span.getName())
-          .append(" ")
+          .append("' : ")
           .append(span.getTraceId())
           .append(" ")
           .append(span.getSpanId())
@@ -49,8 +50,8 @@ public class LoggingExporter implements SpanExporter {
                 }
                 stringBuilder.append(' ');
               });
+      log.info(stringBuilder.toString());
     }
-    log.info(stringBuilder.toString());
     return CompletableResultCode.ofSuccess();
   }
 

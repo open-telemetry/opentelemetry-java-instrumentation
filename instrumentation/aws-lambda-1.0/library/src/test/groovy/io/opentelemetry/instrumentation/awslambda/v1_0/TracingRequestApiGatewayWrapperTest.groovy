@@ -12,10 +12,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.google.common.collect.ImmutableMap
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.extension.trace.propagation.B3Propagator
+import io.opentelemetry.api.trace.attributes.SemanticAttributes
 
 class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase {
 
@@ -34,13 +31,8 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
     }
   }
 
-  def childSetupSpec() {
-    super.childSetupSpec()
-    OpenTelemetry.setGlobalPropagators(ContextPropagators.create(B3Propagator.getInstance()))
-  }
-
   def propagationHeaders() {
-    return ImmutableMap.of("X-B3-TraceId", "4fd0b6131f19f39af59518d127b0cafe", "X-B3-SpanId", "0000000000000456", "X-B3-Sampled", "true")
+    return Collections.singletonMap("traceparent", "00-4fd0b6131f19f39af59518d127b0cafe-0000000000000456-01")
   }
 
   def "handler traced with trace propagation"() {

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.matcher;
 
+import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
 import java.util.regex.Pattern;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,16 +33,19 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       Pattern.compile("com\\.mchange\\.v2\\.c3p0\\..*Proxy");
 
   public static <T extends TypeDescription> ElementMatcher.Junction<T> globalIgnoresMatcher(
-      boolean skipAdditionalLibraryMatcher) {
-    return new GlobalIgnoresMatcher<>(skipAdditionalLibraryMatcher);
+      boolean skipAdditionalLibraryMatcher, IgnoreMatcherProvider ignoreMatcherProviders) {
+    return new GlobalIgnoresMatcher<>(skipAdditionalLibraryMatcher, ignoreMatcherProviders);
   }
 
   private final ElementMatcher<T> additionalLibraryIgnoreMatcher =
       AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher();
   private final boolean skipAdditionalLibraryMatcher;
+  private final IgnoreMatcherProvider ignoreMatcherProvider;
 
-  private GlobalIgnoresMatcher(boolean skipAdditionalLibraryMatcher) {
+  private GlobalIgnoresMatcher(
+      boolean skipAdditionalLibraryMatcher, IgnoreMatcherProvider ignoreMatcherProvider) {
     this.skipAdditionalLibraryMatcher = skipAdditionalLibraryMatcher;
+    this.ignoreMatcherProvider = ignoreMatcherProvider;
   }
 
   /**
@@ -51,6 +55,16 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
    */
   @Override
   public boolean matches(T target) {
+    IgnoreMatcherProvider.Result ignoreResult = ignoreMatcherProvider.type(target);
+    switch (ignoreResult) {
+      case IGNORE:
+        return true;
+      case ALLOW:
+        return false;
+      case DEFAULT:
+      default:
+    }
+
     String name = target.getActualName();
 
     if (name.startsWith("jdk.internal.net.http.")) {

@@ -27,7 +27,7 @@ class SpringBootSmokeTest extends SmokeTest {
     String url = "http://localhost:${target.getMappedPort(8080)}/greeting"
     def request = new Request.Builder().url(url).get().build()
 
-    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION).toString()
 
     when:
     def response = CLIENT.newCall(request).execute()
@@ -46,6 +46,9 @@ class SpringBootSmokeTest extends SmokeTest {
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    then: "javaagent logs its version on startup"
+    isVersionLogged(output, currentAgentVersion)
 
     then: "correct traceIds are logged via MDC instrumentation"
     def loggedTraceIds = getLoggedTraceIds(output)

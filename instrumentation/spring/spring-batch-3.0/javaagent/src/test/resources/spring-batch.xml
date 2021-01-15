@@ -68,6 +68,20 @@
     </b:step>
   </b:job>
 
+  <b:job id="partitionedJob">
+    <b:step id="partitionManagerStep">
+      <b:partition step="partitionWorkerStep" partitioner="testPartitioner"/>
+    </b:step>
+  </b:job>
+  <b:step id="partitionWorkerStep">
+    <b:tasklet>
+      <b:chunk commit-interval="5" reader="testPartitionedItemReader" processor="itemProcessor"
+        writer="itemWriter"/>
+    </b:tasklet>
+  </b:step>
+  <bean id="testPartitioner" class="springbatch.TestPartitioner"/>
+  <bean id="testPartitionedItemReader" class="springbatch.TestPartitionedItemReader"/>
+
   <bean id="itemReader" class="springbatch.TestItemReader"/>
   <bean id="itemProcessor" class="springbatch.TestItemProcessor"/>
   <bean id="itemWriter" class="springbatch.TestItemWriter"/>
