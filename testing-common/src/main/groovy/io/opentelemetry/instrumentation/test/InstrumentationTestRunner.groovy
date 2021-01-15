@@ -33,10 +33,6 @@ abstract class InstrumentationTestRunner extends Specification {
 
   static {
     testExporter = InMemorySpanExporter.create()
-    // TODO this is probably temporary until default propagators are supplied by SDK
-    //  https://github.com/open-telemetry/opentelemetry-java/issues/1742
-    //  currently checking against no-op implementation so that it won't override aws-lambda
-    //  propagator configuration
     OpenTelemetrySdk.builder()
       .setTracerProvider(SdkTracerProvider.builder()
         .addSpanProcessor(new FlushTrackingSpanProcessor())

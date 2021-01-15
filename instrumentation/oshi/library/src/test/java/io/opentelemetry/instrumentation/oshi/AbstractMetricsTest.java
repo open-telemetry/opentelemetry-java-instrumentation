@@ -25,13 +25,21 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
-public class AbstractMetricsTest {
+class AbstractMetricsTest {
   TestMetricExporter testMetricExporter;
 
+  static SdkMeterProvider meterProvider;
+
+  @BeforeAll
+  static void initializeOpenTelemetry() {
+    meterProvider = SdkMeterProvider.builder().buildAndRegisterGlobal();
+  }
+
   @BeforeEach
-  public void beforeEach() {
+  void beforeEach() {
     testMetricExporter = new TestMetricExporter();
   }
 
@@ -39,7 +47,8 @@ public class AbstractMetricsTest {
     return IntervalMetricReader.builder()
         .setExportIntervalMillis(100)
         .setMetricExporter(testMetricExporter)
-        .setMetricProducers(Collections.singletonList(SdkMeterProvider.builder().build()))
+        .setMetricProducers(
+            Collections.singletonList(meterProvider))
         .build();
   }
 

@@ -46,7 +46,7 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
   private static final List<String> DEFAULT_EXPORTERS = Collections.singletonList("otlp");
 
   @Override
-  public void afterByteBuddyAgent() {
+  public void beforeByteBuddyAgent() {
     installAgentTracer();
   }
 
