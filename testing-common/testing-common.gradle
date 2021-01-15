@@ -3,7 +3,6 @@ apply from: "$rootDir/gradle/java.gradle"
 dependencies {
   api deps.guava
   api deps.spock
-  api deps.slf4j
   api deps.testLogging
 
   api deps.opentelemetryApi
