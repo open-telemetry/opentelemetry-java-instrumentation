@@ -4,8 +4,9 @@ muzzle {
   pass {
     group = "org.apache.myfaces.core"
     module = "myfaces-impl"
-    versions = "[2.2,3)"
+    versions = "[1.2,3)"
     extraDependency "jakarta.el:jakarta.el-api:3.0.3"
+    assertInverse = true
   }
 }
 
