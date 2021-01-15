@@ -1,6 +1,8 @@
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
+  api deps.testLogging
+
   compileOnly group: 'jakarta.faces', name: 'jakarta.faces-api', version: '2.3.2'
   compileOnly group: 'jakarta.el', name: 'jakarta.el-api', version: '3.0.3'
 
