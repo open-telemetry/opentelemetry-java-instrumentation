@@ -12,7 +12,7 @@ ext {
     opentelemetryAlpha: "0.14.1-alpha",
 
     slf4j             : "1.7.30",
-    guava             : "20.0", // Last version to support Java 7
+    guava             : "30.1-jre",
 
     spock             : "1.3-groovy-$spockGroovyVer",
     groovy            : groovyVer,
@@ -62,8 +62,6 @@ ext {
     autoservice                : [
       dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc7'),
       dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.8'),
-      // These are the last versions that support guava 20.0.  Upgrading has odd interactions with shadow.
-      dependencies.create(group: 'com.google.guava', name: 'guava', version: "${versions.guava}"),
     ],
     autoValueAnnotations       : "com.google.auto.value:auto-value-annotations:${versions.autoValue}",
     // annotation processor

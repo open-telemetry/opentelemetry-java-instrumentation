@@ -12,5 +12,6 @@ muzzle {
 dependencies {
   library group: 'net.spy', name: 'spymemcached', version: '2.12.0'
 
+  testImplementation deps.guava
   testImplementation deps.testcontainers
 }

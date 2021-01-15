@@ -9,6 +9,7 @@ dependencies {
   testCompileOnly project(':javaagent-api')
   testCompileOnly project(':javaagent-tooling')
 
+  testImplementation deps.guava
   testImplementation deps.opentelemetryExtAnnotations
 
   testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'

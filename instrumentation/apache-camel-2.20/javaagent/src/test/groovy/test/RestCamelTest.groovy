@@ -9,10 +9,9 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
-import com.google.common.collect.ImmutableMap
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.camel.CamelContext
 import org.apache.camel.ProducerTemplate
 import org.springframework.boot.SpringApplication
@@ -35,7 +34,7 @@ class RestCamelTest extends AgentTestRunner {
   def setupSpecUnderRetry() {
     port = PortUtils.randomOpenPort()
     def app = new SpringApplication(RestConfig)
-    app.setDefaultProperties(ImmutableMap.of("restServer.port", port))
+    app.setDefaultProperties(["restServer.port": port])
     server = app.run()
     println getClass().name + " http server started at: http://localhost:$port/"
   }
@@ -57,7 +56,7 @@ class RestCamelTest extends AgentTestRunner {
     new Thread(new Runnable() {
       @Override
       void run() {
-        template.sendBodyAndHeaders("direct:start", null, ImmutableMap.of("module", "firstModule", "unitId", "unitOne"))
+        template.sendBodyAndHeaders("direct:start", null, ["module": "firstModule", "unitId": "unitOne"])
       }
     }
     ).start()
