@@ -28,7 +28,9 @@ public class ActionListenerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(named("processAction"), ActionListenerImplInstrumentation.class.getName() + "$ProcessActionAdvice");
+    return singletonMap(
+        named("processAction"),
+        ActionListenerImplInstrumentation.class.getName() + "$ProcessActionAdvice");
   }
 
   public static class ProcessActionAdvice {
