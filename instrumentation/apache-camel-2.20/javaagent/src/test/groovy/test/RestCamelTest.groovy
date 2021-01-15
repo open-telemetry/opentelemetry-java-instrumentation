@@ -75,6 +75,7 @@ class RestCamelTest extends AgentTestRunner {
         it.span(1) {
           name "GET"
           kind CLIENT
+          parentSpanId(span(0).spanId)
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
@@ -84,6 +85,7 @@ class RestCamelTest extends AgentTestRunner {
         it.span(2) {
           name "/api/{module}/unit/{unitId}"
           kind SERVER
+          parentSpanId(span(1).spanId)
           attributes {
             "$SemanticAttributes.HTTP_URL.key" "http://localhost:$port/api/firstModule/unit/unitOne"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
@@ -98,6 +100,7 @@ class RestCamelTest extends AgentTestRunner {
         it.span(3) {
           name "/api/{module}/unit/{unitId}"
           kind INTERNAL
+          parentSpanId(span(2).spanId)
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "GET"
             "$SemanticAttributes.HTTP_URL.key" "http://localhost:$port/api/firstModule/unit/unitOne"
@@ -107,6 +110,7 @@ class RestCamelTest extends AgentTestRunner {
         it.span(4) {
           name "moduleUnit"
           kind INTERNAL
+          parentSpanId(span(3).spanId)
           attributes {
             "apache-camel.uri" "direct://moduleUnit"
           }

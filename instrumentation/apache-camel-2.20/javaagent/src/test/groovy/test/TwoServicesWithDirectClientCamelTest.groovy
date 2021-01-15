@@ -87,6 +87,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
                 it.span(1) {
                     name "POST"
                     kind CLIENT
+                    parentSpanId(span(0).spanId)
                     attributes {
                         "$SemanticAttributes.HTTP_METHOD.key" "POST"
                         "$SemanticAttributes.HTTP_URL.key" "http://localhost:$portOne/serviceOne"
@@ -97,6 +98,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
                 it.span(2) {
                     name "/serviceOne"
                     kind SERVER
+                    parentSpanId(span(1).spanId)
                     attributes {
                         "$SemanticAttributes.HTTP_METHOD.key" "POST"
                         "$SemanticAttributes.HTTP_URL.key" "http://localhost:$portOne/serviceOne"
@@ -107,6 +109,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
                 it.span(3) {
                     name "POST"
                     kind CLIENT
+                  parentSpanId(span(2).spanId)
                     attributes {
                         "$SemanticAttributes.HTTP_METHOD.key" "POST"
                         "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
@@ -117,6 +120,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
                 it.span(4) {
                     name "/serviceTwo"
                     kind SERVER
+                    parentSpanId(span(3).spanId)
                     attributes {
                         "$SemanticAttributes.HTTP_METHOD.key" "POST"
                         "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
@@ -132,6 +136,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentTestRunner {
                 it.span(5) {
                     name "/serviceTwo"
                     kind INTERNAL
+                    parentSpanId(span(4).spanId)
                     attributes {
                         "$SemanticAttributes.HTTP_METHOD.key" "POST"
                         "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
