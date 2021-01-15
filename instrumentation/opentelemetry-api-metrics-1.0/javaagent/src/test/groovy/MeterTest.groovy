@@ -15,6 +15,8 @@ import io.opentelemetry.api.common.Labels
 import io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.api.metrics.GlobalMetricsProvider
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.sdk.metrics.data.MetricData
+import io.opentelemetry.sdk.metrics.data.Point
 import java.util.function.Consumer
 
 class MeterTest extends AgentTestRunner {
@@ -49,8 +51,8 @@ class MeterTest extends AgentTestRunner {
     metricData.type == expectedType
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
-    metricData.points.size() == 1
-    def point = metricData.points.iterator().next()
+    points(metricData).size() == 1
+    def point = points(metricData).iterator().next()
     if (bind) {
       point.labels == Labels.of("w", "x", "y", "z")
     } else {
@@ -100,8 +102,8 @@ class MeterTest extends AgentTestRunner {
     metricData.type == SUMMARY
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
-    metricData.points.size() == 1
-    def point = metricData.points.iterator().next()
+    points(metricData).size() == 1
+    def point = points(metricData).iterator().next()
     if (bind) {
       point.labels == Labels.of("w", "x", "y", "z")
     } else {
@@ -179,8 +181,8 @@ class MeterTest extends AgentTestRunner {
     metricData.type == expectedType
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
-    metricData.points.size() == 1
-    def point = metricData.points.iterator().next()
+    points(metricData).size() == 1
+    def point = points(metricData).iterator().next()
     point.labels == Labels.of("q", "r")
     if (builderMethod.startsWith("long")) {
       point.value == 123
@@ -229,8 +231,8 @@ class MeterTest extends AgentTestRunner {
     metricData.type == LONG_SUM
     metricData.instrumentationLibraryInfo.name == instrumentationName
     metricData.instrumentationLibraryInfo.version == "1.2.3"
-    metricData.points.size() == 1
-    def point = metricData.points.iterator().next()
+    points(metricData).size() == 1
+    def point = points(metricData).iterator().next()
     point.labels == Labels.of("q", "r")
     point.value == 11
 
@@ -241,8 +243,8 @@ class MeterTest extends AgentTestRunner {
     metricData2.type == SUMMARY
     metricData2.instrumentationLibraryInfo.name == instrumentationName
     metricData2.instrumentationLibraryInfo.version == "1.2.3"
-    metricData2.points.size() == 1
-    def point2 = metricData2.points.iterator().next()
+    points(metricData2).size() == 1
+    def point2 = points(metricData2).iterator().next()
     point2.labels == Labels.of("q", "r")
     point2.count == 2
     point2.sum == 12.1
@@ -258,5 +260,15 @@ class MeterTest extends AgentTestRunner {
         }
       }
     }
+  }
+
+  List<Point> points(MetricData metricData) {
+    def points = []
+    points.addAll(metricData.getDoubleGaugeData().getPoints())
+    points.addAll(metricData.getDoubleSumData().getPoints())
+    points.addAll(metricData.getDoubleSummaryData().getPoints())
+    points.addAll(metricData.getLongGaugeData().getPoints())
+    points.addAll(metricData.getLongSumData().getPoints())
+    return points
   }
 }

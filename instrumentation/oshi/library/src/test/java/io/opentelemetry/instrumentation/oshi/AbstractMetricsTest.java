@@ -47,8 +47,7 @@ class AbstractMetricsTest {
     return IntervalMetricReader.builder()
         .setExportIntervalMillis(100)
         .setMetricExporter(testMetricExporter)
-        .setMetricProducers(
-            Collections.singletonList(meterProvider))
+        .setMetricProducers(Collections.singletonList(meterProvider))
         .build();
   }
 

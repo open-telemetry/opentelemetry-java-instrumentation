@@ -19,6 +19,7 @@ dependencies {
   implementation project(':instrumentation-api')
 
   implementation deps.opentelemetryApi
+  implementation deps.opentelemetryApiMetrics
   implementation deps.opentelemetryContext
   implementation deps.opentelemetrySdk
   implementation deps.opentelemetrySdkMetrics

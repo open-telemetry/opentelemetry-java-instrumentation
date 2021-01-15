@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.DefaultOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -24,7 +24,7 @@ class ParentContextExtractorTest {
 
   @AfterEach
   void resetOpenTelemetry() {
-    OpenTelemetry.set(OpenTelemetrySdk.builder().build());
+    GlobalOpenTelemetry.set(OpenTelemetrySdk.builder().build());
   }
 
   @Test
@@ -38,7 +38,7 @@ class ParentContextExtractorTest {
             "0000000000000456",
             "X-B3-Sampled",
             "true");
-    OpenTelemetry.set(
+    GlobalOpenTelemetry.set(
         DefaultOpenTelemetry.builder()
             .setPropagators(ContextPropagators.create(B3Propagator.getInstance()))
             .build());

@@ -11,148 +11,108 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class PropagatorsInitializerTest {
 
-  AtomicReference<ContextPropagators> seen;
   TextMapPropagator mockPreconfigured;
 
   @BeforeEach
   void setup() {
-    seen = new AtomicReference<>();
     mockPreconfigured = mock(TextMapPropagator.class);
   }
 
   @Test
   void initialize_noIdsPassedNotPreconfigured() {
     List<String> ids = emptyList();
-    Consumer<ContextPropagators> setter = seen::set;
 
-    PropagatorsInitializer.initializePropagators(ids, TextMapPropagator::noop, setter);
+    ContextPropagators propagators =
+        PropagatorsInitializer.initializePropagators(ids, TextMapPropagator::noop);
 
-    assertThat(seen.get().getTextMapPropagator())
-        .extracting("textPropagators")
-        .isInstanceOfSatisfying(
-            TextMapPropagator[].class,
-            p ->
-                assertThat(p)
-                    .containsExactlyInAnyOrder(
-                        W3CTraceContextPropagator.getInstance(),
-                        W3CBaggagePropagator.getInstance()));
+    assertThat(propagators.getTextMapPropagator().fields())
+        .containsExactlyInAnyOrder("traceparent", "tracestate", "baggage");
   }
 
   @Test
   void initialize_noIdsPassedWithPreconfigured() {
     List<String> ids = emptyList();
-    Consumer<ContextPropagators> setter = seen::set;
     TextMapPropagator mockPropagator = mock(TextMapPropagator.class);
+    when(mockPropagator.fields()).thenReturn(Collections.singleton("test"));
     Supplier<TextMapPropagator> preconfigured = () -> mockPropagator;
 
-    PropagatorsInitializer.initializePropagators(ids, preconfigured, setter);
+    ContextPropagators propagators =
+        PropagatorsInitializer.initializePropagators(ids, preconfigured);
 
-    assertThat(seen.get().getTextMapPropagator())
-        .extracting("textPropagators")
-        .isInstanceOfSatisfying(
-            TextMapPropagator[].class,
-            p ->
-                assertThat(p)
-                    .containsExactlyInAnyOrder(
-                        W3CTraceContextPropagator.getInstance(),
-                        W3CBaggagePropagator.getInstance(),
-                        mockPropagator));
+    assertThat(propagators.getTextMapPropagator().fields())
+        .containsExactlyInAnyOrder("traceparent", "tracestate", "baggage", "test");
   }
 
   @Test
   void initialize_preconfiguredSameAsId() {
     List<String> ids = singletonList("jaeger");
-    Consumer<ContextPropagators> setter = seen::set;
     Supplier<TextMapPropagator> preconfigured = () -> PropagatorsInitializer.Propagator.JAEGER;
 
-    PropagatorsInitializer.initializePropagators(ids, preconfigured, setter);
+    ContextPropagators propagators =
+        PropagatorsInitializer.initializePropagators(ids, preconfigured);
 
-    assertThat(seen.get().getTextMapPropagator())
-        .isSameAs(PropagatorsInitializer.Propagator.JAEGER);
+    assertThat(propagators.getTextMapPropagator().fields())
+        .containsExactlyInAnyOrder("uber-trace-id");
   }
 
   @Test
   void initialize_preconfiguredDuplicatedInIds() {
     List<String> ids = Arrays.asList("b3", "jaeger", "b3");
-    Consumer<ContextPropagators> setter = seen::set;
     Supplier<TextMapPropagator> preconfigured = () -> PropagatorsInitializer.Propagator.JAEGER;
 
-    PropagatorsInitializer.initializePropagators(ids, preconfigured, setter);
+    ContextPropagators propagators =
+        PropagatorsInitializer.initializePropagators(ids, preconfigured);
 
-    assertThat(seen.get().getTextMapPropagator())
-        .extracting("textPropagators")
-        .isInstanceOfSatisfying(
-            TextMapPropagator[].class,
-            p ->
-                assertThat(p)
-                    .containsExactlyInAnyOrder(
-                        PropagatorsInitializer.Propagator.B3,
-                        PropagatorsInitializer.Propagator.JAEGER));
+    assertThat(propagators.getTextMapPropagator().fields())
+        .containsExactlyInAnyOrder(
+            "uber-trace-id", "X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled", "b3");
   }
 
   @Test
   void initialize_justOneId() {
     List<String> ids = singletonList("jaeger");
-    Consumer<ContextPropagators> setter = seen::set;
     Supplier<TextMapPropagator> preconfigured = TextMapPropagator::noop;
 
-    PropagatorsInitializer.initializePropagators(ids, preconfigured, setter);
+    ContextPropagators propagators =
+        PropagatorsInitializer.initializePropagators(ids, preconfigured);
 
-    assertThat(seen.get().getTextMapPropagator())
-        .isSameAs(PropagatorsInitializer.Propagator.JAEGER);
+    assertThat(propagators.getTextMapPropagator().fields())
+        .containsExactlyInAnyOrder("uber-trace-id");
   }
 
   @Test
   void initialize_idsWithNoPreconfigured() {
     List<String> ids = Arrays.asList("b3", "unknown-but-no-harm-done", "jaeger");
-    Consumer<ContextPropagators> setter = seen::set;
     Supplier<TextMapPropagator> preconfigured = TextMapPropagator::noop;
 
-    PropagatorsInitializer.initializePropagators(ids, preconfigured, setter);
+    ContextPropagators propagators =
+        PropagatorsInitializer.initializePropagators(ids, preconfigured);
 
-    assertThat(seen.get().getTextMapPropagator())
-        .extracting("textPropagators")
-        .isInstanceOfSatisfying(
-            TextMapPropagator[].class,
-            p ->
-                assertThat(p)
-                    .containsExactlyInAnyOrder(
-                        PropagatorsInitializer.Propagator.B3,
-                        PropagatorsInitializer.Propagator.JAEGER));
+    assertThat(propagators.getTextMapPropagator().fields())
+        .containsExactlyInAnyOrder(
+            "uber-trace-id", "X-B3-TraceId", "X-B3-SpanId", "X-B3-Sampled", "b3");
   }
 
   @Test
   void initialize_idsAndPreconfigured() {
     List<String> ids = Arrays.asList("jaeger", "xray");
-    Consumer<ContextPropagators> setter = seen::set;
     when(mockPreconfigured.fields()).thenReturn(singletonList("mocked"));
     Supplier<TextMapPropagator> preconfigured = () -> mockPreconfigured;
 
-    PropagatorsInitializer.initializePropagators(ids, preconfigured, setter);
-
-    assertThat(seen.get().getTextMapPropagator())
-        .extracting("textPropagators")
-        .isInstanceOfSatisfying(
-            TextMapPropagator[].class,
-            p ->
-                assertThat(p)
-                    .containsExactlyInAnyOrder(
-                        mockPreconfigured,
-                        PropagatorsInitializer.Propagator.JAEGER,
-                        PropagatorsInitializer.Propagator.XRAY));
+    ContextPropagators propagators =
+        PropagatorsInitializer.initializePropagators(ids, preconfigured);
+    assertThat(propagators.getTextMapPropagator().fields())
+        .containsExactlyInAnyOrder("uber-trace-id", "X-Amzn-Trace-Id", "mocked");
   }
 }

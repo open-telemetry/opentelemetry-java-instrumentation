@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
 import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.LongUpDownCounter;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.LabelBridging;
 
 class ApplicationLongUpDownCounter implements LongUpDownCounter {
 

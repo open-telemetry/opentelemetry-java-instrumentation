@@ -113,7 +113,7 @@ class SpanAssert {
   def hasLink(String traceId, String spanId) {
     def found = false
     for (def link : span.links) {
-      if (link.spanContext.traceIdAsHexString == traceId && link.context.spanIdAsHexString == spanId) {
+      if (link.spanContext.traceIdAsHexString == traceId && link.spanContext.spanIdAsHexString == spanId) {
         found = true
         break
       }

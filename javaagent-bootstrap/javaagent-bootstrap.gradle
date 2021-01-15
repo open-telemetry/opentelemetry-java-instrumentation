@@ -9,6 +9,7 @@ minimumInstructionCoverage = 0.0
 
 dependencies {
   api deps.opentelemetryApi
+  api deps.opentelemetryApiMetrics
   compileOnly deps.opentelemetrySdk
   implementation deps.slf4j
   implementation group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j
