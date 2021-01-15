@@ -58,14 +58,12 @@ class SqsCamelTest extends AgentTestRunner {
 
     when:
     template.sendBody("direct:input", "{\"type\": \"hello\"}")
-    // wait for SQS to send back
-    Thread.sleep(2000)
 
     then:
     assertTraces(5) {
       trace(0, 3) {
-        def parent = it
-        it.span(0) {
+
+        span(0) {
           name "input"
           kind INTERNAL
           hasNoParent()
@@ -73,19 +71,19 @@ class SqsCamelTest extends AgentTestRunner {
             "apache-camel.uri" "direct://input"
           }
         }
-        it.span(1) {
+        span(1) {
           name "sqsCamelTest"
           kind PRODUCER
-          parentSpanId parent.span(0).spanId
+          childOf span(0)
           attributes {
             "apache-camel.uri" "aws-sqs://sqsCamelTest?amazonSQSClient=%23sqsClient"
             "messaging.destination" "sqsCamelTest"
           }
         }
-        it.span(2) {
+        span(2) {
           name "sqsCamelTest"
           kind CONSUMER
-          parentSpanId parent.span(1).spanId
+          childOf span(1)
           attributes {
             "apache-camel.uri" "aws-sqs://sqsCamelTest?amazonSQSClient=%23sqsClient&messageAttributeNames=traceparent"
             "messaging.destination" "sqsCamelTest"
@@ -94,7 +92,7 @@ class SqsCamelTest extends AgentTestRunner {
         }
       }
       trace(1, 1) {
-        it.span(0) {
+        span(0) {
           name "SQS.ReceiveMessage"
           kind CLIENT
           hasNoParent()
@@ -115,7 +113,7 @@ class SqsCamelTest extends AgentTestRunner {
         }
       }
       trace(2, 1) {
-        it.span(0) {
+        span(0) {
           name "SQS.DeleteMessage"
           kind CLIENT
           hasNoParent()
@@ -136,7 +134,7 @@ class SqsCamelTest extends AgentTestRunner {
         }
       }
       trace(3, 1) {
-        it.span(0) {
+        span(0) {
           name "SQS.ReceiveMessage"
           kind CLIENT
           hasNoParent()
