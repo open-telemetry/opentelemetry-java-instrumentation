@@ -31,6 +31,8 @@ dependencies {
     'commons-io:commons-io:2.2')
   implementation deps.slf4j
 
+  implementation deps.opentelemetryTraceProps
+
   // 1.2.0 allows to get the function ARN
   testLibrary group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.0'
 
