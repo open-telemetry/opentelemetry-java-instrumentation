@@ -185,3 +185,7 @@ class SqsCamelTest extends AgentTestRunner {
     }
   }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3deda3e12 (adding AWS SQS tests to Apache Camel instrumentation)
