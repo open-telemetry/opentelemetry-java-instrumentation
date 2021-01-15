@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.test.base
 
 import ch.qos.logback.classic.Level
@@ -5,6 +10,8 @@ import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import okhttp3.OkHttpClient
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -25,7 +32,8 @@ trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
   static int port
   static URI address
 
-  def setupSpec() {
+  @BeforeClass
+  def setupServer() {
     withRetryOnAddressAlreadyInUse({
       setupSpecUnderRetry()
     })
@@ -44,7 +52,8 @@ trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
 
   abstract SERVER startServer(int port)
 
-  def cleanupSpec() {
+  @AfterClass
+  def cleanupServer() {
     if (server == null) {
       println getClass().name + " can't stop null server"
       return
