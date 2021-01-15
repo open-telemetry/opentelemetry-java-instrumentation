@@ -12,6 +12,7 @@ import static io.opentelemetry.api.trace.Span.Kind.SERVER
 import com.google.common.collect.ImmutableMap
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import org.apache.camel.CamelContext
 import org.apache.camel.ProducerTemplate
@@ -19,7 +20,7 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-class RestCamelTest extends AgentTestRunner {
+class RestCamelTest extends AgentTestRunner implements RetryOnAddressAlreadyInUseTrait {
 
   @Shared
   ConfigurableApplicationContext server
