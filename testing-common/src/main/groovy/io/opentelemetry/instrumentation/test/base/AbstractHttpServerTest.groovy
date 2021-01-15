@@ -17,7 +17,7 @@ import spock.lang.Shared
 abstract class AbstractHttpServerTest<SERVER> extends AgentTestRunner {
   public static final Logger SERVER_LOGGER = LoggerFactory.getLogger("http-server")
   static {
-    ((Logger) SERVER_LOGGER).setLevel(Level.DEBUG)
+    ((ch.qos.logback.classic.Logger) SERVER_LOGGER).setLevel(Level.DEBUG)
   }
   protected static final String TEST_CLIENT_IP = "1.1.1.1"
   protected static final String TEST_USER_AGENT = "test-user-agent"
