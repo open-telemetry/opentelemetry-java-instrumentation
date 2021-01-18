@@ -8,6 +8,8 @@ apply plugin: 'com.github.johnrengelman.shadow'
 ext {
   packageInAgentBundle = true
   mavenGroupId = 'io.opentelemetry.javaagent.instrumentation'
+  // Shadow is only for testing, not publishing.
+  noShadowPublish = true
 }
 
 apply from: "$rootDir/gradle/java.gradle"
