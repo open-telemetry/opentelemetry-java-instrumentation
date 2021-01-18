@@ -26,7 +26,7 @@ public abstract class JsfTracer extends BaseTracer {
       if (actionSource.getActionExpression() != null) {
         // either an el expression in the form #{bean.method()} or navigation case name
         String expressionString = actionSource.getActionExpression().getExpressionString();
-        // start span only if it an expression
+        // start span only if expression string is really an expression
         if (expressionString.startsWith("#{") || expressionString.startsWith("${")) {
           return tracer.spanBuilder(expressionString).startSpan();
         }
