@@ -19,9 +19,10 @@ public final class SpringBatchInstrumentationConfig {
     return INSTRUMENTATION_NAMES;
   }
 
-  public static boolean isTracingEnabled(String type, boolean defaultEnabled) {
+  // the item level instrumentation is very chatty so it's disabled by default
+  public static boolean isItemLevelTracingEnabled() {
     return Config.get()
-        .isInstrumentationPropertyEnabled(instrumentationNames(), type + ".enabled", defaultEnabled);
+        .isInstrumentationPropertyEnabled(instrumentationNames(), "item.enabled", false);
   }
 
   public static boolean shouldCreateRootSpanForChunk() {

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.batch;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.instrumentationNames;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.isTracingEnabled;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 
 import com.google.auto.service.AutoService;
@@ -21,7 +20,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobParserJobF
 import io.opentelemetry.javaagent.instrumentation.spring.batch.step.StepBuilderHelperInstrumentation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,26 +50,20 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    List<TypeInstrumentation> instrumentations = new ArrayList<>();
-    if (isTracingEnabled("job", true)) {
-      instrumentations.add(new JobBuilderHelperInstrumentation());
-      instrumentations.add(new JobFactoryBeanInstrumentation());
-      instrumentations.add(new JobParserJobFactoryBeanInstrumentation());
-    }
-    if (isTracingEnabled("step", true)) {
-      instrumentations.add(new StepBuilderHelperInstrumentation());
-    }
-    if (isTracingEnabled("chunk", true)) {
-      instrumentations.add(new StepBuilderInstrumentation());
-    }
-    // the item level instrumentation is very chatty so it's disabled by default
-    if (isTracingEnabled("item", false)) {
-      instrumentations.add(new ChunkOrientedTaskletInstrumentation());
-      instrumentations.add(new SimpleChunkProviderInstrumentation());
-      instrumentations.add(new SimpleChunkProcessorInstrumentation());
-      instrumentations.add(new JsrChunkProcessorInstrumentation());
-    }
-    return instrumentations;
+    return Arrays.asList(
+        // job instrumentations
+        new JobBuilderHelperInstrumentation(),
+        new JobFactoryBeanInstrumentation(),
+        new JobParserJobFactoryBeanInstrumentation(),
+        // step instrumentation
+        new StepBuilderHelperInstrumentation(),
+        // chunk instrumentation
+        new StepBuilderInstrumentation(),
+        // item instrumentations
+        new ChunkOrientedTaskletInstrumentation(),
+        new SimpleChunkProviderInstrumentation(),
+        new SimpleChunkProcessorInstrumentation(),
+        new JsrChunkProcessorInstrumentation());
   }
 
   protected boolean defaultEnabled() {

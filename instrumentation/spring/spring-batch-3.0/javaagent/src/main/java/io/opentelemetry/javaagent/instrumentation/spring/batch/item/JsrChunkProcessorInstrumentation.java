@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.isItemLevelTracingEnabled;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -45,6 +46,9 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Local("otelContext") Context context, @Advice.Local("otelScope") Scope scope) {
+      if (!isItemLevelTracingEnabled()) {
+        return;
+      }
       context = tracer().startReadSpan();
       if (context != null) {
         scope = context.makeCurrent();
@@ -71,6 +75,9 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Local("otelContext") Context context, @Advice.Local("otelScope") Scope scope) {
+      if (!isItemLevelTracingEnabled()) {
+        return;
+      }
       context = tracer().startProcessSpan();
       if (context != null) {
         scope = context.makeCurrent();
@@ -97,6 +104,9 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Local("otelContext") Context context, @Advice.Local("otelScope") Scope scope) {
+      if (!isItemLevelTracingEnabled()) {
+        return;
+      }
       context = tracer().startWriteSpan();
       if (context != null) {
         scope = context.makeCurrent();

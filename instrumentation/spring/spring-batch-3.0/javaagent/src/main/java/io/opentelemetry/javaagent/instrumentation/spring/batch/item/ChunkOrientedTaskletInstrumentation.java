@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.isItemLevelTracingEnabled;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -42,12 +43,16 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
   public static class ExecuteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(1) ChunkContext chunkContext) {
-      tracer().startChunk(chunkContext);
+      if (isItemLevelTracingEnabled()) {
+        tracer().startChunk(chunkContext);
+      }
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit() {
-      tracer().endChunk();
+      if (isItemLevelTracingEnabled()) {
+        tracer().endChunk();
+      }
     }
   }
 }

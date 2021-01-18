@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.isItemLevelTracingEnabled;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -39,6 +40,9 @@ public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Local("otelContext") Context context, @Advice.Local("otelScope") Scope scope) {
+      if (!isItemLevelTracingEnabled()) {
+        return;
+      }
       context = tracer().startReadSpan();
       if (context != null) {
         scope = context.makeCurrent();
