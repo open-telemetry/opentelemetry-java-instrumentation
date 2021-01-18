@@ -31,13 +31,13 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod()
-            .and(named("notifyHandlerException"))
+            .and(named("invokeExceptionCaught"))
             .and(takesArgument(0, named(Throwable.class.getName()))),
         AbstractChannelHandlerContextInstrumentation.class.getName()
-            + "$NotifyHandlerExceptionAdvice");
+            + "$InvokeExceptionCaughtAdvice");
   }
 
-  public static class NotifyHandlerExceptionAdvice {
+  public static class InvokeExceptionCaughtAdvice {
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.Argument(0) Throwable throwable) {
       Span span = Java8BytecodeBridge.currentSpan();
