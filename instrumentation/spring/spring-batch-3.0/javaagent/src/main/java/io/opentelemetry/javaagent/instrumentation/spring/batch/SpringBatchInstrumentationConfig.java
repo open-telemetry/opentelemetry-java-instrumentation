@@ -19,9 +19,9 @@ public final class SpringBatchInstrumentationConfig {
     return INSTRUMENTATION_NAMES;
   }
 
-  public static boolean isTracingEnabled(String type) {
+  public static boolean isTracingEnabled(String type, boolean defaultEnabled) {
     return Config.get()
-        .isInstrumentationPropertyEnabled(instrumentationNames(), type + ".enabled", true);
+        .isInstrumentationPropertyEnabled(instrumentationNames(), type + ".enabled", defaultEnabled);
   }
 
   public static boolean shouldCreateRootSpanForChunk() {

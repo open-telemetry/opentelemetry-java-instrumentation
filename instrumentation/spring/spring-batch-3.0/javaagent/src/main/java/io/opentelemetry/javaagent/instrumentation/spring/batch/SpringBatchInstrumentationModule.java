@@ -52,18 +52,19 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     List<TypeInstrumentation> instrumentations = new ArrayList<>();
-    if (isTracingEnabled("job")) {
+    if (isTracingEnabled("job", true)) {
       instrumentations.add(new JobBuilderHelperInstrumentation());
       instrumentations.add(new JobFactoryBeanInstrumentation());
       instrumentations.add(new JobParserJobFactoryBeanInstrumentation());
     }
-    if (isTracingEnabled("step")) {
+    if (isTracingEnabled("step", true)) {
       instrumentations.add(new StepBuilderHelperInstrumentation());
     }
-    if (isTracingEnabled("chunk")) {
+    if (isTracingEnabled("chunk", true)) {
       instrumentations.add(new StepBuilderInstrumentation());
     }
-    if (isTracingEnabled("item")) {
+    // the item level instrumentation is very chatty so it's disabled by default
+    if (isTracingEnabled("item", false)) {
       instrumentations.add(new ChunkOrientedTaskletInstrumentation());
       instrumentations.add(new SimpleChunkProviderInstrumentation());
       instrumentations.add(new SimpleChunkProcessorInstrumentation());
