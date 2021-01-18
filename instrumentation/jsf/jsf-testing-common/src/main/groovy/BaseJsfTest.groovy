@@ -26,6 +26,8 @@ abstract class BaseJsfTest extends AgentTestRunner implements HttpServerTestTrai
 
   @Override
   Server startServer(int port) {
+    String jsfVersion = getJsfVersion();
+
     List<String> configurationClasses = new ArrayList<>()
     Collections.addAll(configurationClasses, WebAppContext.getDefaultConfigurationClasses())
     configurationClasses.add(AnnotationConfiguration.getName())
@@ -34,9 +36,9 @@ abstract class BaseJsfTest extends AgentTestRunner implements HttpServerTestTrai
     webAppContext.setContextPath(getContextPath())
     webAppContext.setConfigurationClasses(configurationClasses)
     // set up test application
-    webAppContext.setBaseResource(Resource.newSystemResource("test-app"))
+    webAppContext.setBaseResource(Resource.newSystemResource("test-app-" + jsfVersion))
     // add additional resources for test app
-    Resource extraResource = Resource.newSystemResource("test-app-extra")
+    Resource extraResource = Resource.newSystemResource("test-app-" + jsfVersion + "-extra")
     if (extraResource != null) {
       webAppContext.getMetaData().addWebInfJar(extraResource)
     }
@@ -52,6 +54,8 @@ abstract class BaseJsfTest extends AgentTestRunner implements HttpServerTestTrai
 
     return jettyServer
   }
+
+  abstract String getJsfVersion();
 
   @Override
   void stopServer(Server server) {

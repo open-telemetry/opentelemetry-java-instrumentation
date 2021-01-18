@@ -14,5 +14,5 @@ dependencies {
   implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
   implementation project(':instrumentation:jsf:myfaces-1.2:javaagent')
 
-  testImplementation project(':instrumentation:jsf:jsf-1.2-test-app')
+  testImplementation project(':instrumentation:jsf:jsf-testing-common')
 }

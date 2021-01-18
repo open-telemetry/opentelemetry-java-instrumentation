@@ -16,7 +16,7 @@ dependencies {
 
   implementation project(':instrumentation:jsf:jsf-common:library')
 
-  testImplementation project(':instrumentation:jsf:jsf-2.2-test-app')
+  testImplementation project(':instrumentation:jsf:jsf-testing-common')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
 
   testImplementation "javax.xml.bind:jaxb-api:2.2.11"
