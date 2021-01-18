@@ -51,7 +51,7 @@ public class InMemoryExporter {
 
   public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
       throws InterruptedException, TimeoutException {
-    long startTime = System.currentTimeMillis();
+    long startTime = System.nanoTime();
     List<List<SpanData>> allTraces = groupTraces(supplier.get());
     List<List<SpanData>> completeTraces =
         allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
@@ -75,7 +75,7 @@ public class InMemoryExporter {
   }
 
   private static long elapsedSeconds(long startTime) {
-    return TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTime);
+    return TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime);
   }
 
   public void clear() {

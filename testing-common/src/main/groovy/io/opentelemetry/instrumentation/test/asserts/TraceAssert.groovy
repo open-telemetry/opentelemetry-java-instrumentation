@@ -27,7 +27,7 @@ class TraceAssert {
                           @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.TraceAssert'])
                           @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def spans = getTrace(spanSupplier, traceId)
-    def startTime = System.currentTimeMillis()
+    def startTime = System.nanoTime()
     while (spans.size() < expectedSize && elapsedSeconds(startTime) < 10) {
       Thread.sleep(10)
       spans = getTrace(spanSupplier, traceId)
@@ -42,7 +42,7 @@ class TraceAssert {
   }
 
   private static long elapsedSeconds(long startTime) {
-    TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTime)
+    TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime)
   }
 
   List<SpanData> getSpans() {
