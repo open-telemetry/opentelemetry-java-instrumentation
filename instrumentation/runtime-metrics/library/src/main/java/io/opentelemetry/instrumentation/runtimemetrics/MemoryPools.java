@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.common.Labels;
 import io.opentelemetry.api.metrics.AsynchronousInstrument.LongResult;
+import io.opentelemetry.api.metrics.GlobalMetricsProvider;
 import io.opentelemetry.api.metrics.LongUpDownSumObserver;
 import io.opentelemetry.api.metrics.Meter;
 import java.lang.management.ManagementFactory;
@@ -58,8 +59,7 @@ public final class MemoryPools {
   /** Register only the "area" observers. */
   public static void registerMemoryAreaObservers() {
     MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
-    Meter meter =
-        io.opentelemetry.api.metrics.GlobalMetricsProvider.getMeter(MemoryPools.class.getName());
+    Meter meter = GlobalMetricsProvider.getMeter(MemoryPools.class.getName());
     final LongUpDownSumObserver areaMetric =
         meter
             .longUpDownSumObserverBuilder("runtime.jvm.memory.area")
@@ -76,8 +76,7 @@ public final class MemoryPools {
   /** Register only the "pool" observers. */
   public static void registerMemoryPoolObservers() {
     List<MemoryPoolMXBean> poolBeans = ManagementFactory.getMemoryPoolMXBeans();
-    Meter meter =
-        io.opentelemetry.api.metrics.GlobalMetricsProvider.getMeter(MemoryPools.class.getName());
+    Meter meter = GlobalMetricsProvider.getMeter(MemoryPools.class.getName());
     List<Labels> usedLabelSets = new ArrayList<>(poolBeans.size());
     List<Labels> committedLabelSets = new ArrayList<>(poolBeans.size());
     List<Labels> maxLabelSets = new ArrayList<>(poolBeans.size());

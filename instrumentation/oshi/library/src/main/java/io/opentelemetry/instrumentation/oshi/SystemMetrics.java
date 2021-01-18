@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.oshi;
 
 import io.opentelemetry.api.common.Labels;
+import io.opentelemetry.api.metrics.GlobalMetricsProvider;
 import io.opentelemetry.api.metrics.Meter;
 import oshi.SystemInfo;
 import oshi.hardware.GlobalMemory;
@@ -24,9 +25,7 @@ public class SystemMetrics {
 
   /** Register observers for system metrics. */
   public static void registerObservers() {
-    Meter meter =
-        io.opentelemetry.api.metrics.GlobalMetricsProvider.get()
-            .get("io.opentelemetry.instrumentation.oshi");
+    Meter meter = GlobalMetricsProvider.get().get("io.opentelemetry.instrumentation.oshi");
     SystemInfo systemInfo = new SystemInfo();
     HardwareAbstractionLayer hal = systemInfo.getHardware();
 
