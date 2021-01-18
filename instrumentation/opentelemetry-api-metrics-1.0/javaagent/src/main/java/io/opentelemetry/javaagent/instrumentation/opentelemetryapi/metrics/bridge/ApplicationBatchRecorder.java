@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
 import application.io.opentelemetry.api.metrics.BatchRecorder;
 import application.io.opentelemetry.api.metrics.DoubleCounter;

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.test.utils
 
-import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
@@ -17,7 +17,7 @@ import java.util.concurrent.ExecutionException
 
 class TraceUtils {
 
-  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
 
   static <T> T runUnderServerTrace(final String rootOperationName, final Callable<T> r) {
     return ServerTraceUtils.runUnderServerTrace(rootOperationName, r)

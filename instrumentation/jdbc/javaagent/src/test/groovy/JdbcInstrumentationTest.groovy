@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.sql.CallableStatement
 import java.sql.Connection

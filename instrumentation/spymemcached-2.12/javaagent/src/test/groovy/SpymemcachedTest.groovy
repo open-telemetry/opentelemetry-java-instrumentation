@@ -8,7 +8,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 import com.google.common.util.concurrent.MoreExecutors
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.javaagent.instrumentation.spymemcached.CompletionListener

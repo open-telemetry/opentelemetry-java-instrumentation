@@ -10,7 +10,7 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.extension.trace.propagation.AwsXRayPropagator;
+import io.opentelemetry.extension.trace.propagation.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -36,7 +36,7 @@ final class AwsSdkHttpClientTracer
   }
 
   public void inject(Context context, SdkHttpRequest.Builder builder) {
-    AwsXRayPropagator.getInstance().inject(context, builder, getSetter());
+    AwsXrayPropagator.getInstance().inject(context, builder, getSetter());
   }
 
   @Override

@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 import com.google.common.collect.ImmutableSet
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.atomic.AtomicLong
 import org.elasticsearch.action.search.SearchResponse

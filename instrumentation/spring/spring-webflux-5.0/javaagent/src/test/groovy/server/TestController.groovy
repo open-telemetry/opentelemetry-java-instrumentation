@@ -5,7 +5,7 @@
 
 package server
 
-import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import java.time.Duration
 import org.springframework.web.bind.annotation.GetMapping
@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono
 @RestController
 class TestController {
 
-  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
 
   @GetMapping("/foo")
   Mono<FooModel> getFooModel() {

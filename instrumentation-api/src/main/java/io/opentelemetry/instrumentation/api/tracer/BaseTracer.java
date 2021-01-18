@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators;
-
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -46,7 +44,7 @@ public abstract class BaseTracer {
   protected final Tracer tracer;
 
   public BaseTracer() {
-    tracer = OpenTelemetry.getGlobalTracer(getInstrumentationName(), getVersion());
+    tracer = GlobalOpenTelemetry.getTracer(getInstrumentationName(), getVersion());
   }
 
   public BaseTracer(Tracer tracer) {
@@ -173,7 +171,9 @@ public abstract class BaseTracer {
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
-    return getGlobalPropagators().getTextMapPropagator().extract(Context.root(), carrier, getter);
+    return GlobalOpenTelemetry.getPropagators()
+        .getTextMapPropagator()
+        .extract(Context.root(), carrier, getter);
   }
 
   private static void debugContextLeak() {

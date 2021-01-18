@@ -5,7 +5,7 @@
 
 package io.opentelemetry.perftest;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Worker {
 
-  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto");
 
   /** Simulate work for the give number of milliseconds. */
   public static void doWork(long workTimeMillis) {

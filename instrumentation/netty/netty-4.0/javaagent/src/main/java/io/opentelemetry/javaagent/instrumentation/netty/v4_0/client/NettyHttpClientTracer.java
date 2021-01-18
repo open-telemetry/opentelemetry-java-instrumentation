@@ -13,7 +13,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -43,7 +43,7 @@ public class NettyHttpClientTracer
     NetPeerUtils.INSTANCE.setNetPeer(span, (InetSocketAddress) ctx.channel().remoteAddress());
 
     Context context = withClientSpan(parentContext, span);
-    OpenTelemetry.getGlobalPropagators()
+    GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
         .inject(context, request.headers(), SETTER);
     return context;

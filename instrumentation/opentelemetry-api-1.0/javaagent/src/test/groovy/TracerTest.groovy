@@ -6,19 +6,19 @@
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
-import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.Scope
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 class TracerTest extends AgentTestRunner {
 
   def "capture span, kind, attributes, and status"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").setSpanKind(PRODUCER).startSpan()
     testSpan.setAttribute("string", "1")
     testSpan.setAttribute("long", 2)
@@ -48,7 +48,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture span with implicit parent using Tracer.withSpan()"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     Span parentSpan = tracer.spanBuilder("parent").startSpan()
     Scope parentScope = Context.current().with(parentSpan).makeCurrent()
 
@@ -79,7 +79,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture span with implicit parent using makeCurrent"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     Span parentSpan = tracer.spanBuilder("parent").startSpan()
     Scope parentScope = parentSpan.makeCurrent()
 
@@ -110,7 +110,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture span with implicit parent using TracingContextUtils.withSpan and makeCurrent"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     Span parentSpan = tracer.spanBuilder("parent").startSpan()
     def parentContext = Context.current().with(parentSpan)
     Scope parentScope = parentContext.makeCurrent()
@@ -142,7 +142,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture span with explicit parent"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
     def context = Context.root().with(parentSpan)
     def testSpan = tracer.spanBuilder("test").setParent(context).startSpan()
@@ -170,7 +170,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture span with explicit no parent"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def parentSpan = tracer.spanBuilder("parent").startSpan()
     def parentScope = parentSpan.makeCurrent()
     def testSpan = tracer.spanBuilder("test").setNoParent().startSpan()
@@ -201,7 +201,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture name update"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.updateName("test2")
     testSpan.end()
@@ -221,7 +221,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture exception()"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.recordException(new IllegalStateException())
     testSpan.end()
@@ -247,7 +247,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture exception with Attributes()"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     testSpan.recordException(
       new IllegalStateException(),
@@ -276,7 +276,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture name update using TracingContextUtils.getCurrentSpan()"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def testScope = Context.current().with(testSpan).makeCurrent()
     Span.current().updateName("test2")
@@ -298,7 +298,7 @@ class TracerTest extends AgentTestRunner {
 
   def "capture name update using TracingContextUtils.Span.fromContext(Context.current())"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def testScope = Context.current().with(testSpan).makeCurrent()
     Span.fromContext(Context.current()).updateName("test2")
@@ -321,7 +321,7 @@ class TracerTest extends AgentTestRunner {
   def "add wrapped span to context"() {
     when:
     // Lazy way to get a span context
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").setSpanKind(PRODUCER).startSpan()
     testSpan.end()
 

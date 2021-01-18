@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.AgentTestRunner
@@ -20,7 +20,7 @@ class ContextTest extends AgentTestRunner {
 
   def "Span.current() should return span"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def scope = testSpan.makeCurrent()
     def span = Span.current()
@@ -40,7 +40,7 @@ class ContextTest extends AgentTestRunner {
 
   def "getSpan should return span"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def scope = testSpan.makeCurrent()
     def span = Span.fromContext(Context.current())
@@ -60,7 +60,7 @@ class ContextTest extends AgentTestRunner {
 
   def "Span.fromContextOrNull should return span"() {
     when:
-    def tracer = OpenTelemetry.getGlobalTracer("test")
+    def tracer = GlobalOpenTelemetry.getTracer("test")
     def testSpan = tracer.spanBuilder("test").startSpan()
     def scope = testSpan.makeCurrent()
     def span = Span.fromContextOrNull(Context.current())

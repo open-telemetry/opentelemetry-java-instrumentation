@@ -18,7 +18,7 @@ import io.grpc.Grpc;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
@@ -97,7 +97,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void start(Listener<RESPONSE> responseListener, Metadata headers) {
-      OpenTelemetry.getGlobalPropagators().getTextMapPropagator().inject(context, headers, SETTER);
+      GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
       try (Scope ignored = span.makeCurrent()) {
         super.start(new TracingClientCallListener<>(responseListener, span, tracer), headers);
       } catch (Throwable e) {

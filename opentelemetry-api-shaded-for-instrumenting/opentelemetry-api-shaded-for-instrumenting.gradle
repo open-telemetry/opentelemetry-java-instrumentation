@@ -6,6 +6,7 @@ apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   implementation deps.opentelemetryApi
+  implementation deps.opentelemetryApiMetrics
   implementation deps.opentelemetryContext
 }
 

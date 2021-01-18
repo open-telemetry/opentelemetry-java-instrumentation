@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
 import io.opentelemetry.api.common.Labels;
 import io.opentelemetry.api.common.LabelsBuilder;

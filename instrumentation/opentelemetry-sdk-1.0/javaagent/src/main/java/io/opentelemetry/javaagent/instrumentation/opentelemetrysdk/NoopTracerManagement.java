@@ -48,7 +48,9 @@ public class NoopTracerManagement implements SdkTracerManagement {
   public void addSpanProcessor(SpanProcessor spanProcessor) {}
 
   @Override
-  public void shutdown() {}
+  public CompletableResultCode shutdown() {
+    return CompletableResultCode.ofSuccess();
+  }
 
   @Override
   public CompletableResultCode forceFlush() {
