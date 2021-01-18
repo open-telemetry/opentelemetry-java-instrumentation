@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import org.glassfish.jersey.client.ClientRequest;
 
-public class JerseyClientUtil {
+public final class JerseyClientUtil {
 
   public static Future<?> addErrorReporting(ClientRequest context, Future<?> future) {
     // since jersey 2.30 jersey internally uses CompletableFuture
@@ -42,4 +42,6 @@ public class JerseyClientUtil {
       tracer().endExceptionally((Context) prop, exception);
     }
   }
+
+  private JerseyClientUtil() {}
 }
