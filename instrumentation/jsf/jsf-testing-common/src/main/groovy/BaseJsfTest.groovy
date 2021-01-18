@@ -20,6 +20,7 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
 import org.jsoup.Jsoup
+import spock.lang.Unroll
 
 abstract class BaseJsfTest extends AgentTestRunner implements HttpServerTestTrait<Server> {
 
@@ -63,7 +64,8 @@ abstract class BaseJsfTest extends AgentTestRunner implements HttpServerTestTrai
     return "/jetty-context"
   }
 
-  def "test hello"() {
+  @Unroll
+  def "test #path"() {
     setup:
     def url = HttpUrl.get(address.resolve("hello.jsf")).newBuilder().build()
     def request = request(url, "GET", null).build()
@@ -79,24 +81,9 @@ abstract class BaseJsfTest extends AgentTestRunner implements HttpServerTestTrai
         basicSpan(it, 0, getContextPath() + "/hello.xhtml", null)
       }
     }
-  }
 
-  def "test hello with faces url"() {
-    setup:
-    def url = HttpUrl.get(address.resolve("faces/hello.xhtml")).newBuilder().build()
-    def request = request(url, "GET", null).build()
-    Response response = client.newCall(request).execute()
-
-    expect:
-    response.code() == 200
-    response.body().string().trim() == "Hello"
-
-    and:
-    assertTraces(1) {
-      trace(0, 1) {
-        basicSpan(it, 0, getContextPath() + "/hello.xhtml", null)
-      }
-    }
+    where:
+    path << ['hello.jsf', 'faces/hello.xhtml']
   }
 
   def "test greeting"() {
