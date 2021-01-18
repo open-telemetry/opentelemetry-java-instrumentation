@@ -26,7 +26,7 @@ abstract class BaseJsfTest extends AgentTestRunner implements HttpServerTestTrai
 
   @Override
   Server startServer(int port) {
-    String jsfVersion = getJsfVersion();
+    String jsfVersion = getJsfVersion()
 
     List<String> configurationClasses = new ArrayList<>()
     Collections.addAll(configurationClasses, WebAppContext.getDefaultConfigurationClasses())
