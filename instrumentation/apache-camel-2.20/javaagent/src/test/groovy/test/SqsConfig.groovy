@@ -5,17 +5,15 @@
 
 package test
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.client.builder.AwsClientBuilder
+
 import com.amazonaws.services.sqs.AmazonSQSAsync
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.context.annotation.Bean
+import org.testcontainers.containers.localstack.LocalStackContainer
 
 @SpringBootConfiguration
 @EnableAutoConfiguration
@@ -49,9 +47,10 @@ class SqsConfig {
   }
 
   @Bean
-  AmazonSQSAsync sqsClient(@Value("\${sqs.port}") int port) {
-    def credentials = new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"))
-    def endpointConfiguration = new AwsClientBuilder.EndpointConfiguration("http://localhost:"+port, "elasticmq")
-    return AmazonSQSAsyncClient.asyncBuilder().withCredentials(credentials).withEndpointConfiguration(endpointConfiguration).build()
+  AmazonSQSAsync sqsClient(LocalStackContainer localstack) {
+
+    return AmazonSQSAsyncClient.asyncBuilder().withEndpointConfiguration(localstack.getEndpointConfiguration(LocalStackContainer.Service.SQS))
+      .withCredentials(localstack.getDefaultCredentialsProvider())
+      .build()
   }
 }

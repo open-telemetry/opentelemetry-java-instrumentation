@@ -22,7 +22,6 @@ dependencies {
   testLibrary group: 'org.apache.camel', name: 'camel-undertow', version: '2.20.1'
 
   testLibrary group: 'org.apache.camel', name: 'camel-aws', version: '2.20.1'
-  testLibrary group: 'org.elasticmq', name: 'elasticmq-rest-sqs_2.12', version: '1.0.0'
 
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
@@ -34,6 +33,9 @@ dependencies {
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter', version: '1.5.17.RELEASE'
 
   testImplementation 'javax.xml.bind:jaxb-api:2.3.1'
+
+  testImplementation deps.testcontainers
+  testCompile "org.testcontainers:localstack:1.15.0-rc2"
 
   latestDepTestLibrary group: 'org.apache.camel', name: 'camel-core', version: '2.+'
   latestDepTestLibrary group: 'org.apache.camel', name: 'camel-spring-boot-starter', version: '2.+'
