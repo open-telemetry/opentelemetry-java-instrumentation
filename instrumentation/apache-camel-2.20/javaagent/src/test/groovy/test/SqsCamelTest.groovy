@@ -37,7 +37,7 @@ class SqsCamelTest extends AgentTestRunner {
     println getClass().name + " SQS server started at: localhost:$sqsPort/"
 
     def app = new SpringApplication(SqsConfig)
-    app.setDefaultProperties(ImmutableMap.of("sqs.port", sqsPort))
+    app.setDefaultProperties(["sqs.port": sqsPort]))
     server = app.run()
   }
 
@@ -178,4 +178,3 @@ class SqsCamelTest extends AgentTestRunner {
     }
   }
 }
-
