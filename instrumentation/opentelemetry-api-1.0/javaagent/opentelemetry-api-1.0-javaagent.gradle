@@ -21,8 +21,6 @@ dependencies {
   // the agent (as those references will later be shaded)
   compileOnly project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
 
-  testImplementation deps.guava
-
   // using OpenTelemetry SDK to make sure that instrumentation doesn't cause
   // OpenTelemetrySdk.getTracerProvider() to throw ClassCastException
   testImplementation deps.opentelemetrySdk

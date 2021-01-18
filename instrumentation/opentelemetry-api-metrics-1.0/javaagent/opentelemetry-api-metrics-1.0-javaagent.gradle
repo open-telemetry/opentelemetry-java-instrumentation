@@ -22,5 +22,6 @@ dependencies {
   compileOnly project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
   compileOnly deps.opentelemetryApiMetrics
 
+  testImplementation deps.guava
   testImplementation deps.opentelemetrySdkMetrics
 }
