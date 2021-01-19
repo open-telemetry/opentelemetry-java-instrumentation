@@ -7,27 +7,30 @@ package io.opentelemetry.javaagent.testing.exporter;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.metrics.GlobalMetricsProvider;
-import io.opentelemetry.javaagent.spi.TracerCustomizer;
+import io.opentelemetry.sdk.autoconfigure.spi.SdkTracerProviderConfigurer;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
-import io.opentelemetry.sdk.trace.SdkTracerManagement;
+import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import java.util.Collections;
 
-@AutoService(TracerCustomizer.class)
-public class AgentTestingSdkCustomizer implements TracerCustomizer {
+@AutoService(SdkTracerProviderConfigurer.class)
+public class AgentTestingSdkCustomizer implements SdkTracerProviderConfigurer {
 
   static final AgentTestingSpanProcessor spanProcessor =
       new AgentTestingSpanProcessor(
-          SimpleSpanProcessor.builder(AgentTestingExporterFactory.spanExporter).build());
+          SimpleSpanProcessor.create(AgentTestingExporterFactory.spanExporter));
 
   static void reset() {
     spanProcessor.forceFlushCalled = false;
   }
 
   @Override
-  public void configure(SdkTracerManagement tracerManagement) {
-    tracerManagement.addSpanProcessor(spanProcessor);
+  public void configure(SdkTracerProviderBuilder tracerProviderBuilder) {
+    tracerProviderBuilder.addSpanProcessor(spanProcessor);
+
+    // Until metrics story settles down there is no SPI for it, we rely on the fact that metrics is
+    // already set up when tracing configuration begins.
     IntervalMetricReader.builder()
         .setExportIntervalMillis(100)
         .setMetricExporter(AgentTestingExporterFactory.metricExporter)

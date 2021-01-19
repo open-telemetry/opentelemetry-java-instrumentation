@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
@@ -34,6 +35,9 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
       copySystemProperties();
 
       OpenTelemetrySdk sdk = OpenTelemetrySdkAutoConfiguration.initialize();
+      // TODO(anuraaga): Remove this workdaround after autoconfiguration is fixed to actually
+      // register the global.
+      GlobalOpenTelemetry.set(sdk);
       OpenTelemetrySdkAccess.internalSetForceFlush(
           (timeout, unit) -> sdk.getTracerManagement().forceFlush().join(timeout, unit));
     } else {

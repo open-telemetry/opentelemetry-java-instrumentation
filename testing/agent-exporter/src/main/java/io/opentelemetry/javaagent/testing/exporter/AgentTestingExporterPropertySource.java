@@ -7,13 +7,16 @@ package io.opentelemetry.javaagent.testing.exporter;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.spi.config.PropertySource;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 @AutoService(PropertySource.class)
 public class AgentTestingExporterPropertySource implements PropertySource {
   @Override
   public Map<String, String> getProperties() {
-    return Collections.singletonMap("otel.exporter", "");
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.trace.exporter", "");
+    properties.put("otel.metrics.exporter", "");
+    return properties;
   }
 }

@@ -20,7 +20,10 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
 
   @Override
   protected Map<String, String> getExtraEnv() {
-    return ["OTEL_CONFIG_SAMPLER_PROBABILITY": String.valueOf(SAMPLER_PROBABILITY)]
+    return [
+      "OTEL_TRACE_SAMPLER": String.valueOf("parentbased_traceidratio"),
+      "OTEL_TRACE_SAMPLER_ARG": String.valueOf(SAMPLER_PROBABILITY),
+    ]
   }
 
   def "spring boot with probability sampling enabled on JDK #jdk"(int jdk) {

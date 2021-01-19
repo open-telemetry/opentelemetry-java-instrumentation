@@ -8,6 +8,7 @@ dependencies {
   compileOnly(project(':javaagent-spi'))
   compileOnly(deps.bytebuddy)
   compileOnly(deps.opentelemetrySdk)
+  compileOnly(deps.opentelemetrySdkAutoconfigure)
   compileOnly(deps.slf4j)
 
   annotationProcessor deps.autoservice
