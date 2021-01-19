@@ -22,6 +22,7 @@ dependencies {
   implementation deps.opentelemetryApiMetrics
   implementation deps.opentelemetryContext
   implementation deps.opentelemetryJaeger
+  implementation deps.opentelemetryLogging
   implementation deps.opentelemetryOtlp
   implementation deps.opentelemetryOtlpMetrics
   implementation deps.opentelemetryPrometheus
