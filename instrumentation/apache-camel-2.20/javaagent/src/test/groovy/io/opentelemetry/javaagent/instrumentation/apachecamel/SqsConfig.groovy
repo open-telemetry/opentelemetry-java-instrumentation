@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test
+package io.opentelemetry.javaagent.instrumentation.apachecamel
 
 
 import com.amazonaws.services.sqs.AmazonSQSAsync
@@ -25,7 +25,7 @@ class SqsConfig {
 
       @Override
       void configure() throws Exception {
-        from("aws-sqs://sqsCamelTest?amazonSQSClient=#sqsClient&messageAttributeNames=traceparent")
+        from("aws-sqs://sqsCamelTest?amazonSQSClient=#sqsClient")
           .log(LoggingLevel.INFO, "test", "RECEIVER got body : \${body}")
           .log(LoggingLevel.INFO, "test", "RECEIVER got headers : \${headers}")
       }

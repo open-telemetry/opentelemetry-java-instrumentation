@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test
+package io.opentelemetry.javaagent.instrumentation.apachecamel
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
@@ -92,7 +92,7 @@ class SqsCamelTest extends AgentTestRunner {
           kind CONSUMER
           childOf span(1)
           attributes {
-            "apache-camel.uri" "aws-sqs://sqsCamelTest?amazonSQSClient=%23sqsClient&messageAttributeNames=traceparent"
+            "apache-camel.uri" "aws-sqs://sqsCamelTest?amazonSQSClient=%23sqsClient"
             "messaging.destination" "sqsCamelTest"
             "messaging.message_id" String
           }

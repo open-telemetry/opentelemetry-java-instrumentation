@@ -25,7 +25,7 @@ import java.io.InputStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-class ApiGatewayProxyRequestTest {
+public class ApiGatewayProxyRequestTest {
 
   @AfterEach
   void resetOpenTelemetry() {

@@ -23,11 +23,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.MessageAttributeNamesFactory.withTextMapPropagatorFields;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
+import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
+import org.apache.camel.component.aws.sqs.SqsEndpoint;
 import org.apache.camel.support.RoutePolicySupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,5 +89,17 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     } catch (Throwable t) {
       LOG.warn("Failed to capture tracing data", t);
     }
+  }
+
+  public void onInit(Route route) {
+    Endpoint endpoint = route.getEndpoint();
+    if (endpoint instanceof SqsEndpoint) {
+      initializeSqsEndpoint((SqsEndpoint) endpoint);
+    }
+  }
+
+  private void initializeSqsEndpoint(SqsEndpoint sqsEndpoint) {
+    String attributeNames = withTextMapPropagatorFields(sqsEndpoint);
+    sqsEndpoint.getConfiguration().setMessageAttributeNames(attributeNames);
   }
 }
