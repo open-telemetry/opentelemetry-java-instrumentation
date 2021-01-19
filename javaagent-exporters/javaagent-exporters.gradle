@@ -77,3 +77,16 @@ shadowJar {
   relocate "io.opentelemetry.extension.kotlin", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.kotlin"
   relocate "io.opentelemetry.extension.trace.propagation", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.trace.propagation"
 }
+
+// We can't apply boms globally to all projects because instrumentation needs fine-grained control
+// of versions. For now we just add to exporters which get the most benefit.
+subprojects {
+  dependencies {
+    configurations.all {
+      // Kotlin compiler classpaths don't support BOM nor need it.
+      if (it.name.endsWith('Classpath') && !it.name.startsWith('kotlin')) {
+        add(it.name, enforcedPlatform("io.grpc:grpc-bom:1.35.0"))
+      }
+    }
+  }
+}
