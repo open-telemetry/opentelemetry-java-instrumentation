@@ -44,7 +44,6 @@ ext {
     opentelemetrySdkAutoconfigure: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-autoconfigure', version: versions.opentelemetry),
     opentelemetrySdkMetrics      : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics', version: versions.opentelemetryAlpha),
     opentelemetryJaeger          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-jaeger', version: versions.opentelemetry),
-    opentelemetryJaegerThrift    : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-jaeger-thrift', version: versions.opentelemetry),
     opentelemetryOtlp            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp', version: versions.opentelemetry),
     opentelemetryOtlpMetrics     : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp-metrics', version: versions.opentelemetryAlpha),
     opentelemetryZipkin          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-zipkin', version: versions.opentelemetry),
