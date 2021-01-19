@@ -8,6 +8,7 @@ import static Jms2Test.producerSpan
 
 import com.google.common.io.Files
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Session
@@ -101,7 +102,9 @@ class SpringTemplateJms2Test extends AgentTestRunner {
   def "send and receive message generates spans"() {
     setup:
     AtomicReference<String> msgId = new AtomicReference<>()
+    CountDownLatch countDownLatch = new CountDownLatch(1)
     Thread.start {
+      countDownLatch.countDown()
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
       msgId.set(msg.getJMSMessageID())
@@ -111,6 +114,8 @@ class SpringTemplateJms2Test extends AgentTestRunner {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
     }
+    // wait for thread to start, we expect the first span to be from receive
+    countDownLatch.await()
     TextMessage receivedMessage = template.sendAndReceive(destination) {
       session -> template.getMessageConverter().toMessage(messageText, session)
     }
