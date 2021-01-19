@@ -11,7 +11,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static org.junit.Assume.assumeTrue
 
-import com.google.common.io.Files
+import java.nio.file.Files
 import javax.servlet.Servlet
 import javax.servlet.ServletException
 import org.apache.catalina.AccessLog
@@ -47,7 +47,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
   Tomcat startServer(int port) {
     def tomcatServer = new Tomcat()
 
-    def baseDir = Files.createTempDir()
+    def baseDir = Files.createTempDirectory("tomcat").toFile()
     baseDir.deleteOnExit()
     tomcatServer.setBaseDir(baseDir.getAbsolutePath())
 

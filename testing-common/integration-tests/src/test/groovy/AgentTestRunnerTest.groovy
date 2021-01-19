@@ -21,7 +21,7 @@ class AgentTestRunnerTest extends AgentTestRunner {
   def "classpath setup"() {
     setup:
     final List<String> bootstrapClassesIncorrectlyLoaded = []
-    for (ClassPath.ClassInfo info : ClasspathUtils.getTestClasspath().getAllClasses()) {
+    for (ClassPath.ClassInfo info : getTestClasspath().getAllClasses()) {
       for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
         if (info.getName().startsWith(Constants.BOOTSTRAP_PACKAGE_PREFIXES[i])) {
           Class<?> bootstrapClass = Class.forName(info.getName())
@@ -111,6 +111,20 @@ class AgentTestRunnerTest extends AgentTestRunner {
           childOf span(0)
         }
       }
+    }
+  }
+
+  private static ClassPath getTestClasspath() {
+    ClassLoader testClassLoader = ClasspathUtils.getClassLoader()
+    if (!(testClassLoader instanceof URLClassLoader)) {
+      // java9's system loader does not extend URLClassLoader
+      // which breaks Guava ClassPath lookup
+      testClassLoader = ClasspathUtils.buildJavaClassPathClassLoader()
+    }
+    try {
+      return ClassPath.from(testClassLoader)
+    } catch (IOException e) {
+      throw new RuntimeException(e)
     }
   }
 }

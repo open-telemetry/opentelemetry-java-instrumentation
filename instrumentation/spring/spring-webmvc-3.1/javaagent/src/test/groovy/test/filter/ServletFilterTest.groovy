@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-import com.google.common.collect.ImmutableMap
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -24,7 +23,7 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
   @Override
   ConfigurableApplicationContext startServer(int port) {
     def app = new SpringApplication(FilteredAppConfig, SecurityConfig)
-    app.setDefaultProperties(ImmutableMap.of("server.port", port, "server.error.include-message", "always"))
+    app.setDefaultProperties(["server.port": port, "server.error.include-message": "always"])
     def context = app.run()
     return context
   }

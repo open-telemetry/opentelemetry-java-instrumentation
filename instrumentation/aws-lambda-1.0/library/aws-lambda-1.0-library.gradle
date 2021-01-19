@@ -37,6 +37,7 @@ dependencies {
   testLibrary group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.0'
 
   testImplementation deps.opentelemetryTraceProps
+  testImplementation deps.guava
 
   testImplementation project(':instrumentation:aws-lambda-1.0:testing')
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'

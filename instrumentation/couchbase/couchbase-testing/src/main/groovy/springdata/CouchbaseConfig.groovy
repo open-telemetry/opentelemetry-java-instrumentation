@@ -5,7 +5,7 @@
 
 package springdata
 
-import static com.google.common.base.Preconditions.checkNotNull
+import static java.util.Objects.requireNonNull
 
 import com.couchbase.client.java.cluster.BucketSettings
 import com.couchbase.client.java.env.CouchbaseEnvironment
@@ -25,7 +25,7 @@ class CouchbaseConfig extends AbstractCouchbaseConfiguration {
 
   @Override
   protected CouchbaseEnvironment getEnvironment() {
-    return checkNotNull(environment)
+    return requireNonNull(environment)
   }
 
   @Override

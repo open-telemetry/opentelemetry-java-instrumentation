@@ -11,7 +11,7 @@ subprojects {
                 opentelemetry            : "0.13.1",
                 opentelemetryJavaagent   : "0.13.0",
                 bytebuddy                : "1.10.10",
-                guava                    : "20.0"
+                guava                    : "30.1-jre"
 
         ]
         deps = [

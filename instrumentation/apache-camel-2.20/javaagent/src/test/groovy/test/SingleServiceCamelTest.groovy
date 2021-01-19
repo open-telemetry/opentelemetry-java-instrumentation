@@ -7,11 +7,10 @@ package test
 
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
-import com.google.common.collect.ImmutableMap
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -41,7 +40,7 @@ class SingleServiceCamelTest extends AgentTestRunner {
     port = PortUtils.randomOpenPort()
     address = new URI("http://localhost:$port/")
     def app = new SpringApplication(SingleServiceConfig)
-    app.setDefaultProperties(ImmutableMap.of("camelService.port", port))
+    app.setDefaultProperties(["camelService.port": port])
     server = app.run()
     println getClass().name + " http server started at: http://localhost:$port/"
   }

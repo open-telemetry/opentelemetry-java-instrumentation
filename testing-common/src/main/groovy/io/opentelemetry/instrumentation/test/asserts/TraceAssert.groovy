@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.test.asserts
 
 import static SpanAssert.assertSpan
 
-import com.google.common.base.Stopwatch
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.instrumentation.test.InMemoryExporter
@@ -28,8 +27,8 @@ class TraceAssert {
                           @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.TraceAssert'])
                           @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def spans = getTrace(spanSupplier, traceId)
-    Stopwatch stopwatch = Stopwatch.createStarted()
-    while (spans.size() < expectedSize && stopwatch.elapsed(TimeUnit.SECONDS) < 10) {
+    def startTime = System.nanoTime()
+    while (spans.size() < expectedSize && elapsedSeconds(startTime) < 10) {
       Thread.sleep(10)
       spans = getTrace(spanSupplier, traceId)
     }
@@ -40,6 +39,10 @@ class TraceAssert {
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(asserter)
     asserter.assertSpansAllVerified()
+  }
+
+  private static long elapsedSeconds(long startTime) {
+    TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime)
   }
 
   List<SpanData> getSpans() {
