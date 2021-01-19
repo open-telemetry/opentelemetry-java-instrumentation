@@ -90,3 +90,13 @@ subprojects {
     }
   }
 }
+
+// Need to apply here too for tests.
+dependencies {
+  configurations.all {
+    // Kotlin compiler classpaths don't support BOM nor need it.
+    if (it.name.endsWith('Classpath') && !it.name.startsWith('kotlin')) {
+      add(it.name, enforcedPlatform("io.grpc:grpc-bom:1.35.0"))
+    }
+  }
+}
