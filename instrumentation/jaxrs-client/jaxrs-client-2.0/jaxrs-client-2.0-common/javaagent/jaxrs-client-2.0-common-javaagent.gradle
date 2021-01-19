@@ -44,8 +44,8 @@ dependencies {
 
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
 
-  latestDepTestLibrary group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '[2+, 3)'
-  latestDepTestLibrary group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '[2+, 3)'
+  latestDepTestLibrary group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.+'
+  latestDepTestLibrary group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.+'
   latestDepTestLibrary group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.2.6'
   latestDepTestLibrary group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.26.Final'
 }
