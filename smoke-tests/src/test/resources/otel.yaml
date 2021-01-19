@@ -12,8 +12,6 @@ receivers:
   zipkin:
   jaeger:
     protocols:
-      thrift_http:
-        endpoint: 0.0.0.0:14268
       grpc:
 
 processors:
