@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.JaxRsClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -71,10 +69,7 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
         @Advice.FieldValue("requestContext") ClientRequest context,
         @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
-        Object prop = context.getProperty(ClientTracingFilter.CONTEXT_PROPERTY_NAME);
-        if (prop instanceof Context) {
-          tracer().endExceptionally((Context) prop, throwable);
-        }
+        JerseyClientUtil.handleException(context, throwable);
       }
     }
   }
@@ -85,9 +80,7 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
     public static void handleError(
         @Advice.FieldValue("requestContext") ClientRequest context,
         @Advice.Return(readOnly = false) Future<?> future) {
-      if (!(future instanceof WrappedFuture)) {
-        future = new WrappedFuture<>(future, context);
-      }
+      future = JerseyClientUtil.addErrorReporting(context, future);
     }
   }
 }
