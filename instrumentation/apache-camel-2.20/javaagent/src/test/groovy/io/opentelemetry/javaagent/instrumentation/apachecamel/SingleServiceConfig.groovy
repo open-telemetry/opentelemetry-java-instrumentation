@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test
+package io.opentelemetry.javaagent.instrumentation.apachecamel
 
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
