@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-class Myfaces22Test extends BaseJsfTest {
+class Mojarra2LatestTest extends BaseJsfTest {
   @Override
   String getJsfVersion() {
-    "2.2"
+    "2"
   }
 }

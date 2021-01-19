@@ -1,4 +1,5 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -10,18 +11,33 @@ muzzle {
   }
 }
 
+testSets {
+  myfaces12Test
+  myfaces2Test
+  latestDepTest {
+    extendsFrom myfaces2Test
+    dirName = 'myfaces2LatestTest'
+  }
+}
+
+test.dependsOn myfaces12Test, myfaces2Test
+
 dependencies {
-  library group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '2.3.7'
-  library group: 'jakarta.el', name: 'jakarta.el-api', version: '3.0.3'
+  compileOnly group: 'org.apache.myfaces.core', name: 'myfaces-api', version: '1.2.12'
+  compileOnly group: 'javax.el', name: 'el-api', version: '1.0'
 
   implementation project(':instrumentation:jsf:jsf-common:library')
 
   testImplementation project(':instrumentation:jsf:jsf-testing-common')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
 
-  testImplementation "javax.xml.bind:jaxb-api:2.2.11"
-  testImplementation "com.sun.xml.bind:jaxb-core:2.2.11"
-  testImplementation "com.sun.xml.bind:jaxb-impl:2.2.11"
+  myfaces12TestImplementation group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '1.2.12'
+  myfaces12TestImplementation group: 'com.sun.facelets', name: 'jsf-facelets', version: '1.1.14'
 
-  latestDepTestLibrary group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '[2+, 3)'
+  myfaces2TestImplementation group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '2.3.2'
+  myfaces2TestImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.11'
+  myfaces2TestImplementation group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.2.11'
+  myfaces2TestImplementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.2.11'
+
+  latestDepTestImplementation group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '2+'
 }

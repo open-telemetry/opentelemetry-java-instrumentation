@@ -1,4 +1,5 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -49,13 +50,30 @@ muzzle {
   }
 }
 
+testSets {
+  mojarra12Test
+  mojarra2Test
+  latestDepTest {
+    extendsFrom mojarra2Test
+    dirName = 'mojarra2LatestTest'
+  }
+}
+
+test.dependsOn mojarra12Test, mojarra2Test
+
 dependencies {
-  library group: 'org.glassfish', name: 'jakarta.faces', version: '2.3.12'
+  compileOnly group: 'javax.faces', name: 'jsf-api', version: '1.2'
 
   implementation project(':instrumentation:jsf:jsf-common:library')
 
   testImplementation project(':instrumentation:jsf:jsf-testing-common')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
 
-  latestDepTestLibrary group: 'org.glassfish', name: 'jakarta.faces', version: '[2+, 3)'
+  mojarra12TestImplementation group: 'javax.faces', name: 'jsf-impl', version: '1.2-20'
+  mojarra12TestImplementation group: 'javax.faces', name: 'jsf-api', version: '1.2'
+  mojarra12TestImplementation group: 'com.sun.facelets', name: 'jsf-facelets', version: '1.1.14'
+
+  mojarra2TestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2.3.12'
+
+  latestDepTestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2+'
 }
