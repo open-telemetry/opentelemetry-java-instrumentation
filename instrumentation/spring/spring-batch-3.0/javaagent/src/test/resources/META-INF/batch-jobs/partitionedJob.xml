@@ -12,7 +12,7 @@
       <writer ref="jsr.TestItemWriter"/>
     </chunk>
     <partition>
-      <plan partitions="2">
+      <plan partitions="2" threads="2">
         <properties partition="0">
           <property name="start" value="0"/>
           <property name="end" value="8"/>

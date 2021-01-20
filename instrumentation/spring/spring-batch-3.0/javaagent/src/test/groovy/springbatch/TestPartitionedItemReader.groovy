@@ -14,21 +14,23 @@ import org.springframework.batch.item.ParseException
 import org.springframework.batch.item.UnexpectedInputException
 
 class TestPartitionedItemReader implements ItemReader<String>, ItemStream {
-  int start
-  int end
+  ThreadLocal<Integer> start = new ThreadLocal<>()
+  ThreadLocal<Integer> end = new ThreadLocal<>()
 
   @Override
   String read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
-    if (start >= end) {
+    if (start.get() >= end.get()) {
       return null
     }
-    return String.valueOf(start++)
+    def value = start.get()
+    start.set(value + 1)
+    return String.valueOf(value)
   }
 
   @Override
   void open(ExecutionContext executionContext) throws ItemStreamException {
-    start = executionContext.getInt("start")
-    end = executionContext.getInt("end")
+    start.set(executionContext.getInt("start"))
+    end.set(executionContext.getInt("end"))
   }
 
   @Override
