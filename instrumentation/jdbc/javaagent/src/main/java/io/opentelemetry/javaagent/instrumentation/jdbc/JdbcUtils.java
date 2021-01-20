@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
-import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.ParseException;
-import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlNormalizer;
-import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlStatementInfoExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.ParseException;
+import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.SqlSanitizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.SqlStatementInfoExtractor;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Statement;
@@ -75,7 +75,7 @@ public abstract class JdbcUtils {
       return sql;
     }
     try {
-      return SqlNormalizer.normalize(sql);
+      return SqlSanitizer.sanitize(sql);
     } catch (Exception e) {
       log.debug("Could not normalize sql", e);
       return null;
