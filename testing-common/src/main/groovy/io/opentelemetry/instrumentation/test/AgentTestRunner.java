@@ -38,8 +38,6 @@ import spock.lang.Specification;
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 public abstract class AgentTestRunner extends Specification {
 
-  private static final org.slf4j.Logger log = LoggerFactory.getLogger(AgentTestRunner.class);
-
   static {
     // always run with the thread propagation debugger to help track down sporadic test failures
     System.setProperty("otel.threadPropagationDebugger", "true");
@@ -100,31 +98,6 @@ public abstract class AgentTestRunner extends Specification {
     assert !Span.current().getSpanContext().isValid()
         : "Span is active before test has started: " + Span.current();
     AgentTestingExporterAccess.reset();
-  }
-
-  /**
-   * This is used by setupSpec() methods to auto-retry setup that depends on finding and then using
-   * an available free port, because that kind of setup can fail sporadically if the available port
-   * gets re-used between when we find the available port and when we use it.
-   *
-   * @param closure the groovy closure to run with retry
-   */
-  public static void withRetryOnAddressAlreadyInUse(Closure<?> closure) {
-    withRetryOnAddressAlreadyInUse(closure, 3);
-  }
-
-  private static void withRetryOnAddressAlreadyInUse(Closure<?> closure, int numRetries) {
-    try {
-      closure.call();
-    } catch (Throwable t) {
-      // typically this is "java.net.BindException: Address already in use", but also can be
-      // "io.netty.channel.unix.Errors$NativeIoException: bind() failed: Address already in use"
-      if (numRetries == 0 || !t.getMessage().contains("Address already in use")) {
-        throw t;
-      }
-      log.debug("retrying due to bind exception: {}", t.getMessage(), t);
-      withRetryOnAddressAlreadyInUse(closure, numRetries - 1);
-    }
   }
 
   @AfterClass

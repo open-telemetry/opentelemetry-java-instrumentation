@@ -8,6 +8,7 @@ package test
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -19,7 +20,7 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-class SingleServiceCamelTest extends AgentTestRunner {
+class SingleServiceCamelTest extends AgentTestRunner implements RetryOnAddressAlreadyInUseTrait {
 
   @Shared
   ConfigurableApplicationContext server
