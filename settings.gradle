@@ -211,14 +211,6 @@ include ':instrumentation:vertx-reactive-3.5:javaagent'
 include ':instrumentation-core:reactor-3.1'
 include ':instrumentation-core:servlet-2.2'
 
-// exporter adapters
-include ":javaagent-exporters"
-include ":javaagent-exporters:jaeger"
-include ":javaagent-exporters:logging"
-include ":javaagent-exporters:otlp"
-include ":javaagent-exporters:zipkin"
-include ":javaagent-exporters:prometheus"
-
 // benchmark
 include ':benchmark'
 include ':benchmark-integration'

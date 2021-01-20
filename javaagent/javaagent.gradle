@@ -42,15 +42,8 @@ CopySpec isolateSpec(Collection<Project> projectsWithShadowJar) {
 //Includes everything needed for OOTB experience
 shadowJar {
   dependsOn ':instrumentation:shadowJar'
-  dependsOn ':javaagent-exporters:shadowJar'
-  def projectsWithShadowJar = [project(':javaagent-exporters'), project(':instrumentation')]
+  def projectsWithShadowJar = [project(':instrumentation')]
   with isolateSpec(projectsWithShadowJar)
-
-  // Exclude class files pulled in from the javaagent-exporters project that are also pulled in from the
-  // instrumentation project.
-  // Removing duplicates reduces jar size and can prevent issues when downstream projects repackage
-  // the jar.
-  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 //Includes instrumentations, but not exporters

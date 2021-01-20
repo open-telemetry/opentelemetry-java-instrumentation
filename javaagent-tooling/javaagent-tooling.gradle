@@ -22,6 +22,7 @@ dependencies {
   implementation deps.opentelemetryApiMetrics
   implementation deps.opentelemetryContext
   implementation deps.opentelemetrySdk
+  implementation deps.opentelemetrySdkAutoconfigure
   implementation deps.opentelemetrySdkMetrics
   implementation deps.opentelemetryKotlin
   implementation deps.opentelemetryTraceProps
@@ -30,12 +31,21 @@ dependencies {
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-common'
   }
 
+  implementation deps.opentelemetryJaeger
+  implementation deps.opentelemetryLogging
+  implementation deps.opentelemetryOtlp
+  implementation deps.opentelemetryOtlpMetrics
+  implementation deps.opentelemetryPrometheus
+  implementation deps.opentelemetryZipkin
+
   implementation group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.15'
   implementation deps.bytebuddy
   implementation deps.bytebuddyagent
   annotationProcessor deps.autoservice
   implementation deps.autoservice
   implementation deps.slf4j
+
+  implementation group: 'io.grpc', name: 'grpc-netty', version: '1.34.1'
 
   testImplementation project(':testing-common')
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'

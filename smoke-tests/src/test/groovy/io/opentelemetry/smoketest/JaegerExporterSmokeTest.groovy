@@ -21,7 +21,7 @@ class JaegerExporterSmokeTest extends SmokeTest {
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_EXPORTER"                : "jaeger",
+      "OTEL_TRACE_EXPORTER"          : "jaeger",
       "OTEL_EXPORTER_JAEGER_ENDPOINT": "collector:14250"
     ]
   }
