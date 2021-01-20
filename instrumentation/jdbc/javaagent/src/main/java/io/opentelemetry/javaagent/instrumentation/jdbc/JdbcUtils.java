@@ -69,7 +69,7 @@ public abstract class JdbcUtils {
     return connection;
   }
 
-  /** Returns null if the sql could not be normalized for any reason. */
+  /** Returns null if the sql could not be sanitized for any reason. */
   public static String sanitizeSql(String sql) {
     if (!NORMALIZATION_ENABLED) {
       return sql;
@@ -77,7 +77,7 @@ public abstract class JdbcUtils {
     try {
       return SqlSanitizer.sanitize(sql);
     } catch (Exception e) {
-      log.debug("Could not normalize sql", e);
+      log.debug("Could not sanitize sql", e);
       return null;
     }
   }
