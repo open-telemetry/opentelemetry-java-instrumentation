@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.db.normalizer
+package io.opentelemetry.javaagent.instrumentation.api.db.sanitizer
 
 import spock.lang.Specification
 import spock.lang.Timeout
 
 @Timeout(20)
-class SqlNormalizerTest extends Specification {
+class SqlSanitizerTest extends Specification {
 
   def "normalize #originalSql"() {
     setup:
-    def actualNormalized = SqlNormalizer.normalize(originalSql)
+    def actualNormalized = SqlSanitizer.sanitize(originalSql)
 
     expect:
     actualNormalized == normalizedSql
@@ -87,7 +87,7 @@ class SqlNormalizerTest extends Specification {
     setup:
     String s = "'"
     for (int i = 0; i < 10000; i++) {
-      assert SqlNormalizer.normalize(s) != null
+      assert SqlSanitizer.sanitize(s) != null
       s += "'"
     }
   }
@@ -98,7 +98,7 @@ class SqlNormalizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i)
     }
-    assert "?" == SqlNormalizer.normalize(s)
+    assert "?" == SqlSanitizer.sanitize(s)
   }
 
   def "very long numbers at end of table name don't cause problem"() {
@@ -107,7 +107,7 @@ class SqlNormalizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i)
     }
-    assert s.substring(0, SqlNormalizer.LIMIT) == SqlNormalizer.normalize(s)
+    assert s.substring(0, SqlSanitizer.LIMIT) == SqlSanitizer.sanitize(s)
   }
 
   def "test 32k truncation"() {
@@ -116,9 +116,9 @@ class SqlNormalizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ")
     }
-    String normalized = SqlNormalizer.normalize(s.toString())
+    String normalized = SqlSanitizer.sanitize(s.toString())
     System.out.println(normalized.length())
-    assert normalized.length() <= SqlNormalizer.LIMIT
+    assert normalized.length() <= SqlSanitizer.LIMIT
     assert !normalized.contains("1234")
   }
 
@@ -130,7 +130,7 @@ class SqlNormalizerTest extends Specification {
       for (int c = 0; c < 1000; c++) {
         sb.append((char) r.nextInt((int) Character.MAX_VALUE))
       }
-      SqlNormalizer.normalize(sb.toString())
+      SqlSanitizer.sanitize(sb.toString())
     }
   }
 }
