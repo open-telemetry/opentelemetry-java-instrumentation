@@ -34,7 +34,7 @@ dependencies {
   testImplementation 'javax.xml.bind:jaxb-api:2.3.1'
 
   testImplementation deps.testcontainers
-  testCompile "org.testcontainers:localstack:1.15.0-rc2"
+  testImplementation "org.testcontainers:localstack:1.15.0-rc2"
 
   latestDepTestLibrary group: 'org.apache.camel', name: 'camel-core', version: '2.+'
 

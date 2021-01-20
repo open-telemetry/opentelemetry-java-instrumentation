@@ -9,7 +9,9 @@ minimumInstructionCoverage = 0
 
 configurations {
   // classpath used by the instrumentation muzzle plugin
-  instrumentationMuzzle
+  instrumentationMuzzle {
+    extendsFrom implementation
+  }
 }
 
 dependencies {
@@ -52,7 +54,6 @@ dependencies {
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
 
   instrumentationMuzzle sourceSets.main.output
-  instrumentationMuzzle configurations.implementation
 }
 
 test {
