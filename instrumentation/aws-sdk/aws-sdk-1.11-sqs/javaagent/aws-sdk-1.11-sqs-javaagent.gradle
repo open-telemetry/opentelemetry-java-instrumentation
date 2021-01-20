@@ -1,0 +1,22 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+// compiling against 1.11.0, but instrumentation should work against 1.10.33 - keep compat with aws-sdk-core
+muzzle {
+  pass {
+    group = "com.amazonaws"
+    module = "aws-java-sdk-sqs"
+    versions = "[1.10.33,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
+  implementation project(":instrumentation:aws-sdk:aws-sdk-1.11:library")
+
+  // Include core instrumentation for testing because it is a dependency for aws-sdk-sqs.
+  testInstrumentation project(':instrumentation:aws-sdk:aws-sdk-1.11-core:javaagent')
+
+  testImplementation deps.testcontainers
+  testCompile "org.testcontainers:localstack:1.15.1"
+}

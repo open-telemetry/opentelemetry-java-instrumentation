@@ -83,7 +83,7 @@ ext {
     ],
     groovy                       : "org.codehaus.groovy:groovy-all:${versions.groovy}",
     systemLambda                 : "com.github.stefanbirkner:system-lambda:${versions.systemLambda}",
-    testcontainers               : "org.testcontainers:testcontainers:1.15.0-rc2",
+    testcontainers               : "org.testcontainers:testcontainers:1.15.1",
     testLogging                  : [
       dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: versions.logback),
       dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: versions.slf4j),
