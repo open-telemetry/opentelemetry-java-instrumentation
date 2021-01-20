@@ -432,6 +432,7 @@ Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/o
 
 - [John Watson](https://github.com/jkwatson), Splunk
 - [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Splunk
+- [Pavol Loffay](https://github.com/pavolloffay), Traceable.ai
 
 Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
 
