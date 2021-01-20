@@ -27,7 +27,7 @@ dependencies {
 }
 
 test {
-  dependsOn ':javaagent:shadowJar'
+  inputs.files(tasks.findByPath(':javaagent:shadowJar').outputs.files.singleFile)
   maxParallelForks = 2
 
   doFirst {

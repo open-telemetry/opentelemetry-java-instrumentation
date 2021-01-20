@@ -25,7 +25,7 @@ dependencies {
   // in public API.
   library group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '2.2.1'
 
-  compile(
+  implementation(
     'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
     'com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10',
     'commons-io:commons-io:2.2')
