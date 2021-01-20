@@ -49,7 +49,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(
         @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
-      SqlStatementInfo normalizedSql = JdbcUtils.normalizeAndExtractInfo(sql);
+      SqlStatementInfo normalizedSql = JdbcUtils.sanitizeAndExtractInfo(sql);
       if (normalizedSql != null) {
         JdbcMaps.preparedStatements.put(statement, normalizedSql);
       }

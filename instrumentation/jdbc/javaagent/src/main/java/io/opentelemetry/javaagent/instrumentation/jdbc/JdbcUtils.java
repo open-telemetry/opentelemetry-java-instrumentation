@@ -70,7 +70,7 @@ public abstract class JdbcUtils {
   }
 
   /** Returns null if the sql could not be normalized for any reason. */
-  public static String normalizeSql(String sql) {
+  public static String sanitizeSql(String sql) {
     if (!NORMALIZATION_ENABLED) {
       return sql;
     }
@@ -82,9 +82,9 @@ public abstract class JdbcUtils {
     }
   }
 
-  public static SqlStatementInfo normalizeAndExtractInfo(String sql) {
+  public static SqlStatementInfo sanitizeAndExtractInfo(String sql) {
     try {
-      return SqlStatementInfoExtractor.extract(normalizeSql(sql));
+      return SqlStatementInfoExtractor.extract(sanitizeSql(sql));
     } catch (ParseException e) {
       log.debug("Could not extract sql info", e);
       return new SqlStatementInfo(null, null, null);
