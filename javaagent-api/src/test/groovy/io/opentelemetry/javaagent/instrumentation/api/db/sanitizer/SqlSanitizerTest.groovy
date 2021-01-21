@@ -116,10 +116,10 @@ class SqlSanitizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ")
     }
-    String normalized = SqlSanitizer.sanitize(s.toString())
-    System.out.println(normalized.length())
-    assert normalized.length() <= SqlSanitizer.LIMIT
-    assert !normalized.contains("1234")
+    String sanitized = SqlSanitizer.sanitize(s.toString())
+    System.out.println(sanitized.length())
+    assert sanitized.length() <= SqlSanitizer.LIMIT
+    assert !sanitized.contains("1234")
   }
 
   def "random bytes don't cause exceptions or timeouts"() {
