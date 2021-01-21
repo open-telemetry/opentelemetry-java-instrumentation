@@ -4,7 +4,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.data.LinkData;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
 import java.util.List;
@@ -15,7 +14,7 @@ import java.util.List;
  * See <a href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk.md#sampling">
  * OpenTelemetry Specification</a> for more information about span sampling.
  *
- * @see DemoTracerCustomizer
+ * @see DemoSdkTracerProviderConfigurer
  */
 public class DemoSampler implements Sampler {
   @Override
