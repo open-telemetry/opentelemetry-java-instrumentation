@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.liberty;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,11 +22,7 @@ public class LibertyHttpServerTracer extends Servlet3HttpServerTracer {
     // span name will be updated a bit later when calling request.getServletPath() works
     // see LibertyUpdateSpanAdvice
     Context context = startSpan(request, request, request, "HTTP " + request.getMethod());
-    String contextPath = request.getContextPath();
-    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
-      context = context.with(ServletContextPath.CONTEXT_KEY, contextPath);
-    }
-    return context;
+    return addContextPathContext(context, request);
   }
 
   @Override

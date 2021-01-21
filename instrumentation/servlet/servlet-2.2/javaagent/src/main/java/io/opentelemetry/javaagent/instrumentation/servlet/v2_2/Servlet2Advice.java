@@ -37,7 +37,7 @@ public class Servlet2Advice {
 
     Context serverContext = tracer().getServerContext(httpServletRequest);
     if (serverContext != null) {
-      tracer().updateServerSpanNameOnce(serverContext, httpServletRequest);
+      tracer().updateServerSpan(serverContext, httpServletRequest);
       return;
     }
 
