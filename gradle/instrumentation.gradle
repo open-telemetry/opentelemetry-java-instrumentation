@@ -24,7 +24,12 @@ if (projectDir.name == 'javaagent') {
 }
 
 configurations {
-  byteBuddyRuntime {
+  toolingRuntime {
+    canBeConsumed = false
+    canBeResolved = true
+  }
+
+  bootstrapRuntime {
     canBeConsumed = false
     canBeResolved = true
   }
@@ -54,12 +59,14 @@ afterEvaluate {
 
     testImplementation deps.testcontainers
 
-    byteBuddyRuntime(project(path: ":javaagent-tooling", configuration: 'instrumentationMuzzle'))
+    toolingRuntime(project(path: ":javaagent-tooling", configuration: 'instrumentationMuzzle'))
+
+    bootstrapRuntime(project(path: ":javaagent-bootstrap", configuration: 'instrumentationMuzzle'))
   }
 
   def pluginName = 'io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin'
   new ByteBuddyPluginConfigurator(project, sourceSets.main, pluginName,
-    configurations.byteBuddyRuntime + configurations.runtimeClasspath
+    configurations.toolingRuntime + configurations.runtimeClasspath
   ).configure()
 }
 
