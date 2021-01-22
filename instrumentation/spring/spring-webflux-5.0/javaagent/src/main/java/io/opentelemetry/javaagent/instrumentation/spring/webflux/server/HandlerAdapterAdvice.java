@@ -53,7 +53,7 @@ public class HandlerAdapterAdvice {
 
     if (context != null) {
       Span serverSpan = BaseTracer.getCurrentServerSpan(context);
-      ;
+
       PathPattern bestPattern =
           exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (serverSpan != null && bestPattern != null) {
