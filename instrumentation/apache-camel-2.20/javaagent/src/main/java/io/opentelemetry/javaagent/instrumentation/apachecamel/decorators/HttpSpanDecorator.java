@@ -24,7 +24,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
