@@ -181,7 +181,7 @@ class MuzzlePlugin implements Plugin<Project> {
   private static ClassLoader createCompileDepsClassLoader(Project project) {
     List<URL> userUrls = new ArrayList<>()
     project.getLogger().info("Creating compile-time classpath for: " + project.getName())
-    for (File f : project.configurations.compileOnly.getFiles()) {
+    for (File f : project.configurations.compileClasspath.getFiles()) {
       project.getLogger().info('--' + f)
       userUrls.add(f.toURI().toURL())
     }
