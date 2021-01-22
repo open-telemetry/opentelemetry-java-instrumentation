@@ -82,6 +82,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
       // initializers would not be considered.
       // Using the specific handler key instead of the generic ChannelPipeline.class will help us
       // both to handle such cases and avoid adding our additional handlers in case of internal
+      // calls of `addLast` to other method overloads with a compatible signature.
       return CallDepthThreadLocalMap.incrementCallDepth(handler.getClass());
     }
 
@@ -91,7 +92,6 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) String name,
         @Advice.Argument(2) ChannelHandler handler) {
-      // calls of `addLast` to other method overloads with a compatible signature.
       if (callDepth > 0) {
         return;
       }
