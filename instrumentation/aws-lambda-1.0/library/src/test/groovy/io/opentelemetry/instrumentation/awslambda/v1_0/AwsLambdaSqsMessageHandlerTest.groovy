@@ -10,9 +10,9 @@ import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 class AwsLambdaSqsMessageHandlerTest extends InstrumentationSpecification implements InstrumentationTestTrait {
 
