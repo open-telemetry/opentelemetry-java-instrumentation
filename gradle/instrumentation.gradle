@@ -23,6 +23,13 @@ if (projectDir.name == 'javaagent') {
   archivesBaseName = projectDir.parentFile.name
 }
 
+configurations {
+  byteBuddyRuntime {
+    canBeConsumed = false
+    canBeResolved = true
+  }
+}
+
 afterEvaluate {
   dependencies {
     compileOnly project(':instrumentation-api')
@@ -46,11 +53,13 @@ afterEvaluate {
     testImplementation project(':utils:test-utils')
 
     testImplementation deps.testcontainers
+
+    byteBuddyRuntime(project(path: ":javaagent-tooling", configuration: 'instrumentationMuzzle'))
   }
 
   def pluginName = 'io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin'
   new ByteBuddyPluginConfigurator(project, sourceSets.main, pluginName,
-    project(':javaagent-tooling').configurations.instrumentationMuzzle + configurations.runtimeClasspath
+    configurations.byteBuddyRuntime + configurations.runtimeClasspath
   ).configure()
 }
 
