@@ -62,9 +62,8 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
       if (message == null) {
         // Do not create span when no message is received
         return;
-      } else {
-        destination = tracer().extractDestination(message, null);
       }
+      destination = tracer().extractDestination(message, null);
 
       Span span = tracer().startConsumerSpan(destination, "receive", message, startTime);
 
