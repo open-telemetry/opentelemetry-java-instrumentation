@@ -14,11 +14,10 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-import com.google.common.collect.ImmutableMap
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import okhttp3.FormBody
 import okhttp3.RequestBody
 import org.springframework.boot.SpringApplication
@@ -30,11 +29,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   ConfigurableApplicationContext startServer(int port) {
     def app = new SpringApplication(AppConfig, SecurityConfig, AuthServerConfig)
-    app.setDefaultProperties(ImmutableMap.of(
-      "server.port", port,
-      "server.context-path", getContextPath(),
-      "server.servlet.contextPath", getContextPath(),
-      "server.error.include-message", "always"))
+    app.setDefaultProperties([
+      "server.port"                 : port,
+      "server.context-path"         : getContextPath(),
+      "server.servlet.contextPath"  : getContextPath(),
+      "server.error.include-message": "always"])
     def context = app.run()
     return context
   }

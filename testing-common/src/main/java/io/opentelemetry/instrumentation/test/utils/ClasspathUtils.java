@@ -5,12 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.utils;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
-import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
-
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.reflect.ClassPath;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -20,13 +14,14 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 public class ClasspathUtils {
-  private static final ClassPath testClasspath = computeTestClasspath();
 
   public static byte[] convertToByteArray(InputStream resource) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -105,11 +100,6 @@ public class ClasspathUtils {
     return tmpJar.toURI().toURL();
   }
 
-  public static URL createJarWithClasses() {
-
-    return null;
-  }
-
   private static void addToJar(String resourceName, byte[] bytes, JarOutputStream jarOutputStream)
       throws IOException {
     JarEntry entry = new JarEntry(resourceName);
@@ -118,30 +108,12 @@ public class ClasspathUtils {
     jarOutputStream.closeEntry();
   }
 
-  public static ClassPath getTestClasspath() {
-    return testClasspath;
-  }
-
-  private static ClassPath computeTestClasspath() {
-    ClassLoader testClassLoader = ClasspathUtils.class.getClassLoader();
-    if (!(testClassLoader instanceof URLClassLoader)) {
-      // java9's system loader does not extend URLClassLoader
-      // which breaks Guava ClassPath lookup
-      testClassLoader = buildJavaClassPathClassLoader();
-    }
-    try {
-      return ClassPath.from(testClassLoader);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   /**
    * Parse JVM classpath and return ClassLoader containing all classpath entries. Inspired by Guava.
    */
-  private static ClassLoader buildJavaClassPathClassLoader() {
-    ImmutableList.Builder<URL> urls = ImmutableList.builder();
-    for (String entry : Splitter.on(PATH_SEPARATOR.value()).split(JAVA_CLASS_PATH.value())) {
+  public static ClassLoader buildJavaClassPathClassLoader() {
+    List<URL> urls = new ArrayList<>();
+    for (String entry : getClasspath()) {
       try {
         try {
           urls.add(new File(entry).toURI().toURL());
@@ -149,12 +121,15 @@ public class ClasspathUtils {
           urls.add(new URL("file", null, new File(entry).getAbsolutePath()));
         }
       } catch (MalformedURLException e) {
-        System.err.println(
-            String.format(
-                "Error injecting bootstrap jar: Malformed classpath entry: %s. %s", entry, e));
+        System.err.printf(
+            "Error injecting bootstrap jar: Malformed classpath entry: %s. %s%n", entry, e);
       }
     }
-    return new URLClassLoader(urls.build().toArray(new URL[0]), null);
+    return new URLClassLoader(urls.toArray(new URL[0]), null);
+  }
+
+  private static String[] getClasspath() {
+    return System.getProperty("java.class.path").split(System.getProperty("path.separator"));
   }
 
   // Moved this to a java class because groovy was adding a hard ref to classLoader

@@ -9,7 +9,7 @@ import java.util.Collection;
  * See <a href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk.md#span-exporter">
  * OpenTelemetry Specification</a> for more information about {@link SpanExporter}.
  *
- * @see DemoTracerCustomizer
+ * @see DemoSdkTracerProviderConfigurer
  */
 public class DemoSpanExporter implements SpanExporter {
   @Override

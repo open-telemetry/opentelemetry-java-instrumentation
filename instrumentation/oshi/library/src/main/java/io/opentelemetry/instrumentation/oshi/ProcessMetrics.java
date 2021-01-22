@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Labels;
+import io.opentelemetry.api.metrics.GlobalMetricsProvider;
 import io.opentelemetry.api.metrics.Meter;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
@@ -20,7 +20,7 @@ public class ProcessMetrics {
 
   /** Register observers for java runtime metrics. */
   public static void registerObservers() {
-    Meter meter = OpenTelemetry.getGlobalMeterProvider().get(ProcessMetrics.class.getName());
+    Meter meter = GlobalMetricsProvider.get().get(ProcessMetrics.class.getName());
     SystemInfo systemInfo = new SystemInfo();
     OperatingSystem osInfo = systemInfo.getOperatingSystem();
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());

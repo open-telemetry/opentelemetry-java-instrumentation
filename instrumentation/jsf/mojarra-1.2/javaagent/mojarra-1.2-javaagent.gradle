@@ -1,0 +1,79 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = "org.glassfish"
+    module = "jakarta.faces"
+    versions = "[2.3.9,3)"
+    extraDependency "javax.el:el-api:2.2"
+  }
+  pass {
+    group = "org.glassfish"
+    module = "javax.faces"
+    versions = "[2.0.7,3)"
+    extraDependency "javax.el:el-api:2.2"
+  }
+  pass {
+    group = "com.sun.faces"
+    module = "jsf-impl"
+    versions = "[2.1,2.2)"
+    extraDependency "javax.faces:jsf-api:2.1"
+    extraDependency "javax.el:el-api:1.0"
+  }
+  pass {
+    group = "com.sun.faces"
+    module = "jsf-impl"
+    versions = "[2.0,2.1)"
+    extraDependency "javax.faces:jsf-api:2.0"
+    extraDependency "javax.el:el-api:1.0"
+  }
+  pass {
+    group = "javax.faces"
+    module = "jsf-impl"
+    versions = "[1.2,2)"
+    extraDependency "javax.faces:jsf-api:1.2"
+    extraDependency "javax.el:el-api:1.0"
+  }
+  fail {
+    group = "org.glassfish"
+    module = "jakarta.faces"
+    versions = "[3.0,)"
+    extraDependency "javax.el:el-api:2.2"
+  }
+  fail {
+    group = "javax.faces"
+    module = "jsf-impl"
+    versions = "[1.1,1.2)"
+    extraDependency "javax.faces:jsf-api:1.1_02"
+    extraDependency "javax.el:el-api:1.0"
+  }
+}
+
+testSets {
+  mojarra12Test
+  mojarra2Test
+  latestDepTest {
+    extendsFrom mojarra2Test
+    dirName = 'mojarra2LatestTest'
+  }
+}
+
+test.dependsOn mojarra12Test, mojarra2Test
+
+dependencies {
+  compileOnly group: 'javax.faces', name: 'jsf-api', version: '1.2'
+
+  implementation project(':instrumentation:jsf:jsf-common:library')
+
+  testImplementation project(':instrumentation:jsf:jsf-testing-common')
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+
+  mojarra12TestImplementation group: 'javax.faces', name: 'jsf-impl', version: '1.2-20'
+  mojarra12TestImplementation group: 'javax.faces', name: 'jsf-api', version: '1.2'
+  mojarra12TestImplementation group: 'com.sun.facelets', name: 'jsf-facelets', version: '1.1.14'
+
+  mojarra2TestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2.3.12'
+
+  latestDepTestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2+'
+}

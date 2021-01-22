@@ -5,11 +5,11 @@
 
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
-import com.google.common.io.Files
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.nio.file.Files
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -38,7 +38,7 @@ class JspInstrumentationForwardTests extends AgentTestRunner {
   OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
-    baseDir = Files.createTempDir()
+    baseDir = Files.createTempDirectory("jsp").toFile()
     baseDir.deleteOnExit()
 
     port = PortUtils.randomOpenPort()

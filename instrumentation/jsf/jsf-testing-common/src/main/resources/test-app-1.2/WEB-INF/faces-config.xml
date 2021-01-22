@@ -1,0 +1,14 @@
+<faces-config xmlns="http://java.sun.com/xml/ns/javaee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_1_2.xsd"
+  version="1.2">
+  <managed-bean>
+    <managed-bean-name>greetingForm</managed-bean-name>
+    <managed-bean-class>GreetingForm</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <application>
+    <view-handler>com.sun.facelets.FaceletViewHandler</view-handler>
+  </application>
+</faces-config>

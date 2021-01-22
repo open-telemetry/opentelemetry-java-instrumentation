@@ -5,12 +5,8 @@
 
 package io.opentelemetry.instrumentation.test;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.TreeTraverser;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -20,6 +16,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -54,11 +51,11 @@ public class InMemoryExporter {
 
   public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
       throws InterruptedException, TimeoutException {
-    Stopwatch stopwatch = Stopwatch.createStarted();
+    long startTime = System.nanoTime();
     List<List<SpanData>> allTraces = groupTraces(supplier.get());
     List<List<SpanData>> completeTraces =
         allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
-    while (completeTraces.size() < number && stopwatch.elapsed(SECONDS) < 20) {
+    while (completeTraces.size() < number && elapsedSeconds(startTime) < 20) {
       allTraces = groupTraces(supplier.get());
       completeTraces = allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
       Thread.sleep(10);
@@ -75,6 +72,10 @@ public class InMemoryExporter {
               + allTraces);
     }
     return completeTraces;
+  }
+
+  private static long elapsedSeconds(long startTime) {
+    return TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime);
   }
 
   public void clear() {
@@ -118,17 +119,9 @@ public class InMemoryExporter {
     }
     sortOneLevel(rootNodes);
 
-    TreeTraverser<Node> traverser =
-        new TreeTraverser<Node>() {
-          @Override
-          public Iterable<Node> children(Node node) {
-            return node.childNodes;
-          }
-        };
-
     List<Node> orderedNodes = new ArrayList<>();
     for (Node rootNode : rootNodes) {
-      Iterables.addAll(orderedNodes, traverser.preOrderTraversal(rootNode));
+      traversePreOrder(rootNode, orderedNodes);
     }
 
     List<SpanData> orderedSpans = new ArrayList<>();
@@ -140,6 +133,13 @@ public class InMemoryExporter {
 
   private static void sortOneLevel(List<Node> nodes) {
     nodes.sort(Comparator.comparingLong(node -> node.span.getStartEpochNanos()));
+  }
+
+  private static void traversePreOrder(Node node, List<Node> accumulator) {
+    accumulator.add(node);
+    for (Node child : node.childNodes) {
+      traversePreOrder(child, accumulator);
+    }
   }
 
   // trace is completed if root span is present

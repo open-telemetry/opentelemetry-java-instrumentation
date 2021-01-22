@@ -15,13 +15,13 @@ import okhttp3.Request
 class JaegerExporterSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20201217.427450994"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210114.484678777"
   }
 
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_EXPORTER"                : "jaeger",
+      "OTEL_TRACE_EXPORTER"          : "jaeger",
       "OTEL_EXPORTER_JAEGER_ENDPOINT": "collector:14250"
     ]
   }

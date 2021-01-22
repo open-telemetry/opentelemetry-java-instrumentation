@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html">
+  <h:head>
+    <title>Hello, World!</title>
+  </h:head>
+  <h:body>
+    <h:form id="app-form">
+      <p>
+        <h:outputLabel for="name" value="Enter your name" required="true"/>
+        <h:inputText id="name" value="#{greetingForm.name}"/>
+        <h:message for="name"/>
+      </p>
+      <p>
+        <h:commandButton id="submit" value="Say hello" action="#{greetingForm.submit()}"/>
+      </p>
+      <p>
+        <h:outputText id="output-message" value="#{greetingForm.message}"/>
+      </p>
+    </h:form>
+  </h:body>
+</html>

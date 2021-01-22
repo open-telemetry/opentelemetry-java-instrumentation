@@ -6,21 +6,21 @@
 package io.opentelemetry.instrumentation.test.asserts
 
 import static AttributesAssert.assertAttributes
-import static io.opentelemetry.sdk.trace.data.SpanData.Event
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.common.Attributes
+import io.opentelemetry.sdk.trace.data.EventData
 
 class EventAssert {
-  private final Event event
+  private final EventData event
   private final checked = [:]
 
   private EventAssert(event) {
     this.event = event
   }
 
-  static void assertEvent(Event event,
+  static void assertEvent(EventData event,
                           @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.EventAssert'])
                           @DelegatesTo(value = EventAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new EventAssert(event)

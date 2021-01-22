@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.testing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
@@ -28,7 +28,7 @@ class AgentForTestingTest {
 
   @Test
   void exportAndRetrieve() {
-    OpenTelemetry.get().getTracer("test").spanBuilder("test").startSpan().end();
+    GlobalOpenTelemetry.getTracer("test").spanBuilder("test").startSpan().end();
 
     List<SpanData> spans = AgentTestingExporterAccess.getExportedSpans();
     assertEquals(1, spans.size());

@@ -115,10 +115,4 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> {
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "netty.request"
   }
-
-  @Override
-  boolean testException() {
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
-  }
 }

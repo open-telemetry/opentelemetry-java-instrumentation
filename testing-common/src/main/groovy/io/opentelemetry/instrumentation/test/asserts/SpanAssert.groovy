@@ -14,7 +14,7 @@ import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
 
 import java.util.regex.Pattern
@@ -113,7 +113,7 @@ class SpanAssert {
   def hasLink(String traceId, String spanId) {
     def found = false
     for (def link : span.links) {
-      if (link.context.traceIdAsHexString == traceId && link.context.spanIdAsHexString == spanId) {
+      if (link.spanContext.traceIdAsHexString == traceId && link.spanContext.spanIdAsHexString == spanId) {
         found = true
         break
       }

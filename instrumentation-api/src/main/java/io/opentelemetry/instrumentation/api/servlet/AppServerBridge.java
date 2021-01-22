@@ -18,35 +18,50 @@ public class AppServerBridge {
   private static final ContextKey<AppServerBridge> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-app-server-bridge");
 
+  /**
+   * Attach AppServerBridge to context.
+   *
+   * @param ctx server context
+   * @return new context with AppServerBridge attached.
+   */
   public static Context init(Context ctx) {
-    return ctx.with(AppServerBridge.CONTEXT_KEY, new AppServerBridge());
+    return init(ctx, true);
+  }
+
+  /**
+   * Attach AppServerBridge to context.
+   *
+   * @param ctx server context
+   * @param shouldRecordException whether servlet integration should record exception thrown during
+   *     servlet invocation in server span. Use <code>false</code> on servers where exceptions
+   *     thrown during servlet invocation are propagated to the method where server span is closed
+   *     and can be added to server span there and <code>true</code> otherwise.
+   * @return new context with AppServerBridge attached.
+   */
+  public static Context init(Context ctx, boolean shouldRecordException) {
+    return ctx.with(AppServerBridge.CONTEXT_KEY, new AppServerBridge(shouldRecordException));
   }
 
   private final AtomicBoolean servletUpdatedServerSpanName = new AtomicBoolean(false);
+  private final AtomicBoolean servletShouldRecordException;
 
-  /**
-   * Check whether given context contains AppServerBridge.
-   *
-   * @param ctx server context
-   * @return <code>true</code> if AppServerBridge is present in the context. <code>false</code>
-   *     otherwise.
-   */
-  public static boolean isPresent(Context ctx) {
-    return ctx.get(AppServerBridge.CONTEXT_KEY) != null;
+  private AppServerBridge(boolean shouldRecordException) {
+    servletShouldRecordException = new AtomicBoolean(shouldRecordException);
   }
 
   /**
-   * Returns true, if servlet integration has indicated, that it has updated the name for the server
-   * span.
+   * Returns true, if servlet integration should update server span name. After server span name has
+   * been updated with <code>setServletUpdatedServerSpanName</code> this method will return <code>
+   * false</code>.
    *
    * @param ctx server context
-   * @return <code>true</code>, if the server span name was updated by servlet integration, or
+   * @return <code>true</code>, if the server span name should be updated by servlet integration, or
    *     <code>false</code> otherwise.
    */
-  public static boolean isServerSpanNameUpdatedFromServlet(Context ctx) {
+  public static boolean shouldUpdateServerSpanName(Context ctx) {
     AppServerBridge appServerBridge = ctx.get(AppServerBridge.CONTEXT_KEY);
     if (appServerBridge != null) {
-      return appServerBridge.servletUpdatedServerSpanName.get();
+      return !appServerBridge.servletUpdatedServerSpanName.get();
     }
     return false;
   }
@@ -61,6 +76,24 @@ public class AppServerBridge {
     if (appServerBridge != null) {
       appServerBridge.servletUpdatedServerSpanName.set(value);
     }
+  }
+
+  /**
+   * Returns true, if servlet integration should record exception thrown during servlet invocation
+   * in server span. This method should return <code>false</code> on servers where exceptions thrown
+   * during servlet invocation are propagated to the method where server span is closed and can be
+   * added to server span there and <code>true</code> otherwise.
+   *
+   * @param ctx server context
+   * @return <code>true</code>, if servlet integration should record exception thrown during servlet
+   *     invocation in server span, or <code>false</code> otherwise.
+   */
+  public static boolean shouldRecordException(Context ctx) {
+    AppServerBridge appServerBridge = ctx.get(AppServerBridge.CONTEXT_KEY);
+    if (appServerBridge != null) {
+      return appServerBridge.servletShouldRecordException.get();
+    }
+    return true;
   }
 
   /**

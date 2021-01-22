@@ -12,8 +12,8 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-import com.google.common.base.Charsets
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import java.nio.charset.StandardCharsets
 import javax.servlet.Filter
 import javax.servlet.FilterChain
 import javax.servlet.FilterConfig
@@ -71,7 +71,7 @@ class FilteredAppConfig extends WebMvcConfigurerAdapter {
 
       @Override
       protected void writeInternal(Map<String, Object> stringObjectMap, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
-        StreamUtils.copy(stringObjectMap.get("message"), Charsets.UTF_8, outputMessage.getBody())
+        StreamUtils.copy(stringObjectMap.get("message"), StandardCharsets.UTF_8, outputMessage.getBody())
       }
     }
   }

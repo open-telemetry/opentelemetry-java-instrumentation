@@ -217,6 +217,61 @@ abstract class SpringBatchTest extends AgentTestRunner {
       }
     }
   }
+
+  def "should trace partitioned job"() {
+    when:
+    runJob("partitionedJob")
+
+    then:
+    assertTraces(1) {
+      trace(0, 8) {
+        span(0) {
+          name "BatchJob partitionedJob"
+          kind INTERNAL
+        }
+        span(1) {
+          def stepName = hasPartitionManagerStep() ? "partitionManagerStep" : "partitionWorkerStep"
+          name "BatchJob partitionedJob.$stepName"
+          kind INTERNAL
+          childOf span(0)
+        }
+        span(2) {
+          name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01]/
+          kind INTERNAL
+          childOf span(1)
+        }
+        span(3) {
+          name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01].Chunk/
+          kind INTERNAL
+          childOf span(2)
+        }
+        span(4) {
+          name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01].Chunk/
+          kind INTERNAL
+          childOf span(2)
+        }
+        span(5) {
+          name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01]/
+          kind INTERNAL
+          childOf span(1)
+        }
+        span(6) {
+          name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01].Chunk/
+          kind INTERNAL
+          childOf span(5)
+        }
+        span(7) {
+          name ~/BatchJob partitionedJob.partitionWorkerStep:partition[01].Chunk/
+          kind INTERNAL
+          childOf span(5)
+        }
+      }
+    }
+  }
+
+  protected boolean hasPartitionManagerStep() {
+    true
+  }
 }
 
 class JavaConfigBatchJobTest extends SpringBatchTest implements ApplicationConfigTrait {
@@ -234,4 +289,7 @@ class XmlConfigBatchJobTest extends SpringBatchTest implements ApplicationConfig
 }
 
 class JsrConfigBatchJobTest extends SpringBatchTest implements JavaxBatchConfigTrait {
+  protected boolean hasPartitionManagerStep() {
+    false
+  }
 }

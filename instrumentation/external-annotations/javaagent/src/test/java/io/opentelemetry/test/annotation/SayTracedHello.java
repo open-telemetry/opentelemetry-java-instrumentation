@@ -5,14 +5,14 @@
 
 package io.opentelemetry.test.annotation;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import java.util.concurrent.Callable;
 
 public class SayTracedHello {
 
-  private static final Tracer TRACER = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto");
+  private static final Tracer TRACER = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto");
 
   @com.appoptics.api.ext.LogMethod
   public String appoptics() {

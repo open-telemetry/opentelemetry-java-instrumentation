@@ -12,17 +12,17 @@ import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes.DbSystemValues;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.SpanAttributeSetter;
 import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -34,7 +34,7 @@ public enum OpenTelemetryTracing implements Tracing {
   INSTANCE;
 
   private static final io.opentelemetry.api.trace.Tracer TRACER =
-      OpenTelemetry.getGlobalTracer("io.opentelemetry.auto.lettuce-5.1");
+      GlobalOpenTelemetry.getTracer("io.opentelemetry.auto.lettuce-5.1");
 
   public static io.opentelemetry.api.trace.Tracer tracer() {
     return TRACER;

@@ -5,7 +5,7 @@
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared

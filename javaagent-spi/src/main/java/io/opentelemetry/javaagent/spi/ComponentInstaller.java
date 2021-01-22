@@ -25,8 +25,8 @@ public interface ComponentInstaller {
    * and InstrumentationContext falls back to the less performant Map implementation for those
    * classes.
    */
-  void beforeByteBuddyAgent();
+  default void beforeByteBuddyAgent() {}
 
   /** Runs after instrumentations are added to ByteBuddy. */
-  void afterByteBuddyAgent();
+  default void afterByteBuddyAgent() {}
 }

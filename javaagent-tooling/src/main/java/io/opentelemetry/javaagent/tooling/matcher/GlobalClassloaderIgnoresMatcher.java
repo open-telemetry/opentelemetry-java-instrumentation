@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.matcher;
 
 import io.opentelemetry.javaagent.bootstrap.PatchLogger;
 import io.opentelemetry.javaagent.bootstrap.WeakCache;
+import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -17,8 +18,6 @@ public class GlobalClassloaderIgnoresMatcher
     extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
   private static final Logger log = LoggerFactory.getLogger(GlobalClassloaderIgnoresMatcher.class);
 
-  private static final GlobalClassloaderIgnoresMatcher INSTANCE =
-      new GlobalClassloaderIgnoresMatcher();
   /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
   private static final String AGENT_CLASSLOADER_NAME =
       "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
@@ -26,14 +25,29 @@ public class GlobalClassloaderIgnoresMatcher
       "io.opentelemetry.javaagent.tooling.ExporterClassLoader";
   private static final WeakCache<ClassLoader, Boolean> skipCache = AgentTooling.newWeakCache();
 
-  private GlobalClassloaderIgnoresMatcher() {}
+  public static ElementMatcher.Junction.AbstractBase<ClassLoader> skipClassLoader(
+      IgnoreMatcherProvider ignoreMatcherProvider) {
+    return new GlobalClassloaderIgnoresMatcher(ignoreMatcherProvider);
+  }
 
-  public static ElementMatcher.Junction.AbstractBase<ClassLoader> skipClassLoader() {
-    return INSTANCE;
+  private final IgnoreMatcherProvider ignoreMatcherProviders;
+
+  private GlobalClassloaderIgnoresMatcher(IgnoreMatcherProvider ignoreMatcherProviders) {
+    this.ignoreMatcherProviders = ignoreMatcherProviders;
   }
 
   @Override
   public boolean matches(ClassLoader cl) {
+    IgnoreMatcherProvider.Result ignoreResult = ignoreMatcherProviders.classloader(cl);
+    switch (ignoreResult) {
+      case IGNORE:
+        return true;
+      case ALLOW:
+        return false;
+      case DEFAULT:
+      default:
+    }
+
     if (cl == ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER) {
       // Don't skip bootstrap loader
       return false;

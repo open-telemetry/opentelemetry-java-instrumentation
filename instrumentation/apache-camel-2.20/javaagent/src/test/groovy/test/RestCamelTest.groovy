@@ -9,17 +9,17 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
-import com.google.common.collect.ImmutableMap
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.camel.CamelContext
 import org.apache.camel.ProducerTemplate
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-class RestCamelTest extends AgentTestRunner {
+class RestCamelTest extends AgentTestRunner implements RetryOnAddressAlreadyInUseTrait {
 
   @Shared
   ConfigurableApplicationContext server
@@ -35,7 +35,7 @@ class RestCamelTest extends AgentTestRunner {
   def setupSpecUnderRetry() {
     port = PortUtils.randomOpenPort()
     def app = new SpringApplication(RestConfig)
-    app.setDefaultProperties(ImmutableMap.of("restServer.port", port))
+    app.setDefaultProperties(["restServer.port": port])
     server = app.run()
     println getClass().name + " http server started at: http://localhost:$port/"
   }
@@ -57,7 +57,7 @@ class RestCamelTest extends AgentTestRunner {
     new Thread(new Runnable() {
       @Override
       void run() {
-        template.sendBodyAndHeaders("direct:start", null, ImmutableMap.of("module", "firstModule", "unitId", "unitOne"))
+        template.sendBodyAndHeaders("direct:start", null, ["module": "firstModule", "unitId": "unitOne"])
       }
     }
     ).start()
@@ -75,6 +75,7 @@ class RestCamelTest extends AgentTestRunner {
         it.span(1) {
           name "GET"
           kind CLIENT
+          parentSpanId(span(0).spanId)
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "GET"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
@@ -84,6 +85,7 @@ class RestCamelTest extends AgentTestRunner {
         it.span(2) {
           name "/api/{module}/unit/{unitId}"
           kind SERVER
+          parentSpanId(span(1).spanId)
           attributes {
             "$SemanticAttributes.HTTP_URL.key" "http://localhost:$port/api/firstModule/unit/unitOne"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
@@ -98,6 +100,7 @@ class RestCamelTest extends AgentTestRunner {
         it.span(3) {
           name "/api/{module}/unit/{unitId}"
           kind INTERNAL
+          parentSpanId(span(2).spanId)
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "GET"
             "$SemanticAttributes.HTTP_URL.key" "http://localhost:$port/api/firstModule/unit/unitOne"
@@ -107,6 +110,7 @@ class RestCamelTest extends AgentTestRunner {
         it.span(4) {
           name "moduleUnit"
           kind INTERNAL
+          parentSpanId(span(3).spanId)
           attributes {
             "apache-camel.uri" "direct://moduleUnit"
           }

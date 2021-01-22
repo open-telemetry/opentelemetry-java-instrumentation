@@ -15,7 +15,7 @@ import com.lambdaworks.redis.api.async.RedisAsyncCommands
 import com.lambdaworks.redis.api.sync.RedisCommands
 import com.lambdaworks.redis.codec.Utf8StringCodec
 import com.lambdaworks.redis.protocol.AsyncCommand
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import java.util.concurrent.CancellationException

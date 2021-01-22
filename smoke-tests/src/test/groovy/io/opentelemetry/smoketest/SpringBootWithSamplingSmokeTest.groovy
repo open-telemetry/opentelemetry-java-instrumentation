@@ -15,12 +15,15 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
   static final int ALLOWED_DEVIATION = 0.1 * NUM_TRIES
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20201217.427450994"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210114.484678777"
   }
 
   @Override
   protected Map<String, String> getExtraEnv() {
-    return ["OTEL_CONFIG_SAMPLER_PROBABILITY": String.valueOf(SAMPLER_PROBABILITY)]
+    return [
+      "OTEL_TRACE_SAMPLER": "parentbased_traceidratio",
+      "OTEL_TRACE_SAMPLER_ARG": String.valueOf(SAMPLER_PROBABILITY),
+    ]
   }
 
   def "spring boot with probability sampling enabled on JDK #jdk"(int jdk) {

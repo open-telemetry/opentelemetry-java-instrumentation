@@ -16,6 +16,6 @@ public class RequestDispatcherTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.servlet";
+    return "io.opentelemetry.javaagent.servlet-common";
   }
 }

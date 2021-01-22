@@ -26,6 +26,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.output.ToStringConsumer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.containers.wait.strategy.WaitStrategy
+import org.testcontainers.images.PullPolicy
 import org.testcontainers.utility.MountableFile
 import spock.lang.Shared
 import spock.lang.Specification
@@ -73,6 +74,7 @@ abstract class SmokeTest extends Specification {
       .waitingFor(Wait.forHttp("/health").forPort(8080))
       .withNetwork(network)
       .withNetworkAliases("backend")
+      .withImagePullPolicy(PullPolicy.alwaysPull())
       .withLogConsumer(new Slf4jLogConsumer(logger))
     backend.start()
 
@@ -81,6 +83,7 @@ abstract class SmokeTest extends Specification {
       .withNetwork(network)
       .withNetworkAliases("collector")
       .withLogConsumer(new Slf4jLogConsumer(logger))
+      .withImagePullPolicy(PullPolicy.alwaysPull())
       .withCopyFileToContainer(MountableFile.forClasspathResource("/otel.yaml"), "/etc/otel.yaml")
       .withCommand("--config /etc/otel.yaml")
     collector.start()
@@ -102,6 +105,8 @@ abstract class SmokeTest extends Specification {
       .withEnv("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1")
       .withEnv("OTEL_BSP_SCHEDULE_DELAY_MILLIS", "10")
       .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "collector:55680")
+      .withEnv("OTEL_EXPORTER_OTLP_INSECURE", "true")
+      .withImagePullPolicy(PullPolicy.alwaysPull())
       .withEnv(extraEnv)
     customizeContainer(target)
 

@@ -27,6 +27,7 @@ class RestConfig {
           .bindingMode(RestBindingMode.auto)
           .host("localhost")
           .port("{{restServer.port}}")
+          .producerComponent("http")
 
         rest("/api")
           .get("/{module}/unit/{unitId}")

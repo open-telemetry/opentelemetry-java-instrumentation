@@ -1,0 +1,19 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api deps.testLogging
+
+  compileOnly group: 'jakarta.faces', name: 'jakarta.faces-api', version: '2.3.2'
+  compileOnly group: 'jakarta.el', name: 'jakarta.el-api', version: '3.0.3'
+
+  implementation(project(':testing-common')) {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
+  }
+  implementation group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
+
+  def jettyVersion = '9.4.35.v20201120'
+  api group: 'org.eclipse.jetty', name: 'jetty-annotations', version: jettyVersion
+  implementation group: 'org.eclipse.jetty', name: 'apache-jsp', version: jettyVersion
+  implementation group: 'org.glassfish', name: 'jakarta.el', version: '3.0.2'
+  implementation group: 'jakarta.websocket', name: 'jakarta.websocket-api', version: '1.1.1'
+}

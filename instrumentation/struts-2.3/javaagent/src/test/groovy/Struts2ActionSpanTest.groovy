@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import javax.servlet.DispatcherType
 import org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter
 import org.eclipse.jetty.server.Server
@@ -59,8 +60,8 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
       }
       def expectedMethodName = endpoint.name().toLowerCase()
       attributes {
-        'code.namespace' "io.opentelemetry.struts.GreetingAction"
-        'code.function' expectedMethodName
+        "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.struts.GreetingAction"
+        "${SemanticAttributes.CODE_FUNCTION.key}" expectedMethodName
       }
       childOf((SpanData) parent)
     }

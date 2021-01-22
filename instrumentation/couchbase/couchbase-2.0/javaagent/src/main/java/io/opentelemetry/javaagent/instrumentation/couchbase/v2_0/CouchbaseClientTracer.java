@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.api.trace.attributes.SemanticAttributes.DbSystemValues;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 

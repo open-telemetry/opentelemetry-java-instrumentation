@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer.utils
 
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
 import io.opentelemetry.instrumentation.api.tracer.BaseTracerTest

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.test.server.http
 
-import static io.opentelemetry.api.OpenTelemetry.getGlobalPropagators
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 import static io.opentelemetry.instrumentation.test.server.http.HttpServletRequestExtractAdapter.GETTER
 
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanBuilder
@@ -32,7 +32,7 @@ import org.eclipse.jetty.server.handler.HandlerList
 
 class TestHttpServer implements AutoCloseable {
 
-  private static final Tracer tracer = OpenTelemetry.getGlobalTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
 
   static TestHttpServer httpServer(@DelegatesTo(value = TestHttpServer, strategy = Closure.DELEGATE_FIRST) Closure spec) {
 
@@ -251,7 +251,7 @@ class TestHttpServer implements AutoCloseable {
       if (isTestServer) {
         final SpanBuilder spanBuilder = tracer.spanBuilder("test-http-server").setSpanKind(SERVER)
         // using Context.root() to avoid inheriting any potentially leaked context here
-        spanBuilder.setParent(getGlobalPropagators().getTextMapPropagator().extract(Context.root(), req, GETTER))
+        spanBuilder.setParent(GlobalOpenTelemetry.getPropagators().getTextMapPropagator().extract(Context.root(), req, GETTER))
         final Span span = spanBuilder.startSpan()
         span.end()
       }

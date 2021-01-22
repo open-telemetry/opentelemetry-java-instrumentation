@@ -7,11 +7,11 @@ package test
 
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
-import com.google.common.collect.ImmutableMap
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -20,7 +20,7 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-class SingleServiceCamelTest extends AgentTestRunner {
+class SingleServiceCamelTest extends AgentTestRunner implements RetryOnAddressAlreadyInUseTrait {
 
   @Shared
   ConfigurableApplicationContext server
@@ -41,7 +41,7 @@ class SingleServiceCamelTest extends AgentTestRunner {
     port = PortUtils.randomOpenPort()
     address = new URI("http://localhost:$port/")
     def app = new SpringApplication(SingleServiceConfig)
-    app.setDefaultProperties(ImmutableMap.of("camelService.port", port))
+    app.setDefaultProperties(["camelService.port": port])
     server = app.run()
     println getClass().name + " http server started at: http://localhost:$port/"
   }

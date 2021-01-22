@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.DbInfo.DEFAULT;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
-import io.opentelemetry.api.trace.attributes.SemanticAttributes.DbSystemValues;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;

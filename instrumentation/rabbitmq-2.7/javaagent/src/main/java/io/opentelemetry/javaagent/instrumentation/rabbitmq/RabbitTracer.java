@@ -18,9 +18,9 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 

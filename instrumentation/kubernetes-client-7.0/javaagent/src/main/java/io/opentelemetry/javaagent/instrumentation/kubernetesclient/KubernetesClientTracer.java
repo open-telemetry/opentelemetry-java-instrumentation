@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
@@ -38,7 +38,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
             .setAttribute("name", digest.getResourceMeta().getName())
             .startSpan();
     Context context = parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
-    OpenTelemetry.getGlobalPropagators()
+    GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
         .inject(context, request, getSetter());
     return context;

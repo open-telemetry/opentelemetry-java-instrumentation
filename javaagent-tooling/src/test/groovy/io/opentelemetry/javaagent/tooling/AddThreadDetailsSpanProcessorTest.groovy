@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.Context
 import io.opentelemetry.sdk.trace.ReadWriteSpan
 import spock.lang.Specification

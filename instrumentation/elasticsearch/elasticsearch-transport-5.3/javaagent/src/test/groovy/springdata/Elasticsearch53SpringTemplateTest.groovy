@@ -9,9 +9,8 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-import com.google.common.collect.ImmutableSet
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.atomic.AtomicLong
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils
@@ -36,7 +35,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   // Some ES actions are not caused by clients and seem to just happen from time to time.
   // We will just ignore these actions in traces.
   // TODO: check if other ES tests need this protection and potentially pull this into global class
-  public static final Set<String> IGNORED_ACTIONS = ImmutableSet.of("NodesStatsAction", "IndicesStatsAction")
+  public static final Set<String> IGNORED_ACTIONS = ["NodesStatsAction", "IndicesStatsAction"] as Set
 
   @Shared
   Node testNode
