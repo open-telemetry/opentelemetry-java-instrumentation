@@ -16,7 +16,6 @@ receivers:
 
 processors:
   batch:
-  queued_retry:
 
 exporters:
   logging:
@@ -29,7 +28,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp, zipkin, jaeger]
-      processors: [batch, queued_retry]
+      processors: [batch]
       exporters: [logging, otlp]
 
   extensions: [health_check, pprof, zpages]

@@ -7,7 +7,7 @@
 
   <Match>
     <!-- ignore default encoding for auto-genned class -->
-    <Class name="io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SimpleCharStream"/>
+    <Class name="io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.SimpleCharStream"/>
     <Bug pattern="DM_DEFAULT_ENCODING"/>
   </Match>
 

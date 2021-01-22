@@ -10,7 +10,7 @@ import java.util.List;
  * See <a href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md">
  * OpenTelemetry Specification</a> for more information about Propagators.
  *
- * @see DemoTracerCustomizer
+ * @see DemoPropagatorProvider
  */
 public class DemoPropagator implements TextMapPropagator {
   private static final String FIELD = "X-demo-field";

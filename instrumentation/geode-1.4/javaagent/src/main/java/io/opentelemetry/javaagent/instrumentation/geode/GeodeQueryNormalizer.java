@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 
 import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 
-import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.ParseException;
-import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlNormalizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.ParseException;
+import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.SqlSanitizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +22,7 @@ public final class GeodeQueryNormalizer {
       return query;
     }
     try {
-      return SqlNormalizer.normalize(query);
+      return SqlSanitizer.sanitize(query);
     } catch (ParseException e) {
       log.debug("Could not normalize Geode query", e);
       return null;
