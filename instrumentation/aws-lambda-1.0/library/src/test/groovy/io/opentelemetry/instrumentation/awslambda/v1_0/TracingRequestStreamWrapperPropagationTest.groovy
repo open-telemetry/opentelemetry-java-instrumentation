@@ -11,9 +11,9 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.nio.charset.Charset
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
