@@ -33,12 +33,11 @@ public abstract class BaseTracer {
   // Keeps track of the server span for the current trace.
   // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
   // or other non-server root.
-  public static final ContextKey<Span> CONTEXT_SERVER_SPAN_KEY =
+  private static final ContextKey<Span> CONTEXT_SERVER_SPAN_KEY =
       ContextKey.named("opentelemetry-trace-server-span-key");
 
   // Keeps track of the client span in a subtree corresponding to a client request.
-  // Visible for testing
-  public static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
+  private final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
       ContextKey.named("opentelemetry-trace-auto-client-span-key");
 
   protected final Tracer tracer;
@@ -65,14 +64,16 @@ public abstract class BaseTracer {
     return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
   }
 
-  // TODO (trask) make the key private
   protected final boolean inClientSpan(Context parentContext) {
     return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
   }
 
-  // TODO (trask) make the key private
   protected final Context withClientSpan(Context parentContext, Span span) {
     return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+  }
+
+  protected final Context withServerSpan(Context parentContext, Span span) {
+    return parentContext.with(span).with(CONTEXT_SERVER_SPAN_KEY, span);
   }
 
   public Scope startScope(Span span) {

@@ -159,9 +159,8 @@ public class AwsLambdaTracer extends BaseTracer {
   /** Creates new scoped context with the given span. */
   @Override
   public Scope startScope(Span span) {
-    // TODO we could do this in one go, but TracingContextUtils.CONTEXT_SPAN_KEY is private
     io.opentelemetry.context.Context newContext =
-        io.opentelemetry.context.Context.current().with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
+        withServerSpan(io.opentelemetry.context.Context.current(), span);
     return newContext.makeCurrent();
   }
 
