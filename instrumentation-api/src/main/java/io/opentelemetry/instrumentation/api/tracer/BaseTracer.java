@@ -81,7 +81,7 @@ public abstract class BaseTracer {
   }
 
   protected final boolean shouldNotSuppressSpan(Kind proposedKind, Context context) {
-    switch(proposedKind) {
+    switch (proposedKind) {
       case CLIENT:
         return !inClientSpan(context);
       case SERVER:

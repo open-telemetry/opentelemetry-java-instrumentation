@@ -9,7 +9,6 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -132,8 +131,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   private Span internalStartSpan(
       Context parentContext, REQUEST request, String name, long startTimeNanos) {
-    SpanBuilder spanBuilder =
-        tracer.spanBuilder(name).setSpanKind(CLIENT).setParent(parentContext);
+    SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(CLIENT).setParent(parentContext);
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
     }
