@@ -19,8 +19,8 @@ dependencies {
 
   library group: 'org.mongodb', name: 'mongodb-driver-core', version: '4.0.0'
 
-  testCompile group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.0.0'
-  testCompile group: 'org.mongodb', name: 'mongodb-driver-reactivestreams', version: '4.0.0'
   testImplementation project(':instrumentation:mongo:mongo-testing')
-  testCompile group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
+  testImplementation group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.0.0'
+  testImplementation group: 'org.mongodb', name: 'mongodb-driver-reactivestreams', version: '4.0.0'
+  testImplementation group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
 }
