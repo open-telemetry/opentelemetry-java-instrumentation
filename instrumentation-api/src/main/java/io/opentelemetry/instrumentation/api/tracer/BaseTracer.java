@@ -37,7 +37,7 @@ public abstract class BaseTracer {
       ContextKey.named("opentelemetry-trace-server-span-key");
 
   // Keeps track of the client span in a subtree corresponding to a client request.
-  private final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
+  private static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
       ContextKey.named("opentelemetry-trace-auto-client-span-key");
 
   protected final Tracer tracer;
