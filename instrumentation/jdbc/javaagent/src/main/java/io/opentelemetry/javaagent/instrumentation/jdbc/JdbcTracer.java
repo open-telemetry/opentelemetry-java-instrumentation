@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.connectionFromStatement;
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.normalizeAndExtractInfo;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.sanitizeAndExtractInfo;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
@@ -71,7 +71,7 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
   }
 
   public Context startSpan(Context parentContext, Statement statement, String query) {
-    return startSpan(parentContext, statement, normalizeAndExtractInfo(query));
+    return startSpan(parentContext, statement, sanitizeAndExtractInfo(query));
   }
 
   private Context startSpan(

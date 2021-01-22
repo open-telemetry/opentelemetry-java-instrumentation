@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 
-import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.ParseException;
-import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlNormalizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.ParseException;
+import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.SqlSanitizer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -126,7 +126,7 @@ public final class CouchbaseQueryNormalizer {
       return query;
     }
     try {
-      return SqlNormalizer.normalize(query);
+      return SqlSanitizer.sanitize(query);
     } catch (ParseException e) {
       log.debug("Could not normalize Couchbase query", e);
       return null;

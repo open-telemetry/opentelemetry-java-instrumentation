@@ -9,16 +9,16 @@ options {
 	STATIC = false;
 }
 
-PARSER_BEGIN(SqlNormalizer)
+PARSER_BEGIN(SqlSanitizer)
 
-package io.opentelemetry.javaagent.instrumentation.api.db.normalizer;
+package io.opentelemetry.javaagent.instrumentation.api.db.sanitizer;
 
 import java.io.StringReader;
 
-public class SqlNormalizer {
+public class SqlSanitizer {
    public static final int LIMIT = 32 * 1024;
-   public static String normalize(String s) throws ParseException {
-     SqlNormalizer parser = new SqlNormalizer(new StringReader(s));
+   public static String sanitize(String s) throws ParseException {
+     SqlSanitizer parser = new SqlSanitizer(new StringReader(s));
      StringBuffer answer = parser.Input();
      if (answer.length() <= LIMIT) {
        return answer.toString();
@@ -28,7 +28,7 @@ public class SqlNormalizer {
      }
   }
 }
-PARSER_END(SqlNormalizer)
+PARSER_END(SqlSanitizer)
 
 StringBuffer Input() :
 {
