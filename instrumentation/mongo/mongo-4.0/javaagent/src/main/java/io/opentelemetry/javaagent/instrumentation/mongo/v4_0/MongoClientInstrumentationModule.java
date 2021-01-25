@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
+import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,8 +19,6 @@ import com.mongodb.event.CommandListener;
 import io.opentelemetry.javaagent.instrumentation.mongo.TracingCommandListener;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.lang.reflect.Modifier;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -45,17 +43,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("com.mongodb.MongoClientSettings$Builder")
-          .and(
-              declaresMethod(
-                  named("addCommandListener")
-                      .and(
-                          takesArguments(
-                              new TypeDescription.Latent(
-                                  "com.mongodb.event.CommandListener",
-                                  Modifier.PUBLIC,
-                                  null,
-                                  Collections.<TypeDescription.Generic>emptyList())))
-                      .and(isPublic())));
+          .and(declaresField(named("commandListeners")));
     }
 
     @Override
