@@ -16,7 +16,7 @@ public final class SpringBatchInstrumentationConfig {
       unmodifiableList(asList("spring-batch", "spring-batch-3.0"));
 
   // the item level instrumentation is very chatty so it's disabled by default
-  private static final boolean ITEM_LEVEL_TRACING_ENABLED =
+  private static final boolean ITEM_TRACING_ENABLED =
       Config.get().isInstrumentationPropertyEnabled(instrumentationNames(), "item.enabled", false);
   private static final boolean CREATE_ROOT_SPAN_FOR_CHUNK =
       Config.get()
@@ -26,8 +26,8 @@ public final class SpringBatchInstrumentationConfig {
     return INSTRUMENTATION_NAMES;
   }
 
-  public static boolean isItemLevelTracingEnabled() {
-    return ITEM_LEVEL_TRACING_ENABLED;
+  public static boolean shouldTraceItems() {
+    return ITEM_TRACING_ENABLED;
   }
 
   public static boolean shouldCreateRootSpanForChunk() {

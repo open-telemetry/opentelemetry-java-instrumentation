@@ -9,31 +9,28 @@ import static io.opentelemetry.api.trace.Span.Kind.INTERNAL;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.batch.core.scope.context.ChunkContext;
 
 public class ItemTracer extends BaseTracer {
+  private static final ContextKey<ChunkContext> CHUNK_CONTEXT_KEY =
+      ContextKey.named("opentelemetry-spring-batch-chunk-context-context-key");
+
   private static final ItemTracer TRACER = new ItemTracer();
 
   public static ItemTracer tracer() {
     return TRACER;
   }
 
-  // item-level listeners do not receive chunk/step context as parameters
-  // fortunately the whole chunk always executes on one thread - in Spring Batch chunk is almost
-  // synonymous with a DB transaction
-  // that makes it quite safe to store the current chunk context in a thread local and use it in
-  // each item span
-
-  private final ThreadLocal<ChunkContext> currentChunk = new ThreadLocal<>();
-
-  public void startChunk(ChunkContext chunkContext) {
-    currentChunk.set(chunkContext);
-  }
-
-  public void endChunk() {
-    currentChunk.remove();
+  /**
+   * Item-level listeners do not receive chunk/step context as parameters. Fortunately the whole
+   * chunk always executes on one thread - in Spring Batch chunk is almost synonymous with a DB
+   * transaction; this makes {@link ChunkContext} a good candidate to be stored in {@link Context}.
+   */
+  public Context startChunk(ChunkContext chunkContext) {
+    return Context.current().with(CHUNK_CONTEXT_KEY, chunkContext);
   }
 
   @Nullable
@@ -53,7 +50,9 @@ public class ItemTracer extends BaseTracer {
 
   @Nullable
   private Context startItemSpan(String itemOperationName) {
-    ChunkContext chunkContext = currentChunk.get();
+    Context currentContext = Context.current();
+
+    ChunkContext chunkContext = currentContext.get(CHUNK_CONTEXT_KEY);
     if (chunkContext == null) {
       return null;
     }
@@ -66,7 +65,7 @@ public class ItemTracer extends BaseTracer {
             .setSpanKind(INTERNAL)
             .startSpan();
 
-    return Context.current().with(span);
+    return currentContext.with(span);
   }
 
   public void end(Context context) {

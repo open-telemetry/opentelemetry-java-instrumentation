@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.isItemLevelTracingEnabled;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldTraceItems;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -13,6 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -42,16 +44,18 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
 
   public static class ExecuteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(1) ChunkContext chunkContext) {
-      if (isItemLevelTracingEnabled()) {
-        tracer().startChunk(chunkContext);
+    public static void onEnter(
+        @Advice.Argument(1) ChunkContext chunkContext, @Advice.Local("otelScope") Scope scope) {
+      if (shouldTraceItems()) {
+        Context context = tracer().startChunk(chunkContext);
+        scope = context.makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit() {
-      if (isItemLevelTracingEnabled()) {
-        tracer().endChunk();
+    public static void onExit(@Advice.Local("otelScope") Scope scope) {
+      if (scope != null) {
+        scope.close();
       }
     }
   }

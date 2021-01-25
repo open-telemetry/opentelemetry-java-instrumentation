@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.isItemLevelTracingEnabled;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldTraceItems;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.item.ItemTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -47,7 +47,7 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
         @Advice.FieldValue("itemProcessor") ItemProcessor<?, ?> itemProcessor,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (!isItemLevelTracingEnabled()) {
+      if (!shouldTraceItems()) {
         return;
       }
       if (itemProcessor == null) {
@@ -81,7 +81,7 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
         @Advice.FieldValue("itemWriter") ItemWriter<?> itemWriter,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (!isItemLevelTracingEnabled()) {
+      if (!shouldTraceItems()) {
         return;
       }
       if (itemWriter == null) {
