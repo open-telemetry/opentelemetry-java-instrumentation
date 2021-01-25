@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.db.normalizer
+package io.opentelemetry.javaagent.instrumentation.api.db.sanitizer
 
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo
 import spock.lang.Specification
