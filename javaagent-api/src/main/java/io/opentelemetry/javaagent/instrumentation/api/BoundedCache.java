@@ -37,7 +37,6 @@ public interface BoundedCache<K, V> {
         new AtomicReference<>(NEVER_ACTUALLY_CACHES);
 
     private Provider() {}
-    ;
 
     public static boolean registerIfAbsent(Builder builder) {
       return builderRef.compareAndSet(NEVER_ACTUALLY_CACHES, builder);
