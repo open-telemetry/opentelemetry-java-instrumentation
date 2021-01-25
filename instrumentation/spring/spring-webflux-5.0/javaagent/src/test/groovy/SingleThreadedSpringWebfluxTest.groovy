@@ -29,7 +29,7 @@ class SingleThreadedSpringWebfluxTest extends SpringWebfluxTest {
 
   static NettyServerCustomizer customizer() {
     if (Boolean.getBoolean("testLatestDeps")) {
-      return { builder -> builder.loopResources(reactor.netty.resources.LoopResources.create("my-http", 1, true)) }
+      return { builder -> builder.runOn(reactor.netty.resources.LoopResources.create("my-http", 1, true)) }
     }
     return { builder -> builder.loopResources(reactor.ipc.netty.resources.LoopResources.create("my-http", 1, true)) }
   }

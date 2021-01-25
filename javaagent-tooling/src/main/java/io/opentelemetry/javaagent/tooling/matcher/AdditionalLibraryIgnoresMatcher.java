@@ -132,7 +132,9 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       if (name.startsWith("org.springframework.core.")) {
         if (name.startsWith("org.springframework.core.task.")
             || name.equals("org.springframework.core.DecoratingClassLoader")
-            || name.equals("org.springframework.core.OverridingClassLoader")) {
+            || name.equals("org.springframework.core.OverridingClassLoader")
+            || name.equals(
+                "org.springframework.core.ReactiveAdapterRegistry$EmptyCompletableFuture")) {
           return false;
         }
         return true;
