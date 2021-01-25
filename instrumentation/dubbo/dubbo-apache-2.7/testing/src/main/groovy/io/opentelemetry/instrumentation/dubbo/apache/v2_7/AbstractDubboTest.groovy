@@ -89,6 +89,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "HelloService:hello"
             "${SemanticAttributes.RPC_METHOD.key}" "hello"
             "${SemanticAttributes.NET_PEER_IP.key}" String
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
           }
         }
