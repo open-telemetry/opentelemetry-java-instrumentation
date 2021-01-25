@@ -37,7 +37,4 @@ dependencies {
   testImplementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.2.11'
 
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
-
-  latestDepTestLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-web-services', version: '+'
-  latestDepTestLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '+'
 }
