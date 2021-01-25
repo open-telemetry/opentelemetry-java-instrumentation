@@ -362,6 +362,7 @@ These are the supported libraries and frameworks:
 | [Spring Scheduling](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html)       | 3.1+                           |
 | [Spring Web MVC](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html)     | 3.1+                           |
 | [Spring Webflux](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html)        | 5.0+                           |
+| [Spring Web Services](https://spring.io/projects/spring-ws)                                                                           | 2.0+                           |
 | [Spymemcached](https://github.com/couchbase/spymemcached)                                                                             | 2.12+                          |
 | [Struts2](https://github.com/apache/struts)                                                                                           | 2.3+                           |
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+ (not including 8.x yet)   |
