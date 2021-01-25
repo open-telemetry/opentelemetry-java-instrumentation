@@ -8,9 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.api;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-/**
- * An LRU cache that has a fixed maximum size.
- */
+/** An LRU cache that has a fixed maximum size. */
 public interface BoundedCache<K, V> {
 
   V get(K key, Function<? super K, ? extends V> mappingFunction);
@@ -25,9 +23,9 @@ public interface BoundedCache<K, V> {
 
   class Provider {
     /*
-      The default implementation just delegates to the lookup function and should not normally be used.
-      It will be replaced at startup by the AgentInstaller.
-     */
+     The default implementation just delegates to the lookup function and should not normally be used.
+     It will be replaced at startup by the AgentInstaller.
+    */
     private static final Builder NEVER_ACTUALLY_CACHES =
         new Builder() {
           @Override

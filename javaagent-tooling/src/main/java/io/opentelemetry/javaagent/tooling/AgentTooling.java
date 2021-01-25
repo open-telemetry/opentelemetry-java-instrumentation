@@ -37,9 +37,8 @@ public class AgentTooling {
   }
 
   /**
-   * Instances of BoundCache are backed by a guava instance that lives
-   * in the agent classloader and is bridged to user/instrumentation classloader
-   * through the BoundedCache.Provider interface.
+   * Instances of BoundCache are backed by a guava instance that lives in the agent classloader and
+   * is bridged to user/instrumentation classloader through the BoundedCache.Provider interface.
    */
   static void registerBoundedCacheProvider() {
     BoundedCache.Provider.registerIfAbsent(
