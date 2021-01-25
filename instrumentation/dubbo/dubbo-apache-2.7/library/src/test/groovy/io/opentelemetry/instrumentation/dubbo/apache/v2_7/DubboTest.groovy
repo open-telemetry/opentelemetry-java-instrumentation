@@ -18,7 +18,7 @@ class DubboTest extends AbstractDubboTest implements InstrumentationTestTrait {
     def registerConfig = new RegistryConfig()
     registerConfig.setAddress("N/A")
     ServiceConfig<HelloServiceImpl> service = new ServiceConfig<>()
-    service.setInterface(HelloService.class)
+    service.setInterface(HelloService)
     service.setRef(new HelloServiceImpl())
     service.setRegistry(registerConfig)
     service.setFilter("OtelServerFilter")
@@ -28,7 +28,7 @@ class DubboTest extends AbstractDubboTest implements InstrumentationTestTrait {
   @Override
   ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
-    reference.setInterface(HelloService.class)
+    reference.setInterface(HelloService)
     reference.setGeneric("true")
     reference.setUrl("dubbo://localhost:" + port)
     reference.setFilter("OtelClientFilter")

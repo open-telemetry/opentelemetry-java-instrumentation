@@ -18,7 +18,7 @@ class DubboTest extends AbstractDubboTest implements AgentTestTrait {
     def registerConfig = new RegistryConfig()
     registerConfig.setAddress("N/A")
     ServiceConfig<HelloServiceImpl> service = new ServiceConfig<>()
-    service.setInterface(HelloService.class)
+    service.setInterface(HelloService)
     service.setRef(new HelloServiceImpl())
     service.setRegistry(registerConfig)
     return service
@@ -27,7 +27,7 @@ class DubboTest extends AbstractDubboTest implements AgentTestTrait {
   @Override
   ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
-    reference.setInterface(HelloService.class)
+    reference.setInterface(HelloService)
     reference.setGeneric("true")
     reference.setUrl("dubbo://localhost:" + port)
     return reference
