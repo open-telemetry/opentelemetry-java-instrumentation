@@ -46,8 +46,9 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     return qualifiedOperation(awsServiceName, awsOperation);
   }
 
-  public Context startSpan(Context parentContext, Request<?> request, RequestMeta requestMeta) {
-    Context context = super.startSpan(parentContext, request, request);
+  public Context startSpan(
+      Span.Kind kind, Context parentContext, Request<?> request, RequestMeta requestMeta) {
+    Context context = super.startSpan(kind, parentContext, request, request, -1);
     Span span = Span.fromContext(context);
 
     String awsServiceName = request.getServiceName();

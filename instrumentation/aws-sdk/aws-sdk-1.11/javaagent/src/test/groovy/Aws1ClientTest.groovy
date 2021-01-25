@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 
@@ -137,7 +138,7 @@ class Aws1ClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           name "$service.$operation"
-          kind CLIENT
+          kind operation == "SendMessage" ? PRODUCER : CLIENT
           errored false
           hasNoParent()
           attributes {

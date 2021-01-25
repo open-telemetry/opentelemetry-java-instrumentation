@@ -94,12 +94,22 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
 
   @Override
   public Span.Kind getInitiatorSpanKind() {
-    return Kind.PRODUCER;
+    switch (component) {
+      case "aws-sqs":
+        return Kind.INTERNAL;
+      default:
+        return Kind.PRODUCER;
+    }
   }
 
   @Override
   public Span.Kind getReceiverSpanKind() {
-    return Kind.CONSUMER;
+    switch (component) {
+      case "aws-sqs":
+        return Kind.INTERNAL;
+      default:
+        return Kind.CONSUMER;
+    }
   }
 
   /**
