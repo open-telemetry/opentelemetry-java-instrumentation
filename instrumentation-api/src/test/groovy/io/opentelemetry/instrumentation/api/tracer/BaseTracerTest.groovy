@@ -18,10 +18,13 @@ class BaseTracerTest extends Specification {
   @Shared
   def resolvedAddress = new InetSocketAddress("github.com", 999)
 
-  @Shared
   def span = Mock(Span)
+
   @Shared
   def root = Context.root()
+
+  @Shared
+  def existingSpan = Span.getInvalid()
 
   def newTracer() {
     return new BaseTracer() {
@@ -33,8 +36,6 @@ class BaseTracerTest extends Specification {
   }
 
   def "test shouldStartSpan"() {
-    setup:
-
     when:
     boolean result = tracer.shouldStartSpan(kind, context)
 
@@ -42,11 +43,22 @@ class BaseTracerTest extends Specification {
     result == expected
 
     where:
-    kind             | context                           | expected
-    Span.Kind.CLIENT | root                              | true
-    Span.Kind.CLIENT | tracer.withClientSpan(root, span) | false
-    Span.Kind.SERVER | root                              | true
-    Span.Kind.SERVER | tracer.withServerSpan(root, span) | false
+    kind               | context                                   | expected
+    Span.Kind.CLIENT   | root                                      | true
+    Span.Kind.SERVER   | root                                      | true
+    Span.Kind.INTERNAL | root                                      | true
+    Span.Kind.PRODUCER | root                                      | true
+    Span.Kind.CONSUMER | root                                      | true
+    Span.Kind.CLIENT   | tracer.withClientSpan(root, existingSpan) | false
+    Span.Kind.SERVER   | tracer.withClientSpan(root, existingSpan) | true
+    Span.Kind.INTERNAL | tracer.withClientSpan(root, existingSpan) | true
+    Span.Kind.CONSUMER | tracer.withClientSpan(root, existingSpan) | true
+    Span.Kind.PRODUCER | tracer.withClientSpan(root, existingSpan) | true
+    Span.Kind.SERVER   | tracer.withServerSpan(root, existingSpan) | false
+    Span.Kind.INTERNAL | tracer.withServerSpan(root, existingSpan) | true
+    Span.Kind.CONSUMER | tracer.withServerSpan(root, existingSpan) | true
+    Span.Kind.PRODUCER | tracer.withServerSpan(root, existingSpan) | true
+    Span.Kind.CLIENT   | tracer.withServerSpan(root, existingSpan) | true
   }
 
 
