@@ -28,7 +28,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
 
   abstract ServiceConfig configureServer()
 
-  abstract ReferenceConfig configureClient(int port)
+  abstract ReferenceConfig<?> configureClient(int port)
 
   def "test apache dubbo #base"() {
     setup:
@@ -36,7 +36,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     def protocolConfig = new ProtocolConfig()
     protocolConfig.setPort(port)
 
-    DubboBootstrap bootstrap = DubboBootstrap.getInstance();
+    DubboBootstrap bootstrap = DubboBootstrap.getInstance()
     bootstrap.application(new ApplicationConfig("dubbo-test-provider"))
       .service(configureServer())
       .protocol(protocolConfig)

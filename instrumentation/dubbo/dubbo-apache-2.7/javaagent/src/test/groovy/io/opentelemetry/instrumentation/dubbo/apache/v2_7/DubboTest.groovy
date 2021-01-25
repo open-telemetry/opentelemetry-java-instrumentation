@@ -25,7 +25,7 @@ class DubboTest extends AbstractDubboTest implements AgentTestTrait {
   }
 
   @Override
-  ReferenceConfig configureClient(int port) {
+  ReferenceConfig<?> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
     reference.setInterface(HelloService.class)
     reference.setGeneric("true")
