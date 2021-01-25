@@ -7,14 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import io.opentelemetry.javaagent.instrumentation.api.BoundedCache;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlSanitizer;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Statement;
-import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +23,8 @@ public abstract class JdbcUtils {
   private static final boolean NORMALIZATION_ENABLED = isQueryNormalizationEnabled("jdbc");
 
   private static Field c3poField = null;
-  private static final Cache<String, SqlStatementInfo> sqlToStatementInfoCache =
-      CacheBuilder.newBuilder().maximumSize(5000).build();
+  private static final BoundedCache<String, SqlStatementInfo> sqlToStatementInfoCache =
+      BoundedCache.build(5000);
 
   /** Returns the unwrapped connection or null if exception was thrown. */
   public static Connection connectionFromStatement(Statement statement) {
@@ -79,11 +77,11 @@ public abstract class JdbcUtils {
     try {
       return sqlToStatementInfoCache.get(
           sql,
-          () -> {
+          k -> {
             log.debug("SQL statement cache miss");
             return SqlSanitizer.sanitize(sql);
           });
-    } catch (ExecutionException e) {
+    } catch (BoundedCache.Exception e) {
       log.debug("Sql statement cache error", e);
       return new SqlStatementInfo(null, null, null);
     }
