@@ -57,7 +57,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     def o = new Object[1]
     o[0] = "hello"
     def response = runUnderTrace("parent") {
-      genericService.$invoke("hello", [String.class.getName()] as String[], o)
+      genericService.$invoke("hello", [String.getName()] as String[], o)
     }
 
     then:
