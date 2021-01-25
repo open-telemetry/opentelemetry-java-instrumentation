@@ -13,12 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jms.Message;
-import javax.jms.MessageConsumer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -57,21 +55,15 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.This MessageConsumer consumer,
         @Advice.Enter long startTime,
         @Advice.Return Message message,
         @Advice.Thrown Throwable throwable) {
       MessageDestination destination;
       if (message == null) {
-        destination =
-            InstrumentationContext.get(MessageConsumer.class, MessageDestination.class)
-                .get(consumer);
-        if (destination == null) {
-          destination = MessageDestination.UNKNOWN;
-        }
-      } else {
-        destination = tracer().extractDestination(message, null);
+        // Do not create span when no message is received
+        return;
       }
+      destination = tracer().extractDestination(message, null);
 
       Span span = tracer().startConsumerSpan(destination, "receive", message, startTime);
 

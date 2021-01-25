@@ -161,22 +161,8 @@ class Jms2Test extends AgentTestRunner {
 
     expect:
     receivedMessage == null
-    assertTraces(1) {
-      trace(0, 1) { // Consumer trace
-        span(0) {
-          hasNoParent()
-          name destinationName + " receive"
-          kind CONSUMER
-          errored false
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-          }
-        }
-      }
-    }
+    // span is not created if no message is received
+    assertTraces(0,{})
 
     cleanup:
     consumer.close()
@@ -196,23 +182,8 @@ class Jms2Test extends AgentTestRunner {
 
     expect:
     receivedMessage == null
-    assertTraces(1) {
-      trace(0, 1) { // Consumer trace
-        span(0) {
-          hasNoParent()
-          name destinationName + " receive"
-          kind CONSUMER
-          errored false
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-
-          }
-        }
-      }
-    }
+    // span is not created if no message is received
+    assertTraces(0, {})
 
     cleanup:
     consumer.close()
