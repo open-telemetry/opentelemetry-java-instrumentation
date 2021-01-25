@@ -84,7 +84,7 @@ public abstract class JdbcUtils {
             return SqlSanitizer.sanitize(sql);
           });
     } catch (ExecutionException e) {
-      log.info("Sql statement cache error", e);
+      log.debug("Sql statement cache error", e);
       return new SqlStatementInfo(null, null, null);
     }
   }
