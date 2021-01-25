@@ -5,18 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.db.sanitizer
 
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo
 import spock.lang.Specification
 import spock.lang.Timeout
+import spock.lang.Unroll
 
 @Timeout(20)
 class SqlSanitizerTest extends Specification {
 
   def "normalize #originalSql"() {
     setup:
-    def actualNormalized = SqlSanitizer.sanitize(originalSql)
+    def actualSanitized = SqlSanitizer.sanitize(originalSql)
 
     expect:
-    actualNormalized == normalizedSql
+    actualSanitized.getFullStatement() == normalizedSql
 
     where:
     originalSql                                                                | normalizedSql
@@ -83,6 +85,69 @@ class SqlSanitizerTest extends Specification {
     "SELECT    *    \t\r\nFROM  TABLE WHERE FIELD1 = 12344 AND FIELD2 = 5678"  | "SELECT * FROM TABLE WHERE FIELD1 = ? AND FIELD2 = ?"
   }
 
+  @Unroll
+  def "should simplify #sql"() {
+    expect:
+    SqlSanitizer.sanitize(sql) == expected
+
+    where:
+    sql                                                               | expected
+    // Select
+    'SELECT x, y, z FROM schema.table'                                | new SqlStatementInfo(sql, 'SELECT', 'schema.table')
+    'WITH subquery as (select a from b) SELECT x, y, z FROM table'    | new SqlStatementInfo(sql, 'SELECT', null)
+    'SELECT x, y, (select a from b) as z FROM table'                  | new SqlStatementInfo(sql, 'SELECT', null)
+    'select delete, insert into, merge, update from table'            | new SqlStatementInfo(sql, 'SELECT', 'table')
+    'select col /* from table2 */ from table'                         | new SqlStatementInfo(sql, 'SELECT', 'table')
+    'select col from table join anotherTable'                         | new SqlStatementInfo(sql, 'SELECT', null)
+    'select col from (select * from anotherTable)'                    | new SqlStatementInfo(sql, 'SELECT', null)
+    'select col from (select * from anotherTable) alias'              | new SqlStatementInfo(sql, 'SELECT', null)
+    'select col from table1 union select col from table2'             | new SqlStatementInfo(sql, 'SELECT', null)
+    'select col from table where col in (select * from anotherTable)' | new SqlStatementInfo(sql, 'SELECT', null)
+    'select col from table1, table2'                                  | new SqlStatementInfo(sql, 'SELECT', null)
+    'select col from table1 t1, table2 t2'                            | new SqlStatementInfo(sql, 'SELECT', null)
+    'select col from table1 as t1, table2 as t2'                      | new SqlStatementInfo(sql, 'SELECT', null)
+    'select col from table where col in (1, 2, 3)'                    | new SqlStatementInfo('select col from table where col in (?, ?, ?)', 'SELECT', 'table')
+    'select col from table order by col, col2'                        | new SqlStatementInfo(sql, 'SELECT', 'table')
+    'select ąś∂ń© from źćļńĶ order by col, col2'                      | new SqlStatementInfo(sql, 'SELECT', 'źćļńĶ')
+    'select 12345678'                                                 | new SqlStatementInfo('select ?', 'SELECT', null)
+    '/* update comment */ select * from table1'                       | new SqlStatementInfo(sql, 'SELECT', 'table1')
+    'select /*((*/abc from table'                                     | new SqlStatementInfo(sql, 'SELECT', 'table')
+    'SeLeCT * FrOm TAblE'                                             | new SqlStatementInfo(sql, 'SELECT', 'TAblE')
+    // Insert
+    ' insert into table where lalala'                                 | new SqlStatementInfo(sql, 'INSERT', 'table')
+    'insert insert into table where lalala'                           | new SqlStatementInfo(sql, 'INSERT', 'table')
+    'insert into db.table where lalala'                               | new SqlStatementInfo(sql, 'INSERT', 'db.table')
+    'insert without i-n-t-o'                                          | new SqlStatementInfo(sql, 'INSERT', null)
+    // Delete
+    'delete from table where something something'                     | new SqlStatementInfo(sql, 'DELETE', 'table')
+    'delete from 12345678'                                            | new SqlStatementInfo('delete from ?', 'DELETE', null)
+    'delete   ((('                                                    | new SqlStatementInfo('delete (((', 'DELETE', null)
+    // Update
+    'update table set answer=42'                                      | new SqlStatementInfo('update table set answer=?', 'UPDATE', 'table')
+    'update /*table'                                                  | new SqlStatementInfo(sql, 'UPDATE', null)
+    // Merge
+    'merge into table'                                                | new SqlStatementInfo(sql, 'MERGE', 'table')
+    'merge table (into is optional in some dbs)'                      | new SqlStatementInfo(sql, 'MERGE', 'table')
+    'merge (into )))'                                                 | new SqlStatementInfo(sql, 'MERGE', null)
+    // Unknown operation
+    'and now for something completely different'                      | new SqlStatementInfo(sql, null, null)
+    ''                                                                | new SqlStatementInfo(sql, null, null)
+    null                                                              | new SqlStatementInfo(sql, null, null)
+  }
+
+  def "very long SELECT statements don't cause problems"() {
+    given:
+    def sb = new StringBuilder("SELECT * FROM table WHERE")
+    for (int i = 0; i < 2000; i++) {
+      sb.append(" column").append(i).append("=123 and")
+    }
+    def query = sb.toString()
+
+    expect:
+    def sanitizedQuery = query.replace('=123', '=?').substring(0, SqlSanitizer.LIMIT)
+    SqlSanitizer.sanitize(query) == new SqlStatementInfo(sanitizedQuery, "SELECT", "table")
+  }
+
   def "lots and lots of ticks don't cause stack overflow or long runtimes"() {
     setup:
     String s = "'"
@@ -98,7 +163,7 @@ class SqlSanitizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i)
     }
-    assert "?" == SqlSanitizer.sanitize(s)
+    assert "?" == SqlSanitizer.sanitize(s).getFullStatement()
   }
 
   def "very long numbers at end of table name don't cause problem"() {
@@ -107,7 +172,7 @@ class SqlSanitizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i)
     }
-    assert s.substring(0, SqlSanitizer.LIMIT) == SqlSanitizer.sanitize(s)
+    assert s.substring(0, SqlSanitizer.LIMIT) == SqlSanitizer.sanitize(s).getFullStatement()
   }
 
   def "test 32k truncation"() {
@@ -116,7 +181,7 @@ class SqlSanitizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ")
     }
-    String sanitized = SqlSanitizer.sanitize(s.toString())
+    String sanitized = SqlSanitizer.sanitize(s.toString()).getFullStatement()
     System.out.println(sanitized.length())
     assert sanitized.length() <= SqlSanitizer.LIMIT
     assert !sanitized.contains("1234")

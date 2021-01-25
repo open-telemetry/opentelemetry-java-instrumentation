@@ -7,16 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 
-import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.ParseException;
 import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.SqlSanitizer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class CouchbaseQueryNormalizer {
-  private static final Logger log = LoggerFactory.getLogger(CouchbaseQueryNormalizer.class);
   private static final boolean NORMALIZATION_ENABLED =
       isQueryNormalizationEnabled("couchbase", "couchbase-2.0");
 
@@ -125,12 +121,7 @@ public final class CouchbaseQueryNormalizer {
     if (!NORMALIZATION_ENABLED || query == null) {
       return query;
     }
-    try {
-      return SqlSanitizer.sanitize(query);
-    } catch (ParseException e) {
-      log.debug("Could not normalize Couchbase query", e);
-      return null;
-    }
+    return SqlSanitizer.sanitize(query).getFullStatement();
   }
 
   private CouchbaseQueryNormalizer() {}
