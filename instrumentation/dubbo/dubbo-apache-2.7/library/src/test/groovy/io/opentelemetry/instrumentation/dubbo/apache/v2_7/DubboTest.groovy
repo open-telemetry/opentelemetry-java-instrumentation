@@ -26,7 +26,7 @@ class DubboTest extends AbstractDubboTest implements InstrumentationTestTrait {
   }
 
   @Override
-  ReferenceConfig<?> configureClient(int port) {
+  ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
     reference.setInterface(HelloService.class)
     reference.setGeneric("true")

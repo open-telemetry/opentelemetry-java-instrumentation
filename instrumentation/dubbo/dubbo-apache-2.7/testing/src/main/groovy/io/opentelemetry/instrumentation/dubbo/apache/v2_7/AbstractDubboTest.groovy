@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.dubbo.apache.v2_7
 
-
+import io.opentelemetry.instrumentation.dubbo.apache.v2_7.api.HelloService
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -28,7 +28,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
 
   abstract ServiceConfig configureServer()
 
-  abstract ReferenceConfig<?> configureClient(int port)
+  abstract ReferenceConfig<HelloService> configureClient(int port)
 
   def "test apache dubbo #base"() {
     setup:
