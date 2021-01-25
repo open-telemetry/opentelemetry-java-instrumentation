@@ -81,7 +81,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     onRequest(span, request);
     onConnectionAndRequest(span, connection, request);
 
-    Context context = parentContext.with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
+    Context context = withServerSpan(parentContext, span);
     attachServerContext(context, storage);
 
     return context;
@@ -137,7 +137,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   public Span getServerSpan(STORAGE storage) {
     Context attachedContext = getServerContext(storage);
-    return attachedContext == null ? null : attachedContext.get(CONTEXT_SERVER_SPAN_KEY);
+    return attachedContext == null ? null : getCurrentServerSpan(attachedContext);
   }
 
   /**

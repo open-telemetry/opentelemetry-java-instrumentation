@@ -29,7 +29,7 @@ public class TwilioTracer extends BaseTracer {
   }
 
   public boolean shouldStartSpan(Context parentContext) {
-    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
+    return !inClientSpan(parentContext);
   }
 
   public Context startSpan(Context parentContext, Object serviceExecutor, String methodName) {
@@ -39,7 +39,7 @@ public class TwilioTracer extends BaseTracer {
             .setSpanKind(CLIENT)
             .setParent(parentContext)
             .startSpan();
-    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    return withClientSpan(parentContext, span);
   }
 
   /** Decorate trace based on service execution metadata. */
