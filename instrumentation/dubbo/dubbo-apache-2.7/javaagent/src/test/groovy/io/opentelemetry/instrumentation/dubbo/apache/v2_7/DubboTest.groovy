@@ -7,12 +7,12 @@ package io.opentelemetry.instrumentation.dubbo.apache.v2_7
 
 import io.opentelemetry.instrumentation.dubbo.apache.v2_7.api.HelloService
 import io.opentelemetry.instrumentation.dubbo.apache.v2_7.impl.HelloServiceImpl
-import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import org.apache.dubbo.config.ReferenceConfig
 import org.apache.dubbo.config.RegistryConfig
 import org.apache.dubbo.config.ServiceConfig
 
-class DubboTest extends AbstractDubboTest implements InstrumentationTestTrait {
+class DubboTest extends AbstractDubboTest implements AgentTestTrait {
   @Override
   ServiceConfig configureServer() {
     def registerConfig = new RegistryConfig()
@@ -21,7 +21,6 @@ class DubboTest extends AbstractDubboTest implements InstrumentationTestTrait {
     service.setInterface(HelloService.class)
     service.setRef(new HelloServiceImpl())
     service.setRegistry(registerConfig)
-    service.setFilter("OtelServerFilter")
     return service
   }
 
@@ -31,7 +30,6 @@ class DubboTest extends AbstractDubboTest implements InstrumentationTestTrait {
     reference.setInterface(HelloService.class)
     reference.setGeneric("true")
     reference.setUrl("dubbo://localhost:" + port)
-    reference.setFilter("OtelClientFilter")
     return reference
   }
 }

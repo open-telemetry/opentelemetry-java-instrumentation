@@ -5,15 +5,13 @@
 
 package io.opentelemetry.instrumentation.dubbo.apache.v2_7
 
-import io.opentelemetry.instrumentation.dubbo.apache.v2_7.api.HelloService
-import io.opentelemetry.instrumentation.dubbo.apache.v2_7.impl.HelloServiceImpl
+
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.dubbo.config.ApplicationConfig
 import org.apache.dubbo.config.ProtocolConfig
 import org.apache.dubbo.config.ReferenceConfig
-import org.apache.dubbo.config.RegistryConfig
 import org.apache.dubbo.config.ServiceConfig
 import org.apache.dubbo.config.bootstrap.DubboBootstrap
 import org.apache.dubbo.config.utils.ReferenceConfigCache
@@ -27,32 +25,27 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 @Unroll
 abstract class AbstractDubboTest extends InstrumentationSpecification {
+
+  abstract ServiceConfig configureServer()
+
+  abstract ReferenceConfig configureClient(int port)
+
   def "test apache dubbo #base"() {
     setup:
     def port = PortUtils.randomOpenPort()
     def protocolConfig = new ProtocolConfig()
     protocolConfig.setPort(port)
 
-    def registerConfig = new RegistryConfig()
-    registerConfig.setAddress("N/A")
-    ServiceConfig<HelloServiceImpl> service = new ServiceConfig<>()
-    service.setInterface(HelloService.class)
-    service.setRef(new HelloServiceImpl())
-    service.setRegistry(registerConfig)
-
     DubboBootstrap bootstrap = DubboBootstrap.getInstance();
     bootstrap.application(new ApplicationConfig("dubbo-test-provider"))
-      .service(service)
+      .service(configureServer())
       .protocol(protocolConfig)
       .start()
 
     def consumerProtocolConfig = new ProtocolConfig()
     consumerProtocolConfig.setRegister(false)
 
-    ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
-    reference.setInterface(HelloService.class)
-    reference.setGeneric("true")
-    reference.setUrl("dubbo://localhost:" + port)
+    def reference = configureClient(port)
     DubboBootstrap consumerBootstrap = DubboBootstrap.getInstance()
     consumerBootstrap.application(new ApplicationConfig("dubbo-demo-api-consumer"))
       .reference(reference)

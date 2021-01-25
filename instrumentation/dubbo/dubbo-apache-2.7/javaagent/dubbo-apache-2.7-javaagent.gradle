@@ -1,0 +1,19 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.apache.dubbo"
+    module = "dubbo"
+    versions = "[2.7.0,)"
+  }
+}
+
+def apacheDubboVersion = '2.7.5'
+
+dependencies {
+  implementation project(':instrumentation:dubbo:dubbo-apache-2.7:library')
+
+  library group: 'org.apache.dubbo', name: 'dubbo', version: apacheDubboVersion
+
+  testImplementation project(':instrumentation:dubbo:dubbo-apache-2.7:testing')
+}
