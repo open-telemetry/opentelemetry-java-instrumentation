@@ -29,7 +29,7 @@ public class TwilioTracer extends BaseTracer {
   }
 
   public boolean shouldStartSpan(Context parentContext) {
-    return shouldNotSuppressSpan(CLIENT, parentContext);
+    return shouldStartSpan(CLIENT, parentContext);
   }
 
   public Context startSpan(Context parentContext, Object serviceExecutor, String methodName) {

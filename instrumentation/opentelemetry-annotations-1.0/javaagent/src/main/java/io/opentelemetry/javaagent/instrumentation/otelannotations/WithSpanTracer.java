@@ -27,7 +27,7 @@ public class WithSpanTracer extends BaseTracer {
   // whether to call end() or not on the Span in the returned Context
   public boolean shouldStartSpan(Context context, io.opentelemetry.api.trace.Span.Kind kind) {
     // don't create a nested span if you're not supposed to.
-    return shouldNotSuppressSpan(kind, context);
+    return shouldStartSpan(kind, context);
   }
 
   public io.opentelemetry.context.Context startSpan(

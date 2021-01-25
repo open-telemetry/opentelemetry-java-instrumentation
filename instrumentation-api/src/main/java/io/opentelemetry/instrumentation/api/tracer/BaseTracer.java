@@ -80,7 +80,7 @@ public abstract class BaseTracer {
     return Span.current();
   }
 
-  protected final boolean shouldNotSuppressSpan(Kind proposedKind, Context context) {
+  protected final boolean shouldStartSpan(Kind proposedKind, Context context) {
     switch (proposedKind) {
       case CLIENT:
         return !inClientSpan(context);

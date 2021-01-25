@@ -61,7 +61,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   public boolean shouldStartSpan(Context parentContext) {
-    return shouldNotSuppressSpan(CLIENT, parentContext);
+    return shouldStartSpan(CLIENT, parentContext);
   }
 
   public Context startSpan(Context parentContext, REQUEST request, CARRIER carrier) {

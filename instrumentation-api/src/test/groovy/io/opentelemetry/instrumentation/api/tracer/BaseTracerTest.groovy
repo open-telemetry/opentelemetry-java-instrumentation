@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.context.Context
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -18,7 +18,10 @@ class BaseTracerTest extends Specification {
   @Shared
   def resolvedAddress = new InetSocketAddress("github.com", 999)
 
+  @Shared
   def span = Mock(Span)
+  @Shared
+  def root = Context.root()
 
   def newTracer() {
     return new BaseTracer() {
@@ -28,6 +31,24 @@ class BaseTracerTest extends Specification {
       }
     }
   }
+
+  def "test shouldStartSpan"() {
+    setup:
+
+    when:
+    boolean result = tracer.shouldStartSpan(kind, context)
+
+    then:
+    result == expected
+
+    where:
+    kind             | context                           | expected
+    Span.Kind.CLIENT | root                              | true
+    Span.Kind.CLIENT | tracer.withClientSpan(root, span) | false
+    Span.Kind.SERVER | root                              | true
+    Span.Kind.SERVER | tracer.withServerSpan(root, span) | false
+  }
+
 
   class SomeInnerClass implements Runnable {
     void run() {
