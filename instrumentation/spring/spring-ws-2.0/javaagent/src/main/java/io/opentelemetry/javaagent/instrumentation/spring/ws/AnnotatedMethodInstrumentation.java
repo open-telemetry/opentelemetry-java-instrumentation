@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.ws;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.ws.SpringWsTracer.tracer;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -31,6 +32,11 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
         "org.springframework.ws.soap.server.endpoint.annotation.SoapAction",
         "org.springframework.ws.soap.addressing.server.annotation.Action"
       };
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.springframework.ws.server.endpoint.annotation.PayloadRoot");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
