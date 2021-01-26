@@ -112,7 +112,8 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   @Override
   protected TextMapPropagator.Setter<Request<?>> getSetter() {
-    return AwsSdkInjectAdapter.INSTANCE;
+    // Will inject manually with X-Ray propagator instead of user-configured propagators.
+    return null;
   }
 
   @Override
