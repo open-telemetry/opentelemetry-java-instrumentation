@@ -45,7 +45,7 @@ public class AgentTooling {
         new BoundedCache.Builder() {
           @Override
           public <K, V> BoundedCache<K, V> build(long maxSize) {
-            Cache<K, V> cache = CacheBuilder.newBuilder().maximumSize(5000).build();
+            Cache<K, V> cache = CacheBuilder.newBuilder().maximumSize(maxSize).build();
             return new GuavaBoundedCache<>(cache);
           }
         });
