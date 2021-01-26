@@ -78,7 +78,7 @@ public abstract class JdbcUtils {
       return sqlToStatementInfoCache.get(
           sql,
           k -> {
-            log.debug("SQL statement cache miss");
+            log.trace("SQL statement cache miss");
             return SqlSanitizer.sanitize(sql);
           });
     } catch (BoundedCache.Exception e) {
