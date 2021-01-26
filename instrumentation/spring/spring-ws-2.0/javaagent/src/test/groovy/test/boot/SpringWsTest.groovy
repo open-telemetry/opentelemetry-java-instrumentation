@@ -64,18 +64,12 @@ class SpringWsTest extends AgentTestRunner implements HttpServerTestTrait<Config
     Object request = null
     WebServiceMessageCallback callback = null
     if ("hello" == methodName) {
-      HelloRequest tmp = new HelloRequest()
-      tmp.setName(name)
-      request = tmp
+      request = new HelloRequest(name: name)
     } else if ("helloSoapAction" == methodName) {
-      HelloRequestSoapAction tmp = new HelloRequestSoapAction()
-      tmp.setName(name)
-      request = tmp
+      request = new HelloRequestSoapAction(name: name)
       callback = new SoapActionCallback("http://opentelemetry.io/test/hello-soap-action")
     } else if ("helloWsAction" == methodName) {
-      HelloRequestWsAction tmp = new HelloRequestWsAction()
-      tmp.setName(name)
-      request = tmp
+      request = new HelloRequestWsAction(name: name)
       callback = new ActionCallback("http://opentelemetry.io/test/hello-ws-action")
     } else {
       throw new IllegalArgumentException(methodName)
@@ -94,7 +88,7 @@ class SpringWsTest extends AgentTestRunner implements HttpServerTestTrait<Config
     and:
     assertTraces(1) {
       trace(0, 2) {
-        serverSpan(it, 0, getContextPath() + "/ws", null)
+        serverSpan(it, 0, getContextPath() + "/ws")
         handlerSpan(it, 1, methodName, span(0))
       }
     }
@@ -115,7 +109,7 @@ class SpringWsTest extends AgentTestRunner implements HttpServerTestTrait<Config
     def expectedException = new Exception("hello exception")
     assertTraces(1) {
       trace(0, 2) {
-        serverSpan(it, 0, getContextPath() + "/ws", null, expectedException)
+        serverSpan(it, 0, getContextPath() + "/ws", expectedException)
         handlerSpan(it, 1, methodName, span(0), expectedException)
       }
     }
@@ -124,13 +118,9 @@ class SpringWsTest extends AgentTestRunner implements HttpServerTestTrait<Config
     methodName << ["hello", "helloSoapAction", "helloWsAction"]
   }
 
-  static serverSpan(TraceAssert trace, int index, String operation, Object parentSpan = null, Throwable exception = null) {
+  static serverSpan(TraceAssert trace, int index, String operation, Throwable exception = null) {
     trace.span(index) {
-      if (parentSpan == null) {
-        hasNoParent()
-      } else {
-        childOf((SpanData) parentSpan)
-      }
+      hasNoParent()
       name operation
       kind Span.Kind.SERVER
       errored exception != null
