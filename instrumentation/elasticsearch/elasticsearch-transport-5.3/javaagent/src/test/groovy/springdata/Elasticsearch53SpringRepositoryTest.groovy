@@ -5,6 +5,8 @@
 
 package springdata
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
