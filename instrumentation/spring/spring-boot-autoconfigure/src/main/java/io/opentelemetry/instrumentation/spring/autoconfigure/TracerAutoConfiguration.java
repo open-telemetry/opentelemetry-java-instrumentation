@@ -43,25 +43,23 @@ public class TracerAutoConfiguration {
   @Bean
   @Scope("singleton")
   @ConditionalOnMissingBean
-  public TracerProvider tracerProvider(TracerProperties tracerProperties,
-      ObjectProvider<List<SpanExporter>> spanExportersProvider) {
+  public TracerProvider tracerProvider(
+      TracerProperties tracerProperties, ObjectProvider<List<SpanExporter>> spanExportersProvider) {
     SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
 
-    spanExportersProvider.getIfAvailable(Collections::emptyList)
-        .stream()
-        //todo SimpleSpanProcessor...is that really what we want here?
+    spanExportersProvider.getIfAvailable(Collections::emptyList).stream()
+        // todo SimpleSpanProcessor...is that really what we want here?
         .map(SimpleSpanProcessor::create)
         .forEach(tracerProviderBuilder::addSpanProcessor);
 
-    SdkTracerProvider tracerProvider = tracerProviderBuilder
-        .setTraceConfig(TraceConfig.getDefault().toBuilder()
-            .setSampler(Sampler.traceIdRatioBased(tracerProperties.getSamplerProbability()))
-            .build())
-        .build();
-    OpenTelemetrySdk.builder()
-        .setTracerProvider(tracerProvider)
-        .buildAndRegisterGlobal();
+    SdkTracerProvider tracerProvider =
+        tracerProviderBuilder
+            .setTraceConfig(
+                TraceConfig.getDefault().toBuilder()
+                    .setSampler(Sampler.traceIdRatioBased(tracerProperties.getSamplerProbability()))
+                    .build())
+            .build();
+    OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
     return tracerProvider;
   }
-
 }
