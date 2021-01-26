@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling
 
-import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import spock.lang.Specification
 
