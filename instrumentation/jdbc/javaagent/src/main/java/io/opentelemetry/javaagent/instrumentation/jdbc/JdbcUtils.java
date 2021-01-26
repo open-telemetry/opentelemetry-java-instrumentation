@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlSanitizer;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
-import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.SqlSanitizer;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Statement;

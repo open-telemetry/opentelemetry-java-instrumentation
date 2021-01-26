@@ -3,15 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.db.sanitizer;
-
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
+package io.opentelemetry.javaagent.instrumentation.api.db;
 
 %%
 
-%public
 %final
-%class SqlSanitizer
+%class AutoSqlSanitizer
 %apiprivate
 %int
 %buffer 2048
@@ -33,11 +30,8 @@ DOLLAR_QUOTED_STR = "$$" [^$]* "$$"
 WHITESPACE        = [ \t\r\n]+
 
 %{
-  public static SqlStatementInfo sanitize(String statement) {
-    if (statement == null) {
-        return new SqlStatementInfo(null, null, null);
-    }
-    SqlSanitizer sanitizer = new SqlSanitizer(new java.io.StringReader(statement));
+  static SqlStatementInfo sanitize(String statement) {
+    AutoSqlSanitizer sanitizer = new AutoSqlSanitizer(new java.io.StringReader(statement));
     try {
       while (!sanitizer.yyatEOF()) {
         int token = sanitizer.yylex();
@@ -142,11 +136,11 @@ WHITESPACE        = [ \t\r\n]+
         // main query FROM clause
         expectingTableName = true;
         return false;
-      } else {
-        // subquery in WITH or SELECT clause, before main FROM clause; skipping
-        mainTable = null;
-        return true;
       }
+
+      // subquery in WITH or SELECT clause, before main FROM clause; skipping
+      mainTable = null;
+      return true;
     }
 
     boolean handleJoin() {

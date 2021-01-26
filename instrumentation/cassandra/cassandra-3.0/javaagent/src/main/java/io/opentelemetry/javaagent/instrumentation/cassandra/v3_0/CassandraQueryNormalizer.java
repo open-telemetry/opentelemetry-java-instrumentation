@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 
-import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.SqlSanitizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlSanitizer;
 
 public final class CassandraQueryNormalizer {
   private static final boolean NORMALIZATION_ENABLED =

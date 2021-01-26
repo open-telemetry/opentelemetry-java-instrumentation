@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 
-import io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.SqlSanitizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlSanitizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
