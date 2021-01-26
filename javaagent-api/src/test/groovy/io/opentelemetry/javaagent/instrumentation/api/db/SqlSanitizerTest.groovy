@@ -143,7 +143,7 @@ class SqlSanitizerTest extends Specification {
     def query = sb.toString()
 
     expect:
-    def sanitizedQuery = query.replace('=123', '=?').substring(0, SqlSanitizer.LIMIT)
+    def sanitizedQuery = query.replace('=123', '=?').substring(0, AutoSqlSanitizer.LIMIT)
     SqlSanitizer.sanitize(query) == new SqlStatementInfo(sanitizedQuery, "SELECT", "table")
   }
 
@@ -171,7 +171,7 @@ class SqlSanitizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i)
     }
-    assert s.substring(0, SqlSanitizer.LIMIT) == SqlSanitizer.sanitize(s).getFullStatement()
+    assert s.substring(0, AutoSqlSanitizer.LIMIT) == SqlSanitizer.sanitize(s).getFullStatement()
   }
 
   def "test 32k truncation"() {
@@ -182,7 +182,7 @@ class SqlSanitizerTest extends Specification {
     }
     String sanitized = SqlSanitizer.sanitize(s.toString()).getFullStatement()
     System.out.println(sanitized.length())
-    assert sanitized.length() <= SqlSanitizer.LIMIT
+    assert sanitized.length() <= AutoSqlSanitizer.LIMIT
     assert !sanitized.contains("1234")
   }
 
