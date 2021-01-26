@@ -38,7 +38,7 @@ public class OtlpGrpcSpanExporterAutoConfiguration {
 
     return OtlpGrpcSpanExporter.builder()
         .setEndpoint(otlpGrpcSpanExporterProperties.getEndpoint())
-        .setDeadlineMs(otlpGrpcSpanExporterProperties.getSpanTimeout().toMillis())
+        .setTimeout(otlpGrpcSpanExporterProperties.getSpanTimeout())
         .build();
   }
 }
