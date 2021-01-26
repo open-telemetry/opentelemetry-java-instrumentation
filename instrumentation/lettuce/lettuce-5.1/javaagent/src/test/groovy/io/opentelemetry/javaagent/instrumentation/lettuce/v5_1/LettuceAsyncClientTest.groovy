@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.lettuce.core.ClientOptions
@@ -93,8 +95,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
   }
 
   def cleanup() {

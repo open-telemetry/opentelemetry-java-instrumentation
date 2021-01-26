@@ -4,6 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 import io.opentelemetry.test.annotation.SayTracedHello
 import java.util.concurrent.Callable
 
@@ -14,7 +15,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     SayTracedHello.fromCallableWhenDisabled()
 
     expect:
-    TEST_WRITER.traces == []
+    InMemoryTraceUtils.traces == []
   }
 
   def "method with custom annotation should be traced"() {

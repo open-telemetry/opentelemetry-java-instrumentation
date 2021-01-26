@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.lettuce.core.ClientOptions
@@ -95,8 +97,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set + 1 connect trace
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(2)
+    InMemoryTraceUtils.clear()
   }
 
   def cleanup() {

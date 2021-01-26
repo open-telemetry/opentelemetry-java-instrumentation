@@ -5,12 +5,13 @@
 
 import com.google.api.client.http.HttpRequest
 import com.google.api.client.http.HttpResponse
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 import spock.lang.Timeout
 
 @Timeout(5)
 class GoogleHttpClientAsyncTest extends AbstractGoogleHttpClientTest {
   def setup() {
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
   }
 
   @Override

@@ -10,6 +10,7 @@ import com.mongodb.reactivestreams.client.MongoClients
 import com.mongodb.reactivestreams.client.MongoCollection
 import com.mongodb.reactivestreams.client.MongoDatabase
 import io.opentelemetry.api.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.bson.BsonDocument
@@ -122,8 +123,8 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
       latch1.await()
       return db.getCollection(collectionName)
     }
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(2)
+    InMemoryTraceUtils.clear()
 
     when:
     def count = new CompletableFuture()
@@ -168,8 +169,8 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
       latch2.await()
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     def result = new CompletableFuture<UpdateResult>()
@@ -219,8 +220,8 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
       latch2.await()
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     def result = new CompletableFuture<DeleteResult>()

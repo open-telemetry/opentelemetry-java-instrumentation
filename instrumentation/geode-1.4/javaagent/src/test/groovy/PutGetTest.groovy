@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -158,8 +160,8 @@ class PutGetTest extends AgentTestRunner {
 
     region.clear()
     region.put(1, value)
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(2)
+    InMemoryTraceUtils.clear()
 
     when:
     def results = region.query("SELECT * FROM /test-region p WHERE p.expDate = '10/2020'")

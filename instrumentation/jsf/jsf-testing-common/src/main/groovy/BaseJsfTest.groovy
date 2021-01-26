@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
@@ -108,7 +110,7 @@ abstract class BaseJsfTest extends AgentTestRunner implements HttpServerTestTrai
         basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
       }
     }
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
 
     when:
     // extract parameters needed to post back form
@@ -168,7 +170,7 @@ abstract class BaseJsfTest extends AgentTestRunner implements HttpServerTestTrai
         basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
       }
     }
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
 
     when:
     // extract parameters needed to post back form

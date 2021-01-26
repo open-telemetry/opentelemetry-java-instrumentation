@@ -21,13 +21,15 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class InMemoryExporter {
+public class InMemoryTraceUtils {
 
-  public List<List<SpanData>> getTraces() {
+  private InMemoryTraceUtils() {}
+
+  public static List<List<SpanData>> getTraces() {
     return groupTraces(AgentTestingExporterAccess.getExportedSpans());
   }
 
-  public List<MetricData> getMetrics() {
+  public static List<MetricData> getMetrics() {
     // TODO do these need grouping?
     return AgentTestingExporterAccess.getExportedMetrics();
   }
@@ -44,7 +46,7 @@ public class InMemoryExporter {
     return traces;
   }
 
-  public List<List<SpanData>> waitForTraces(int number)
+  public static List<List<SpanData>> waitForTraces(int number)
       throws InterruptedException, TimeoutException {
     return waitForTraces(AgentTestingExporterAccess::getExportedSpans, number);
   }
@@ -54,10 +56,10 @@ public class InMemoryExporter {
     long startTime = System.nanoTime();
     List<List<SpanData>> allTraces = groupTraces(supplier.get());
     List<List<SpanData>> completeTraces =
-        allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
+        allTraces.stream().filter(InMemoryTraceUtils::isCompleted).collect(toList());
     while (completeTraces.size() < number && elapsedSeconds(startTime) < 20) {
       allTraces = groupTraces(supplier.get());
-      completeTraces = allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
+      completeTraces = allTraces.stream().filter(InMemoryTraceUtils::isCompleted).collect(toList());
       Thread.sleep(10);
     }
     if (completeTraces.size() < number) {
@@ -78,13 +80,13 @@ public class InMemoryExporter {
     return TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime);
   }
 
-  public void clear() {
+  public static void clear() {
     AgentTestingExporterAccess.reset();
   }
 
   // must be called under tracesLock
   private static void sortTraces(List<List<SpanData>> traces) {
-    traces.sort(Comparator.comparingLong(InMemoryExporter::getMinSpanOrder));
+    traces.sort(Comparator.comparingLong(InMemoryTraceUtils::getMinSpanOrder));
   }
 
   private static long getMinSpanOrder(List<SpanData> spans) {

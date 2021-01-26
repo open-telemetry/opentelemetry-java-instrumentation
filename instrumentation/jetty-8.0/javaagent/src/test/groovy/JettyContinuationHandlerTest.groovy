@@ -48,9 +48,9 @@ abstract class JettyContinuationHandlerTest extends JettyHandlerTest {
 //    final Closure spec) {
 //
 //    // If this is failing, make sure HttpServerTestAdvice is applied correctly.
-//    TEST_WRITER.waitForTraces(size * 3)
-//    // TEST_WRITER is a CopyOnWriteArrayList, which doesn't support remove()
-//    def toRemove = TEST_WRITER.findAll {
+//    InMemoryTraceUtils.waitForTraces(size * 3)
+//    // InMemoryTraceUtils is a CopyOnWriteArrayList, which doesn't support remove()
+//    def toRemove = InMemoryTraceUtils.findAll {
 //      it.size() == 1 && it.get(0).name == "TEST_SPAN"
 //    }
 //    toRemove.each {
@@ -59,7 +59,7 @@ abstract class JettyContinuationHandlerTest extends JettyHandlerTest {
 //      }
 //    }
 //    assert toRemove.size() == size * 2
-//    TEST_WRITER.removeAll(toRemove)
+//    InMemoryTraceUtils.removeAll(toRemove)
 //
 //    assertTraces(size, spec)
 //  }

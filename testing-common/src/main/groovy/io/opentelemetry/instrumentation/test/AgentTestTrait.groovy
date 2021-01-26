@@ -17,11 +17,9 @@ import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 trait AgentTestTrait {
 
   static AgentTestRunner agentTestRunner
-  static InMemoryExporter testWriter
 
   def setupSpec() {
     agentTestRunner = new AgentTestRunnerImpl()
-    testWriter = AgentTestRunner.TEST_WRITER
 
     agentTestRunner.setupBeforeTests()
 

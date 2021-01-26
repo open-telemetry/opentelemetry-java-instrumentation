@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -47,7 +49,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
 
     when:
     repo.save(customer)
@@ -56,7 +58,7 @@ class SpringJpaTest extends AgentTestRunner {
     then:
     customer.id != null
     // Behavior changed in new version:
-    def extraTrace = TEST_WRITER.traces.size() == 2
+    def extraTrace = InMemoryTraceUtils.traces.size() == 2
     assertTraces(extraTrace ? 2 : 1) {
       if (extraTrace) {
         trace(0, 1) {
@@ -87,7 +89,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
 
     when:
     customer.firstName = "Bill"
@@ -123,7 +125,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
 
     when:
     customer = repo.findByLastName("Anonymous")[0]
@@ -146,7 +148,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
 
     when:
     repo.delete(customer)
@@ -180,6 +182,6 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
   }
 }

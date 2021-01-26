@@ -5,6 +5,8 @@
 
 package springdata
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -111,7 +113,7 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     }
 
     when:
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
     def result = template.findById("1", Doc)
 
     then:

@@ -5,6 +5,8 @@
 
 package springdata
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
@@ -68,7 +70,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       // into a top level trace to get exactly one trace in the result.
       testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     }
-    TEST_WRITER.waitForTraces(1)
+    InMemoryTraceUtils.waitForTraces(1)
 
     template = new ElasticsearchTemplate(testNode.client())
   }
@@ -267,8 +269,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       .withId("b")
       .build())
     template.refresh(indexName)
-    TEST_WRITER.waitForTraces(5)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(5)
+    InMemoryTraceUtils.clear()
 
     and:
     def query = new NativeSearchQueryBuilder().withIndices(indexName).build()

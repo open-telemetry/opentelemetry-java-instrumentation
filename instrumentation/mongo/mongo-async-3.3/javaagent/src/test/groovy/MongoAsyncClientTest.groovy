@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -157,8 +159,8 @@ class MongoAsyncClientTest extends MongoBaseTest {
       latch1.await()
       return db.getCollection(collectionName)
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     def count = new CompletableFuture()
@@ -203,8 +205,8 @@ class MongoAsyncClientTest extends MongoBaseTest {
       latch2.await()
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     def result = new CompletableFuture<UpdateResult>()
@@ -254,8 +256,8 @@ class MongoAsyncClientTest extends MongoBaseTest {
       latch2.await()
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     def result = new CompletableFuture<DeleteResult>()

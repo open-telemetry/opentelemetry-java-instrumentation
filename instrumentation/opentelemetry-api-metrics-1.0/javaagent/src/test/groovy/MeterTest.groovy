@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.sdk.metrics.data.MetricDataType.DOUBLE_GAUGE
 import static io.opentelemetry.sdk.metrics.data.MetricDataType.DOUBLE_SUM
 import static io.opentelemetry.sdk.metrics.data.MetricDataType.LONG_GAUGE
@@ -253,7 +255,7 @@ class MeterTest extends AgentTestRunner {
   def findMetric(instrumentationName, metricName) {
     Stopwatch stopwatch = Stopwatch.createStarted()
     while (stopwatch.elapsed(SECONDS) < 10) {
-      def allMetrics = TEST_WRITER.getMetrics()
+      def allMetrics = InMemoryTraceUtils.getMetrics()
       for (def metric : allMetrics) {
         if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.name == metricName) {
           return metric

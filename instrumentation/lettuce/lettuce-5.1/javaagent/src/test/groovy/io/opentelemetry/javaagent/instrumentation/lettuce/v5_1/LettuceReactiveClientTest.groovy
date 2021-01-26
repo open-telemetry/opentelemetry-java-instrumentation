@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -68,8 +70,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
   }
 
   def cleanup() {
@@ -275,7 +277,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     res != null
-    TEST_WRITER.traces.size() == 0
+    InMemoryTraceUtils.traces.size() == 0
   }
 
   def "blocking subscriber"() {

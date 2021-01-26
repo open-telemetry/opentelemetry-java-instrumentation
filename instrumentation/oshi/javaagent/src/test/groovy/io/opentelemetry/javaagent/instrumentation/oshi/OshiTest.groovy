@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.oshi
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static java.util.concurrent.TimeUnit.SECONDS
 
 import com.google.common.base.Stopwatch
@@ -33,7 +35,7 @@ class OshiTest extends AgentTestRunner {
   def findMetric(instrumentationName, metricName) {
     Stopwatch stopwatch = Stopwatch.createStarted()
     while (stopwatch.elapsed(SECONDS) < 10) {
-      def allMetrics = TEST_WRITER.getMetrics()
+      def allMetrics = InMemoryTraceUtils.getMetrics()
       for (def metric : allMetrics) {
         if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.name == metricName) {
           return metric

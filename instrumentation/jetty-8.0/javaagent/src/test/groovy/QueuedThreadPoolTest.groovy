@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
@@ -37,11 +39,11 @@ class QueuedThreadPoolTest extends AgentTestRunner {
       }
     }.run()
 
-    TEST_WRITER.waitForTraces(1)
-    List<SpanData> trace = TEST_WRITER.traces[0]
+    InMemoryTraceUtils.waitForTraces(1)
+    List<SpanData> trace = InMemoryTraceUtils.traces[0]
 
     expect:
-    TEST_WRITER.traces.size() == 1
+    InMemoryTraceUtils.traces.size() == 1
     trace.size() == 2
     trace.get(0).traceId == trace.get(1).traceId
     trace.get(0).name == "parent"
@@ -73,11 +75,11 @@ class QueuedThreadPoolTest extends AgentTestRunner {
     child.unblock()
     child.waitForCompletion()
 
-    TEST_WRITER.waitForTraces(1)
-    List<SpanData> trace = TEST_WRITER.traces[0]
+    InMemoryTraceUtils.waitForTraces(1)
+    List<SpanData> trace = InMemoryTraceUtils.traces[0]
 
     expect:
-    TEST_WRITER.traces.size() == 1
+    InMemoryTraceUtils.traces.size() == 1
     trace.size() == 2
     trace.get(0).traceId == trace.get(1).traceId
     trace.get(0).name == "parent"

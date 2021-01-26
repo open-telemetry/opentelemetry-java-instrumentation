@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.google.common.reflect.ClassPath
@@ -48,7 +50,7 @@ class AgentTestRunnerTest extends AgentTestRunner {
   def "waiting for child spans times out"() {
     when:
     runUnderTrace("parent") {
-      TEST_WRITER.waitForTraces(1)
+      InMemoryTraceUtils.waitForTraces(1)
     }
 
     then:

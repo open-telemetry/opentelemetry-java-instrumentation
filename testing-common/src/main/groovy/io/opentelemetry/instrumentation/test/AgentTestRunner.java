@@ -46,13 +46,6 @@ public abstract class AgentTestRunner extends Specification {
     System.setProperty("io.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher", "warn");
   }
 
-  /**
-   * For test runs, agent's global tracer will report to this list writer.
-   *
-   * <p>Before the start of each test the reported traces will be reset.
-   */
-  public static final InMemoryExporter TEST_WRITER = new InMemoryExporter();
-
   protected static final Tracer TEST_TRACER;
 
   static {

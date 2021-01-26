@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -123,8 +125,8 @@ class MongoClientTest extends MongoBaseTest {
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     collection.insertOne(new Document("password", "SECRET"))
@@ -154,8 +156,8 @@ class MongoClientTest extends MongoBaseTest {
       coll.insertOne(new Document("password", "OLDPW"))
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     def result = collection.updateOne(
@@ -188,8 +190,8 @@ class MongoClientTest extends MongoBaseTest {
       coll.insertOne(new Document("password", "SECRET"))
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     def result = collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")))
@@ -219,8 +221,8 @@ class MongoClientTest extends MongoBaseTest {
       coll.insertMany([new Document("_id", 0), new Document("_id", 1), new Document("_id", 2)])
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     collection.find().filter(new Document("_id", new Document('$gte', 0)))
@@ -248,8 +250,8 @@ class MongoClientTest extends MongoBaseTest {
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     collection.updateOne(new BsonDocument(), new BsonDocument())

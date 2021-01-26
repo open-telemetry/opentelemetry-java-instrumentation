@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static java.nio.charset.StandardCharsets.UTF_8
 
@@ -83,8 +85,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
     syncCommands.hmset("TESTHM", testHashMap)
 
     // 2 sets
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(2)
+    InMemoryTraceUtils.clear()
   }
 
   def cleanup() {

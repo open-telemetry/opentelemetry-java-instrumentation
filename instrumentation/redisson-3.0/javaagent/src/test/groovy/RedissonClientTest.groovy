@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static java.util.regex.Pattern.compile
 import static java.util.regex.Pattern.quote
@@ -59,7 +61,7 @@ class RedissonClientTest extends AgentTestRunner {
     Config config = new Config()
     config.useSingleServer().setAddress(address)
     redisson = Redisson.create(config)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
   }
 
   def "test string command"() {

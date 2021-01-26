@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -39,7 +41,7 @@ class JedisClientTest extends AgentTestRunner {
 
   def setup() {
     jedis.flushAll()
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
   }
 
   def "set command"() {

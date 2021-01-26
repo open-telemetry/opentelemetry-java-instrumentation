@@ -4,6 +4,7 @@
  */
 
 import com.mongodb.MongoTimeoutException
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 import org.bson.BsonDocument
 import org.bson.BsonString
 
@@ -95,8 +96,8 @@ class MongoClientTest extends MongoBaseTest {
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     collection.insertOne(new Document("password", "SECRET"))
@@ -126,8 +127,8 @@ class MongoClientTest extends MongoBaseTest {
       coll.insertOne(new Document("password", "OLDPW"))
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     def result = collection.updateOne(
@@ -160,8 +161,8 @@ class MongoClientTest extends MongoBaseTest {
       coll.insertOne(new Document("password", "SECRET"))
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     def result = collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")))
@@ -190,8 +191,8 @@ class MongoClientTest extends MongoBaseTest {
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
 
     when:
     collection.updateOne(new BsonDocument(), new BsonDocument())

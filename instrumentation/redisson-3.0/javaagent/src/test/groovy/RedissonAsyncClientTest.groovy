@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -54,7 +56,7 @@ class RedissonAsyncClientTest extends AgentTestRunner {
     Config config = new Config()
     config.useSingleServer().setAddress(address)
     redisson = Redisson.create(config)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
   }
 
   def "test future set"() {

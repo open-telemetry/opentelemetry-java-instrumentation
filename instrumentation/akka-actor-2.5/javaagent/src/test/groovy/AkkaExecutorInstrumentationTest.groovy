@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import akka.dispatch.forkjoin.ForkJoinPool
@@ -58,11 +60,11 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
       }
     }.run()
 
-    TEST_WRITER.waitForTraces(1)
-    List<SpanData> trace = TEST_WRITER.traces[0]
+    InMemoryTraceUtils.waitForTraces(1)
+    List<SpanData> trace = InMemoryTraceUtils.traces[0]
 
     expect:
-    TEST_WRITER.traces.size() == 1
+    InMemoryTraceUtils.traces.size() == 1
     trace.size() == 2
     trace.get(0).name == "parent"
     trace.get(1).name == "asyncChild"
@@ -129,10 +131,10 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
       }
     }.run()
 
-    TEST_WRITER.waitForTraces(1)
+    InMemoryTraceUtils.waitForTraces(1)
 
     expect:
-    TEST_WRITER.traces.size() == 1
+    InMemoryTraceUtils.traces.size() == 1
 
     where:
     name              | method         | poolImpl

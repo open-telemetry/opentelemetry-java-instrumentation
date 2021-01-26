@@ -43,7 +43,7 @@ class SpringTemplateJms1Test extends AgentTestRunner {
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
 
     template = new JmsTemplate(connectionFactory)
-    // Make this longer than timeout on TEST_WRITER.waitForTraces
+    // Make this longer than timeout on InMemoryTraceUtils.waitForTraces
     // Otherwise caller might give up waiting before callee has a chance to respond.
     template.receiveTimeout = TimeUnit.SECONDS.toMillis(21)
   }

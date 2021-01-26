@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
@@ -222,8 +224,8 @@ class KafkaStreamsTest extends AgentTestRunner {
       }
     })
     def spanContext = Span.fromContext(context).getSpanContext()
-    spanContext.traceIdAsHexString == TEST_WRITER.traces[0][3].traceId
-    spanContext.spanIdAsHexString == TEST_WRITER.traces[0][3].spanId
+    spanContext.traceIdAsHexString == InMemoryTraceUtils.traces[0][3].traceId
+    spanContext.spanIdAsHexString == InMemoryTraceUtils.traces[0][3].spanId
 
 
     cleanup:

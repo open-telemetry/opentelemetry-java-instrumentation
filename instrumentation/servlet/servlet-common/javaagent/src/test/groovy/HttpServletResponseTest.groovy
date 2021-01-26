@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static java.util.Collections.emptyEnumeration
@@ -32,7 +34,7 @@ class HttpServletResponseTest extends AgentTestRunner {
     def servlet = new AbstractHttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
     servlet.service((ServletRequest) request, (ServletResponse) response)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
   }
 
   def "test send no-parent"() {
@@ -91,7 +93,7 @@ class HttpServletResponseTest extends AgentTestRunner {
     def servlet = new AbstractHttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
     servlet.service((ServletRequest) request, (ServletResponse) response)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
 
     when:
     runUnderTrace("parent") {

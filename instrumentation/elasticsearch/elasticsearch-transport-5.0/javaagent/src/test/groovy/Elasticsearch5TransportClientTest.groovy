@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
+
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
@@ -68,7 +70,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
       // into a top level trace to get exactly one trace in the result.
       client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     }
-    TEST_WRITER.waitForTraces(1)
+    InMemoryTraceUtils.waitForTraces(1)
   }
 
   def cleanupSpec() {
@@ -141,13 +143,13 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
 
   def "test elasticsearch get"() {
     setup:
-    assert TEST_WRITER.traces == []
+    assert InMemoryTraceUtils.traces == []
     def indexResult = client.admin().indices().prepareCreate(indexName).get()
-    TEST_WRITER.waitForTraces(1)
+    InMemoryTraceUtils.waitForTraces(1)
 
     expect:
     indexResult.acknowledged
-    TEST_WRITER.traces.size() == 1
+    InMemoryTraceUtils.traces.size() == 1
 
     when:
     def emptyResult = client.prepareGet(indexName, indexType, id).get()

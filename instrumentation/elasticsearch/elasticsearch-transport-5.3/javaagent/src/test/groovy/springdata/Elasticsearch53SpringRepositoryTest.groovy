@@ -51,12 +51,12 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
 
   def setup() {
     repo.refresh()
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
     runUnderTrace("delete") {
       repo.deleteAll()
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.waitForTraces(1)
+    InMemoryTraceUtils.clear()
   }
 
   def "test empty repo"() {
@@ -158,7 +158,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
 
     and:
     repo.findById("1").get() == doc
@@ -189,7 +189,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
 
     when:
     doc.data = "other data"
@@ -265,7 +265,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    InMemoryTraceUtils.clear()
 
     when:
     repo.deleteById("1")
