@@ -28,7 +28,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
   }
 
   public boolean shouldStartSpan(Context parentContext) {
-    return !inClientSpan(parentContext);
+    return shouldStartSpan(CLIENT, parentContext);
   }
 
   public Context startSpan(Context parentContext, CONNECTION connection, QUERY query) {
