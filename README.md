@@ -372,17 +372,18 @@ These are the supported libraries and frameworks:
 
 These are the supported application servers:
 
-| Application server                                                                        | Version                     | JVM            | OS                             |
-| ----------------------------------------------------------------------------------------- | --------------------------- | -------------- | ------------------------------ |
-| [Glassfish](https://javaee.github.io/glassfish/)                                          | 5.0.x, 5.1.x                | OpenJDK 8, 11  | Ubuntu 18, Windows Server 2019 |
-| [JBoss EAP](https://www.redhat.com/en/technologies/jboss-middleware/application-platform) | 7.1.x, 7.3.x                | OpenJDK 8, 11  | Ubuntu 18, Windows Server 2019 |
-| [Jetty](https://www.eclipse.org/jetty/)                                                   | 9.4.x, 10.0.x, 11.0.x       | OpenJDK 8, 11  | Ubuntu 20                      |
-| [Payara](https://www.payara.fish/)                                                        | 5.0.x, 5.1.x                | OpenJDK 8, 11  | Ubuntu 18, Windows Server 2019 |
-| [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x, 8.5.x, 9.0.x, 10.0.x | OpenJDK 8, 11  | Ubuntu 18                      |
-| [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 12                          | OpenJDK 8      | Oracle Linux 7, 8              |
-| [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 14                          | OpenJDK 8, 11  | Oracle Linux 7, 8              |
-| [WildFly](https://www.wildfly.org/)                                                       | 13.0.x                      | OpenJDK 8      | Ubuntu 18, Windows Server 2019 |
-| [WildFly](https://www.wildfly.org/)                                                       | 17.0.1, 21.0.0              | OpenJDK 8, 11  | Ubuntu 18, Windows Server 2019 |
+| Application server                                                                        | Version                     | JVM              | OS                             |
+| ----------------------------------------------------------------------------------------- | --------------------------- | ---------------- | ------------------------------ |
+| [Glassfish](https://javaee.github.io/glassfish/)                                          | 5.0.x, 5.1.x                | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+| [JBoss EAP](https://www.redhat.com/en/technologies/jboss-middleware/application-platform) | 7.1.x, 7.3.x                | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+| [Jetty](https://www.eclipse.org/jetty/)                                                   | 9.4.x, 10.0.x, 11.0.x       | OpenJDK 8, 11    | Ubuntu 20                      |
+| [Payara](https://www.payara.fish/)                                                        | 5.0.x, 5.1.x                | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+| [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x, 8.5.x, 9.0.x, 10.0.x | OpenJDK 8, 11    | Ubuntu 18                      |
+| [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 12                          | Oracle JDK 8     | Oracle Linux 7, 8              |
+| [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 14                          | Oracle JDK 8, 11 | Oracle Linux 7, 8              |
+| [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.0.0.12                   | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+| [WildFly](https://www.wildfly.org/)                                                       | 13.0.x                      | OpenJDK 8        | Ubuntu 18, Windows Server 2019 |
+| [WildFly](https://www.wildfly.org/)                                                       | 17.0.1, 21.0.0              | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
 
 ### Disabled instrumentations
 
