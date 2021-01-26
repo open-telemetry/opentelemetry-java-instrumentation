@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.db
 
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo
 import spock.lang.Specification
 import spock.lang.Timeout
 import spock.lang.Unroll
