@@ -10,6 +10,8 @@ minimumInstructionCoverage = 0
 configurations {
   // classpath used by the instrumentation muzzle plugin
   instrumentationMuzzle {
+    canBeConsumed = true
+    canBeResolved = false
     extendsFrom implementation
   }
 }

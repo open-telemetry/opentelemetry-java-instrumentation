@@ -35,3 +35,11 @@ dependencies {
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
 }
+
+sourcesJar {
+  /*
+  We have two javacc config above. They both generate some overlapping files, e.g. ParseException.java.
+  As they both add generated files to sources, this results in duplicating files.
+   */
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}

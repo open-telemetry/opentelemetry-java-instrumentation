@@ -73,8 +73,8 @@ class MuzzlePlugin implements Plugin<Project> {
       doLast {
         if (!project.muzzle.directives.any { it.assertPass }) {
           project.getLogger().info('No muzzle pass directives configured. Asserting pass against instrumentation compile-time dependencies')
-          ClassLoader userCL = createCompileDepsClassLoader(project, bootstrapProject)
-          ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
+          ClassLoader userCL = createCompileDepsClassLoader(project)
+          ClassLoader instrumentationCL = createInstrumentationClassloader(project)
           Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, true)
@@ -86,7 +86,7 @@ class MuzzlePlugin implements Plugin<Project> {
       group = 'Muzzle'
       description = "Print references created by instrumentation muzzle"
       doLast {
-        ClassLoader instrumentationCL = createInstrumentationClassloader(project, toolingProject)
+        ClassLoader instrumentationCL = createInstrumentationClassloader(project)
         Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
           .getMethod('printMuzzleReferences', ClassLoader.class)
         assertionMethod.invoke(null, instrumentationCL)
@@ -125,15 +125,15 @@ class MuzzlePlugin implements Plugin<Project> {
         project.getLogger().info("configured $muzzleDirective")
 
         if (muzzleDirective.coreJdk) {
-          runAfter = addMuzzleTask(muzzleDirective, null, project, runAfter, bootstrapProject, toolingProject)
+          runAfter = addMuzzleTask(muzzleDirective, null, project, runAfter)
         } else {
           muzzleDirectiveToArtifacts(muzzleDirective, system, session).collect() { Artifact singleVersion ->
-            runAfter = addMuzzleTask(muzzleDirective, singleVersion, project, runAfter, bootstrapProject, toolingProject)
+            runAfter = addMuzzleTask(muzzleDirective, singleVersion, project, runAfter)
           }
           if (muzzleDirective.assertInverse) {
             inverseOf(muzzleDirective, system, session).collect() { MuzzleDirective inverseDirective ->
               muzzleDirectiveToArtifacts(inverseDirective, system, session).collect() { Artifact singleVersion ->
-                runAfter = addMuzzleTask(inverseDirective, singleVersion, project, runAfter, bootstrapProject, toolingProject)
+                runAfter = addMuzzleTask(inverseDirective, singleVersion, project, runAfter)
               }
             }
           }
@@ -142,14 +142,14 @@ class MuzzlePlugin implements Plugin<Project> {
     }
   }
 
-  private static ClassLoader getOrCreateToolingLoader(Project toolingProject) {
+  private static ClassLoader getOrCreateToolingLoader(Project project) {
     synchronized (TOOLING_LOADER) {
       ClassLoader toolingLoader = TOOLING_LOADER.get()
       if (toolingLoader == null) {
         Set<URL> urls = new HashSet<>()
-        toolingProject.getLogger().info('creating classpath for auto-tooling')
-        for (File f : toolingProject.sourceSets.main.runtimeClasspath.getFiles()) {
-          toolingProject.getLogger().info('--' + f)
+        project.getLogger().info('creating classpath for auto-tooling')
+        for (File f : project.configurations.toolingRuntime.getFiles()) {
+          project.getLogger().info('--' + f)
           urls.add(f.toURI().toURL())
         }
         def loader = new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.platformClassLoader)
@@ -164,7 +164,7 @@ class MuzzlePlugin implements Plugin<Project> {
   /**
    * Create a classloader with core agent classes and project instrumentation on the classpath.
    */
-  private static ClassLoader createInstrumentationClassloader(Project project, Project toolingProject) {
+  private static ClassLoader createInstrumentationClassloader(Project project) {
     project.getLogger().info("Creating instrumentation classpath for: " + project.getName())
     Set<URL> urls = new HashSet<>()
     for (File f : project.sourceSets.main.runtimeClasspath.getFiles()) {
@@ -172,20 +172,20 @@ class MuzzlePlugin implements Plugin<Project> {
       urls.add(f.toURI().toURL())
     }
 
-    return new URLClassLoader(urls.toArray(new URL[0]), getOrCreateToolingLoader(toolingProject))
+    return new URLClassLoader(urls.toArray(new URL[0]), getOrCreateToolingLoader(project))
   }
 
   /**
    * Create a classloader with all compile-time dependencies on the classpath
    */
-  private static ClassLoader createCompileDepsClassLoader(Project project, Project bootstrapProject) {
+  private static ClassLoader createCompileDepsClassLoader(Project project) {
     List<URL> userUrls = new ArrayList<>()
     project.getLogger().info("Creating compile-time classpath for: " + project.getName())
-    for (File f : project.configurations.compileOnly.getFiles()) {
+    for (File f : project.configurations.compileClasspath.getFiles()) {
       project.getLogger().info('--' + f)
       userUrls.add(f.toURI().toURL())
     }
-    for (File f : bootstrapProject.sourceSets.main.runtimeClasspath.getFiles()) {
+    for (File f : project.configurations.bootstrapRuntime.getFiles()) {
       project.getLogger().info('--' + f)
       userUrls.add(f.toURI().toURL())
     }
@@ -195,7 +195,7 @@ class MuzzlePlugin implements Plugin<Project> {
   /**
    * Create a classloader with dependencies for a single muzzle task.
    */
-  private static ClassLoader createClassLoaderForTask(Project project, Project bootstrapProject, String muzzleTaskName) {
+  private static ClassLoader createClassLoaderForTask(Project project, String muzzleTaskName) {
     List<URL> userUrls = new ArrayList<>()
 
     project.getLogger().info("Creating task classpath")
@@ -204,7 +204,7 @@ class MuzzlePlugin implements Plugin<Project> {
       userUrls.add(jarFile.toURI().toURL())
     }
 
-    for (File f : bootstrapProject.sourceSets.main.runtimeClasspath.getFiles()) {
+    for (File f : project.configurations.bootstrapRuntime.getFiles()) {
       project.getLogger().info("-- Added to instrumentation bootstrap classpath: $f")
       userUrls.add(f.toURI().toURL())
     }
@@ -334,12 +334,10 @@ class MuzzlePlugin implements Plugin<Project> {
    * @param versionArtifact version to assert against.
    * @param instrumentationProject instrumentation being asserted against.
    * @param runAfter Task which runs before the new muzzle task.
-   * @param bootstrapProject Agent bootstrap project.
-   * @param toolingProject Agent tooling project.
    *
    * @return The created muzzle task.
    */
-  private static Task addMuzzleTask(MuzzleDirective muzzleDirective, Artifact versionArtifact, Project instrumentationProject, Task runAfter, Project bootstrapProject, Project toolingProject) {
+  private static Task addMuzzleTask(MuzzleDirective muzzleDirective, Artifact versionArtifact, Project instrumentationProject, Task runAfter) {
     def taskName
     if (muzzleDirective.coreJdk) {
       taskName = "muzzle-Assert$muzzleDirective"
@@ -368,7 +366,7 @@ class MuzzlePlugin implements Plugin<Project> {
     def muzzleTask = instrumentationProject.task(taskName) {
       dependsOn(instrumentationProject.configurations.named("runtimeClasspath"))
       doLast {
-        ClassLoader instrumentationCL = createInstrumentationClassloader(instrumentationProject, toolingProject)
+        ClassLoader instrumentationCL = createInstrumentationClassloader(instrumentationProject)
         def ccl = Thread.currentThread().contextClassLoader
         def bogusLoader = new SecureClassLoader() {
           @Override
@@ -378,7 +376,7 @@ class MuzzlePlugin implements Plugin<Project> {
 
         }
         Thread.currentThread().contextClassLoader = bogusLoader
-        ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
+        ClassLoader userCL = createClassLoaderForTask(instrumentationProject, taskName)
         try {
           // find all instrumenters, get muzzle, and assert
           Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
