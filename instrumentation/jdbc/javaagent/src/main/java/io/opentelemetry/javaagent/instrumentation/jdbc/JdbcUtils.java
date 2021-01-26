@@ -74,16 +74,11 @@ public abstract class JdbcUtils {
     if (!NORMALIZATION_ENABLED) {
       return new SqlStatementInfo(sql, null, null);
     }
-    try {
-      return sqlToStatementInfoCache.get(
-          sql,
-          k -> {
-            log.trace("SQL statement cache miss");
-            return SqlSanitizer.sanitize(sql);
-          });
-    } catch (BoundedCache.Exception e) {
-      log.debug("Sql statement cache error", e);
-      return new SqlStatementInfo(null, null, null);
-    }
+    return sqlToStatementInfoCache.get(
+        sql,
+        k -> {
+          log.trace("SQL statement cache miss");
+          return SqlSanitizer.sanitize(sql);
+        });
   }
 }

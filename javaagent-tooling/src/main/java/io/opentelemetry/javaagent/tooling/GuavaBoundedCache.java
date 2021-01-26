@@ -23,7 +23,7 @@ class GuavaBoundedCache<K, V> implements BoundedCache<K, V> {
     try {
       return delegate.get(key, () -> mappingFunction.apply(key));
     } catch (ExecutionException e) {
-      throw new BoundedCache.Exception(e);
+      throw new IllegalStateException("Unexpected cache exception", e);
     }
   }
 }

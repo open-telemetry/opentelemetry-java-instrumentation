@@ -51,10 +51,4 @@ public interface BoundedCache<K, V> {
       return builderRef.get();
     }
   }
-
-  class Exception extends java.lang.RuntimeException {
-    public Exception(Throwable cause) {
-      super(cause);
-    }
-  }
 }
