@@ -41,7 +41,6 @@ public class TracerAutoConfiguration {
   }
 
   @Bean
-  @Scope("singleton")
   @ConditionalOnMissingBean
   public TracerProvider tracerProvider(
       TracerProperties tracerProperties, ObjectProvider<List<SpanExporter>> spanExportersProvider) {
