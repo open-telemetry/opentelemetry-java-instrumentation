@@ -4,8 +4,6 @@ muzzle {
   pass {
     group = "io.reactivex.rxjava2"
     module = "rxjava"
-    // Tomcat 10 is about servlet 5.0
-    // 7.0.4 added Request.isAsync, which is needed
     versions = "[2.0.0,)"
   }
 }
