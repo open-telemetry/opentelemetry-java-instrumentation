@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.instrumentation.api.BoundedCache;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
-public class GuavaBoundedCache<K, V> implements BoundedCache<K, V> {
+class GuavaBoundedCache<K, V> implements BoundedCache<K, V> {
 
   private final Cache<K, V> delegate;
 
