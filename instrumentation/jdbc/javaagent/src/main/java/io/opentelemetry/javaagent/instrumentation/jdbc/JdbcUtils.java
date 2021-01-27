@@ -24,7 +24,7 @@ public abstract class JdbcUtils {
 
   private static Field c3poField = null;
   private static final BoundedCache<String, SqlStatementInfo> sqlToStatementInfoCache =
-      BoundedCache.build(5000);
+      BoundedCache.build(1000);
 
   /** Returns the unwrapped connection or null if exception was thrown. */
   public static Connection connectionFromStatement(Statement statement) {
