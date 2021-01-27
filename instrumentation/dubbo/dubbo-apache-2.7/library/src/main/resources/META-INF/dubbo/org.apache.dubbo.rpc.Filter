@@ -1,2 +1,1 @@
-OtelClientFilter=io.opentelemetry.instrumentation.dubbo.apache.v2_7.client.TracingClientFilter
-OtelServerFilter=io.opentelemetry.instrumentation.dubbo.apache.v2_7.server.TracingServerFilter
+OtelTracingFilter=io.opentelemetry.instrumentation.dubbo.apache.v2_7.TracingFilter

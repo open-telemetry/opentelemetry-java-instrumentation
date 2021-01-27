@@ -11,11 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.dubbo.apache.v2_7.client.TracingClientFilter;
-import io.opentelemetry.instrumentation.dubbo.apache.v2_7.server.TracingServerFilter;
+import io.opentelemetry.instrumentation.dubbo.apache.v2_7.TracingFilter;
 import io.opentelemetry.javaagent.instrumentation.dubbo.apache.v2_7.filter.SimpleFilter;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,15 +39,7 @@ public class DubboFilterInstrumentation implements TypeInstrumentation {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        named("getActivateExtension")
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.dubbo.common.URL")))
-            .and(takesArgument(1, Array.class))
-            .and(takesArgument(2, String.class))
-            .and(isPublic()),
-        DubboFilterInstrumentation.class.getName() + "$AddClientFilterAdvice");
-    transformers.put(
-        named("getExtension"), DubboFilterInstrumentation.class.getName() + "$RemoveServerFilter");
+        named("getExtension"), DubboFilterInstrumentation.class.getName() + "$RemoveActiveFilter");
     transformers.put(
         named("getActivateExtension")
             .and(takesArguments(3))
@@ -57,54 +47,30 @@ public class DubboFilterInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, String.class))
             .and(takesArgument(2, String.class))
             .and(isPublic()),
-        DubboFilterInstrumentation.class.getName() + "$AddServerFilterAdvice");
+        DubboFilterInstrumentation.class.getName() + "$AddFilterAdvice");
     return transformers;
   }
 
-  public static class AddClientFilterAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void addFilter(
-        @Advice.Argument(2) String group, @Advice.Return(readOnly = false) List<?> filters) {
-      if (!filters.isEmpty() && filters.get(0) instanceof Filter) {
-        List<Filter> filterList = (List<Filter>) filters;
-        if (group.equals("consumer")) {
-          boolean shouldAdd = true;
-          for (Filter filter : filterList) {
-            if (filter instanceof TracingClientFilter) {
-              shouldAdd = false;
-              break;
-            }
-          }
-          if (shouldAdd) {
-            filterList.add(filterList.size(), new TracingClientFilter());
-          }
-        }
-        filters = filterList;
-      }
-    }
-  }
-
-  public static class RemoveServerFilter {
+  public static class RemoveActiveFilter {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void removeFilter(
         @Advice.Argument(0) String name, @Advice.Return(readOnly = false) Object object) {
-      if (name.equals("OtelServerFilter")) {
+      if (name.equals("OtelTracingFilter")) {
         object = new SimpleFilter();
       }
     }
   }
 
-  public static class AddServerFilterAdvice {
+  public static class AddFilterAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addFilter(
         @Advice.Argument(2) String group, @Advice.Return(readOnly = false) List<?> filters) {
       if (!filters.isEmpty() && filters.get(0) instanceof Filter) {
         List<Filter> filterList = (List<Filter>) filters;
-        if (group.equals("provider")) {
-          filterList.add(filterList.size(), new TracingServerFilter());
+        if (group.equals("provider") || group.equals("consumer")) {
+          filterList.add(filterList.size(), new TracingFilter());
         }
         filters = filterList;
       }

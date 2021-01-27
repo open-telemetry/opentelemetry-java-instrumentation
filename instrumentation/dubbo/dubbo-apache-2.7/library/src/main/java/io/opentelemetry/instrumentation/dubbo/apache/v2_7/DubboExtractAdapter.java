@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.dubbo.apache.v2_7.server;
+package io.opentelemetry.instrumentation.dubbo.apache.v2_7;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import org.apache.dubbo.rpc.RpcInvocation;
