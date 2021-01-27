@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.Span.Kind.SERVER;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
 import io.opentelemetry.instrumentation.dubbo.apache.v2_7.common.DubboHelper;
@@ -25,11 +26,20 @@ public class DubboServerTracer extends RpcServerTracer<RpcInvocation> {
     super(tracer);
   }
 
-  public Span startSpan(String name, RpcInvocation rpcInvocation) {
+  public Span startSpan(String interfaceName, String methodName, RpcInvocation rpcInvocation) {
     SpanBuilder spanBuilder =
-        tracer.spanBuilder(name).setSpanKind(SERVER).setParent(extract(rpcInvocation, getGetter()));
+        tracer
+            .spanBuilder(DubboHelper.getSpanName(interfaceName, methodName))
+            .setSpanKind(SERVER)
+            .setParent(extract(rpcInvocation, getGetter()));
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "dubbo");
-    return spanBuilder.startSpan();
+    Span span = spanBuilder.startSpan();
+    DubboHelper.prepareSpan(span, methodName, interfaceName);
+    return span;
+  }
+
+  public Context withServer(Span span) {
+    return withServerSpan(Context.current(), span);
   }
 
   public void endSpan(Span span, Result result) {

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.dubbo.apache.v2_7.server;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import org.apache.dubbo.rpc.RpcInvocation;
 
-final class DubboExtractAdapter implements TextMapPropagator.Getter<RpcInvocation> {
+class DubboExtractAdapter implements TextMapPropagator.Getter<RpcInvocation> {
 
   static final DubboExtractAdapter GETTER = new DubboExtractAdapter();
 

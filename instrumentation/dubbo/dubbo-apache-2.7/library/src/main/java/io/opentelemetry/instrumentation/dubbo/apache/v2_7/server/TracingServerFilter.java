@@ -9,7 +9,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.instrumentation.dubbo.apache.v2_7.common.DubboHelper;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
@@ -26,28 +25,24 @@ public class TracingServerFilter implements Filter {
     this.tracer = new DubboServerTracer();
   }
 
-  public static TracingServerFilter newFilter() {
-    return new TracingServerFilter();
-  }
-
   @Override
   public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
-    if (invocation instanceof RpcInvocation) {
-      String methodName = invocation.getMethodName();
-      Span span = tracer.startSpan(methodName, (RpcInvocation) invocation);
-      NetPeerUtils.INSTANCE.setNetPeer(span, RpcContext.getContext().getRemoteAddress());
-      DubboHelper.prepareSpan(span, methodName, invoker);
-      Context context = Context.current().with(span);
-      Result result;
-      try (Scope ignored = context.makeCurrent()) {
-        result = invoker.invoke(invocation);
-      } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
-        throw e;
-      }
-      tracer.endSpan(span, result);
-      return result;
+    if (!(invocation instanceof RpcInvocation)) {
+      return invoker.invoke(invocation);
     }
-    return invoker.invoke(invocation);
+    String methodName = invocation.getMethodName();
+    String interfaceName = invoker.getInterface().getName();
+    Span span = tracer.startSpan(interfaceName, methodName, (RpcInvocation) invocation);
+    Context context = tracer.withServer(span);
+    NetPeerUtils.INSTANCE.setNetPeer(span, RpcContext.getContext().getRemoteAddress());
+    Result result;
+    try (Scope ignored = context.makeCurrent()) {
+      result = invoker.invoke(invocation);
+    } catch (Throwable e) {
+      tracer.endExceptionally(span, e);
+      throw e;
+    }
+    tracer.endSpan(span, result);
+    return result;
   }
 }

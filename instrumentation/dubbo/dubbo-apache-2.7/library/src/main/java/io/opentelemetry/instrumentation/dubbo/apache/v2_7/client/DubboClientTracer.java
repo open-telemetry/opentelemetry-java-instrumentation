@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.RpcClientTracer;
 import io.opentelemetry.instrumentation.dubbo.apache.v2_7.common.DubboHelper;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -23,10 +24,17 @@ public class DubboClientTracer extends RpcClientTracer {
     super(tracer);
   }
 
-  public Span startSpan(String name) {
-    SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(CLIENT);
+  public Span startSpan(String interfaceName, String methodName) {
+    SpanBuilder spanBuilder =
+        tracer.spanBuilder(DubboHelper.getSpanName(interfaceName, methodName)).setSpanKind(CLIENT);
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "dubbo");
-    return spanBuilder.startSpan();
+    Span span = spanBuilder.startSpan();
+    DubboHelper.prepareSpan(span, methodName, interfaceName);
+    return span;
+  }
+
+  public Context withClient(Span span) {
+    return withClientSpan(Context.current(), span);
   }
 
   public void endSpan(Span span, Result result) {

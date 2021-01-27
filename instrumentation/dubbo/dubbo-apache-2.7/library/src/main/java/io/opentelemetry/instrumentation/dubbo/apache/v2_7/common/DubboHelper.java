@@ -8,19 +8,19 @@ package io.opentelemetry.instrumentation.dubbo.apache.v2_7.common;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 
 public final class DubboHelper {
 
   private DubboHelper() {}
 
-  public static void prepareSpan(Span span, String methodName, Invoker<?> invoker) {
-    span.setAttribute(
-        SemanticAttributes.RPC_SERVICE, invoker.getInterface().getSimpleName() + ":" + methodName);
-    if (methodName != null) {
-      span.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
-    }
+  public static void prepareSpan(Span span, String methodName, String interfaceName) {
+    span.setAttribute(SemanticAttributes.RPC_SERVICE, interfaceName);
+    span.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
+  }
+
+  public static String getSpanName(String interfaceName, String methodName) {
+    return interfaceName + "/" + methodName;
   }
 
   public static StatusCode statusFromResult(Result result) {

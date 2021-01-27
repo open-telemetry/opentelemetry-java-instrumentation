@@ -10,6 +10,7 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.dubbo.apache.v2_7.client.TracingClientFilter;
 import io.opentelemetry.instrumentation.dubbo.apache.v2_7.server.TracingServerFilter;
@@ -38,6 +39,7 @@ public class DubboFilterInstrumentation implements TypeInstrumentation {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("getActivateExtension")
+            .and(takesArguments(3))
             .and(takesArgument(0, named("org.apache.dubbo.common.URL")))
             .and(takesArgument(1, String.class))
             .and(takesArgument(2, String.class))
@@ -61,7 +63,7 @@ public class DubboFilterInstrumentation implements TypeInstrumentation {
             }
           }
           if (shouldAdd) {
-            filterList.add(filterList.size(), TracingClientFilter.newFilter());
+            filterList.add(filterList.size(), new TracingClientFilter());
           }
         } else if (group.equals("provider")) {
           boolean shouldAdd = true;
@@ -72,7 +74,7 @@ public class DubboFilterInstrumentation implements TypeInstrumentation {
             }
           }
           if (shouldAdd) {
-            filterList.add(filterList.size(), TracingServerFilter.newFilter());
+            filterList.add(filterList.size(), new TracingServerFilter());
           }
         }
         filters = filterList;
