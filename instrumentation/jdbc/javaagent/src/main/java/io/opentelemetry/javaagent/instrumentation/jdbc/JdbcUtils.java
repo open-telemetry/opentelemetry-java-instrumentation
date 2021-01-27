@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
 
+import io.opentelemetry.javaagent.instrumentation.api.BoundedCache;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlSanitizer;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import java.lang.reflect.Field;
@@ -22,6 +23,8 @@ public abstract class JdbcUtils {
   private static final boolean NORMALIZATION_ENABLED = isQueryNormalizationEnabled("jdbc");
 
   private static Field c3poField = null;
+  private static final BoundedCache<String, SqlStatementInfo> sqlToStatementInfoCache =
+      BoundedCache.build(1000);
 
   /** Returns the unwrapped connection or null if exception was thrown. */
   public static Connection connectionFromStatement(Statement statement) {
@@ -71,6 +74,11 @@ public abstract class JdbcUtils {
     if (!NORMALIZATION_ENABLED) {
       return new SqlStatementInfo(sql, null, null);
     }
-    return SqlSanitizer.sanitize(sql);
+    return sqlToStatementInfoCache.get(
+        sql,
+        k -> {
+          log.trace("SQL statement cache miss");
+          return SqlSanitizer.sanitize(sql);
+        });
   }
 }
