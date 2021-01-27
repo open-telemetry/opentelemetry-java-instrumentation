@@ -77,10 +77,11 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return context;
   }
 
-  private void inject(Context context, CARRIER carrier) {
+  protected void inject(Context context, CARRIER carrier) {
     Setter<CARRIER> setter = getSetter();
     if (setter == null) {
-      return;
+      throw new IllegalStateException(
+          "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
     GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, carrier, setter);
   }

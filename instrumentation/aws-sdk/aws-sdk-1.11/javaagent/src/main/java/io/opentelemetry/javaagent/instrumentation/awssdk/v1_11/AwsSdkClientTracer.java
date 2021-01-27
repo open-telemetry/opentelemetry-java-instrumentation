@@ -31,6 +31,11 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   public AwsSdkClientTracer() {}
 
   @Override
+  protected void inject(Context context, Request<?> request) {
+    AwsXrayPropagator.getInstance().inject(context, request, AwsSdkInjectAdapter.INSTANCE);
+  }
+
+  @Override
   protected String spanNameForRequest(Request<?> request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
@@ -112,7 +117,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   @Override
   protected TextMapPropagator.Setter<Request<?>> getSetter() {
-    // Will inject manually with X-Ray propagator instead of user-configured propagators.
+    // We override injection and don't want to have the base class do it accidentally.
     return null;
   }
 
