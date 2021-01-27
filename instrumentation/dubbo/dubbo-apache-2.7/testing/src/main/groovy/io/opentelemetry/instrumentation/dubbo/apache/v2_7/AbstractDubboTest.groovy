@@ -6,12 +6,14 @@
 package io.opentelemetry.instrumentation.dubbo.apache.v2_7
 
 import io.opentelemetry.instrumentation.dubbo.apache.v2_7.api.HelloService
+import io.opentelemetry.instrumentation.dubbo.apache.v2_7.impl.HelloServiceImpl
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.dubbo.config.ApplicationConfig
 import org.apache.dubbo.config.ProtocolConfig
 import org.apache.dubbo.config.ReferenceConfig
+import org.apache.dubbo.config.RegistryConfig
 import org.apache.dubbo.config.ServiceConfig
 import org.apache.dubbo.config.bootstrap.DubboBootstrap
 import org.apache.dubbo.config.utils.ReferenceConfigCache
@@ -26,9 +28,29 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 @Unroll
 abstract class AbstractDubboTest extends InstrumentationSpecification {
 
-  abstract ServiceConfig configureServer()
+  abstract void configureServerFilter(ServiceConfig serviceConfig)
 
-  abstract ReferenceConfig<HelloService> configureClient(int port)
+  abstract void configureClientFilter(ReferenceConfig<HelloService> referenceConfig)
+
+  ReferenceConfig<HelloService> configureClient(int port) {
+    ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
+    reference.setInterface(HelloService)
+    reference.setGeneric("true")
+    reference.setUrl("dubbo://localhost:" + port)
+    configureClientFilter(reference)
+    return reference
+  }
+
+  ServiceConfig configureServer() {
+    def registerConfig = new RegistryConfig()
+    registerConfig.setAddress("N/A")
+    ServiceConfig<HelloServiceImpl> service = new ServiceConfig<>()
+    service.setInterface(HelloService)
+    service.setRef(new HelloServiceImpl())
+    service.setRegistry(registerConfig)
+    configureServerFilter(service)
+    return service
+  }
 
   def "test apache dubbo base #dubbo"() {
     setup:

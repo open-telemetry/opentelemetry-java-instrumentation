@@ -35,8 +35,8 @@ public class TracingClientFilter implements Filter {
     }
     String methodName = invocation.getMethodName();
     String interfaceName = invoker.getInterface().getName();
-    Span span = tracer.startSpan(interfaceName, methodName);
-    Context context = tracer.withClient(span);
+    Context context = tracer.startSpan(interfaceName, methodName);
+    Span span = Span.fromContext(context);
     NetPeerUtils.INSTANCE.setNetPeer(span, RpcContext.getContext().getRemoteAddress());
     GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()

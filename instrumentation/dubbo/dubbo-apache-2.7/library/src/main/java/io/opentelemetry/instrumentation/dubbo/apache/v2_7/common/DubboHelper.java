@@ -14,7 +14,7 @@ public final class DubboHelper {
 
   private DubboHelper() {}
 
-  public static void prepareSpan(Span span, String methodName, String interfaceName) {
+  public static void prepareSpan(Span span, String interfaceName, String methodName) {
     span.setAttribute(SemanticAttributes.RPC_SERVICE, interfaceName);
     span.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
   }

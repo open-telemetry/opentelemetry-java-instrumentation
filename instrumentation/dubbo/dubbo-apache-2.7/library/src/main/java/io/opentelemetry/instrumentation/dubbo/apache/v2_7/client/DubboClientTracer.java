@@ -24,16 +24,12 @@ public class DubboClientTracer extends RpcClientTracer {
     super(tracer);
   }
 
-  public Span startSpan(String interfaceName, String methodName) {
+  public Context startSpan(String interfaceName, String methodName) {
     SpanBuilder spanBuilder =
         tracer.spanBuilder(DubboHelper.getSpanName(interfaceName, methodName)).setSpanKind(CLIENT);
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "dubbo");
     Span span = spanBuilder.startSpan();
-    DubboHelper.prepareSpan(span, methodName, interfaceName);
-    return span;
-  }
-
-  public Context withClient(Span span) {
+    DubboHelper.prepareSpan(span, interfaceName, methodName);
     return withClientSpan(Context.current(), span);
   }
 

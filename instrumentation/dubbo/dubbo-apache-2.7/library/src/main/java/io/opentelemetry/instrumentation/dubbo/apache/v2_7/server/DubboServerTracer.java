@@ -26,7 +26,7 @@ public class DubboServerTracer extends RpcServerTracer<RpcInvocation> {
     super(tracer);
   }
 
-  public Span startSpan(String interfaceName, String methodName, RpcInvocation rpcInvocation) {
+  public Context startSpan(String interfaceName, String methodName, RpcInvocation rpcInvocation) {
     SpanBuilder spanBuilder =
         tracer
             .spanBuilder(DubboHelper.getSpanName(interfaceName, methodName))
@@ -34,11 +34,7 @@ public class DubboServerTracer extends RpcServerTracer<RpcInvocation> {
             .setParent(extract(rpcInvocation, getGetter()));
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "dubbo");
     Span span = spanBuilder.startSpan();
-    DubboHelper.prepareSpan(span, methodName, interfaceName);
-    return span;
-  }
-
-  public Context withServer(Span span) {
+    DubboHelper.prepareSpan(span, interfaceName, methodName);
     return withServerSpan(Context.current(), span);
   }
 

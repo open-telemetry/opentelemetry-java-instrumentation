@@ -32,8 +32,8 @@ public class TracingServerFilter implements Filter {
     }
     String methodName = invocation.getMethodName();
     String interfaceName = invoker.getInterface().getName();
-    Span span = tracer.startSpan(interfaceName, methodName, (RpcInvocation) invocation);
-    Context context = tracer.withServer(span);
+    Context context = tracer.startSpan(interfaceName, methodName, (RpcInvocation) invocation);
+    Span span = Span.fromContext(context);
     NetPeerUtils.INSTANCE.setNetPeer(span, RpcContext.getContext().getRemoteAddress());
     Result result;
     try (Scope ignored = context.makeCurrent()) {
