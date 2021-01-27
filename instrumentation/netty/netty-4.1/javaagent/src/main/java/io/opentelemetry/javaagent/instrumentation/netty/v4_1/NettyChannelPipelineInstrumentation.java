@@ -90,12 +90,17 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
     public static void addHandler(
         @Advice.Enter int callDepth,
         @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(1) String name,
+        @Advice.Argument(1) String handlerName,
         @Advice.Argument(2) ChannelHandler handler) {
       if (callDepth > 0) {
         return;
       }
       CallDepthThreadLocalMap.reset(handler.getClass());
+
+      String name = handlerName;
+      if (name == null) {
+        name = pipeline.context(handler).name();
+      }
 
       try {
         // Server pipeline handlers
