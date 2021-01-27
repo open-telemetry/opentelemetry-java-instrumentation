@@ -28,16 +28,11 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 @Unroll
 abstract class AbstractDubboTest extends InstrumentationSpecification {
 
-  abstract void configureServerFilter(ServiceConfig serviceConfig)
-
-  abstract void configureClientFilter(ReferenceConfig<HelloService> referenceConfig)
-
   ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
     reference.setInterface(HelloService)
     reference.setGeneric("true")
     reference.setUrl("dubbo://localhost:" + port)
-    configureClientFilter(reference)
     return reference
   }
 
@@ -48,7 +43,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     service.setInterface(HelloService)
     service.setRef(new HelloServiceImpl())
     service.setRegistry(registerConfig)
-    configureServerFilter(service)
     return service
   }
 
