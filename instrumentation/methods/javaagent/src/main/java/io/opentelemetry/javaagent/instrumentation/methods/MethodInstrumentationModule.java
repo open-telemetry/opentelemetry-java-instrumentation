@@ -56,7 +56,9 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   // generate any TypeInstrumentation for muzzle to analyze
   @Override
   protected String[] additionalHelperClassNames() {
-    return new String[] {"io.opentelemetry.javaagent.instrumentation.methods.MethodTracer"};
+    return typeInstrumentations.isEmpty()
+        ? new String[0]
+        : new String[] {"io.opentelemetry.javaagent.instrumentation.methods.MethodTracer"};
   }
 
   @Override
