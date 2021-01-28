@@ -41,7 +41,7 @@ public class TracingFilter implements Filter {
     String interfaceName = invoker.getInterface().getName();
     RpcContext rpcContext = RpcContext.getContext();
     Kind kind = rpcContext.isProviderSide() ? SERVER : CLIENT;
-    Context context;
+    final Context context;
     if (kind.equals(CLIENT)) {
       context = tracer.startClientSpan(interfaceName, methodName);
       GlobalOpenTelemetry.getPropagators()
@@ -51,7 +51,7 @@ public class TracingFilter implements Filter {
       context = tracer.startServerSpan(interfaceName, methodName, (RpcInvocation) invocation);
     }
     Span span = Span.fromContext(context);
-    Result result;
+    final Result result;
     boolean isSynchronous = true;
     try (Scope ignored = span.makeCurrent()) {
       result = invoker.invoke(invocation);

@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.dubbo.rpc.Result;
 
-public final class DubboHelper {
+class DubboHelper {
 
   private DubboHelper() {}
 

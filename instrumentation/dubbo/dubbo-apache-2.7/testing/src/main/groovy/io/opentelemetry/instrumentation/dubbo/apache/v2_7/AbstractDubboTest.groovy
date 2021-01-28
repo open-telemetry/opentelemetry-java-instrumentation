@@ -18,6 +18,7 @@ import org.apache.dubbo.config.ServiceConfig
 import org.apache.dubbo.config.bootstrap.DubboBootstrap
 import org.apache.dubbo.config.utils.ReferenceConfigCache
 import org.apache.dubbo.rpc.service.GenericService
+import spock.lang.Shared
 import spock.lang.Unroll
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
@@ -27,6 +28,9 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 @Unroll
 abstract class AbstractDubboTest extends InstrumentationSpecification {
+
+  @Shared
+  def protocolConfig = new ProtocolConfig()
 
   ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
@@ -49,7 +53,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
   def "test apache dubbo base #dubbo"() {
     setup:
     def port = PortUtils.randomOpenPort()
-    def protocolConfig = new ProtocolConfig()
     protocolConfig.setPort(port)
 
     DubboBootstrap bootstrap = DubboBootstrap.getInstance()
@@ -76,16 +79,9 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
       genericService.$invoke("hello", [String.getName()] as String[], o)
     }
 
-    and:
-    def responseAsync = runUnderTrace("parent") {
-      genericService.$invokeAsync("hello", [String.getName()] as String[], o)
-    }
-
     then:
     response == "hello"
-    responseAsync.get() == "hello"
-
-    assertTraces(2) {
+    assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
@@ -116,7 +112,46 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           }
         }
       }
-      trace(1, 3) {
+    }
+
+    cleanup:
+    bootstrap.destroy()
+    consumerBootstrap.destroy()
+  }
+
+  def "test apache dubbo test #dubbo"() {
+    setup:
+    def port = PortUtils.randomOpenPort()
+    protocolConfig.setPort(port)
+
+    DubboBootstrap bootstrap = DubboBootstrap.getInstance()
+    bootstrap.application(new ApplicationConfig("dubbo-test-async-provider"))
+      .service(configureServer())
+      .protocol(protocolConfig)
+      .start()
+
+    def consumerProtocolConfig = new ProtocolConfig()
+    consumerProtocolConfig.setRegister(false)
+
+    def reference = configureClient(port)
+    DubboBootstrap consumerBootstrap = DubboBootstrap.getInstance()
+    consumerBootstrap.application(new ApplicationConfig("dubbo-demo-async-api-consumer"))
+      .reference(reference)
+      .protocol(consumerProtocolConfig)
+      .start()
+
+    when:
+    GenericService genericService = ReferenceConfigCache.getCache().get(reference) as GenericService
+    def o = new Object[1]
+    o[0] = "hello"
+    def responseAsync = runUnderTrace("parent") {
+      genericService.$invokeAsync("hello", [String.getName()] as String[], o)
+    }
+
+    then:
+    responseAsync.get() == "hello"
+    assertTraces(1) {
+      trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
           name "org.apache.dubbo.rpc.service.GenericService/\$invokeAsync"
