@@ -5,11 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.dubbo.apache.v2_7;
 
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class DubboInstrumentationModule extends InstrumentationModule {
@@ -18,7 +21,19 @@ public class DubboInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public String[] helperResourceNames() {
+    return new String[] {
+      "META-INF/dubbo/org.apache.dubbo.rpc.Filter",
+    };
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("org.apache.dubbo.rpc.Filter");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new DubboFilterInstrumentation());
+    return Collections.singletonList(new DubboInstrumentation());
   }
 }
