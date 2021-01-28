@@ -127,6 +127,129 @@ abstract class ItemLevelSpanTest extends AgentTestRunner {
       }
     }
   }
+
+  def "should trace all item operations on a parallel items job"() {
+    when:
+    runJob("parallelItemsJob")
+
+    then:
+    assertTraces(1) {
+      trace(0, 23) {
+        span(0) {
+          name "BatchJob parallelItemsJob"
+          kind INTERNAL
+        }
+        span(1) {
+          name "BatchJob parallelItemsJob.parallelItemsStep"
+          kind INTERNAL
+          childOf span(0)
+        }
+
+        // chunk 1, first two items; thread 1
+        span(2) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.Chunk"
+          kind INTERNAL
+          childOf span(1)
+        }
+        [3, 4].forEach {
+          span(it) {
+            name "BatchJob parallelItemsJob.parallelItemsStep.ItemRead"
+            kind INTERNAL
+            childOf span(2)
+          }
+        }
+        [5, 6].forEach {
+          span(it) {
+            name "BatchJob parallelItemsJob.parallelItemsStep.ItemProcess"
+            kind INTERNAL
+            childOf span(2)
+          }
+        }
+        span(7) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.ItemWrite"
+          kind INTERNAL
+          childOf span(2)
+        }
+
+        // chunk 2, items 3 & 4; thread 2
+        span(8) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.Chunk"
+          kind INTERNAL
+          childOf span(1)
+        }
+        [9, 10].forEach {
+          span(it) {
+            name "BatchJob parallelItemsJob.parallelItemsStep.ItemRead"
+            kind INTERNAL
+            childOf span(8)
+          }
+        }
+        [11, 12].forEach {
+          span(it) {
+            name "BatchJob parallelItemsJob.parallelItemsStep.ItemProcess"
+            kind INTERNAL
+            childOf span(8)
+          }
+        }
+        span(13) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.ItemWrite"
+          kind INTERNAL
+          childOf span(8)
+        }
+
+        // chunk 3, 5th item; thread 1
+        span(14) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.Chunk"
+          kind INTERNAL
+          childOf span(1)
+        }
+        // +1 for last read returning end of stream marker
+        [15, 16].forEach {
+          span(it) {
+            name "BatchJob parallelItemsJob.parallelItemsStep.ItemRead"
+            kind INTERNAL
+            childOf span(14)
+          }
+        }
+        span(17) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.ItemProcess"
+          kind INTERNAL
+          childOf span(14)
+        }
+        span(18) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.ItemWrite"
+          kind INTERNAL
+          childOf span(14)
+        }
+
+        // empty chunk on thread 2, end processing
+        span(19) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.Chunk"
+          kind INTERNAL
+          childOf span(1)
+        }
+        // end of stream marker
+        span(20) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.ItemRead"
+          kind INTERNAL
+          childOf span(19)
+        }
+
+        // empty chunk on thread 1, end processing
+        span(21) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.Chunk"
+          kind INTERNAL
+          childOf span(1)
+        }
+        // end of stream marker
+        span(22) {
+          name "BatchJob parallelItemsJob.parallelItemsStep.ItemRead"
+          kind INTERNAL
+          childOf span(21)
+        }
+      }
+    }
+  }
 }
 
 class JavaConfigItemLevelSpanTest extends ItemLevelSpanTest implements ApplicationConfigTrait {
