@@ -45,6 +45,8 @@ configurations {
 }
 
 dependencies {
+  compileOnly deps.opentelemetryTraceProps
+
   library group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
@@ -55,6 +57,9 @@ dependencies {
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.106'
+
+  // Make sure doesn't add HTTP headers
+  testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
 
   // needed for kinesis:
   testImplementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-cbor', version: versions.jackson
