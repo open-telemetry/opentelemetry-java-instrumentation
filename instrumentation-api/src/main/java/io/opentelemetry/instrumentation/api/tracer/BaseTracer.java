@@ -22,6 +22,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public abstract class BaseTracer {
+  private static final Logger log = LoggerFactory.getLogger(BaseTracer.class);
+
   // Keeps track of the server span for the current trace.
   // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
   // or other non-server root.
@@ -84,14 +86,27 @@ public abstract class BaseTracer {
   }
 
   protected final boolean shouldStartSpan(SpanKind proposedKind, Context context) {
+    boolean result;
     switch (proposedKind) {
       case CLIENT:
-        return !inClientSpan(context);
+        result = !inClientSpan(context);
+        break;
       case SERVER:
-        return !inServerSpan(context);
+        result = !inServerSpan(context);
+        break;
       default:
-        return true;
+        result = true;
     }
+    if (!result) {
+      if (log.isDebugEnabled()) {
+        log.debug(
+            "Suppressing "
+                + proposedKind
+                + " span. Suppressed instrumentation: "
+                + getInstrumentationName());
+      }
+    }
+    return result;
   }
 
   private boolean inClientSpan(Context parentContext) {
