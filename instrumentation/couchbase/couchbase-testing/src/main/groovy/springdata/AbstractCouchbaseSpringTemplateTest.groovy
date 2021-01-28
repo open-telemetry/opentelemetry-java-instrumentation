@@ -111,7 +111,7 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     }
 
     when:
-    TEST_WRITER.clear()
+    testWriter.clear()
     def result = template.findById("1", Doc)
 
     then:

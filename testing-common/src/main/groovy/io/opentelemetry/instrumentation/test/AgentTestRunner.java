@@ -11,9 +11,7 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
@@ -53,17 +51,9 @@ public abstract class AgentTestRunner extends Specification {
    */
   public static final InMemoryExporter TEST_WRITER = new InMemoryExporter();
 
-  protected static final Tracer TEST_TRACER;
-
   static {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
-
-    TEST_TRACER = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto");
-  }
-
-  protected static Tracer getTestTracer() {
-    return TEST_TRACER;
   }
 
   /**
@@ -119,19 +109,5 @@ public abstract class AgentTestRunner extends Specification {
           @DelegatesTo(value = InMemoryExporterAssert.class, strategy = Closure.DELEGATE_FIRST)
           Closure spec) {
     InMemoryExporterAssert.assertTraces(AgentTestingExporterAccess::getExportedSpans, size, spec);
-  }
-
-  protected static String getClassName(Class clazz) {
-    String className = clazz.getSimpleName();
-    if (className.isEmpty()) {
-      className = clazz.getName();
-      if (clazz.getPackage() != null) {
-        String pkgName = clazz.getPackage().getName();
-        if (!pkgName.isEmpty()) {
-          className = clazz.getName().replace(pkgName, "").substring(1);
-        }
-      }
-    }
-    return className;
   }
 }

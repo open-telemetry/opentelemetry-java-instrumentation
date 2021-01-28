@@ -7,14 +7,14 @@ package test
 
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.camel.CamelContext
 import org.apache.camel.ProducerTemplate
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-class DirectCamelTest extends AgentTestRunner {
+class DirectCamelTest extends AgentInstrumentationSpecification {
 
     @Shared
     ConfigurableApplicationContext server

@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import com.mongodb.MongoTimeoutException
-import org.bson.BsonDocument
-import org.bson.BsonString
-
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
+import com.mongodb.MongoTimeoutException
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
+import org.bson.BsonDocument
+import org.bson.BsonString
 import org.bson.Document
 import spock.lang.Shared
 
@@ -95,8 +95,8 @@ class MongoClientTest extends MongoBaseTest {
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(1)
+    testWriter.clear()
 
     when:
     collection.insertOne(new Document("password", "SECRET"))
@@ -126,8 +126,8 @@ class MongoClientTest extends MongoBaseTest {
       coll.insertOne(new Document("password", "OLDPW"))
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(1)
+    testWriter.clear()
 
     when:
     def result = collection.updateOne(
@@ -160,8 +160,8 @@ class MongoClientTest extends MongoBaseTest {
       coll.insertOne(new Document("password", "SECRET"))
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(1)
+    testWriter.clear()
 
     when:
     def result = collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")))
@@ -190,8 +190,8 @@ class MongoClientTest extends MongoBaseTest {
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(1)
+    testWriter.clear()
 
     when:
     collection.updateOne(new BsonDocument(), new BsonDocument())

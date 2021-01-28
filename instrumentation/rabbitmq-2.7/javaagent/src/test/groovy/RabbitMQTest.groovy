@@ -18,10 +18,10 @@ import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.GetResponse
 import com.rabbitmq.client.ShutdownSignalException
 import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.time.Duration
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
@@ -32,7 +32,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
-class RabbitMQTest extends AgentTestRunner {
+class RabbitMQTest extends AgentInstrumentationSpecification {
 
   @Shared
   def rabbitMQContainer

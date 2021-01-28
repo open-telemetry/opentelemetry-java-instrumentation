@@ -8,10 +8,10 @@ import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.h
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import reactor.netty.http.client.HttpClient
@@ -19,7 +19,7 @@ import reactor.netty.http.client.HttpClientResponse
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class HttpClientTest extends AgentTestRunner {
+class HttpClientTest extends AgentInstrumentationSpecification {
   @AutoCleanup
   @Shared
   def server = httpServer {

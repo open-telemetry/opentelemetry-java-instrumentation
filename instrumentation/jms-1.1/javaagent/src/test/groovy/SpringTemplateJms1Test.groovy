@@ -7,7 +7,7 @@ import static Jms1Test.consumerSpan
 import static Jms1Test.producerSpan
 
 import com.google.common.base.Stopwatch
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Connection
@@ -21,7 +21,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 
-class SpringTemplateJms1Test extends AgentTestRunner {
+class SpringTemplateJms1Test extends AgentInstrumentationSpecification {
   private static final Logger logger = LoggerFactory.getLogger(SpringTemplateJms1Test)
 
   private static final GenericContainer broker = new GenericContainer("rmohr/activemq:latest")
@@ -43,7 +43,7 @@ class SpringTemplateJms1Test extends AgentTestRunner {
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
 
     template = new JmsTemplate(connectionFactory)
-    // Make this longer than timeout on TEST_WRITER.waitForTraces
+    // Make this longer than timeout on testWriter.waitForTraces
     // Otherwise caller might give up waiting before callee has a chance to respond.
     template.receiveTimeout = TimeUnit.SECONDS.toMillis(21)
   }

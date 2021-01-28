@@ -8,10 +8,9 @@ package io.opentelemetry.instrumentation.reactor
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.test.InstrumentationTestRunner
+import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import java.time.Duration
 import org.reactivestreams.Publisher
@@ -21,7 +20,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import spock.lang.Shared
 
-class ReactorCoreTest extends InstrumentationTestRunner {
+class ReactorCoreTest extends LibraryInstrumentationSpecification {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
 

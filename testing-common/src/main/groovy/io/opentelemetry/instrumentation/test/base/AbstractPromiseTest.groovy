@@ -8,10 +8,10 @@ package io.opentelemetry.instrumentation.test.base
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
 // TODO: add a test for a longer chain of promises
-abstract class AbstractPromiseTest<P, M> extends AgentTestRunner {
+abstract class AbstractPromiseTest<P, M> extends AgentInstrumentationSpecification {
 
   abstract P newPromise()
 

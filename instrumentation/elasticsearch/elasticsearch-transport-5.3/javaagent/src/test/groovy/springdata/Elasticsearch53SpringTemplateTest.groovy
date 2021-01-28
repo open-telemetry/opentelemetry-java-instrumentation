@@ -9,7 +9,7 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.atomic.AtomicLong
 import org.elasticsearch.action.search.SearchResponse
@@ -29,7 +29,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder
 import spock.lang.Shared
 
-class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
+class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecification {
   public static final long TIMEOUT = 10000 // 10 seconds
 
   // Some ES actions are not caused by clients and seem to just happen from time to time.
@@ -68,7 +68,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       // into a top level trace to get exactly one trace in the result.
       testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     }
-    TEST_WRITER.waitForTraces(1)
+    testWriter.waitForTraces(1)
 
     template = new ElasticsearchTemplate(testNode.client())
   }
@@ -267,8 +267,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       .withId("b")
       .build())
     template.refresh(indexName)
-    TEST_WRITER.waitForTraces(5)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(5)
+    testWriter.clear()
 
     and:
     def query = new NativeSearchQueryBuilder().withIndices(indexName).build()
