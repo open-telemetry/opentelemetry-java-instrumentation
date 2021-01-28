@@ -55,7 +55,6 @@ afterEvaluate {
     testImplementation project(':testing-common')
     testAnnotationProcessor deps.autoservice
     testCompileOnly deps.autoservice
-    testImplementation project(':utils:test-utils')
 
     testImplementation deps.testcontainers
 

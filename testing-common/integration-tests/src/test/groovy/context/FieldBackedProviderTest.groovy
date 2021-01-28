@@ -7,7 +7,7 @@ package context
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
-import io.opentelemetry.instrumentation.util.gc.GcUtils
+import io.opentelemetry.instrumentation.test.utils.GcUtils
 import java.lang.instrument.ClassDefinition
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field

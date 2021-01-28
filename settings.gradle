@@ -49,7 +49,6 @@ include ':testing:agent-for-testing'
 include ':testing-common'
 include ':testing-common:integration-tests'
 include ':testing-common:library-for-integration-tests'
-include ':utils:test-utils'
 
 // smoke tests
 include ':smoke-tests'

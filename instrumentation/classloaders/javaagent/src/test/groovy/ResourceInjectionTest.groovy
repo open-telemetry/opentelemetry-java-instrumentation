@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.util.gc.GcUtils.awaitGc
+import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.javaagent.testing.common.HelperInjectorAccess
