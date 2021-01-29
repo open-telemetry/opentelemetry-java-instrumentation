@@ -103,6 +103,7 @@ public abstract class BaseTracer {
       case SERVER:
         suppressed = inServerSpan(context);
         break;
+      default:
     }
     if (suppressed && log.isDebugEnabled()) {
       log.debug(
