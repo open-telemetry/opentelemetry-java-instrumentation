@@ -8,6 +8,7 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:servlet:servlet-common:javaagent')
   testInstrumentation project(':instrumentation:grizzly-2.0:javaagent')
 
   testLibrary group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '4.0'

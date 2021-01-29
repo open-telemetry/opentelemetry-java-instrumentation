@@ -13,6 +13,7 @@ muzzle {
 dependencies {
   library group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.4'
   implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:servlet:servlet-common:javaagent')
 
   // Tests need at least version 9 to have necessary classes to configure the embedded tomcat...
   // ... but not newer that version 10, because its servlet 5.
