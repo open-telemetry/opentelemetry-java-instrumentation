@@ -14,7 +14,7 @@ import okhttp3.Request
 abstract class PropagationTest extends SmokeTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210114.484678777"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210129.520311771"
   }
 
   def "Should propagate test"() {

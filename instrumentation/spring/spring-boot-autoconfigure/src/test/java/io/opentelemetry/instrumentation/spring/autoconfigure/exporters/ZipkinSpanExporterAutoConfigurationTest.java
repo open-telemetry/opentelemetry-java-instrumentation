@@ -7,10 +7,12 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin.ZipkinSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin.ZipkinSpanExporterProperties;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -24,6 +26,11 @@ class ZipkinSpanExporterAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   TracerAutoConfiguration.class, ZipkinSpanExporterAutoConfiguration.class));
+
+  @AfterEach
+  void tearDown() {
+    GlobalOpenTelemetry.resetForTest();
+  }
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize ZipkinSpanExporter bean")
@@ -44,13 +51,11 @@ class ZipkinSpanExporterAutoConfigurationTest {
     this.contextRunner
         .withPropertyValues(
             "opentelemetry.trace.exporter.zipkin.enabled=true",
-            "opentelemetry.trace.exporter.zipkin.servicename=test",
             "opentelemetry.trace.exporter.zipkin.endpoint=http://localhost:8080/test")
         .run(
             (context) -> {
               ZipkinSpanExporterProperties zipkinSpanExporterProperties =
                   context.getBean(ZipkinSpanExporterProperties.class);
-              assertThat(zipkinSpanExporterProperties.getServiceName()).isEqualTo("test");
               assertThat(zipkinSpanExporterProperties.getEndpoint())
                   .isEqualTo("http://localhost:8080/test");
             });

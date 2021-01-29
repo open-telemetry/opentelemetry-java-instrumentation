@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetrysdk;
 
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.SdkTracerManagement;
-import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
@@ -40,12 +39,6 @@ public class NoopTracerManagement implements SdkTracerManagement {
   public TraceConfig getActiveTraceConfig() {
     return TraceConfig.getDefault();
   }
-
-  @Override
-  public void updateActiveTraceConfig(TraceConfig traceConfig) {}
-
-  @Override
-  public void addSpanProcessor(SpanProcessor spanProcessor) {}
 
   @Override
   public CompletableResultCode shutdown() {

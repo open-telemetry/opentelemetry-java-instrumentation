@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging.LoggingSpanExporterAutoConfiguration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -23,6 +25,11 @@ class LoggingSpanExporterAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   TracerAutoConfiguration.class, LoggingSpanExporterAutoConfiguration.class));
+
+  @AfterEach
+  void tearDown() {
+    GlobalOpenTelemetry.resetForTest();
+  }
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize LoggingSpanExporter bean")
