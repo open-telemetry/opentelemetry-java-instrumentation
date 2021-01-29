@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.reactor
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
@@ -19,13 +19,12 @@ import org.reactivestreams.Subscription
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import spock.lang.Shared
+import spock.lang.Unroll
 
+@Unroll
 class ReactorCoreTest extends LibraryInstrumentationSpecification {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
-
-  private static final Tracer testTracer =
-    GlobalOpenTelemetry.getTracer("io.opentelemetry.auto.reactor")
 
   def setupSpec() {
     TracingOperator.registerOnEachOperator()
@@ -50,7 +49,7 @@ class ReactorCoreTest extends LibraryInstrumentationSpecification {
     throw new RuntimeException(EXCEPTION_MESSAGE)
   }
 
-  def "Publisher '#name' test"() {
+  def "Publisher '#paramName' test"() {
     when:
     def result = runUnderTrace(publisherSupplier)
 
@@ -94,7 +93,7 @@ class ReactorCoreTest extends LibraryInstrumentationSpecification {
     }
   }
 
-  def "Publisher error '#name' test"() {
+  def "Publisher error '#paramName' test"() {
     when:
     runUnderTrace(publisherSupplier)
 
@@ -125,7 +124,7 @@ class ReactorCoreTest extends LibraryInstrumentationSpecification {
     "flux"    | { -> Flux.error(new RuntimeException(EXCEPTION_MESSAGE)) }
   }
 
-  def "Publisher step '#name' test"() {
+  def "Publisher step '#paramName' test"() {
     when:
     runUnderTrace(publisherSupplier)
 
@@ -167,7 +166,7 @@ class ReactorCoreTest extends LibraryInstrumentationSpecification {
     }
   }
 
-  def "Publisher '#name' cancel"() {
+  def "Publisher '#paramName' cancel"() {
     when:
     cancelUnderTrace(publisherSupplier)
 
@@ -191,7 +190,7 @@ class ReactorCoreTest extends LibraryInstrumentationSpecification {
     "basic flux" | { -> Flux.fromIterable([5, 6]) }
   }
 
-  def "Publisher chain spans have the correct parent for '#name'"() {
+  def "Publisher chain spans have the correct parent for '#paramName'"() {
     when:
     runUnderTrace(publisherSupplier)
 
@@ -228,7 +227,7 @@ class ReactorCoreTest extends LibraryInstrumentationSpecification {
     }
   }
 
-  def "Publisher chain spans have the correct parents from assembly time '#name'"() {
+  def "Publisher chain spans have the correct parents from assembly time '#paramName'"() {
     when:
     runUnderTrace {
       // The "add one" operations in the publisher created here should be children of the publisher-parent
@@ -321,12 +320,12 @@ class ReactorCoreTest extends LibraryInstrumentationSpecification {
   }
 
   static addOneFunc(int i) {
-    testTracer.spanBuilder("add one").startSpan().end()
+    runInternalSpan("add one")
     return i + 1
   }
 
   static addTwoFunc(int i) {
-    testTracer.spanBuilder("add two").startSpan().end()
+    runInternalSpan("add two")
     return i + 2
   }
 }
