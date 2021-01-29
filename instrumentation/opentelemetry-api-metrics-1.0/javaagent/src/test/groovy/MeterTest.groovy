@@ -16,7 +16,7 @@ import io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.api.metrics.GlobalMetricsProvider
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.sdk.metrics.data.MetricData
-import io.opentelemetry.sdk.metrics.data.Point
+import io.opentelemetry.sdk.metrics.data.PointData
 import java.util.function.Consumer
 
 class MeterTest extends AgentTestRunner {
@@ -262,7 +262,7 @@ class MeterTest extends AgentTestRunner {
     }
   }
 
-  List<Point> points(MetricData metricData) {
+  List<PointData> points(MetricData metricData) {
     def points = []
     points.addAll(metricData.getDoubleGaugeData().getPoints())
     points.addAll(metricData.getDoubleSumData().getPoints())

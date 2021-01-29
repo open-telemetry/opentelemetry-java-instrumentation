@@ -9,12 +9,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.metrics.data.DoublePoint;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryPoint;
-import io.opentelemetry.sdk.metrics.data.LongPoint;
+import io.opentelemetry.sdk.metrics.data.DoublePointData;
+import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
+import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.MetricDataType;
-import io.opentelemetry.sdk.metrics.data.Point;
+import io.opentelemetry.sdk.metrics.data.PointData;
 import io.opentelemetry.sdk.metrics.export.IntervalMetricReader;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ class AbstractMetricsTest {
         assertThat(metricData.getDescription()).isNotEmpty();
         assertThat(metricData.getUnit()).isEqualTo(unit);
         metricData.getDoubleGaugeData().getPoints();
-        List<Point> points = new ArrayList<>();
+        List<PointData> points = new ArrayList<>();
         points.addAll(metricData.getDoubleGaugeData().getPoints());
         points.addAll(metricData.getDoubleSumData().getPoints());
         points.addAll(metricData.getDoubleSummaryData().getPoints());
@@ -69,15 +69,15 @@ class AbstractMetricsTest {
         assertThat(points).isNotEmpty();
         assertThat(metricData.getType()).isEqualTo(type);
         if (checkNonZeroValue) {
-          for (Point point : points) {
-            if (point instanceof LongPoint) {
-              LongPoint longPoint = (LongPoint) point;
+          for (PointData point : points) {
+            if (point instanceof LongPointData) {
+              LongPointData longPoint = (LongPointData) point;
               assertThat(longPoint.getValue()).isGreaterThan(0);
-            } else if (point instanceof DoublePoint) {
-              DoublePoint doublePoint = (DoublePoint) point;
+            } else if (point instanceof DoublePointData) {
+              DoublePointData doublePoint = (DoublePointData) point;
               assertThat(doublePoint.getValue()).isGreaterThan(0.0);
-            } else if (point instanceof DoubleSummaryPoint) {
-              DoubleSummaryPoint summaryPoint = (DoubleSummaryPoint) point;
+            } else if (point instanceof DoubleSummaryPointData) {
+              DoubleSummaryPointData summaryPoint = (DoubleSummaryPointData) point;
               assertThat(summaryPoint.getSum()).isGreaterThan(0.0);
             } else {
               Assertions.fail("unexpected type " + metricData.getType());

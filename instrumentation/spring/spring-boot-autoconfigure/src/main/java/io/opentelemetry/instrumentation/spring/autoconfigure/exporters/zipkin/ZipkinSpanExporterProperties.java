@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin;
 
-import static io.opentelemetry.exporter.zipkin.ZipkinSpanExporter.DEFAULT_ENDPOINT;
-import static io.opentelemetry.exporter.zipkin.ZipkinSpanExporter.DEFAULT_SERVICE_NAME;
-
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -21,8 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ZipkinSpanExporterProperties {
 
   private boolean enabled = true;
-  private String serviceName = DEFAULT_SERVICE_NAME;
-  private String endpoint = DEFAULT_ENDPOINT;
+  @Nullable private String endpoint;
 
   public boolean isEnabled() {
     return enabled;
@@ -32,14 +29,7 @@ public class ZipkinSpanExporterProperties {
     this.enabled = enabled;
   }
 
-  public String getServiceName() {
-    return serviceName;
-  }
-
-  public void setServiceName(String serviceName) {
-    this.serviceName = serviceName;
-  }
-
+  @Nullable
   public String getEndpoint() {
     return endpoint;
   }

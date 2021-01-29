@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
 import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.BoundDoubleUpDownCounter;
 import application.io.opentelemetry.api.metrics.DoubleUpDownCounter;
+import application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
 
 class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
 
@@ -38,12 +40,11 @@ class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
 
   static class BoundInstrument implements BoundDoubleUpDownCounter {
 
-    private final io.opentelemetry.api.metrics.DoubleUpDownCounter.BoundDoubleUpDownCounter
+    private final io.opentelemetry.api.metrics.BoundDoubleUpDownCounter
         agentBoundDoubleUpDownCounter;
 
     BoundInstrument(
-        io.opentelemetry.api.metrics.DoubleUpDownCounter.BoundDoubleUpDownCounter
-            agentBoundDoubleUpDownCounter) {
+        io.opentelemetry.api.metrics.BoundDoubleUpDownCounter agentBoundDoubleUpDownCounter) {
       this.agentBoundDoubleUpDownCounter = agentBoundDoubleUpDownCounter;
     }
 
@@ -58,22 +59,22 @@ class ApplicationDoubleUpDownCounter implements DoubleUpDownCounter {
     }
   }
 
-  static class Builder implements DoubleUpDownCounter.Builder {
+  static class Builder implements DoubleUpDownCounterBuilder {
 
-    private final io.opentelemetry.api.metrics.DoubleUpDownCounter.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder agentBuilder;
 
-    Builder(io.opentelemetry.api.metrics.DoubleUpDownCounter.Builder agentBuilder) {
+    Builder(io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public DoubleUpDownCounter.Builder setDescription(String description) {
+    public Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public DoubleUpDownCounter.Builder setUnit(String unit) {
+    public Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
