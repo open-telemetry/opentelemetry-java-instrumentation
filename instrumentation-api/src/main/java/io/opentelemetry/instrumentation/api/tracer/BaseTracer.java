@@ -85,28 +85,33 @@ public abstract class BaseTracer {
     return parentContext.with(span).with(CONTEXT_SERVER_SPAN_KEY, span);
   }
 
+<<<<<<< HEAD
   protected final boolean shouldStartSpan(SpanKind proposedKind, Context context) {
     boolean result;
+=======
+  public Scope startScope(Span span) {
+    return Context.current().with(span).makeCurrent();
+  }
+
+  protected final boolean shouldStartSpan(Kind proposedKind, Context context) {
+    boolean suppressed = false;
+>>>>>>> 4174bc5c4 (cleanup from PR comments)
     switch (proposedKind) {
       case CLIENT:
-        result = !inClientSpan(context);
+        suppressed = inClientSpan(context);
         break;
       case SERVER:
-        result = !inServerSpan(context);
+        suppressed = inServerSpan(context);
         break;
-      default:
-        result = true;
     }
-    if (!result) {
-      if (log.isDebugEnabled()) {
-        log.debug(
-            "Suppressing "
-                + proposedKind
-                + " span. Suppressed instrumentation: "
-                + getInstrumentationName());
-      }
+    if (suppressed && log.isDebugEnabled()) {
+      log.debug(
+          "Suppressing "
+              + proposedKind
+              + " span. Suppressed instrumentation: "
+              + getInstrumentationName());
     }
-    return result;
+    return !suppressed;
   }
 
   private boolean inClientSpan(Context parentContext) {
