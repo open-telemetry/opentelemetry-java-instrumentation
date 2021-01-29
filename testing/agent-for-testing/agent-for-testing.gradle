@@ -2,7 +2,11 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
+description = 'OpenTelemetry Javaagent for testing'
+group = 'io.opentelemetry.javaagent'
+
 apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 
 jar {
   manifest {

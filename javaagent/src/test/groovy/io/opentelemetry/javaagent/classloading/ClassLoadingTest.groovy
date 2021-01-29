@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.classloading
 
 import static io.opentelemetry.javaagent.IntegrationTestUtils.createJarWithClasses
 
-import io.opentelemetry.instrumentation.util.gc.GcUtils
 import io.opentelemetry.javaagent.ClassToInstrument
 import io.opentelemetry.javaagent.ClassToInstrumentChild
+import io.opentelemetry.javaagent.util.GcUtils
 import java.lang.ref.WeakReference
 import spock.lang.Specification
 import spock.lang.Timeout
