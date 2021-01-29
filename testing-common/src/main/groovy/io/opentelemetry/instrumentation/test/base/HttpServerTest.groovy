@@ -59,6 +59,10 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
     false
   }
 
+  int getErrorPageSpansCount(ServerEndpoint endpoint) {
+    1
+  }
+
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
     false
   }
@@ -364,7 +368,7 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
         spanCount++
       }
       if (hasErrorPageSpans(endpoint)) {
-        spanCount++
+        spanCount += getErrorPageSpansCount(endpoint)
       }
     }
     assertTraces(size) {

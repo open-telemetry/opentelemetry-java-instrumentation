@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -41,6 +42,28 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
   @Override
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
     endpoint == ERROR || endpoint == EXCEPTION
+  }
+
+  @Override
+  int getErrorPageSpansCount(ServerEndpoint endpoint) {
+    2
+  }
+
+  @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    endpoint == REDIRECT || endpoint == ERROR
+  }
+
+  @Override
+  void responseSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
+    switch (endpoint) {
+      case REDIRECT:
+        redirectSpan(trace, index, parent)
+        break
+      case ERROR:
+        sendErrorSpan(trace, index, parent)
+        break
+    }
   }
 
   @Override
@@ -81,10 +104,18 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
   @Override
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      name "BasicErrorController.error"
+      name "ApplicationDispatcher.forward"
       kind INTERNAL
       errored false
       childOf((SpanData) parent)
+      attributes {
+      }
+    }
+    trace.span(index + 1) {
+      name "BasicErrorController.error"
+      kind INTERNAL
+      errored false
+      childOf(trace.span(index))
       attributes {
       }
     }
