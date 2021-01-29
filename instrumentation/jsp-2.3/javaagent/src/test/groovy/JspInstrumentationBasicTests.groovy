@@ -332,7 +332,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 4) {
         span(0) {
           hasNoParent()
           name "/$jspWebappContext/includes/includeHtml.jsp"
@@ -366,6 +366,11 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "jsp.requestURL" reqUrl
           }
         }
+        span(3) {
+          childOf span(2)
+          name "ApplicationDispatcher.include"
+          errored false
+        }
       }
     }
     res.code() == 200
@@ -384,7 +389,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 7) {
+      trace(0, 9) {
         span(0) {
           hasNoParent()
           name "/$jspWebappContext/includes/includeMulti.jsp"
@@ -420,6 +425,11 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         }
         span(3) {
           childOf span(2)
+          name "ApplicationDispatcher.include"
+          errored false
+        }
+        span(4) {
+          childOf span(3)
           name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
@@ -427,16 +437,21 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(4) {
-          childOf span(2)
+        span(5) {
+          childOf span(3)
           name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
             "jsp.requestURL" reqUrl
           }
         }
-        span(5) {
+        span(6) {
           childOf span(2)
+          name "ApplicationDispatcher.include"
+          errored false
+        }
+        span(7) {
+          childOf span(6)
           name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
@@ -444,8 +459,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(6) {
-          childOf span(2)
+        span(8) {
+          childOf span(6)
           name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {

@@ -80,7 +80,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 5) {
+      trace(0, 6) {
         span(0) {
           hasNoParent()
           name "/$jspWebappContext/$forwardFromFileName"
@@ -116,6 +116,11 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         }
         span(3) {
           childOf span(2)
+          name "ApplicationDispatcher.forward"
+          errored false
+        }
+        span(4) {
+          childOf span(3)
           name "Compile /$forwardDestFileName"
           errored false
           attributes {
@@ -123,8 +128,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(4) {
-          childOf span(2)
+        span(5) {
+          childOf span(3)
           name "Render /$forwardDestFileName"
           errored false
           attributes {
@@ -155,7 +160,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 4) {
         span(0) {
           hasNoParent()
           name "/$jspWebappContext/forwards/forwardToHtml.jsp"
@@ -189,6 +194,11 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "jsp.requestURL" reqUrl
           }
         }
+        span(3) {
+          childOf span(2)
+          name "ApplicationDispatcher.forward"
+          errored false
+        }
       }
     }
     res.code() == 200
@@ -207,7 +217,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 9) {
+      trace(0, 12) {
         span(0) {
           hasNoParent()
           name "/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
@@ -243,6 +253,11 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         }
         span(3) {
           childOf span(2)
+          name "ApplicationDispatcher.forward"
+          errored false
+        }
+        span(4) {
+          childOf span(3)
           name "Compile /includes/includeMulti.jsp"
           errored false
           attributes {
@@ -250,8 +265,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(4) {
-          childOf span(2)
+        span(5) {
+          childOf span(3)
           name "Render /includes/includeMulti.jsp"
           errored false
           attributes {
@@ -259,26 +274,13 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
           }
         }
-        span(5) {
-          childOf span(4)
-          name "Compile /common/javaLoopH2.jsp"
-          errored false
-          attributes {
-            "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
-            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-          }
-        }
         span(6) {
-          childOf span(4)
-          name "Render /common/javaLoopH2.jsp"
+          childOf span(5)
+          name "ApplicationDispatcher.include"
           errored false
-          attributes {
-            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
-            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
-          }
         }
         span(7) {
-          childOf span(4)
+          childOf span(6)
           name "Compile /common/javaLoopH2.jsp"
           errored false
           attributes {
@@ -287,7 +289,30 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           }
         }
         span(8) {
-          childOf span(4)
+          childOf span(6)
+          name "Render /common/javaLoopH2.jsp"
+          errored false
+          attributes {
+            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
+            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
+          }
+        }
+        span(9) {
+          childOf span(5)
+          name "ApplicationDispatcher.include"
+          errored false
+        }
+        span(10) {
+          childOf span(9)
+          name "Compile /common/javaLoopH2.jsp"
+          errored false
+          attributes {
+            "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+          }
+        }
+        span(11) {
+          childOf span(9)
           name "Render /common/javaLoopH2.jsp"
           errored false
           attributes {
@@ -313,7 +338,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 7) {
+      trace(0, 9) {
         span(0) {
           hasNoParent()
           name "/$jspWebappContext/forwards/forwardToJspForward.jsp"
@@ -349,6 +374,11 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         }
         span(3) {
           childOf span(2)
+          name "ApplicationDispatcher.forward"
+          errored false
+        }
+        span(4) {
+          childOf span(3)
           name "Compile /forwards/forwardToSimpleJava.jsp"
           errored false
           attributes {
@@ -356,8 +386,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(4) {
-          childOf span(2)
+        span(5) {
+          childOf span(3)
           name "Render /forwards/forwardToSimpleJava.jsp"
           errored false
           attributes {
@@ -365,8 +395,13 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "jsp.requestURL" baseUrl + "/forwards/forwardToSimpleJava.jsp"
           }
         }
-        span(5) {
-          childOf span(4)
+        span(6) {
+          childOf span(5)
+          name "ApplicationDispatcher.forward"
+          errored false
+        }
+        span(7) {
+          childOf span(6)
           name "Compile /common/loop.jsp"
           errored false
           attributes {
@@ -374,8 +409,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(6) {
-          childOf span(4)
+        span(8) {
+          childOf span(6)
           name "Render /common/loop.jsp"
           errored false
           attributes {
@@ -401,7 +436,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 5) {
         span(0) {
           hasNoParent()
           name "/$jspWebappContext/forwards/forwardToCompileError.jsp"
@@ -439,6 +474,12 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         }
         span(3) {
           childOf span(2)
+          name "ApplicationDispatcher.forward"
+          errored true
+          errorEvent(JasperException, String)
+        }
+        span(4) {
+          childOf span(3)
           name "Compile /compileError.jsp"
           errored true
           errorEvent(JasperException, String)
@@ -465,7 +506,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 5) {
         span(0) {
           hasNoParent()
           name "/$jspWebappContext/forwards/forwardToNonExistent.jsp"
@@ -498,6 +539,14 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           attributes {
             "jsp.requestURL" reqUrl
           }
+        }
+        span(3) {
+          childOf span(2)
+          name "ApplicationDispatcher.forward"
+        }
+        span(4) {
+          childOf span(3)
+          name "ResponseFacade.sendError"
         }
       }
     }

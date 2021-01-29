@@ -17,6 +17,7 @@ muzzle {
 dependencies {
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
   api(project(':instrumentation-core:servlet-2.2'))
+  api(project(':instrumentation:servlet:servlet-common:javaagent'))
 
   testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
 

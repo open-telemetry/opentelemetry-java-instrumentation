@@ -21,8 +21,7 @@ public class LibertyHttpServerTracer extends Servlet3HttpServerTracer {
     // using request method as span name as server isn't ready for calling request.getServletPath()
     // span name will be updated a bit later when calling request.getServletPath() works
     // see LibertyUpdateSpanAdvice
-    Context context = startSpan(request, request, request, "HTTP " + request.getMethod());
-    return addContextPathContext(context, request);
+    return startSpan(request, request, request, "HTTP " + request.getMethod());
   }
 
   @Override

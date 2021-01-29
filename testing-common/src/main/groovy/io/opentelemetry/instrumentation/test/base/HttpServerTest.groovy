@@ -51,6 +51,14 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
     false
   }
 
+  boolean hasForwardSpan() {
+    false
+  }
+
+  boolean hasIncludeSpan() {
+    false
+  }
+
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
     false
   }
@@ -341,12 +349,18 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
     if (hasHandlerSpan()) {
       spanCount++
     }
+    if (hasResponseSpan(endpoint)) {
+      spanCount++
+    }
     if (endpoint != NOT_FOUND) {
       spanCount++ // controller span
       if (hasRenderSpan(endpoint)) {
         spanCount++
       }
-      if (hasResponseSpan(endpoint)) {
+      if (hasForwardSpan()) {
+        spanCount++
+      }
+      if (hasIncludeSpan()) {
         spanCount++
       }
       if (hasErrorPageSpans(endpoint)) {
@@ -362,21 +376,31 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
           if (endpoint != NOT_FOUND) {
+            def controllerSpanIndex = 0
             if (hasHandlerSpan()) {
-              controllerSpan(it, spanIndex++, span(1), errorMessage, expectedExceptionClass())
-            } else {
-              controllerSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
+              controllerSpanIndex++
             }
+            if (hasForwardSpan()) {
+              forwardSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
+              controllerSpanIndex++
+            }
+            if (hasIncludeSpan()) {
+              includeSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
+              controllerSpanIndex++
+            }
+            controllerSpan(it, spanIndex++, span(controllerSpanIndex), errorMessage, expectedExceptionClass())
             if (hasRenderSpan(endpoint)) {
               renderSpan(it, spanIndex++, span(0), method, endpoint)
             }
             if (hasResponseSpan(endpoint)) {
-              responseSpan(it, spanIndex, span(spanIndex - 1), method, endpoint)
+              responseSpan(it, spanIndex, span(spanIndex - 1), span(0), method, endpoint)
               spanIndex++
             }
             if (hasErrorPageSpans(endpoint)) {
               errorPageSpans(it, spanIndex, span(0), method, endpoint)
             }
+          } else if (hasResponseSpan(endpoint)) {
+            responseSpan(it, 1, span(0), span(0), method, endpoint)
           }
         }
       }
@@ -402,12 +426,56 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
     throw new UnsupportedOperationException("renderSpan not implemented in " + getClass().name)
   }
 
+  void responseSpan(TraceAssert trace, int index, Object controllerSpan, Object handlerSpan, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    responseSpan(trace, index, controllerSpan, method, endpoint)
+  }
+
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     throw new UnsupportedOperationException("responseSpan not implemented in " + getClass().name)
   }
 
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     throw new UnsupportedOperationException("errorPageSpans not implemented in " + getClass().name)
+  }
+
+  void redirectSpan(TraceAssert trace, int index, Object parent) {
+    trace.span(index) {
+      name ~/\.sendRedirect$/
+      kind Span.Kind.INTERNAL
+      childOf((SpanData) parent)
+    }
+  }
+
+  void sendErrorSpan(TraceAssert trace, int index, Object parent) {
+    trace.span(index) {
+      name ~/\.sendError$/
+      kind Span.Kind.INTERNAL
+      childOf((SpanData) parent)
+    }
+  }
+
+  void forwardSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
+    trace.span(index) {
+      name ~/\.forward$/
+      kind Span.Kind.INTERNAL
+      errored errorMessage != null
+      if (errorMessage) {
+        errorEvent(exceptionClass, errorMessage)
+      }
+      childOf((SpanData) parent)
+    }
+  }
+
+  void includeSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
+    trace.span(index) {
+      name ~/\.include$/
+      kind Span.Kind.INTERNAL
+      errored errorMessage != null
+      if (errorMessage) {
+        errorEvent(exceptionClass, errorMessage)
+      }
+      childOf((SpanData) parent)
+    }
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)

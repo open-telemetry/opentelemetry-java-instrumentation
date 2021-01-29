@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.servlet;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Helper container for Context attributes for transferring certain information between servlet
@@ -40,15 +39,7 @@ public class AppServerBridge {
    * @return new context with AppServerBridge attached.
    */
   public static Context init(Context ctx, boolean shouldRecordException) {
-    Context context =
-        ctx.with(AppServerBridge.CONTEXT_KEY, new AppServerBridge(shouldRecordException));
-    // Add context for storing servlet context path. Servlet context path is updated from servlet
-    // integration.
-    if (context.get(ServletContextPath.CONTEXT_KEY) == null) {
-      context = context.with(ServletContextPath.CONTEXT_KEY, new AtomicReference<>(null));
-    }
-
-    return context;
+    return ctx.with(AppServerBridge.CONTEXT_KEY, new AppServerBridge(shouldRecordException));
   }
 
   private final AtomicBoolean servletUpdatedServerSpanName = new AtomicBoolean(false);

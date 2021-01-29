@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The context key here is used to propagate the servlet context path throughout the request, so
@@ -23,12 +22,11 @@ public class ServletContextPath {
 
   // Keeps track of the servlet context path that needs to be prepended to the route when updating
   // the span name
-  public static final ContextKey<AtomicReference<String>> CONTEXT_KEY =
+  public static final ContextKey<String> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-context-path-key");
 
   public static String prepend(Context context, String spanName) {
-    AtomicReference<String> valueReference = context.get(CONTEXT_KEY);
-    String value = valueReference != null ? valueReference.get() : null;
+    String value = context.get(CONTEXT_KEY);
     // checking isEmpty just to avoid unnecessary string concat / allocation
     if (value != null && !value.isEmpty()) {
       return value + spanName;

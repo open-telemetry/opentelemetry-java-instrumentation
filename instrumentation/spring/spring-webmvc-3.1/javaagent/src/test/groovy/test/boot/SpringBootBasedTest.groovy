@@ -59,6 +59,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   }
 
   @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    endpoint == REDIRECT
+  }
+
+  @Override
   boolean testNotFound() {
     // FIXME: the instrumentation adds an extra controller span which is not consistent.
     // Fix tests or remove extra span.
@@ -84,9 +89,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
     and:
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 4) {
         serverSpan(it, 0, null, null, "GET", null, AUTH_ERROR)
-        errorPageSpans(it, 1, null)
+        sendErrorSpan(it, 1, span(0))
+        forwardSpan(it, 2, span(0))
+        errorPageSpans(it, 3, null)
       }
     }
   }
@@ -111,8 +118,9 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
     and:
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         serverSpan(it, 0, null, null, "POST", response.body()?.contentLength(), LOGIN)
+        redirectSpan(it, 1, span(0))
       }
     }
 
@@ -134,7 +142,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      name "HttpServletResponse.sendRedirect"
+      name "OnCommittedResponseWrapper.sendRedirect"
       kind INTERNAL
       errored false
       attributes {

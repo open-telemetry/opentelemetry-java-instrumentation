@@ -9,13 +9,11 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -27,16 +25,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
 
   public Context startSpan(HttpServletRequest request) {
-    Context context = startSpan(request, request, request, getSpanName(request));
-    return addContextPathContext(context, request);
-  }
-
-  protected Context addContextPathContext(Context context, HttpServletRequest request) {
-    String contextPath = request.getContextPath();
-    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
-      context = context.with(ServletContextPath.CONTEXT_KEY, new AtomicReference<>(contextPath));
-    }
-    return context;
+    return startSpan(request, request, request, getSpanName(request));
   }
 
   @Override
@@ -159,37 +148,15 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   }
 
   /**
-   * When server spans are managed by app server instrumentation servlet instrumentation should set
-   * information that was not available from app server instrumentation.
-   */
-  public void updateServerSpan(Context attachedContext, HttpServletRequest request) {
-    updateServerSpanName(attachedContext, request);
-    updateContextPath(attachedContext, request);
-  }
-
-  /**
    * When server spans are managed by app server instrumentation, servlet must update server span
    * name only once and only during the first pass through the servlet stack. There are potential
    * forward and other scenarios, where servlet path may change, but we don't want this to be
    * reflected in the span name.
    */
-  private void updateServerSpanName(Context attachedContext, HttpServletRequest request) {
-    // Update name only when server span wasn't created by servlet integration
-    // and has not been already updated
+  public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
     if (AppServerBridge.shouldUpdateServerSpanName(attachedContext)) {
       updateSpanName(Span.fromContext(attachedContext), request);
       AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
-    }
-  }
-
-  private void updateContextPath(Context attachedContext, HttpServletRequest request) {
-    // Update context path if it isn't already set
-    AtomicReference<String> reference = attachedContext.get(ServletContextPath.CONTEXT_KEY);
-    if (reference != null && reference.get() == null) {
-      String contextPath = request.getContextPath();
-      if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
-        reference.compareAndSet(null, contextPath);
-      }
     }
   }
 

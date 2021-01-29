@@ -64,10 +64,10 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
         tracer().onRequest(context, serverSpan, request);
-        // Now create a span for handler/controller execution.
-        span = tracer().startHandlerSpan(handler);
-        scope = context.with(span).makeCurrent();
       }
+      // Now create a span for handler/controller execution.
+      span = tracer().startHandlerSpan(handler);
+      scope = context.with(span).makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
