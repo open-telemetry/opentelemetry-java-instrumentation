@@ -10,17 +10,17 @@ import spock.lang.Timeout
 import spock.lang.Unroll
 
 @Timeout(20)
-class SqlSanitizerTest extends Specification {
+class SqlStatementSanitizerTest extends Specification {
 
   def "normalize #originalSql"() {
     setup:
-    def actualSanitized = SqlSanitizer.sanitize(originalSql)
+    def actualSanitized = SqlStatementSanitizer.sanitize(originalSql)
 
     expect:
-    actualSanitized.getFullStatement() == normalizedSql
+    actualSanitized.getFullStatement() == sanitizedSql
 
     where:
-    originalSql                                                                | normalizedSql
+    originalSql                                                                | sanitizedSql
     // Numbers
     "SELECT * FROM TABLE WHERE FIELD=1234"                                     | "SELECT * FROM TABLE WHERE FIELD=?"
     "SELECT * FROM TABLE WHERE FIELD = 1234"                                   | "SELECT * FROM TABLE WHERE FIELD = ?"
@@ -87,7 +87,7 @@ class SqlSanitizerTest extends Specification {
   @Unroll
   def "should simplify #sql"() {
     expect:
-    SqlSanitizer.sanitize(sql) == expected
+    SqlStatementSanitizer.sanitize(sql) == expected
 
     where:
     sql                                                               | expected
@@ -144,14 +144,14 @@ class SqlSanitizerTest extends Specification {
 
     expect:
     def sanitizedQuery = query.replace('=123', '=?').substring(0, AutoSqlSanitizer.LIMIT)
-    SqlSanitizer.sanitize(query) == new SqlStatementInfo(sanitizedQuery, "SELECT", "table")
+    SqlStatementSanitizer.sanitize(query) == new SqlStatementInfo(sanitizedQuery, "SELECT", "table")
   }
 
   def "lots and lots of ticks don't cause stack overflow or long runtimes"() {
     setup:
     String s = "'"
     for (int i = 0; i < 10000; i++) {
-      assert SqlSanitizer.sanitize(s) != null
+      assert SqlStatementSanitizer.sanitize(s) != null
       s += "'"
     }
   }
@@ -162,7 +162,7 @@ class SqlSanitizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i)
     }
-    assert "?" == SqlSanitizer.sanitize(s).getFullStatement()
+    assert "?" == SqlStatementSanitizer.sanitize(s).getFullStatement()
   }
 
   def "very long numbers at end of table name don't cause problem"() {
@@ -171,7 +171,7 @@ class SqlSanitizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i)
     }
-    assert s.substring(0, AutoSqlSanitizer.LIMIT) == SqlSanitizer.sanitize(s).getFullStatement()
+    assert s.substring(0, AutoSqlSanitizer.LIMIT) == SqlStatementSanitizer.sanitize(s).getFullStatement()
   }
 
   def "test 32k truncation"() {
@@ -180,7 +180,7 @@ class SqlSanitizerTest extends Specification {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ")
     }
-    String sanitized = SqlSanitizer.sanitize(s.toString()).getFullStatement()
+    String sanitized = SqlStatementSanitizer.sanitize(s.toString()).getFullStatement()
     System.out.println(sanitized.length())
     assert sanitized.length() <= AutoSqlSanitizer.LIMIT
     assert !sanitized.contains("1234")
@@ -194,7 +194,7 @@ class SqlSanitizerTest extends Specification {
       for (int c = 0; c < 1000; c++) {
         sb.append((char) r.nextInt((int) Character.MAX_VALUE))
       }
-      SqlSanitizer.sanitize(sb.toString())
+      SqlStatementSanitizer.sanitize(sb.toString())
     }
   }
 }

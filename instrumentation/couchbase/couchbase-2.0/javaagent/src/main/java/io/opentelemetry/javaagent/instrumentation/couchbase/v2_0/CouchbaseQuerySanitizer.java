@@ -5,17 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
-
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlSanitizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 
-public final class CouchbaseQueryNormalizer {
-  private static final boolean NORMALIZATION_ENABLED =
-      isQueryNormalizationEnabled("couchbase", "couchbase-2.0");
-
+public final class CouchbaseQuerySanitizer {
   private static final Class<?> QUERY_CLASS;
   private static final Class<?> STATEMENT_CLASS;
   private static final Class<?> N1QL_QUERY_CLASS;
@@ -73,15 +68,15 @@ public final class CouchbaseQueryNormalizer {
     ANALYTICS_GET_STATEMENT = analyticsGetStatement;
   }
 
-  public static String normalize(Object query) {
+  public static String sanitize(Object query) {
     if (query instanceof String) {
-      return normalizeString((String) query);
+      return sanitizeString((String) query);
     }
     // Query is present in Couchbase [2.0.0, 2.2.0)
     // Statement is present starting from Couchbase 2.1.0
     if (QUERY_CLASS != null && QUERY_CLASS.isAssignableFrom(query.getClass())
         || STATEMENT_CLASS != null && STATEMENT_CLASS.isAssignableFrom(query.getClass())) {
-      return normalizeString(query.toString());
+      return sanitizeString(query.toString());
     }
     // SpatialViewQuery is present starting from Couchbase 2.1.0
     String queryClassName = query.getClass().getName();
@@ -93,14 +88,14 @@ public final class CouchbaseQueryNormalizer {
     if (N1QL_QUERY_CLASS != null && N1QL_QUERY_CLASS.isAssignableFrom(query.getClass())) {
       String statement = getStatementString(N1QL_GET_STATEMENT, query);
       if (statement != null) {
-        return normalizeString(statement);
+        return sanitizeString(statement);
       }
     }
     // AnalyticsQuery is present starting from Couchbase 2.4.3
     if (ANALYTICS_QUERY_CLASS != null && ANALYTICS_QUERY_CLASS.isAssignableFrom(query.getClass())) {
       String statement = getStatementString(ANALYTICS_GET_STATEMENT, query);
       if (statement != null) {
-        return normalizeString(statement);
+        return sanitizeString(statement);
       }
     }
     return query.getClass().getSimpleName();
@@ -117,12 +112,9 @@ public final class CouchbaseQueryNormalizer {
     }
   }
 
-  private static String normalizeString(String query) {
-    if (!NORMALIZATION_ENABLED || query == null) {
-      return query;
-    }
-    return SqlSanitizer.sanitize(query).getFullStatement();
+  private static String sanitizeString(String query) {
+    return SqlStatementSanitizer.sanitize(query).getFullStatement();
   }
 
-  private CouchbaseQueryNormalizer() {}
+  private CouchbaseQuerySanitizer() {}
 }

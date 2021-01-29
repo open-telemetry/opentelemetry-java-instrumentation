@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.instrumentation.lettuce.LettuceArgSplitter;
 import java.util.Collections;
 import java.util.List;
@@ -19,9 +19,6 @@ public class LettuceDatabaseClientTracer
   public static LettuceDatabaseClientTracer tracer() {
     return TRACER;
   }
-
-  private final RedisCommandNormalizer commandNormalizer =
-      new RedisCommandNormalizer("lettuce", "lettuce-5.0");
 
   @Override
   protected String spanName(
@@ -36,6 +33,6 @@ public class LettuceDatabaseClientTracer
         redisCommand.getArgs() == null
             ? Collections.emptyList()
             : LettuceArgSplitter.splitArgs(redisCommand.getArgs().toCommandString());
-    return commandNormalizer.normalize(command, args);
+    return RedisCommandSanitizer.sanitize(command, args);
   }
 }
