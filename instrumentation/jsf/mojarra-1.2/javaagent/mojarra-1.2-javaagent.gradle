@@ -68,6 +68,7 @@ dependencies {
 
   testImplementation project(':instrumentation:jsf:jsf-testing-common')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:servlet:servlet-common:javaagent')
 
   mojarra12TestImplementation group: 'javax.faces', name: 'jsf-impl', version: '1.2-20'
   mojarra12TestImplementation group: 'javax.faces', name: 'jsf-api', version: '1.2'

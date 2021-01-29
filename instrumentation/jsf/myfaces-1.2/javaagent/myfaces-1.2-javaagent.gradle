@@ -30,6 +30,7 @@ dependencies {
 
   testImplementation project(':instrumentation:jsf:jsf-testing-common')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:servlet:servlet-common:javaagent')
 
   myfaces12TestImplementation group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '1.2.12'
   myfaces12TestImplementation group: 'com.sun.facelets', name: 'jsf-facelets', version: '1.1.14'
