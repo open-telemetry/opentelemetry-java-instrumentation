@@ -47,12 +47,12 @@ import io.opentelemetry.proto.trace.v1.Status;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.DoubleGaugeData;
-import io.opentelemetry.sdk.metrics.data.DoublePoint;
+import io.opentelemetry.sdk.metrics.data.DoublePointData;
 import io.opentelemetry.sdk.metrics.data.DoubleSumData;
 import io.opentelemetry.sdk.metrics.data.DoubleSummaryData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryPoint;
+import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
 import io.opentelemetry.sdk.metrics.data.LongGaugeData;
-import io.opentelemetry.sdk.metrics.data.LongPoint;
+import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.LongSumData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.ValueAtPercentile;
@@ -278,7 +278,8 @@ public final class AgentTestingExporterAccess {
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            DoubleGaugeData.create(getDoublePoints(metric.getDoubleGauge().getDataPointsList())));
+            DoubleGaugeData.create(
+                getDoublePointDatas(metric.getDoubleGauge().getDataPointsList())));
       case INT_SUM:
         IntSum intSum = metric.getIntSum();
         return MetricData.createLongSum(
@@ -302,7 +303,7 @@ public final class AgentTestingExporterAccess {
             DoubleSumData.create(
                 doubleSum.getIsMonotonic(),
                 getTemporality(doubleSum.getAggregationTemporality()),
-                getDoublePoints(metric.getDoubleSum().getDataPointsList())));
+                getDoublePointDatas(metric.getDoubleSum().getDataPointsList())));
       case DOUBLE_HISTOGRAM:
         return MetricData.createDoubleSummary(
             resource,
@@ -325,11 +326,11 @@ public final class AgentTestingExporterAccess {
     return labelsBuilder.build();
   }
 
-  private static List<LongPoint> getIntPoints(List<IntDataPoint> points) {
+  private static List<LongPointData> getIntPoints(List<IntDataPoint> points) {
     return points.stream()
         .map(
             point ->
-                LongPoint.create(
+                LongPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     createLabels(point.getLabelsList()),
@@ -337,11 +338,11 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static List<DoublePoint> getDoublePoints(List<DoubleDataPoint> points) {
+  private static List<DoublePointData> getDoublePointDatas(List<DoubleDataPoint> points) {
     return points.stream()
         .map(
             point ->
-                DoublePoint.create(
+                DoublePointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     createLabels(point.getLabelsList()),
@@ -349,12 +350,12 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static Collection<DoubleSummaryPoint> getDoubleHistogramDataPoints(
+  private static Collection<DoubleSummaryPointData> getDoubleHistogramDataPoints(
       List<DoubleHistogramDataPoint> dataPointsList) {
     return dataPointsList.stream()
         .map(
             point ->
-                DoubleSummaryPoint.create(
+                DoubleSummaryPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     createLabels(point.getLabelsList()),

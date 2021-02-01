@@ -11,14 +11,13 @@ import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import org.apache.camel.CamelContext
 import org.apache.camel.ProducerTemplate
+import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import org.springframework.boot.SpringApplication
-import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.context.support.AbstractApplicationContext
-import org.testcontainers.containers.localstack.LocalStackContainer
-import org.testcontainers.utility.DockerImageName
+import org.testcontainers.shaded.com.google.common.collect.ImmutableMap
 import spock.lang.Shared
 
 class SqsCamelTest extends AgentTestRunner {
@@ -33,6 +32,9 @@ class SqsCamelTest extends AgentTestRunner {
 
   def setupSpec() {
 
+    /**
+     * Temporarily using emq instead of localstack till the latter supports AWS trace propagation
+     *
     sqs = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
       .withServices(LocalStackContainer.Service.SQS)
     sqs.start()
@@ -45,6 +47,14 @@ class SqsCamelTest extends AgentTestRunner {
         applicationContext.getBeanFactory().registerSingleton("localStack", sqs)
       }
     })
+    server = app.run()**/
+
+    sqsPort = PortUtils.randomOpenPort()
+    sqs = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start()
+    println getClass().name + " SQS server started at: localhost:$sqsPort/"
+
+    def app = new SpringApplication(SqsConfig)
+    app.setDefaultProperties(ImmutableMap.of("sqs.port", sqsPort))
     server = app.run()
   }
 
@@ -54,7 +64,7 @@ class SqsCamelTest extends AgentTestRunner {
       server = null
     }
     if (sqs != null) {
-      sqs.stop()
+      sqs.stopAndWait()
     }
   }
 
@@ -67,8 +77,8 @@ class SqsCamelTest extends AgentTestRunner {
     template.sendBody("direct:input", "{\"type\": \"hello\"}")
 
     then:
-    assertTraces(5) {
-      trace(0, 3) {
+    assertTraces(6) {
+      trace(0, 5) {
 
         span(0) {
           name "input"
@@ -80,7 +90,7 @@ class SqsCamelTest extends AgentTestRunner {
         }
         span(1) {
           name "sqsCamelTest"
-          kind PRODUCER
+          kind INTERNAL
           childOf span(0)
           attributes {
             "apache-camel.uri" "aws-sqs://sqsCamelTest?amazonSQSClient=%23sqsClient"
@@ -88,8 +98,47 @@ class SqsCamelTest extends AgentTestRunner {
           }
         }
         span(2) {
-          name "sqsCamelTest"
+          name "SQS.SendMessage"
+          kind PRODUCER
+          childOf span(1)
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" "http://localhost:$sqsPort"
+            "aws.operation" "SendMessageRequest"
+            "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
+            "aws.service" "AmazonSQS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" "http://localhost:$sqsPort"
+            "net.peer.name" "localhost"
+            "net.peer.port" sqsPort
+            "net.transport" "IP.TCP"
+          }
+        }
+        span(3) {
+          name "SQS.ReceiveMessage"
           kind CONSUMER
+          childOf span(2)
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" "http://localhost:$sqsPort"
+            "aws.operation" "ReceiveMessageRequest"
+            "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
+            "aws.service" "AmazonSQS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" "http://localhost:$sqsPort"
+            "http.user_agent" String
+            "net.peer.name" "localhost"
+            "net.peer.port" sqsPort
+            "net.transport" "IP.TCP"
+          }
+        }
+        span(4) {
+          name "sqsCamelTest"
+          kind INTERNAL
           childOf span(1)
           attributes {
             "apache-camel.uri" "aws-sqs://sqsCamelTest?amazonSQSClient=%23sqsClient&messageAttributeNames=traceparent"
@@ -105,15 +154,15 @@ class SqsCamelTest extends AgentTestRunner {
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
-            "aws.endpoint" "http://127.0.0.1:$sqsPort"
+            "aws.endpoint" "http://localhost:$sqsPort"
             "aws.operation" "ReceiveMessageRequest"
-            "aws.queue.url" "http://localhost:$sqsPort/000000000000/sqsCamelTest"
+            "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
-            "http.url" "http://127.0.0.1:$sqsPort"
-            "net.peer.name" "127.0.0.1"
+            "http.url" "http://localhost:$sqsPort"
+            "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" "IP.TCP"
           }
@@ -126,15 +175,15 @@ class SqsCamelTest extends AgentTestRunner {
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
-            "aws.endpoint" "http://127.0.0.1:$sqsPort"
+            "aws.endpoint" "http://localhost:$sqsPort"
             "aws.operation" "DeleteMessageRequest"
-            "aws.queue.url" "http://localhost:$sqsPort/000000000000/sqsCamelTest"
+            "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
-            "http.url" "http://127.0.0.1:$sqsPort"
-            "net.peer.name" "127.0.0.1"
+            "http.url" "http://localhost:$sqsPort"
+            "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" "IP.TCP"
           }
@@ -147,15 +196,15 @@ class SqsCamelTest extends AgentTestRunner {
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
-            "aws.endpoint" "http://127.0.0.1:$sqsPort"
+            "aws.endpoint" "http://localhost:$sqsPort"
             "aws.operation" "ReceiveMessageRequest"
-            "aws.queue.url" "http://localhost:$sqsPort/000000000000/sqsCamelTest"
+            "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
-            "http.url" "http://127.0.0.1:$sqsPort"
-            "net.peer.name" "127.0.0.1"
+            "http.url" "http://localhost:$sqsPort"
+            "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" "IP.TCP"
           }
@@ -168,15 +217,36 @@ class SqsCamelTest extends AgentTestRunner {
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
-            "aws.endpoint" "http://127.0.0.1:$sqsPort"
+            "aws.endpoint" "http://localhost:$sqsPort"
             "aws.operation" "ReceiveMessageRequest"
-            "aws.queue.url" "http://localhost:$sqsPort/000000000000/sqsCamelTest"
+            "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
-            "http.url" "http://127.0.0.1:$sqsPort"
-            "net.peer.name" "127.0.0.1"
+            "http.url" "http://localhost:$sqsPort"
+            "net.peer.name" "localhost"
+            "net.peer.port" sqsPort
+            "net.transport" "IP.TCP"
+          }
+        }
+      }
+      trace(5, 1) {
+        it.span(0) {
+          name "SQS.ReceiveMessage"
+          kind CLIENT
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" "http://localhost:$sqsPort"
+            "aws.operation" "ReceiveMessageRequest"
+            "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
+            "aws.service" "AmazonSQS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" "http://localhost:$sqsPort"
+            "net.peer.name" "localhost"
             "net.peer.port" sqsPort
             "net.transport" "IP.TCP"
           }

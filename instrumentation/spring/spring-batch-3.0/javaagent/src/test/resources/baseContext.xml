@@ -3,12 +3,16 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-  <bean id="asyncTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor"/>
+  <bean id="asyncTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+    <property name="corePoolSize" value="10"/>
+    <property name="maxPoolSize" value="10"/>
+  </bean>
 
   <bean id="jobRepository"
     class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean"/>
   <bean id="jobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
     <property name="jobRepository" ref="jobRepository"/>
+    <property name="taskExecutor" ref="asyncTaskExecutor"/>
   </bean>
   <bean id="jobParametersConverter"
     class="org.springframework.batch.core.converter.DefaultJobParametersConverter"/>
