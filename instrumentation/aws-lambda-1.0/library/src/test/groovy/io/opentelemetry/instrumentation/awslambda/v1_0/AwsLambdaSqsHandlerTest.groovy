@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.awslambda.v1_0
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
-import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import io.opentelemetry.instrumentation.test.LibraryTestTrait
 
-class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements InstrumentationTestTrait {
+class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements LibraryTestTrait {
 
   static class TestHandler extends TracingSqsEventHandler {
     @Override

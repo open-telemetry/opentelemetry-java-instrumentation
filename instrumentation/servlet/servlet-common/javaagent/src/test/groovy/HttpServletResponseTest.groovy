@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static java.util.Collections.emptyEnumeration
 
 import groovy.servlet.AbstractHttpServlet
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.servlet.ServletOutputStream
 import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import spock.lang.Subject
 
-class HttpServletResponseTest extends AgentTestRunner {
+class HttpServletResponseTest extends AgentInstrumentationSpecification {
 
   @Subject
   def response = new TestResponse()

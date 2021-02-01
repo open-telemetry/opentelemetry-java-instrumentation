@@ -11,7 +11,7 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.atomic.AtomicLong
 import org.elasticsearch.action.search.SearchResponse
@@ -31,7 +31,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder
 import spock.lang.Shared
 
-class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
+class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecification {
   public static final long TIMEOUT = 10000 // 10 seconds
 
   // Some ES actions are not caused by clients and seem to just happen from time to time.

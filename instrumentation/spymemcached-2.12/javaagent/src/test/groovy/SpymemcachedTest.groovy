@@ -10,10 +10,10 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 import com.google.common.util.concurrent.MoreExecutors
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.javaagent.instrumentation.spymemcached.CompletionListener
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
@@ -30,7 +30,7 @@ import net.spy.memcached.ops.OperationQueueFactory
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
-class SpymemcachedTest extends AgentTestRunner {
+class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   @Shared
   def parentOperation = "parent-span"

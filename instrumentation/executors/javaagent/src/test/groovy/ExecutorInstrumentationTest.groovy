@@ -7,7 +7,7 @@ import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.AbstractExecutorService
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import spock.lang.Shared
 
-class ExecutorInstrumentationTest extends AgentTestRunner {
+class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 
   @Shared
   def executeRunnable = { e, c -> e.execute((Runnable) c) }

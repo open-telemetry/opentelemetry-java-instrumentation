@@ -9,14 +9,14 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository
 import spring.jpa.JpaPersistenceConfig
 
-class SpringJpaTest extends AgentTestRunner {
+class SpringJpaTest extends AgentInstrumentationSpecification {
   def "test object method"() {
     setup:
     def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)

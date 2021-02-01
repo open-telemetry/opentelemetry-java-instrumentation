@@ -5,11 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 
-import static io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.DEFAULT_DEADLINE_MS;
-import static io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.DEFAULT_ENDPOINT;
-import static io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.DEFAULT_SERVICE_NAME;
-
 import java.time.Duration;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -25,9 +22,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public final class JaegerSpanExporterProperties {
 
   private boolean enabled = true;
-  private String serviceName = DEFAULT_SERVICE_NAME;
-  private String endpoint = DEFAULT_ENDPOINT;
-  private Duration spanTimeout = Duration.ofMillis(DEFAULT_DEADLINE_MS);
+  @Nullable private String endpoint;
+  @Nullable private Duration spanTimeout;
 
   public boolean isEnabled() {
     return enabled;
@@ -37,14 +33,7 @@ public final class JaegerSpanExporterProperties {
     this.enabled = enabled;
   }
 
-  public String getServiceName() {
-    return serviceName;
-  }
-
-  public void setServiceName(String serviceName) {
-    this.serviceName = serviceName;
-  }
-
+  @Nullable
   public String getEndpoint() {
     return endpoint;
   }
@@ -53,6 +42,7 @@ public final class JaegerSpanExporterProperties {
     this.endpoint = endpoint;
   }
 
+  @Nullable
   public Duration getSpanTimeout() {
     return spanTimeout;
   }

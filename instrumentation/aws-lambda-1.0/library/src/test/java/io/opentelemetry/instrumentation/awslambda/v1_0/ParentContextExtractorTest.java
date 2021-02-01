@@ -15,7 +15,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,7 @@ class ParentContextExtractorTest {
 
   @AfterEach
   void resetOpenTelemetry() {
-    GlobalOpenTelemetry.set(OpenTelemetrySdk.builder().build());
+    GlobalOpenTelemetry.resetForTest();
   }
 
   @Test

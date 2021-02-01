@@ -20,7 +20,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.SpanAttributeSetter;
-import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
@@ -39,9 +39,6 @@ public enum OpenTelemetryTracing implements Tracing {
   public static io.opentelemetry.api.trace.Tracer tracer() {
     return TRACER;
   }
-
-  private static final RedisCommandNormalizer commandNormalizer =
-      new RedisCommandNormalizer("lettuce", "lettuce-5.1");
 
   @Override
   public TracerProvider getTracerProvider() {
@@ -256,7 +253,7 @@ public enum OpenTelemetryTracing implements Tracing {
     public synchronized void finish() {
       if (span != null) {
         if (name != null) {
-          String statement = commandNormalizer.normalize(name, splitArgs(args));
+          String statement = RedisCommandSanitizer.sanitize(name, splitArgs(args));
           span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
         }
         span.end();

@@ -7,7 +7,7 @@ import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ArrayBlockingQueue
@@ -24,7 +24,7 @@ import spock.lang.Shared
  * Test executor instrumentation for Scala specific classes.
  * This is to large extent a copy of ExecutorInstrumentationTest.
  */
-class ScalaExecutorInstrumentationTest extends AgentTestRunner {
+class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 
   @Shared
   def executeRunnable = { e, c -> e.execute((Runnable) c) }

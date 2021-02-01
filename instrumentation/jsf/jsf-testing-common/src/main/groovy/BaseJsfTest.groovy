@@ -8,7 +8,7 @@ import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -24,7 +24,7 @@ import org.eclipse.jetty.webapp.WebAppContext
 import org.jsoup.Jsoup
 import spock.lang.Unroll
 
-abstract class BaseJsfTest extends AgentTestRunner implements HttpServerTestTrait<Server> {
+abstract class BaseJsfTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
 
   @Override
   Server startServer(int port) {

@@ -7,14 +7,14 @@ import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared
 
-class JedisClientTest extends AgentTestRunner {
+class JedisClientTest extends AgentInstrumentationSpecification {
 
   @Shared
   int port = PortUtils.randomOpenPort()

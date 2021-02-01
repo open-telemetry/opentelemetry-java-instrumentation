@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.reactor
 
-import io.opentelemetry.instrumentation.test.InstrumentationTestRunner
+import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import java.util.concurrent.atomic.AtomicReference
 import reactor.core.CoreSubscriber
 import reactor.core.publisher.Mono
 
-class HooksTest extends InstrumentationTestRunner {
+class HooksTest extends LibraryInstrumentationSpecification {
 
   def "can reset out hooks"() {
     setup:

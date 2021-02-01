@@ -4,11 +4,11 @@
  */
 
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import org.apache.log4j.LogManager
 
-class Log4j1MdcTest extends AgentTestRunner {
+class Log4j1MdcTest extends AgentInstrumentationSpecification {
   def cleanup() {
     ListAppender.clearEvents()
   }

@@ -12,13 +12,13 @@ import com.lambdaworks.redis.RedisClient
 import com.lambdaworks.redis.RedisConnectionException
 import com.lambdaworks.redis.api.StatefulConnection
 import com.lambdaworks.redis.api.sync.RedisCommands
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import redis.embedded.RedisServer
 import spock.lang.Shared
 
-class LettuceSyncClientTest extends AgentTestRunner {
+class LettuceSyncClientTest extends AgentInstrumentationSpecification {
   public static final String HOST = "localhost"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown

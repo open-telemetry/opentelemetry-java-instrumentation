@@ -52,10 +52,7 @@ public class TracerAutoConfiguration {
 
     SdkTracerProvider tracerProvider =
         tracerProviderBuilder
-            .setTraceConfig(
-                TraceConfig.getDefault().toBuilder()
-                    .setSampler(Sampler.traceIdRatioBased(tracerProperties.getSamplerProbability()))
-                    .build())
+            .setSampler(Sampler.traceIdRatioBased(tracerProperties.getSamplerProbability()))
             .build();
     OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
     return tracerProvider;

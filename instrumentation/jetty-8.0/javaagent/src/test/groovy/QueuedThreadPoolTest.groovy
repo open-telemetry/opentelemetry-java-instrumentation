@@ -8,12 +8,12 @@ import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.instrumentation.jetty.JavaLambdaMaker
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 
-class QueuedThreadPoolTest extends AgentTestRunner {
+class QueuedThreadPoolTest extends AgentInstrumentationSpecification {
 
   def "QueueThreadPool 'dispatch' propagates"() {
     setup:

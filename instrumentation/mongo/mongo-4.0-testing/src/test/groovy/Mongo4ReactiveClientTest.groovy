@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.reactivestreams.client.MongoClient
@@ -13,6 +16,8 @@ import io.opentelemetry.api.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CountDownLatch
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
@@ -20,12 +25,6 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Shared
 import spock.lang.Timeout
-
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CountDownLatch
-
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 @Timeout(10)
 class Mongo4ReactiveClientTest extends MongoBaseTest {

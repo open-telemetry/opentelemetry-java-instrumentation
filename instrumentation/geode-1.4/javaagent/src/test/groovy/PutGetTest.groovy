@@ -9,8 +9,8 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.apache.geode.DataSerializable
 import org.apache.geode.cache.client.ClientCacheFactory
 import org.apache.geode.cache.client.ClientRegionShortcut
@@ -18,7 +18,7 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 @Unroll
-class PutGetTest extends AgentTestRunner {
+class PutGetTest extends AgentInstrumentationSpecification {
   @Shared
   def cache = new ClientCacheFactory().create()
 

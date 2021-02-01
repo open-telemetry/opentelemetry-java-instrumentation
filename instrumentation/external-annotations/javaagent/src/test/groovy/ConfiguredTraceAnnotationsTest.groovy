@@ -8,7 +8,7 @@ import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 import io.opentelemetry.test.annotation.SayTracedHello
 import java.util.concurrent.Callable
 
-class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
+class ConfiguredTraceAnnotationsTest extends AgentInstrumentationSpecification {
 
   def "method with disabled NewRelic annotation should be ignored"() {
     setup:

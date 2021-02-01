@@ -7,8 +7,8 @@ import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 import spring.jpa.Customer
@@ -18,7 +18,7 @@ import spring.jpa.PersistenceConfig
 /**
  * Unfortunately this test verifies that our hibernate instrumentation doesn't currently work with Spring Data Repositories.
  */
-class SpringJpaTest extends AgentTestRunner {
+class SpringJpaTest extends AgentInstrumentationSpecification {
 
   @Shared
   def context = new AnnotationConfigApplicationContext(PersistenceConfig)

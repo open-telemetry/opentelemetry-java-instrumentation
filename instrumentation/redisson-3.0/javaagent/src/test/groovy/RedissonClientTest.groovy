@@ -9,9 +9,9 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static java.util.regex.Pattern.compile
 import static java.util.regex.Pattern.quote
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.redisson.Redisson
 import org.redisson.api.RAtomicLong
 import org.redisson.api.RBatch
@@ -26,7 +26,7 @@ import org.redisson.config.Config
 import redis.embedded.RedisServer
 import spock.lang.Shared
 
-class RedissonClientTest extends AgentTestRunner {
+class RedissonClientTest extends AgentInstrumentationSpecification {
 
   @Shared
   int port = PortUtils.randomOpenPort()

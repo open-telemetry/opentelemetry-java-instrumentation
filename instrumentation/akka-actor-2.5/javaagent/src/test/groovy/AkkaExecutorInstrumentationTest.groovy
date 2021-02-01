@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 import akka.dispatch.forkjoin.ForkJoinPool
 import akka.dispatch.forkjoin.ForkJoinTask
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ArrayBlockingQueue
@@ -24,7 +24,7 @@ import spock.lang.Shared
  * Test executor instrumentation for Akka specific classes.
  * This is to large extent a copy of ExecutorInstrumentationTest.
  */
-class AkkaExecutorInstrumentationTest extends AgentTestRunner {
+class AkkaExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 
   @Shared
   def executeRunnable = { e, c -> e.execute((Runnable) c) }

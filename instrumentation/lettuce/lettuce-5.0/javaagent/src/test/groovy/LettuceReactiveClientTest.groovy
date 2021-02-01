@@ -13,16 +13,16 @@ import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.api.sync.RedisCommands
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.function.Consumer
 import reactor.core.scheduler.Schedulers
 import redis.embedded.RedisServer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
-class LettuceReactiveClientTest extends AgentTestRunner {
+class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
   public static final String PEER_HOST = "localhost"
   public static final String PEER_IP = "127.0.0.1"
   public static final int DB_INDEX = 0

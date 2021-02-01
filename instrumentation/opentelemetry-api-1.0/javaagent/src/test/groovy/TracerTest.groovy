@@ -11,10 +11,10 @@ import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.Scope
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
-class TracerTest extends AgentTestRunner {
+class TracerTest extends AgentInstrumentationSpecification {
 
   def "capture span, kind, attributes, and status"() {
     when:

@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -69,15 +70,21 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   public Context startSpan(
-      Context parentContext, REQUEST request, CARRIER carrier, long startTimeNanos) {
+      Kind kind, Context parentContext, REQUEST request, CARRIER carrier, long startTimeNanos) {
     Span span =
-        internalStartSpan(parentContext, request, spanNameForRequest(request), startTimeNanos);
+        internalStartSpan(
+            kind, parentContext, request, spanNameForRequest(request), startTimeNanos);
     Context context = withClientSpan(parentContext, span);
     inject(context, carrier);
     return context;
   }
 
-  private void inject(Context context, CARRIER carrier) {
+  public Context startSpan(
+      Context parentContext, REQUEST request, CARRIER carrier, long startTimeNanos) {
+    return startSpan(Kind.CLIENT, parentContext, request, carrier, startTimeNanos);
+  }
+
+  protected void inject(Context context, CARRIER carrier) {
     Setter<CARRIER> setter = getSetter();
     if (setter == null) {
       throw new IllegalStateException(
@@ -130,8 +137,8 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   private Span internalStartSpan(
-      Context parentContext, REQUEST request, String name, long startTimeNanos) {
-    SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(CLIENT).setParent(parentContext);
+      Kind kind, Context parentContext, REQUEST request, String name, long startTimeNanos) {
+    SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext);
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
     }

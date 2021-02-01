@@ -10,11 +10,11 @@ import io.opentelemetry.instrumentation.test.InMemoryTraceUtils
 import static java.util.concurrent.TimeUnit.SECONDS
 
 import com.google.common.base.Stopwatch
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import oshi.PlatformEnum
 import oshi.SystemInfo
 
-class OshiTest extends AgentTestRunner {
+class OshiTest extends AgentInstrumentationSpecification {
 
   def "test system metrics is enabled"() {
     setup:

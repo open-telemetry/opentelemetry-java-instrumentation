@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
-class ClassLoadingTest extends AgentTestRunner {
+class ClassLoadingTest extends AgentInstrumentationSpecification {
   def "delegates to bootstrap class loader for agent classes"() {
     setup:
     def classLoader = new NonDelegatingURLClassLoader()

@@ -10,10 +10,14 @@ import org.bson.BsonString
 
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
+import com.mongodb.MongoTimeoutException
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
+import org.bson.BsonDocument
+import org.bson.BsonString
 import org.bson.Document
 import spock.lang.Shared
 
