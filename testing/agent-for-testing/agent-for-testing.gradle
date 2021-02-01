@@ -72,6 +72,10 @@ shadowJar {
   relocate "application.io.opentelemetry", "io.opentelemetry"
 }
 
+jar {
+  enabled = false
+}
+
 dependencies {
   // Dependencies to include without obfuscation.
   shadowInclude project(':javaagent-bootstrap')
