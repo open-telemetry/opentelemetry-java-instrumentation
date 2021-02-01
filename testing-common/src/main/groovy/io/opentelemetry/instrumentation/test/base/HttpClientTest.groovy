@@ -13,11 +13,13 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
 import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
@@ -72,6 +74,13 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
       prefix("to-secured") {
         handleDistributedRequest()
         redirect(server.address.resolve("/secured").toURL().toString())
+      }
+      prefix("front") {
+        handleDistributedRequest {
+          doRequest('GET', server.address.resolve("/success"))
+          return
+        }
+        response.status(200).send("Cheese!")
       }
     }
   }
@@ -395,6 +404,49 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
     method = "HEAD"
   }
 
+  /**
+   * This test fires a large number of concurrent requests.
+   * Each request first hits a HTTP server and then makes another client request.
+   * The goal of this test is to verify that in highly concurrent environment our instrumentations
+   * for http clients (especially inherently concurrent ones, such as Netty or Reactor) correctly
+   * propagate trace context.
+   */
+  def "causality test"() {
+    setup:
+    assumeTrue(testCausality())
+    int count = 50
+    def method = 'GET'
+    def frontUrl = server.address.resolve("/front")
+    def backUrl = server.address.resolve("/success")
+
+    def latch = new CountDownLatch(1)
+    def job = {
+      latch.await()
+      doRequest(method, frontUrl)
+    }
+
+    def pool = Executors.newFixedThreadPool(4)
+
+    when:
+    count.times {
+      pool.submit(job)
+    }
+    latch.countDown()
+
+    then:
+    assertTraces(count) {
+      count.times { traceIndex ->
+        trace(traceIndex, 4) {
+          clientSpan(it, 0, null, method, frontUrl)
+          serverSpan(it, 1, span(0))
+          clientSpan(it, 2, span(1), method, backUrl)
+          serverSpan(it, 3, span(2))
+        }
+      }
+    }
+
+  }
+
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null, String httpFlavor = "1.1") {
     def userAgent = userAgent()
@@ -464,6 +516,10 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
   }
 
   boolean testRemoteConnection() {
+    true
+  }
+
+  boolean testCausality() {
     true
   }
 

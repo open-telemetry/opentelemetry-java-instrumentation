@@ -36,4 +36,10 @@ class OkHttp3Test extends HttpClientTest {
   boolean testRedirects() {
     false
   }
+
+  @Override
+  boolean testCausality() {
+    false
+  }
+
 }

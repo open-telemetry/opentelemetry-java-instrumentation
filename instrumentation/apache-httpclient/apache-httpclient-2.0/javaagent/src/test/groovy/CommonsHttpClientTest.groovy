@@ -26,6 +26,11 @@ class CommonsHttpClientTest extends HttpClientTest {
   }
 
   @Override
+  boolean testCausality() {
+    return false
+  }
+
+  @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
     HttpMethod httpMethod
 
