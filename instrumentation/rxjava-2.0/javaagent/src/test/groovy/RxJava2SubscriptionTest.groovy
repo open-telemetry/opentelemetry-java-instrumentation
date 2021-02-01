@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.reactivex.Maybe
