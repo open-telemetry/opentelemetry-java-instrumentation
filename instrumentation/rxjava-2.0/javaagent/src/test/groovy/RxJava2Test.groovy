@@ -304,13 +304,13 @@ class RxJava2Test extends AgentTestRunner {
     }
   }
 
-  def static addOneFunc(int i) {
+  static addOneFunc(int i) {
     runUnderTrace("addOne") {
       return i + 1
     }
   }
 
-  def static addTwoFunc(int i) {
+  static addTwoFunc(int i) {
     runUnderTrace("addTwo") {
       return i + 2
     }
