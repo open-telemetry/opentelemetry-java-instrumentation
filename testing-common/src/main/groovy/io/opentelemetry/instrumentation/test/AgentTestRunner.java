@@ -44,8 +44,6 @@ public abstract class AgentTestRunner extends Specification {
     System.setProperty("io.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher", "warn");
   }
 
-  protected static final Tracer TEST_TRACER;
-
   static {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("io.opentelemetry")).setLevel(Level.DEBUG);
