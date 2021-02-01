@@ -6,7 +6,7 @@
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import hello.HelloApplication
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import javax.servlet.DispatcherType
 import okhttp3.HttpUrl
@@ -20,7 +20,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.FileResource
 import org.jsoup.Jsoup
 
-class WicketTest extends AgentTestRunner implements HttpServerTestTrait<Server> {
+class WicketTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
 
   @Override
   Server startServer(int port) {

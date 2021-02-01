@@ -4,7 +4,7 @@ muzzle {
   pass {
     group = 'org.apache.wicket'
     module = 'wicket'
-    versions = "[6.0.0,]"
+    versions = "[8.0.0,]"
     assertInverse = true
   }
 }
