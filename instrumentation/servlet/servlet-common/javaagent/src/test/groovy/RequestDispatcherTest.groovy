@@ -7,12 +7,12 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-class RequestDispatcherTest extends AgentTestRunner {
+class RequestDispatcherTest extends AgentInstrumentationSpecification {
 
   def request = Mock(HttpServletRequest)
   def response = Mock(HttpServletResponse)

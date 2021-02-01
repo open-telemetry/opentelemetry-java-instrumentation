@@ -6,8 +6,8 @@
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
@@ -19,7 +19,7 @@ import org.hibernate.exception.SQLGrammarException
 import org.hibernate.procedure.ProcedureCall
 import spock.lang.Shared
 
-class ProcedureCallTest extends AgentTestRunner {
+class ProcedureCallTest extends AgentInstrumentationSpecification {
 
 
   @Shared

@@ -23,9 +23,14 @@ public class GrpcClientTracer extends RpcClientTracer {
     super(tracer);
   }
 
+  @Override
+  protected String getRpcSystem() {
+    return "grpc";
+  }
+
   public Span startSpan(String name) {
     SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(CLIENT);
-    spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "grpc");
+    spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, getRpcSystem());
     return spanBuilder.startSpan();
   }
 

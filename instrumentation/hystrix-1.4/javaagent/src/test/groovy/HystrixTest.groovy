@@ -4,16 +4,17 @@
  */
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.netflix.hystrix.HystrixCommand
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import spock.lang.Timeout
 
 @Timeout(10)
-class HystrixTest extends AgentTestRunner {
+class HystrixTest extends AgentInstrumentationSpecification {
 
   def "test command #action"() {
     setup:
@@ -24,7 +25,7 @@ class HystrixTest extends AgentTestRunner {
       }
 
       private String tracedMethod() {
-        getTestTracer().spanBuilder("tracedMethod").startSpan().end()
+        runInternalSpan("tracedMethod")
         return "Hello!"
       }
     }

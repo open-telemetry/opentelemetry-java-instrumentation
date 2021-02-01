@@ -15,39 +15,26 @@ import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
  * A trait which initializes instrumentation library tests, including a test span exporter. All
  * library tests should implement this trait.
  */
-trait InstrumentationTestTrait {
+trait LibraryTestTrait {
 
   static InstrumentationTestRunner instrumentationTestRunner
   static InMemorySpanExporter testWriter
 
-  def setupSpec() {
+  void runnerSetupSpec() {
     instrumentationTestRunner = new InstrumentationTestRunnerImpl()
     testWriter = InstrumentationTestRunner.testExporter
-
-    childSetupSpec()
   }
 
-  def setup() {
+  void runnerSetup() {
     instrumentationTestRunner.beforeTest()
+  }
 
-    childSetup()
+  void runnerCleanupSpec() {
   }
 
   boolean forceFlushCalled() {
     return instrumentationTestRunner.forceFlushCalled()
   }
-
-  /**
-   * Initialization method called once per test class. Equivalent to Spock's {@code setupSpec} which
-   * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
-   */
-  def childSetupSpec() {}
-
-  /**
-   * Initialization method called once per individual test. Equivalent to Spock's {@code setup} which
-   * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
-   */
-  def childSetup() {}
 
   void assertTraces(final int size,
                     @ClosureParams(

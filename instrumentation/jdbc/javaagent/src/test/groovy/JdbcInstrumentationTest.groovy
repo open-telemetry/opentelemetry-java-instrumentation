@@ -10,8 +10,8 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -28,7 +28,7 @@ import spock.lang.Unroll
 import test.TestConnection
 import test.TestDriver
 
-class JdbcInstrumentationTest extends AgentTestRunner {
+class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
 
   @Shared
   def dbName = "jdbcUnitTest"
@@ -526,8 +526,8 @@ class JdbcInstrumentationTest extends AgentTestRunner {
     datasource.getConnection().close()
 
     then:
-    !TEST_WRITER.traces.any { it.any { it.name == "database.connection" } }
-    TEST_WRITER.clear()
+    !testWriter.traces.any { it.any { it.name == "database.connection" } }
+    testWriter.clear()
 
     when:
     runUnderTrace("parent") {

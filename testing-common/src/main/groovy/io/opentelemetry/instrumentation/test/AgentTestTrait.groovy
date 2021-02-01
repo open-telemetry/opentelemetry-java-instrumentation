@@ -19,44 +19,20 @@ trait AgentTestTrait {
   static AgentTestRunner agentTestRunner
   static InMemoryExporter testWriter
 
-  def setupSpec() {
+  void runnerSetupSpec() {
     agentTestRunner = new AgentTestRunnerImpl()
     testWriter = AgentTestRunner.TEST_WRITER
 
     agentTestRunner.setupBeforeTests()
-
-    childSetupSpec()
   }
 
-  def setup() {
+  void runnerSetup() {
     agentTestRunner.beforeTest()
-
-    childSetup()
   }
 
-  def cleanupSpec() {
+  void runnerCleanupSpec() {
     AgentTestRunner.agentCleanup()
-
-    childCleanupSpec()
   }
-
-  /**
-   * Initialization method called once per individual test. Equivalent to Spock's {@code setup} which
-   * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
-   */
-  def childSetup() {}
-
-  /**
-   * Initialization method called once per test class. Equivalent to Spock's {@code setupSpec} which
-   * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
-   */
-  def childSetupSpec() {}
-
-  /**
-   * Cleanup method called once per test class. Equivalent to Spock's {@code cleanupSpec} which
-   * we can't use because of https://stackoverflow.com/questions/56464191/public-groovy-method-must-be-public-says-the-compiler
-   */
-  def childCleanupSpec() {}
 
   void assertTraces(final int size,
                     @ClosureParams(

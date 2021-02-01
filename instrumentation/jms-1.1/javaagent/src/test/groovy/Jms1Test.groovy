@@ -6,10 +6,10 @@
 import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Connection
@@ -25,7 +25,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 
-class Jms1Test extends AgentTestRunner {
+class Jms1Test extends AgentInstrumentationSpecification {
 
   private static final Logger logger = LoggerFactory.getLogger(Jms1Test)
 

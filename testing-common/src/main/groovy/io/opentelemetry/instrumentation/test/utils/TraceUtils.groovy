@@ -45,6 +45,7 @@ class TraceUtils {
     }
   }
 
+
   static <T> T runUnderTraceWithoutExceptionCatch(final String rootOperationName, final Callable<T> r) {
     final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(Span.Kind.INTERNAL).startSpan()
 
@@ -55,6 +56,10 @@ class TraceUtils {
     } finally {
       span.end()
     }
+  }
+
+  static void runInternalSpan(String spanName) {
+    tracer.spanBuilder(spanName).startSpan().end()
   }
 
   static basicSpan(TraceAssert trace, int index, String operation, Object parentSpan = null, Throwable exception = null) {

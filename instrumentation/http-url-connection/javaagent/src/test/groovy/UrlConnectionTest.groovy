@@ -8,10 +8,10 @@ import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_POR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 
-class UrlConnectionTest extends AgentTestRunner {
+class UrlConnectionTest extends AgentInstrumentationSpecification {
 
   def "trace request with connection failure #scheme"() {
     when:
