@@ -94,13 +94,17 @@ muzzle {
   }
   // it is expected that muzzle passes the runtime check for this component
   pass {
-    group = "org.apache.httpcomponents"
-    module = "httpclient"
-    versions = "[4.0,)"
-    // verify that all other versions - [,4.0) in this case - fail the muzzle runtime check
+    group = 'org.springframework'
+    module = 'spring-webmvc'
+    versions = "[3.1.0.RELEASE,]"
+    // except these versions
+    skipVersions += ['1.2.1', '1.2.2', '1.2.3', '1.2.4']
+    skipVersions += '3.2.1.RELEASE'
+    // this dependency will be added to the classpath when muzzle check is run
+    extraDependency "javax.servlet:javax.servlet-api:3.0.1"
+    // verify that all other versions - [,3.1.0.RELEASE) in this case - fail the muzzle runtime check
     assertInverse = true
   }
-  // ...
 }
 ```
 
@@ -110,6 +114,28 @@ muzzle {
   specify the exact version to start/end, e.g. `[1.0.0,4)` would usually behave in the same way as
   `[1.0.0,4.0.0-Alpha)`;
 * `assertInverse` is basically a shortcut for adding an opposite directive for all library versions
-  that are not included in the specified `versions` range.
+  that are not included in the specified `versions` range;
+* `extraDependency` allows putting additional libs on the classpath just for the compile-time check;
+  this is usually used for jars that are not bundled with the instrumented lib but always present
+  in the runtime anyway.
 
 The source code of the gradle plugin is located in the `buildSrc` directory.
+
+### Covering all versions and `assertInverse`
+
+Ideally when using the muzzle gradle plugin we should aim to cover all versions of the instrumented
+library. Expecting muzzle check failures from some library versions is a way to ensure that the
+instrumentation will not be applied to them in the runtime - and won't break anything in the
+instrumented application.
+
+The easiest way it can be done is by adding `assertInverse = true` to the `pass` muzzle
+directive. The plugin will add an implicit `fail` directive that contains all other versions of the
+instrumented library.
+It is worth using `assertInverse = true` by default when writing instrumentation modules, even for
+very old library versions. The muzzle plugin will ensure that those old versions won't be
+accidentally instrumented when we know that the instrumentation will not work properly for them.
+Having a `fail` directive forces the authors of the instrumentation module to properly specify
+`classLoaderMatcher()` so that only the desired version range is instrumented.
+
+In more complicated scenarios it may be required to use multiple `pass` and `fail` directives
+to cover as many versions as possible.
