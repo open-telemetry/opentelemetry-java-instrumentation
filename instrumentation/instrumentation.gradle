@@ -48,8 +48,6 @@ configurations {
 shadowJar {
   mergeServiceFiles()
 
-  archiveClassifier.set("")
-
   exclude '**/module-info.class'
 
   // Prevents conflict with other SLF4J instances. Important for premain.
