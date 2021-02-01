@@ -64,10 +64,6 @@ public abstract class BaseTracer {
     return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
   }
 
-  protected final boolean inClientSpan(Context parentContext) {
-    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
-  }
-
   protected final Context withClientSpan(Context parentContext, Span span) {
     return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
   }
@@ -82,6 +78,25 @@ public abstract class BaseTracer {
 
   public Span getCurrentSpan() {
     return Span.current();
+  }
+
+  protected final boolean shouldStartSpan(Kind proposedKind, Context context) {
+    switch (proposedKind) {
+      case CLIENT:
+        return !inClientSpan(context);
+      case SERVER:
+        return !inServerSpan(context);
+      default:
+        return true;
+    }
+  }
+
+  private boolean inClientSpan(Context parentContext) {
+    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
+  }
+
+  private boolean inServerSpan(Context context) {
+    return getCurrentServerSpan(context) != null;
   }
 
   protected abstract String getInstrumentationName();

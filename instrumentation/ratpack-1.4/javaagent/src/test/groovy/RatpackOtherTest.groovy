@@ -6,16 +6,16 @@
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.path.PathBinding
 
-class RatpackOtherTest extends AgentTestRunner {
+class RatpackOtherTest extends AgentInstrumentationSpecification {
 
   OkHttpClient client = OkHttpUtils.client()
 

@@ -9,15 +9,15 @@ import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
-class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
+class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecification {
   // Setting up appContext & repo with @Shared doesn't allow
   // spring-data instrumentation to applied.
   // To change the timing without adding ugly checks everywhere -
@@ -51,12 +51,12 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
 
   def setup() {
     repo.refresh()
-    TEST_WRITER.clear()
+    testWriter.clear()
     runUnderTrace("delete") {
       repo.deleteAll()
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(1)
+    testWriter.clear()
   }
 
   def "test empty repo"() {
@@ -158,7 +158,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     and:
     repo.findById("1").get() == doc
@@ -189,7 +189,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     doc.data = "other data"
@@ -265,7 +265,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     repo.deleteById("1")

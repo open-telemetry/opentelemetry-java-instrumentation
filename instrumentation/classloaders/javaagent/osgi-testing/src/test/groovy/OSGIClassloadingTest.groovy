@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.felix.framework.BundleWiringImpl
 import org.eclipse.osgi.internal.debug.Debug
 import org.eclipse.osgi.internal.framework.EquinoxConfiguration
@@ -12,7 +12,7 @@ import org.eclipse.osgi.internal.loader.ModuleClassLoader
 import org.eclipse.osgi.internal.loader.classpath.ClasspathManager
 import org.eclipse.osgi.storage.BundleInfo
 
-class OSGIClassloadingTest extends AgentTestRunner {
+class OSGIClassloadingTest extends AgentInstrumentationSpecification {
   def "OSGI delegates to bootstrap class loader for agent classes"() {
     when:
     def clazz

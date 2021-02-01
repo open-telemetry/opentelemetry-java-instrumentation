@@ -5,8 +5,8 @@
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 import spring.jpa.Customer
@@ -16,7 +16,7 @@ import spring.jpa.PersistenceConfig
 /**
  * Unfortunately this test verifies that our hibernate instrumentation doesn't currently work with Spring Data Repositories.
  */
-class SpringJpaTest extends AgentTestRunner {
+class SpringJpaTest extends AgentInstrumentationSpecification {
 
   @Shared
   def context = new AnnotationConfigApplicationContext(PersistenceConfig)
@@ -47,7 +47,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     repo.save(customer)
@@ -56,7 +56,7 @@ class SpringJpaTest extends AgentTestRunner {
     then:
     customer.id != null
     // Behavior changed in new version:
-    def extraTrace = TEST_WRITER.traces.size() == 2
+    def extraTrace = testWriter.traces.size() == 2
     assertTraces(extraTrace ? 2 : 1) {
       if (extraTrace) {
         trace(0, 1) {
@@ -87,7 +87,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     customer.firstName = "Bill"
@@ -123,7 +123,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     customer = repo.findByLastName("Anonymous")[0]
@@ -146,7 +146,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     repo.delete(customer)
@@ -180,6 +180,6 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
   }
 }

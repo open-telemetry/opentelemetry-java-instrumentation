@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
-class AkkaActorTest extends AgentTestRunner {
+class AkkaActorTest extends AgentInstrumentationSpecification {
 
   // TODO this test doesn't really depend on otel.instrumentation.akka-actor.enabled=true
   //  but setting this property here is needed when running both this test

@@ -5,10 +5,10 @@
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 
-class SlickTest extends AgentTestRunner {
+class SlickTest extends AgentInstrumentationSpecification {
 
   // Can't be @Shared, otherwise the work queue is initialized before the instrumentation is applied
   def database = new SlickUtils()

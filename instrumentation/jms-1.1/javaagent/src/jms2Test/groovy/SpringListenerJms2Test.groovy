@@ -6,13 +6,13 @@
 import static Jms2Test.consumerSpan
 import static Jms2Test.producerSpan
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.jms.ConnectionFactory
 import listener.Config
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.jms.core.JmsTemplate
 
-class SpringListenerJms2Test extends AgentTestRunner {
+class SpringListenerJms2Test extends AgentInstrumentationSpecification {
   def "receiving message in spring listener generates spans"() {
     setup:
     def context = new AnnotationConfigApplicationContext(Config)

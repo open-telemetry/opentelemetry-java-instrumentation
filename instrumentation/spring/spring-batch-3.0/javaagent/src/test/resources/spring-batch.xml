@@ -25,6 +25,15 @@
     </b:step>
   </b:job>
 
+  <b:job id="parallelItemsJob">
+    <b:step id="parallelItemsStep">
+      <b:tasklet task-executor="asyncTaskExecutor" throttle-limit="2">
+        <b:chunk commit-interval="2" reader="syncItemReader" processor="itemProcessor"
+          writer="itemWriter"/>
+      </b:tasklet>
+    </b:step>
+  </b:job>
+
   <b:job id="flowJob">
     <b:flow id="flow" parent="parentFlow"/>
   </b:job>
@@ -70,7 +79,9 @@
 
   <b:job id="partitionedJob">
     <b:step id="partitionManagerStep">
-      <b:partition step="partitionWorkerStep" partitioner="testPartitioner"/>
+      <b:partition step="partitionWorkerStep" partitioner="testPartitioner">
+        <b:handler task-executor="asyncTaskExecutor" grid-size="2"/>
+      </b:partition>
     </b:step>
   </b:job>
   <b:step id="partitionWorkerStep">
@@ -83,6 +94,9 @@
   <bean id="testPartitionedItemReader" class="springbatch.TestPartitionedItemReader"/>
 
   <bean id="itemReader" class="springbatch.TestItemReader"/>
+  <bean id="syncItemReader" class="springbatch.TestSyncItemReader">
+    <constructor-arg name="max" value="5"/>
+  </bean>
   <bean id="itemProcessor" class="springbatch.TestItemProcessor"/>
   <bean id="itemWriter" class="springbatch.TestItemWriter"/>
   <bean id="testTasklet" class="springbatch.TestTasklet"/>

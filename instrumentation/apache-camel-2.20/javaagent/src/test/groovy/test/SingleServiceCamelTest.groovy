@@ -7,7 +7,7 @@ package test
 
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -20,7 +20,7 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import spock.lang.Shared
 
-class SingleServiceCamelTest extends AgentTestRunner implements RetryOnAddressAlreadyInUseTrait {
+class SingleServiceCamelTest extends AgentInstrumentationSpecification implements RetryOnAddressAlreadyInUseTrait {
 
   @Shared
   ConfigurableApplicationContext server

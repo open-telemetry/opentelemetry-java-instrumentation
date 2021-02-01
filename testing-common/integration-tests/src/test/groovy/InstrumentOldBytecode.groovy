@@ -4,9 +4,9 @@
  */
 
 import com.ibm.as400.resource.ResourceLevel
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
-class InstrumentOldBytecode extends AgentTestRunner {
+class InstrumentOldBytecode extends AgentInstrumentationSpecification {
   def "can instrument old bytecode"() {
     expect:
     new ResourceLevel().toString() == "instrumented"

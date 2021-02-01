@@ -7,10 +7,12 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger.JaegerSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger.JaegerSpanExporterProperties;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -24,6 +26,11 @@ class JaegerSpanExporterAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   TracerAutoConfiguration.class, JaegerSpanExporterAutoConfiguration.class));
+
+  @AfterEach
+  void tearDown() {
+    GlobalOpenTelemetry.resetForTest();
+  }
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize JaegerGrpcSpanExporter bean")
@@ -44,14 +51,12 @@ class JaegerSpanExporterAutoConfigurationTest {
     this.contextRunner
         .withPropertyValues(
             "opentelemetry.trace.exporter.jaeger.enabled=true",
-            "opentelemetry.trace.exporter.jaeger.servicename=test",
             "opentelemetry.trace.exporter.jaeger.endpoint=localhost:8080/test",
             "opentelemetry.trace.exporter.jaeger.spantimeout=420ms")
         .run(
             (context) -> {
               JaegerSpanExporterProperties jaegerSpanExporterProperties =
                   context.getBean(JaegerSpanExporterProperties.class);
-              assertThat(jaegerSpanExporterProperties.getServiceName()).isEqualTo("test");
               assertThat(jaegerSpanExporterProperties.getEndpoint())
                   .isEqualTo("localhost:8080/test");
               assertThat(jaegerSpanExporterProperties.getSpanTimeout()).hasMillis(420);

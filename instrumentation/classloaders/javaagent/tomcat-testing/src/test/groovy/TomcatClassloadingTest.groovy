@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.catalina.WebResource
 import org.apache.catalina.WebResourceRoot
 import org.apache.catalina.loader.ParallelWebappClassLoader
 
-class TomcatClassloadingTest extends AgentTestRunner {
+class TomcatClassloadingTest extends AgentInstrumentationSpecification {
 
   WebResourceRoot resources = Mock(WebResourceRoot) {
     getResource(_) >> Mock(WebResource)

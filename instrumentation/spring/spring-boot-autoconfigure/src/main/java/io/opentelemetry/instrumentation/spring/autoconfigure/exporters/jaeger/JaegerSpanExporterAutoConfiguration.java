@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 
 import io.grpc.ManagedChannel;
 import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
+import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -36,10 +37,13 @@ public class JaegerSpanExporterAutoConfiguration {
   public JaegerGrpcSpanExporter otelJaegerSpanExporter(
       JaegerSpanExporterProperties jaegerSpanExporterProperties) {
 
-    return JaegerGrpcSpanExporter.builder()
-        .setServiceName(jaegerSpanExporterProperties.getServiceName())
-        .setDeadlineMs(jaegerSpanExporterProperties.getSpanTimeout().toMillis())
-        .setEndpoint(jaegerSpanExporterProperties.getEndpoint())
-        .build();
+    JaegerGrpcSpanExporterBuilder builder = JaegerGrpcSpanExporter.builder();
+    if (jaegerSpanExporterProperties.getEndpoint() != null) {
+      builder.setEndpoint(jaegerSpanExporterProperties.getEndpoint());
+    }
+    if (jaegerSpanExporterProperties.getSpanTimeout() != null) {
+      builder.setTimeout(jaegerSpanExporterProperties.getSpanTimeout());
+    }
+    return builder.build();
   }
 }

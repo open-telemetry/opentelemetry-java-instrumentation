@@ -23,6 +23,18 @@ if (projectDir.name == 'javaagent') {
   archivesBaseName = projectDir.parentFile.name
 }
 
+configurations {
+  toolingRuntime {
+    canBeConsumed = false
+    canBeResolved = true
+  }
+
+  bootstrapRuntime {
+    canBeConsumed = false
+    canBeResolved = true
+  }
+}
+
 afterEvaluate {
   dependencies {
     compileOnly project(':instrumentation-api')
@@ -43,14 +55,17 @@ afterEvaluate {
     testImplementation project(':testing-common')
     testAnnotationProcessor deps.autoservice
     testCompileOnly deps.autoservice
-    testImplementation project(':utils:test-utils')
 
     testImplementation deps.testcontainers
+
+    toolingRuntime(project(path: ":javaagent-tooling", configuration: 'instrumentationMuzzle'))
+
+    bootstrapRuntime(project(path: ":javaagent-bootstrap", configuration: 'instrumentationMuzzle'))
   }
 
   def pluginName = 'io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin'
   new ByteBuddyPluginConfigurator(project, sourceSets.main, pluginName,
-    project(':javaagent-tooling').configurations.instrumentationMuzzle + configurations.runtimeClasspath
+    configurations.toolingRuntime + configurations.runtimeClasspath
   ).configure()
 }
 
@@ -89,9 +104,11 @@ shadowJar {
   relocate "application.io.opentelemetry", "io.opentelemetry"
 }
 
+evaluationDependsOn(":testing:agent-for-testing")
+
 tasks.withType(Test).configureEach {
   jvmArgs "-Dotel.javaagent.debug=true"
-  jvmArgs "-javaagent:${project(":testing:agent-for-testing").buildDir}/libs/javaagent-for-testing.jar"
+  jvmArgs "-javaagent:${project(":testing:agent-for-testing").tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dotel.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dinternal.testing.disable.global.library.ignores=true"
 
