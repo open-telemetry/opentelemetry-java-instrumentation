@@ -36,9 +36,12 @@ configurations {
   shadowInclude
 }
 
+evaluationDependsOn(":testing:agent-exporter")
+
 shadowJar {
   configurations = [project.configurations.shadowInclude]
-  archiveFileName = 'javaagent-for-testing.jar'
+
+  archiveClassifier.set("")
 
   dependsOn ':testing:agent-exporter:shadowJar'
   with isolateSpec([project(':testing:agent-exporter').tasks.shadowJar])
@@ -77,9 +80,11 @@ dependencies {
   testImplementation deps.opentelemetryApi
 }
 
-tasks.withType(Test).configureEach {
-  jvmArgs "-Dotel.javaagent.debug=true"
-  jvmArgs "-javaagent:${shadowJar.archiveFile.get().asFile.absolutePath}"
+afterEvaluate {
+  tasks.withType(Test).configureEach {
+    jvmArgs "-Dotel.javaagent.debug=true"
+    jvmArgs "-javaagent:${shadowJar.archiveFile.get().asFile.absolutePath}"
 
-  dependsOn shadowJar
+    dependsOn shadowJar
+  }
 }

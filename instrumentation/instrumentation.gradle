@@ -46,7 +46,6 @@ configurations {
 }
 
 shadowJar {
-
   mergeServiceFiles()
 
   exclude '**/module-info.class'
