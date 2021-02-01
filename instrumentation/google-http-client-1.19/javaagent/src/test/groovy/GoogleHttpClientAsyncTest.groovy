@@ -10,7 +10,7 @@ import spock.lang.Timeout
 @Timeout(5)
 class GoogleHttpClientAsyncTest extends AbstractGoogleHttpClientTest {
   def setup() {
-    TEST_WRITER.clear()
+    testWriter.clear()
   }
 
   @Override

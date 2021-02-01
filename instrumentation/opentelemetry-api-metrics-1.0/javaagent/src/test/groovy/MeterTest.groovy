@@ -14,12 +14,12 @@ import com.google.common.base.Stopwatch
 import io.opentelemetry.api.common.Labels
 import io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.api.metrics.GlobalMetricsProvider
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.metrics.data.MetricData
 import io.opentelemetry.sdk.metrics.data.PointData
 import java.util.function.Consumer
 
-class MeterTest extends AgentTestRunner {
+class MeterTest extends AgentInstrumentationSpecification {
 
   def "test counter #builderMethod bound=#bind"() {
     given:
@@ -253,7 +253,7 @@ class MeterTest extends AgentTestRunner {
   def findMetric(instrumentationName, metricName) {
     Stopwatch stopwatch = Stopwatch.createStarted()
     while (stopwatch.elapsed(SECONDS) < 10) {
-      def allMetrics = TEST_WRITER.getMetrics()
+      def allMetrics = testWriter.getMetrics()
       for (def metric : allMetrics) {
         if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.name == metricName) {
           return metric

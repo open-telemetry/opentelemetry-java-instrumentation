@@ -4,9 +4,10 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
@@ -17,7 +18,7 @@ import java.util.function.Supplier
 import spock.lang.Requires
 
 @Requires({ javaVersion >= 1.8 })
-class CompletableFutureTest extends AgentTestRunner {
+class CompletableFutureTest extends AgentInstrumentationSpecification {
 
   def "CompletableFuture test"() {
     setup:
@@ -26,7 +27,7 @@ class CompletableFutureTest extends AgentTestRunner {
     def supplier = new Supplier<String>() {
       @Override
       String get() {
-        getTestTracer().spanBuilder("supplier").startSpan().end()
+        runInternalSpan("supplier")
         sleep(1000)
         return "a"
       }
@@ -35,7 +36,7 @@ class CompletableFutureTest extends AgentTestRunner {
     def function = new Function<String, String>() {
       @Override
       String apply(String s) {
-        getTestTracer().spanBuilder("function").startSpan().end()
+        runInternalSpan("function")
         return s + "c"
       }
     }
@@ -52,13 +53,13 @@ class CompletableFutureTest extends AgentTestRunner {
       }
     }.get()
 
-    TEST_WRITER.waitForTraces(1)
-    List<SpanData> trace = TEST_WRITER.traces[0]
+    testWriter.waitForTraces(1)
+    List<SpanData> trace = testWriter.traces[0]
 
     expect:
     result == "abc"
 
-    TEST_WRITER.traces.size() == 1
+    testWriter.traces.size() == 1
     trace.size() == 4
     trace.get(0).name == "parent"
     trace.get(1).name == "supplier"
@@ -237,7 +238,7 @@ class CompletableFutureTest extends AgentTestRunner {
 
     @Override
     String get() {
-      getTestTracer().spanBuilder("appendingSupplier").startSpan().end()
+      runInternalSpan("appendingSupplier")
       return letter + "b"
     }
   }

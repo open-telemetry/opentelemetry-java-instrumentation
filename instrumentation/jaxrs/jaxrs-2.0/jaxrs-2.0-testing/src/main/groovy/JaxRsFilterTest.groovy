@@ -6,7 +6,7 @@
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
@@ -17,7 +17,7 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 @Unroll
-abstract class JaxRsFilterTest extends AgentTestRunner {
+abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
 
   @Shared
   SimpleRequestFilter simpleRequestFilter = new SimpleRequestFilter()

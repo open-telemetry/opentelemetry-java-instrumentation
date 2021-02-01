@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
-class ScalaInstrumentationTest extends AgentTestRunner {
+class ScalaInstrumentationTest extends AgentInstrumentationSpecification {
 
   def "scala futures and callbacks"() {
     setup:

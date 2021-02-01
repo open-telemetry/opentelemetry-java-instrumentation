@@ -5,12 +5,12 @@
 
 import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.testing.common.HelperInjectorAccess
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicReference
 
-class ResourceInjectionTest extends AgentTestRunner {
+class ResourceInjectionTest extends AgentInstrumentationSpecification {
 
   def "resources injected to non-delegating classloader"() {
     setup:

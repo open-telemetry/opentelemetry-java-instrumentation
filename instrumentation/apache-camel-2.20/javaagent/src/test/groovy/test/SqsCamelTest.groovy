@@ -10,8 +10,8 @@ import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.camel.CamelContext
 import org.apache.camel.ProducerTemplate
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
@@ -20,7 +20,7 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap
 import spock.lang.Shared
 
-class SqsCamelTest extends AgentTestRunner {
+class SqsCamelTest extends AgentInstrumentationSpecification {
 
   @Shared
   ConfigurableApplicationContext server

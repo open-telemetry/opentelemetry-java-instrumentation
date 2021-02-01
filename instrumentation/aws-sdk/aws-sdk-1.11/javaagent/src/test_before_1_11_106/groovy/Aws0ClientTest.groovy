@@ -25,13 +25,13 @@ import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.atomic.AtomicReference
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class Aws0ClientTest extends AgentTestRunner {
+class Aws0ClientTest extends AgentInstrumentationSpecification {
 
   private static final CREDENTIALS_PROVIDER_CHAIN = new AWSCredentialsProviderChain(
     new EnvironmentVariableCredentialsProvider(),

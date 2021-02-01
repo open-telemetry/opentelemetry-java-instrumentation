@@ -103,9 +103,9 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     }
 
     cleanup:
-    TEST_WRITER.clear()
+    testWriter.clear()
     repo.deleteAll()
-    TEST_WRITER.waitForTraces(2)
+    testWriter.waitForTraces(2)
   }
 
   def "test save and retrieve"() {
@@ -130,9 +130,9 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     }
 
     cleanup:
-    TEST_WRITER.clear()
+    testWriter.clear()
     repo.deleteAll()
-    TEST_WRITER.waitForTraces(2)
+    testWriter.waitForTraces(2)
   }
 
   def "test save and update"() {
@@ -157,9 +157,9 @@ abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTe
     }
 
     cleanup:
-    TEST_WRITER.clear()
+    testWriter.clear()
     repo.deleteAll()
-    TEST_WRITER.waitForTraces(2)
+    testWriter.waitForTraces(2)
   }
 
   def "save and delete"() {

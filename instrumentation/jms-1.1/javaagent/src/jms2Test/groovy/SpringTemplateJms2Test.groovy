@@ -7,7 +7,7 @@ import static Jms2Test.consumerSpan
 import static Jms2Test.producerSpan
 
 import com.google.common.io.Files
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -27,7 +27,7 @@ import org.hornetq.core.server.HornetQServers
 import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
-class SpringTemplateJms2Test extends AgentTestRunner {
+class SpringTemplateJms2Test extends AgentInstrumentationSpecification {
   @Shared
   HornetQServer server
   @Shared

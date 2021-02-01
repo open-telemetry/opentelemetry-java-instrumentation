@@ -6,13 +6,13 @@
 import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
 import static java.util.Collections.emptyMap
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.springframework.batch.core.JobParameter
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 
-abstract class ItemLevelSpanTest extends AgentTestRunner {
+abstract class ItemLevelSpanTest extends AgentInstrumentationSpecification {
   abstract runJob(String jobName, Map<String, JobParameter> params = emptyMap())
 
   def "should trace item read, process and write calls"() {
@@ -269,7 +269,7 @@ class XmlConfigItemLevelSpanTest extends ItemLevelSpanTest implements Applicatio
 // JsrChunkProcessor works a bit differently than the "standard" one and does not read the whole
 // chunk at once, it reads every item separately; it results in a different span ordering, that's
 // why it has a completely separate test class
-class JsrConfigItemLevelSpanTest extends AgentTestRunner implements JavaxBatchConfigTrait {
+class JsrConfigItemLevelSpanTest extends AgentInstrumentationSpecification implements JavaxBatchConfigTrait {
   def "should trace item read, process and write calls"() {
     when:
     runJob("itemsAndTaskletJob", [:])
