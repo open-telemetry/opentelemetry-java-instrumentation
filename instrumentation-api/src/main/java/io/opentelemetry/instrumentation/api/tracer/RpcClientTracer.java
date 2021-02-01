@@ -13,4 +13,6 @@ public abstract class RpcClientTracer extends BaseTracer {
   protected RpcClientTracer(Tracer tracer) {
     super(tracer);
   }
+
+  protected abstract String getRpcSystem();
 }
