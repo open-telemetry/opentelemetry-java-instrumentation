@@ -36,9 +36,12 @@ configurations {
   shadowInclude
 }
 
+evaluationDependsOn(":testing:agent-exporter")
+
 shadowJar {
   configurations = [project.configurations.shadowInclude]
-  archiveFileName = 'javaagent-for-testing.jar'
+
+  classifier = null
 
   dependsOn ':testing:agent-exporter:shadowJar'
   with isolateSpec([project(':testing:agent-exporter').tasks.shadowJar])

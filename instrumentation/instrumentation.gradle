@@ -46,8 +46,9 @@ configurations {
 }
 
 shadowJar {
-
   mergeServiceFiles()
+
+  archiveClassifier.set("")
 
   exclude '**/module-info.class'
 
