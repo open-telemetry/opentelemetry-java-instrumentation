@@ -27,7 +27,7 @@ public class RmiClientTracer extends RpcClientTracer {
 
     SpanBuilder spanBuilder =
         tracer.spanBuilder(serviceName + "/" + methodName).setSpanKind(CLIENT);
-    spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "java_rmi");
+    spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, getRpcSystem());
     spanBuilder.setAttribute(SemanticAttributes.RPC_SERVICE, serviceName);
     spanBuilder.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
 
@@ -37,5 +37,10 @@ public class RmiClientTracer extends RpcClientTracer {
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.rmi";
+  }
+
+  @Override
+  protected String getRpcSystem() {
+    return "java_rmi";
   }
 }
