@@ -94,7 +94,7 @@ The following configuration properties are common to all exporters:
 
 | System property     | Environment variable | Purpose                                                                                                                                                 |
 |---------------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| otel.trace.exporter | OTEL_EXPORTER        | The exporter to be used. Use a comma-separated list for multiple exporters. Currently does not support multiple metric exporters. Default is `otlp`. |
+| otel.trace.exporter | OTEL_TRACE_EXPORTER  | The exporter to be used. Use a comma-separated list for multiple exporters. Currently does not support multiple metric exporters. Default is `otlp`. |
 
 ##### OTLP exporter (both span and metric exporters)
 
@@ -102,7 +102,7 @@ A simple wrapper for the OpenTelemetry Protocol (OTLP) span and metric exporters
 
 | System property                    | Environment variable        | Description                                                               |
 |------------------------------------|-----------------------------|---------------------------------------------------------------------------|
-| otel.trace.exporter=otlp (default) | OTEL_EXPORTER=otlp          | Select the OpenTelemetry exporter (default)                                   |
+| otel.trace.exporter=otlp (default) | OTEL_TRACE_EXPORTER=otlp    | Select the OpenTelemetry exporter (default)                                   |
 | otel.exporter.otlp.endpoint        | OTEL_EXPORTER_OTLP_ENDPOINT | The OTLP endpoint to connect to. Default is `localhost:55680`.            |
 | otel.exporter.otlp.insecure        | OTEL_EXPORTER_OTLP_INSECURE | Whether to enable client transport security for the connection            |
 | otel.exporter.otlp.headers         | OTEL_EXPORTER_OTLP_HEADERS  | Key-value pairs separated by semicolons to pass as request headers        |
@@ -117,7 +117,7 @@ A simple wrapper for the Jaeger exporter of opentelemetry-java. This exporter us
 
 | System property                   | Environment variable              | Description                                                                                        |
 |-----------------------------------|-----------------------------------|----------------------------------------------------------------------------------------------------|
-| otel.trace.exporter=jaeger        | OTEL_EXPORTER=jaeger              | Select the Jaeger exporter                                                                         |
+| otel.trace.exporter=jaeger        | OTEL_TRACE_EXPORTER=jaeger        | Select the Jaeger exporter                                                                         |
 | otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger gRPC endpoint to connect to. Default is `localhost:14250`.                              |
 | otel.exporter.jaeger.service.name | OTEL_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                       |
 
@@ -126,18 +126,18 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It sends JSON in
 
 | System property                   | Environment variable              | Description                                                                                                           |
 |-----------------------------------|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| otel.trace.exporter=zipkin        | OTEL_EXPORTER=zipkin              | Select the Zipkin exporter                                                                                            |
+| otel.trace.exporter=zipkin        | OTEL_TRACE_EXPORTER=zipkin        | Select the Zipkin exporter                                                                                            |
 | otel.exporter.zipkin.endpoint     | OTEL_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to. Default is `http://localhost:9411/api/v2/spans`. Currently only HTTP is supported. |
 | otel.exporter.zipkin.service.name | OTEL_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                                          |
 
 ##### Prometheus exporter
 A simple wrapper for the Prometheus exporter of opentelemetry-java.
 
-| System property                 | Environment variable          | Description                                                                        |
-|---------------------------------|-------------------------------|------------------------------------------------------------------------------------|
-| otel.trace.exporter=prometheus  | OTEL_EXPORTER=prometheus      | Select the Prometheus exporter                                                     |
-| otel.exporter.prometheus.port   | OTEL_EXPORTER_PROMETHEUS_PORT | The local port used to bind the prometheus metric server. Default is `9464`.       |
-| otel.exporter.prometheus.host   | OTEL_EXPORTER_PROMETHEUS_HOST | The local address used to bind the prometheus metric server. Default is `0.0.0.0`. |
+| System property                 | Environment variable           | Description                                                                        |
+|---------------------------------|--------------------------------|------------------------------------------------------------------------------------|
+| otel.trace.exporter=prometheus  | OTEL_TRACE_EXPORTER=prometheus | Select the Prometheus exporter                                                     |
+| otel.exporter.prometheus.port   | OTEL_EXPORTER_PROMETHEUS_PORT  | The local port used to bind the prometheus metric server. Default is `9464`.       |
+| otel.exporter.prometheus.host   | OTEL_EXPORTER_PROMETHEUS_HOST  | The local address used to bind the prometheus metric server. Default is `0.0.0.0`. |
 
 ##### Logging exporter
 
@@ -146,7 +146,7 @@ attributes to stdout. It's mainly used for testing and debugging.
 
 | System property              | Environment variable         | Description                                                                  |
 |------------------------------|------------------------------|------------------------------------------------------------------------------|
-| otel.trace.exporter=logging  | OTEL_EXPORTER=logging        | Select the logging exporter                                                  |
+| otel.trace.exporter=logging  | OTEL_TRACE_EXPORTER=logging        | Select the logging exporter                                                  |
 | otel.exporter.logging.prefix | OTEL_EXPORTER_LOGGING_PREFIX | An optional string printed in front of the span name and attributes.         |
 
 #### Propagator
