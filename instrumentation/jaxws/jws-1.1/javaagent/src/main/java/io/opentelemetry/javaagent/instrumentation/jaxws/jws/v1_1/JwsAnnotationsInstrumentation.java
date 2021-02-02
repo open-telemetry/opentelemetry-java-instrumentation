@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_0;
+package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
