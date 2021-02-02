@@ -22,7 +22,7 @@ class JwsAnnotationsTest extends AgentTestRunner {
           name "WebServiceClass.doSomethingPublic"
           attributes {
             attribute('code.function', 'doSomethingPublic')
-            attribute('code.namespace', 'io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_0.WebServiceClass')
+            attribute('code.namespace', 'io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceClass')
           }
         }
       }
@@ -42,7 +42,7 @@ class JwsAnnotationsTest extends AgentTestRunner {
           name "WebServiceFromInterface.partOfPublicInterface"
           attributes {
             attribute('code.function', 'partOfPublicInterface')
-            attribute('code.namespace', 'io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_0.WebServiceFromInterface')
+            attribute('code.namespace', 'io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface')
           }
         }
       }
