@@ -8,13 +8,13 @@ import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.test.annotation.TracedWithSpan
 
 /**
  * This test verifies that auto instrumentation supports {@link io.opentelemetry.extension.annotations.WithSpan} contrib annotation.
  */
-class WithSpanInstrumentationTest extends AgentTestRunner {
+class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
 
   def "should derive automatic name"() {
     setup:

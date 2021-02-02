@@ -5,14 +5,14 @@
 
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.ws.rs.client.Client
 import org.glassfish.jersey.client.JerseyClientBuilder
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
-class JaxMultithreadedClientTest extends AgentTestRunner {
+class JaxMultithreadedClientTest extends AgentInstrumentationSpecification {
 
   @AutoCleanup
   @Shared

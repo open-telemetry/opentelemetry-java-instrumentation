@@ -6,7 +6,7 @@
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.google.common.reflect.ClassPath
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.javaagent.tooling.Constants
 import java.util.concurrent.TimeoutException
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 // this test is run using
 //   -Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass$NestedClass
 // (see integration-tests.gradle)
-class AgentTestRunnerTest extends AgentTestRunner {
+class AgentTestRunnerTest extends AgentInstrumentationSpecification {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
 
   def "classpath setup"() {
@@ -48,7 +48,7 @@ class AgentTestRunnerTest extends AgentTestRunner {
   def "waiting for child spans times out"() {
     when:
     runUnderTrace("parent") {
-      TEST_WRITER.waitForTraces(1)
+      testWriter.waitForTraces(1)
     }
 
     then:

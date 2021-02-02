@@ -7,11 +7,11 @@ import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapPropagator
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -31,7 +31,7 @@ import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
 import spock.lang.Shared
 
-class KafkaStreamsTest extends AgentTestRunner {
+class KafkaStreamsTest extends AgentInstrumentationSpecification {
 
   static final STREAM_PENDING = "test.pending"
   static final STREAM_PROCESSED = "test.processed"
@@ -222,8 +222,8 @@ class KafkaStreamsTest extends AgentTestRunner {
       }
     })
     def spanContext = Span.fromContext(context).getSpanContext()
-    spanContext.traceIdAsHexString == TEST_WRITER.traces[0][3].traceId
-    spanContext.spanIdAsHexString == TEST_WRITER.traces[0][3].spanId
+    spanContext.traceIdAsHexString == testWriter.traces[0][3].traceId
+    spanContext.spanIdAsHexString == testWriter.traces[0][3].spanId
 
 
     cleanup:

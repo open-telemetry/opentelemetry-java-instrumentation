@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.brid
 
 import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.DoubleValueObserver;
+import application.io.opentelemetry.api.metrics.DoubleValueObserverBuilder;
 import java.util.function.Consumer;
 
 class ApplicationDoubleValueObserver implements DoubleValueObserver {
@@ -50,28 +51,28 @@ class ApplicationDoubleValueObserver implements DoubleValueObserver {
     }
   }
 
-  static class Builder implements DoubleValueObserver.Builder {
+  static class Builder implements DoubleValueObserverBuilder {
 
-    private final io.opentelemetry.api.metrics.DoubleValueObserver.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.DoubleValueObserverBuilder agentBuilder;
 
-    protected Builder(io.opentelemetry.api.metrics.DoubleValueObserver.Builder agentBuilder) {
+    protected Builder(io.opentelemetry.api.metrics.DoubleValueObserverBuilder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public DoubleValueObserver.Builder setDescription(String description) {
+    public Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public DoubleValueObserver.Builder setUnit(String unit) {
+    public Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public DoubleValueObserver.Builder setUpdater(Consumer<DoubleResult> callback) {
+    public Builder setUpdater(Consumer<DoubleResult> callback) {
       agentBuilder.setUpdater(
           result ->
               callback.accept((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));

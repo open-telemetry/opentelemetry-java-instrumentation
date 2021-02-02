@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -15,7 +16,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import spock.lang.Unroll
 
-abstract class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
+abstract class JaxRsAnnotationsInstrumentationTest extends AgentInstrumentationSpecification {
 
   def "instrumentation can be used as root span and resource is set to METHOD PATH"() {
     setup:

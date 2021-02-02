@@ -55,7 +55,6 @@ afterEvaluate {
     testImplementation project(':testing-common')
     testAnnotationProcessor deps.autoservice
     testCompileOnly deps.autoservice
-    testImplementation project(':utils:test-utils')
 
     testImplementation deps.testcontainers
 
@@ -105,9 +104,11 @@ shadowJar {
   relocate "application.io.opentelemetry", "io.opentelemetry"
 }
 
+evaluationDependsOn(":testing:agent-for-testing")
+
 tasks.withType(Test).configureEach {
   jvmArgs "-Dotel.javaagent.debug=true"
-  jvmArgs "-javaagent:${project(":testing:agent-for-testing").buildDir}/libs/javaagent-for-testing.jar"
+  jvmArgs "-javaagent:${project(":testing:agent-for-testing").tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dotel.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dinternal.testing.disable.global.library.ignores=true"
 

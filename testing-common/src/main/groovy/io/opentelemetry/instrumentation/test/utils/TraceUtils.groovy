@@ -44,6 +44,10 @@ class TraceUtils {
     }
   }
 
+  static void runInternalSpan(String spanName) {
+    tracer.spanBuilder(spanName).startSpan().end()
+  }
+
   static basicSpan(TraceAssert trace, int index, String operation, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       if (parentSpan == null) {

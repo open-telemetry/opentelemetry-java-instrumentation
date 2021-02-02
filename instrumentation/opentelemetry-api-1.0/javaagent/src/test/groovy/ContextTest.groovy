@@ -6,9 +6,9 @@
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
-class ContextTest extends AgentTestRunner {
+class ContextTest extends AgentInstrumentationSpecification {
 
   def "Span.current() should return invalid"() {
     when:

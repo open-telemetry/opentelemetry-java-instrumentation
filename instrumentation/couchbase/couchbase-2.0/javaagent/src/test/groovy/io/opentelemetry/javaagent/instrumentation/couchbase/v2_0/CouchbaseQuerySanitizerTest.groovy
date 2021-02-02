@@ -14,11 +14,11 @@ import com.couchbase.client.java.view.ViewQuery
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class CouchbaseQueryNormalizerTest extends Specification {
+class CouchbaseQuerySanitizerTest extends Specification {
   @Unroll
   def "should normalize #desc query"() {
     when:
-    def normalized = CouchbaseQueryNormalizer.normalize(query)
+    def normalized = CouchbaseQuerySanitizer.sanitize(query)
 
     then:
     // the analytics query ends up with trailing ';' in earlier couchbase version, but no trailing ';' in later couchbase version

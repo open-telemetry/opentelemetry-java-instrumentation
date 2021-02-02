@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.CommandWithArgs;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
@@ -24,9 +24,6 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
     return TRACER;
   }
 
-  private final RedisCommandNormalizer commandNormalizer =
-      new RedisCommandNormalizer("jedis", "jedis-3.0");
-
   @Override
   protected String spanName(Connection connection, CommandWithArgs query, String normalizedQuery) {
     return query.getStringCommand();
@@ -34,7 +31,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
 
   @Override
   protected String normalizeQuery(CommandWithArgs command) {
-    return commandNormalizer.normalize(command.getStringCommand(), command.getArgs());
+    return RedisCommandSanitizer.sanitize(command.getStringCommand(), command.getArgs());
   }
 
   @Override

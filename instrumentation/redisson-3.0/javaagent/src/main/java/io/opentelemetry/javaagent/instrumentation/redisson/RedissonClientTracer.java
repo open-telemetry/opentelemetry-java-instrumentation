@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandNormalizer;
+import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -25,9 +25,6 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
   public static RedissonClientTracer tracer() {
     return TRACER;
   }
-
-  private final RedisCommandNormalizer commandNormalizer =
-      new RedisCommandNormalizer("redisson", "redisson-3.0");
 
   @Override
   protected String spanName(RedisConnection connection, Object query, String normalizedQuery) {
@@ -93,7 +90,7 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
         args.add(param);
       }
     }
-    return commandNormalizer.normalize(command.getCommand().getName(), args);
+    return RedisCommandSanitizer.sanitize(command.getCommand().getName(), args);
   }
 
   @Override

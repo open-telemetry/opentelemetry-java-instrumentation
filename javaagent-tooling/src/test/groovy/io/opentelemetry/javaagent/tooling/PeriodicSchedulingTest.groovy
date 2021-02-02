@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
-import io.opentelemetry.instrumentation.util.gc.GcUtils
+import io.opentelemetry.instrumentation.test.utils.GcUtils
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger

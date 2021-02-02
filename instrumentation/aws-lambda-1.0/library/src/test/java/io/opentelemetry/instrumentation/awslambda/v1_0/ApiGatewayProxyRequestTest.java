@@ -18,7 +18,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.extension.trace.propagation.AwsXrayPropagator;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +28,7 @@ class ApiGatewayProxyRequestTest {
 
   @AfterEach
   void resetOpenTelemetry() {
-    GlobalOpenTelemetry.set(OpenTelemetrySdk.builder().build());
+    GlobalOpenTelemetry.resetForTest();
   }
 
   @Test

@@ -9,9 +9,9 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.ServerBuilder
 import io.opentelemetry.instrumentation.grpc.v1_5.client.TracingClientInterceptor
 import io.opentelemetry.instrumentation.grpc.v1_5.server.TracingServerInterceptor
-import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import io.opentelemetry.instrumentation.test.LibraryTestTrait
 
-class GrpcStreamingTest extends AbstractGrpcStreamingTest implements InstrumentationTestTrait {
+class GrpcStreamingTest extends AbstractGrpcStreamingTest implements LibraryTestTrait {
   @Override
   ServerBuilder configureServer(ServerBuilder server) {
     return server.intercept(TracingServerInterceptor.newInterceptor())
