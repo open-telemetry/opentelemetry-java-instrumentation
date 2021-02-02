@@ -18,6 +18,7 @@ class OkHttp3Test extends HttpClientTest {
 
   def client = new OkHttpClient.Builder()
     .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+    .retryOnConnectionFailure(false)
     .build()
 
   @Override
