@@ -119,7 +119,8 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE.key" Boolean
         "$SemanticAttributes.DB_CASSANDRA_PAGE_SIZE.key" 5000
         "$SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT.key" 0
-        "$SemanticAttributes.DB_CASSANDRA_TABLE.key" { table -> (keyspace == null ? null : "users") == table }
+        // the SqlStatementSanitizer can't handle CREATE statements or splitting out the keyspace
+        "$SemanticAttributes.DB_CASSANDRA_TABLE.key" { table -> (statement.contains("CREATE") || keyspace == null ? true : table.endsWith("users")) }
       }
     }
   }
