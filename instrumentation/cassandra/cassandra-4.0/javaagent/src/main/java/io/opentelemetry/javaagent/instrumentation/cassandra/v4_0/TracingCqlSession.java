@@ -178,10 +178,10 @@ public class TracingCqlSession implements CqlSession {
     try (Scope ignored = context.makeCurrent()) {
       try {
         ResultSet resultSet = session.execute(query);
-        tracer().onResponse(context, resultSet.getExecutionInfo());
+        tracer().onResponse(context, session, resultSet.getExecutionInfo());
         return resultSet;
       } catch (RuntimeException e) {
-        tracer().endExceptionally(context, e);
+        tracer().endExceptionally(context, e, session);
         throw e;
       } finally {
         tracer().end(context);
@@ -198,10 +198,10 @@ public class TracingCqlSession implements CqlSession {
     try (Scope ignored = context.makeCurrent()) {
       try {
         ResultSet resultSet = session.execute(statement);
-        tracer().onResponse(context, resultSet.getExecutionInfo());
+        tracer().onResponse(context, session, resultSet.getExecutionInfo());
         return resultSet;
       } catch (RuntimeException e) {
-        tracer().endExceptionally(context, e);
+        tracer().endExceptionally(context, e, session);
         throw e;
       } finally {
         tracer().end(context);
@@ -220,9 +220,9 @@ public class TracingCqlSession implements CqlSession {
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
             if (throwable != null) {
-              tracer().endExceptionally(context, throwable);
+              tracer().endExceptionally(context, throwable, session);
             } else {
-              tracer().onResponse(context, asyncResultSet.getExecutionInfo());
+              tracer().onResponse(context, session, asyncResultSet.getExecutionInfo());
               tracer().end(context);
             }
           });
@@ -238,9 +238,9 @@ public class TracingCqlSession implements CqlSession {
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
             if (throwable != null) {
-              tracer().endExceptionally(context, throwable);
+              tracer().endExceptionally(context, throwable, session);
             } else {
-              tracer().onResponse(context, asyncResultSet.getExecutionInfo());
+              tracer().onResponse(context, session, asyncResultSet.getExecutionInfo());
               tracer().end(context);
             }
           });
