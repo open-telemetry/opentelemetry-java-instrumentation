@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraTableNameExtractor.extractTableNameFromQuery;
-
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.DriverException;
@@ -16,12 +14,11 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.Statement;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes;
-import io.opentelemetry.api.trace.attributes.SemanticAttributes.DbSystemValues;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -132,7 +129,7 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
   @Override
   protected void onStatement(Span span, String statement) {
     super.onStatement(span, statement);
-    String table = extractTableNameFromQuery(statement);
+    String table = SqlStatementSanitizer.sanitize(statement).getTable();
     if (table != null) {
       span.setAttribute(SemanticAttributes.DB_CASSANDRA_TABLE, table);
     }
