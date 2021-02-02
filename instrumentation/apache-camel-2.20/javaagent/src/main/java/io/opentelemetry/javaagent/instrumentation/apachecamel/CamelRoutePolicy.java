@@ -38,7 +38,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
 
   private Span spanOnExchangeBegin(
       Route route, Exchange exchange, SpanDecorator sd, Span.Kind spanKind) {
-    Span activeSpan = CamelTracer.TRACER.getCurrentSpan();
+    Span activeSpan = Span.current();
     String name = sd.getOperationName(exchange, route.getEndpoint(), CamelDirection.INBOUND);
     SpanBuilder builder = CamelTracer.TRACER.spanBuilder(name);
     builder.setSpanKind(spanKind);
@@ -52,7 +52,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
   }
 
   private Span.Kind spanKind(SpanDecorator sd) {
-    Span activeSpan = CamelTracer.TRACER.getCurrentSpan();
+    Span activeSpan = Span.current();
     // if there's an active span, this is not a root span which we always mark as INTERNAL
     return (activeSpan.getSpanContext().isValid() ? Span.Kind.INTERNAL : sd.getReceiverSpanKind());
   }
