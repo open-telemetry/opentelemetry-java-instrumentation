@@ -24,23 +24,31 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
   // use a dynamic proxy.  There's probably a more "groovy" way to do this.
 
   @Shared
+  LazyProxyInvoker lazyProxyInvoker = new LazyProxyInvoker()
+
+  @Shared
   DocRepository repo = Proxy.newProxyInstance(
     getClass().getClassLoader(),
     [DocRepository] as Class[],
-    new LazyProxyInvoker())
+    lazyProxyInvoker)
 
   static class LazyProxyInvoker implements InvocationHandler {
     def repo
+    def applicationContext
 
     DocRepository getOrCreateRepository() {
       if (repo != null) {
         return repo
       }
 
-      def applicationContext = new AnnotationConfigApplicationContext(Config)
+      applicationContext = new AnnotationConfigApplicationContext(Config)
       repo = applicationContext.getBean(DocRepository)
 
       return repo
+    }
+
+    void close() {
+      applicationContext.close()
     }
 
     @Override
@@ -57,6 +65,10 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
     }
     testWriter.waitForTraces(1)
     testWriter.clear()
+  }
+
+  def cleanupSpec() {
+    lazyProxyInvoker.close()
   }
 
   def "test empty repo"() {

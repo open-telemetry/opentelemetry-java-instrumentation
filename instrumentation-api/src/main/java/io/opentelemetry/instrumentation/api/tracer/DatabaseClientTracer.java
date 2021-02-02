@@ -51,15 +51,6 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     return withClientSpan(parentContext, span);
   }
 
-  @Override
-  public Span getCurrentSpan() {
-    return Span.current();
-  }
-
-  public void end(Context context) {
-    Span.fromContext(context).end();
-  }
-
   public void endExceptionally(Context context, Throwable throwable) {
     Span span = Span.fromContext(context);
     onError(span, throwable);

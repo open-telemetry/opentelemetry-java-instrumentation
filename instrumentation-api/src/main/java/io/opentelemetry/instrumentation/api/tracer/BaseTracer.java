@@ -17,8 +17,6 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import java.lang.reflect.Method;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -26,9 +24,6 @@ import org.slf4j.LoggerFactory;
 
 public abstract class BaseTracer {
   private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
-
-  private static final boolean FAIL_ON_CONTEXT_LEAK =
-      Boolean.getBoolean("otel.internal.failOnContextLeak");
 
   // Keeps track of the server span for the current trace.
   // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
@@ -74,10 +69,6 @@ public abstract class BaseTracer {
 
   public Scope startScope(Span span) {
     return Context.current().with(span).makeCurrent();
-  }
-
-  public Span getCurrentSpan() {
-    return Span.current();
   }
 
   protected final boolean shouldStartSpan(Kind proposedKind, Context context) {
@@ -146,6 +137,14 @@ public abstract class BaseTracer {
     return className;
   }
 
+  public void end(Context context) {
+    end(context, -1);
+  }
+
+  public void end(Context context, long endTimeNanos) {
+    end(Span.fromContext(context), endTimeNanos);
+  }
+
   public void end(Span span) {
     end(span, -1);
   }
@@ -156,6 +155,14 @@ public abstract class BaseTracer {
     } else {
       span.end();
     }
+  }
+
+  public void endExceptionally(Context context, Throwable throwable) {
+    endExceptionally(context, throwable, -1);
+  }
+
+  public void endExceptionally(Context context, Throwable throwable, long endTimeNanos) {
+    endExceptionally(Span.fromContext(context), throwable, endTimeNanos);
   }
 
   public void endExceptionally(Span span, Throwable throwable) {
@@ -181,45 +188,14 @@ public abstract class BaseTracer {
   }
 
   public static <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
-    if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
-      debugContextLeak();
-    }
+    ContextPropagationDebug.debugContextLeakIfEnabled();
+
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
     return GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
         .extract(Context.root(), carrier, getter);
-  }
-
-  private static void debugContextLeak() {
-    Context current = Context.current();
-    if (current != Context.root()) {
-      log.error("Unexpected non-root current context found when extracting remote context!");
-      Span currentSpan = Span.fromContextOrNull(current);
-      if (currentSpan != null) {
-        log.error("It contains this span: {}", currentSpan);
-      }
-      List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(current);
-      if (locations != null) {
-        StringBuilder sb = new StringBuilder();
-        Iterator<StackTraceElement[]> i = locations.iterator();
-        while (i.hasNext()) {
-          for (StackTraceElement ste : i.next()) {
-            sb.append("\n");
-            sb.append(ste);
-          }
-          if (i.hasNext()) {
-            sb.append("\nwhich was propagated from:");
-          }
-        }
-        log.error("a context leak was detected. it was propagated from:{}", sb);
-      }
-
-      if (FAIL_ON_CONTEXT_LEAK) {
-        throw new IllegalStateException("Context leak detected");
-      }
-    }
   }
 
   /** Returns span of type SERVER from the current context or <code>null</code> if not found. */
