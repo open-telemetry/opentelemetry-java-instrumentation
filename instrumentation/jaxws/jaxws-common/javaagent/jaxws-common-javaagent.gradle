@@ -1,0 +1,2 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
