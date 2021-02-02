@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.reactornetty;
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -19,7 +20,6 @@ import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -33,15 +33,21 @@ import reactor.netty.http.client.HttpClientRequest;
 /**
  * This instrumentation solves the problem of the correct context propagation through the roller
  * coaster of Project Reactor and Netty thread hopping. It uses two public hooks of {@link
- * HttpClient}: {@link HttpClient#mapConnect(BiFunction)} and {@link
- * HttpClient#doOnRequest(BiConsumer)} two short-cut context propagation from the caller to Reactor
+ * HttpClient}: {@link HttpClient#mapConnect(Function)} and {@link
+ * HttpClient#doOnRequest(BiConsumer)} to pass context from the caller to Reactor
  * to Netty.
  */
 @AutoService(InstrumentationModule.class)
 public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
-    super("reactor-netty", "reactor-netty-0.9");
+    super("reactor-netty", "reactor-netty-1.0");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    //Introduced in 1.0.0
+    return hasClassesNamed("reactor.netty.transport.AddressUtils");
   }
 
   @Override
