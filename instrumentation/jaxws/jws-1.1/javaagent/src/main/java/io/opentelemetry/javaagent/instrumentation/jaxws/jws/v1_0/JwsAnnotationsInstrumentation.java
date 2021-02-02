@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.JaxWsTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.methodIsDeclaredByType;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.inheritsAnnotation;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -31,6 +32,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
 
   public static final String JWS_WEB_SERVICE_ANNOTATION = "javax.jws.WebService";
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed(JWS_WEB_SERVICE_ANNOTATION);
+  }
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
