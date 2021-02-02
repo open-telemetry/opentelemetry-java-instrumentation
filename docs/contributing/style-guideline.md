@@ -65,4 +65,4 @@ rough guideline of what are commonly accepted static imports:
 * ByteBuddy `ElementMatchers` (for building instrumentation modules)
 * Immutable constants (where clearly named)
 * Singleton instances (especially where clearly named an hopefully immutable)
-* Tracer() methods that expose tracer singleton instances
+* `tracer()` methods that expose tracer singleton instances
