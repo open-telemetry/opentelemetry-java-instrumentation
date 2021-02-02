@@ -104,7 +104,7 @@ A simple wrapper for the OpenTelemetry Protocol (OTLP) span and metric exporters
 | System property              | Environment variable        | Description                                                               |
 |------------------------------|-----------------------------|---------------------------------------------------------------------------|
 | otel.trace.exporter=otlp (default) | OTEL_TRACE_EXPORTER=otlp          | Select the OpenTelemetry exporter for tracing (default)                                   |
-| otel.trace.exporter=otlp (default) | OTEL_TRACE_EXPORTER=otlp          | Select the OpenTelemetry exporter for metrics (default)                                   |
+| otel.metrics.exporter=otlp (default) | OTEL_METRICS_EXPORTER=otlp          | Select the OpenTelemetry exporter for metrics (default)                                   |
 | otel.exporter.otlp.endpoint  | OTEL_EXPORTER_OTLP_ENDPOINT | The OTLP endpoint to connect to. Must be a URL with a scheme of either `http` or `https` based on the use of TLS. Default is `http://localhost:55680`.            |
 | otel.exporter.otlp.headers   | OTEL_EXPORTER_OTLP_HEADERS  | Key-value pairs separated by semicolons to pass as request headers        |
 | otel.exporter.otlp.timeout   | OTEL_EXPORTER_OTLP_TIMEOUT  | The maximum waiting time allowed to send each batch. Default is `1000`.   |
