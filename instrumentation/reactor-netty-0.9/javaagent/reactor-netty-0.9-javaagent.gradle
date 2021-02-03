@@ -5,7 +5,11 @@ muzzle {
     group = "io.projectreactor.netty"
     module = "reactor-netty"
     versions = "[0.9.0.RELEASE,1.0.0)"
-    assertInverse = true
+  }
+  fail {
+    group = "io.projectreactor.netty"
+    module = "reactor-netty-http"
+    versions = "[1.0.0,)"
   }
 }
 

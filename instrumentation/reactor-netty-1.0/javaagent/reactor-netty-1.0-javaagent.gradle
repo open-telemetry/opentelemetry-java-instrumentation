@@ -1,6 +1,11 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 muzzle {
+  fail {
+    group = "io.projectreactor.netty"
+    module = "reactor-netty"
+    versions = "[,1.0.0)"
+  }
   pass {
     group = "io.projectreactor.netty"
     module = "reactor-netty-http"
