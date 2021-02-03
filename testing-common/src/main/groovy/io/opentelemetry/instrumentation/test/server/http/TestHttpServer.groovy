@@ -251,10 +251,17 @@ class TestHttpServer implements AutoCloseable {
         final SpanBuilder spanBuilder = tracer.spanBuilder("test-http-server").setSpanKind(SERVER)
         // using Context.root() to avoid inheriting any potentially leaked context here
         spanBuilder.setParent(GlobalOpenTelemetry.getPropagators().getTextMapPropagator().extract(Context.root(), req, GETTER))
-        final Span span = spanBuilder.startSpan()
-        if (doInSpan != null) {
-          span.makeCurrent().withCloseable(doInSpan)
+
+        def traceAge = request.getHeader("traceAge")
+        if (traceAge == null) {
+          //e.g. google http client converts headers to lower case
+          traceAge = request.getHeader("traceage")
         }
+        if (traceAge != null) {
+          spanBuilder.setAttribute("traceAge", Integer.parseInt(traceAge))
+        }
+
+        final Span span = spanBuilder.startSpan()
         span.end()
       }
     }

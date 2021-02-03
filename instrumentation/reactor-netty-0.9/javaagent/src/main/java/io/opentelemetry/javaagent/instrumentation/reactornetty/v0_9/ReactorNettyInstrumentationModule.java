@@ -35,8 +35,7 @@ import reactor.netty.http.client.HttpClientRequest;
  * This instrumentation solves the problem of the correct context propagation through the roller
  * coaster of Project Reactor and Netty thread hopping. It uses two public hooks of {@link
  * HttpClient}: {@link HttpClient#mapConnect(BiFunction)} and {@link
- * HttpClient#doOnRequest(BiConsumer)} to pass context from the caller to Reactor
- * to Netty.
+ * HttpClient#doOnRequest(BiConsumer)} to pass context from the caller to Reactor to Netty.
  */
 @AutoService(InstrumentationModule.class)
 public class ReactorNettyInstrumentationModule extends InstrumentationModule {
@@ -47,7 +46,7 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    //Removed in 1.0.0
+    // Removed in 1.0.0
     return hasClassesNamed("reactor.netty.tcp.InetSocketAddressUtil");
   }
 

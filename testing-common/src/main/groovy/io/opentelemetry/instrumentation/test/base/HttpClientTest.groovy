@@ -13,7 +13,11 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -74,13 +78,6 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
       prefix("to-secured") {
         handleDistributedRequest()
         redirect(server.address.resolve("/secured").toURL().toString())
-      }
-      prefix("front") {
-        handleDistributedRequest {
-          doRequest('GET', server.address.resolve("/success"))
-          return
-        }
-        response.status(200).send("Cheese!")
       }
     }
   }
@@ -416,31 +413,40 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
     assumeTrue(testCausality())
     int count = 50
     def method = 'GET'
-    def frontUrl = server.address.resolve("/front")
-    def backUrl = server.address.resolve("/success")
+    def url = server.address.resolve("/success")
 
     def latch = new CountDownLatch(1)
-    def job = {
-      latch.await()
-      doRequest(method, frontUrl)
-    }
 
     def pool = Executors.newFixedThreadPool(4)
 
     when:
-    count.times {
+    count.times { index ->
+      def job = {
+        latch.await()
+        runUnderTrace("Parent span " + index) {
+          Span.current().setAttribute("traceAge", index)
+          doRequest(method, url, ["traceAge": index.toString()])
+        }
+      }
       pool.submit(job)
     }
     latch.countDown()
 
     then:
     assertTraces(count) {
-      count.times { traceIndex ->
-        trace(traceIndex, 4) {
-          clientSpan(it, 0, null, method, frontUrl)
-          serverSpan(it, 1, span(0))
-          clientSpan(it, 2, span(1), method, backUrl)
-          serverSpan(it, 3, span(2))
+      count.times { idx ->
+        trace(idx, 3) {
+          def rootSpan = it.span(0)
+          //Traces can be in arbitrary order, let us find out the age if the current one
+          def traceAge = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
+
+          basicSpan(it, 0, "Parent span " + traceAge, null, null) {
+            it."traceAge" traceAge
+          }
+          clientSpan(it, 1, span(0), method, url)
+          serverSpan(it, 2, span(1)) {
+            it."traceAge" traceAge
+          }
         }
       }
     }
@@ -480,7 +486,9 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
     }
   }
 
-  void serverSpan(TraceAssert traces, int index, Object parentSpan = null) {
+  void serverSpan(TraceAssert traces, int index, Object parentSpan = null,
+                  @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
+                  @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure additionAttributesAssert = null) {
     traces.span(index) {
       name "test-http-server"
       kind SERVER
@@ -490,7 +498,8 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
       } else {
         childOf((SpanData) parentSpan)
       }
-      attributes {
+      if(additionAttributesAssert != null){
+        attributes(additionAttributesAssert)
       }
     }
   }
