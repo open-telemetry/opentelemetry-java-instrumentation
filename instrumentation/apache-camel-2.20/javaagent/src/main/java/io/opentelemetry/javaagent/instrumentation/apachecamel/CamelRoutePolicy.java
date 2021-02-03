@@ -43,7 +43,8 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     SpanBuilder builder = CamelTracer.TRACER.spanBuilder(name);
     builder.setSpanKind(spanKind);
     if (!activeSpan.getSpanContext().isValid()) {
-      Context parentContext = CamelPropagationUtil.extractParent(exchange.getIn().getHeaders());
+      Context parentContext =
+          CamelPropagationUtil.extractParent(exchange.getIn().getHeaders(), route.getEndpoint());
       if (parentContext != null) {
         builder.setParent(parentContext);
       }
