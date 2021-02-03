@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test
+package io.opentelemetry.javaagent.instrumentation.apachecamel
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicAWSCredentials
@@ -27,7 +27,7 @@ class SqsConfig {
 
       @Override
       void configure() throws Exception {
-        from("aws-sqs://sqsCamelTest?amazonSQSClient=#sqsClient&messageAttributeNames=traceparent")
+        from("aws-sqs://sqsCamelTest?amazonSQSClient=#sqsClient")
           .log(LoggingLevel.INFO, "test", "RECEIVER got body : \${body}")
           .log(LoggingLevel.INFO, "test", "RECEIVER got headers : \${headers}")
       }
@@ -44,6 +44,20 @@ class SqsConfig {
           .log(LoggingLevel.INFO, "test", "SENDING body: \${body}")
           .log(LoggingLevel.INFO, "test", "SENDING headers: \${headers}")
           .to("aws-sqs://sqsCamelTest?amazonSQSClient=#sqsClient")
+      }
+    }
+  }
+
+  @Bean
+  RouteBuilder separateQueueProducerRoute() {
+    return new RouteBuilder() {
+
+      @Override
+      void configure() throws Exception {
+        from("direct:separate-input")
+          .log(LoggingLevel.INFO, "test", "SENDING body: \${body}")
+          .log(LoggingLevel.INFO, "test", "SENDING headers: \${headers}")
+          .to("aws-sqs://sqsCamelSeparateQueueTest?amazonSQSClient=#sqsClient")
       }
     }
   }
