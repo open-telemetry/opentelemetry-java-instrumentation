@@ -20,6 +20,10 @@ public final class CallDepth {
     return --this.depth;
   }
 
+  public int get() {
+    return depth;
+  }
+
   void reset() {
     depth = 0;
   }
