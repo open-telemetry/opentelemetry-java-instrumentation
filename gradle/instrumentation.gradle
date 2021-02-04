@@ -125,7 +125,7 @@ tasks.withType(Test).configureEach {
     }
     // If agent depends on library instrumentation, it will be packaged into the testing jar so we
     // need to make sure to exclude from the test classpath.
-    if (it.absolutePath.startsWith(file("${projectDir.parent}/library").absolutePath)) {
+    if (it.absolutePath.startsWith(file("${projectDir.parent}/library/build/libs").absolutePath)) {
       return false
     }
     return true
