@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1
 
 import io.opentelemetry.instrumentation.test.AgentTestRunner
+import java.lang.reflect.Proxy
 
 class JwsAnnotationsTest extends AgentTestRunner {
 
@@ -49,4 +50,27 @@ class JwsAnnotationsTest extends AgentTestRunner {
     })
   }
 
+  def "WebService via proxy must have span attributes from actual implementation"() {
+    when:
+    WebServiceDefinitionInterface proxy =
+      Proxy.newProxyInstance(
+        WebServiceFromInterface.class.getClassLoader(),
+        [WebServiceDefinitionInterface.class] as Class[],
+        new ProxyInvocationHandler(new WebServiceFromInterface())) as WebServiceDefinitionInterface
+    proxy.partOfPublicInterface()
+
+    then:
+    proxy.getClass() != WebServiceFromInterface
+    assertTraces(1, {
+      trace(0, 1) {
+        span(0) {
+          name "WebServiceFromInterface.partOfPublicInterface"
+          attributes {
+            attribute('code.function', 'partOfPublicInterface')
+            attribute('code.namespace', 'io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface')
+          }
+        }
+      }
+    })
+  }
 }
