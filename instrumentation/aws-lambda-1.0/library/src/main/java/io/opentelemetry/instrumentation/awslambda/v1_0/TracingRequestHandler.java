@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
@@ -68,20 +67,21 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
 
   @Override
   public final O handleRequest(I input, Context context) {
-    Span span = tracer.startSpan(context, Kind.SERVER, input, getHeaders(input));
+    io.opentelemetry.context.Context otelContext =
+        tracer.startSpan(context, Kind.SERVER, input, getHeaders(input));
     Throwable error = null;
-    try (Scope ignored = tracer.startScope(span)) {
+    try (Scope ignored = otelContext.makeCurrent()) {
       O output = doHandleRequest(input, context);
-      tracer.onOutput(span, output);
+      tracer.onOutput(otelContext, output);
       return output;
     } catch (Throwable t) {
       error = t;
       throw t;
     } finally {
       if (error != null) {
-        tracer.endExceptionally(span, error);
+        tracer.endExceptionally(otelContext, error);
       } else {
-        tracer.end(span);
+        tracer.end(otelContext);
       }
       OpenTelemetrySdk.getGlobalTracerManagement()
           .forceFlush()
