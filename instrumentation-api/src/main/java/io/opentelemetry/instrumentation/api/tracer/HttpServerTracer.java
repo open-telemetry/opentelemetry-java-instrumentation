@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import static io.opentelemetry.api.trace.Span.Kind.SERVER;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
@@ -46,6 +47,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     super(tracer);
   }
 
+  public HttpServerTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
+  }
+
   public Context startSpan(REQUEST request, CONNECTION connection, STORAGE storage, Method origin) {
     String spanName = spanNameForMethod(origin);
     return startSpan(request, connection, storage, spanName);
@@ -69,7 +74,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     // also we can't conditionally start a span in this method, because the caller won't know
     // whether to call end() or not on the Span in the returned Context
 
-    Context parentContext = extract(request, getGetter());
+    Context parentContext = extract(propagators, request, getGetter());
     SpanBuilder builder = tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
 
     if (startTimestamp >= 0) {
