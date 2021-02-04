@@ -54,8 +54,8 @@ class JwsAnnotationsTest extends AgentTestRunner {
     when:
     WebServiceDefinitionInterface proxy =
       Proxy.newProxyInstance(
-        WebServiceFromInterface.class.getClassLoader(),
-        [WebServiceDefinitionInterface.class] as Class[],
+        WebServiceFromInterface.getClassLoader(),
+        [WebServiceDefinitionInterface] as Class[],
         new ProxyInvocationHandler(new WebServiceFromInterface())) as WebServiceDefinitionInterface
     proxy.partOfPublicInterface()
 
