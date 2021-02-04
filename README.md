@@ -390,6 +390,7 @@ These are the supported application servers:
 | [Jetty](https://www.eclipse.org/jetty/)                                                   | 9.4.x, 10.0.x, 11.0.x       | OpenJDK 8, 11    | Ubuntu 20                      |
 | [Payara](https://www.payara.fish/)                                                        | 5.0.x, 5.1.x                | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
 | [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x, 8.5.x, 9.0.x, 10.0.x | OpenJDK 8, 11    | Ubuntu 18                      |
+| [TomEE](https://tomee.apache.org/)                                                        | 7.x, 8.x                    | OpenJDK 8, 11    | Ubuntu 18                      |
 | [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 12                          | Oracle JDK 8     | Oracle Linux 7, 8              |
 | [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 14                          | Oracle JDK 8, 11 | Oracle Linux 7, 8              |
 | [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.0.0.12                   | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
