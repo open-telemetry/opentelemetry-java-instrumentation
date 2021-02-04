@@ -23,7 +23,7 @@ public class DubboInstrumentationModule extends InstrumentationModule {
   @Override
   public String[] helperResourceNames() {
     return new String[] {
-      "META-INF/dubbo/org.apache.dubbo.rpc.Filter",
+      "META-INF/services/org.apache.dubbo.rpc.Filter",
     };
   }
 

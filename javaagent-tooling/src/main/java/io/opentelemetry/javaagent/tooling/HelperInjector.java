@@ -170,6 +170,7 @@ public class HelperInjector implements Transformer {
           continue;
         }
 
+        log.debug("Injecting resource onto classloader {} -> {}", classLoader, resourceName);
         HelperResources.register(classLoader, resourceName, resource);
       }
     }

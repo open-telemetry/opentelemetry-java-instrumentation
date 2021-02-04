@@ -25,10 +25,10 @@ import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.RpcInvocation;
 
 @Activate(group = {"consumer", "provider"})
-public class TracingFilter implements Filter {
+public class OpenTelemetryFilter implements Filter {
   private final DubboTracer tracer;
 
-  public TracingFilter() {
+  public OpenTelemetryFilter() {
     this.tracer = new DubboTracer();
   }
 
