@@ -1,1 +1,0 @@
-OtelTracingFilter=io.opentelemetry.instrumentation.dubbo.apache.v2_7.TracingFilter
