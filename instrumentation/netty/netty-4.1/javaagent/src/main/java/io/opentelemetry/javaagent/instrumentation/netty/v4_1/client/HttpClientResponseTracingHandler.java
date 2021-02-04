@@ -13,7 +13,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 
 public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
 
