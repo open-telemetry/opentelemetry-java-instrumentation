@@ -339,6 +339,7 @@ These are the supported libraries and frameworks:
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                         | 1.4+                           |
 | [JAX-RS](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html)                                              | 0.5+                           |
 | [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                | 2.0+                           |
+| [JAX-WS](https://jakarta.ee/specifications/xml-web-services/2.3/apidocs/javax/xml/ws/package-summary.html)                            | 2.0+ (not including 3.x yet)   |
 | [JDBC](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/package-summary.html)                                     | Java 7+                        |
 | [Jedis](https://github.com/xetorthio/jedis)                                                                                           | 1.4+                           |
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
