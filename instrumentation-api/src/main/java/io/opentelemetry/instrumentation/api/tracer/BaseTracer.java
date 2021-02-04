@@ -205,16 +205,14 @@ public abstract class BaseTracer {
     return extract(GlobalOpenTelemetry.getPropagators(), carrier, getter);
   }
 
-  public static <C> Context extract(ContextPropagators propagators, C carrier,
-      TextMapPropagator.Getter<C> getter) {
+  public static <C> Context extract(
+      ContextPropagators propagators, C carrier, TextMapPropagator.Getter<C> getter) {
     ContextPropagationDebug.debugContextLeakIfEnabled();
 
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
-    return propagators
-        .getTextMapPropagator()
-        .extract(Context.root(), carrier, getter);
+    return propagators.getTextMapPropagator().extract(Context.root(), carrier, getter);
   }
 
   /** Returns span of type SERVER from the current context or <code>null</code> if not found. */
@@ -226,5 +224,4 @@ public abstract class BaseTracer {
   public static Span getCurrentServerSpan(Context context) {
     return context.get(CONTEXT_SERVER_SPAN_KEY);
   }
-
 }
