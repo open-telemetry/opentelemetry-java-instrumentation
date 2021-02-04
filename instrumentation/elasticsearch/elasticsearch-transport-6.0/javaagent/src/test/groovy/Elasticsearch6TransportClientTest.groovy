@@ -47,6 +47,7 @@ class Elasticsearch6TransportClientTest extends AgentInstrumentationSpecificatio
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
       .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+      .put("discovery.type", "single-node")
       .build()
     testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
     testNode.start()
@@ -71,6 +72,7 @@ class Elasticsearch6TransportClientTest extends AgentInstrumentationSpecificatio
   }
 
   def cleanupSpec() {
+    client?.close()
     testNode?.close()
     if (esWorkingDir != null) {
       FileSystemUtils.deleteSubDirectories(esWorkingDir.toPath())
