@@ -131,6 +131,11 @@ public class CassandraDatabaseClientTracer extends DatabaseClientTracer<CqlSessi
     super.onStatement(span, statement);
     String table = SqlStatementSanitizer.sanitize(statement).getTable();
     if (table != null) {
+      // account for splitting out the keyspace, <keyspace>.<table>
+      int i = table.indexOf('.');
+      if (i > -1 && i + 1 < table.length()) {
+        table = table.substring(i + 1);
+      }
       span.setAttribute(SemanticAttributes.DB_CASSANDRA_TABLE, table);
     }
   }

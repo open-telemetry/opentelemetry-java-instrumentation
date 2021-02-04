@@ -18,6 +18,7 @@ ext {
 
 dependencies {
   library group: 'org.apache.camel', name: 'camel-core', version: "$camelversion"
+  implementation deps.opentelemetryTraceProps
 
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
@@ -40,7 +41,7 @@ dependencies {
    *    Temporarily using emq instead of localstack till the latter supports AWS trace propagation
    *
    *    testImplementation deps.testcontainers
-   *    testImplementation "org.testcontainers:localstack:1.15.0-rc2"
+   *    testImplementation "org.testcontainers:localstack:1.15.1"
    **/
 
   latestDepTestLibrary group: 'org.apache.camel', name: 'camel-core', version: '2.+'

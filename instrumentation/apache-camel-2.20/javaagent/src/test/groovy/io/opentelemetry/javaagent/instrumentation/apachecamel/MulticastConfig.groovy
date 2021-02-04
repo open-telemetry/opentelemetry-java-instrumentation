@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test
+package io.opentelemetry.javaagent.instrumentation.apachecamel
 
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
@@ -13,31 +13,48 @@ import org.springframework.context.annotation.Bean
 
 @SpringBootConfiguration
 @EnableAutoConfiguration
-class DirectConfig {
+class MulticastConfig {
 
   @Bean
-  RouteBuilder receiverRoute() {
+  RouteBuilder firstServiceRoute() {
     return new RouteBuilder() {
 
       @Override
       void configure() throws Exception {
-        from("direct:receiver")
-          .log(LoggingLevel.INFO, "test", "RECEIVER got: \${body}")
-          .delay(simple("2000"))
-          .setBody(constant("result"))
+        from("direct:first")
+          .log(LoggingLevel.INFO, "test", "FIRST request: \${body}")
+          .delay(simple("1000"))
+          .setBody(constant("first"))
       }
     }
   }
 
   @Bean
-  RouteBuilder clientRoute() {
+  RouteBuilder secondServiceRoute() {
+    return new RouteBuilder() {
+
+      @Override
+      void configure() throws Exception {
+        from("direct:second")
+          .log(LoggingLevel.INFO, "test", "SECOND request: \${body}")
+          .delay(simple("2000"))
+          .setBody(constant("second"))
+      }
+    }
+  }
+
+  @Bean
+  RouteBuilder clientServiceRoute() {
     return new RouteBuilder() {
 
       @Override
       void configure() throws Exception {
         from("direct:input")
           .log(LoggingLevel.INFO, "test", "SENDING request \${body}")
-          .to("direct:receiver")
+          .multicast()
+          .parallelProcessing()
+          .to("direct:first", "direct:second")
+          .end()
           .log(LoggingLevel.INFO, "test", "RECEIVED response \${body}")
       }
     }
