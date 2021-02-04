@@ -45,6 +45,8 @@ public abstract class BaseTracer {
     propagators = GlobalOpenTelemetry.getPropagators();
   }
 
+  /** @deprecated prefer to pass in an OpenTelemetry instance, instead. */
+  @Deprecated
   public BaseTracer(Tracer tracer) {
     this.tracer = tracer;
     this.propagators = GlobalOpenTelemetry.getPropagators();
@@ -201,11 +203,18 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
-  public static <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
+  /** @deprecated We should eliminate all static usages so we can use the non-global propagators. */
+  @Deprecated
+  public static <C> Context extractWithGlobalPropagators(
+      C carrier, TextMapPropagator.Getter<C> getter) {
     return extract(GlobalOpenTelemetry.getPropagators(), carrier, getter);
   }
 
-  public static <C> Context extract(
+  public <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
+    return extract(propagators, carrier, getter);
+  }
+
+  private static <C> Context extract(
       ContextPropagators propagators, C carrier, TextMapPropagator.Getter<C> getter) {
     ContextPropagationDebug.debugContextLeakIfEnabled();
 

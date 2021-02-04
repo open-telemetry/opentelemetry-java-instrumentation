@@ -43,6 +43,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     super();
   }
 
+  /** @deprecated prefer to pass in an OpenTelemetry instance, instead. */
+  @Deprecated
   public HttpServerTracer(Tracer tracer) {
     super(tracer);
   }
@@ -74,7 +76,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     // also we can't conditionally start a span in this method, because the caller won't know
     // whether to call end() or not on the Span in the returned Context
 
-    Context parentContext = extract(propagators, request, getGetter());
+    Context parentContext = extract(request, getGetter());
     SpanBuilder builder = tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
 
     if (startTimestamp >= 0) {
