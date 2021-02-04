@@ -8,12 +8,10 @@ muzzle {
   }
 }
 
-def apacheDubboVersion = '2.7.5'
-
 dependencies {
   implementation project(':instrumentation:dubbo:dubbo-apache-2.7:library')
 
-  library group: 'org.apache.dubbo', name: 'dubbo', version: apacheDubboVersion
+  library group: 'org.apache.dubbo', name: 'dubbo', version: '2.7.0'
 
   testImplementation project(':instrumentation:dubbo:dubbo-apache-2.7:testing')
 }
