@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.server.ServerTraceUtils
 import io.opentelemetry.sdk.trace.data.SpanData
+
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
 
@@ -56,6 +57,18 @@ class TraceUtils {
       if (exception) {
         errorEvent(exception.class, exception.message)
       }
+    }
+  }
+
+  static <T> T runUnderTraceWithoutExceptionCatch(final String rootOperationName, final Callable<T> r) {
+    final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(Span.Kind.INTERNAL).startSpan()
+
+    try {
+      return span.makeCurrent().withCloseable {
+        r.call()
+      }
+    } finally {
+      span.end()
     }
   }
 }
