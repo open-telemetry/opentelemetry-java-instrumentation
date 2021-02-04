@@ -18,7 +18,9 @@ testSets {
     dirName = 'test'
   }
 
-  latestDepTest
+  latestDepTest {
+    dirName = 'test'
+  }
 }
 
 test.dependsOn version5Test, version6Test
@@ -53,5 +55,5 @@ dependencies {
   // hibernate 6 is alpha so use 5 as latest version
   latestDepTestImplementation group: 'org.hibernate', name: 'hibernate-core', version: '5.+'
   latestDepTestImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.+'
-  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '(,2.4.0)'
+  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '(2.4.0,)'
 }
