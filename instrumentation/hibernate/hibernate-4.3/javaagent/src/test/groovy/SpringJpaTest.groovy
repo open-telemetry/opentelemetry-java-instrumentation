@@ -41,7 +41,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key}" "test"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/select ([^\.]+)\.id([^\,]*), ([^\.]+)\.firstName([^\,]*), ([^\.]+)\.lastName(.*)from Customer(.*)/
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
@@ -104,7 +104,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key}" "test"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/select ([^\.]+)\.id([^\,]*), ([^\.]+)\.firstName([^\,]*), ([^\.]+)\.lastName (.*)from Customer (.*)where ([^\.]+)\.id( ?)=( ?)\?/
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
@@ -140,7 +140,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key}" "test"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/select ([^\.]+)\.id([^\,]*), ([^\.]+)\.firstName([^\,]*), ([^\.]+)\.lastName (.*)from Customer (.*)(where ([^\.]+)\.lastName( ?)=( ?)\?|)/
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
@@ -161,7 +161,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key}" "test"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/select ([^\.]+)\.id([^\,]*), ([^\.]+)\.firstName([^\,]*), ([^\.]+)\.lastName (.*)from Customer (.*)where ([^\.]+)\.id( ?)=( ?)\?/
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }

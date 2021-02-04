@@ -17,6 +17,7 @@ import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import org.hibernate.exception.SQLGrammarException
 import org.hibernate.procedure.ProcedureCall
+import org.junit.Assume
 import spock.lang.Shared
 
 class ProcedureCallTest extends AgentInstrumentationSpecification {
@@ -55,6 +56,16 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
     }
   }
 
+  def callProcedure(ProcedureCall call) {
+    try {
+      call.getOutputs()
+    } catch (Exception exception) {
+      // ignore failures on hibernate 6 where this functionality has not been implemented yet
+      Assume.assumeFalse("org.hibernate.NotYetImplementedFor6Exception" == exception.getClass().getName())
+      throw exception
+    }
+  }
+
   def "test ProcedureCall"() {
     setup:
 
@@ -62,7 +73,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
     session.beginTransaction()
 
     ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
-    call.getOutputs()
+    callProcedure(call)
 
     session.getTransaction().commit()
     session.close()
@@ -114,10 +125,11 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
     session.beginTransaction()
 
     ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
-    call.registerParameter("nonexistent", Long, ParameterMode.IN)
-    call.getParameterRegistration("nonexistent").bindValue(420L)
+    def parameterRegistration = call.registerParameter("nonexistent", Long, ParameterMode.IN)
+    Assume.assumeTrue(parameterRegistration.metaClass.getMetaMethod("bindValue", Object) != null)
+    parameterRegistration.bindValue(420L)
     try {
-      call.getOutputs()
+      callProcedure(call)
     } catch (Exception e) {
       // We expected this.
     }
