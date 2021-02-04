@@ -15,7 +15,12 @@ import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.matcher.ElementMatcher;
 
-// TODO: add javadoc
+/**
+ * Matches a method and all its declarations up the class hierarchy including interfaces using
+ * provided matcher.
+ *
+ * @param <T> Type of the matched method.
+ */
 class HasSuperMethodMatcher<T extends MethodDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
