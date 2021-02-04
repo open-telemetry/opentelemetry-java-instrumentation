@@ -100,10 +100,6 @@ public class TwilioTracer extends BaseTracer {
     super.end(span);
   }
 
-  public void endExceptionally(Context context, Throwable throwable) {
-    super.endExceptionally(Span.fromContext(context), throwable);
-  }
-
   /**
    * Helper method for calling a getter using reflection. This will be slow, so only use when
    * required.

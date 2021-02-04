@@ -9,13 +9,34 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.extension.trace.propagation.AwsXrayPropagator;
+import java.util.Collections;
 import java.util.Map;
+import org.apache.camel.Endpoint;
 
 final class CamelPropagationUtil {
 
   private CamelPropagationUtil() {}
 
-  static Context extractParent(final Map<String, Object> exchangeHeaders) {
+  private static boolean isAwsPropagated(Endpoint endpoint) {
+    return endpoint.getClass().getName().endsWith("SqsEndpoint");
+  }
+
+  static Context extractParent(final Map<String, Object> exchangeHeaders, Endpoint endpoint) {
+    return (isAwsPropagated(endpoint)
+        ? extractAwsPropagationParent(exchangeHeaders)
+        : extractHttpPropagationParent(exchangeHeaders));
+  }
+
+  private static Context extractAwsPropagationParent(final Map<String, Object> exchangeHeaders) {
+    return AwsXrayPropagator.getInstance()
+        .extract(
+            Context.current(),
+            Collections.singletonMap("X-Amzn-Trace-Id", exchangeHeaders.get("AWSTraceHeader")),
+            MapGetter.INSTANCE);
+  }
+
+  private static Context extractHttpPropagationParent(final Map<String, Object> exchangeHeaders) {
     return GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
         .extract(Context.current(), exchangeHeaders, MapGetter.INSTANCE);

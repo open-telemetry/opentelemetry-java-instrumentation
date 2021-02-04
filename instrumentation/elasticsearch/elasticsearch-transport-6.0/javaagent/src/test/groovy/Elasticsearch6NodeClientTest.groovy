@@ -10,6 +10,7 @@ import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
+import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.index.IndexNotFoundException
@@ -41,6 +42,7 @@ class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
     // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
       .put("thread_pool.listener.size", 1)
       .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+      .put("discovery.type", "single-node")
       .build()
     testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
     testNode.start()
@@ -48,6 +50,8 @@ class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
       // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
       // into a top level trace to get exactly one trace in the result.
       testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
+      // disable periodic refresh in InternalClusterInfoService as it creates spans that tests don't expect
+      testNode.client().admin().cluster().updateSettings(new ClusterUpdateSettingsRequest().transientSettings(["cluster.routing.allocation.disk.threshold_enabled": false]))
     }
     testWriter.waitForTraces(1)
   }

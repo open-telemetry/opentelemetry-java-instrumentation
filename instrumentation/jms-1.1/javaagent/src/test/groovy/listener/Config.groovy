@@ -5,6 +5,7 @@
 
 package listener
 
+import java.time.Duration
 import javax.annotation.PreDestroy
 import javax.jms.ConnectionFactory
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -15,6 +16,7 @@ import org.springframework.jms.annotation.EnableJms
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory
 import org.springframework.jms.config.JmsListenerContainerFactory
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.Wait
 
 @Configuration
 @ComponentScan
@@ -23,6 +25,8 @@ class Config {
 
   private static GenericContainer broker = new GenericContainer("rmohr/activemq:latest")
     .withExposedPorts(61616, 8161)
+    .waitingFor(Wait.forLogMessage(".*Apache ActiveMQ .* started.*", 1))
+    .withStartupTimeout(Duration.ofMinutes(2))
 
   static {
     broker.start()
