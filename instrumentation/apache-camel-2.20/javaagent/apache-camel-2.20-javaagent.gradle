@@ -14,6 +14,7 @@ muzzle {
 
 dependencies {
   library group: 'org.apache.camel', name: 'camel-core', version: '2.20.1'
+  implementation deps.opentelemetryTraceProps
 
   testLibrary group: 'org.apache.camel', name: 'camel-spring-boot-starter', version: '2.20.1'
   testLibrary group: 'org.apache.camel', name: 'camel-jetty-starter', version: '2.20.1'

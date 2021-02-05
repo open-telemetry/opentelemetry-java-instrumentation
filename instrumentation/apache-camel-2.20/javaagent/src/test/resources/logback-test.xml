@@ -14,6 +14,7 @@
   </root>
 
   <logger name="io.opentelemetry.javaagent.instrumentation.apachecamel" level="trace"/>
+  <logger name="io.opentelemetry.javaagent.testing.exporter.OtlpInMemoryMetricExporter" level="ERROR" />
   <logger name="org.apache.camel" level="debug" />
   <logger name="test" level="trace"/>
   <logger name="org.testcontainers" level="debug" />
