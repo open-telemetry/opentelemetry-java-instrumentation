@@ -42,6 +42,13 @@ public class ServletContextPathInstrumentationModule extends InstrumentationModu
     return singletonList(new ServletContextPathInstrumentation());
   }
 
+  @Override
+  public int getOrder() {
+    // run after Servlet3InstrumentationModule/Servlet2InstrumentationModule
+    // so we warp the context created by servlet integration
+    return 1;
+  }
+
   public static class ServletContextPathInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
