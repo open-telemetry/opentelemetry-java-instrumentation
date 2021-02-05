@@ -10,7 +10,7 @@ provides.
   - Logging
   - Zipkin
 - Bundled propagators
-  - W3C TraceContext / Baggage
+  - [W3C TraceContext / Baggage](https://www.w3.org/TR/trace-context/)
   - All Java [trace propagator extensions](https://github.com/open-telemetry/opentelemetry-java/tree/master/extensions/trace-propagators)
 - Environment variable configuration as per [spec](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md)
   - Additional support for system properties for same variables by transforming UPPER_UNDERSCORE -> lower.dot
