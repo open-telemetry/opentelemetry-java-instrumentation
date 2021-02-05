@@ -28,7 +28,9 @@ and pushes a git tag with the version number.
 Once the GitHub workflow completes, go to Github [release
 page](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases), press
 `Draft a new release` to write release notes about the new release. If there is already a draft
-release notes, just point it at the created tag.
+release notes, just point it at the created tag. Download the `-all` artifact that was published
+to maven central, and upload it to the GitHub release as `opentelemetry-javaagent-all.jar`
+(without the version suffix). Hit the release button!
 
 ## Patch Release
 
@@ -40,6 +42,8 @@ Open the patch release build workflow in your browser [here](https://github.com/
 You will see a button that says "Run workflow". Press the button, enter the version number you want
 to release in the input field for version that pops up and the commits you want to cherrypick for the
 patch as a comma-separated list. Then, press "Run workflow".
+
+Follow the steps in [announcement](#announcement) above.
 
 If the commits cannot be cleanly applied to the release branch, for example because it has diverged
 too much from main, then the workflow will fail before building. In this case, you will need to
