@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.lang.reflect.Proxy
 
-class JwsAnnotationsTest extends AgentTestRunner {
+class JwsAnnotationsTest extends AgentInstrumentationSpecification {
 
   def "WebService on a class generates spans only for public methods"() {
     when:

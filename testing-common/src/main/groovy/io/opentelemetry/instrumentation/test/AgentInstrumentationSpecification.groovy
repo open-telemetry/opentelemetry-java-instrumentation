@@ -5,5 +5,8 @@
 
 package io.opentelemetry.instrumentation.test
 
+/**
+ * Base class for spock specifications that test javaagent instrumentations.
+ */
 abstract class AgentInstrumentationSpecification extends InstrumentationSpecification implements AgentTestTrait {
 }
