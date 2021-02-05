@@ -12,13 +12,14 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Ignore
 import spock.lang.Shared
+import spock.lang.Specification
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
-class RxJava2Test extends InstrumentationTestTrait.InstrumentationTestRunnerImpl {
+class RxJava2Test extends Specification implements InstrumentationTestTrait {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
 

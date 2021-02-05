@@ -3,18 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.instrumentation.rxjava2.TracingAssembly
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 import io.reactivex.Single
 import io.reactivex.functions.Consumer
+import spock.lang.Specification
 
 import java.util.concurrent.CountDownLatch
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-class RxJava2SubscriptionTest extends InstrumentationTestTrait.InstrumentationTestRunnerImpl {
+class RxJava2SubscriptionTest extends Specification implements InstrumentationTestTrait {
 
   def setupSpec() {
     TracingAssembly.enable()
