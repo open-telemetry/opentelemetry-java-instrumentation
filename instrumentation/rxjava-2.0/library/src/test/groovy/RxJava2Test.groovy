@@ -10,6 +10,7 @@ import io.reactivex.Maybe
 import io.reactivex.schedulers.Schedulers
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
+import spock.lang.Ignore
 import spock.lang.Shared
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
@@ -194,6 +195,7 @@ class RxJava2Test extends InstrumentationTestTrait.InstrumentationTestRunnerImpl
     }
   }
 
+  @Ignore
   def "Publisher chain spans have the correct parents from subscription time"() {
     when:
     def maybe = Maybe.just(42)
