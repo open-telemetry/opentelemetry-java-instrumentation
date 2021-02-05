@@ -43,7 +43,12 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     super();
   }
 
-  /** @deprecated prefer to pass in an OpenTelemetry instance, instead. */
+  /**
+   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
+   * use the GlobalOpenTelemetry Propagator instance.
+   *
+   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
+   */
   @Deprecated
   public HttpServerTracer(Tracer tracer) {
     super(tracer);

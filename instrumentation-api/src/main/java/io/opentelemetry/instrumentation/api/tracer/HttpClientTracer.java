@@ -36,7 +36,12 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     super();
   }
 
-  /** @deprecated prefer to pass in an OpenTelemetry instance, instead. */
+  /**
+   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
+   * use the GlobalOpenTelemetry Propagator instance.
+   *
+   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
+   */
   @Deprecated
   protected HttpClientTracer(Tracer tracer) {
     super(tracer);
