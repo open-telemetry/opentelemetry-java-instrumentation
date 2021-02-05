@@ -91,7 +91,7 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
         return;
       }
       span = tracer().startSpan(method.getName(), thiz, null);
-      scope = tracer().startScope(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -125,7 +125,7 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
         return;
       }
       span = tracer().startSpan(method.getName(), thiz, query);
-      scope = tracer().startScope(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

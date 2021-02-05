@@ -97,7 +97,7 @@ class ActiveSpanManager {
       if (isClientSpan(spanKind)) {
         scope = CamelTracer.TRACER.startClientScope(span);
       } else {
-        scope = CamelTracer.TRACER.startScope(span);
+        scope = span.makeCurrent();
       }
 
       return new SpanWithScope(parent, span, scope);

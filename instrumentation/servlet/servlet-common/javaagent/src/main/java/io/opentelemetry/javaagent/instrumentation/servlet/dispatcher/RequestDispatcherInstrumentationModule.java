@@ -127,7 +127,7 @@ public class RequestDispatcherInstrumentationModule extends InstrumentationModul
         Context newContext = Java8BytecodeBridge.currentContext().with(span);
         request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
       }
-      scope = tracer().startScope(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
