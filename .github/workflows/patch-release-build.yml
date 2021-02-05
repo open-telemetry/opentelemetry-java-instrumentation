@@ -58,7 +58,7 @@ jobs:
       - name: Cherrypicks
         if: ${{ github.event.inputs.commits != '' }}
         run: |
-          git fetch origin master
+          git fetch origin main
           echo ${{ github.event.inputs.commits }} | sed -n 1'p' | tr ',' '\n' | while read word; do
               # Trim whitespaces and cherrypick
               echo $word | sed 's/ *$//g' | sed 's/^ *//g' | git cherry-pick --stdin
