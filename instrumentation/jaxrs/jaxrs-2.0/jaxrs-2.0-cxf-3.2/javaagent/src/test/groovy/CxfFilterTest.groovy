@@ -24,7 +24,7 @@ class CxfFilterTest extends JaxRsFilterTest implements HttpServerTestTrait<Serve
   }
 
   @Override
-  boolean testRunsOnServer() {
+  boolean runsOnServer() {
     true
   }
 

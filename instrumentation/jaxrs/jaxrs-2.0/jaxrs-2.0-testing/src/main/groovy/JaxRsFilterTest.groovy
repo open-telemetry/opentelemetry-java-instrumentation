@@ -29,7 +29,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
   abstract makeRequest(String url)
 
   Tuple2<String, String> runRequest(String resource) {
-    if (testRunsOnServer()) {
+    if (runsOnServer()) {
       return makeRequest(resource)
     }
     // start a trace because the test doesn't go through any servlet or other instrumentation.
@@ -42,7 +42,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
     true
   }
 
-  boolean testRunsOnServer() {
+  boolean runsOnServer() {
     false
   }
 
@@ -71,7 +71,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name parentSpanName != null ? parentSpanName : "test.span"
-          if (testRunsOnServer()) {
+          if (runsOnServer()) {
             errored abortNormal
           } else {
             attributes {
@@ -81,7 +81,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name controllerName
-          if (!testRunsOnServer()) {
+          if (!runsOnServer()) {
             attributes {
             }
           }
@@ -123,7 +123,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name parentResourceName
-          if (!testRunsOnServer()) {
+          if (!runsOnServer()) {
             attributes {
             }
           }
@@ -132,7 +132,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
           childOf span(0)
           name controller1Name
           kind INTERNAL
-          if (!testRunsOnServer()) {
+          if (!runsOnServer()) {
             attributes {
             }
           }
