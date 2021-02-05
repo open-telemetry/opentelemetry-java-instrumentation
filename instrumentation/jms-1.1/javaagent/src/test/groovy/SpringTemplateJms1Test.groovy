@@ -97,6 +97,17 @@ class SpringTemplateJms1Test extends AgentInstrumentationSpecification {
     expect:
     receivedMessage.text == "responded!"
     assertTraces(4) {
+      sortTraces {
+        def expectedOrder = ["SpringTemplateJms1 receive",
+                             "SpringTemplateJms1 send",
+                             "(temporary) receive",
+                             "(temporary) send"]
+        // ensure that traces appear in expected order
+        traces.sort {a,b ->
+          expectedOrder.indexOf(a[0].name) - expectedOrder.indexOf(b[0].name)
+        }
+      }
+
       trace(0, 1) {
         consumerSpan(it, 0, destinationType, destinationName, msgId.get(), null, "receive")
       }
