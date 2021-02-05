@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
-class JaxWsAnnotationsTest extends AgentTestRunner {
+class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {
 
   def "Web service providers generate spans"() {
     when:
