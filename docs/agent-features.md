@@ -6,7 +6,6 @@ provides.
 - Bundled exporters
   - [OTLP](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/otlp.md)
   - Jaeger gRPC
-  - Jaeger Thrift (considering to remove in https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1973)
   - Logging
   - Zipkin
 - Bundled propagators
