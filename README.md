@@ -361,7 +361,7 @@ These are the supported libraries and frameworks:
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
 | [Reactor](https://github.com/reactor/reactor-core)                                                                                    | 3.1+                           |
-| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                             | 0.9+ (not including 1.0)       |
+| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                             | 0.9+                           |
 | [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
 | [Redisson](https://github.com/redisson/redisson)                                                                                      | 3.0+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |

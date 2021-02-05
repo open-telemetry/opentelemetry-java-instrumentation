@@ -70,4 +70,9 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest {
   boolean testRemoteConnection() {
     false // otherwise SocketTimeoutException for https requests
   }
+
+  @Override
+  boolean testCausality() {
+    false
+  }
 }

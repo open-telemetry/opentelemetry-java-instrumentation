@@ -11,7 +11,7 @@ import io.netty.util.Attribute;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
 

@@ -56,6 +56,12 @@ class ResteasyProxyClientTest extends HttpClientTest {
   boolean testRemoteConnection() {
     false
   }
+
+  @Override
+  boolean testCausality() {
+    false
+  }
+
 }
 
 @Path("")
