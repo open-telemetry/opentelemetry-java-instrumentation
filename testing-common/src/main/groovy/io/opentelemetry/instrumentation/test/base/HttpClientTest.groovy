@@ -408,7 +408,7 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
    * for http clients (especially inherently concurrent ones, such as Netty or Reactor) correctly
    * propagate trace context.
    */
-  def "causality test"() {
+  def "high concurrency test"() {
     setup:
     assumeTrue(testCausality())
     int count = 50
@@ -424,8 +424,8 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
       def job = {
         latch.await()
         runUnderTrace("Parent span " + index) {
-          Span.current().setAttribute("traceAge", index)
-          doRequest(method, url, ["traceAge": index.toString()])
+          Span.current().setAttribute("test.request.id", index)
+          doRequest(method, url, ["test-request-id": index.toString()])
         }
       }
       pool.submit(job)
@@ -437,15 +437,15 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
       count.times { idx ->
         trace(idx, 3) {
           def rootSpan = it.span(0)
-          //Traces can be in arbitrary order, let us find out the age if the current one
-          def traceAge = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
+          //Traces can be in arbitrary order, let us find out the request id if the current one
+          def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
 
-          basicSpan(it, 0, "Parent span " + traceAge, null, null) {
-            it."traceAge" traceAge
+          basicSpan(it, 0, "Parent span " + requestId, null, null) {
+            it."test.request.id" requestId
           }
           clientSpan(it, 1, span(0), method, url)
           serverSpan(it, 2, span(1)) {
-            it."traceAge" traceAge
+            it."test.request.id" requestId
           }
         }
       }
