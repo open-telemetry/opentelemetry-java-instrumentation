@@ -322,7 +322,7 @@ instrument your application.
 We support an impressively huge number of [libraries and frameworks](docs/supported-libraries.md#libraries---frameworks) and
 a majority of the most popular [application servers](docs/supported-libraries.md#application-servers)...right out of the box!
 [Click here to see the full list](docs/supported-libraries.md) and to learn more about
-[disabled](docs/(docs/supported-libraries.md#disabled-instrumentations)
+[disabled](docs/supported-libraries.md#disabled-instrumentations)
 and [suppressing instrumentation](docs/suppressing-instrumentation.md).
 
 
