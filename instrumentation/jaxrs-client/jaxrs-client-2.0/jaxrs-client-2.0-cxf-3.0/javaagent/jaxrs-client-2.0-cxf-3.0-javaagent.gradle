@@ -1,0 +1,15 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.apache.cxf"
+    module = "cxf-rt-rs-client"
+    versions = "[3.0.0,)"
+  }
+}
+
+dependencies {
+  library group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.0.0'
+
+  implementation project(':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-common:javaagent')
+}
