@@ -6,6 +6,21 @@ Note: These parameter names are very likely to change over time, so please check
 back here when trying out a new version! Please report any bugs or unexpected
 behavior you find.
 
+* [Exporters](#exporters)
+  + [OTLP exporter (both span and metric exporters)](#otlp-exporter--both-span-and-metric-exporters-)
+  + [Jaeger exporter](#jaeger-exporter)
+  + [Zipkin exporter](#zipkin-exporter)
+  + [Prometheus exporter](#prometheus-exporter)
+  + [Logging exporter](#logging-exporter)
+* [Trace context propagation](#propagator)
+* [OpenTelemetry Resource](#opentelemetry-resource)
+* [Peer service name](#peer-service-name)
+* [Batch span processor](#batch-span-processor)
+* [Trace config](#trace-config)
+* [Interval metric reader](#interval-metric-reader)
+* [Customizing the OpenTelemetry SDK](#customizing-the-opentelemetry-sdk)
+
+
 ## Exporters
 
 The following configuration properties are common to all exporters:
@@ -105,11 +120,11 @@ The [peer service name](https://github.com/open-telemetry/opentelemetry-specific
 
 | System property                 | Environment variable            | Description                                                  |
 |---------------------------------|---------------------------------|--------------------------------------------------------------|
-| otel.trace.sampler              | OTEL_TRACE_SAMPLER                    | The sampler to use for tracing. Defaults to `parentbased_always_on` |
-| otel.trace.sampler.arg          | OTEL_TRACE_SAMPLER_ARG                | An argument to the configured tracer if supported, for example a ratio. |
-| otel.span.attribute.count.limit | OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT       | The maximum number of attributes per span. Default is `32`.  |
-| otel.span.event.count.limit     | OTEL_SPAN_EVENT_COUNT_LIMIT          | The maximum number of events per span. Default is `128`.     |
-| otel.span.link.count.limit      | OTEL_SPAN_LINK_COUNT_LIMIT          | The maximum number of links per span. Default is `32`        |
+| otel.trace.sampler              | OTEL_TRACE_SAMPLER              | The sampler to use for tracing. Defaults to `parentbased_always_on` |
+| otel.trace.sampler.arg          | OTEL_TRACE_SAMPLER_ARG          | An argument to the configured tracer if supported, for example a ratio. |
+| otel.span.attribute.count.limit | OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT | The maximum number of attributes per span. Default is `32`.  |
+| otel.span.event.count.limit     | OTEL_SPAN_EVENT_COUNT_LIMIT     | The maximum number of events per span. Default is `128`.     |
+| otel.span.link.count.limit      | OTEL_SPAN_LINK_COUNT_LIMIT      | The maximum number of links per span. Default is `32`        |
 
 Supported values for `otel.trace.sampler` are
 
