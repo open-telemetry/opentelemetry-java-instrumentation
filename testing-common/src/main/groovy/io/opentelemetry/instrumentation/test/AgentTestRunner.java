@@ -18,15 +18,6 @@ import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import org.slf4j.LoggerFactory;
 
 public final class AgentTestRunner {
-
-  static {
-    // always run with the thread propagation debugger to help track down sporadic test failures
-    System.setProperty("otel.threadPropagationDebugger", "true");
-    System.setProperty("otel.internal.failOnContextLeak", "true");
-    // always print muzzle warnings
-    System.setProperty("io.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher", "warn");
-  }
-
   /**
    * For test runs, agent's global tracer will report to this list writer.
    *
