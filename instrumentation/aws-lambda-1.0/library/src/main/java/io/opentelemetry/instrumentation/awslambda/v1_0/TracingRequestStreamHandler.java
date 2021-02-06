@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
@@ -69,12 +68,14 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
       throws IOException {
 
     ApiGatewayProxyRequest proxyRequest = ApiGatewayProxyRequest.forStream(input);
-    Span span = tracer.startSpan(context, Kind.SERVER, input, proxyRequest.getHeaders());
+    io.opentelemetry.context.Context otelContext =
+        tracer.startSpan(context, Kind.SERVER, input, proxyRequest.getHeaders());
 
-    try (Scope ignored = tracer.startScope(span)) {
-      doHandleRequest(proxyRequest.freshStream(), new OutputStreamWrapper(output, span), context);
+    try (Scope ignored = otelContext.makeCurrent()) {
+      doHandleRequest(
+          proxyRequest.freshStream(), new OutputStreamWrapper(output, otelContext), context);
     } catch (Throwable t) {
-      tracer.endExceptionally(span, t);
+      tracer.endExceptionally(otelContext, t);
       OpenTelemetrySdk.getGlobalTracerManagement()
           .forceFlush()
           .join(flushTimeout, TimeUnit.SECONDS);
@@ -88,11 +89,12 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
   private class OutputStreamWrapper extends OutputStream {
 
     private final OutputStream delegate;
-    private final Span span;
+    private final io.opentelemetry.context.Context otelContext;
 
-    OutputStreamWrapper(OutputStream delegate, Span span) {
+    private OutputStreamWrapper(
+        OutputStream delegate, io.opentelemetry.context.Context otelContext) {
       this.delegate = delegate;
-      this.span = span;
+      this.otelContext = otelContext;
     }
 
     @Override
@@ -118,7 +120,7 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
     @Override
     public void close() throws IOException {
       delegate.close();
-      tracer.end(span);
+      tracer.end(otelContext);
       OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
     }
   }
