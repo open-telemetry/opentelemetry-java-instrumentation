@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -13,6 +14,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
@@ -36,13 +38,32 @@ public abstract class BaseTracer {
       ContextKey.named("opentelemetry-trace-auto-client-span-key");
 
   protected final Tracer tracer;
+  protected final ContextPropagators propagators;
 
   public BaseTracer() {
     tracer = GlobalOpenTelemetry.getTracer(getInstrumentationName(), getVersion());
+    propagators = GlobalOpenTelemetry.getPropagators();
   }
 
+  /**
+   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
+   * use the GlobalOpenTelemetry Propagator instance.
+   *
+   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
+   */
+  @Deprecated
   public BaseTracer(Tracer tracer) {
     this.tracer = tracer;
+    this.propagators = GlobalOpenTelemetry.getPropagators();
+  }
+
+  public BaseTracer(OpenTelemetry openTelemetry) {
+    this.tracer = openTelemetry.getTracer(getInstrumentationName(), getVersion());
+    this.propagators = openTelemetry.getPropagators();
+  }
+
+  public ContextPropagators getPropagators() {
+    return propagators;
   }
 
   public Span startSpan(Class<?> clazz) {
@@ -187,15 +208,29 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
-  public static <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
+  /**
+   * Do extraction with the propagators from the GlobalOpenTelemetry instance. Not recommended.
+   *
+   * @deprecated We should eliminate all static usages so we can use the non-global propagators.
+   */
+  @Deprecated
+  public static <C> Context extractWithGlobalPropagators(
+      C carrier, TextMapPropagator.Getter<C> getter) {
+    return extract(GlobalOpenTelemetry.getPropagators(), carrier, getter);
+  }
+
+  public <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
+    return extract(propagators, carrier, getter);
+  }
+
+  private static <C> Context extract(
+      ContextPropagators propagators, C carrier, TextMapPropagator.Getter<C> getter) {
     ContextPropagationDebug.debugContextLeakIfEnabled();
 
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
-    return GlobalOpenTelemetry.getPropagators()
-        .getTextMapPropagator()
-        .extract(Context.root(), carrier, getter);
+    return propagators.getTextMapPropagator().extract(Context.root(), carrier, getter);
   }
 
   /** Returns span of type SERVER from the current context or <code>null</code> if not found. */

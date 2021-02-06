@@ -20,7 +20,7 @@ trait AgentTestTrait {
   static InMemoryExporter testWriter
 
   void runnerSetupSpec() {
-    agentTestRunner = new AgentTestRunnerImpl()
+    agentTestRunner = new AgentTestRunner()
     testWriter = AgentTestRunner.TEST_WRITER
 
     agentTestRunner.setupBeforeTests()
@@ -43,5 +43,4 @@ trait AgentTestTrait {
     AgentTestRunner.assertTraces(size, spec)
   }
 
-  static class AgentTestRunnerImpl extends AgentTestRunner {}
 }

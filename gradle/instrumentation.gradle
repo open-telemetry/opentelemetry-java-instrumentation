@@ -111,6 +111,11 @@ tasks.withType(Test).configureEach {
   jvmArgs "-javaagent:${project(":testing:agent-for-testing").tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dotel.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dinternal.testing.disable.global.library.ignores=true"
+  // always run with the thread propagation debugger to help track down sporadic test failures
+  jvmArgs "-Dotel.threadPropagationDebugger=true"
+  jvmArgs "-Dotel.internal.failOnContextLeak=true"
+  // always print muzzle warnings
+  jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher=warn"
 
   dependsOn shadowJar
   dependsOn ":testing:agent-for-testing:shadowJar"

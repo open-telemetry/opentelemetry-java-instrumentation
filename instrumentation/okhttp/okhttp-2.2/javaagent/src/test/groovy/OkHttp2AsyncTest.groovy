@@ -47,4 +47,9 @@ class OkHttp2AsyncTest extends OkHttp2Test {
     }
     return responseRef.get().code()
   }
+
+  @Override
+  boolean testCausality() {
+    false
+  }
 }

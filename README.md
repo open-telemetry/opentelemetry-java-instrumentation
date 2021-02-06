@@ -339,6 +339,7 @@ These are the supported libraries and frameworks:
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                         | 1.4+                           |
 | [JAX-RS](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html)                                              | 0.5+                           |
 | [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                | 2.0+                           |
+| [JAX-WS](https://jakarta.ee/specifications/xml-web-services/2.3/apidocs/javax/xml/ws/package-summary.html)                            | 2.0+ (not including 3.x yet)   |
 | [JDBC](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/package-summary.html)                                     | Java 7+                        |
 | [Jedis](https://github.com/xetorthio/jedis)                                                                                           | 1.4+                           |
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
@@ -360,7 +361,7 @@ These are the supported libraries and frameworks:
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
 | [Reactor](https://github.com/reactor/reactor-core)                                                                                    | 3.1+                           |
-| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                             | 0.9+ (not including 1.0)       |
+| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                             | 0.9+                           |
 | [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
 | [Redisson](https://github.com/redisson/redisson)                                                                                      | 3.0+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |

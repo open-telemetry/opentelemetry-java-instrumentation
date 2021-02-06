@@ -52,6 +52,11 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
     return false
   }
 
+  @Override
+  boolean testCausality() {
+    false
+  }
+
   def "singleRequest exception trace"() {
     when:
     // Passing null causes NPE in singleRequest

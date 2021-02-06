@@ -6,11 +6,17 @@ muzzle {
     module = "reactor-netty"
     versions = "[0.9.0.RELEASE,1.0.0)"
   }
+  fail {
+    group = "io.projectreactor.netty"
+    module = "reactor-netty-http"
+    versions = "[1.0.0,)"
+  }
 }
 
 dependencies {
-  implementation project(':instrumentation:netty:netty-4.1:javaagent')
+  implementation project(':instrumentation:netty:netty-4.1:library')
   library "io.projectreactor.netty:reactor-netty:0.9.0.RELEASE"
 
-  latestDepTestLibrary group: 'io.projectreactor.netty', name: 'reactor-netty', version: '(,1.0.0)'
+  testInstrumentation project(':instrumentation:reactor-netty-1.0:javaagent')
+  testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
 }

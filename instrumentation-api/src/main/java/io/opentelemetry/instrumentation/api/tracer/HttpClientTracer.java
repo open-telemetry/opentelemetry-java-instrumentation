@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
@@ -32,6 +32,25 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   protected static final String USER_AGENT = "User-Agent";
 
+  protected HttpClientTracer() {
+    super();
+  }
+
+  /**
+   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
+   * use the GlobalOpenTelemetry Propagator instance.
+   *
+   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
+   */
+  @Deprecated
+  protected HttpClientTracer(Tracer tracer) {
+    super(tracer);
+  }
+
+  protected HttpClientTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
+  }
+
   protected abstract String method(REQUEST request);
 
   @Nullable
@@ -52,14 +71,6 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   protected abstract String responseHeader(RESPONSE response, String name);
 
   protected abstract TextMapPropagator.Setter<CARRIER> getSetter();
-
-  protected HttpClientTracer() {
-    super();
-  }
-
-  protected HttpClientTracer(Tracer tracer) {
-    super(tracer);
-  }
 
   public boolean shouldStartSpan(Context parentContext) {
     return shouldStartSpan(CLIENT, parentContext);
@@ -90,7 +101,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       throw new IllegalStateException(
           "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
     }
-    GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, carrier, setter);
+    propagators.getTextMapPropagator().inject(context, carrier, setter);
   }
 
   public void end(Context context, RESPONSE response) {

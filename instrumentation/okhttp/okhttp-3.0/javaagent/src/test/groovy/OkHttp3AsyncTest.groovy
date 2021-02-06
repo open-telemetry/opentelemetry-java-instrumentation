@@ -50,4 +50,10 @@ class OkHttp3AsyncTest extends OkHttp3Test {
     }
     return responseRef.get().code()
   }
+
+  @Override
+  boolean testCausality() {
+    false
+  }
+
 }
