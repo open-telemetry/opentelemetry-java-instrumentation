@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apache.dubbo.v2_7;
+package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 
@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class DubboInstrumentationModule extends InstrumentationModule {
   public DubboInstrumentationModule() {
-    super("dubbo", "dubbo-apache-2.7");
+    super("apache-dubbo", "apache-dubbo-2.7");
   }
 
   @Override

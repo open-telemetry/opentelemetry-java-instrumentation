@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.apache.dubbo.v2_7;
+package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
 import static io.opentelemetry.api.trace.Span.Kind.SERVER;
@@ -59,7 +59,7 @@ class DubboTracer extends RpcServerTracer<RpcInvocation> {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.dubbo";
+    return "io.opentelemetry.javaagent.apache-dubbo";
   }
 
   @Override

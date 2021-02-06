@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apache.dubbo.v2_7;
+package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 

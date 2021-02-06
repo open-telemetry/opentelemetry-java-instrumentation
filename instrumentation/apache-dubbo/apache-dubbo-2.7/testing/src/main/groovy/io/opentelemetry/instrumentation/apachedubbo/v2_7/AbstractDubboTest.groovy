@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.apache.dubbo.v2_7
+package io.opentelemetry.instrumentation.apachedubbo.v2_7
 
-import io.opentelemetry.instrumentation.apache.dubbo.v2_7.api.HelloService
-import io.opentelemetry.instrumentation.apache.dubbo.v2_7.impl.HelloServiceImpl
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -98,13 +98,13 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           }
         }
         span(2) {
-          name "io.opentelemetry.instrumentation.apache.dubbo.v2_7.api.HelloService/hello"
+          name "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
           kind SERVER
           childOf span(1)
           errored false
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
-            "${SemanticAttributes.RPC_SERVICE.key}" "io.opentelemetry.instrumentation.apache.dubbo.v2_7.api.HelloService"
+            "${SemanticAttributes.RPC_SERVICE.key}" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
             "${SemanticAttributes.RPC_METHOD.key}" "hello"
             "${SemanticAttributes.NET_PEER_IP.key}" String
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
@@ -167,13 +167,13 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           }
         }
         span(2) {
-          name "io.opentelemetry.instrumentation.apache.dubbo.v2_7.api.HelloService/hello"
+          name "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
           kind SERVER
           childOf span(1)
           errored false
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
-            "${SemanticAttributes.RPC_SERVICE.key}" "io.opentelemetry.instrumentation.apache.dubbo.v2_7.api.HelloService"
+            "${SemanticAttributes.RPC_SERVICE.key}" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
             "${SemanticAttributes.RPC_METHOD.key}" "hello"
             "${SemanticAttributes.NET_PEER_IP.key}" String
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it instanceof String }
