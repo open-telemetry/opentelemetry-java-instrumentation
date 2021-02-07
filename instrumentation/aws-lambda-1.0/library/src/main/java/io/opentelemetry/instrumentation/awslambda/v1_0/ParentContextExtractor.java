@@ -43,7 +43,7 @@ public class ParentContextExtractor {
   }
 
   static Context fromHttpHeaders(Map<String, String> headers) {
-    return BaseTracer.extract(lowercaseMap(headers), MapGetter.INSTANCE);
+    return BaseTracer.extractWithGlobalPropagators(lowercaseMap(headers), MapGetter.INSTANCE);
   }
 
   // lower-case map getter used for extraction
