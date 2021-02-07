@@ -17,6 +17,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.NettyHttpClientTracer;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;

@@ -17,7 +17,7 @@ import spock.lang.Unroll
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210114.484678777"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210129.520311771"
   }
 
   @Unroll
@@ -42,7 +42,7 @@ class SpringBootSmokeTest extends SmokeTest {
     [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
       .map { it.stringValue }
       .collect(toSet())
-    findResourceAttribute(traces, "os.name")
+    findResourceAttribute(traces, "os.type")
       .map { it.stringValue }
       .findAny()
       .isPresent()

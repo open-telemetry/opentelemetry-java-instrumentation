@@ -8,8 +8,8 @@ configurations.all {
 
 ext {
   versions = [
-    opentelemetry     : '0.14.1',
-    opentelemetryAlpha: "0.14.1-alpha",
+    opentelemetry     : '0.15.0',
+    opentelemetryAlpha: "0.15.0-alpha",
 
     slf4j             : "1.7.30",
     guava             : "30.1-jre",
@@ -42,7 +42,7 @@ ext {
     opentelemetryLogging         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-logging', version: versions.opentelemetry),
     opentelemetryTraceProps      : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-trace-propagators', version: versions.opentelemetry),
     opentelemetrySdk             : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: versions.opentelemetry),
-    opentelemetrySdkAutoconfigure: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-autoconfigure', version: versions.opentelemetry),
+    opentelemetrySdkAutoconfigure: dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-autoconfigure', version: versions.opentelemetryAlpha),
     opentelemetrySdkMetrics      : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-metrics', version: versions.opentelemetryAlpha),
     opentelemetryJaeger          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-jaeger', version: versions.opentelemetry),
     opentelemetryOtlp            : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp', version: versions.opentelemetry),
@@ -53,7 +53,7 @@ ext {
     opentelemetryProto           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetry),
     opentelemetryResources       : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-resources', version: versions.opentelemetry),
     opentelemetrySdkTesting      : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-testing', version: versions.opentelemetry),
-    opentelemetrySemConv         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-semconv', version: versions.opentelemetry),
+    opentelemetrySemConv         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-semconv', version: versions.opentelemetryAlpha),
 
     // General
     slf4j                        : "org.slf4j:slf4j-api:${versions.slf4j}",
@@ -83,7 +83,7 @@ ext {
     ],
     groovy                       : "org.codehaus.groovy:groovy-all:${versions.groovy}",
     systemLambda                 : "com.github.stefanbirkner:system-lambda:${versions.systemLambda}",
-    testcontainers               : "org.testcontainers:testcontainers:1.15.0-rc2",
+    testcontainers               : "org.testcontainers:testcontainers:1.15.1",
     testLogging                  : [
       dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: versions.logback),
       dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: versions.slf4j),

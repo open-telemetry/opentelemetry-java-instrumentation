@@ -12,6 +12,7 @@ import com.amazonaws.Response;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.extension.trace.propagation.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +32,11 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   public AwsSdkClientTracer() {}
 
   @Override
+  protected void inject(Context context, Request<?> request) {
+    AwsXrayPropagator.getInstance().inject(context, request, AwsSdkInjectAdapter.INSTANCE);
+  }
+
+  @Override
   protected String spanNameForRequest(Request<?> request) {
     if (request == null) {
       return DEFAULT_SPAN_NAME;
@@ -40,8 +46,9 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     return qualifiedOperation(awsServiceName, awsOperation);
   }
 
-  public Context startSpan(Context parentContext, Request<?> request, RequestMeta requestMeta) {
-    Context context = super.startSpan(parentContext, request, request);
+  public Context startSpan(
+      Span.Kind kind, Context parentContext, Request<?> request, RequestMeta requestMeta) {
+    Context context = super.startSpan(kind, parentContext, request, request, -1);
     Span span = Span.fromContext(context);
 
     String awsServiceName = request.getServiceName();
@@ -112,7 +119,8 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   @Override
   protected TextMapPropagator.Setter<Request<?>> getSetter() {
-    return AwsSdkInjectAdapter.INSTANCE;
+    // We override injection and don't want to have the base class do it accidentally.
+    return null;
   }
 
   @Override

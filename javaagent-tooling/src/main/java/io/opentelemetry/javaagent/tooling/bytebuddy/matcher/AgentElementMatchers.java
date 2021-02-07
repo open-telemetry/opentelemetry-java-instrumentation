@@ -40,7 +40,27 @@ public class AgentElementMatchers {
         .and(new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), false));
   }
 
-  // TODO: add javadoc
+  /**
+   * Matches method's declaring class against a given type matcher.
+   *
+   * @param matcher type matcher to match method's declaring type against.
+   * @param <T> Type of the matched object
+   * @return a matcher that matches method's declaring class against a given type matcher.
+   */
+  public static <T extends MethodDescription> ElementMatcher.Junction<T> methodIsDeclaredByType(
+      ElementMatcher<? super TypeDescription> matcher) {
+    return new MethodDeclaringTypeMatcher<>(matcher);
+  }
+
+  /**
+   * Matches a method and all its declarations up the class hierarchy including interfaces using
+   * provided matcher.
+   *
+   * @param matcher method matcher to apply to method declarations up the hierarchy.
+   * @param <T> Type of the matched object
+   * @return A matcher that matches a method and all its declarations up the class hierarchy
+   *     including interfaces.
+   */
   public static <T extends MethodDescription> ElementMatcher.Junction<T> hasSuperMethod(
       ElementMatcher<? super MethodDescription> matcher) {
     return new HasSuperMethodMatcher<>(matcher);

@@ -1,10 +1,12 @@
 // not applying $rootDir/gradle/instrumentation.gradle because that brings running tests with agent
 // infrastructure, and this module only wants to run unit tests
 
-group = 'io.opentelemetry.javaagent.instrumentation'
+ext.mavenGroupId = 'io.opentelemetry.javaagent.instrumentation'
 
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
+
+archivesBaseName = projectDir.parentFile.name
 
 dependencies {
   compileOnly project(':instrumentation-api')

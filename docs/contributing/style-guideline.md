@@ -52,3 +52,17 @@ To run these checks locally:
 ```
 ./gradlew checkstyleMain checkstyleTest
 ```
+
+### Static imports
+
+We leverage static imports for many common types of operations. However, not all static methods or
+constants are necessarily good candidates for a static import. The following list is a very
+rough guideline of what are commonly accepted static imports:
+
+* Test assertions (JUnit and AssertJ)
+* Mocking/stubbing in tests (with Mockito)
+* Collections helpers (such as `singletonList()` and `Collectors.toList()`)
+* ByteBuddy `ElementMatchers` (for building instrumentation modules)
+* Immutable constants (where clearly named)
+* Singleton instances (especially where clearly named an hopefully immutable)
+* `tracer()` methods that expose tracer singleton instances

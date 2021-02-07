@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.jboss.weld.environment.se.Weld
 import org.jboss.weld.environment.se.WeldContainer
 import org.jboss.weld.environment.se.threading.RunnableDecorator
 
-class CDIContainerTest extends AgentTestRunner {
+class CDIContainerTest extends AgentInstrumentationSpecification {
 
   def "CDI container starts with agent"() {
     given:

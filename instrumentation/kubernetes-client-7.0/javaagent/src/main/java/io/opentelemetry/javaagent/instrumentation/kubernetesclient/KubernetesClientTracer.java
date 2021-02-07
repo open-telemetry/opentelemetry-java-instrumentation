@@ -37,7 +37,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
             .setAttribute("namespace", digest.getResourceMeta().getNamespace())
             .setAttribute("name", digest.getResourceMeta().getName())
             .startSpan();
-    Context context = parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    Context context = withClientSpan(parentContext, span);
     GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
         .inject(context, request, getSetter());

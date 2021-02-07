@@ -5,9 +5,9 @@
 
 import static io.opentelemetry.api.trace.Span.Kind.CLIENT
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import org.redisson.Redisson
 import org.redisson.api.RBucket
@@ -19,7 +19,7 @@ import org.redisson.config.Config
 import redis.embedded.RedisServer
 import spock.lang.Shared
 
-class RedissonAsyncClientTest extends AgentTestRunner {
+class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
 
   @Shared
   int port = PortUtils.randomOpenPort()
@@ -54,7 +54,7 @@ class RedissonAsyncClientTest extends AgentTestRunner {
     Config config = new Config()
     config.useSingleServer().setAddress(address)
     redisson = Redisson.create(config)
-    TEST_WRITER.clear()
+    testWriter.clear()
   }
 
   def "test future set"() {

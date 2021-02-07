@@ -372,10 +372,10 @@
   </module>
   <!-- this enables @SuppressWarnings("checkstyle:...") annotations -->
   <module name="SuppressWarningsFilter"/>
-  <!-- skip javacc generated files -->
+  <!-- skip jflex generated files -->
   <module name="SuppressionSingleFilter">
     <property name="checks" value=".*"/>
-    <property name="files" value="javaagent-api[/\\]build[/\\]generated[/\\]javacc"/>
+    <property name="files" value="javaagent-api[/\\]build[/\\]generated[/\\]jflex"/>
   </module>
   <module name="SuppressionSingleFilter">
     <property name="checks" value="MethodName"/>

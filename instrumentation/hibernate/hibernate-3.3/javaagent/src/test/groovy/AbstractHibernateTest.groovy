@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.AnnotationConfiguration
 import spock.lang.Shared
 
-abstract class AbstractHibernateTest extends AgentTestRunner {
+abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
 
   @Shared
   protected SessionFactory sessionFactory

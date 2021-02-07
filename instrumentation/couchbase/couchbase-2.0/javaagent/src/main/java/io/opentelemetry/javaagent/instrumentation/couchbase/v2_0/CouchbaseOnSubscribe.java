@@ -31,7 +31,7 @@ public class CouchbaseOnSubscribe<T> extends TracedOnSubscribe<T> {
   public static <T> CouchbaseOnSubscribe<T> create(
       Observable<T> originalObservable, String bucket, Object query) {
     return new CouchbaseOnSubscribe<>(
-        originalObservable, bucket, CouchbaseQueryNormalizer.normalize(query));
+        originalObservable, bucket, CouchbaseQuerySanitizer.sanitize(query));
   }
 
   private CouchbaseOnSubscribe(Observable<T> originalObservable, String bucket, String query) {

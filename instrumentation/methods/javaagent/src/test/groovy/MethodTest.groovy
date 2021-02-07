@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.Callable
 
-class MethodTest extends AgentTestRunner {
+class MethodTest extends AgentInstrumentationSpecification {
 
   static class ConfigTracedCallable implements Callable<String> {
     @Override

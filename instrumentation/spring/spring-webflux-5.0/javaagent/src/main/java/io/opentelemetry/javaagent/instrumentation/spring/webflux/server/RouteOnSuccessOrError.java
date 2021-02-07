@@ -43,7 +43,7 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
             span.setAttribute("spring-webflux.request.predicate", predicateString);
           }
 
-          Span serverSpan = context.get(BaseTracer.CONTEXT_SERVER_SPAN_KEY);
+          Span serverSpan = BaseTracer.getCurrentServerSpan(context);
           if (serverSpan != null) {
             serverSpan.updateName(ServletContextPath.prepend(context, parseRoute(predicateString)));
           }

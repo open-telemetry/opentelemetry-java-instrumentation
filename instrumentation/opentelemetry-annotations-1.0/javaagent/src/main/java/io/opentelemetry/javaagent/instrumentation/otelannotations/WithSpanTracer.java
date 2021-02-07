@@ -26,17 +26,8 @@ public class WithSpanTracer extends BaseTracer {
   // we can't conditionally start a span in startSpan() below, because the caller won't know
   // whether to call end() or not on the Span in the returned Context
   public boolean shouldStartSpan(Context context, io.opentelemetry.api.trace.Span.Kind kind) {
-    if (kind == io.opentelemetry.api.trace.Span.Kind.SERVER
-        && getCurrentServerSpan(context) != null) {
-      // don't create a nested SERVER span
-      return false;
-    }
-    if (kind == io.opentelemetry.api.trace.Span.Kind.CLIENT
-        && context.get(CONTEXT_CLIENT_SPAN_KEY) != null) {
-      // don't create a nested CLIENT span
-      return false;
-    }
-    return true;
+    // don't create a nested span if you're not supposed to.
+    return shouldStartSpan(kind, context);
   }
 
   public io.opentelemetry.context.Context startSpan(
@@ -47,10 +38,10 @@ public class WithSpanTracer extends BaseTracer {
     io.opentelemetry.api.trace.Span span =
         startSpan(spanNameForMethodWithAnnotation(applicationAnnotation, method), kind);
     if (kind == io.opentelemetry.api.trace.Span.Kind.SERVER) {
-      context = context.with(CONTEXT_SERVER_SPAN_KEY, span);
+      return withServerSpan(context, span);
     }
     if (kind == io.opentelemetry.api.trace.Span.Kind.CLIENT) {
-      context = context.with(CONTEXT_CLIENT_SPAN_KEY, span);
+      return withClientSpan(context, span);
     }
     return context.with(span);
   }

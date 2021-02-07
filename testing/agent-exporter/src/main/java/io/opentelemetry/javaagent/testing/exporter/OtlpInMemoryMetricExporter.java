@@ -69,9 +69,6 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   @Override
   public CompletableResultCode export(Collection<MetricData> metrics) {
-    for (MetricData metric : metrics) {
-      logger.info("Exporting metric {}", metric);
-    }
     return delegate.export(metrics);
   }
 

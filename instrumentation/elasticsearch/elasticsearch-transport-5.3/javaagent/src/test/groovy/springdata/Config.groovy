@@ -5,6 +5,7 @@
 
 package springdata
 
+import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.env.Environment
@@ -28,8 +29,8 @@ class Config {
     return new NodeBuilder()
   }
 
-  @Bean
-  ElasticsearchOperations elasticsearchTemplate() {
+  @Bean(destroyMethod = "close")
+  Node elasticSearchNode() {
     def tmpDir = File.createTempFile("test-es-working-dir-", "")
     tmpDir.delete()
     tmpDir.mkdir()
@@ -49,10 +50,21 @@ class Config {
       .put("thread_pool.listener.size", 1)
       .put("transport.type", "netty3")
       .put("http.type", "netty3")
+      .put("discovery.type", "single-node")
       .build()
 
     println "ES work dir: $tmpDir"
 
-    return new ElasticsearchTemplate(new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin]).start().client())
+    def testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
+    testNode.start()
+    // disable periodic refresh in InternalClusterInfoService as it creates spans that tests don't expect
+    testNode.client().admin().cluster().updateSettings(new ClusterUpdateSettingsRequest().transientSettings(["cluster.routing.allocation.disk.threshold_enabled": false]))
+
+    return testNode
+  }
+
+  @Bean
+  ElasticsearchOperations elasticsearchTemplate(Node node) {
+    return new ElasticsearchTemplate(node.client())
   }
 }
