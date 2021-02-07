@@ -38,10 +38,10 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   private String groupName = "opentelemetry_group_name";
 
   @Shared
-  private String brokerAddr = "10.77.32.41:10911"
+  private String brokerAddr = "127.0.0.1:10911"
 
   @Shared
-  private String nameServerAddr = "10.77.32.41:9876"
+  private String nameServerAddr = "127.0.0.1:9876"
 
   @Shared
   private SendResult sendResult;
