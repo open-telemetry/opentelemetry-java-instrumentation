@@ -54,6 +54,7 @@ include ':utils:test-utils'
 // smoke tests
 include ':smoke-tests'
 
+
 include ':instrumentation:akka-actor-2.5:javaagent'
 include ':instrumentation:akka-http-10.0:javaagent'
 include ':instrumentation:apache-camel-2.20:javaagent'
@@ -211,9 +212,12 @@ include ':instrumentation:twilio-6.6:javaagent'
 include ':instrumentation:undertow:javaagent'
 include ':instrumentation:vertx-web-3.0'
 include ':instrumentation:vertx-reactive-3.5:javaagent'
-
+include ':instrumentation:rocketmq-client-4.8:javaagent'
+include ':instrumentation:rocketmq-client-4.8:library'
+include ':instrumentation:rocketmq-client-4.8:testing'
 include ':instrumentation-core:reactor-3.1'
 include ':instrumentation-core:servlet-2.2'
+
 
 // benchmark
 include ':benchmark'
