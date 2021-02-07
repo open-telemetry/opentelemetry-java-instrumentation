@@ -90,18 +90,10 @@ class CxfClientAsyncTest extends JaxRsClientAsyncTest {
   @Override
   ClientBuilder builder() {
     return new ClientBuilderImpl()
+      .property("http.connection.timeout", (long) CONNECT_TIMEOUT_MS)
   }
 
   boolean testRedirects() {
-    false
-  }
-
-  boolean testConnectionFailure() {
-    false
-  }
-
-  boolean testRemoteConnection() {
-    // FIXME: span not reported correctly.
     false
   }
 }
