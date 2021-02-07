@@ -217,7 +217,7 @@ include ':instrumentation:rocketmq-client-4.8:library'
 include ':instrumentation:rocketmq-client-4.8:testing'
 include ':instrumentation-core:reactor-3.1'
 include ':instrumentation-core:servlet-2.2'
-
+include ':instrumentation:wicket-8.0:javaagent'
 
 // benchmark
 include ':benchmark'
