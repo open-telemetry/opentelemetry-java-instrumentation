@@ -34,6 +34,17 @@
 
 # <img src="https://opentelemetry.io/img/logos/opentelemetry-logo-nav.png" alt="OpenTelemetry Icon" width="45" height=""> OpenTelemetry Instrumentation for Java
 
+* [About](#about)
+* [Getting Started](#getting-started)
+* [Configuring the Agent](#configuring-the-agent)
+* [Manually instrumenting](#manually-instrumenting)
+* [Supported libraries, frameworks, and application servers](#supported-libraries--frameworks--and-application-servers)
+* [Troubleshooting](#troubleshooting)
+* [Roadmap to 1.0 (GA)](#roadmap-to-10--ga-)
+* [Contributing](#contributing)
+
+## About
+
 This project provides a Java agent JAR that can be attached to any Java 8+
 application and dynamically injects bytecode to capture telemetry from a
 number of popular libraries and frameworks.
@@ -97,7 +108,7 @@ For most users, the out-of-the-box instrumentation is completely sufficient and 
 be done.  Sometimes, however, users wish to add attributes to the otherwise automatic spans,
 or they might want to manually create spans for their own custom code.
 
-[See here for details](docs/manual-instrumentation.md).
+[See here for detailed instructions](docs/manual-instrumentation.md).
 
 ## Supported libraries, frameworks, and application servers
 
