@@ -24,25 +24,25 @@ public class ParentContextExtractor {
     Context parentContext = null;
     String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
     if (parentTraceHeader != null) {
-      parentContext = ParentContextExtractor.fromXRayHeader(parentTraceHeader);
+      parentContext = fromXRayHeader(parentTraceHeader);
     }
-    if (!isValid(parentContext)) {
+    if (!isValidAndSampled(parentContext)) {
       // try http
-      parentContext = ParentContextExtractor.fromHttpHeaders(headers);
+      parentContext = fromHttpHeaders(headers);
     }
     return parentContext;
   }
 
-  private static boolean isValid(Context context) {
+  private static boolean isValidAndSampled(Context context) {
     if (context == null) {
       return false;
     }
     Span parentSpan = Span.fromContext(context);
     SpanContext parentSpanContext = parentSpan.getSpanContext();
-    return parentSpanContext.isValid();
+    return (parentSpanContext.isValid() && parentSpanContext.isSampled());
   }
 
-  static Context fromHttpHeaders(Map<String, String> headers) {
+  private static Context fromHttpHeaders(Map<String, String> headers) {
     return BaseTracer.extractWithGlobalPropagators(lowercaseMap(headers), MapGetter.INSTANCE);
   }
 
