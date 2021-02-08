@@ -49,7 +49,7 @@ class ParentContextExtractorTest {
     SpanContext spanContext = span.getSpanContext();
     assertThat(spanContext.isValid()).isTrue();
     assertThat(spanContext.isValid()).isTrue();
-    assertThat(spanContext.getSpanIdAsHexString()).isEqualTo("0000000000000456");
-    assertThat(spanContext.getTraceIdAsHexString()).isEqualTo("4fd0b6131f19f39af59518d127b0cafe");
+    assertThat(spanContext.getSpanId()).isEqualTo("0000000000000456");
+    assertThat(spanContext.getTraceId()).isEqualTo("4fd0b6131f19f39af59518d127b0cafe");
   }
 }

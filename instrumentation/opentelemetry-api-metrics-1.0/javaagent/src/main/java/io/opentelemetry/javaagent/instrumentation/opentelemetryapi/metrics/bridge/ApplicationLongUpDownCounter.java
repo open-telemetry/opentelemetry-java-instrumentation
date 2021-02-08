@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.BoundLongUpDownCounter;
 import application.io.opentelemetry.api.metrics.LongUpDownCounter;
 import application.io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 
 class ApplicationLongUpDownCounter implements LongUpDownCounter {
 

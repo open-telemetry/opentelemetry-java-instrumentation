@@ -24,6 +24,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
@@ -68,8 +69,8 @@ public interface SpanDecorator {
   void post(Span span, Exchange exchange, Endpoint endpoint);
 
   /** Returns the 'span.kind' value for use when the component is initiating a communication. */
-  Span.Kind getInitiatorSpanKind();
+  SpanKind getInitiatorSpanKind();
 
   /** Returns the 'span.kind' value for use when the component is receiving a communication. */
-  Span.Kind getReceiverSpanKind();
+  SpanKind getReceiverSpanKind();
 }

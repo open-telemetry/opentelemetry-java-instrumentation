@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import example.GreeterGrpc
 import example.Helloworld

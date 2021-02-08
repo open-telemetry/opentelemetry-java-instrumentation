@@ -14,14 +14,12 @@ import static java.util.stream.Collectors.toList;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.common.Labels;
-import io.opentelemetry.api.common.LabelsBuilder;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.metrics.common.Labels;
+import io.opentelemetry.api.metrics.common.LabelsBuilder;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.SpanId;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
-import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.TraceStateBuilder;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
@@ -64,6 +62,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -154,17 +153,20 @@ public final class AgentTestingExporterAccess {
           resourceSpans.getInstrumentationLibrarySpansList()) {
         InstrumentationLibrary instrumentationLibrary = ilSpans.getInstrumentationLibrary();
         for (Span span : ilSpans.getSpansList()) {
-          String traceId = TraceId.bytesToHex(span.getTraceId().toByteArray());
+          String traceId = new BigInteger(1, span.getTraceId().toByteArray()).toString(16);
           spans.add(
               TestSpanData.builder()
-                  .setTraceId(traceId)
-                  .setSpanId(SpanId.bytesToHex(span.getSpanId().toByteArray()))
-                  .setTraceState(extractTraceState(span.getTraceState()))
+                  .setSpanContext(
+                      SpanContext.create(
+                          traceId,
+                          new BigInteger(1, span.getSpanId().toByteArray()).toString(16),
+                          TraceFlags.getDefault(),
+                          extractTraceState(span.getTraceState())))
                   // TODO is it ok to use default trace flags and default trace state here?
                   .setParentSpanContext(
                       SpanContext.create(
                           traceId,
-                          SpanId.bytesToHex(span.getParentSpanId().toByteArray()),
+                          new BigInteger(1, span.getParentSpanId().toByteArray()).toString(16),
                           TraceFlags.getDefault(),
                           TraceState.getDefault()))
                   .setResource(
@@ -196,8 +198,10 @@ public final class AgentTestingExporterAccess {
                               link ->
                                   LinkData.create(
                                       SpanContext.create(
-                                          TraceId.bytesToHex(link.getTraceId().toByteArray()),
-                                          SpanId.bytesToHex(link.getSpanId().toByteArray()),
+                                          new BigInteger(1, link.getTraceId().toByteArray())
+                                              .toString(16),
+                                          new BigInteger(1, link.getSpanId().toByteArray())
+                                              .toString(16),
                                           TraceFlags.getDefault(),
                                           extractTraceState(link.getTraceState())),
                                       fromProto(link.getAttributesList()),
@@ -461,20 +465,20 @@ public final class AgentTestingExporterAccess {
     return StatusData.create(code, status.getMessage());
   }
 
-  private static Kind fromProto(Span.SpanKind kind) {
+  private static SpanKind fromProto(Span.SpanKind kind) {
     switch (kind) {
       case SPAN_KIND_INTERNAL:
-        return Kind.INTERNAL;
+        return SpanKind.INTERNAL;
       case SPAN_KIND_SERVER:
-        return Kind.SERVER;
+        return SpanKind.SERVER;
       case SPAN_KIND_CLIENT:
-        return Kind.CLIENT;
+        return SpanKind.CLIENT;
       case SPAN_KIND_PRODUCER:
-        return Kind.PRODUCER;
+        return SpanKind.PRODUCER;
       case SPAN_KIND_CONSUMER:
-        return Kind.CONSUMER;
+        return SpanKind.CONSUMER;
       default:
-        return Kind.INTERNAL;
+        return SpanKind.INTERNAL;
     }
   }
 

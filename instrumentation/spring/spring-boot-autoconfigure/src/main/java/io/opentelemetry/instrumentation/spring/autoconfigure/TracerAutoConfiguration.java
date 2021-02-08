@@ -10,7 +10,6 @@ import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
-import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
@@ -27,7 +26,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>Adds span exporter beans to the active tracer provider.
  *
- * <p>Updates the sampler probability in the active {@link TraceConfig}
+ * <p>Updates the sampler probability for the configured {@link TracerProvider}.
  */
 @Configuration
 @EnableConfigurationProperties(TracerProperties.class)

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -68,15 +68,15 @@ public abstract class BaseTracer {
 
   public Span startSpan(Class<?> clazz) {
     String spanName = spanNameForClass(clazz);
-    return startSpan(spanName, Kind.INTERNAL);
+    return startSpan(spanName, SpanKind.INTERNAL);
   }
 
   public Span startSpan(Method method) {
     String spanName = spanNameForMethod(method);
-    return startSpan(spanName, Kind.INTERNAL);
+    return startSpan(spanName, SpanKind.INTERNAL);
   }
 
-  public Span startSpan(String spanName, Kind kind) {
+  public Span startSpan(String spanName, SpanKind kind) {
     return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
   }
 
@@ -92,7 +92,7 @@ public abstract class BaseTracer {
     return Context.current().with(span).makeCurrent();
   }
 
-  protected final boolean shouldStartSpan(Kind proposedKind, Context context) {
+  protected final boolean shouldStartSpan(SpanKind proposedKind, Context context) {
     switch (proposedKind) {
       case CLIENT:
         return !inClientSpan(context);

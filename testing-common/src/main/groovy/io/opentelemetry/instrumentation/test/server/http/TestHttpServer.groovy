@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.test.server.http
 
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.server.http.HttpServletRequestExtractAdapter.GETTER
 
 import io.opentelemetry.api.GlobalOpenTelemetry

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
-import static io.opentelemetry.api.trace.Span.Kind.SERVER;
+import static io.opentelemetry.api.trace.SpanKind.SERVER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;

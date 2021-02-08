@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.test.server;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.extension.annotations.WithSpan;
 import java.util.concurrent.Callable;
 
@@ -18,7 +19,7 @@ import java.util.concurrent.Callable;
  */
 public final class ServerTraceUtils {
 
-  @WithSpan(kind = Span.Kind.SERVER)
+  @WithSpan(kind = SpanKind.SERVER)
   public static <T> T runUnderServerTrace(String spanName, Callable<T> r) throws Exception {
     Span.current().updateName(spanName);
     return r.call();

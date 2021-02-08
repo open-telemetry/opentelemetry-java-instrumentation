@@ -53,7 +53,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
   void handlerSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
     trace.span(index) {
       name "GreetingAction.${endpoint.name().toLowerCase()}"
-      kind Span.Kind.INTERNAL
+      kind SpanKind.INTERNAL
       errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)

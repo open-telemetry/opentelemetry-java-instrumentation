@@ -44,21 +44,21 @@ class BaseTracerTest extends Specification {
 
     where:
     kind               | context                                   | expected
-    Span.Kind.CLIENT   | root                                      | true
-    Span.Kind.SERVER   | root                                      | true
-    Span.Kind.INTERNAL | root                                      | true
-    Span.Kind.PRODUCER | root                                      | true
-    Span.Kind.CONSUMER | root                                      | true
-    Span.Kind.CLIENT   | tracer.withClientSpan(root, existingSpan) | false
-    Span.Kind.SERVER   | tracer.withClientSpan(root, existingSpan) | true
-    Span.Kind.INTERNAL | tracer.withClientSpan(root, existingSpan) | true
-    Span.Kind.CONSUMER | tracer.withClientSpan(root, existingSpan) | true
-    Span.Kind.PRODUCER | tracer.withClientSpan(root, existingSpan) | true
-    Span.Kind.SERVER   | tracer.withServerSpan(root, existingSpan) | false
-    Span.Kind.INTERNAL | tracer.withServerSpan(root, existingSpan) | true
-    Span.Kind.CONSUMER | tracer.withServerSpan(root, existingSpan) | true
-    Span.Kind.PRODUCER | tracer.withServerSpan(root, existingSpan) | true
-    Span.Kind.CLIENT   | tracer.withServerSpan(root, existingSpan) | true
+    SpanKind.CLIENT   | root                                      | true
+    SpanKind.SERVER   | root                                      | true
+    SpanKind.INTERNAL | root                                      | true
+    SpanKind.PRODUCER | root                                      | true
+    SpanKind.CONSUMER | root                                      | true
+    SpanKind.CLIENT   | tracer.withClientSpan(root, existingSpan) | false
+    SpanKind.SERVER   | tracer.withClientSpan(root, existingSpan) | true
+    SpanKind.INTERNAL | tracer.withClientSpan(root, existingSpan) | true
+    SpanKind.CONSUMER | tracer.withClientSpan(root, existingSpan) | true
+    SpanKind.PRODUCER | tracer.withClientSpan(root, existingSpan) | true
+    SpanKind.SERVER   | tracer.withServerSpan(root, existingSpan) | false
+    SpanKind.INTERNAL | tracer.withServerSpan(root, existingSpan) | true
+    SpanKind.CONSUMER | tracer.withServerSpan(root, existingSpan) | true
+    SpanKind.PRODUCER | tracer.withServerSpan(root, existingSpan) | true
+    SpanKind.CLIENT   | tracer.withServerSpan(root, existingSpan) | true
   }
 
 

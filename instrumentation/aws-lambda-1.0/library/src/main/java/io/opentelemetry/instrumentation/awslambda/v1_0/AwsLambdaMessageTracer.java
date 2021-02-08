@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -43,7 +43,7 @@ public class AwsLambdaMessageTracer extends BaseTracer {
       }
     }
 
-    SpanBuilder span = tracer.spanBuilder(source + " process").setSpanKind(Kind.CONSUMER);
+    SpanBuilder span = tracer.spanBuilder(source + " process").setSpanKind(SpanKind.CONSUMER);
 
     span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
     span.setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process");
@@ -57,7 +57,7 @@ public class AwsLambdaMessageTracer extends BaseTracer {
 
   public Context startSpan(SQSMessage message) {
     SpanBuilder span =
-        tracer.spanBuilder(message.getEventSource() + " process").setSpanKind(Kind.CONSUMER);
+        tracer.spanBuilder(message.getEventSource() + " process").setSpanKind(SpanKind.CONSUMER);
 
     span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS");
     span.setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process");

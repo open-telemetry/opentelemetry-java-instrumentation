@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -25,7 +25,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.otel"
-          kind Span.Kind.INTERNAL
+          kind SpanKind.INTERNAL
           hasNoParent()
           errored false
           attributes {

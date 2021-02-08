@@ -79,7 +79,7 @@ public final class DemoServlet3InstrumentationModule extends InstrumentationModu
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
         if (!httpServletResponse.containsHeader("X-server-id")) {
           httpServletResponse
-              .addHeader("X-server-id", Span.current().getSpanContext().getTraceIdAsHexString());
+              .addHeader("X-server-id", Span.current().getSpanContext().getTraceId());
         }
       }
 

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.chunk;
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldCreateRootSpanForChunk;
 
 import io.opentelemetry.api.trace.Span;

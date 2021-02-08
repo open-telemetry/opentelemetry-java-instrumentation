@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;

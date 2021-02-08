@@ -122,7 +122,7 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
     trace.span(index) {
       hasNoParent()
       name operation
-      kind Span.Kind.SERVER
+      kind SpanKind.SERVER
       errored exception != null
     }
   }
@@ -135,7 +135,7 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
         childOf((SpanData) parentSpan)
       }
       name "HelloEndpoint." + methodName
-      kind Span.Kind.INTERNAL
+      kind SpanKind.INTERNAL
       errored exception != null
       if (exception) {
         errorEvent(exception.class, exception.message)

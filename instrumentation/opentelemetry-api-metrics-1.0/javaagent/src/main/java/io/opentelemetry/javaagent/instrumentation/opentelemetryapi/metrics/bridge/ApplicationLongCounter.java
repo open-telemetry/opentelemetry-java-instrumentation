@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.BoundLongCounter;
 import application.io.opentelemetry.api.metrics.LongCounter;
 import application.io.opentelemetry.api.metrics.LongCounterBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 
 class ApplicationLongCounter implements LongCounter {
 

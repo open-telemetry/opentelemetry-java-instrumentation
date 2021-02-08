@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.rabbitmq.client.AMQP
