@@ -51,12 +51,12 @@ public class PropagatingController {
         .build()
         .toUri();
     String backendTraceId = restTemplate.getForObject(backend, String.class);
-    String frontendTraceId = Span.current().getSpanContext().getTraceIdAsHexString();
+    String frontendTraceId = Span.current().getSpanContext().getTraceId();
     return String.format("%s;%s", frontendTraceId, backendTraceId);
   }
 
   @RequestMapping("/back")
   public String back() {
-    return Span.current().getSpanContext().getTraceIdAsHexString();
+    return Span.current().getSpanContext().getTraceId();
   }
 }
