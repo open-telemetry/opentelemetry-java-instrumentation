@@ -185,6 +185,7 @@ include ':instrumentation:rmi:javaagent'
 include ':instrumentation:runtime-metrics:library'
 include ':instrumentation:rxjava-1.0:library'
 include ':instrumentation:rxjava-2.0:library'
+include ':instrumentation:rxjava-2.0:testing'
 include ':instrumentation:scala-executors:javaagent'
 include ':instrumentation:servlet:glassfish-testing'
 include ':instrumentation:servlet:servlet-common:javaagent'
@@ -233,9 +234,9 @@ def setBuildFile(project) {
   }
   project.children.each {
     setBuildFile(it)
-  }
+    }
 }
 
 rootProject.children.each {
-  setBuildFile(it)
+    setBuildFile(it)
 }

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import io.opentelemetry.instrumentation.rxjava2.AbstractRxJava2Test
 import io.opentelemetry.instrumentation.rxjava2.TracingAssembly
 import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 import io.reactivex.Flowable
@@ -11,35 +13,18 @@ import io.reactivex.schedulers.Schedulers
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Ignore
-import spock.lang.Shared
-import spock.lang.Specification
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
-class RxJava2Test extends Specification implements InstrumentationTestTrait {
+class RxJava2Test extends AbstractRxJava2Test implements InstrumentationTestTrait {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
 
-  def setupSpec() {
+  def childSetupSpec() {
     TracingAssembly.enable()
-  }
-
-  @Shared
-  def addOne = { i ->
-    addOneFunc(i)
-  }
-
-  @Shared
-  def addTwo = { i ->
-    addTwoFunc(i)
-  }
-
-  @Shared
-  def throwException = {
-    throw new RuntimeException(EXCEPTION_MESSAGE)
   }
 
   def "Publisher '#name' test"() {
@@ -314,18 +299,6 @@ class RxJava2Test extends Specification implements InstrumentationTestTrait {
 
         throw new RuntimeException("Unknown publisher: " + publisher)
       }
-    }
-  }
-
-  static addOneFunc(int i) {
-    runUnderTrace("addOne") {
-      return i + 1
-    }
-  }
-
-  static addTwoFunc(int i) {
-    runUnderTrace("addTwo") {
-      return i + 2
     }
   }
 }
