@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import spock.lang.Shared
 import spock.lang.Specification
@@ -43,8 +44,8 @@ class BaseTracerTest extends Specification {
     result == expected
 
     where:
-    kind               | context                                   | expected
-    SpanKind.CLIENT   | root                                      | true
+    kind              | context                                   | expected
+    SpanKind.CLIENT   | root | true
     SpanKind.SERVER   | root                                      | true
     SpanKind.INTERNAL | root                                      | true
     SpanKind.PRODUCER | root                                      | true
