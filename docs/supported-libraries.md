@@ -21,6 +21,7 @@ These are the supported libraries and frameworks:
 | Library/Framework                                                                                                                     | Versions                       |
 |---------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                    | 10.0+                          |
+| [Apache Dubbo](https://github.com/apache/dubbo/)                                                                                      | 2.7+                           |
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.1+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Apache Wicket](https://wicket.apache.org/)                                                                                           | 8.0+                           |
