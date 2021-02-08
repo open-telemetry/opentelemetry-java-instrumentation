@@ -4,6 +4,11 @@
 We automatically instrument and support a huge number of libraries, frameworks,
 and application servers... right out of the box!
 
+Don't see your favorite tool listed here?  Consider [filing an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues),
+or [contributing](../CONTRIBUTING.md).
+
+## Contents
+
   * [Libraries / Frameworks](#libraries---frameworks)
   * [Application Servers](#application-servers)
   * [Disabled instrumentations](#disabled-instrumentations)
@@ -11,8 +16,6 @@ and application servers... right out of the box!
   * [Suppressing specific auto-instrumentation](#suppressing-specific-auto-instrumentation)
   * [Logger MDC (Mapped Diagnostic Context) auto-instrumentation](#logger-mdc--mapped-diagnostic-context--auto-instrumentation)
 
-Don't see your favorite tool listed here?  Consider [filing an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues),
-or [contributing](../CONTRIBUTING.md).
 
 ## Libraries / Frameworks
 

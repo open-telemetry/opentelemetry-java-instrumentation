@@ -6,6 +6,8 @@ Note: These parameter names are very likely to change over time, so please check
 back here when trying out a new version! Please report any bugs or unexpected
 behavior you find.
 
+## Contents
+
 * [Exporters](#exporters)
   + [OTLP exporter (both span and metric exporters)](#otlp-exporter--both-span-and-metric-exporters-)
   + [Jaeger exporter](#jaeger-exporter)

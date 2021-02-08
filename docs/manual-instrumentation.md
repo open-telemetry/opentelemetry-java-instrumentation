@@ -4,6 +4,8 @@ For most users, the out-of-the-box instrumentation is completely sufficient and 
 be done.  Sometimes, however, users wish to add attributes to the otherwise automatic spans,
 or they might want to manually create spans for their own custom code.
 
+## Contents
+
 - [Manual instrumentation](#manual-instrumentation)
 - [Dependencies](#dependencies)
   * [Maven](#maven)
