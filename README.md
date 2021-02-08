@@ -101,6 +101,10 @@ only supports manual instrumentation using the `opentelemetry-api` version with 
 number as the Java agent you are using. Starting with 1.0.0, the Java agent will start supporting
 multiple (1.0.0+) versions of `opentelemetry-api`.
 
+For most users, the out-of-the-box instrumentation is completely sufficient and nothing more has to
+be done.  Sometimes, however, users wish to add attributes to the otherwise automatic spans,
+or they might want to create spans for their own custom code.
+
 You'll need to add a dependency on the `opentelemetry-api` library to get started; if you intend to
 use the `@WithSpan` annotation, also include the `opentelemetry-extension-annotations` dependency.
 
