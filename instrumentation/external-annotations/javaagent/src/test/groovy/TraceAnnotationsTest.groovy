@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.test.annotation.SayTracedHello
 import io.opentracing.contrib.dropwizard.Trace
 import java.util.concurrent.Callable
 
-class TraceAnnotationsTest extends AgentTestRunner {
+class TraceAnnotationsTest extends AgentInstrumentationSpecification {
 
   def "test simple case annotations"() {
     setup:

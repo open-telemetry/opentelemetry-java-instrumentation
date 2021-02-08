@@ -4,11 +4,11 @@
  */
 
 import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ThreadPoolDispatcherKt
 
-class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
+class KotlinCoroutineInstrumentationTest extends AgentInstrumentationSpecification {
 
   static dispatchersToTest = [
     Dispatchers.Default,

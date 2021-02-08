@@ -7,8 +7,7 @@ import static Jms2Test.consumerSpan
 import static Jms2Test.producerSpan
 
 import com.google.common.io.Files
-import io.opentelemetry.instrumentation.test.AgentTestRunner
-import java.util.concurrent.CountDownLatch
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Session
@@ -27,7 +26,7 @@ import org.hornetq.core.server.HornetQServers
 import org.springframework.jms.core.JmsTemplate
 import spock.lang.Shared
 
-class SpringTemplateJms2Test extends AgentTestRunner {
+class SpringTemplateJms2Test extends AgentInstrumentationSpecification {
   @Shared
   HornetQServer server
   @Shared
@@ -102,9 +101,7 @@ class SpringTemplateJms2Test extends AgentTestRunner {
   def "send and receive message generates spans"() {
     setup:
     AtomicReference<String> msgId = new AtomicReference<>()
-    CountDownLatch countDownLatch = new CountDownLatch(1)
     Thread.start {
-      countDownLatch.countDown()
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
       msgId.set(msg.getJMSMessageID())
@@ -115,7 +112,6 @@ class SpringTemplateJms2Test extends AgentTestRunner {
       }
     }
     // wait for thread to start, we expect the first span to be from receive
-    countDownLatch.await()
     TextMessage receivedMessage = template.sendAndReceive(destination) {
       session -> template.getMessageConverter().toMessage(messageText, session)
     }
@@ -123,6 +119,17 @@ class SpringTemplateJms2Test extends AgentTestRunner {
     expect:
     receivedMessage.text == "responded!"
     assertTraces(4) {
+      sortTraces {
+        def expectedOrder = ["$destinationName receive",
+                             "$destinationName send",
+                             "(temporary) receive",
+                             "(temporary) send"]
+        // ensure that traces appear in expected order
+        traces.sort {a,b ->
+          expectedOrder.indexOf(a[0].name) - expectedOrder.indexOf(b[0].name)
+        }
+      }
+
       trace(0, 1) {
         consumerSpan(it, 0, destinationType, destinationName, msgId.get(), null, "receive")
       }

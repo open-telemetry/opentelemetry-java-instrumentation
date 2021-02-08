@@ -11,15 +11,14 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.nio.charset.Charset
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import spock.lang.Shared
 
-class TracingRequestStreamWrapperPropagationTest extends InstrumentationSpecification implements InstrumentationTestTrait {
+class TracingRequestStreamWrapperPropagationTest extends LibraryInstrumentationSpecification {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
 
@@ -48,7 +47,7 @@ class TracingRequestStreamWrapperPropagationTest extends InstrumentationSpecific
   @Shared
   TracingRequestStreamWrapper wrapper
 
-  def childSetup() {
+  def setup() {
     environmentVariables.set(WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY, "io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestStreamWrapperPropagationTest\$TestRequestHandler::handleRequest")
     TracingRequestStreamWrapper.WRAPPED_LAMBDA = WrappedLambda.fromConfiguration()
     wrapper = new TracingRequestStreamWrapper()

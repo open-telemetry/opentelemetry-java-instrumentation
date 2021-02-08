@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.oshi
 import static java.util.concurrent.TimeUnit.SECONDS
 
 import com.google.common.base.Stopwatch
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import oshi.PlatformEnum
 import oshi.SystemInfo
 
-class OshiTest extends AgentTestRunner {
+class OshiTest extends AgentInstrumentationSpecification {
 
   def "test system metrics is enabled"() {
     setup:
@@ -33,7 +33,7 @@ class OshiTest extends AgentTestRunner {
   def findMetric(instrumentationName, metricName) {
     Stopwatch stopwatch = Stopwatch.createStarted()
     while (stopwatch.elapsed(SECONDS) < 10) {
-      def allMetrics = TEST_WRITER.getMetrics()
+      def allMetrics = testWriter.getMetrics()
       for (def metric : allMetrics) {
         if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.name == metricName) {
           return metric

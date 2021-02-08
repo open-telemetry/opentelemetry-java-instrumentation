@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.test.annotation.SayTracedHello
 
 /**
  * This test verifies that Otel supports various 3rd-party trace annotations
  */
-class TraceProvidersTest extends AgentTestRunner {
+class TraceProvidersTest extends AgentInstrumentationSpecification {
 
   def "should support #provider"(String provider) {
     setup:

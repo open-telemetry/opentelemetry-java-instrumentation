@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 
@@ -37,18 +36,18 @@ public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
   @Override
   protected final void handleEvent(SQSEvent event, Context context) {
     for (SQSMessage message : event.getRecords()) {
-      Span span = getTracer().startSpan(message);
+      io.opentelemetry.context.Context otelContext = getTracer().startSpan(message);
       Throwable error = null;
-      try (Scope ignored = getTracer().startScope(span)) {
+      try (Scope ignored = otelContext.makeCurrent()) {
         handleMessage(message, context);
       } catch (Throwable t) {
         error = t;
         throw t;
       } finally {
         if (error != null) {
-          getTracer().endExceptionally(span, error);
+          getTracer().endExceptionally(otelContext, error);
         } else {
-          getTracer().end(span);
+          getTracer().end(otelContext);
         }
       }
     }

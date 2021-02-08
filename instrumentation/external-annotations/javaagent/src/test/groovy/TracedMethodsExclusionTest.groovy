@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentracing.contrib.dropwizard.Trace
 
-class TracedMethodsExclusionTest extends AgentTestRunner {
+class TracedMethodsExclusionTest extends AgentInstrumentationSpecification {
 
   static class TestClass {
     //This method is not mentioned in any configuration

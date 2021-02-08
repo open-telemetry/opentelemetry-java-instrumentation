@@ -7,11 +7,11 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.CountDownLatch
 import reactor.core.publisher.Mono
 
-class SubscriptionTest extends AgentTestRunner {
+class SubscriptionTest extends AgentInstrumentationSpecification {
 
   def "subscription test"() {
     when:

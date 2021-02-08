@@ -1,0 +1,27 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  // Cant assert fails because muzzle assumes all instrumentations will fail
+  // Instrumentations in jaxrs-2.0-common will pass
+  pass {
+    group = "org.apache.cxf"
+    module = "cxf-rt-frontend-jaxrs"
+    versions = "[3.2,)"
+  }
+}
+
+dependencies {
+  compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
+  library group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxrs', version: '3.2.0'
+
+  implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
+
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
+
+  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing')
+  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
+
+  testLibrary group: 'org.apache.cxf', name: 'cxf-rt-transports-http-jetty', version: '3.2.0'
+  testLibrary group: 'org.apache.cxf', name: 'cxf-rt-ws-policy', version: '3.2.0'
+}

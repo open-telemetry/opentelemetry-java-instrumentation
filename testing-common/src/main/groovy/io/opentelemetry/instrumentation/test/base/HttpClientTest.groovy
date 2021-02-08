@@ -13,18 +13,24 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
 import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
 
 @Unroll
-abstract class HttpClientTest extends AgentTestRunner {
+abstract class HttpClientTest extends AgentInstrumentationSpecification {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 5000
   protected static final BASIC_AUTH_KEY = "custom-authorization-header"
@@ -395,6 +401,58 @@ abstract class HttpClientTest extends AgentTestRunner {
     method = "HEAD"
   }
 
+  /**
+   * This test fires a large number of concurrent requests.
+   * Each request first hits a HTTP server and then makes another client request.
+   * The goal of this test is to verify that in highly concurrent environment our instrumentations
+   * for http clients (especially inherently concurrent ones, such as Netty or Reactor) correctly
+   * propagate trace context.
+   */
+  def "high concurrency test"() {
+    setup:
+    assumeTrue(testCausality())
+    int count = 50
+    def method = 'GET'
+    def url = server.address.resolve("/success")
+
+    def latch = new CountDownLatch(1)
+
+    def pool = Executors.newFixedThreadPool(4)
+
+    when:
+    count.times { index ->
+      def job = {
+        latch.await()
+        runUnderTrace("Parent span " + index) {
+          Span.current().setAttribute("test.request.id", index)
+          doRequest(method, url, ["test-request-id": index.toString()])
+        }
+      }
+      pool.submit(job)
+    }
+    latch.countDown()
+
+    then:
+    assertTraces(count) {
+      count.times { idx ->
+        trace(idx, 3) {
+          def rootSpan = it.span(0)
+          //Traces can be in arbitrary order, let us find out the request id if the current one
+          def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
+
+          basicSpan(it, 0, "Parent span " + requestId, null, null) {
+            it."test.request.id" requestId
+          }
+          clientSpan(it, 1, span(0), method, url)
+          serverSpan(it, 2, span(1)) {
+            it."test.request.id" requestId
+          }
+        }
+      }
+    }
+
+  }
+
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null, String httpFlavor = "1.1") {
     def userAgent = userAgent()
@@ -428,7 +486,9 @@ abstract class HttpClientTest extends AgentTestRunner {
     }
   }
 
-  void serverSpan(TraceAssert traces, int index, Object parentSpan = null) {
+  void serverSpan(TraceAssert traces, int index, Object parentSpan = null,
+                  @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
+                  @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure additionAttributesAssert = null) {
     traces.span(index) {
       name "test-http-server"
       kind SERVER
@@ -438,7 +498,8 @@ abstract class HttpClientTest extends AgentTestRunner {
       } else {
         childOf((SpanData) parentSpan)
       }
-      attributes {
+      if(additionAttributesAssert != null){
+        attributes(additionAttributesAssert)
       }
     }
   }
@@ -464,6 +525,10 @@ abstract class HttpClientTest extends AgentTestRunner {
   }
 
   boolean testRemoteConnection() {
+    true
+  }
+
+  boolean testCausality() {
     true
   }
 

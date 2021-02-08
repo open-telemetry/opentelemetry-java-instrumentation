@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetrysdk
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.OpenTelemetrySdk
 
-class OpenTelemetrySdkTest extends AgentTestRunner {
+class OpenTelemetrySdkTest extends AgentInstrumentationSpecification {
 
   def "direct access to sdk should not fail"() {
     when:

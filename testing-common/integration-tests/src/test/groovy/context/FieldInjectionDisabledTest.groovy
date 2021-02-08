@@ -5,27 +5,21 @@
 
 package context
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess
 import java.lang.reflect.Field
-import java.util.function.BiFunction
 import library.DisabledKeyClass
 
 // this test is run using:
 //   -Dotel.javaagent.runtime.context.field.injection=false
 //   -Dotel.instrumentation.context-test-instrumentation.enabled=true
 // (see integration-tests.gradle)
-class FieldInjectionDisabledTest extends AgentTestRunner {
+class FieldInjectionDisabledTest extends AgentInstrumentationSpecification {
 
-  @Override
-  protected List<BiFunction<String, Throwable, Boolean>> skipErrorConditions() {
-    return [
-      new BiFunction<String, Throwable, Boolean>() {
-        @Override
-        Boolean apply(String typeName, Throwable throwable) {
-          return typeName.startsWith(ContextTestInstrumentationModule.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected.")
-        }
-      }
-    ]
+  def setupSpec() {
+    TestAgentListenerAccess.addSkipErrorCondition({ typeName, throwable ->
+      return typeName.startsWith(ContextTestInstrumentationModule.getName() + '$Incorrect') && throwable.getMessage().startsWith("Incorrect Context Api Usage detected.")
+    })
   }
 
   def "Check that structure is not modified when structure modification is disabled"() {

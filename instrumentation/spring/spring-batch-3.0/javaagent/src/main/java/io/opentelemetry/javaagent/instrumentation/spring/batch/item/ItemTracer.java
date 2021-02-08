@@ -68,14 +68,6 @@ public class ItemTracer extends BaseTracer {
     return currentContext.with(span);
   }
 
-  public void end(Context context) {
-    end(Span.fromContext(context));
-  }
-
-  public void endExceptionally(Context context, Throwable throwable) {
-    endExceptionally(Span.fromContext(context), throwable);
-  }
-
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.spring-batch";

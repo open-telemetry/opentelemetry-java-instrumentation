@@ -5,17 +5,16 @@
 
 package context
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.instrumentation.test.utils.GcUtils
+import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess
 import java.lang.instrument.ClassDefinition
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.concurrent.atomic.AtomicReference
-import java.util.function.BiFunction
-import java.util.function.Function
 import library.IncorrectCallUsageKeyClass
 import library.IncorrectContextClassUsageKeyClass
 import library.IncorrectKeyClassUsageKeyClass
@@ -29,28 +28,15 @@ import net.sf.cglib.proxy.MethodProxy
 // this test is run using
 //   -Dotel.instrumentation.context-test-instrumentation.enabled=true
 // (see integration-tests.gradle)
-class FieldBackedProviderTest extends AgentTestRunner {
+class FieldBackedProviderTest extends AgentInstrumentationSpecification {
 
-  @Override
-  protected List<BiFunction<String, Throwable, Boolean>> skipErrorConditions() {
-    return [
-      new BiFunction<String, Throwable, Boolean>() {
-        @Override
-        Boolean apply(String typeName, Throwable throwable) {
-          return typeName.startsWith('library.Incorrect') &&
-            throwable.getMessage().startsWith("Incorrect Context Api Usage detected.")
-        }
-      }
-    ]
-  }
-
-  @Override
-  protected List<Function<String, Boolean>> skipTransformationConditions() {
-    return Collections.singletonList(new Function<String, Boolean>() {
-      @Override
-      Boolean apply(String typeName) {
-        return typeName != null && typeName.endsWith("UntransformableKeyClass")
-      }
+  def setupSpec() {
+    TestAgentListenerAccess.addSkipErrorCondition({ typeName, throwable ->
+      return typeName.startsWith('library.Incorrect') &&
+        throwable.getMessage().startsWith("Incorrect Context Api Usage detected.")
+    })
+    TestAgentListenerAccess.addSkipTransformationCondition({ typeName ->
+      return typeName != null && typeName.endsWith("UntransformableKeyClass")
     })
   }
 

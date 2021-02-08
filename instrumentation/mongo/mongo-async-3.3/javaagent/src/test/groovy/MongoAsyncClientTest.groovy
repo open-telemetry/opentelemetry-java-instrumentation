@@ -16,9 +16,9 @@ import com.mongodb.async.client.MongoDatabase
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.connection.ClusterSettings
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import org.bson.BsonDocument
@@ -157,8 +157,8 @@ class MongoAsyncClientTest extends MongoBaseTest {
       latch1.await()
       return db.getCollection(collectionName)
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(1)
+    testWriter.clear()
 
     when:
     def count = new CompletableFuture()
@@ -203,8 +203,8 @@ class MongoAsyncClientTest extends MongoBaseTest {
       latch2.await()
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(1)
+    testWriter.clear()
 
     when:
     def result = new CompletableFuture<UpdateResult>()
@@ -254,8 +254,8 @@ class MongoAsyncClientTest extends MongoBaseTest {
       latch2.await()
       return coll
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(1)
+    testWriter.clear()
 
     when:
     def result = new CompletableFuture<DeleteResult>()

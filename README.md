@@ -62,13 +62,13 @@ By default, the OpenTelemetry Java agent uses
 [OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/master/exporters/otlp)
 configured to send data to
 [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/master/receiver/otlpreceiver/README.md)
-at `localhost:55680`.
+at `http://localhost:4317`.
 
 Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables. See below for a full list of environment variables. For example:
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
-     -Dotel.exporter=zipkin \
+     -Dotel.trace.exporter=zipkin \
      -jar myapp.jar
 ```
 
@@ -94,7 +94,8 @@ The following configuration properties are common to all exporters:
 
 | System property | Environment variable | Purpose                                                                                                                                                 |
 |-----------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| otel.exporter   | OTEL_EXPORTER        | The exporter to be used. Use a comma-separated list for multiple exporters. Currently does not support multiple metric exporters. Default is `otlp`. |
+| otel.trace.exporter   | OTEL_TRACE_EXPORTER        | The exporter to be used for tracing. Default is `otlp`. `none` means no exporter. |
+| otel.metrics.exporter   | OTEL_METRICS_EXPORTER        | The exporter to be used for metrics. Default is `otlp`. `none` means no exporter. |
 
 ##### OTLP exporter (both span and metric exporters)
 
@@ -102,9 +103,9 @@ A simple wrapper for the OpenTelemetry Protocol (OTLP) span and metric exporters
 
 | System property              | Environment variable        | Description                                                               |
 |------------------------------|-----------------------------|---------------------------------------------------------------------------|
-| otel.exporter=otlp (default) | OTEL_EXPORTER=otlp          | Select the OpenTelemetry exporter (default)                                   |
-| otel.exporter.otlp.endpoint  | OTEL_EXPORTER_OTLP_ENDPOINT | The OTLP endpoint to connect to. Default is `localhost:55680`.            |
-| otel.exporter.otlp.insecure  | OTEL_EXPORTER_OTLP_INSECURE | Whether to enable client transport security for the connection            |
+| otel.trace.exporter=otlp (default) | OTEL_TRACE_EXPORTER=otlp          | Select the OpenTelemetry exporter for tracing (default)                                   |
+| otel.metrics.exporter=otlp (default) | OTEL_METRICS_EXPORTER=otlp          | Select the OpenTelemetry exporter for metrics (default)                                   |
+| otel.exporter.otlp.endpoint  | OTEL_EXPORTER_OTLP_ENDPOINT | The OTLP endpoint to connect to. Must be a URL with a scheme of either `http` or `https` based on the use of TLS. Default is `http://localhost:4317`.            |
 | otel.exporter.otlp.headers   | OTEL_EXPORTER_OTLP_HEADERS  | Key-value pairs separated by semicolons to pass as request headers        |
 | otel.exporter.otlp.timeout   | OTEL_EXPORTER_OTLP_TIMEOUT  | The maximum waiting time allowed to send each batch. Default is `1000`.   |
 
@@ -117,25 +118,23 @@ A simple wrapper for the Jaeger exporter of opentelemetry-java. This exporter us
 
 | System property                   | Environment variable              | Description                                                                                        |
 |-----------------------------------|-----------------------------------|----------------------------------------------------------------------------------------------------|
-| otel.exporter=jaeger              | OTEL_EXPORTER=jaeger              | Select the Jaeger exporter                                                                         |
+| otel.trace.exporter=jaeger              | OTEL_TRACE_EXPORTER=jaeger              | Select the Jaeger exporter                                                                         |
 | otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger gRPC endpoint to connect to. Default is `localhost:14250`.                              |
-| otel.exporter.jaeger.service.name | OTEL_EXPORTER_JAEGER_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                       |
 
 ##### Zipkin exporter
 A simple wrapper for the Zipkin exporter of opentelemetry-java. It sends JSON in [Zipkin format](https://zipkin.io/zipkin-api/#/default/post_spans) to a specified HTTP URL.
 
 | System property                   | Environment variable              | Description                                                                                                               |
 |-----------------------------------|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| otel.exporter=zipkin              | OTEL_EXPORTER=zipkin              | Select the Zipkin exporter                                                                                             |
+| otel.trace.exporter=zipkin              | OTEL_TRACE_EXPORTER=zipkin              | Select the Zipkin exporter                                                                                             |
 | otel.exporter.zipkin.endpoint     | OTEL_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to. Default is `http://localhost:9411/api/v2/spans`. Currently only HTTP is supported. |
-| otel.exporter.zipkin.service.name | OTEL_EXPORTER_ZIPKIN_SERVICE_NAME | The service name of this JVM instance. Default is `unknown`.                                                          |
 
 ##### Prometheus exporter
 A simple wrapper for the Prometheus exporter of opentelemetry-java.
 
 | System property               | Environment variable          | Description                                                                        |
 |-------------------------------|-------------------------------|------------------------------------------------------------------------------------|
-| otel.exporter=prometheus      | OTEL_EXPORTER=prometheus      | Select the Prometheus exporter                                                     |
+| otel.metrics.exporter=prometheus      | OTEL_METRICS_EXPORTER=prometheus      | Select the Prometheus exporter                                                     |
 | otel.exporter.prometheus.port | OTEL_EXPORTER_PROMETHEUS_PORT | The local port used to bind the prometheus metric server. Default is `9464`.       |
 | otel.exporter.prometheus.host | OTEL_EXPORTER_PROMETHEUS_HOST | The local address used to bind the prometheus metric server. Default is `0.0.0.0`. |
 
@@ -146,7 +145,8 @@ attributes to stdout. It's mainly used for testing and debugging.
 
 | System property              | Environment variable         | Description                                                                  |
 |------------------------------|------------------------------|------------------------------------------------------------------------------|
-| otel.exporter=logging        | OTEL_EXPORTER=logging        | Select the logging exporter                                                  |
+| otel.trace.exporter=logging        | OTEL_TRACE_EXPORTER=logging        | Select the logging exporter for tracing                                               |
+| otel.metrics.exporter=logging        | OTEL_METRICS_EXPORTER=logging        | Select the logging exporter for metrics                                               |
 | otel.exporter.logging.prefix | OTEL_EXPORTER_LOGGING_PREFIX | An optional string printed in front of the span name and attributes.         |
 
 #### Propagator
@@ -180,21 +180,28 @@ The [peer service name](https://github.com/open-telemetry/opentelemetry-specific
 | System property           | Environment variable      | Description                                                                        |
 |---------------------------|---------------------------|------------------------------------------------------------------------------------|
 | otel.bsp.schedule.delay   | OTEL_BSP_SCHEDULE_DELAY   | The interval, in milliseconds, between two consecutive exports. Default is `5000`. |
-| otel.bsp.max.queue        | OTEL_BSP_MAX_QUEUE        | The maximum queue size. Default is `2048`.                                             |
-| otel.bsp.max.export.batch | OTEL_BSP_MAX_EXPORT_BATCH | The maximum batch size. Default is `512`.                                              |
+| otel.bsp.max.queue.size   | OTEL_BSP_MAX_QUEUE_SIZE   | The maximum queue size. Default is `2048`.                                             |
+| otel.bsp.max.export.batch.size | OTEL_BSP_MAX_EXPORT_BATCH_SIZE | The maximum batch size. Default is `512`.                                              |
 | otel.bsp.export.timeout   | OTEL_BSP_EXPORT_TIMEOUT   | The maximum allowed time, in milliseconds, to export data. Default is `30000`.         |
-| otel.bsp.export.sampled   | OTEL_BSP_EXPORT_SAMPLED   | Whether only sampled spans should be exported. Default is `true`.                  |
 
 #### Trace config
 
 | System property                 | Environment variable            | Description                                                  |
 |---------------------------------|---------------------------------|--------------------------------------------------------------|
-| otel.config.sampler.probability | OTEL_CONFIG_SAMPLER_PROBABILITY | Sampling probability between 0 and 1. Default is `1`.        |
-| otel.config.max.attrs           | OTEL_CONFIG_MAX_ATTRS           | The maximum number of attributes per span. Default is `32`.  |
-| otel.config.max.events          | OTEL_CONFIG_MAX_EVENTS          | The maximum number of events per span. Default is `128`.     |
-| otel.config.max.links           | OTEL_CONFIG_MAX_LINKS           | The maximum number of links per span. Default is `32`        |
-| otel.config.max.event.attrs     | OTEL_CONFIG_MAX_EVENT_ATTRS     | The maximum number of attributes per event. Default is `32`. |
-| otel.config.max.link.attrs      | OTEL_CONFIG_MAX_LINK_ATTRS      | The maximum number of attributes per link. Default is `32`.  |
+| otel.trace.sampler              | OTEL_TRACE_SAMPLER                    | The sampler to use for tracing. Defaults to `parentbased_always_on` |
+| otel.trace.sampler.arg          | OTEL_TRACE_SAMPLER_ARG                | An argument to the configured tracer if supported, for example a ratio. |
+| otel.span.attribute.count.limit | OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT       | The maximum number of attributes per span. Default is `32`.  |
+| otel.span.event.count.limit     | OTEL_SPAN_EVENT_COUNT_LIMIT          | The maximum number of events per span. Default is `128`.     |
+| otel.span.link.count.limit      | OTEL_SPAN_LINK_COUNT_LIMIT          | The maximum number of links per span. Default is `32`        |
+
+Supported values for `otel.trace.sampler` are
+
+- "always_on": AlwaysOnSampler
+- "always_off": AlwaysOffSampler
+- "traceidratio": TraceIdRatioBased. `otel.trace.sampler.arg` sets the ratio.
+- "parentbased_always_on": ParentBased(root=AlwaysOnSampler)
+- "parentbased_always_off": ParentBased(root=AlwaysOffSampler)
+- "parentbased_traceidratio": ParentBased(root=TraceIdRatioBased). `otel.trace.sampler.arg` sets the ratio.
 
 #### Interval metric reader
 
@@ -207,7 +214,7 @@ The [peer service name](https://github.com/open-telemetry/opentelemetry-specific
 *Customizing the SDK is highly advanced behavior and is still in the prototyping phase. It may change drastically or be removed completely. Use
 with caution*
 
-The OpenTelemetry API exposes SPI [hooks](https://github.com/open-telemetry/opentelemetry-java/blob/master/api/src/main/java/io/opentelemetry/spi/trace/TracerProviderFactory.java)
+The OpenTelemetry SDK exposes SPI [hooks](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/spi)
 for customizing its behavior, such as the `Resource` attached to spans or the `Sampler`.
 
 Because the automatic instrumentation runs in a different classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can provide the path to a JAR file, including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR needs to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you must specify the `io.opentelemetry.javaagent.shaded.io.opentelemetry.api.trace.spi.TraceProvider` to the name of the class that implements the SPI.
@@ -229,12 +236,12 @@ use the `@WithSpan` annotation, also include the `opentelemetry-extension-annota
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-api</artifactId>
-      <version>0.11.0</version>
+      <version>0.15.0</version>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-extension-annotations</artifactId>
-      <version>0.11.0</version>
+      <version>0.15.0</version>
     </dependency>
   </dependencies>
 ```
@@ -243,8 +250,8 @@ use the `@WithSpan` annotation, also include the `opentelemetry-extension-annota
 
 ```groovy
 dependencies {
-    implementation('io.opentelemetry:opentelemetry-api:0.11.0')
-    implementation('io.opentelemetry:opentelemetry-extension-annotations:0.11.0')
+    implementation('io.opentelemetry:opentelemetry-api:0.15.0')
+    implementation('io.opentelemetry:opentelemetry-extension-annotations:0.15.0')
 }
 ```
 
@@ -311,6 +318,7 @@ These are the supported libraries and frameworks:
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                    | 10.0+                          |
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.1+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
+| [Apache Wicket](https://wicket.apache.org/)                                                                                           | 8.0+                           |
 | [Armeria](https://armeria.dev)                                                                                                        | 1.3+                           |
 | [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+ (not including 2.x yet)   |
 | [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)                                                          | 1.0+                           |
@@ -331,6 +339,7 @@ These are the supported libraries and frameworks:
 | [Hystrix](https://github.com/Netflix/Hystrix)                                                                                         | 1.4+                           |
 | [JAX-RS](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html)                                              | 0.5+                           |
 | [JAX-RS Client](https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/client/package-summary.html)                                | 2.0+                           |
+| [JAX-WS](https://jakarta.ee/specifications/xml-web-services/2.3/apidocs/javax/xml/ws/package-summary.html)                            | 2.0+ (not including 3.x yet)   |
 | [JDBC](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/package-summary.html)                                     | Java 7+                        |
 | [Jedis](https://github.com/xetorthio/jedis)                                                                                           | 1.4+                           |
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
@@ -352,7 +361,7 @@ These are the supported libraries and frameworks:
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
 | [Reactor](https://github.com/reactor/reactor-core)                                                                                    | 3.1+                           |
-| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                             | 0.9+ (not including 1.0)       |
+| [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                             | 0.9+                           |
 | [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
 | [Redisson](https://github.com/redisson/redisson)                                                                                      | 3.0+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |
@@ -375,17 +384,19 @@ These are the supported libraries and frameworks:
 
 These are the supported application servers:
 
-| Application server                                                                        | Version                     | JVM            | OS                             |
-| ----------------------------------------------------------------------------------------- | --------------------------- | -------------- | ------------------------------ |
-| [Glassfish](https://javaee.github.io/glassfish/)                                          | 5.0.x, 5.1.x                | OpenJDK 8, 11  | Ubuntu 18, Windows Server 2019 |
-| [JBoss EAP](https://www.redhat.com/en/technologies/jboss-middleware/application-platform) | 7.1.x, 7.3.x                | OpenJDK 8, 11  | Ubuntu 18, Windows Server 2019 |
-| [Jetty](https://www.eclipse.org/jetty/)                                                   | 9.4.x, 10.0.x               | OpenJDK 8, 11  | Ubuntu 20                      |
-| [Payara](https://www.payara.fish/)                                                        | 5.0.x, 5.1.x                | OpenJDK 8, 11  | Ubuntu 18, Windows Server 2019 |
-| [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x, 8.5.x, 9.0.x         | OpenJDK 8, 11  | Ubuntu 18                      |
-| [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 12                          | OpenJDK 8      | Oracle Linux 7, 8              |
-| [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 14                          | OpenJDK 8, 11  | Oracle Linux 7, 8              |
-| [WildFly](https://www.wildfly.org/)                                                       | 13.0.x                      | OpenJDK 8      | Ubuntu 18, Windows Server 2019 |
-| [WildFly](https://www.wildfly.org/)                                                       | 17.0.1, 21.0.0              | OpenJDK 8, 11  | Ubuntu 18, Windows Server 2019 |
+| Application server                                                                        | Version                     | JVM              | OS                             |
+| ----------------------------------------------------------------------------------------- | --------------------------- | ---------------- | ------------------------------ |
+| [Glassfish](https://javaee.github.io/glassfish/)                                          | 5.0.x, 5.1.x                | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+| [JBoss EAP](https://www.redhat.com/en/technologies/jboss-middleware/application-platform) | 7.1.x, 7.3.x                | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+| [Jetty](https://www.eclipse.org/jetty/)                                                   | 9.4.x, 10.0.x, 11.0.x       | OpenJDK 8, 11    | Ubuntu 20                      |
+| [Payara](https://www.payara.fish/)                                                        | 5.0.x, 5.1.x                | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+| [Tomcat](http://tomcat.apache.org/)                                                       | 7.0.x, 8.5.x, 9.0.x, 10.0.x | OpenJDK 8, 11    | Ubuntu 18                      |
+| [TomEE](https://tomee.apache.org/)                                                        | 7.x, 8.x                    | OpenJDK 8, 11    | Ubuntu 18                      |
+| [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 12                          | Oracle JDK 8     | Oracle Linux 7, 8              |
+| [Weblogic](https://www.oracle.com/java/weblogic/)                                         | 14                          | Oracle JDK 8, 11 | Oracle Linux 7, 8              |
+| [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.0.0.12                   | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+| [WildFly](https://www.wildfly.org/)                                                       | 13.0.x                      | OpenJDK 8        | Ubuntu 18, Windows Server 2019 |
+| [WildFly](https://www.wildfly.org/)                                                       | 17.0.1, 21.0.0              | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
 
 ### Disabled instrumentations
 

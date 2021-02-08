@@ -26,10 +26,6 @@ public class StepExecutionTracer extends BaseTracer {
     return Context.current().with(span);
   }
 
-  public void end(Context context) {
-    end(Span.fromContext(context));
-  }
-
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.spring-batch";

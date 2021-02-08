@@ -67,7 +67,9 @@ public class HelperInjector implements Transformer {
    *     resolvable by the classloader returned by
    *     io.opentelemetry.javaagent.tooling.Utils#getAgentClassLoader(). Classes are injected in the
    *     order provided. This is important if there is interdependency between helper classes that
-   *     requires them to be injected in a specific order.
+   *     requires them to be injected in a specific order. And be careful, the class's package in
+   *     library will be renamed like 'io.opentelemetry.instrumentation' to
+   *     'io.opentelemetry.javaagent.shaded.instrumentation'
    */
   public HelperInjector(
       String requestingName, List<String> helperClassNames, List<String> helperResourceNames) {
@@ -170,6 +172,7 @@ public class HelperInjector implements Transformer {
           continue;
         }
 
+        log.debug("Injecting resource onto classloader {} -> {}", classLoader, resourceName);
         HelperResources.register(classLoader, resourceName, resource);
       }
     }

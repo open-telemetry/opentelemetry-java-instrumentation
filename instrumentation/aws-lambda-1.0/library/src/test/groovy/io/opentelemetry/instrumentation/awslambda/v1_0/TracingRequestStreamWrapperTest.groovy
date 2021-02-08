@@ -9,15 +9,14 @@ import static io.opentelemetry.api.trace.Span.Kind.SERVER
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.nio.charset.Charset
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import spock.lang.Shared
 
-class TracingRequestStreamWrapperTest extends InstrumentationSpecification implements InstrumentationTestTrait {
+class TracingRequestStreamWrapperTest extends LibraryInstrumentationSpecification {
 
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
@@ -43,7 +42,7 @@ class TracingRequestStreamWrapperTest extends InstrumentationSpecification imple
   @Shared
   TracingRequestStreamWrapper wrapper
 
-  def childSetup() {
+  def setup() {
     environmentVariables.set(WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY, "io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestStreamWrapperTest\$TestRequestHandler::handleRequest")
     TracingRequestStreamWrapper.WRAPPED_LAMBDA = WrappedLambda.fromConfiguration()
     wrapper = new TracingRequestStreamWrapper()

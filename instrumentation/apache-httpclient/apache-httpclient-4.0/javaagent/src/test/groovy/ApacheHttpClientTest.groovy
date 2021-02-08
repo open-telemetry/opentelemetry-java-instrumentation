@@ -26,6 +26,11 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   @Override
+  boolean testCausality() {
+    return false
+  }
+
+  @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
     def request = createRequest(method, uri)
     headers.entrySet().each {

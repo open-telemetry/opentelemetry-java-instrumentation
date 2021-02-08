@@ -19,6 +19,7 @@ dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
   compileOnly group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
 
+  testInstrumentation project(':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-cxf-3.0:javaagent')
   testInstrumentation project(':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-jersey-2.0:javaagent')
   testInstrumentation project(':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-resteasy-2.0:javaagent')
 
@@ -37,6 +38,5 @@ dependencies {
 
   latestDepTestLibrary group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.+'
   latestDepTestLibrary group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.+'
-  latestDepTestLibrary group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.2.6'
   latestDepTestLibrary group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.26.Final'
 }

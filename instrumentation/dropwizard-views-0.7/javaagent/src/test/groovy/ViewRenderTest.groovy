@@ -9,10 +9,10 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import io.dropwizard.views.View
 import io.dropwizard.views.freemarker.FreemarkerViewRenderer
 import io.dropwizard.views.mustache.MustacheViewRenderer
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.nio.charset.StandardCharsets
 
-class ViewRenderTest extends AgentTestRunner {
+class ViewRenderTest extends AgentInstrumentationSpecification {
 
   def "render #template succeeds with span"() {
     setup:
