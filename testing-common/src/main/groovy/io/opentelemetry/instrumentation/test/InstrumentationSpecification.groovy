@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.test
 
-
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
+import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner
 import spock.lang.Specification
 
 /**
@@ -17,29 +18,35 @@ import spock.lang.Specification
  * {@link LibraryTestTrait}.
  */
 abstract class InstrumentationSpecification extends Specification {
+  abstract InstrumentationTestRunner testRunner()
+
   def setupSpec() {
-    runnerSetupSpec()
+    testRunner().beforeTestClass()
   }
 
-  abstract void runnerSetupSpec()
-
+  /**
+   * Clears all data exported during a test.
+   */
   def setup() {
-    runnerSetup()
+    assert !Span.current().getSpanContext().isValid(): "Span is active before test has started: " + Span.current()
+    testRunner().clearAllExportedData()
   }
-
-  abstract void runnerSetup()
 
   def cleanupSpec() {
-    runnerCleanupSpec()
+    testRunner().afterTestClass()
   }
 
-  abstract void runnerCleanupSpec()
+  boolean forceFlushCalled() {
+    return testRunner().forceFlushCalled()
+  }
 
-  abstract void assertTraces(
+  void assertTraces(
     final int size,
     @ClosureParams(
       value = SimpleType,
       options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
     @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
-    final Closure spec)
+    final Closure spec) {
+    InMemoryExporterAssert.assertTraces({ testRunner().getExportedSpans() }, size, spec)
+  }
 }
