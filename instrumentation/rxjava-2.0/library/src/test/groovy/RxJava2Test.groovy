@@ -6,7 +6,6 @@
 
 import io.opentelemetry.instrumentation.rxjava2.AbstractRxJava2Test
 import io.opentelemetry.instrumentation.rxjava2.TracingAssembly
-import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
 import io.reactivex.Flowable
 import io.reactivex.Maybe
 import io.reactivex.schedulers.Schedulers
@@ -19,11 +18,12 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
-class RxJava2Test extends AbstractRxJava2Test implements InstrumentationTestTrait {
+class RxJava2Test extends AbstractRxJava2Test {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
 
-  def childSetupSpec() {
+  void runnerSetupSpec() {
+    super.runnerSetupSpec()
     TracingAssembly.enable()
   }
 

@@ -1,11 +1,11 @@
 package io.opentelemetry.instrumentation.rxjava2
 
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import spock.lang.Shared
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-abstract class AbstractRxJava2Test extends InstrumentationSpecification {
+abstract class AbstractRxJava2Test extends LibraryInstrumentationSpecification {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
 
