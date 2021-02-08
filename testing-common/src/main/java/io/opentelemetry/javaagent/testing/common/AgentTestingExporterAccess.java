@@ -62,7 +62,6 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -153,20 +152,20 @@ public final class AgentTestingExporterAccess {
           resourceSpans.getInstrumentationLibrarySpansList()) {
         InstrumentationLibrary instrumentationLibrary = ilSpans.getInstrumentationLibrary();
         for (Span span : ilSpans.getSpansList()) {
-          String traceId = new BigInteger(1, span.getTraceId().toByteArray()).toString(16);
+          String traceId = bytesToHex(span.getTraceId().toByteArray());
           spans.add(
               TestSpanData.builder()
                   .setSpanContext(
                       SpanContext.create(
                           traceId,
-                          new BigInteger(1, span.getSpanId().toByteArray()).toString(16),
+                          bytesToHex(span.getSpanId().toByteArray()),
                           TraceFlags.getDefault(),
                           extractTraceState(span.getTraceState())))
                   // TODO is it ok to use default trace flags and default trace state here?
                   .setParentSpanContext(
                       SpanContext.create(
                           traceId,
-                          new BigInteger(1, span.getParentSpanId().toByteArray()).toString(16),
+                          bytesToHex(span.getParentSpanId().toByteArray()),
                           TraceFlags.getDefault(),
                           TraceState.getDefault()))
                   .setResource(
@@ -198,10 +197,8 @@ public final class AgentTestingExporterAccess {
                               link ->
                                   LinkData.create(
                                       SpanContext.create(
-                                          new BigInteger(1, link.getTraceId().toByteArray())
-                                              .toString(16),
-                                          new BigInteger(1, link.getSpanId().toByteArray())
-                                              .toString(16),
+                                          bytesToHex(link.getTraceId().toByteArray()),
+                                          bytesToHex(link.getSpanId().toByteArray()),
                                           TraceFlags.getDefault(),
                                           extractTraceState(link.getTraceState())),
                                       fromProto(link.getAttributesList()),
@@ -496,6 +493,36 @@ public final class AgentTestingExporterAccess {
       traceStateBuilder.set(listMember.substring(0, index), listMember.substring(index + 1));
     }
     return traceStateBuilder.build();
+  }
+
+  private static String bytesToHex(byte[] bytes) {
+    char[] dest = new char[bytes.length * 2];
+    bytesToBase16(bytes, dest);
+    return new String(dest);
+  }
+
+  private static void bytesToBase16(byte[] bytes, char[] dest) {
+    for (int i = 0; i < bytes.length; i++) {
+      byteToBase16(bytes[i], dest, i * 2);
+    }
+  }
+
+  private static void byteToBase16(byte value, char[] dest, int destOffset) {
+    int b = value & 0xFF;
+    dest[destOffset] = ENCODING[b];
+    dest[destOffset + 1] = ENCODING[b | 0x100];
+  }
+
+  private static final String ALPHABET = "0123456789abcdef";
+  private static final char[] ENCODING = buildEncodingArray();
+
+  private static char[] buildEncodingArray() {
+    char[] encoding = new char[512];
+    for (int i = 0; i < 256; ++i) {
+      encoding[i] = ALPHABET.charAt(i >>> 4);
+      encoding[i | 0x100] = ALPHABET.charAt(i & 0xF);
+    }
+    return encoding;
   }
 
   private AgentTestingExporterAccess() {}

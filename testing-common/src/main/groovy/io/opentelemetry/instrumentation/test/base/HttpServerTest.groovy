@@ -16,10 +16,11 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.Callable
 import okhttp3.HttpUrl
 import okhttp3.Request

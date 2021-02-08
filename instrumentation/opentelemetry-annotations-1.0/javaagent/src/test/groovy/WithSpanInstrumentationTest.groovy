@@ -7,7 +7,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 
-import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.test.annotation.TracedWithSpan
 

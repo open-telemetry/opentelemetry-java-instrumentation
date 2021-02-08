@@ -222,8 +222,8 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
       }
     })
     def spanContext = Span.fromContext(context).getSpanContext()
-    spanContext.traceIdAsHexString == testWriter.traces[0][3].traceId
-    spanContext.spanIdAsHexString == testWriter.traces[0][3].spanId
+    spanContext.traceId == testWriter.traces[0][3].traceId
+    spanContext.spanId == testWriter.traces[0][3].spanId
 
 
     cleanup:

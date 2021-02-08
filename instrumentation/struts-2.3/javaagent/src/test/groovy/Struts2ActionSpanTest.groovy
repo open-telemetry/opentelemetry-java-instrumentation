@@ -6,7 +6,7 @@
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 
-import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData

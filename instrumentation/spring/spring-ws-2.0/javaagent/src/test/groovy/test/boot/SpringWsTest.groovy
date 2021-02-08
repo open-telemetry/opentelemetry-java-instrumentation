@@ -5,7 +5,7 @@
 
 package test.boot
 
-import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
