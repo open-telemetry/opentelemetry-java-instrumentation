@@ -108,8 +108,14 @@ Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
 
 # Creating spans manually with a Tracer
 
-OpenTelemetry offers a tracer to easily enable custom instrumentation throughout your application.
+If `@WithSpan` doesn't work for your specific use case, you're still in luck!
+
+The underlying OpenTelemetry API allows you to [obtain a tracer](https://github.com/open-telemetry/opentelemetry-java/blob/main/QUICKSTART.md#tracing)
+that can be used to [manually create spans](https://github.com/open-telemetry/opentelemetry-java/blob/main/QUICKSTART.md#create-a-basic-span)
+and execute code within the scope of that span.
+
 See the [OpenTelemetry Java
 QuickStart](https://github.com/open-telemetry/opentelemetry-java/blob/master/QUICKSTART.md#tracing)
-for an example of how to configure the tracer and use the Tracer, Scope and Span interfaces to
+for a detailed en example of how to configure OpenTelemetry with code and 
+how to use the `Tracer`, `Scope` and `Span` interfaces to
 instrument your application.
