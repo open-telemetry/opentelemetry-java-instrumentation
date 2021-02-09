@@ -5,10 +5,8 @@
 
 package io.opentelemetry.instrumentation.test
 
-
-import groovy.transform.stc.ClosureParams
-import groovy.transform.stc.SimpleType
-import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
+import io.opentelemetry.instrumentation.testing.AgentTestRunner
+import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner
 
 /**
  * A trait which initializes agent tests, including bytecode manipulation and a test span exporter.
@@ -16,31 +14,10 @@ import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
  */
 trait AgentTestTrait {
 
-  static AgentTestRunner agentTestRunner
-  static InMemoryExporter testWriter
+  static InstrumentationTestRunner agentTestRunner = AgentTestRunner.instance()
+  static InMemoryExporter testWriter = new InMemoryExporter()
 
-  void runnerSetupSpec() {
-    agentTestRunner = new AgentTestRunner()
-    testWriter = AgentTestRunner.TEST_WRITER
-
-    agentTestRunner.setupBeforeTests()
+  InstrumentationTestRunner testRunner() {
+    agentTestRunner
   }
-
-  void runnerSetup() {
-    agentTestRunner.beforeTest()
-  }
-
-  void runnerCleanupSpec() {
-    AgentTestRunner.agentCleanup()
-  }
-
-  void assertTraces(final int size,
-                    @ClosureParams(
-                      value = SimpleType,
-                      options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
-                    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
-                    final Closure spec) {
-    AgentTestRunner.assertTraces(size, spec)
-  }
-
 }
