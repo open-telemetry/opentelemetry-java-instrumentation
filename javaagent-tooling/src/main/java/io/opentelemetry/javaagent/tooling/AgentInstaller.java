@@ -345,7 +345,6 @@ public class AgentInstaller {
         JavaModule module,
         boolean loaded,
         DynamicType dynamicType) {
-      log.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
     }
 
     @Override
@@ -354,19 +353,16 @@ public class AgentInstaller {
         ClassLoader classLoader,
         JavaModule module,
         boolean loaded) {
-      //      log.debug("onIgnored {}", typeDescription.getName());
     }
 
     @Override
     public void onComplete(
         String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      // log.debug("onComplete {}", typeName);
     }
 
     @Override
     public void onDiscovery(
         String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      // log.debug("onDiscovery {}", typeName);
     }
   }
 
