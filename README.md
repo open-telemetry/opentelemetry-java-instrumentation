@@ -301,6 +301,14 @@ and you want to suppress some of them without modifying the code.
 | trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods.
 Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
 
+#### Creating spans around methods with otel.instrumentation.methods.include
+This is a way to to create a span around a first-party code method without using `@WithSpan`.
+
+| System property                 | Environment variable            | Purpose                                                                                                                                  |
+|---------------------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| otel.instrumentation.methods.include |                                 | Add instrumentation for specific methods in lieu of `@WithSpan`.
+Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
+
 ### Creating spans manually with a Tracer
 
 OpenTelemetry offers a tracer to easily enable custom instrumentation throughout your application.
@@ -316,6 +324,7 @@ These are the supported libraries and frameworks:
 | Library/Framework                                                                                                                     | Versions                       |
 |---------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                    | 10.0+                          |
+| [Apache Dubbo](https://github.com/apache/dubbo/)                                                                                      | 2.7+                           |
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.1+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Apache Wicket](https://wicket.apache.org/)                                                                                           | 8.0+                           |
