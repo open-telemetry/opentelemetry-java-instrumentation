@@ -9,9 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 
 public abstract class RpcClientTracer extends BaseTracer {
-  protected RpcClientTracer() {
-    super();
-  }
+  protected RpcClientTracer() {}
 
   /**
    * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to

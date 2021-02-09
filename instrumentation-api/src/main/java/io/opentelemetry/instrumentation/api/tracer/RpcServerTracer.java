@@ -11,7 +11,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 
 public abstract class RpcServerTracer<REQUEST> extends BaseTracer {
 
-  protected RpcServerTracer() { super(); }
+  protected RpcServerTracer() {}
 
   /**
    * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to

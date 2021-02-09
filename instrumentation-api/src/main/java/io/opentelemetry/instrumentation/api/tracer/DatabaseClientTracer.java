@@ -20,9 +20,7 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
   protected static final String DB_QUERY = "DB Query";
 
-  public DatabaseClientTracer() {
-    super();
-  }
+  public DatabaseClientTracer() {}
 
   public DatabaseClientTracer(OpenTelemetry openTelemetry) {
     super(openTelemetry);
