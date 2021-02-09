@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.api.trace.Span.Kind.SERVER;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.SERVER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;

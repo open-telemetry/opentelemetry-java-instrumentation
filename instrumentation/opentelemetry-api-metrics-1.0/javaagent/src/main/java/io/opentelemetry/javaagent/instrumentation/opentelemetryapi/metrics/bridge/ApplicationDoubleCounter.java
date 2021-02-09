@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.BoundDoubleCounter;
 import application.io.opentelemetry.api.metrics.DoubleCounter;
 import application.io.opentelemetry.api.metrics.DoubleCounterBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 
 class ApplicationDoubleCounter implements DoubleCounter {
 

@@ -59,8 +59,8 @@ abstract class Log4j2Test extends InstrumentationSpecification {
     then:
     events.size() == 3
     events[0].message.formattedMessage == "log message 1"
-    events[0].getContextData().getValue("traceId") == span1.spanContext.traceIdAsHexString
-    events[0].getContextData().getValue("spanId") == span1.spanContext.spanIdAsHexString
+    events[0].getContextData().getValue("traceId") == span1.spanContext.traceId
+    events[0].getContextData().getValue("spanId") == span1.spanContext.spanId
     events[0].getContextData().getValue("sampled") == "true"
 
     events[1].message.formattedMessage == "log message 2"
@@ -69,8 +69,8 @@ abstract class Log4j2Test extends InstrumentationSpecification {
     events[1].getContextData().getValue("sampled") == null
 
     events[2].message.formattedMessage == "log message 3"
-    events[2].getContextData().getValue("traceId") == span2.spanContext.traceIdAsHexString
-    events[2].getContextData().getValue("spanId") == span2.spanContext.spanIdAsHexString
+    events[2].getContextData().getValue("traceId") == span2.spanContext.traceId
+    events[2].getContextData().getValue("spanId") == span2.spanContext.spanId
     events[2].getContextData().getValue("sampled") == "true"
   }
 }

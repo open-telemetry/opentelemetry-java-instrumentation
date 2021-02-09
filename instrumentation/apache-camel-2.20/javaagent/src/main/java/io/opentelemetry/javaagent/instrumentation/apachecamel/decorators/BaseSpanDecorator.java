@@ -24,7 +24,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
@@ -106,12 +106,12 @@ class BaseSpanDecorator implements SpanDecorator {
   }
 
   @Override
-  public Span.Kind getInitiatorSpanKind() {
-    return Kind.CLIENT;
+  public SpanKind getInitiatorSpanKind() {
+    return SpanKind.CLIENT;
   }
 
   @Override
-  public Span.Kind getReceiverSpanKind() {
-    return Kind.SERVER;
+  public SpanKind getReceiverSpanKind() {
+    return SpanKind.SERVER;
   }
 }

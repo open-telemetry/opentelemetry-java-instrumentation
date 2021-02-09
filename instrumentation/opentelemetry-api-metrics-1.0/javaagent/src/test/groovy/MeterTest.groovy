@@ -11,7 +11,7 @@ import static io.opentelemetry.sdk.metrics.data.MetricDataType.SUMMARY
 import static java.util.concurrent.TimeUnit.SECONDS
 
 import com.google.common.base.Stopwatch
-import io.opentelemetry.api.common.Labels
+import io.opentelemetry.api.metrics.common.Labels
 import io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.api.metrics.GlobalMetricsProvider
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification

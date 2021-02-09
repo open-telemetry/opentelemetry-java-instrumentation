@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.google.common.collect.ImmutableMap
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase {
@@ -66,8 +67,8 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
           name("/hello/{param}")
           kind SERVER
           attributes {
-            "$SemanticAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
-            "$SemanticAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
+            "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
             "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
             "$SemanticAttributes.FAAS_TRIGGER.key" "http"
             "$SemanticAttributes.HTTP_METHOD.key" "GET"
@@ -98,8 +99,8 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
           name("my_function")
           kind SERVER
           attributes {
-            "$SemanticAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
-            "$SemanticAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
+            "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
             "$SemanticAttributes.FAAS_EXECUTION.key" "1-22-333"
             "$SemanticAttributes.FAAS_TRIGGER.key" "http"
           }

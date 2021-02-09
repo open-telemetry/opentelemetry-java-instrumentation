@@ -98,8 +98,8 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   @Override
   public void onRequest(Span span, HttpServletRequest request) {
     // we do this e.g. so that servlet containers can use these values in their access logs
-    request.setAttribute("traceId", span.getSpanContext().getTraceIdAsHexString());
-    request.setAttribute("spanId", span.getSpanContext().getSpanIdAsHexString());
+    request.setAttribute("traceId", span.getSpanContext().getTraceId());
+    request.setAttribute("spanId", span.getSpanContext().getSpanId());
 
     super.onRequest(span, request);
   }

@@ -9,8 +9,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import java.util.concurrent.TimeUnit;
 
 public abstract class TracingSqsEventHandler extends TracingRequestHandler<SQSEvent, Void> {
 
@@ -52,7 +50,7 @@ public abstract class TracingSqsEventHandler extends TracingRequestHandler<SQSEv
       } else {
         tracer.end(otelContext);
       }
-      OpenTelemetrySdk.getGlobalTracerManagement().forceFlush().join(1, TimeUnit.SECONDS);
+      LambdaUtils.forceFlush();
     }
     return null;
   }

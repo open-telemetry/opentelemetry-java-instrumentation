@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.api.trace.Span.Kind.SERVER;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.SERVER;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.CompletableFuture;
@@ -39,7 +39,7 @@ public class OpenTelemetryFilter implements Filter {
     String methodName = invocation.getMethodName();
     String interfaceName = invoker.getInterface().getName();
     RpcContext rpcContext = RpcContext.getContext();
-    Kind kind = rpcContext.isProviderSide() ? SERVER : CLIENT;
+    SpanKind kind = rpcContext.isProviderSide() ? SERVER : CLIENT;
     final Context context;
     if (kind.equals(CLIENT)) {
       context = tracer.startClientSpan(interfaceName, methodName);

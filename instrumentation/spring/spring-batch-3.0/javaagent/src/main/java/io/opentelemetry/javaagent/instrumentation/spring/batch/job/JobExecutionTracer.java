@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.job;
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;

@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.netty.channel.ChannelFuture;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyHttpClientTracer;
@@ -63,7 +63,7 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
         return null;
       }
       Scope parentScope = parentContext.makeCurrent();
-      Span span = NettyHttpClientTracer.tracer().startSpan("CONNECT", Kind.CLIENT);
+      Span span = NettyHttpClientTracer.tracer().startSpan("CONNECT", SpanKind.CLIENT);
       NettyHttpClientTracer.tracer().endExceptionally(span, cause);
       return parentScope;
     }

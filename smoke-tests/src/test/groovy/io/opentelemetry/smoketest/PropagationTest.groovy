@@ -7,7 +7,6 @@ package io.opentelemetry.smoketest
 
 import static java.util.stream.Collectors.toSet
 
-import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import okhttp3.Request
 
@@ -15,7 +14,7 @@ abstract class PropagationTest extends SmokeTest {
 
   @Override
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210129.520311771"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210209.550405798"
   }
 
   def "Should propagate test"() {
@@ -28,7 +27,7 @@ abstract class PropagationTest extends SmokeTest {
     def response = CLIENT.newCall(request).execute()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
     def traceIds = getSpanStream(traces)
-      .map({ TraceId.bytesToHex(it.getTraceId().toByteArray()) })
+      .map({ bytesToHex(it.getTraceId().toByteArray()) })
       .collect(toSet())
 
     then:
@@ -79,7 +78,7 @@ class JaegerPropagationTest extends PropagationTest {
 class OtTracerPropagationTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210129.520311771"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210209.550405798"
   }
 
   // OtTracer only propagates lower half of trace ID so we have to mangle the trace IDs similar to
@@ -94,7 +93,7 @@ class OtTracerPropagationTest extends SmokeTest {
     def response = CLIENT.newCall(request).execute()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
     def traceIds = getSpanStream(traces)
-      .map({ TraceId.bytesToHex(it.getTraceId().toByteArray()).substring(16) })
+      .map({ bytesToHex(it.getTraceId().toByteArray()).substring(16) })
       .collect(toSet())
 
     then:

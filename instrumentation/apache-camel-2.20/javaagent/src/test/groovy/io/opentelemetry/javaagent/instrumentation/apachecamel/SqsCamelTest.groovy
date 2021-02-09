@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification

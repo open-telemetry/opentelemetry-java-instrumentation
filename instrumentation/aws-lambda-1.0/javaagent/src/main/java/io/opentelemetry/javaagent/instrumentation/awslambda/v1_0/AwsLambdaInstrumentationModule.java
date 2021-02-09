@@ -20,7 +20,7 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
 
   @Override
   public String[] additionalHelperClassNames() {
-    return new String[] {"io.opentelemetry.extension.trace.propagation.AwsXrayPropagator"};
+    return new String[] {"io.opentelemetry.extension.aws.AwsXrayPropagator"};
   }
 
   @Override

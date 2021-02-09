@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
@@ -53,7 +53,7 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) HttpServletRequest req,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = tracer().startSpan(tracer().spanNameOnRender(req), Kind.INTERNAL);
+      span = tracer().startSpan(tracer().spanNameOnRender(req), SpanKind.INTERNAL);
       tracer().onRender(span, req);
       scope = span.makeCurrent();
     }

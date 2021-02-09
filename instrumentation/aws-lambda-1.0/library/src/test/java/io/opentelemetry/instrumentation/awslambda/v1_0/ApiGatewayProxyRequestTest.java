@@ -13,10 +13,10 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
-import io.opentelemetry.api.DefaultOpenTelemetry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.extension.trace.propagation.AwsXrayPropagator;
+import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -35,8 +35,7 @@ class ApiGatewayProxyRequestTest {
   public void shouldCreateNoopRequestIfNoPropagatorsSet() throws IOException {
     // given
     InputStream mock = mock(InputStream.class);
-    GlobalOpenTelemetry.set(
-        DefaultOpenTelemetry.builder().setPropagators(ContextPropagators.noop()).build());
+    GlobalOpenTelemetry.set(OpenTelemetry.getDefault());
     // when
     ApiGatewayProxyRequest created = ApiGatewayProxyRequest.forStream(mock);
     // then
@@ -49,9 +48,7 @@ class ApiGatewayProxyRequestTest {
     // given
     InputStream mock = mock(InputStream.class);
     GlobalOpenTelemetry.set(
-        DefaultOpenTelemetry.builder()
-            .setPropagators(ContextPropagators.create(AwsXrayPropagator.getInstance()))
-            .build());
+        OpenTelemetry.getPropagating(ContextPropagators.create(AwsXrayPropagator.getInstance())));
     // when
     ApiGatewayProxyRequest created = ApiGatewayProxyRequest.forStream(mock);
     // then
@@ -65,9 +62,7 @@ class ApiGatewayProxyRequestTest {
     InputStream mock = mock(InputStream.class);
     given(mock.markSupported()).willReturn(true);
     GlobalOpenTelemetry.set(
-        DefaultOpenTelemetry.builder()
-            .setPropagators(ContextPropagators.create(B3Propagator.getInstance()))
-            .build());
+        OpenTelemetry.getPropagating(ContextPropagators.create(B3Propagator.getInstance())));
     // when
     ApiGatewayProxyRequest created = ApiGatewayProxyRequest.forStream(mock);
     // then
@@ -83,9 +78,7 @@ class ApiGatewayProxyRequestTest {
     given(mock.markSupported()).willReturn(false);
     given(mock.read(any(byte[].class))).willReturn(-1);
     GlobalOpenTelemetry.set(
-        DefaultOpenTelemetry.builder()
-            .setPropagators(ContextPropagators.create(B3Propagator.getInstance()))
-            .build());
+        OpenTelemetry.getPropagating(ContextPropagators.create(B3Propagator.getInstance())));
     // when
     ApiGatewayProxyRequest created = ApiGatewayProxyRequest.forStream(mock);
     // then

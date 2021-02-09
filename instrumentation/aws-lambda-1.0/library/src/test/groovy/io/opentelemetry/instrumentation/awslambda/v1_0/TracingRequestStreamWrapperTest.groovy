@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.nio.charset.Charset
 import org.junit.Rule
@@ -70,8 +71,8 @@ class TracingRequestStreamWrapperTest extends LibraryInstrumentationSpecificatio
           name("my_function")
           kind SERVER
           attributes {
-            "$SemanticAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
-            "$SemanticAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
+            "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }
@@ -105,8 +106,8 @@ class TracingRequestStreamWrapperTest extends LibraryInstrumentationSpecificatio
           errored true
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {
-            "$SemanticAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
-            "$SemanticAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
+            "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"
+            "$ResourceAttributes.CLOUD_ACCOUNT_ID.key" "123456789"
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"
           }
         }

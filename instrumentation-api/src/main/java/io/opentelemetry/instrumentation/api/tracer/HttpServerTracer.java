@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.api.trace.Span.Kind.SERVER;
+import static io.opentelemetry.api.trace.SpanKind.SERVER;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;

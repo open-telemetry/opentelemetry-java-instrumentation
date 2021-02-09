@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rxjava;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -18,13 +19,13 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
   private final String operationName;
   private final Context parentContext;
   private final BaseTracer tracer;
-  private final Span.Kind spanKind;
+  private final SpanKind spanKind;
 
   public TracedOnSubscribe(
       Observable<T> originalObservable,
       String operationName,
       BaseTracer tracer,
-      Span.Kind spanKind) {
+      SpanKind spanKind) {
     delegate = __OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
     this.operationName = operationName;
     this.tracer = tracer;

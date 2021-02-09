@@ -12,8 +12,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
@@ -39,9 +39,9 @@ public class WithSpanAspectTest {
       return "Span with name greatestSpanEver was created";
     }
 
-    @WithSpan(kind = Kind.CLIENT)
+    @WithSpan(kind = SpanKind.CLIENT)
     public String testWithSpanWithKind() {
-      return "Span with name testWithSpanWithKind and Kind.CLIENT was created";
+      return "Span with name testWithSpanWithKind and SpanKind.CLIENT was created";
     }
 
     @WithSpan
@@ -113,24 +113,24 @@ public class WithSpanAspectTest {
 
   @Test
   @DisplayName(
-      "when method is annotated with @WithSpan AND Span.Kind is missing should set default Kind")
+      "when method is annotated with @WithSpan AND SpanKind is missing should set default SpanKind")
   void withSpanDefaultKind() throws Throwable {
 
     withSpanTester.testWithSpan();
 
-    verify(spanBuilder, times(1)).setSpanKind(Kind.INTERNAL);
+    verify(spanBuilder, times(1)).setSpanKind(SpanKind.INTERNAL);
     verify(spanBuilder, times(1)).startSpan();
     verify(span, times(1)).end();
   }
 
   @Test
   @DisplayName(
-      "when method is annotated with @WithSpan AND WithSpan.kind is set should build span with the declared Kind")
+      "when method is annotated with @WithSpan AND WithSpan.kind is set should build span with the declared SpanKind")
   void withSpanClientKind() throws Throwable {
 
     withSpanTester.testWithSpanWithKind();
 
-    verify(spanBuilder, times(1)).setSpanKind(Kind.CLIENT);
+    verify(spanBuilder, times(1)).setSpanKind(SpanKind.CLIENT);
     verify(spanBuilder, times(1)).startSpan();
     verify(span, times(1)).end();
   }

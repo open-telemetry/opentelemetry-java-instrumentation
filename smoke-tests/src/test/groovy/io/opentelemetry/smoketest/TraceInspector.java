@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest;
 
 import com.google.protobuf.ByteString;
-import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
@@ -89,7 +88,7 @@ public class TraceInspector {
     return getSpanStream()
         .map(Span::getTraceId)
         .map(ByteString::toByteArray)
-        .map(TraceId::bytesToHex)
+        .map(SmokeTest::bytesToHex)
         .collect(Collectors.toSet());
   }
 }

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.TextMapExtractAdapter.GETTER;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -29,7 +29,7 @@ public class KafkaStreamsTracer extends BaseTracer {
     Span span =
         tracer
             .spanBuilder(spanNameForConsume(record))
-            .setSpanKind(Kind.CONSUMER)
+            .setSpanKind(SpanKind.CONSUMER)
             .setParent(extract(record.value.headers(), GETTER))
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "kafka")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, record.topic())
