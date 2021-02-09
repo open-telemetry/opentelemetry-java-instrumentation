@@ -70,7 +70,7 @@ span.setAttribute(..., ...);
 
 # Creating spans around methods with `@WithSpan`
 
-Another common situation is to capture a span around an existing first-party code method. The
+Another common situation is to capture a span corresponding to one of your methods. The
 `@WithSpan` annotation makes this straightforward:
 
 ```java
