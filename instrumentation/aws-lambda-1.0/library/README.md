@@ -92,7 +92,7 @@ Context propagation for this instrumentation can be done either with X-Ray propa
 
 ### X-Ray propagation
 This instrumentation supports propagating traces using the `X-Amzn-Trace-Id` format for both normal
-requests and SQS requests. X-Ray propagation is always enabled, there is no need to configure it explicitely. 
+requests and SQS requests. X-Ray propagation is always enabled, there is no need to configure it explicitely.
 
 ### HTTP headers based propagation
 For API Gateway (HTTP) requests instrumented by using one of following methods:
