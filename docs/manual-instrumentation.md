@@ -95,7 +95,7 @@ and you want to suppress some of them without modifying the code.
 
 | System property                 | Environment variable            | Purpose                                                                                                                                  |
 |---------------------------------|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| trace.annotated.methods.exclude | TRACE_ANNOTATED_METHODS_EXCLUDE | Suppress `@WithSpan` instrumentation for specific methods.
+| otel.instrumentation.opentelemetry-annotations.exclude-methods | OTEL_INSTRUMENTATION_OPENTELEMETRY_ANNOTATIONS_EXCLUDE_METHODS | Suppress `@WithSpan` instrumentation for specific methods.
 Format is "my.package.MyClass1[method1,method2];my.package.MyClass2[method3]" |
 
 ## Creating spans around methods with otel.instrumentation.methods.include
