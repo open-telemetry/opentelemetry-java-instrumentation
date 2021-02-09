@@ -40,7 +40,7 @@ public class ApacheCamelInstrumentationModule extends InstrumentationModule {
 
   @Override
   public String[] additionalHelperClassNames() {
-    return new String[] {"io.opentelemetry.extension.trace.propagation.AwsXrayPropagator"};
+    return new String[] {"io.opentelemetry.extension.aws.AwsXrayPropagator"};
   }
 
   public static class CamelContextInstrumentation implements TypeInstrumentation {
