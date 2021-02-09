@@ -68,14 +68,14 @@ class TraceUtils {
         errorEvent(exception.class, exception.message)
       }
 
-      if(additionAttributesAssert != null){
+      if (additionAttributesAssert != null) {
         attributes(additionAttributesAssert)
       }
     }
   }
 
   static <T> T runUnderTraceWithoutExceptionCatch(final String rootOperationName, final Callable<T> r) {
-    final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(Span.Kind.INTERNAL).startSpan()
+    final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(SpanKind.INTERNAL).startSpan()
 
     try {
       return span.makeCurrent().withCloseable {
