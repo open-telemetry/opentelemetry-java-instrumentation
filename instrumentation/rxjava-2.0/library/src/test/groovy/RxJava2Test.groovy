@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.instrumentation.rxjava2.AbstractRxJava2Test
 import io.opentelemetry.instrumentation.rxjava2.TracingAssembly
 import io.reactivex.Flowable
@@ -10,7 +11,6 @@ import io.reactivex.Maybe
 import io.reactivex.schedulers.Schedulers
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
-import spock.lang.Ignore
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -180,7 +180,6 @@ class RxJava2Test extends AbstractRxJava2Test {
     }
   }
 
-  @Ignore
   def "Publisher chain spans have the correct parents from subscription time"() {
     when:
     def maybe = Maybe.just(42)

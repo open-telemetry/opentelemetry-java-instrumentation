@@ -29,21 +29,19 @@ public class TracingCompletableObserver implements CompletableObserver, Disposab
       return;
     }
     disposable = d;
-    try (Scope scope = parentSpan.makeCurrent()) {
-      actual.onSubscribe(this);
-    }
+    actual.onSubscribe(this);
   }
 
   @Override
   public void onComplete() {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       actual.onComplete();
     }
   }
 
   @Override
   public void onError(final @NonNull Throwable e) {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       actual.onError(e);
     }
   }

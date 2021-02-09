@@ -21,5 +21,7 @@ public class TracingCompletable extends Completable {
   }
 
   @Override
-  protected void subscribeActual(CompletableObserver s) {}
+  protected void subscribeActual(CompletableObserver s) {
+    source.subscribe(new TracingCompletableObserver(s, parentSpan));
+  }
 }

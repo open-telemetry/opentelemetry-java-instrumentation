@@ -26,15 +26,13 @@ public class TracingConnectableObservable<T> extends ConnectableObservable<T> {
 
   @Override
   public void connect(final @NonNull Consumer<? super Disposable> connection) {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       source.connect(connection);
     }
   }
 
   @Override
   protected void subscribeActual(final Observer<? super T> observer) {
-    try (Scope scope = parentSpan.makeCurrent()) {
-      source.subscribe(new TracingObserver<>(observer, parentSpan));
-    }
+    source.subscribe(new TracingObserver<>(observer, parentSpan));
   }
 }

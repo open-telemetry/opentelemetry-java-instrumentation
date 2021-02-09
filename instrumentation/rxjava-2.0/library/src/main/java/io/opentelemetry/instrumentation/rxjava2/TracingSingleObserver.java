@@ -29,7 +29,6 @@ public class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
       return;
     }
     this.disposable = disposable;
-    // TODO: context here? dd has no context
     actual.onSubscribe(this);
   }
 

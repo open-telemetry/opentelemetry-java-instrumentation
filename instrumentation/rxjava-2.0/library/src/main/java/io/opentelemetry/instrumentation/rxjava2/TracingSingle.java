@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.rxjava2;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.SingleSource;
@@ -24,8 +23,6 @@ public class TracingSingle<T> extends Single<T> {
 
   @Override
   protected void subscribeActual(@NonNull SingleObserver<? super T> singleObserver) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
-      source.subscribe(new TracingSingleObserver<>(singleObserver, parentSpan));
-    }
+    source.subscribe(new TracingSingleObserver<>(singleObserver, parentSpan));
   }
 }

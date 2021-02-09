@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.rxjava2;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
@@ -23,8 +22,6 @@ public class TracingObservable<T> extends Observable<T> {
 
   @Override
   protected void subscribeActual(Observer<? super T> observer) {
-    try (Scope scope = parentSpan.makeCurrent()) {
-      source.subscribe(new TracingObserver<>(observer, parentSpan));
-    }
+    source.subscribe(new TracingObserver<>(observer, parentSpan));
   }
 }

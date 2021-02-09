@@ -29,28 +29,26 @@ public class TracingMaybeObserver<T> implements MaybeObserver<T>, Disposable {
       return;
     }
     disposable = d;
-    try (Scope scope = parentSpan.makeCurrent()) {
-      actual.onSubscribe(this);
-    }
+    actual.onSubscribe(this);
   }
 
   @Override
   public void onSuccess(final @NonNull T t) {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       actual.onSuccess(t);
     }
   }
 
   @Override
   public void onError(final @NonNull Throwable e) {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       actual.onError(e);
     }
   }
 
   @Override
   public void onComplete() {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       actual.onComplete();
     }
   }

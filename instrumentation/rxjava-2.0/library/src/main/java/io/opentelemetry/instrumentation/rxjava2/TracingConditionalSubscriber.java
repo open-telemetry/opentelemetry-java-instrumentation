@@ -23,28 +23,28 @@ public class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSub
 
   @Override
   public boolean tryOnNext(T t) {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       return actual.tryOnNext(t);
     }
   }
 
   @Override
   public void onNext(T t) {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       actual.onNext(t);
     }
   }
 
   @Override
   public void onError(Throwable t) {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       actual.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       actual.onComplete();
     }
   }

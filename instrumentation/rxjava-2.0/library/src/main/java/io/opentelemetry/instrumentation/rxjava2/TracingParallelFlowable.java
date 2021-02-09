@@ -22,13 +22,13 @@ public class TracingParallelFlowable<T> extends ParallelFlowable<T> {
     this.parentSpan = parentSpan;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public void subscribe(final @NonNull Subscriber<? super T>[] subscribers) {
     if (!validate(subscribers)) {
       return;
     }
     final int n = subscribers.length;
-    @SuppressWarnings("unchecked")
     final Subscriber<? super T>[] parents = new Subscriber[n];
     for (int i = 0; i < n; i++) {
       final Subscriber<? super T> z = subscribers[i];
@@ -39,7 +39,7 @@ public class TracingParallelFlowable<T> extends ParallelFlowable<T> {
         parents[i] = new TracingSubscriber<>(z, parentSpan);
       }
     }
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       source.subscribe(parents);
     }
   }

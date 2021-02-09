@@ -26,20 +26,19 @@ public class TracingConnectableFlowable<T> extends ConnectableFlowable<T> {
 
   @Override
   public void connect(final @NonNull Consumer<? super Disposable> connection) {
-    try (Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = parentSpan.makeCurrent()) {
       source.connect(connection);
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   protected void subscribeActual(final Subscriber<? super T> s) {
-    try (Scope scope = parentSpan.makeCurrent()) {
-      if (s instanceof ConditionalSubscriber) {
-        source.subscribe(
-            new TracingConditionalSubscriber<>((ConditionalSubscriber<? super T>) s, parentSpan));
-      } else {
-        source.subscribe(new TracingSubscriber<>(s, parentSpan));
-      }
+    if (s instanceof ConditionalSubscriber) {
+      source.subscribe(
+          new TracingConditionalSubscriber<>((ConditionalSubscriber<? super T>) s, parentSpan));
+    } else {
+      source.subscribe(new TracingSubscriber<>(s, parentSpan));
     }
   }
 }
