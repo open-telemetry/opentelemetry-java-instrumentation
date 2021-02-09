@@ -13,9 +13,6 @@ or [contributing](../CONTRIBUTING.md).
   * [Application Servers](#application-servers)
   * [Disabled instrumentations](#disabled-instrumentations)
     + [Grizzly instrumentation](#grizzly-instrumentation)
-  * [Suppressing specific auto-instrumentation](#suppressing-specific-auto-instrumentation)
-  * [Logger MDC (Mapped Diagnostic Context) auto-instrumentation](#logger-mdc--mapped-diagnostic-context--auto-instrumentation)
-
 
 ## Libraries / Frameworks
 
@@ -128,11 +125,3 @@ support. As these two instrumentations conflict with each other, more generic
 instrumentation for Grizzly HTTP server is disabled by default. If needed,
 you can enable it by adding the following system property:
 `-Dotel.instrumentation.grizzly.enabled=true`
-
-## Suppressing specific auto-instrumentation
-
-See [suppressing specific auto-instrumentation](suppressing-instrumentation.md)
-
-## Logger MDC (Mapped Diagnostic Context) auto-instrumentation
-
-See [Logger MDC auto-instrumentation](logger-mdc-instrumentation.md)

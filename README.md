@@ -37,8 +37,9 @@
 * [About](#about)
 * [Getting Started](#getting-started)
 * [Configuring the Agent](#configuring-the-agent)
-* [Manually instrumenting](#manually-instrumenting)
 * [Supported libraries, frameworks, and application servers](#supported-libraries--frameworks--and-application-servers)
+* [Manually instrumenting](#manually-instrumenting)
+* [Logger MDC auto-instrumentation](#logger-mdc--mapped-diagnostic-context--auto-instrumentation)
 * [Troubleshooting](#troubleshooting)
 * [Roadmap to 1.0 (GA)](#roadmap-to-10--ga-)
 * [Contributing](#contributing)
@@ -100,14 +101,6 @@ data is sent), trace context propagation headers, and much more.
 back here when trying out a new version! Please [report any bugs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues) or unexpected
 behavior you find.*
 
-## Manually instrumenting
-
-For most users, the out-of-the-box instrumentation is completely sufficient and nothing more has to
-be done.  Sometimes, however, users wish to add attributes to the otherwise automatic spans,
-or they might want to manually create spans for their own custom code.
-
-[See here for detailed instructions](docs/manual-instrumentation.md).
-
 ## Supported libraries, frameworks, and application servers
 
 We support an impressively huge number of [libraries and frameworks](docs/supported-libraries.md#libraries---frameworks) and
@@ -116,6 +109,20 @@ a majority of the most popular [application servers](docs/supported-libraries.md
 [disabled instrumentation](docs/supported-libraries.md#disabled-instrumentations)
 and how to [suppress unwanted instrumentation](docs/suppressing-instrumentation.md).
 
+## Manually instrumenting
+
+For most users, the out-of-the-box instrumentation is completely sufficient and nothing more has to
+be done.  Sometimes, however, users wish to add attributes to the otherwise automatic spans,
+or they might want to manually create spans for their own custom code.
+
+[See here for detailed instructions](docs/manual-instrumentation.md).
+
+
+## Logger MDC (Mapped Diagnostic Context) auto-instrumentation
+
+It is possible to inject trace information like trace id and span id into your custom application logs.
+
+See [Logger MDC auto-instrumentation](logger-mdc-instrumentation.md)
 
 ## Troubleshooting
 
