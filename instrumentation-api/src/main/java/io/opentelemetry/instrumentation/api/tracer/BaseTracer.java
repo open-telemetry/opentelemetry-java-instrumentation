@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -61,18 +62,29 @@ public abstract class BaseTracer {
     return propagators;
   }
 
-  public Span startSpan(Class<?> clazz) {
-    String spanName = spanNameForClass(clazz);
+  public Context startSpan(Class<?> clazz) {
+    return startSpan(spanNameForClass(clazz));
+  }
+
+  public Context startSpan(Method method) {
+    return startSpan(spanNameForMethod(method));
+  }
+
+  public Context startSpan(String spanName) {
     return startSpan(spanName, SpanKind.INTERNAL);
   }
 
-  public Span startSpan(Method method) {
-    String spanName = spanNameForMethod(method);
-    return startSpan(spanName, SpanKind.INTERNAL);
+  public Context startSpan(String spanName, SpanKind kind) {
+    return startSpan(Context.current(), spanName, kind);
   }
 
-  public Span startSpan(String spanName, SpanKind kind) {
-    return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
+  public Context startSpan(Context parentContext, String spanName, SpanKind kind) {
+    Span span = spanBuilder(spanName, kind).setParent(parentContext).startSpan();
+    return parentContext.with(span);
+  }
+
+  protected SpanBuilder spanBuilder(String spanName, SpanKind kind) {
+    return tracer.spanBuilder(spanName).setSpanKind(kind);
   }
 
   protected final Context withClientSpan(Context parentContext, Span span) {
@@ -157,10 +169,22 @@ public abstract class BaseTracer {
     end(Span.fromContext(context), endTimeNanos);
   }
 
+  /**
+   * End span.
+   *
+   * @deprecated Use {@link #end(Context)} instead.
+   */
+  @Deprecated
   public void end(Span span) {
     end(span, -1);
   }
 
+  /**
+   * End span.
+   *
+   * @deprecated Use {@link #end(Context, long)} instead.
+   */
+  @Deprecated
   public void end(Span span, long endTimeNanos) {
     if (endTimeNanos > 0) {
       span.end(endTimeNanos, TimeUnit.NANOSECONDS);
@@ -177,10 +201,22 @@ public abstract class BaseTracer {
     endExceptionally(Span.fromContext(context), throwable, endTimeNanos);
   }
 
+  /**
+   * End span.
+   *
+   * @deprecated Use {@link #endExceptionally(Context, Throwable)} instead.
+   */
+  @Deprecated
   public void endExceptionally(Span span, Throwable throwable) {
     endExceptionally(span, throwable, -1);
   }
 
+  /**
+   * End span.
+   *
+   * @deprecated Use {@link #endExceptionally(Context, Throwable, long)} instead.
+   */
+  @Deprecated
   public void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
     span.setStatus(StatusCode.ERROR);
     onError(span, unwrapThrowable(throwable));

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.play.v2_3;
 
 import static io.opentelemetry.javaagent.instrumentation.play.v2_3.PlayTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.api.mvc.Result;
@@ -17,19 +17,19 @@ public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try
 
   private static final Logger log = LoggerFactory.getLogger(RequestCompleteCallback.class);
 
-  private final Span span;
+  private final Context context;
 
-  public RequestCompleteCallback(Span span) {
-    this.span = span;
+  public RequestCompleteCallback(Context context) {
+    this.context = context;
   }
 
   @Override
   public Object apply(Try<Result> result) {
     try {
       if (result.isFailure()) {
-        tracer().endExceptionally(span, result.failed().get());
+        tracer().endExceptionally(context, result.failed().get());
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     } catch (Throwable t) {
       log.debug("error in play instrumentation", t);

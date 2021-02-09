@@ -59,7 +59,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
 
     String name =
         sd.getOperationName(ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
-    Span span = CamelTracer.TRACER.startSpan(name, sd.getInitiatorSpanKind());
+    Span span = Span.fromContext(CamelTracer.TRACER.startSpan(name, sd.getInitiatorSpanKind()));
     sd.pre(span, ese.getExchange(), ese.getEndpoint(), CamelDirection.OUTBOUND);
     ActiveSpanManager.activate(ese.getExchange(), span, sd.getInitiatorSpanKind());
     CamelPropagationUtil.injectParent(Context.current(), ese.getExchange().getIn().getHeaders());
