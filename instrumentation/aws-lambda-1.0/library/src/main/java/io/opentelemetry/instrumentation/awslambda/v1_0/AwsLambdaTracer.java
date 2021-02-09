@@ -5,17 +5,17 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CLOUD_ACCOUNT_ID;
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CLOUD_ACCOUNT_ID;
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.FAAS_ID;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_EXECUTION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_ID;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_TRIGGER;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FaasTriggerValues;
@@ -111,12 +111,13 @@ public class AwsLambdaTracer extends BaseTracer {
     return name == null ? context.getFunctionName() : name;
   }
 
-  public io.opentelemetry.context.Context startSpan(Context awsContext, Kind kind, Object input) {
+  public io.opentelemetry.context.Context startSpan(
+      Context awsContext, SpanKind kind, Object input) {
     return startSpan(awsContext, kind, input, Collections.emptyMap());
   }
 
   public io.opentelemetry.context.Context startSpan(
-      Context awsContext, Kind kind, Object input, Map<String, String> headers) {
+      Context awsContext, SpanKind kind, Object input, Map<String, String> headers) {
     io.opentelemetry.context.Context parentContext = ParentContextExtractor.extract(headers);
 
     SpanBuilder spanBuilder = tracer.spanBuilder(spanName(awsContext, input));

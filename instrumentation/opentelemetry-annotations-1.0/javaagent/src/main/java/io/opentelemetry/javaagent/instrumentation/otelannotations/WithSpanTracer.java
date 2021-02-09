@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
-import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.extension.annotations.WithSpan;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
@@ -25,7 +24,7 @@ public class WithSpanTracer extends BaseTracer {
 
   // we can't conditionally start a span in startSpan() below, because the caller won't know
   // whether to call end() or not on the Span in the returned Context
-  public boolean shouldStartSpan(Context context, io.opentelemetry.api.trace.Span.Kind kind) {
+  public boolean shouldStartSpan(Context context, io.opentelemetry.api.trace.SpanKind kind) {
     // don't create a nested span if you're not supposed to.
     return shouldStartSpan(kind, context);
   }
@@ -34,13 +33,13 @@ public class WithSpanTracer extends BaseTracer {
       Context context,
       WithSpan applicationAnnotation,
       Method method,
-      io.opentelemetry.api.trace.Span.Kind kind) {
+      io.opentelemetry.api.trace.SpanKind kind) {
     io.opentelemetry.api.trace.Span span =
         startSpan(spanNameForMethodWithAnnotation(applicationAnnotation, method), kind);
-    if (kind == io.opentelemetry.api.trace.Span.Kind.SERVER) {
+    if (kind == io.opentelemetry.api.trace.SpanKind.SERVER) {
       return withServerSpan(context, span);
     }
-    if (kind == io.opentelemetry.api.trace.Span.Kind.CLIENT) {
+    if (kind == io.opentelemetry.api.trace.SpanKind.CLIENT) {
       return withClientSpan(context, span);
     }
     return context.with(span);
@@ -59,18 +58,21 @@ public class WithSpanTracer extends BaseTracer {
     return spanNameForMethod(method);
   }
 
-  public Kind extractSpanKind(WithSpan applicationAnnotation) {
-    Span.Kind applicationKind =
-        applicationAnnotation != null ? applicationAnnotation.kind() : Span.Kind.INTERNAL;
+  public SpanKind extractSpanKind(WithSpan applicationAnnotation) {
+    application.io.opentelemetry.api.trace.SpanKind applicationKind =
+        applicationAnnotation != null
+            ? applicationAnnotation.kind()
+            : application.io.opentelemetry.api.trace.SpanKind.INTERNAL;
     return toAgentOrNull(applicationKind);
   }
 
-  public static Kind toAgentOrNull(Span.Kind applicationSpanKind) {
+  public static SpanKind toAgentOrNull(
+      application.io.opentelemetry.api.trace.SpanKind applicationSpanKind) {
     try {
-      return Kind.valueOf(applicationSpanKind.name());
+      return SpanKind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {
       log.debug("unexpected span kind: {}", applicationSpanKind.name());
-      return Kind.INTERNAL;
+      return SpanKind.INTERNAL;
     }
   }
 

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import static com.google.common.collect.ImmutableMap.of
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes

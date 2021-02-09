@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
-import static io.opentelemetry.api.trace.Span.Kind.CONSUMER;
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.TextMapExtractAdapter.GETTER;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
@@ -18,6 +18,7 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -33,7 +34,7 @@ public class RabbitTracer extends BaseTracer {
   }
 
   public Span startSpan(String method, Connection connection) {
-    Span.Kind kind = method.equals("Channel.basicPublish") ? PRODUCER : CLIENT;
+    SpanKind kind = method.equals("Channel.basicPublish") ? PRODUCER : CLIENT;
     Span span = startSpan(method, kind);
     span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq");
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue");

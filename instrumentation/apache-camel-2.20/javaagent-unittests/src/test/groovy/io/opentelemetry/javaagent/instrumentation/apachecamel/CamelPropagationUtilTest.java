@@ -36,8 +36,7 @@ public class CamelPropagationUtilTest {
     // then
     Span parentSpan = Span.fromContext(parent);
     SpanContext parentSpanContext = parentSpan.getSpanContext();
-    assertThat(parentSpanContext.getTraceIdAsHexString())
-        .isEqualTo("5759e988bd862e3fe1be46a994272793");
-    assertThat(parentSpanContext.getSpanIdAsHexString()).isEqualTo("53995c3f42cd8ad8");
+    assertThat(parentSpanContext.getTraceId()).isEqualTo("5759e988bd862e3fe1be46a994272793");
+    assertThat(parentSpanContext.getSpanId()).isEqualTo("53995c3f42cd8ad8");
   }
 }

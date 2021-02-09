@@ -8,8 +8,8 @@ configurations.all {
 
 ext {
   versions = [
-    opentelemetry     : '0.15.0',
-    opentelemetryAlpha: "0.15.0-alpha",
+    opentelemetry     : '0.16.0',
+    opentelemetryAlpha: "0.16.0-alpha",
 
     slf4j             : "1.7.30",
     guava             : "30.1-jre",
@@ -37,6 +37,7 @@ ext {
     opentelemetryApi             : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api', version: versions.opentelemetry),
     opentelemetryApiMetrics      : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-api-metrics', version: versions.opentelemetryAlpha),
     opentelemetryExtAnnotations  : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-annotations', version: versions.opentelemetry),
+    opentelemetryExtAws          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-aws', version: versions.opentelemetry),
     opentelemetryContext         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-context', version: versions.opentelemetry),
     opentelemetryKotlin          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-extension-kotlin', version: versions.opentelemetry),
     opentelemetryLogging         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-logging', version: versions.opentelemetry),

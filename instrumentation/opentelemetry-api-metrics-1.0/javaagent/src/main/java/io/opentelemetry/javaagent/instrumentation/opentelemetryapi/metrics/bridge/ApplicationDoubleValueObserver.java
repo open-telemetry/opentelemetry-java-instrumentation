@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.DoubleValueObserver;
 import application.io.opentelemetry.api.metrics.DoubleValueObserverBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 import java.util.function.Consumer;
 
 class ApplicationDoubleValueObserver implements DoubleValueObserver {

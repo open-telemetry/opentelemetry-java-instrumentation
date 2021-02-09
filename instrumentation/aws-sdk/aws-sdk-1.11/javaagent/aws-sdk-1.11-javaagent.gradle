@@ -45,10 +45,9 @@ configurations {
 }
 
 dependencies {
-  compileOnly deps.opentelemetryTraceProps
+  compileOnly deps.opentelemetryExtAws
 
   library group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
-  implementation deps.opentelemetryTraceProps
 
   compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
 

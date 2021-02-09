@@ -16,7 +16,7 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -35,7 +35,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   public void beforeRequest(Request<?> request) {
 
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
-    Span.Kind kind = (isSqsProducer(originalRequest) ? Span.Kind.PRODUCER : Span.Kind.CLIENT);
+    SpanKind kind = (isSqsProducer(originalRequest) ? SpanKind.PRODUCER : SpanKind.CLIENT);
 
     RequestMeta requestMeta = contextStore.get(originalRequest);
     Context parentContext = Context.current();
@@ -94,7 +94,7 @@ public class TracingRequestHandler extends RequestHandler2 {
     Context parentContext = SqsParentContext.ofSystemAttributes(message.getAttributes());
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     RequestMeta requestMeta = contextStore.get(originalRequest);
-    Context context = tracer().startSpan(Span.Kind.CONSUMER, parentContext, request, requestMeta);
+    Context context = tracer().startSpan(SpanKind.CONSUMER, parentContext, request, requestMeta);
     tracer().end(context, response);
   }
 

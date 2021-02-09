@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.BoundLongValueRecorder;
 import application.io.opentelemetry.api.metrics.LongValueRecorder;
 import application.io.opentelemetry.api.metrics.LongValueRecorderBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 
 class ApplicationLongValueRecorder implements LongValueRecorder {
 

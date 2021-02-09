@@ -11,14 +11,14 @@ import okhttp3.Request
 class ZipkinExporterSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210129.520311771"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210209.550405798"
   }
 
   @Override
   protected Map<String, String> getExtraEnv() {
     return [
-      "OTEL_TRACE_EXPORTER"          : "zipkin",
-      "OTEL_EXPORTER_ZIPKIN_ENDPOINT": "http://collector:9411/api/v2/spans"
+      "OTEL_TRACES_EXPORTER"          : "zipkin",
+      "OTEL_EXPORTER_ZIPKIN_ENDPOINT" : "http://collector:9411/api/v2/spans"
     ]
   }
 

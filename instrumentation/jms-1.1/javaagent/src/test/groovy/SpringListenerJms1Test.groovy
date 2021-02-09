@@ -5,7 +5,7 @@
 
 import static Jms1Test.consumerSpan
 import static Jms1Test.producerSpan
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.jms.ConnectionFactory

@@ -7,7 +7,6 @@ package io.opentelemetry.smoketest
 
 import static java.util.stream.Collectors.toSet
 
-import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import java.util.jar.Attributes
 import java.util.jar.JarFile
@@ -17,7 +16,7 @@ import spock.lang.Unroll
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210129.520311771"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210209.550405798"
   }
 
   @Unroll
@@ -53,7 +52,7 @@ class SpringBootSmokeTest extends SmokeTest {
     then: "correct traceIds are logged via MDC instrumentation"
     def loggedTraceIds = getLoggedTraceIds(output)
     def spanTraceIds = getSpanStream(traces)
-      .map({ TraceId.bytesToHex(it.getTraceId().toByteArray()) })
+      .map({ bytesToHex(it.getTraceId().toByteArray()) })
       .collect(toSet())
     loggedTraceIds == spanTraceIds
 

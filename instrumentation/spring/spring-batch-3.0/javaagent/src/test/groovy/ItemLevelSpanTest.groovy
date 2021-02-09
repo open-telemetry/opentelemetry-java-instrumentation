@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static java.util.Collections.emptyMap
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification

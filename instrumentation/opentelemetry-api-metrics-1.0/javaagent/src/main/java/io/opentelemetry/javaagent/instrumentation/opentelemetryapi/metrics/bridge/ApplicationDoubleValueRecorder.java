@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.BoundDoubleValueRecorder;
 import application.io.opentelemetry.api.metrics.DoubleValueRecorder;
 import application.io.opentelemetry.api.metrics.DoubleValueRecorderBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 
 class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
 

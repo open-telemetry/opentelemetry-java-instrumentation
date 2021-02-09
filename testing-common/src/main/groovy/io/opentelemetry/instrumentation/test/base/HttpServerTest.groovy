@@ -16,10 +16,11 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.Callable
 import okhttp3.HttpUrl
 import okhttp3.Request
@@ -413,7 +414,7 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       name expectedServerSpanName(endpoint)
-      kind Span.Kind.SERVER // can't use static import because of SERVER type parameter
+      kind SpanKind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
