@@ -87,8 +87,6 @@ java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -jar myapp.jar
 ```
 
-Learn how to add custom instrumentation in the [Manually Instrumenting](#manually-instrumenting)
-section.
 
 ## Configuring the Agent
 
