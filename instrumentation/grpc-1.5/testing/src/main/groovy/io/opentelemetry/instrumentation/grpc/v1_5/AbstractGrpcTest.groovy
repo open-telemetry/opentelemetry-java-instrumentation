@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 

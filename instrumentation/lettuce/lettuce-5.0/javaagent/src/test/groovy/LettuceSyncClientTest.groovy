@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient

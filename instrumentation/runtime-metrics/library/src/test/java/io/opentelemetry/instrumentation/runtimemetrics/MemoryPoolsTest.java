@@ -9,8 +9,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import io.opentelemetry.api.common.Labels;
 import io.opentelemetry.api.metrics.AsynchronousInstrument;
+import io.opentelemetry.api.metrics.common.Labels;
 import java.lang.management.MemoryUsage;
 import org.junit.jupiter.api.Test;
 

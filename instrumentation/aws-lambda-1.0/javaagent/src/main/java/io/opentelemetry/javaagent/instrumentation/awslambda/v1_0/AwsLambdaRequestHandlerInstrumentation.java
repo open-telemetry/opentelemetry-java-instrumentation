@@ -16,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -60,7 +60,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
         @Advice.Local("otelFunctionScope") Scope functionScope,
         @Advice.Local("otelMessageContext") io.opentelemetry.context.Context messageContext,
         @Advice.Local("otelMessageScope") Scope messageScope) {
-      functionContext = functionTracer().startSpan(context, Kind.SERVER, arg);
+      functionContext = functionTracer().startSpan(context, SpanKind.SERVER, arg);
       functionScope = functionContext.makeCurrent();
       if (arg instanceof SQSEvent) {
         messageContext = messageTracer().startSpan((SQSEvent) arg);

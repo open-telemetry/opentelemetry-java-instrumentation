@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait

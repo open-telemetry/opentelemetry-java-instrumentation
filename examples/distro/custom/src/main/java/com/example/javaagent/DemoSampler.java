@@ -19,8 +19,8 @@ import java.util.List;
 public class DemoSampler implements Sampler {
   @Override
   public SamplingResult shouldSample(Context parentContext, String traceId, String name,
-      Span.Kind spanKind, Attributes attributes, List<LinkData> parentLinks) {
-    if (spanKind == Span.Kind.INTERNAL && name.contains("greeting")) {
+      SpanKind spanKind, Attributes attributes, List<LinkData> parentLinks) {
+    if (spanKind == SpanKind.INTERNAL && name.contains("greeting")) {
       return SamplingResult.create(SamplingResult.Decision.DROP);
     } else {
       return SamplingResult.create(SamplingResult.Decision.RECORD_AND_SAMPLE);

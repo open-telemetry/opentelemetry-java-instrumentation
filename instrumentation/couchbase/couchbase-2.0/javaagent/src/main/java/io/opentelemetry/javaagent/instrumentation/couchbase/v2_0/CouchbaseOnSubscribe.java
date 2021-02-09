@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;

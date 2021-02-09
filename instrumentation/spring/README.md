@@ -428,7 +428,7 @@ public class ControllerFilter implements Filter {
   }
 
   private Span createSpanWithParent(HttpServletRequest request, Context context) {
-    return tracer.spanBuilder(request.getRequestURI()).setSpanKind(Span.Kind.SERVER).startSpan();
+    return tracer.spanBuilder(request.getRequestURI()).setSpanKind(SpanKind.SERVER).startSpan();
   }
 }
 
@@ -537,7 +537,7 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
          ClientHttpRequestExecution execution) throws IOException {
 
       String spanName = request.getMethodValue() +  " " + request.getURI().toString();
-      Span currentSpan = tracer.spanBuilder(spanName).setSpanKind(Span.Kind.CLIENT).startSpan();
+      Span currentSpan = tracer.spanBuilder(spanName).setSpanKind(SpanKind.CLIENT).startSpan();
 
       try (Scope scope = tracer.withSpan(currentSpan)) {
          OpenTelemetry.getPropagators().getTextMapPropagator().inject(Context.current(), request, setter);
@@ -743,7 +743,7 @@ public class TimeServiceApplication {
         }
      }
      
-     @WithSpan(kind=Span.Kind.SERVER)
+     @WithSpan(kind=SpanKind.SERVER)
      public void withSpanMethod() {}
   }
 }

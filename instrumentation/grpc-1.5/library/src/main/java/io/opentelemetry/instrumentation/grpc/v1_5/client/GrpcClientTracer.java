@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5.client;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.grpc.Status;
 import io.opentelemetry.api.trace.Span;

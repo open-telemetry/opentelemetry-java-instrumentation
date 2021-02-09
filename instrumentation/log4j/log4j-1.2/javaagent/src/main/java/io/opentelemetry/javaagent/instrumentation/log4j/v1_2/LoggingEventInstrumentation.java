@@ -73,10 +73,10 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         SpanContext spanContext = span.getSpanContext();
         switch (key) {
           case TRACE_ID:
-            value = spanContext.getTraceIdAsHexString();
+            value = spanContext.getTraceId();
             break;
           case SPAN_ID:
-            value = spanContext.getSpanIdAsHexString();
+            value = spanContext.getSpanId();
             break;
           case SAMPLED:
             value = Boolean.toString(spanContext.isSampled());
@@ -112,8 +112,8 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
           Span span = InstrumentationContext.get(LoggingEvent.class, Span.class).get(event);
           if (span != null && span.getSpanContext().isValid()) {
             SpanContext spanContext = span.getSpanContext();
-            mdc.put(TRACE_ID, spanContext.getTraceIdAsHexString());
-            mdc.put(SPAN_ID, spanContext.getSpanIdAsHexString());
+            mdc.put(TRACE_ID, spanContext.getTraceId());
+            mdc.put(SPAN_ID, spanContext.getSpanId());
             mdc.put(SAMPLED, Boolean.toString(spanContext.isSampled()));
           }
         }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import com.linecorp.armeria.client.WebClient
 import com.linecorp.armeria.client.WebClientBuilder

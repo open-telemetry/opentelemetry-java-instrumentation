@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
-import io.opentelemetry.api.common.Labels;
 import io.opentelemetry.api.metrics.GlobalMetricsProvider;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.common.Labels;
 import oshi.SystemInfo;
 import oshi.hardware.GlobalMemory;
 import oshi.hardware.HWDiskStore;

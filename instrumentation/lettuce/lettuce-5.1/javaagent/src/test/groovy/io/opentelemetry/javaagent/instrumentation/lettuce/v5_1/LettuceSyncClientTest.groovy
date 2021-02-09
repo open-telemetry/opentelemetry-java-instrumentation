@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static java.nio.charset.StandardCharsets.UTF_8
 
 import io.lettuce.core.ClientOptions

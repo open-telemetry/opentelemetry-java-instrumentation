@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlayTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import net.bytebuddy.asm.Advice;
@@ -24,7 +24,7 @@ public class PlayAdvice {
       @Advice.Argument(0) Request<?> req,
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
-    span = tracer().startSpan("play.request", Kind.INTERNAL);
+    span = tracer().startSpan("play.request", SpanKind.INTERNAL);
     scope = span.makeCurrent();
   }
 

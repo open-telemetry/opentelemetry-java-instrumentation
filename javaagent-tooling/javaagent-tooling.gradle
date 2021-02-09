@@ -34,6 +34,7 @@ dependencies {
     exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-common'
     exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core'
   }
+  implementation deps.opentelemetryExtAws
   implementation deps.opentelemetryTraceProps
   implementation(deps.opentelemetryResources) {
     // exclude sdk-common to avoid bumping guava version

@@ -8,13 +8,11 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A base class similar to {@link RequestHandler} but will automatically trace invocations of {@link
@@ -68,7 +66,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
   @Override
   public final O handleRequest(I input, Context context) {
     io.opentelemetry.context.Context otelContext =
-        tracer.startSpan(context, Kind.SERVER, input, getHeaders(input));
+        tracer.startSpan(context, SpanKind.SERVER, input, getHeaders(input));
     Throwable error = null;
     try (Scope ignored = otelContext.makeCurrent()) {
       O output = doHandleRequest(input, context);
@@ -83,9 +81,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
       } else {
         tracer.end(otelContext);
       }
-      OpenTelemetrySdk.getGlobalTracerManagement()
-          .forceFlush()
-          .join(flushTimeout, TimeUnit.SECONDS);
+      LambdaUtils.forceFlush();
     }
   }
 

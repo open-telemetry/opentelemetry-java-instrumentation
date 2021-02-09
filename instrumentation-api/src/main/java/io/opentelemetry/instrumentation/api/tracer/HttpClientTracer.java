@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -81,7 +81,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   public Context startSpan(
-      Kind kind, Context parentContext, REQUEST request, CARRIER carrier, long startTimeNanos) {
+      SpanKind kind, Context parentContext, REQUEST request, CARRIER carrier, long startTimeNanos) {
     Span span =
         internalStartSpan(
             kind, parentContext, request, spanNameForRequest(request), startTimeNanos);
@@ -92,7 +92,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   public Context startSpan(
       Context parentContext, REQUEST request, CARRIER carrier, long startTimeNanos) {
-    return startSpan(Kind.CLIENT, parentContext, request, carrier, startTimeNanos);
+    return startSpan(SpanKind.CLIENT, parentContext, request, carrier, startTimeNanos);
   }
 
   protected void inject(Context context, CARRIER carrier) {
@@ -138,7 +138,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   private Span internalStartSpan(
-      Kind kind, Context parentContext, REQUEST request, String name, long startTimeNanos) {
+      SpanKind kind, Context parentContext, REQUEST request, String name, long startTimeNanos) {
     SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext);
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);

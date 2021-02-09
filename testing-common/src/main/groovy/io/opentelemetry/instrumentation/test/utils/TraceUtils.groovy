@@ -9,6 +9,7 @@ import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
@@ -28,7 +29,7 @@ class TraceUtils {
 
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
     try {
-      final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(Span.Kind.INTERNAL).startSpan()
+      final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(SpanKind.INTERNAL).startSpan()
 
       try {
         def result = span.makeCurrent().withCloseable {

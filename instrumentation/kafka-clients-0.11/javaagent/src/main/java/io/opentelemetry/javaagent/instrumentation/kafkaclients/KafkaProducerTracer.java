@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER;
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;

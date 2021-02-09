@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.api.GlobalOpenTelemetry
@@ -329,6 +329,6 @@ class TracerTest extends AgentInstrumentationSpecification {
     def context = Context.current().with(span)
 
     then:
-    Span.fromContext(context).getSpanContext().getSpanIdAsHexString() == span.getSpanContext().getSpanIdAsHexString()
+    Span.fromContext(context).getSpanContext().getSpanId() == span.getSpanContext().getSpanId()
   }
 }

@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
-import io.opentelemetry.extension.trace.propagation.AwsXrayPropagator;
+import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import java.util.Collections;
 import java.util.Map;
 import org.apache.camel.Endpoint;

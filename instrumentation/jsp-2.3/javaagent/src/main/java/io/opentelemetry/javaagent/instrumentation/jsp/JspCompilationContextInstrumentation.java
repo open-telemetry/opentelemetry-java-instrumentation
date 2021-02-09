@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
@@ -43,7 +43,8 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
         @Advice.This JspCompilationContext jspCompilationContext,
         @Advice.Local("otelSpan") Span span,
         @Advice.Local("otelScope") Scope scope) {
-      span = tracer().startSpan(tracer().spanNameOnCompile(jspCompilationContext), Kind.INTERNAL);
+      span =
+          tracer().startSpan(tracer().spanNameOnCompile(jspCompilationContext), SpanKind.INTERNAL);
       scope = span.makeCurrent();
     }
 

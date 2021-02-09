@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.DataSourceTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonList;

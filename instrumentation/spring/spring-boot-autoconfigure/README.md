@@ -200,7 +200,7 @@ public class TracedClass {
         currentSpan.setAttribute("isTestAttribute", true);
     }
 
-    @WithSpan(kind=Span.Kind.CLIENT)
+    @WithSpan(kind=SpanKind.CLIENT)
     public void tracedClientSpan() {
     }
 }
@@ -346,7 +346,7 @@ The traces below were exported using Zipkin.
       }
       "tags":{
          "test.type":"@WithSpan annotation",
-         "test.case":"@WithSpan(kind=Span.Kind.Client)",
+         "test.case":"@WithSpan(kind=SpanKind.Client)",
       }
    },
 ]

@@ -18,7 +18,7 @@ ext {
 
 dependencies {
   library group: 'org.apache.camel', name: 'camel-core', version: "$camelversion"
-  implementation deps.opentelemetryTraceProps
+  implementation deps.opentelemetryExtAws
 
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
