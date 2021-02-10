@@ -40,7 +40,7 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
     try (Scope ignored = parentContext.makeCurrent()) {
       Span span = tracer.startSpan(operationName, spanKind);
       decorateSpan(span);
-      try (Scope ignored1 = tracer.startScope(span)) {
+      try (Scope ignored1 = span.makeCurrent()) {
         delegate.call(new TracedSubscriber<>(Context.current(), subscriber, tracer));
       }
     }

@@ -99,7 +99,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     Setter<CARRIER> setter = getSetter();
     if (setter == null) {
       throw new IllegalStateException(
-          "getSetter() not defined but calling startScope(), either getSetter must be implemented or the scope should be setup manually");
+          "getSetter() not defined but calling inject(), either getSetter must be implemented or the scope should be setup manually");
     }
     propagators.getTextMapPropagator().inject(context, carrier, setter);
   }

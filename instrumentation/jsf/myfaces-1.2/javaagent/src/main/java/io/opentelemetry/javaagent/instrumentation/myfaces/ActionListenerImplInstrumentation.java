@@ -42,7 +42,7 @@ public class ActionListenerImplInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       span = tracer().startSpan(event);
       if (span != null) {
-        scope = tracer().startScope(span);
+        scope = span.makeCurrent();
       }
     }
 

@@ -21,7 +21,7 @@ public class ActionInvocationAdvice {
       @Advice.Local("otelSpan") Span span,
       @Advice.Local("otelScope") Scope scope) {
     span = tracer().startSpan(actionInvocation);
-    scope = tracer().startScope(span);
+    scope = span.makeCurrent();
 
     tracer()
         .updateServerSpanName(Java8BytecodeBridge.currentContext(), actionInvocation.getProxy());
