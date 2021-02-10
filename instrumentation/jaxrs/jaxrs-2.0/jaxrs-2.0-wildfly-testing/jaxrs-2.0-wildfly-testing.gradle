@@ -52,6 +52,8 @@ test.dependsOn modifyLogbackJar, setupServer
 
 test {
   doFirst {
+    // --add-modules is unrecognized on jdk8, ignore it instead of failing
+    jvmArgs "-XX:+IgnoreUnrecognizedVMOptions"
     // needed for java 11
     jvmArgs "--add-modules=java.se"
     // add offset to default port values
