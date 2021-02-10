@@ -1,3 +1,9 @@
+import com.github.jk1.license.render.InventoryMarkdownReportRenderer
+
+plugins {
+  id "com.github.jk1.dependency-license-report" version "1.16"
+}
+
 group = 'io.opentelemetry.javaagent'
 
 apply from: "$rootDir/gradle/java.gradle"
@@ -76,3 +82,23 @@ test.finalizedBy(tasks.register('testHelperInjection', Test) {
     includeTestsMatching 'HelperInjectionTest'
   }
 })
+
+licenseReport {
+  outputDir = rootProject.file("licenses")
+  renderers = [new InventoryMarkdownReportRenderer()]
+
+  configurations = ["compileClasspath"]
+
+  excludeGroups = [
+    "io.opentelemetry.instrumentation",
+    "io.opentelemetry.javaagent"
+  ]
+}
+
+def cleanLicenses = tasks.register("cleanLicenses", Delete) {
+  delete(rootProject.file("licenses"))
+}
+
+tasks.named("generateLicenseReport").configure {
+  dependsOn(cleanLicenses)
+}

@@ -3,3 +3,4 @@
 *.bat text eol=crlf
 *.cmd text eol=crlf
 
+licenses/** linguist-generated
