@@ -13,7 +13,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
@@ -21,12 +20,8 @@ import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class BaseTracer {
-  private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
-
   // Keeps track of the server span for the current trace.
   // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
   // or other non-server root.
@@ -86,10 +81,6 @@ public abstract class BaseTracer {
 
   protected final Context withServerSpan(Context parentContext, Span span) {
     return parentContext.with(span).with(CONTEXT_SERVER_SPAN_KEY, span);
-  }
-
-  public Scope startScope(Span span) {
-    return Context.current().with(span).makeCurrent();
   }
 
   protected final boolean shouldStartSpan(SpanKind proposedKind, Context context) {
