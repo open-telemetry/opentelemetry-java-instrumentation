@@ -1,0 +1,67 @@
+ext.skipPublish = true
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+configurations {
+  testServer
+}
+
+dependencies {
+  api "javax:javaee-api:7.0"
+
+  def arquillianVersion = '1.4.0.Final'
+  testImplementation "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}"
+  testImplementation "org.jboss.arquillian.protocol:arquillian-protocol-servlet:${arquillianVersion}"
+  testImplementation "org.wildfly.arquillian:wildfly-arquillian-container-embedded:2.2.0.Final"
+  testImplementation 'org.jboss.arquillian.spock:arquillian-spock-container:1.0.0.CR1'
+  testImplementation "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain:3.1.3"
+  testImplementation "org.glassfish.jersey.core:jersey-client:2.8"
+
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
+
+  // wildfly version used to run tests
+  testServer "org.wildfly:wildfly-dist:18.0.0.Final@zip"
+}
+
+// extract wildfly dist, path is used from arquillian.xml
+task setupServer(type: Copy) {
+  from zipTree(configurations.testServer.singleFile)
+  into file('build/server/')
+}
+
+// logback-classic contains /META-INF/services/javax.servlet.ServletContainerInitializer
+// that breaks deploy on embedded wildfly
+// create a copy of logback-classic jar that does not have this file
+task modifyLogbackJar(type: Jar) {
+  doFirst {
+    configurations.configureEach {
+      if (it.name.toLowerCase().endsWith('testruntimeclasspath')) {
+        def logbackJar = it.find { it.name.contains('logback-classic') }
+        from zipTree(logbackJar)
+        exclude(
+          "/META-INF/services/javax.servlet.ServletContainerInitializer"
+        )
+        destinationDirectory = file("$buildDir/tmp")
+        archiveFileName = "logback-classic-modified.jar"
+      }
+    }
+  }
+}
+
+test.dependsOn modifyLogbackJar, setupServer
+
+test {
+  doFirst {
+    // needed for java 11
+    jvmArgs "--add-modules=java.se"
+    // add offset to default port values
+    jvmArgs "-Djboss.socket.binding.port-offset=100"
+
+    // remove logback-classic from classpath
+    classpath = classpath.filter {
+      return !it.absolutePath.contains("logback-classic")
+    }
+    // add modified copy of logback-classic to classpath
+    classpath += files("$buildDir/tmp/logback-classic-modified.jar")
+  }
+}

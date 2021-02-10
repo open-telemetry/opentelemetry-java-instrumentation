@@ -170,6 +170,15 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
+    // bytecode proxies typically have $$ in their name
+    if (name.contains("$$")) {
+      // scala anonymous classes
+      if (name.contains("$$anon$")) {
+        return false;
+      }
+      return true;
+    }
+
     if (name.contains("$JaxbAccessor")
         || name.contains("CGLIB$$")
         || name.contains("javassist")
