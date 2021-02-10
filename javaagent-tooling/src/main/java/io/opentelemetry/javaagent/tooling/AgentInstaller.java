@@ -320,7 +320,7 @@ public class AgentInstaller {
 
   static class TransformLoggingListener implements AgentBuilder.Listener {
 
-    private static final Logger log = LoggerFactory.getLogger(TransformLoggingListener.class);
+    private static final SafeLogger log = SafeLogger.getLogger(TransformLoggingListener.class);
 
     @Override
     public void onError(
@@ -344,7 +344,9 @@ public class AgentInstaller {
         ClassLoader classLoader,
         JavaModule module,
         boolean loaded,
-        DynamicType dynamicType) {}
+        DynamicType dynamicType) {
+      log.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
+    }
 
     @Override
     public void onIgnored(

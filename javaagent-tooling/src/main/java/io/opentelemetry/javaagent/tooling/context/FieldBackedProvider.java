@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
+import io.opentelemetry.javaagent.tooling.SafeLogger;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -48,8 +49,6 @@ import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.utility.JavaModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * InstrumentationContextProvider which stores context in a field that is injected into a class and
@@ -75,14 +74,7 @@ import org.slf4j.LoggerFactory;
  */
 public class FieldBackedProvider implements InstrumentationContextProvider {
 
-  // IMPORTANT: the logging in this class is performed at TRACE level instead of DEBUG level
-  //
-  // BECAUSE: logging in this class occurs frequently and under class file transform,
-  // which can lead gradle to deadlock sporadically when gradle triggers a class to load
-  // while it is holding a lock, and then (because gradle hijacks System.out),
-  // gradle is called from inside of the class file transform,
-  // and then gradle tries to grab a different lock (and then add multiple threads)
-  private static final Logger log = LoggerFactory.getLogger(FieldBackedProvider.class);
+  private static final SafeLogger log = SafeLogger.getLogger(FieldBackedProvider.class);
 
   /**
    * Note: the value here has to be inside on of the prefixes in
@@ -205,7 +197,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                         .equals(owner)
                     && CONTEXT_GET_METHOD.getName().equals(name)
                     && Type.getMethodDescriptor(CONTEXT_GET_METHOD).equals(descriptor)) {
-                  log.trace("Found context-store access in {}", instrumenterClass.getName());
+                  log.debug("Found context-store access in {}", instrumenterClass.getName());
                   /*
                   The idea here is that the rest if this method visitor collects last three instructions in `insnStack`
                   variable. Once we get here we check if those last three instructions constitute call that looks like
@@ -221,7 +213,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     TypeDescription contextStoreImplementationClass =
                         getContextStoreImplementation(keyClassName, contextClassName);
                     if (log.isDebugEnabled()) {
-                      log.trace(
+                      log.debug(
                           "Rewriting context-store map fetch for instrumenter {}: {} -> {}",
                           instrumenterClass.getName(),
                           keyClassName,
@@ -380,11 +372,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
          */
         synchronized (INSTALLED_CONTEXT_MATCHERS) {
           if (INSTALLED_CONTEXT_MATCHERS.contains(entry)) {
-            log.trace("Skipping builder for {} {}", instrumenterClass.getName(), entry);
+            log.debug("Skipping builder for {} {}", instrumenterClass.getName(), entry);
             continue;
           }
 
-          log.trace("Making builder for {} {}", instrumenterClass.getName(), entry);
+          log.debug("Making builder for {} {}", instrumenterClass.getName(), entry);
           INSTALLED_CONTEXT_MATCHERS.add(entry);
 
           /*
