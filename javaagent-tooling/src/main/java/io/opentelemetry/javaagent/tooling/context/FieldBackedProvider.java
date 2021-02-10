@@ -14,9 +14,9 @@ import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
-import io.opentelemetry.javaagent.tooling.SafeLogger;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.SafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
