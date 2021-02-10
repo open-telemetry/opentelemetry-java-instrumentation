@@ -144,12 +144,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 
 - [John Watson](https://github.com/jkwatson), Splunk
-- [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Splunk
 - [Pavol Loffay](https://github.com/pavolloffay), Traceable.ai
 
 Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
 
 - [Anuraag Agrawal](https://github.com/anuraaga), AWS
+- [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Splunk
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 - [Tyler Benson](https://github.com/tylerbenson), DataDog
