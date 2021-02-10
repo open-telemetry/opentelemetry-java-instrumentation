@@ -6,5 +6,5 @@ dependencies {
   testImplementation group: 'org.apache.camel', name: 'camel-aws', version: '2.20.1'
 
   testImplementation deps.opentelemetryExtAws
-  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
+  testImplementation deps.assertj
 }

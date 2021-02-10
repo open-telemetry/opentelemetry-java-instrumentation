@@ -8,5 +8,5 @@ dependencies {
 
   testImplementation deps.opentelemetrySdkMetrics
   testImplementation project(':testing-common')
-  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
+  testImplementation deps.assertj
 }

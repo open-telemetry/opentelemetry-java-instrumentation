@@ -7,6 +7,8 @@ apply from: "$rootDir/gradle/publish.gradle"
 dependencies {
   api deps.groovy
   api deps.spock
+  api deps.assertj
+  implementation deps.junitApi
 
   api deps.opentelemetryApi
   api deps.opentelemetrySdk
