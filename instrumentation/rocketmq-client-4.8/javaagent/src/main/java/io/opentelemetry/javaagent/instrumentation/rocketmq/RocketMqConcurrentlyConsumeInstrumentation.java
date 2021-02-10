@@ -46,7 +46,7 @@ public class RocketMqConcurrentlyConsumeInstrumentation implements TypeInstrumen
         @Advice.Local("otelScope") Scope scope) {
 
       span = tracer().startSpan(msgs);
-      scope = tracer().startScope(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
