@@ -445,7 +445,7 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
   void redirectSpan(TraceAssert trace, int index, Object parent) {
     trace.span(index) {
       name ~/\.sendRedirect$/
-      kind Span.Kind.INTERNAL
+      kind SpanKind.INTERNAL
       childOf((SpanData) parent)
     }
   }
@@ -453,7 +453,7 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
   void sendErrorSpan(TraceAssert trace, int index, Object parent) {
     trace.span(index) {
       name ~/\.sendError$/
-      kind Span.Kind.INTERNAL
+      kind SpanKind.INTERNAL
       childOf((SpanData) parent)
     }
   }
@@ -461,7 +461,7 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
   void forwardSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
     trace.span(index) {
       name ~/\.forward$/
-      kind Span.Kind.INTERNAL
+      kind SpanKind.INTERNAL
       errored errorMessage != null
       if (errorMessage) {
         errorEvent(exceptionClass, errorMessage)
@@ -473,7 +473,7 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
   void includeSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
     trace.span(index) {
       name ~/\.include$/
-      kind Span.Kind.INTERNAL
+      kind SpanKind.INTERNAL
       errored errorMessage != null
       if (errorMessage) {
         errorEvent(exceptionClass, errorMessage)

@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -25,7 +26,16 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
 
   public Context startSpan(HttpServletRequest request) {
-    return startSpan(request, request, request, getSpanName(request));
+    Context context = startSpan(request, request, request, getSpanName(request));
+    return addServletContextPath(context, request);
+  }
+
+  private static Context addServletContextPath(Context context, HttpServletRequest request) {
+    String contextPath = request.getContextPath();
+    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
+      return context.with(ServletContextPath.CONTEXT_KEY, contextPath);
+    }
+    return context;
   }
 
   @Override
@@ -153,11 +163,13 @@ public abstract class ServletHttpServerTracer<RESPONSE>
    * forward and other scenarios, where servlet path may change, but we don't want this to be
    * reflected in the span name.
    */
-  public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
-    if (AppServerBridge.shouldUpdateServerSpanName(attachedContext)) {
-      updateSpanName(Span.fromContext(attachedContext), request);
-      AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
+  public Context runOnceUnderAppServer(Context context, HttpServletRequest request) {
+    if (AppServerBridge.shouldUpdateServerSpanName(context)) {
+      updateSpanName(Span.fromContext(context), request);
+      AppServerBridge.setServletUpdatedServerSpanName(context, true);
+      return addServletContextPath(context, request);
     }
+    return context;
   }
 
   public void updateSpanName(HttpServletRequest request) {
