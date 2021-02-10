@@ -38,7 +38,8 @@ abstract class SmokeTest extends Specification {
   protected static final OkHttpClient CLIENT = OkHttpUtils.client()
 
   @Shared
-  private Network network = Network.newNetwork()
+  private Backend backend = Backend.getInstance()
+
   @Shared
   protected String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
 
@@ -60,31 +61,8 @@ abstract class SmokeTest extends Specification {
   protected void customizeContainer(GenericContainer container) {
   }
 
-  @Shared
-  private GenericContainer backend
-
-  @Shared
-  private GenericContainer collector
-
   def setupSpec() {
-    backend = new GenericContainer<>("ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20201128.1734635")
-      .withExposedPorts(8080)
-      .waitingFor(Wait.forHttp("/health").forPort(8080))
-      .withNetwork(network)
-      .withNetworkAliases("backend")
-      .withImagePullPolicy(PullPolicy.alwaysPull())
-      .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("smoke.tests.backend")))
-    backend.start()
-
-    collector = new GenericContainer<>("otel/opentelemetry-collector-dev:latest")
-      .dependsOn(backend)
-      .withNetwork(network)
-      .withNetworkAliases("collector")
-      .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("smoke.tests.collector")))
-      .withImagePullPolicy(PullPolicy.alwaysPull())
-      .withCopyFileToContainer(MountableFile.forClasspathResource("/otel.yaml"), "/etc/otel.yaml")
-      .withCommand("--config /etc/otel.yaml")
-    collector.start()
+    backend.setup()
   }
 
   def startTarget(int jdk, String serverVersion = null) {
@@ -95,7 +73,7 @@ abstract class SmokeTest extends Specification {
     def output = new ToStringConsumer()
     target = new GenericContainer<>(getTargetImage(jdk, serverVersion))
       .withExposedPorts(8080)
-      .withNetwork(network)
+      .withNetwork(backend.network)
       .withLogConsumer(output)
       .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("smoke.tests.target")))
       .withCopyFileToContainer(MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
@@ -133,9 +111,7 @@ abstract class SmokeTest extends Specification {
   }
 
   def cleanupSpec() {
-    backend.stop()
-    collector.stop()
-    network.close()
+    backend.cleanup()
   }
 
   protected static Stream<AnyValue> findResourceAttribute(Collection<ExportTraceServiceRequest> traces,
@@ -242,5 +218,60 @@ abstract class SmokeTest extends Specification {
       encoding[i | 0x100] = ALPHABET.charAt(i & 0xF)
     }
     return encoding
+  }
+
+  static class Backend {
+    private static final INSTANCE = new Backend()
+
+    private final Network network = Network.newNetwork()
+    private GenericContainer backend
+    private GenericContainer collector
+
+    boolean started = false
+
+    static Backend getInstance() {
+      return INSTANCE
+    }
+
+    def setup() {
+      // we start backend & collector once for all tests
+      if (started) {
+        return
+      }
+      started = true
+
+      backend = new GenericContainer<>("ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20201128.1734635")
+        .withExposedPorts(8080)
+        .waitingFor(Wait.forHttp("/health").forPort(8080))
+        .withNetwork(network)
+        .withNetworkAliases("backend")
+        .withImagePullPolicy(PullPolicy.alwaysPull())
+        .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("smoke.tests.backend")))
+      backend.start()
+
+      collector = new GenericContainer<>("otel/opentelemetry-collector-dev:latest")
+        .dependsOn(backend)
+        .withNetwork(network)
+        .withNetworkAliases("collector")
+        .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("smoke.tests.collector")))
+        .withImagePullPolicy(PullPolicy.alwaysPull())
+        .withCopyFileToContainer(MountableFile.forClasspathResource("/otel.yaml"), "/etc/otel.yaml")
+        .withCommand("--config /etc/otel.yaml")
+      collector.start()
+    }
+
+    int getMappedPort(int originalPort) {
+      return backend.getMappedPort(originalPort)
+    }
+
+    def cleanup() {
+    }
+
+    // currently unused
+    def stop() {
+      backend.stop()
+      collector.stop()
+      network.close()
+    }
   }
 }
