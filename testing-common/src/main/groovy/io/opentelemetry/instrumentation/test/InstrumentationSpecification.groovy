@@ -14,9 +14,27 @@ import spock.lang.Specification
 /**
  * Base class for test specifications that are shared between instrumentation libraries and agent.
  * The methods in this class are implemented by {@link AgentTestTrait} and
- * {@link InstrumentationTestTrait}.
+ * {@link LibraryTestTrait}.
  */
 abstract class InstrumentationSpecification extends Specification {
+  def setupSpec() {
+    runnerSetupSpec()
+  }
+
+  abstract void runnerSetupSpec()
+
+  def setup() {
+    runnerSetup()
+  }
+
+  abstract void runnerSetup()
+
+  def cleanupSpec() {
+    runnerCleanupSpec()
+  }
+
+  abstract void runnerCleanupSpec()
+
   abstract void assertTraces(
     final int size,
     @ClosureParams(

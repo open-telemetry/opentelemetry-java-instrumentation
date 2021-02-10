@@ -2,7 +2,11 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
+description = 'OpenTelemetry Javaagent for testing'
+group = 'io.opentelemetry.javaagent'
+
 apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 
 jar {
   manifest {
@@ -32,9 +36,12 @@ configurations {
   shadowInclude
 }
 
+evaluationDependsOn(":testing:agent-exporter")
+
 shadowJar {
   configurations = [project.configurations.shadowInclude]
-  archiveFileName = 'javaagent-for-testing.jar'
+
+  archiveClassifier.set("")
 
   dependsOn ':testing:agent-exporter:shadowJar'
   with isolateSpec([project(':testing:agent-exporter').tasks.shadowJar])
@@ -65,6 +72,10 @@ shadowJar {
   relocate "application.io.opentelemetry", "io.opentelemetry"
 }
 
+jar {
+  enabled = false
+}
+
 dependencies {
   // Dependencies to include without obfuscation.
   shadowInclude project(':javaagent-bootstrap')
@@ -73,9 +84,11 @@ dependencies {
   testImplementation deps.opentelemetryApi
 }
 
-tasks.withType(Test).configureEach {
-  jvmArgs "-Dotel.javaagent.debug=true"
-  jvmArgs "-javaagent:${shadowJar.archiveFile.get().asFile.absolutePath}"
+afterEvaluate {
+  tasks.withType(Test).configureEach {
+    jvmArgs "-Dotel.javaagent.debug=true"
+    jvmArgs "-javaagent:${shadowJar.archiveFile.get().asFile.absolutePath}"
 
-  dependsOn shadowJar
+    dependsOn shadowJar
+  }
 }

@@ -114,7 +114,6 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
       MetricExporterFactory metricExporterFactory, Properties config) {
     MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
     IntervalMetricReader.builder()
-        .readProperties(config)
         .setMetricExporter(metricExporter)
         .setMetricProducers(Collections.singleton((SdkMeterProvider) GlobalMetricsProvider.get()))
         .build();

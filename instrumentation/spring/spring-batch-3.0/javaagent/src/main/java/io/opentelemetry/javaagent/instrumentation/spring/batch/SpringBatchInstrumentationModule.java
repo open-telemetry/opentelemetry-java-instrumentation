@@ -6,18 +6,21 @@
 package io.opentelemetry.javaagent.instrumentation.spring.batch;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.instrumentationNames;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.isTracingEnabled;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.StepBuilderInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.spring.batch.item.ChunkOrientedTaskletInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.spring.batch.item.JsrChunkProcessorInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.spring.batch.item.SimpleChunkProcessorInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.spring.batch.item.SimpleChunkProviderInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobBuilderHelperInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobParserJobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.step.StepBuilderHelperInstrumentation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,19 +50,20 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    List<TypeInstrumentation> instrumentations = new ArrayList<>();
-    if (isTracingEnabled("job")) {
-      instrumentations.add(new JobBuilderHelperInstrumentation());
-      instrumentations.add(new JobFactoryBeanInstrumentation());
-      instrumentations.add(new JobParserJobFactoryBeanInstrumentation());
-    }
-    if (isTracingEnabled("step")) {
-      instrumentations.add(new StepBuilderHelperInstrumentation());
-    }
-    if (isTracingEnabled("chunk")) {
-      instrumentations.add(new StepBuilderInstrumentation());
-    }
-    return instrumentations;
+    return Arrays.asList(
+        // job instrumentations
+        new JobBuilderHelperInstrumentation(),
+        new JobFactoryBeanInstrumentation(),
+        new JobParserJobFactoryBeanInstrumentation(),
+        // step instrumentation
+        new StepBuilderHelperInstrumentation(),
+        // chunk instrumentation
+        new StepBuilderInstrumentation(),
+        // item instrumentations
+        new ChunkOrientedTaskletInstrumentation(),
+        new SimpleChunkProviderInstrumentation(),
+        new SimpleChunkProcessorInstrumentation(),
+        new JsrChunkProcessorInstrumentation());
   }
 
   protected boolean defaultEnabled() {

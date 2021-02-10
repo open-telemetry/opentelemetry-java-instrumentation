@@ -24,7 +24,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -87,7 +86,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
 
     span.setAttribute(SemanticAttributes.HTTP_METHOD, getHttpMethod(exchange, endpoint));
 
-    Span serverSpan = Context.current().get(BaseTracer.CONTEXT_SERVER_SPAN_KEY);
+    Span serverSpan = BaseTracer.getCurrentServerSpan();
     if (shouldUpdateServerSpanName(serverSpan, camelDirection)) {
       updateServerSpanName(serverSpan, exchange, endpoint);
     }

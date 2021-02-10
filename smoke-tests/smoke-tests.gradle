@@ -1,3 +1,5 @@
+import java.time.Duration
+
 ext {
   // we only need to run the Spock test itself under a single Java version, and the Spock test in
   // turn is parameterized and runs the test using different docker containers that run different
@@ -30,6 +32,8 @@ test {
   inputs.files(tasks.findByPath(':javaagent:shadowJar').outputs.files)
   maxParallelForks = 2
 
+  timeout = Duration.ofMinutes(30)
+  
   doFirst {
     jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':javaagent').tasks.shadowJar.archivePath}"
   }

@@ -33,6 +33,11 @@ class ApacheHttpClientResponseHandlerTest extends HttpClientTest {
   }
 
   @Override
+  boolean testCausality() {
+    return false
+  }
+
+  @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
     def request = new HttpUriRequest(method, uri)
     headers.entrySet().each {

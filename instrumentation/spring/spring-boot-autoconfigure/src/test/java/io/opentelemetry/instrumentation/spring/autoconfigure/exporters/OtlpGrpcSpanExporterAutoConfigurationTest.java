@@ -7,10 +7,12 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpGrpcSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpGrpcSpanExporterProperties;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -37,6 +39,11 @@ class OtlpGrpcSpanExporterAutoConfigurationTest {
             });
   }
 
+  @AfterEach
+  void tearDown() {
+    GlobalOpenTelemetry.resetForTest();
+  }
+
   @Test
   @DisplayName(
       "when opentelemetry.trace.exporter.otlp properties are set should initialize OtlpGrpcSpanExporterProperties")
@@ -44,14 +51,12 @@ class OtlpGrpcSpanExporterAutoConfigurationTest {
     this.contextRunner
         .withPropertyValues(
             "opentelemetry.trace.exporter.otlp.enabled=true",
-            "opentelemetry.trace.exporter.otlp.servicename=test",
             "opentelemetry.trace.exporter.otlp.endpoint=localhost:8080/test",
             "opentelemetry.trace.exporter.otlp.spantimeout=69ms")
         .run(
             (context) -> {
               OtlpGrpcSpanExporterProperties otlpSpanExporterProperties =
                   context.getBean(OtlpGrpcSpanExporterProperties.class);
-              assertThat(otlpSpanExporterProperties.getServiceName()).isEqualTo("test");
               assertThat(otlpSpanExporterProperties.getEndpoint()).isEqualTo("localhost:8080/test");
               assertThat(otlpSpanExporterProperties.getSpanTimeout()).hasMillis(69);
             });

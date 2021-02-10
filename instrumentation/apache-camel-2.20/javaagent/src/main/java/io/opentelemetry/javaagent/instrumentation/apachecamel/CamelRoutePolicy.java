@@ -36,19 +36,26 @@ final class CamelRoutePolicy extends RoutePolicySupport {
 
   private static final Logger LOG = LoggerFactory.getLogger(CamelRoutePolicy.class);
 
-  private Span spanOnExchangeBegin(Route route, Exchange exchange, SpanDecorator sd) {
-    Span activeSpan = CamelTracer.TRACER.getCurrentSpan();
+  private Span spanOnExchangeBegin(
+      Route route, Exchange exchange, SpanDecorator sd, Span.Kind spanKind) {
+    Span activeSpan = Span.current();
     String name = sd.getOperationName(exchange, route.getEndpoint(), CamelDirection.INBOUND);
     SpanBuilder builder = CamelTracer.TRACER.spanBuilder(name);
+    builder.setSpanKind(spanKind);
     if (!activeSpan.getSpanContext().isValid()) {
-      // root operation, set kind, otherwise - INTERNAL
-      builder.setSpanKind(sd.getReceiverSpanKind());
-      Context parentContext = CamelPropagationUtil.extractParent(exchange.getIn().getHeaders());
+      Context parentContext =
+          CamelPropagationUtil.extractParent(exchange.getIn().getHeaders(), route.getEndpoint());
       if (parentContext != null) {
         builder.setParent(parentContext);
       }
     }
     return builder.startSpan();
+  }
+
+  private Span.Kind spanKind(SpanDecorator sd) {
+    Span activeSpan = Span.current();
+    // if there's an active span, this is not a root span which we always mark as INTERNAL
+    return (activeSpan.getSpanContext().isValid() ? Span.Kind.INTERNAL : sd.getReceiverSpanKind());
   }
 
   /**
@@ -59,9 +66,10 @@ final class CamelRoutePolicy extends RoutePolicySupport {
   public void onExchangeBegin(Route route, Exchange exchange) {
     try {
       SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(route.getEndpoint());
-      Span span = spanOnExchangeBegin(route, exchange, sd);
+      Span.Kind spanKind = spanKind(sd);
+      Span span = spanOnExchangeBegin(route, exchange, sd, spanKind);
       sd.pre(span, exchange, route.getEndpoint(), CamelDirection.INBOUND);
-      ActiveSpanManager.activate(exchange, span, CamelDirection.INBOUND);
+      ActiveSpanManager.activate(exchange, span, spanKind);
       LOG.debug("[Route start] Receiver span started {}", span);
     } catch (Throwable t) {
       LOG.warn("Failed to capture tracing data", t);

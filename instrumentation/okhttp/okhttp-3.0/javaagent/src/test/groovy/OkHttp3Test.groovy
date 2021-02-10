@@ -18,6 +18,7 @@ class OkHttp3Test extends HttpClientTest {
 
   def client = new OkHttpClient.Builder()
     .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+    .retryOnConnectionFailure(false)
     .build()
 
   @Override
@@ -35,4 +36,10 @@ class OkHttp3Test extends HttpClientTest {
   boolean testRedirects() {
     false
   }
+
+  @Override
+  boolean testCausality() {
+    false
+  }
+
 }

@@ -132,7 +132,9 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       if (name.startsWith("org.springframework.core.")) {
         if (name.startsWith("org.springframework.core.task.")
             || name.equals("org.springframework.core.DecoratingClassLoader")
-            || name.equals("org.springframework.core.OverridingClassLoader")) {
+            || name.equals("org.springframework.core.OverridingClassLoader")
+            || name.equals(
+                "org.springframework.core.ReactiveAdapterRegistry$EmptyCompletableFuture")) {
           return false;
         }
         return true;
@@ -187,8 +189,8 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
       return false;
     }
 
-    // xml-apis, xerces, xalan
-    if (name.startsWith("javax.xml.")
+    // xml-apis, xerces, xalan, but not xml web-services
+    if ((name.startsWith("javax.xml.") && !name.startsWith("javax.xml.ws."))
         || name.startsWith("org.apache.bcel.")
         || name.startsWith("org.apache.html.")
         || name.startsWith("org.apache.regexp.")

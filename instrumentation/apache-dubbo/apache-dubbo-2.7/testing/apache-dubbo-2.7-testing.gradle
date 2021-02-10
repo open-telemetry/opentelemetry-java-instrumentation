@@ -1,0 +1,21 @@
+plugins {
+  id "java-library"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+
+def apacheDubboVersion = '2.7.5'
+
+dependencies {
+  api project(':testing-common')
+
+  api group: 'org.apache.dubbo', name: 'dubbo', version: apacheDubboVersion
+  api group: 'org.apache.dubbo', name: 'dubbo-config-api', version: apacheDubboVersion
+
+  implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
+  implementation deps.guava
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}

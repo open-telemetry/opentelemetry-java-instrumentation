@@ -7,10 +7,10 @@ import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
 import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
 
 import com.google.common.io.Files
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 import javax.jms.Message
@@ -31,7 +31,7 @@ import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQTextMessage
 import spock.lang.Shared
 
-class Jms2Test extends AgentTestRunner {
+class Jms2Test extends AgentInstrumentationSpecification {
   @Shared
   HornetQServer server
   @Shared
@@ -161,22 +161,8 @@ class Jms2Test extends AgentTestRunner {
 
     expect:
     receivedMessage == null
-    assertTraces(1) {
-      trace(0, 1) { // Consumer trace
-        span(0) {
-          hasNoParent()
-          name destinationName + " receive"
-          kind CONSUMER
-          errored false
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-          }
-        }
-      }
-    }
+    // span is not created if no message is received
+    assertTraces(0,{})
 
     cleanup:
     consumer.close()
@@ -196,23 +182,8 @@ class Jms2Test extends AgentTestRunner {
 
     expect:
     receivedMessage == null
-    assertTraces(1) {
-      trace(0, 1) { // Consumer trace
-        span(0) {
-          hasNoParent()
-          name destinationName + " receive"
-          kind CONSUMER
-          errored false
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" destinationType
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
-            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
-
-          }
-        }
-      }
-    }
+    // span is not created if no message is received
+    assertTraces(0, {})
 
     cleanup:
     consumer.close()

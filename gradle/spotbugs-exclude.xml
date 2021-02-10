@@ -6,14 +6,11 @@
   </Match>
 
   <Match>
-    <!-- ignore default encoding for auto-genned class -->
-    <Class name="io.opentelemetry.javaagent.instrumentation.api.db.sanitizer.SimpleCharStream"/>
-    <Bug pattern="DM_DEFAULT_ENCODING"/>
-  </Match>
-
-  <Match>
     <!-- forced GC only used in testing -->
-    <Class name="io.opentelemetry.instrumentation.util.gc.GcUtils"/>
+    <Or>
+      <Class name="io.opentelemetry.instrumentation.test.utils.GcUtils"/>
+      <Class name="io.opentelemetry.javaagent.util.GcUtils"/>
+    </Or>
     <Bug pattern="DM_GC"/>
   </Match>
 

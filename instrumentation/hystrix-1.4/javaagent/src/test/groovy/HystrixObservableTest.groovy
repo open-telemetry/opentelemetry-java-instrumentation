@@ -4,18 +4,19 @@
  */
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import rx.Observable
 import rx.schedulers.Schedulers
 
-class HystrixObservableTest extends AgentTestRunner {
+class HystrixObservableTest extends AgentInstrumentationSpecification {
 
   def "test command #action"() {
     setup:
@@ -24,7 +25,7 @@ class HystrixObservableTest extends AgentTestRunner {
     def result = runUnderTrace("parent") {
       def val = operation new HystrixObservableCommand<String>(asKey("ExampleGroup")) {
         private String tracedMethod() {
-          getTestTracer().spanBuilder("tracedMethod").startSpan().end()
+          runInternalSpan("tracedMethod")
           return "Hello!"
         }
 

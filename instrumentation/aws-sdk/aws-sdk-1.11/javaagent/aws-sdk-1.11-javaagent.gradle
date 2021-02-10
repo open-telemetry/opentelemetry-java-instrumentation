@@ -45,7 +45,12 @@ configurations {
 }
 
 dependencies {
+  compileOnly deps.opentelemetryTraceProps
+
   library group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
+  implementation deps.opentelemetryTraceProps
+
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
@@ -53,11 +58,17 @@ dependencies {
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '1.11.106'
-  testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.106'
+  testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
+
+  // Make sure doesn't add HTTP headers
+  testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
 
   // needed for kinesis:
   testImplementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-cbor', version: versions.jackson
+
+  // needed for SQS - using emq directly as localstack references emq v0.15.7 ie WITHOUT AWS trace header propagation
+  testLibrary group: 'org.elasticmq', name: 'elasticmq-rest-sqs_2.12', version: '1.0.0'
 
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.0')
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.0')

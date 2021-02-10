@@ -7,13 +7,13 @@ package server
 
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import okhttp3.MultipartBody
 import okhttp3.Request
 import spock.lang.Shared
 
-class ServerTest extends AgentTestRunner {
+class ServerTest extends AgentInstrumentationSpecification {
   @Shared
   def client = OkHttpUtils.client()
 

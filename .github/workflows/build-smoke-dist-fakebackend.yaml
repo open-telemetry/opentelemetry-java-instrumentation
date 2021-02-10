@@ -5,7 +5,7 @@ on:
     paths:
       - 'smoke-tests/fake-backend/**'
       - '.github/workflows/build-smoke-dist-fakebackend.yaml'
-    branches: 'master'
+    branches: 'main'
   workflow_dispatch:
 
 jobs:

@@ -9,6 +9,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.TracerProvider;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -21,12 +23,17 @@ class TracerAutoConfigurationTest {
   @TestConfiguration
   static class CustomTracerConfiguration {
     @Bean
-    public Tracer customTestTracer() {
-      return GlobalOpenTelemetry.getTracer("customTestTracer");
+    public Tracer customTestTracer(TracerProvider tracerProvider) {
+      return tracerProvider.get("customTestTracer");
     }
   }
 
   private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
+
+  @AfterEach
+  void tearDown() {
+    GlobalOpenTelemetry.resetForTest();
+  }
 
   @Test
   @DisplayName("when Application Context contains Tracer bean should NOT initialize otelTracer")

@@ -9,12 +9,12 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.annotations.WithSpan
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 
-class ContextBridgeTest extends AgentTestRunner {
+class ContextBridgeTest extends AgentInstrumentationSpecification {
 
   private static final ContextKey<String> ANIMAL = ContextKey.named("animal")
 

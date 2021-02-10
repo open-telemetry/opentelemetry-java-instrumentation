@@ -7,6 +7,15 @@ apply from: "$rootDir/gradle/publish.gradle"
 minimumBranchCoverage = 0.0
 minimumInstructionCoverage = 0.0
 
+configurations {
+  // classpath used by the instrumentation muzzle plugin
+  instrumentationMuzzle {
+    canBeConsumed = true
+    canBeResolved = false
+    extendsFrom implementation
+  }
+}
+
 dependencies {
   api deps.opentelemetryApi
   api deps.opentelemetryApiMetrics

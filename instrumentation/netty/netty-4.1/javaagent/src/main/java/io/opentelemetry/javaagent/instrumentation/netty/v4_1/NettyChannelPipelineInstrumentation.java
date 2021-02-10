@@ -23,6 +23,7 @@ import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientRequestTracingHandler;
@@ -57,6 +58,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
     transformers.put(
         isMethod()
             .and(nameStartsWith("add"))
+            .and(takesArgument(1, String.class))
             .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
         NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAddAdvice");
     transformers.put(
@@ -89,36 +91,46 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
     public static void addHandler(
         @Advice.Enter int callDepth,
         @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(1) String handlerName,
         @Advice.Argument(2) ChannelHandler handler) {
       if (callDepth > 0) {
         return;
       }
       CallDepthThreadLocalMap.reset(handler.getClass());
 
+      String name = handlerName;
+      if (name == null) {
+        name = pipeline.context(handler).name();
+      }
+
       try {
         // Server pipeline handlers
         if (handler instanceof HttpServerCodec) {
-          pipeline.addLast(
-              HttpServerTracingHandler.class.getName(), new HttpServerTracingHandler());
+          pipeline.addAfter(
+              name, HttpServerTracingHandler.class.getName(), new HttpServerTracingHandler());
         } else if (handler instanceof HttpRequestDecoder) {
-          pipeline.addLast(
+          pipeline.addAfter(
+              name,
               HttpServerRequestTracingHandler.class.getName(),
               new HttpServerRequestTracingHandler());
         } else if (handler instanceof HttpResponseEncoder) {
-          pipeline.addLast(
+          pipeline.addAfter(
+              name,
               HttpServerResponseTracingHandler.class.getName(),
               new HttpServerResponseTracingHandler());
         } else
         // Client pipeline handlers
         if (handler instanceof HttpClientCodec) {
-          pipeline.addLast(
-              HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
+          pipeline.addAfter(
+              name, HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
         } else if (handler instanceof HttpRequestEncoder) {
-          pipeline.addLast(
+          pipeline.addAfter(
+              name,
               HttpClientRequestTracingHandler.class.getName(),
               new HttpClientRequestTracingHandler());
         } else if (handler instanceof HttpResponseDecoder) {
-          pipeline.addLast(
+          pipeline.addAfter(
+              name,
               HttpClientResponseTracingHandler.class.getName(),
               new HttpClientResponseTracingHandler());
         }

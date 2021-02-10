@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webcli
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -21,6 +23,11 @@ class WebClientAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   TracerAutoConfiguration.class, WebClientAutoConfiguration.class));
+
+  @AfterEach
+  void tearDown() {
+    GlobalOpenTelemetry.resetForTest();
+  }
 
   @Test
   @DisplayName("when httpclients are ENABLED should initialize WebClientBeanPostProcessor bean")

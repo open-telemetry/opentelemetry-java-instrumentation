@@ -11,7 +11,10 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.job.builder.FlowBuilder
 import org.springframework.batch.core.job.flow.Flow
 import org.springframework.batch.core.job.flow.support.SimpleFlow
+import org.springframework.batch.core.launch.JobLauncher
+import org.springframework.batch.core.launch.support.SimpleJobLauncher
 import org.springframework.batch.core.partition.support.Partitioner
+import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
@@ -26,6 +29,7 @@ import springbatch.TestItemReader
 import springbatch.TestItemWriter
 import springbatch.TestPartitionedItemReader
 import springbatch.TestPartitioner
+import springbatch.TestSyncItemReader
 import springbatch.TestTasklet
 
 @Configuration
@@ -36,6 +40,24 @@ class SpringBatchApplication {
   JobBuilderFactory jobs
   @Autowired
   StepBuilderFactory steps
+  @Autowired
+  JobRepository jobRepository
+
+  @Bean
+  AsyncTaskExecutor asyncTaskExecutor() {
+    def executor = new ThreadPoolTaskExecutor()
+    executor.corePoolSize = 10
+    executor.maxPoolSize = 10
+    executor
+  }
+
+  @Bean
+  JobLauncher jobLauncher() {
+    def launcher = new SimpleJobLauncher()
+    launcher.jobRepository = jobRepository
+    launcher.taskExecutor = asyncTaskExecutor()
+    launcher
+  }
 
   // common
   @Bean
@@ -51,11 +73,6 @@ class SpringBatchApplication {
   @Bean
   ItemWriter<Integer> itemWriter() {
     new TestItemWriter()
-  }
-
-  @Bean
-  AsyncTaskExecutor asyncTaskExecutor() {
-    new ThreadPoolTaskExecutor()
   }
 
   // simple tasklet job
@@ -96,6 +113,26 @@ class SpringBatchApplication {
       .reader(itemReader())
       .processor(itemProcessor())
       .writer(itemWriter())
+      .build()
+  }
+
+  // parallel items job
+  @Bean
+  Job parallelItemsJob() {
+    jobs.get("parallelItemsJob")
+      .start(parallelItemsStep())
+      .build()
+  }
+
+  @Bean
+  Step parallelItemsStep() {
+    steps.get("parallelItemsStep")
+      .chunk(2)
+      .reader(new TestSyncItemReader(5))
+      .processor(itemProcessor())
+      .writer(itemWriter())
+      .taskExecutor(asyncTaskExecutor())
+      .throttleLimit(2)
       .build()
   }
 

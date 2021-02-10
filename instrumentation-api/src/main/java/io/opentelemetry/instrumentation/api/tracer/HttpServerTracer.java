@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import static io.opentelemetry.api.trace.Span.Kind.SERVER;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
@@ -42,8 +43,19 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     super();
   }
 
+  /**
+   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
+   * use the GlobalOpenTelemetry Propagator instance.
+   *
+   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
+   */
+  @Deprecated
   public HttpServerTracer(Tracer tracer) {
     super(tracer);
+  }
+
+  public HttpServerTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
   }
 
   public Context startSpan(REQUEST request, CONNECTION connection, STORAGE storage, Method origin) {
@@ -81,7 +93,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     onRequest(span, request);
     onConnectionAndRequest(span, connection, request);
 
-    Context context = parentContext.with(CONTEXT_SERVER_SPAN_KEY, span).with(span);
+    Context context = withServerSpan(parentContext, span);
     attachServerContext(context, storage);
 
     return context;
@@ -137,7 +149,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   public Span getServerSpan(STORAGE storage) {
     Context attachedContext = getServerContext(storage);
-    return attachedContext == null ? null : attachedContext.get(CONTEXT_SERVER_SPAN_KEY);
+    return attachedContext == null ? null : getCurrentServerSpan(attachedContext);
   }
 
   /**
