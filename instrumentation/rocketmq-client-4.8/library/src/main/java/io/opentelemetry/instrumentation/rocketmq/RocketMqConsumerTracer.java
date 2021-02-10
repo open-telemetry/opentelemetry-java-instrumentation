@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.rocketmq;
 
-import static io.opentelemetry.api.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.instrumentation.rocketmq.TextMapExtractAdapter.GETTER;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;

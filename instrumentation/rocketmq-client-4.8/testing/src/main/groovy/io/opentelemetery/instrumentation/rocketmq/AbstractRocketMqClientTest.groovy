@@ -6,6 +6,7 @@
 package io.opentelemetery.instrumentation.rocketmq
 
 import base.BaseConf
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.rocketmq.client.producer.DefaultMQProducer
@@ -20,8 +21,8 @@ import org.apache.rocketmq.test.listener.rmq.concurrent.RMQNormalListener
 import org.apache.rocketmq.test.listener.rmq.order.RMQOrderListener
 import spock.lang.Shared
 import spock.lang.Unroll
-import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -29,25 +30,25 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
 
   @Shared
-  private RMQNormalConsumer consumer;
+  RMQNormalConsumer consumer;
 
   @Shared
-  private RMQNormalProducer producer;
+  RMQNormalProducer producer;
 
   @Shared
   DefaultMQProducer defaultMQProducer;
 
   @Shared
-  private String sharedTopic;
+  String sharedTopic;
 
   @Shared
-  private String brokerAddr;
+  String brokerAddr;
 
   @Shared
   Message msg;
 
   @Shared
-  int consumeTime = 1000;
+  int consumeTime = 5000;
 
   @Shared
   BaseConf baseConf =new BaseConf();
@@ -91,10 +92,8 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
           }
         }
       }
-
       cleanup:
       defaultMQProducer.shutdown()
-
     }
   }
 

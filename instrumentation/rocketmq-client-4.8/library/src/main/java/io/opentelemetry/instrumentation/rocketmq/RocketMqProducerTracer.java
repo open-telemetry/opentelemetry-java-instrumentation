@@ -4,9 +4,7 @@
  */
 
 package io.opentelemetry.instrumentation.rocketmq;
-
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER;
-
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;

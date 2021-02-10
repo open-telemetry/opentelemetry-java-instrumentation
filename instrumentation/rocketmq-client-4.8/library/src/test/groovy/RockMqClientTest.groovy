@@ -5,8 +5,8 @@
 
 
 import io.opentelemetery.instrumentation.rocketmq.AbstractRocketMqClientTest
-import io.opentelemetry.instrumentation.test.InstrumentationTestTrait
+import io.opentelemetry.instrumentation.test.LibraryTestTrait
 
-class RockMqClientTest extends AbstractRocketMqClientTest implements InstrumentationTestTrait {
+class RockMqClientTest extends AbstractRocketMqClientTest implements LibraryTestTrait {
 
 }
