@@ -36,6 +36,11 @@ dependencies {
   // 1.2.0 allows to get the function ARN
   testLibrary group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.0'
 
+  testImplementation(
+    'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
+    'com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10',
+    'commons-io:commons-io:2.2')
+
   testImplementation deps.opentelemetryTraceProps
   testImplementation deps.guava
 
