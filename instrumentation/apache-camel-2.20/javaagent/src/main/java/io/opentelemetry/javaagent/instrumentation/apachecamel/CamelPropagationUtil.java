@@ -58,8 +58,12 @@ final class CamelPropagationUtil {
     }
 
     @Override
-    public String get(Map<String, Object> map, String s) {
-      return (map.containsKey(s) ? map.get(s).toString() : null);
+    public String get(Map<String, Object> map, String key) {
+      return (hasValidValue(map, key) ? map.get(key).toString() : null);
+    }
+
+    private boolean hasValidValue(Map<String, Object> map, String key) {
+      return (map.containsKey(key) && (map.get(key) != null));
     }
   }
 
