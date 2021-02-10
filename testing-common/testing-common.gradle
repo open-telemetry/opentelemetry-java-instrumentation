@@ -7,7 +7,6 @@ apply from: "$rootDir/gradle/publish.gradle"
 dependencies {
   api deps.groovy
   api deps.spock
-  api deps.assertj
   implementation deps.junitApi
 
   api deps.opentelemetryApi
@@ -33,6 +32,8 @@ dependencies {
 
   annotationProcessor deps.autoservice
   compileOnly deps.autoservice
+
+  testImplementation deps.assertj
 
   testImplementation project(':instrumentation-api')
   testImplementation project(':javaagent-api')
