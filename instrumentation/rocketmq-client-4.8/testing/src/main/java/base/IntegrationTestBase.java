@@ -81,7 +81,8 @@ public class IntegrationTestBase {
       String baseDir = System.getProperty("user.home") + SEP + "otel-rocketmq-unitteststore";
       final File file = new File(baseDir);
         if (file.exists()) {
-            deleteFile(file);
+          logger.info(String.format("[%s] has already existed, please back up and remove it for integration tests", baseDir));
+          System.exit(1);
         }
         TMPE_FILES.add(file);
         return baseDir;
