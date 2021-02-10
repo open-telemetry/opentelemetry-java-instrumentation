@@ -22,6 +22,20 @@ import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Base class for all instrumentation specific tracer implementations.
+ *
+ * <p>Tracers should not use {@link Span} directly in their public APIs: ideally all lifecycle
+ * methods (ex. start/end methods) should return/accept {@link Context}.
+ *
+ * <p>The {@link BaseTracer} offers several {@code startSpan()} utility methods for creating bare
+ * spans without any attributes. If you want to provide some additional attributes on span start
+ * please consider writing your own specific {@code startSpan()} method in the your tracer.
+ *
+ * <p>When constructing {@link Span}s tracers should set all attributes available during
+ * construction on a {@link SpanBuilder} instead of a {@link Span}. This way {@code SpanProcessor}s
+ * are able to see those attributes in the {@code onStart()} method and can freely read/modify them.
+ */
 public abstract class BaseTracer {
   // Keeps track of the server span for the current trace.
   // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
