@@ -344,30 +344,22 @@ public class AgentInstaller {
         ClassLoader classLoader,
         JavaModule module,
         boolean loaded,
-        DynamicType dynamicType) {
-      log.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
-    }
+        DynamicType dynamicType) {}
 
     @Override
     public void onIgnored(
         TypeDescription typeDescription,
         ClassLoader classLoader,
         JavaModule module,
-        boolean loaded) {
-      //      log.debug("onIgnored {}", typeDescription.getName());
-    }
+        boolean loaded) {}
 
     @Override
     public void onComplete(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      // log.debug("onComplete {}", typeName);
-    }
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
 
     @Override
     public void onDiscovery(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      // log.debug("onDiscovery {}", typeName);
-    }
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
   }
 
   /**
