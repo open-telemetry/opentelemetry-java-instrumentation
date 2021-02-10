@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * <li>(Because gradle hijacks System.out), gradle is called from inside of the class file transform
  * <li>Gradle tries to grab a different lock during it's implementation of System.out
  */
-public class SafeLogger {
+public class GradleSafeLogger {
 
   private static final boolean ENABLE_GRADLE_SAFE_LOGGING =
       Boolean.getBoolean("otel.internal.enableGradleSafeLogging");
@@ -27,7 +27,7 @@ public class SafeLogger {
 
   static {
     if (ENABLE_GRADLE_SAFE_LOGGING) {
-      logMessageQueue = new ArrayBlockingQueue<>(100);
+      logMessageQueue = new ArrayBlockingQueue<>(1000);
       Thread thread = new Thread(new LogMessageQueueReader());
       thread.setName("otel-javaagent-safe-logger");
       thread.setDaemon(true);
@@ -39,17 +39,17 @@ public class SafeLogger {
 
   private final Logger logger;
 
-  public static SafeLogger getLogger(Class<?> clazz) {
-    return new SafeLogger(LoggerFactory.getLogger(clazz));
+  public static GradleSafeLogger getLogger(Class<?> clazz) {
+    return new GradleSafeLogger(LoggerFactory.getLogger(clazz));
   }
 
-  private SafeLogger(Logger logger) {
+  private GradleSafeLogger(Logger logger) {
     this.logger = logger;
   }
 
   public void debug(String format, Object arg) {
     if (logMessageQueue != null) {
-      logMessageQueue.add(new LogMessage(logger, format, arg));
+      logMessageQueue.offer(new LogMessage(logger, format, arg));
     } else {
       logger.debug(format, arg);
     }
@@ -57,7 +57,7 @@ public class SafeLogger {
 
   public void debug(String format, Object arg1, Object arg2) {
     if (logMessageQueue != null) {
-      logMessageQueue.add(new LogMessage(logger, format, arg1, arg2));
+      logMessageQueue.offer(new LogMessage(logger, format, arg1, arg2));
     } else {
       logger.debug(format, arg1, arg2);
     }
@@ -65,7 +65,7 @@ public class SafeLogger {
 
   public void debug(String format, Object... arguments) {
     if (logMessageQueue != null) {
-      logMessageQueue.add(new LogMessage(logger, format, arguments));
+      logMessageQueue.offer(new LogMessage(logger, format, arguments));
     } else {
       logger.debug(format, arguments);
     }
