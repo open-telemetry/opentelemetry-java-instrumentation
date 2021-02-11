@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.Labels;
 import io.opentelemetry.api.metrics.GlobalMetricsProvider;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.common.Labels;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -24,9 +24,11 @@ import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseTracer {
-  private static Meter meterProvider =
+  private static final Meter meterProvider =
       GlobalMetricsProvider.getMeter("io.opentelemetry.instrumentation.api.tracer");
 
   private static final Logger log = LoggerFactory.getLogger(BaseTracer.class);
@@ -98,17 +100,8 @@ public abstract class BaseTracer {
     return parentContext.with(span).with(CONTEXT_SERVER_SPAN_KEY, span);
   }
 
-<<<<<<< HEAD
   protected final boolean shouldStartSpan(SpanKind proposedKind, Context context) {
-    boolean result;
-=======
-  public Scope startScope(Span span) {
-    return Context.current().with(span).makeCurrent();
-  }
-
-  protected final boolean shouldStartSpan(Kind proposedKind, Context context) {
     boolean suppressed = false;
->>>>>>> 4174bc5c4 (cleanup from PR comments)
     switch (proposedKind) {
       case CLIENT:
         suppressed = inClientSpan(context);
@@ -116,7 +109,6 @@ public abstract class BaseTracer {
       case SERVER:
         suppressed = inServerSpan(context);
         break;
-      default:
     }
     if (suppressed) {
       suppressionCounter.add(
