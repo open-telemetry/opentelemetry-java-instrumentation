@@ -12,13 +12,13 @@ import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.disposables.DisposableHelper;
 
-public class TracingMaybeObserver<T> implements MaybeObserver<T>, Disposable {
+class TracingMaybeObserver<T> implements MaybeObserver<T>, Disposable {
 
   private final MaybeObserver<T> actual;
   private final Context parentSpan;
   private Disposable disposable;
 
-  public TracingMaybeObserver(final MaybeObserver<T> actual, final Context parentSpan) {
+  TracingMaybeObserver(final MaybeObserver<T> actual, final Context parentSpan) {
     this.actual = actual;
     this.parentSpan = parentSpan;
   }
@@ -34,21 +34,21 @@ public class TracingMaybeObserver<T> implements MaybeObserver<T>, Disposable {
 
   @Override
   public void onSuccess(final @NonNull T t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onSuccess(t);
     }
   }
 
   @Override
   public void onError(final @NonNull Throwable e) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onError(e);
     }
   }
 
   @Override
   public void onComplete() {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onComplete();
     }
   }

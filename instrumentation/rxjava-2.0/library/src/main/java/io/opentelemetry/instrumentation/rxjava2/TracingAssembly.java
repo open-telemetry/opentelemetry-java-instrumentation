@@ -27,11 +27,7 @@ import io.reactivex.plugins.RxJavaPlugins;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.reactivestreams.Subscriber;
 
-public class TracingAssembly {
-
-  @SuppressWarnings("rawtypes")
-  @GuardedBy("TracingAssembly.class")
-  private static Function<? super Observable, ? extends Observable> oldOnObservableAssembly;
+public final class TracingAssembly {
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
@@ -79,7 +75,6 @@ public class TracingAssembly {
 
   private TracingAssembly() {}
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   public static synchronized void enable() {
     if (enabled) {
       return;
@@ -87,17 +82,7 @@ public class TracingAssembly {
 
     enableObservable();
 
-    oldOnConnectableObservableAssembly = RxJavaPlugins.getOnConnectableObservableAssembly();
-    RxJavaPlugins.setOnConnectableObservableAssembly(
-        compose(
-            oldOnConnectableObservableAssembly,
-            new ConditionalOnCurrentContextFunction<ConnectableObservable>() {
-              @Override
-              ConnectableObservable applyActual(
-                  ConnectableObservable connectableObservable, Context ctx) {
-                return new TracingConnectableObservable(connectableObservable, ctx);
-              }
-            }));
+    enableConnectableObservable();
 
     enableCompletable();
 
@@ -107,121 +92,11 @@ public class TracingAssembly {
 
     enableFlowable();
 
-    oldOnConnectableFlowableAssembly = RxJavaPlugins.getOnConnectableFlowableAssembly();
-    RxJavaPlugins.setOnConnectableFlowableAssembly(
-        compose(
-            oldOnConnectableFlowableAssembly,
-            new ConditionalOnCurrentContextFunction<ConnectableFlowable>() {
-              @Override
-              ConnectableFlowable applyActual(
-                  ConnectableFlowable connectableFlowable, Context ctx) {
-                return new TracingConnectableFlowable(connectableFlowable, ctx);
-              }
-            }));
+    enableConnectableFlowable();
 
-    oldOnParallelAssembly = RxJavaPlugins.getOnParallelAssembly();
-    RxJavaPlugins.setOnParallelAssembly(
-        compose(
-            oldOnParallelAssembly,
-            new ConditionalOnCurrentContextFunction<ParallelFlowable>() {
-              @Override
-              ParallelFlowable applyActual(ParallelFlowable parallelFlowable, Context ctx) {
-                return new TracingParallelFlowable(parallelFlowable, ctx);
-              }
-            }));
+    enableParallel();
 
     enabled = true;
-  }
-
-  private static synchronized void enableCompletable() {
-    oldOnCompletableSubscribe = RxJavaPlugins.getOnCompletableSubscribe();
-    RxJavaPlugins.setOnCompletableSubscribe(
-        biCompose(
-            oldOnCompletableSubscribe,
-            new BiConditionalOnCurrentContextFunction<Completable, CompletableObserver>() {
-              @Override
-              CompletableObserver applyActual(
-                  Completable completable, CompletableObserver observer, Context ctx) {
-                try (final Scope scope = ctx.makeCurrent()) {
-                  return new TracingCompletableObserver(observer, ctx);
-                }
-              }
-            }));
-  }
-
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  private static synchronized void enableFlowable() {
-    oldOnFlowableSubscribe = RxJavaPlugins.getOnFlowableSubscribe();
-    RxJavaPlugins.setOnFlowableSubscribe(
-        biCompose(
-            oldOnFlowableSubscribe,
-            new BiConditionalOnCurrentContextFunction<Flowable, Subscriber>() {
-
-              @Override
-              Subscriber applyActual(Flowable flowable, Subscriber subscriber, Context ctx) {
-                try (final Scope scope = ctx.makeCurrent()) {
-                  if (subscriber instanceof ConditionalSubscriber) {
-                    return new TracingConditionalSubscriber<>(
-                        (ConditionalSubscriber) subscriber, ctx);
-                  } else {
-                    return new TracingSubscriber<>(subscriber, ctx);
-                  }
-                }
-              }
-            }));
-  }
-
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  private static synchronized void enableObservable() {
-    oldOnObservableSubscribe = RxJavaPlugins.getOnObservableSubscribe();
-    RxJavaPlugins.setOnObservableSubscribe(
-        biCompose(
-            oldOnObservableSubscribe,
-            new BiConditionalOnCurrentContextFunction<Observable, Observer>() {
-
-              @Override
-              Observer applyActual(Observable observable, Observer observer, Context ctx) {
-                try (final Scope scope = ctx.makeCurrent()) {
-                  return new TracingObserver(observer, ctx);
-                }
-              }
-            }));
-  }
-
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  private static synchronized void enableSingle() {
-    oldOnSingleSubscribe = RxJavaPlugins.getOnSingleSubscribe();
-    RxJavaPlugins.setOnSingleSubscribe(
-        biCompose(
-            oldOnSingleSubscribe,
-            new BiConditionalOnCurrentContextFunction<Single, SingleObserver>() {
-
-              @Override
-              SingleObserver applyActual(
-                  Single single, SingleObserver singleObserver, Context ctx) {
-                try (final Scope scope = ctx.makeCurrent()) {
-                  return new TracingSingleObserver(singleObserver, ctx);
-                }
-              }
-            }));
-  }
-
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  private static synchronized void enableMaybe() {
-    oldOnMaybeSubscribe = RxJavaPlugins.getOnMaybeSubscribe();
-    RxJavaPlugins.setOnMaybeSubscribe(
-        (BiFunction<? super Maybe, MaybeObserver, ? extends MaybeObserver>)
-            biCompose(
-                oldOnMaybeSubscribe,
-                new BiConditionalOnCurrentContextFunction<Maybe, MaybeObserver>() {
-
-                  @Override
-                  MaybeObserver applyActual(Maybe maybe, MaybeObserver maybeObserver, Context ctx) {
-                    try (final Scope scope = ctx.makeCurrent()) {
-                      return new TracingMaybeObserver(maybeObserver, ctx);
-                    }
-                  }
-                }));
   }
 
   public static synchronized void disable() {
@@ -235,46 +110,191 @@ public class TracingAssembly {
 
     disableFlowable();
 
-    RxJavaPlugins.setOnParallelAssembly(oldOnParallelAssembly);
-    oldOnParallelAssembly = null;
+    disableParallel();
 
     disableObservable();
 
-    RxJavaPlugins.setOnConnectableObservableAssembly(oldOnConnectableObservableAssembly);
-    oldOnConnectableObservableAssembly = null;
+    disableConnectableObservable();
 
     disableCompletable();
 
-    RxJavaPlugins.setOnConnectableFlowableAssembly(oldOnConnectableFlowableAssembly);
-    oldOnConnectableFlowableAssembly = null;
+    disableConnectableFlowable();
 
     enabled = false;
   }
 
-  private static synchronized void disableObservable() {
-    RxJavaPlugins.setOnObservableAssembly(oldOnObservableAssembly);
-    oldOnObservableAssembly = null;
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void enableParallel() {
+    oldOnParallelAssembly = RxJavaPlugins.getOnParallelAssembly();
+    RxJavaPlugins.setOnParallelAssembly(
+        compose(
+            oldOnParallelAssembly,
+            new ConditionalOnCurrentContextFunction<ParallelFlowable>() {
+              @Override
+              ParallelFlowable applyActual(ParallelFlowable parallelFlowable, Context ctx) {
+                return new TracingParallelFlowable(parallelFlowable, ctx);
+              }
+            }));
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void enableConnectableFlowable() {
+    oldOnConnectableFlowableAssembly = RxJavaPlugins.getOnConnectableFlowableAssembly();
+    RxJavaPlugins.setOnConnectableFlowableAssembly(
+        compose(
+            oldOnConnectableFlowableAssembly,
+            new ConditionalOnCurrentContextFunction<ConnectableFlowable>() {
+              @Override
+              ConnectableFlowable applyActual(
+                  ConnectableFlowable connectableFlowable, Context ctx) {
+                return new TracingConnectableFlowable(connectableFlowable, ctx);
+              }
+            }));
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void enableConnectableObservable() {
+    oldOnConnectableObservableAssembly = RxJavaPlugins.getOnConnectableObservableAssembly();
+    RxJavaPlugins.setOnConnectableObservableAssembly(
+        compose(
+            oldOnConnectableObservableAssembly,
+            new ConditionalOnCurrentContextFunction<ConnectableObservable>() {
+              @Override
+              ConnectableObservable applyActual(
+                  ConnectableObservable connectableObservable, Context ctx) {
+                return new TracingConnectableObservable(connectableObservable, ctx);
+              }
+            }));
+  }
+
+  private static void enableCompletable() {
+    oldOnCompletableSubscribe = RxJavaPlugins.getOnCompletableSubscribe();
+    RxJavaPlugins.setOnCompletableSubscribe(
+        biCompose(
+            oldOnCompletableSubscribe,
+            new BiConditionalOnCurrentContextFunction<Completable, CompletableObserver>() {
+              @Override
+              CompletableObserver applyActual(
+                  Completable completable, CompletableObserver observer, Context ctx) {
+                try (Scope ignored = ctx.makeCurrent()) {
+                  return new TracingCompletableObserver(observer, ctx);
+                }
+              }
+            }));
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void enableFlowable() {
+    oldOnFlowableSubscribe = RxJavaPlugins.getOnFlowableSubscribe();
+    RxJavaPlugins.setOnFlowableSubscribe(
+        biCompose(
+            oldOnFlowableSubscribe,
+            new BiConditionalOnCurrentContextFunction<Flowable, Subscriber>() {
+
+              @Override
+              Subscriber applyActual(Flowable flowable, Subscriber subscriber, Context ctx) {
+                try (Scope ignored = ctx.makeCurrent()) {
+                  if (subscriber instanceof ConditionalSubscriber) {
+                    return new TracingConditionalSubscriber<>(
+                        (ConditionalSubscriber) subscriber, ctx);
+                  } else {
+                    return new TracingSubscriber<>(subscriber, ctx);
+                  }
+                }
+              }
+            }));
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void enableObservable() {
+    oldOnObservableSubscribe = RxJavaPlugins.getOnObservableSubscribe();
+    RxJavaPlugins.setOnObservableSubscribe(
+        biCompose(
+            oldOnObservableSubscribe,
+            new BiConditionalOnCurrentContextFunction<Observable, Observer>() {
+
+              @Override
+              Observer applyActual(Observable observable, Observer observer, Context ctx) {
+                try (Scope ignored = ctx.makeCurrent()) {
+                  return new TracingObserver(observer, ctx);
+                }
+              }
+            }));
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void enableSingle() {
+    oldOnSingleSubscribe = RxJavaPlugins.getOnSingleSubscribe();
+    RxJavaPlugins.setOnSingleSubscribe(
+        biCompose(
+            oldOnSingleSubscribe,
+            new BiConditionalOnCurrentContextFunction<Single, SingleObserver>() {
+
+              @Override
+              SingleObserver applyActual(
+                  Single single, SingleObserver singleObserver, Context ctx) {
+                try (Scope ignored = ctx.makeCurrent()) {
+                  return new TracingSingleObserver(singleObserver, ctx);
+                }
+              }
+            }));
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void enableMaybe() {
+    oldOnMaybeSubscribe = RxJavaPlugins.getOnMaybeSubscribe();
+    RxJavaPlugins.setOnMaybeSubscribe(
+        (BiFunction<? super Maybe, MaybeObserver, ? extends MaybeObserver>)
+            biCompose(
+                oldOnMaybeSubscribe,
+                new BiConditionalOnCurrentContextFunction<Maybe, MaybeObserver>() {
+
+                  @Override
+                  MaybeObserver applyActual(Maybe maybe, MaybeObserver maybeObserver, Context ctx) {
+                    try (Scope ignored = ctx.makeCurrent()) {
+                      return new TracingMaybeObserver(maybeObserver, ctx);
+                    }
+                  }
+                }));
+  }
+
+  private static void disableConnectableFlowable() {
+    RxJavaPlugins.setOnConnectableFlowableAssembly(oldOnConnectableFlowableAssembly);
+    oldOnConnectableFlowableAssembly = null;
+  }
+
+  private static void disableConnectableObservable() {
+    RxJavaPlugins.setOnConnectableObservableAssembly(oldOnConnectableObservableAssembly);
+    oldOnConnectableObservableAssembly = null;
+  }
+
+  private static void disableParallel() {
+    RxJavaPlugins.setOnParallelAssembly(oldOnParallelAssembly);
+    oldOnParallelAssembly = null;
+  }
+
+  private static void disableObservable() {
     RxJavaPlugins.setOnObservableSubscribe(oldOnObservableSubscribe);
     oldOnObservableSubscribe = null;
   }
 
-  private static synchronized void disableCompletable() {
+  private static void disableCompletable() {
     RxJavaPlugins.setOnCompletableSubscribe(oldOnCompletableSubscribe);
     oldOnCompletableSubscribe = null;
   }
 
-  private static synchronized void disableFlowable() {
+  private static void disableFlowable() {
     RxJavaPlugins.setOnFlowableSubscribe(oldOnFlowableSubscribe);
     oldOnFlowableSubscribe = null;
   }
 
-  private static synchronized void disableSingle() {
+  private static void disableSingle() {
     RxJavaPlugins.setOnSingleSubscribe(oldOnSingleSubscribe);
     oldOnSingleSubscribe = null;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private static synchronized void disableMaybe() {
+  private static void disableMaybe() {
     RxJavaPlugins.setOnMaybeSubscribe(
         (BiFunction<? super Maybe, MaybeObserver, ? extends MaybeObserver>) oldOnMaybeSubscribe);
     oldOnMaybeSubscribe = null;

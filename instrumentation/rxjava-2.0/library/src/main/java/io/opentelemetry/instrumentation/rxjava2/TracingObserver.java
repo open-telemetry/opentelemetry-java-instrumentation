@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.rxjava2;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.reactivex.Observer;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.internal.fuseable.QueueDisposable;
 import io.reactivex.internal.observers.BasicFuseableObserver;
 
@@ -21,22 +22,22 @@ public class TracingObserver<T> extends BasicFuseableObserver<T, T> {
   }
 
   @Override
-  public void onNext(T t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+  public void onNext(@NonNull T t) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onNext(t);
     }
   }
 
   @Override
   public void onError(Throwable t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onComplete();
     }
   }

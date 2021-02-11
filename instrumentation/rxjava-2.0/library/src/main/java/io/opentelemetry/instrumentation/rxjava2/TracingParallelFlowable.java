@@ -12,12 +12,12 @@ import io.reactivex.internal.fuseable.ConditionalSubscriber;
 import io.reactivex.parallel.ParallelFlowable;
 import org.reactivestreams.Subscriber;
 
-public class TracingParallelFlowable<T> extends ParallelFlowable<T> {
+class TracingParallelFlowable<T> extends ParallelFlowable<T> {
 
   private final ParallelFlowable<T> source;
   private final Context parentSpan;
 
-  public TracingParallelFlowable(final ParallelFlowable<T> source, final Context parentSpan) {
+  TracingParallelFlowable(final ParallelFlowable<T> source, final Context parentSpan) {
     this.source = source;
     this.parentSpan = parentSpan;
   }
@@ -39,7 +39,7 @@ public class TracingParallelFlowable<T> extends ParallelFlowable<T> {
         parents[i] = new TracingSubscriber<>(z, parentSpan);
       }
     }
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       source.subscribe(parents);
     }
   }

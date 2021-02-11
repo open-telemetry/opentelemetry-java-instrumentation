@@ -11,7 +11,7 @@ import io.reactivex.internal.fuseable.ConditionalSubscriber;
 import io.reactivex.internal.fuseable.QueueSubscription;
 import io.reactivex.internal.subscribers.BasicFuseableConditionalSubscriber;
 
-public class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSubscriber<T, T> {
+class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSubscriber<T, T> {
 
   private final Context parentSpan;
 
@@ -23,28 +23,28 @@ public class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSub
 
   @Override
   public boolean tryOnNext(T t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       return actual.tryOnNext(t);
     }
   }
 
   @Override
   public void onNext(T t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onNext(t);
     }
   }
 
   @Override
   public void onError(Throwable t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onComplete();
     }
   }

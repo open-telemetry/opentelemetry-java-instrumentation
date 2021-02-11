@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.test.asserts
 
+import static TraceAssert.assertTrace
+
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.instrumentation.test.InMemoryExporter
@@ -15,8 +17,6 @@ import org.spockframework.runtime.ConditionNotSatisfiedError
 import org.spockframework.runtime.model.TextPosition
 
 import java.util.function.Supplier
-
-import static TraceAssert.assertTrace
 
 class InMemoryExporterAssert {
   private final List<List<SpanData>> traces
@@ -84,7 +84,7 @@ class InMemoryExporterAssert {
     assert assertedIndexes.size() == traces.size()
   }
 
-  void sortSpansByStart() {
+  void sortSpansByStartTime() {
     traces.each {
       it.sort { a, b ->
         return a.startEpochNanos <=> b.startEpochNanos

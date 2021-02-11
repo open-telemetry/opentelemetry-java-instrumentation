@@ -12,36 +12,36 @@ import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.disposables.DisposableHelper;
 
-public class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
+class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
 
   private final SingleObserver<T> actual;
   private final Context parentSpan;
   private Disposable disposable;
 
-  public TracingSingleObserver(final SingleObserver<T> actual, final Context parentSpan) {
+  TracingSingleObserver(final SingleObserver<T> actual, final Context parentSpan) {
     this.actual = actual;
     this.parentSpan = parentSpan;
   }
 
   @Override
-  public void onSubscribe(final @NonNull Disposable disposable) {
-    if (!DisposableHelper.validate(this.disposable, disposable)) {
+  public void onSubscribe(final @NonNull Disposable d) {
+    if (!DisposableHelper.validate(disposable, d)) {
       return;
     }
-    this.disposable = disposable;
+    this.disposable = d;
     actual.onSubscribe(this);
   }
 
   @Override
   public void onSuccess(final @NonNull T t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onSuccess(t);
     }
   }
 
   @Override
   public void onError(@NonNull Throwable throwable) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onError(throwable);
     }
   }

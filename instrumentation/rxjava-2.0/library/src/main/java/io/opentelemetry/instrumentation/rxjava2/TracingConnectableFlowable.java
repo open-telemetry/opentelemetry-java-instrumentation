@@ -14,19 +14,19 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.internal.fuseable.ConditionalSubscriber;
 import org.reactivestreams.Subscriber;
 
-public class TracingConnectableFlowable<T> extends ConnectableFlowable<T> {
+class TracingConnectableFlowable<T> extends ConnectableFlowable<T> {
 
   private final ConnectableFlowable<T> source;
   private final Context parentSpan;
 
-  public TracingConnectableFlowable(final ConnectableFlowable<T> source, final Context parentSpan) {
+  TracingConnectableFlowable(final ConnectableFlowable<T> source, final Context parentSpan) {
     this.source = source;
     this.parentSpan = parentSpan;
   }
 
   @Override
   public void connect(final @NonNull Consumer<? super Disposable> connection) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       source.connect(connection);
     }
   }

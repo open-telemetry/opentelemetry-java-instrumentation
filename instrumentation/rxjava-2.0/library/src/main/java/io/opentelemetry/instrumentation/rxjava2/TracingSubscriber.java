@@ -11,7 +11,7 @@ import io.reactivex.internal.fuseable.QueueSubscription;
 import io.reactivex.internal.subscribers.BasicFuseableSubscriber;
 import org.reactivestreams.Subscriber;
 
-public class TracingSubscriber<T> extends BasicFuseableSubscriber<T, T> {
+class TracingSubscriber<T> extends BasicFuseableSubscriber<T, T> {
 
   private final Context parentSpan;
 
@@ -22,21 +22,21 @@ public class TracingSubscriber<T> extends BasicFuseableSubscriber<T, T> {
 
   @Override
   public void onNext(T t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onNext(t);
     }
   }
 
   @Override
   public void onError(Throwable t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       actual.onComplete();
     }
   }

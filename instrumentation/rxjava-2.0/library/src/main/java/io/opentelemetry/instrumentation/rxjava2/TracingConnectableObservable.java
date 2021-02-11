@@ -13,20 +13,19 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.observables.ConnectableObservable;
 
-public class TracingConnectableObservable<T> extends ConnectableObservable<T> {
+class TracingConnectableObservable<T> extends ConnectableObservable<T> {
 
   private final ConnectableObservable<T> source;
   private final Context parentSpan;
 
-  public TracingConnectableObservable(
-      final ConnectableObservable<T> source, final Context parentSpan) {
+  TracingConnectableObservable(final ConnectableObservable<T> source, final Context parentSpan) {
     this.source = source;
     this.parentSpan = parentSpan;
   }
 
   @Override
   public void connect(final @NonNull Consumer<? super Disposable> connection) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = parentSpan.makeCurrent()) {
       source.connect(connection);
     }
   }
