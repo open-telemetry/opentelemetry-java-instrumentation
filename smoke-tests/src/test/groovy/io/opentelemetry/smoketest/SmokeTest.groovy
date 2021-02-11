@@ -239,6 +239,7 @@ abstract class SmokeTest extends Specification {
         return
       }
       started = true
+      Runtime.addShutdownHook { stop() }
 
       backend = new GenericContainer<>("ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20201128.1734635")
         .withExposedPorts(8080)
@@ -267,11 +268,10 @@ abstract class SmokeTest extends Specification {
     def cleanup() {
     }
 
-    // currently unused
     def stop() {
-      backend.stop()
-      collector.stop()
-      network.close()
+      backend?.stop()
+      collector?.stop()
+      network?.close()
     }
   }
 }
