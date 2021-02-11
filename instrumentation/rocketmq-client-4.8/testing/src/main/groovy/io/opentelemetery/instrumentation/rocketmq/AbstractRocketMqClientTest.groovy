@@ -6,7 +6,6 @@
 package io.opentelemetery.instrumentation.rocketmq
 
 import base.BaseConf
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.rocketmq.client.producer.DefaultMQProducer

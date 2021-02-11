@@ -8,6 +8,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.BrokerConfig;
@@ -78,7 +79,7 @@ public class IntegrationTestBase {
     }
 
     public static String createBaseDir() {
-      String baseDir = System.getProperty("user.home") + SEP + "otel-rocketmq-unitteststore";
+      String baseDir = System.getProperty("user.home") + SEP + "unitteststore-" + UUID.randomUUID();
       final File file = new File(baseDir);
         if (file.exists()) {
           logger.info(String.format("[%s] has already existed, please back up and remove it for integration tests", baseDir));
