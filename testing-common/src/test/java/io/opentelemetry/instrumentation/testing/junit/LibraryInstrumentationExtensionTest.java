@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import io.opentelemetry.instrumentation.test.utils.TraceUtils;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class LibraryInstrumentationExtensionTest {
@@ -19,7 +19,8 @@ class LibraryInstrumentationExtensionTest {
   static final LibraryInstrumentationExtension instrumentation =
       LibraryInstrumentationExtension.create();
 
-  @Test
+  // repeated test verifies that the telemetry data is cleared between test runs
+  @RepeatedTest(5)
   void shouldCollectTraces() {
     // when
     TraceUtils.runInternalSpan("test");
