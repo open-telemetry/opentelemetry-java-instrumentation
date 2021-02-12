@@ -5,29 +5,35 @@
 
 import static Jms1Test.consumerSpan
 import static Jms1Test.producerSpan
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.jms.ConnectionFactory
 import listener.Config
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.jms.core.JmsTemplate
 
-class SpringListenerJms1Test extends AgentTestRunner {
+class SpringListenerJms1Test extends AgentInstrumentationSpecification {
 
   def "receiving message in spring listener generates spans"() {
     setup:
     def context = new AnnotationConfigApplicationContext(Config)
     def factory = context.getBean(ConnectionFactory)
     def template = new JmsTemplate(factory)
-    // TODO(anuraaga): There is no defined order between when JMS starts receiving and our attempt
-    // to send/receive. Sleep a bit to let JMS start to receive first. Ideally, we would not have
-    // an ordering constraint in our assertTraces for when there is no defined ordering like this
-    // test case.
-    sleep(500)
+
     template.convertAndSend("SpringListenerJms1", "a message")
 
     expect:
     assertTraces(2) {
+      sortTraces {
+        // ensure that traces appear in expected order
+        if (traces[0][0].kind == PRODUCER) {
+          def tmp = traces[0]
+          traces[0] = traces[1]
+          traces[1] = tmp
+        }
+      }
+
       trace(0, 1) {
         consumerSpan(it, 0, "queue", "SpringListenerJms1", "", null, "receive")
       }

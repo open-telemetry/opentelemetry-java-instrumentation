@@ -14,14 +14,12 @@ import static java.util.stream.Collectors.toList;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.common.Labels;
-import io.opentelemetry.api.common.LabelsBuilder;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.metrics.common.Labels;
+import io.opentelemetry.api.metrics.common.LabelsBuilder;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.SpanId;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
-import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.TraceStateBuilder;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
@@ -47,12 +45,12 @@ import io.opentelemetry.proto.trace.v1.Status;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.DoubleGaugeData;
-import io.opentelemetry.sdk.metrics.data.DoublePoint;
+import io.opentelemetry.sdk.metrics.data.DoublePointData;
 import io.opentelemetry.sdk.metrics.data.DoubleSumData;
 import io.opentelemetry.sdk.metrics.data.DoubleSummaryData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryPoint;
+import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
 import io.opentelemetry.sdk.metrics.data.LongGaugeData;
-import io.opentelemetry.sdk.metrics.data.LongPoint;
+import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.LongSumData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.ValueAtPercentile;
@@ -154,17 +152,20 @@ public final class AgentTestingExporterAccess {
           resourceSpans.getInstrumentationLibrarySpansList()) {
         InstrumentationLibrary instrumentationLibrary = ilSpans.getInstrumentationLibrary();
         for (Span span : ilSpans.getSpansList()) {
-          String traceId = TraceId.bytesToHex(span.getTraceId().toByteArray());
+          String traceId = bytesToHex(span.getTraceId().toByteArray());
           spans.add(
               TestSpanData.builder()
-                  .setTraceId(traceId)
-                  .setSpanId(SpanId.bytesToHex(span.getSpanId().toByteArray()))
-                  .setTraceState(extractTraceState(span.getTraceState()))
+                  .setSpanContext(
+                      SpanContext.create(
+                          traceId,
+                          bytesToHex(span.getSpanId().toByteArray()),
+                          TraceFlags.getDefault(),
+                          extractTraceState(span.getTraceState())))
                   // TODO is it ok to use default trace flags and default trace state here?
                   .setParentSpanContext(
                       SpanContext.create(
                           traceId,
-                          SpanId.bytesToHex(span.getParentSpanId().toByteArray()),
+                          bytesToHex(span.getParentSpanId().toByteArray()),
                           TraceFlags.getDefault(),
                           TraceState.getDefault()))
                   .setResource(
@@ -196,8 +197,8 @@ public final class AgentTestingExporterAccess {
                               link ->
                                   LinkData.create(
                                       SpanContext.create(
-                                          TraceId.bytesToHex(link.getTraceId().toByteArray()),
-                                          SpanId.bytesToHex(link.getSpanId().toByteArray()),
+                                          bytesToHex(link.getTraceId().toByteArray()),
+                                          bytesToHex(link.getSpanId().toByteArray()),
                                           TraceFlags.getDefault(),
                                           extractTraceState(link.getTraceState())),
                                       fromProto(link.getAttributesList()),
@@ -278,7 +279,8 @@ public final class AgentTestingExporterAccess {
             metric.getName(),
             metric.getDescription(),
             metric.getUnit(),
-            DoubleGaugeData.create(getDoublePoints(metric.getDoubleGauge().getDataPointsList())));
+            DoubleGaugeData.create(
+                getDoublePointDatas(metric.getDoubleGauge().getDataPointsList())));
       case INT_SUM:
         IntSum intSum = metric.getIntSum();
         return MetricData.createLongSum(
@@ -302,7 +304,7 @@ public final class AgentTestingExporterAccess {
             DoubleSumData.create(
                 doubleSum.getIsMonotonic(),
                 getTemporality(doubleSum.getAggregationTemporality()),
-                getDoublePoints(metric.getDoubleSum().getDataPointsList())));
+                getDoublePointDatas(metric.getDoubleSum().getDataPointsList())));
       case DOUBLE_HISTOGRAM:
         return MetricData.createDoubleSummary(
             resource,
@@ -325,11 +327,11 @@ public final class AgentTestingExporterAccess {
     return labelsBuilder.build();
   }
 
-  private static List<LongPoint> getIntPoints(List<IntDataPoint> points) {
+  private static List<LongPointData> getIntPoints(List<IntDataPoint> points) {
     return points.stream()
         .map(
             point ->
-                LongPoint.create(
+                LongPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     createLabels(point.getLabelsList()),
@@ -337,11 +339,11 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static List<DoublePoint> getDoublePoints(List<DoubleDataPoint> points) {
+  private static List<DoublePointData> getDoublePointDatas(List<DoubleDataPoint> points) {
     return points.stream()
         .map(
             point ->
-                DoublePoint.create(
+                DoublePointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     createLabels(point.getLabelsList()),
@@ -349,12 +351,12 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static Collection<DoubleSummaryPoint> getDoubleHistogramDataPoints(
+  private static Collection<DoubleSummaryPointData> getDoubleHistogramDataPoints(
       List<DoubleHistogramDataPoint> dataPointsList) {
     return dataPointsList.stream()
         .map(
             point ->
-                DoubleSummaryPoint.create(
+                DoubleSummaryPointData.create(
                     point.getStartTimeUnixNano(),
                     point.getTimeUnixNano(),
                     createLabels(point.getLabelsList()),
@@ -460,20 +462,20 @@ public final class AgentTestingExporterAccess {
     return StatusData.create(code, status.getMessage());
   }
 
-  private static Kind fromProto(Span.SpanKind kind) {
+  private static SpanKind fromProto(Span.SpanKind kind) {
     switch (kind) {
       case SPAN_KIND_INTERNAL:
-        return Kind.INTERNAL;
+        return SpanKind.INTERNAL;
       case SPAN_KIND_SERVER:
-        return Kind.SERVER;
+        return SpanKind.SERVER;
       case SPAN_KIND_CLIENT:
-        return Kind.CLIENT;
+        return SpanKind.CLIENT;
       case SPAN_KIND_PRODUCER:
-        return Kind.PRODUCER;
+        return SpanKind.PRODUCER;
       case SPAN_KIND_CONSUMER:
-        return Kind.CONSUMER;
+        return SpanKind.CONSUMER;
       default:
-        return Kind.INTERNAL;
+        return SpanKind.INTERNAL;
     }
   }
 
@@ -491,6 +493,36 @@ public final class AgentTestingExporterAccess {
       traceStateBuilder.set(listMember.substring(0, index), listMember.substring(index + 1));
     }
     return traceStateBuilder.build();
+  }
+
+  private static String bytesToHex(byte[] bytes) {
+    char[] dest = new char[bytes.length * 2];
+    bytesToBase16(bytes, dest);
+    return new String(dest);
+  }
+
+  private static void bytesToBase16(byte[] bytes, char[] dest) {
+    for (int i = 0; i < bytes.length; i++) {
+      byteToBase16(bytes[i], dest, i * 2);
+    }
+  }
+
+  private static void byteToBase16(byte value, char[] dest, int destOffset) {
+    int b = value & 0xFF;
+    dest[destOffset] = ENCODING[b];
+    dest[destOffset + 1] = ENCODING[b | 0x100];
+  }
+
+  private static final String ALPHABET = "0123456789abcdef";
+  private static final char[] ENCODING = buildEncodingArray();
+
+  private static char[] buildEncodingArray() {
+    char[] encoding = new char[512];
+    for (int i = 0; i < 256; ++i) {
+      encoding[i] = ALPHABET.charAt(i >>> 4);
+      encoding[i | 0x100] = ALPHABET.charAt(i & 0xF);
+    }
+    return encoding;
   }
 
   private AgentTestingExporterAccess() {}

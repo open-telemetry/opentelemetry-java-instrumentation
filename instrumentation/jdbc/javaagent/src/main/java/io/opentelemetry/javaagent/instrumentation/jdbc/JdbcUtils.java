@@ -5,12 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.javaagent.instrumentation.api.db.QueryNormalizationConfig.isQueryNormalizationEnabled;
-
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
-import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.ParseException;
-import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlNormalizer;
-import io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SqlStatementInfoExtractor;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Statement;
@@ -20,8 +14,6 @@ import org.slf4j.LoggerFactory;
 public abstract class JdbcUtils {
 
   private static final Logger log = LoggerFactory.getLogger(JdbcUtils.class);
-
-  private static final boolean NORMALIZATION_ENABLED = isQueryNormalizationEnabled("jdbc");
 
   private static Field c3poField = null;
 
@@ -67,27 +59,5 @@ public abstract class JdbcUtils {
       return null;
     }
     return connection;
-  }
-
-  /** Returns null if the sql could not be normalized for any reason. */
-  public static String normalizeSql(String sql) {
-    if (!NORMALIZATION_ENABLED) {
-      return sql;
-    }
-    try {
-      return SqlNormalizer.normalize(sql);
-    } catch (Exception e) {
-      log.debug("Could not normalize sql", e);
-      return null;
-    }
-  }
-
-  public static SqlStatementInfo normalizeAndExtractInfo(String sql) {
-    try {
-      return SqlStatementInfoExtractor.extract(normalizeSql(sql));
-    } catch (ParseException e) {
-      log.debug("Could not extract sql info", e);
-      return new SqlStatementInfo(null, null, null);
-    }
   }
 }

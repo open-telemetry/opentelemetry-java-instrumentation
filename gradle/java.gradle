@@ -100,7 +100,7 @@ repositories {
   }
   // this is only needed for the working against unreleased otel-java snapshots
   maven {
-    url "https://oss.jfrog.org/artifactory/oss-snapshot-local"
+    url "https://oss.sonatype.org/content/repositories/snapshots"
     content {
       includeGroup "io.opentelemetry"
     }

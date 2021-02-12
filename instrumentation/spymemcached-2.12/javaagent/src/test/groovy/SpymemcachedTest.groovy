@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 import com.google.common.util.concurrent.MoreExecutors
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.javaagent.instrumentation.spymemcached.CompletionListener
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
@@ -28,7 +28,7 @@ import net.spy.memcached.ops.OperationQueueFactory
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
-class SpymemcachedTest extends AgentTestRunner {
+class SpymemcachedTest extends AgentInstrumentationSpecification {
 
   @Shared
   def parentOperation = "parent-span"
@@ -116,8 +116,8 @@ class SpymemcachedTest extends AgentTestRunner {
     runUnderTrace("setup") {
       valuesToSet.each { k, v -> assert memcached.set(key(k), expiration, v).get() }
     }
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(1)
+    testWriter.clear()
   }
 
   def "test get hit"() {

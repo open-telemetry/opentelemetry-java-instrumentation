@@ -5,7 +5,7 @@ on:
     paths:
       - 'smoke-tests/grpc/**'
       - '.github/workflows/build-grpc-smoke-dist.yaml'
-    branches: 'master'
+    branches: 'main'
   workflow_dispatch:
 
 jobs:

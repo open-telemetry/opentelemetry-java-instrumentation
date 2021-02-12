@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.LongValueObserver;
+import application.io.opentelemetry.api.metrics.LongValueObserverBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 import java.util.function.Consumer;
 
 class ApplicationLongValueObserver implements LongValueObserver {
@@ -49,28 +50,28 @@ class ApplicationLongValueObserver implements LongValueObserver {
     }
   }
 
-  static class Builder implements LongValueObserver.Builder {
+  static class Builder implements LongValueObserverBuilder {
 
-    private final io.opentelemetry.api.metrics.LongValueObserver.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.LongValueObserverBuilder agentBuilder;
 
-    public Builder(io.opentelemetry.api.metrics.LongValueObserver.Builder agentBuilder) {
+    public Builder(io.opentelemetry.api.metrics.LongValueObserverBuilder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public LongValueObserver.Builder setDescription(String description) {
+    public Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public LongValueObserver.Builder setUnit(String unit) {
+    public Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public LongValueObserver.Builder setUpdater(Consumer<LongResult> callback) {
+    public Builder setUpdater(Consumer<LongResult> callback) {
       agentBuilder.setUpdater(
           result ->
               callback.accept((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));

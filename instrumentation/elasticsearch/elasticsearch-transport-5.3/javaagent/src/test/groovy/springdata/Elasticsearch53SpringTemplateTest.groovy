@@ -5,13 +5,14 @@
 
 package springdata
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.atomic.AtomicLong
+import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
@@ -29,13 +30,8 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder
 import spock.lang.Shared
 
-class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
+class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecification {
   public static final long TIMEOUT = 10000 // 10 seconds
-
-  // Some ES actions are not caused by clients and seem to just happen from time to time.
-  // We will just ignore these actions in traces.
-  // TODO: check if other ES tests need this protection and potentially pull this into global class
-  public static final Set<String> IGNORED_ACTIONS = ["NodesStatsAction", "IndicesStatsAction"] as Set
 
   @Shared
   Node testNode
@@ -60,6 +56,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       .put("transport.type", "netty3")
       .put("http.type", "netty3")
       .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+      .put("discovery.type", "single-node")
       .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
     testNode.start()
@@ -67,8 +64,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
       // into a top level trace to get exactly one trace in the result.
       testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
+      // disable periodic refresh in InternalClusterInfoService as it creates spans that tests don't expect
+      testNode.client().admin().cluster().updateSettings(new ClusterUpdateSettingsRequest().transientSettings(["cluster.routing.allocation.disk.threshold_enabled": false]))
     }
-    TEST_WRITER.waitForTraces(1)
+    testWriter.waitForTraces(1)
 
     template = new ElasticsearchTemplate(testNode.client())
   }
@@ -267,8 +266,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       .withId("b")
       .build())
     template.refresh(indexName)
-    TEST_WRITER.waitForTraces(5)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(5)
+    testWriter.clear()
 
     and:
     def query = new NativeSearchQueryBuilder().withIndices(indexName).build()

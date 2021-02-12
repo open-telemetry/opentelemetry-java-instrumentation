@@ -3,25 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository
 import spring.jpa.JpaPersistenceConfig
 
-class SpringJpaTest extends AgentTestRunner {
+class SpringJpaTest extends AgentInstrumentationSpecification {
   def "test object method"() {
     setup:
     def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)
     def repo = context.getBean(JpaCustomerRepository)
 
     // when Spring JPA sets up, it issues metadata queries -- clear those traces
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     runUnderTrace("toString test") {
@@ -47,7 +47,7 @@ class SpringJpaTest extends AgentTestRunner {
     def repo = context.getBean(JpaCustomerRepository)
 
     // when Spring JPA sets up, it issues metadata queries -- clear those traces
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     setup:
     def customer = new JpaCustomer("Bob", "Anonymous")
@@ -79,7 +79,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     repo.save(customer) // insert
@@ -110,7 +110,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     customer.firstName = "Bill"
@@ -153,7 +153,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     customer = repo.findByLastName("Anonymous")[0] // select
@@ -182,7 +182,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
 
     when:
     repo.delete(customer) // delete
@@ -223,6 +223,6 @@ class SpringJpaTest extends AgentTestRunner {
         }
       }
     }
-    TEST_WRITER.clear()
+    testWriter.clear()
   }
 }

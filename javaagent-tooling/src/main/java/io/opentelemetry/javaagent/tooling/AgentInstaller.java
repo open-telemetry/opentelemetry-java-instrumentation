@@ -69,6 +69,8 @@ public class AgentInstaller {
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(loadBootstrapPackagePrefixes());
     // WeakMap is used by other classes below, so we need to register the provider first.
     AgentTooling.registerWeakMapProvider();
+    // Instrumentation can use a bounded cache, so register here.
+    AgentTooling.registerBoundedCacheProvider();
     // this needs to be done as early as possible - before the first Config.get() call
     ConfigInitializer.initialize();
   }
@@ -342,30 +344,22 @@ public class AgentInstaller {
         ClassLoader classLoader,
         JavaModule module,
         boolean loaded,
-        DynamicType dynamicType) {
-      log.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
-    }
+        DynamicType dynamicType) {}
 
     @Override
     public void onIgnored(
         TypeDescription typeDescription,
         ClassLoader classLoader,
         JavaModule module,
-        boolean loaded) {
-      //      log.debug("onIgnored {}", typeDescription.getName());
-    }
+        boolean loaded) {}
 
     @Override
     public void onComplete(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      // log.debug("onComplete {}", typeName);
-    }
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
 
     @Override
     public void onDiscovery(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      // log.debug("onDiscovery {}", typeName);
-    }
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
   }
 
   /**

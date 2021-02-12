@@ -5,16 +5,16 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.SpanProcessor;
-import io.opentelemetry.sdk.trace.config.TraceConfig;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>Adds span exporter beans to the active tracer provider.
  *
- * <p>Updates the sampler probability in the active {@link TraceConfig}
+ * <p>Updates the sampler probability for the configured {@link TracerProvider}.
  */
 @Configuration
 @EnableConfigurationProperties(TracerProperties.class)
@@ -34,38 +34,26 @@ public class TracerAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public Tracer otelTracer(
-      TracerProperties tracerProperties, ObjectProvider<List<SpanExporter>> spanExportersProvider)
-      throws Exception {
-    Tracer tracer = GlobalOpenTelemetry.getTracer(tracerProperties.getName());
-
-    List<SpanExporter> spanExporters = spanExportersProvider.getIfAvailable();
-    if (spanExporters == null || spanExporters.isEmpty()) {
-      return tracer;
-    }
-
-    addSpanProcessors(spanExporters);
-    setSampler(tracerProperties);
-
-    return tracer;
+  public Tracer otelTracer(TracerProvider tracerProvider, TracerProperties tracerProperties) {
+    return tracerProvider.get(tracerProperties.getName());
   }
 
-  private void addSpanProcessors(List<SpanExporter> spanExporters) {
-    List<SpanProcessor> spanProcessors =
-        spanExporters.stream()
-            .map(spanExporter -> SimpleSpanProcessor.builder(spanExporter).build())
-            .collect(Collectors.toList());
+  @Bean
+  @ConditionalOnMissingBean
+  public TracerProvider tracerProvider(
+      TracerProperties tracerProperties, ObjectProvider<List<SpanExporter>> spanExportersProvider) {
+    SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
 
-    OpenTelemetrySdk.getGlobalTracerManagement()
-        .addSpanProcessor(SpanProcessor.composite(spanProcessors));
-  }
+    spanExportersProvider.getIfAvailable(Collections::emptyList).stream()
+        // todo SimpleSpanProcessor...is that really what we want here?
+        .map(SimpleSpanProcessor::create)
+        .forEach(tracerProviderBuilder::addSpanProcessor);
 
-  private void setSampler(TracerProperties tracerProperties) {
-    TraceConfig updatedTraceConfig =
-        OpenTelemetrySdk.getGlobalTracerManagement().getActiveTraceConfig().toBuilder()
+    SdkTracerProvider tracerProvider =
+        tracerProviderBuilder
             .setSampler(Sampler.traceIdRatioBased(tracerProperties.getSamplerProbability()))
             .build();
-
-    OpenTelemetrySdk.getGlobalTracerManagement().updateActiveTraceConfig(updatedTraceConfig);
+    OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
+    return tracerProvider;
   }
 }

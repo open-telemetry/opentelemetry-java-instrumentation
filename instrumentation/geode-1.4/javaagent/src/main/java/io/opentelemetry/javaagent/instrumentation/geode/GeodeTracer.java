@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import org.apache.geode.cache.Region;
@@ -40,7 +41,7 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
 
   @Override
   protected String normalizeQuery(String query) {
-    return GeodeQueryNormalizer.normalize(query);
+    return SqlStatementSanitizer.sanitize(query).getFullStatement();
   }
 
   @Override

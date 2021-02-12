@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.dropwizard.testing.junit.ResourceTestRule
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.junit.ClassRule
 import spock.lang.Shared
 
-class JerseyTest extends AgentTestRunner {
+class JerseyTest extends AgentInstrumentationSpecification {
 
   @Shared
   @ClassRule

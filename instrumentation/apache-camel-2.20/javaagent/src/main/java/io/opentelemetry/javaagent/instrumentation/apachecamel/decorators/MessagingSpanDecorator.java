@@ -24,7 +24,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -93,13 +93,23 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public Span.Kind getInitiatorSpanKind() {
-    return Kind.PRODUCER;
+  public SpanKind getInitiatorSpanKind() {
+    switch (component) {
+      case "aws-sqs":
+        return SpanKind.INTERNAL;
+      default:
+        return SpanKind.PRODUCER;
+    }
   }
 
   @Override
-  public Span.Kind getReceiverSpanKind() {
-    return Kind.CONSUMER;
+  public SpanKind getReceiverSpanKind() {
+    switch (component) {
+      case "aws-sqs":
+        return SpanKind.INTERNAL;
+      default:
+        return SpanKind.CONSUMER;
+    }
   }
 
   /**

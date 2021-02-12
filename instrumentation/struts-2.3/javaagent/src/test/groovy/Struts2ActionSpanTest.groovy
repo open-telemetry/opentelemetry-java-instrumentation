@@ -6,10 +6,11 @@
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 
-import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import javax.servlet.DispatcherType
 import org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter
 import org.eclipse.jetty.server.Server
@@ -52,15 +53,15 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
   void handlerSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
     trace.span(index) {
       name "GreetingAction.${endpoint.name().toLowerCase()}"
-      kind Span.Kind.INTERNAL
+      kind SpanKind.INTERNAL
       errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
         errorEvent(Exception, EXCEPTION.body)
       }
       def expectedMethodName = endpoint.name().toLowerCase()
       attributes {
-        'code.namespace' "io.opentelemetry.struts.GreetingAction"
-        'code.function' expectedMethodName
+        "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.struts.GreetingAction"
+        "${SemanticAttributes.CODE_FUNCTION.key}" expectedMethodName
       }
       childOf((SpanData) parent)
     }

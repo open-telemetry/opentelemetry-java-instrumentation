@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 
@@ -25,13 +25,13 @@ import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import java.util.concurrent.atomic.AtomicReference
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class Aws0ClientTest extends AgentTestRunner {
+class Aws0ClientTest extends AgentInstrumentationSpecification {
 
   private static final CREDENTIALS_PROVIDER_CHAIN = new AWSCredentialsProviderChain(
     new EnvironmentVariableCredentialsProvider(),
@@ -122,7 +122,8 @@ class Aws0ClientTest extends AgentTestRunner {
         }
       }
     }
-    server.lastRequest.headers.get("traceparent") != null
+    server.lastRequest.headers.get("X-Amzn-Trace-Id") != null
+    server.lastRequest.headers.get("traceparent") == null
 
     where:
     service | operation           | method | path                  | handlerCount | client                                                                      | additionalAttributes              | call                                                                                                                                   | body

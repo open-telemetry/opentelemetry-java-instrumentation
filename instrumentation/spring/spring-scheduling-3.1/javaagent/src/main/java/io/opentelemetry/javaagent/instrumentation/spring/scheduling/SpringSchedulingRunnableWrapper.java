@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling;
 import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.SpringSchedulingTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 
 public class SpringSchedulingRunnableWrapper implements Runnable {
@@ -23,7 +23,7 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
     if (runnable == null) {
       return;
     }
-    Span span = tracer().startSpan(tracer().spanNameOnRun(runnable), Kind.INTERNAL);
+    Span span = tracer().startSpan(tracer().spanNameOnRun(runnable), SpanKind.INTERNAL);
 
     try (Scope ignored = span.makeCurrent()) {
       runnable.run();

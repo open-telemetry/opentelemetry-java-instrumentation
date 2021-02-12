@@ -6,81 +6,100 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import java.lang.reflect.Method;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class BaseTracer {
-  private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
-
-  private static final boolean FAIL_ON_CONTEXT_LEAK =
-      Boolean.getBoolean("otel.internal.failOnContextLeak");
-
   // Keeps track of the server span for the current trace.
   // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
   // or other non-server root.
-  public static final ContextKey<Span> CONTEXT_SERVER_SPAN_KEY =
+  private static final ContextKey<Span> CONTEXT_SERVER_SPAN_KEY =
       ContextKey.named("opentelemetry-trace-server-span-key");
 
   // Keeps track of the client span in a subtree corresponding to a client request.
-  // Visible for testing
-  public static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
+  private static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
       ContextKey.named("opentelemetry-trace-auto-client-span-key");
 
   protected final Tracer tracer;
+  protected final ContextPropagators propagators;
 
   public BaseTracer() {
     tracer = GlobalOpenTelemetry.getTracer(getInstrumentationName(), getVersion());
+    propagators = GlobalOpenTelemetry.getPropagators();
   }
 
+  /**
+   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
+   * use the GlobalOpenTelemetry Propagator instance.
+   *
+   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
+   */
+  @Deprecated
   public BaseTracer(Tracer tracer) {
     this.tracer = tracer;
+    this.propagators = GlobalOpenTelemetry.getPropagators();
+  }
+
+  public BaseTracer(OpenTelemetry openTelemetry) {
+    this.tracer = openTelemetry.getTracer(getInstrumentationName(), getVersion());
+    this.propagators = openTelemetry.getPropagators();
+  }
+
+  public ContextPropagators getPropagators() {
+    return propagators;
   }
 
   public Span startSpan(Class<?> clazz) {
     String spanName = spanNameForClass(clazz);
-    return startSpan(spanName, Kind.INTERNAL);
+    return startSpan(spanName, SpanKind.INTERNAL);
   }
 
   public Span startSpan(Method method) {
     String spanName = spanNameForMethod(method);
-    return startSpan(spanName, Kind.INTERNAL);
+    return startSpan(spanName, SpanKind.INTERNAL);
   }
 
-  public Span startSpan(String spanName, Kind kind) {
+  public Span startSpan(String spanName, SpanKind kind) {
     return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
   }
 
-  // TODO (trask) make the key private
-  protected final boolean inClientSpan(Context parentContext) {
-    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
-  }
-
-  // TODO (trask) make the key private
   protected final Context withClientSpan(Context parentContext, Span span) {
     return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
   }
 
-  public Scope startScope(Span span) {
-    return Context.current().with(span).makeCurrent();
+  protected final Context withServerSpan(Context parentContext, Span span) {
+    return parentContext.with(span).with(CONTEXT_SERVER_SPAN_KEY, span);
   }
 
-  public Span getCurrentSpan() {
-    return Span.current();
+  protected final boolean shouldStartSpan(SpanKind proposedKind, Context context) {
+    switch (proposedKind) {
+      case CLIENT:
+        return !inClientSpan(context);
+      case SERVER:
+        return !inServerSpan(context);
+      default:
+        return true;
+    }
+  }
+
+  private boolean inClientSpan(Context parentContext) {
+    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
+  }
+
+  private boolean inServerSpan(Context context) {
+    return getCurrentServerSpan(context) != null;
   }
 
   protected abstract String getInstrumentationName();
@@ -130,6 +149,14 @@ public abstract class BaseTracer {
     return className;
   }
 
+  public void end(Context context) {
+    end(context, -1);
+  }
+
+  public void end(Context context, long endTimeNanos) {
+    end(Span.fromContext(context), endTimeNanos);
+  }
+
   public void end(Span span) {
     end(span, -1);
   }
@@ -140,6 +167,14 @@ public abstract class BaseTracer {
     } else {
       span.end();
     }
+  }
+
+  public void endExceptionally(Context context, Throwable throwable) {
+    endExceptionally(context, throwable, -1);
+  }
+
+  public void endExceptionally(Context context, Throwable throwable, long endTimeNanos) {
+    endExceptionally(Span.fromContext(context), throwable, endTimeNanos);
   }
 
   public void endExceptionally(Span span, Throwable throwable) {
@@ -164,46 +199,29 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
-  public static <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
-    if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
-      debugContextLeak();
-    }
+  /**
+   * Do extraction with the propagators from the GlobalOpenTelemetry instance. Not recommended.
+   *
+   * @deprecated We should eliminate all static usages so we can use the non-global propagators.
+   */
+  @Deprecated
+  public static <C> Context extractWithGlobalPropagators(
+      C carrier, TextMapPropagator.Getter<C> getter) {
+    return extract(GlobalOpenTelemetry.getPropagators(), carrier, getter);
+  }
+
+  public <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
+    return extract(propagators, carrier, getter);
+  }
+
+  private static <C> Context extract(
+      ContextPropagators propagators, C carrier, TextMapPropagator.Getter<C> getter) {
+    ContextPropagationDebug.debugContextLeakIfEnabled();
+
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
-    return GlobalOpenTelemetry.getPropagators()
-        .getTextMapPropagator()
-        .extract(Context.root(), carrier, getter);
-  }
-
-  private static void debugContextLeak() {
-    Context current = Context.current();
-    if (current != Context.root()) {
-      log.error("Unexpected non-root current context found when extracting remote context!");
-      Span currentSpan = Span.fromContextOrNull(current);
-      if (currentSpan != null) {
-        log.error("It contains this span: {}", currentSpan);
-      }
-      List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(current);
-      if (locations != null) {
-        StringBuilder sb = new StringBuilder();
-        Iterator<StackTraceElement[]> i = locations.iterator();
-        while (i.hasNext()) {
-          for (StackTraceElement ste : i.next()) {
-            sb.append("\n");
-            sb.append(ste);
-          }
-          if (i.hasNext()) {
-            sb.append("\nwhich was propagated from:");
-          }
-        }
-        log.error("a context leak was detected. it was propagated from:{}", sb);
-      }
-
-      if (FAIL_ON_CONTEXT_LEAK) {
-        throw new IllegalStateException("Context leak detected");
-      }
-    }
+    return propagators.getTextMapPropagator().extract(Context.root(), carrier, getter);
   }
 
   /** Returns span of type SERVER from the current context or <code>null</code> if not found. */

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
@@ -31,7 +31,7 @@ public class CouchbaseOnSubscribe<T> extends TracedOnSubscribe<T> {
   public static <T> CouchbaseOnSubscribe<T> create(
       Observable<T> originalObservable, String bucket, Object query) {
     return new CouchbaseOnSubscribe<>(
-        originalObservable, bucket, CouchbaseQueryNormalizer.normalize(query));
+        originalObservable, bucket, CouchbaseQuerySanitizer.sanitize(query));
   }
 
   private CouchbaseOnSubscribe(Observable<T> originalObservable, String bucket, String query) {

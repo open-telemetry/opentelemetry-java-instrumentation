@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.lettuce.core.ClientOptions
@@ -11,16 +11,16 @@ import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.api.sync.RedisCommands
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.function.Consumer
 import reactor.core.scheduler.Schedulers
 import redis.embedded.RedisServer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
-class LettuceReactiveClientTest extends AgentTestRunner {
+class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
   public static final String PEER_HOST = "localhost"
   public static final String PEER_IP = "127.0.0.1"
   public static final int DB_INDEX = 0
@@ -65,8 +65,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set + 1 connect trace
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(2)
+    testWriter.clear()
   }
 
   def cleanup() {
@@ -245,7 +245,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     res != null
-    TEST_WRITER.traces.size() == 0
+    testWriter.traces.size() == 0
   }
 
   def "debug segfault command (returns mono void) with no argument should produce span"() {

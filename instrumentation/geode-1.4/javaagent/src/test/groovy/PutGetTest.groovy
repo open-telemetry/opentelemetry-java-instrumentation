@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.apache.geode.DataSerializable
 import org.apache.geode.cache.client.ClientCacheFactory
 import org.apache.geode.cache.client.ClientRegionShortcut
@@ -16,7 +16,7 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 @Unroll
-class PutGetTest extends AgentTestRunner {
+class PutGetTest extends AgentInstrumentationSpecification {
   @Shared
   def cache = new ClientCacheFactory().create()
 
@@ -158,8 +158,8 @@ class PutGetTest extends AgentTestRunner {
 
     region.clear()
     region.put(1, value)
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(2)
+    testWriter.clear()
 
     when:
     def results = region.query("SELECT * FROM /test-region p WHERE p.expDate = '10/2020'")

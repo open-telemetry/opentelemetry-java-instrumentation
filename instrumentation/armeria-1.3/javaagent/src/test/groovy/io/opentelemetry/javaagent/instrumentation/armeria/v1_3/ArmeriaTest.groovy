@@ -21,11 +21,11 @@ class ArmeriaTest extends AbstractArmeriaTest implements AgentTestTrait {
     return clientBuilder
   }
 
-  def childSetupSpec() {
+  def setupSpec() {
     server.before()
   }
 
-  def childCleanupSpec() {
+  def cleanupSpec() {
     server.after()
   }
 }

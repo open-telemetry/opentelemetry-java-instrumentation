@@ -9,7 +9,7 @@ subprojects {
     ext {
         versions = [
                 opentelemetry            : "0.14.1",
-                opentelemetryJavaagent   : "0.14.0",
+                opentelemetryJavaagent   : "0.15.0-SNAPSHOT",
                 bytebuddy                : "1.10.10",
                 guava                    : "30.1-jre"
 
@@ -30,10 +30,7 @@ subprojects {
     repositories {
         jcenter()
         maven {
-            url = uri("https://dl.bintray.com/open-telemetry/maven")
-        }
-        maven {
-            url = uri("https://oss.jfrog.org/artifactory/oss-snapshot-local")
+            url = uri("https://oss.sonatype.org/content/repositories/snapshots")
         }
         mavenCentral()
     }

@@ -4,10 +4,11 @@
  */
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import java.time.Duration
 import org.reactivestreams.Publisher
@@ -17,7 +18,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import spock.lang.Shared
 
-class ReactorCoreTest extends AgentTestRunner {
+class ReactorCoreTest extends AgentInstrumentationSpecification {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
 
@@ -344,12 +345,12 @@ class ReactorCoreTest extends AgentTestRunner {
   }
 
   static addOneFunc(int i) {
-    getTestTracer().spanBuilder("add one").startSpan().end()
+    runInternalSpan("add one")
     return i + 1
   }
 
   static addTwoFunc(int i) {
-    getTestTracer().spanBuilder("add two").startSpan().end()
+    runInternalSpan("add two")
     return i + 2
   }
 }

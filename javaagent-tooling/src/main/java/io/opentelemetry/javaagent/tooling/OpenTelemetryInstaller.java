@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
@@ -35,11 +34,8 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
       copySystemProperties();
 
       OpenTelemetrySdk sdk = OpenTelemetrySdkAutoConfiguration.initialize();
-      // TODO(anuraaga): Remove this workdaround after autoconfiguration is fixed to actually
-      // register the global.
-      GlobalOpenTelemetry.set(sdk);
       OpenTelemetrySdkAccess.internalSetForceFlush(
-          (timeout, unit) -> sdk.getTracerManagement().forceFlush().join(timeout, unit));
+          (timeout, unit) -> sdk.getSdkTracerProvider().forceFlush().join(timeout, unit));
     } else {
       log.info("Tracing is disabled.");
     }
@@ -80,11 +76,17 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
     if (!environmentPropertiesWithCopies.containsKey("otel.propagators")) {
       System.setProperty("otel.propagators", "tracecontext,baggage");
     }
-    if (!environmentPropertiesWithCopies.containsKey("otel.trace.exporter")) {
-      System.setProperty("otel.trace.exporter", "otlp");
+    String traceExporter = environmentPropertiesWithCopies.getProperty("otel.traces.exporter");
+    if (traceExporter == null) {
+      System.setProperty("otel.traces.exporter", "otlp");
+    } else if (traceExporter.equals("none")) {
+      System.clearProperty("otel.traces.exporter");
     }
-    if (!environmentPropertiesWithCopies.containsKey("otel.metrics.exporter")) {
+    String metricExporter = environmentPropertiesWithCopies.getProperty("otel.metrics.exporter");
+    if (metricExporter == null) {
       System.setProperty("otel.metrics.exporter", "otlp");
+    } else if (metricExporter.equals("none")) {
+      System.clearProperty("otel.metrics.exporter");
     }
   }
 }

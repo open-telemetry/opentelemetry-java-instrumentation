@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.chunk;
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.shouldCreateRootSpanForChunk;
 
 import io.opentelemetry.api.trace.Span;
@@ -41,14 +41,6 @@ public class ChunkExecutionTracer extends BaseTracer {
     if (parentSpanContext.isValid()) {
       spanBuilder.addLink(parentSpanContext);
     }
-  }
-
-  public void end(Context context) {
-    end(Span.fromContext(context));
-  }
-
-  public void endExceptionally(Context context, Throwable throwable) {
-    endExceptionally(Span.fromContext(context), throwable);
   }
 
   @Override

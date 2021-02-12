@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
+import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.env.Environment
@@ -19,7 +20,7 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
 
-class Elasticsearch53NodeClientTest extends AgentTestRunner {
+class Elasticsearch53NodeClientTest extends AgentInstrumentationSpecification {
   public static final long TIMEOUT = 10000 // 10 seconds
 
   @Shared
@@ -44,6 +45,7 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
       .put("transport.type", "netty3")
       .put("http.type", "netty3")
       .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+      .put("discovery.type", "single-node")
       .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
     testNode.start()
@@ -51,8 +53,10 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
       // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
       // into a top level trace to get exactly one trace in the result.
       testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
+      // disable periodic refresh in InternalClusterInfoService as it creates spans that tests don't expect
+      testNode.client().admin().cluster().updateSettings(new ClusterUpdateSettingsRequest().transientSettings(["cluster.routing.allocation.disk.threshold_enabled": false]))
     }
-    TEST_WRITER.waitForTraces(1)
+    testWriter.waitForTraces(1)
   }
 
   def cleanupSpec() {
@@ -122,13 +126,13 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
 
   def "test elasticsearch get"() {
     setup:
-    assert TEST_WRITER.traces == []
+    assert testWriter.traces == []
     def indexResult = client.admin().indices().prepareCreate(indexName).get()
-    TEST_WRITER.waitForTraces(1)
+    testWriter.waitForTraces(1)
 
     expect:
     indexResult.acknowledged
-    TEST_WRITER.traces.size() == 1
+    testWriter.traces.size() == 1
 
     when:
     client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)

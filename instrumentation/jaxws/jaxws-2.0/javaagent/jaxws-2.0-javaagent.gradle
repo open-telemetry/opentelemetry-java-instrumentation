@@ -1,0 +1,15 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "javax.xml.ws"
+    module = "jaxws-api"
+    versions = "[2.0,]"
+    skipVersions += ['2.1-1', '2.1EA2'] // contain broken dependencies
+  }
+}
+
+dependencies {
+  library group: 'javax.xml.ws', name: 'jaxws-api', version: '2.0'
+  implementation project(":instrumentation:jaxws:jaxws-common:javaagent")
+}

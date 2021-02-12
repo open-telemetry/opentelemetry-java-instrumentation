@@ -1,0 +1,40 @@
+plugins {
+  id "org.unbroken-dome.xjc" version "2.0.0"
+}
+
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = 'org.springframework.ws'
+    module = 'spring-ws-core'
+    versions = "[2.0.0.RELEASE,]"
+    assertInverse = true
+  }
+}
+
+sourceSets {
+  test {
+    resources.srcDirs "src/test/schema"
+  }
+}
+
+checkstyle {
+  // exclude generated web service classes
+  checkstyleTest.exclude "**/hello_web_service/**"
+}
+
+dependencies {
+  compileOnly group: 'org.springframework.ws', name: 'spring-ws-core', version: '2.0.0.RELEASE'
+
+  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-web-services', version: '2.0.0.RELEASE'
+  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.0.0.RELEASE'
+
+  testImplementation group: 'wsdl4j', name: 'wsdl4j', version: '1.6.3'
+  testImplementation group: 'com.sun.xml.messaging.saaj', name: 'saaj-impl', version: '1.5.2'
+  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.11'
+  testImplementation group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.2.11'
+  testImplementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.2.11'
+
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+}

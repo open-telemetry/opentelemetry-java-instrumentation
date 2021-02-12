@@ -3,21 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.sync.RedisCommands
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletionException
 import redis.embedded.RedisServer
 import spock.lang.Shared
 
-class LettuceSyncClientTest extends AgentTestRunner {
+class LettuceSyncClientTest extends AgentInstrumentationSpecification {
   public static final String PEER_NAME = "localhost"
   public static final String PEER_IP = "127.0.0.1"
   public static final int DB_INDEX = 0
@@ -78,8 +78,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
     syncCommands.hmset("TESTHM", testHashMap)
 
     // 2 sets + 1 connect trace
-    TEST_WRITER.waitForTraces(3)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(3)
+    testWriter.clear()
   }
 
   def cleanup() {

@@ -5,7 +5,7 @@
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.AbstractExecutorService
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import spock.lang.Shared
 
-class ExecutorInstrumentationTest extends AgentTestRunner {
+class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 
   @Shared
   def executeRunnable = { e, c -> e.execute((Runnable) c) }
@@ -72,11 +72,11 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
       }
     }.run()
 
-    TEST_WRITER.waitForTraces(1)
-    List<SpanData> trace = TEST_WRITER.traces[0]
+    testWriter.waitForTraces(1)
+    List<SpanData> trace = testWriter.traces[0]
 
     expect:
-    TEST_WRITER.traces.size() == 1
+    testWriter.traces.size() == 1
     trace.size() == 2
     trace.get(0).name == "parent"
     trace.get(1).name == "asyncChild"
@@ -153,11 +153,11 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     child.unblock()
     child.waitForCompletion()
 
-    TEST_WRITER.waitForTraces(1)
-    List<SpanData> trace = TEST_WRITER.traces[0]
+    testWriter.waitForTraces(1)
+    List<SpanData> trace = testWriter.traces[0]
 
     expect:
-    TEST_WRITER.traces.size() == 1
+    testWriter.traces.size() == 1
     trace.size() == 2
     trace.get(0).name == "parent"
     trace.get(1).name == "asyncChild"
@@ -216,10 +216,10 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
       }
     }.run()
 
-    TEST_WRITER.waitForTraces(1)
+    testWriter.waitForTraces(1)
 
     expect:
-    TEST_WRITER.traces.size() == 1
+    testWriter.traces.size() == 1
 
     where:
     name                | method           | poolImpl

@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.BoundDoubleValueRecorder;
 import application.io.opentelemetry.api.metrics.DoubleValueRecorder;
+import application.io.opentelemetry.api.metrics.DoubleValueRecorderBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 
 class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
 
@@ -36,14 +38,12 @@ class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
     return new BoundInstrument(agentDoubleValueRecorder.bind(LabelBridging.toAgent(labels)));
   }
 
-  static class BoundInstrument implements DoubleValueRecorder.BoundDoubleValueRecorder {
+  static class BoundInstrument implements BoundDoubleValueRecorder {
 
-    private final io.opentelemetry.api.metrics.DoubleValueRecorder.BoundDoubleValueRecorder
-        agentBoundDoubleMeasure;
+    private final io.opentelemetry.api.metrics.BoundDoubleValueRecorder agentBoundDoubleMeasure;
 
     public BoundInstrument(
-        io.opentelemetry.api.metrics.DoubleValueRecorder.BoundDoubleValueRecorder
-            agentBoundDoubleMeasure) {
+        io.opentelemetry.api.metrics.BoundDoubleValueRecorder agentBoundDoubleMeasure) {
       this.agentBoundDoubleMeasure = agentBoundDoubleMeasure;
     }
 
@@ -58,22 +58,22 @@ class ApplicationDoubleValueRecorder implements DoubleValueRecorder {
     }
   }
 
-  static class Builder implements DoubleValueRecorder.Builder {
+  static class Builder implements DoubleValueRecorderBuilder {
 
-    private final io.opentelemetry.api.metrics.DoubleValueRecorder.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.DoubleValueRecorderBuilder agentBuilder;
 
-    public Builder(io.opentelemetry.api.metrics.DoubleValueRecorder.Builder agentBuilder) {
+    public Builder(io.opentelemetry.api.metrics.DoubleValueRecorderBuilder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public DoubleValueRecorder.Builder setDescription(String description) {
+    public Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public DoubleValueRecorder.Builder setUnit(String unit) {
+    public Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }

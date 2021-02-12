@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -19,7 +19,7 @@ import org.apache.jasper.JasperException
 import spock.lang.Shared
 import spock.lang.Unroll
 
-class JspInstrumentationForwardTests extends AgentTestRunner {
+class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
 
   @Shared
   int port

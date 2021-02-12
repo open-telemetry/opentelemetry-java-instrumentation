@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.BoundLongCounter;
 import application.io.opentelemetry.api.metrics.LongCounter;
+import application.io.opentelemetry.api.metrics.LongCounterBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 
 class ApplicationLongCounter implements LongCounter {
 
@@ -35,12 +37,11 @@ class ApplicationLongCounter implements LongCounter {
     return new BoundInstrument(agentLongCounter.bind(LabelBridging.toAgent(labels)));
   }
 
-  static class BoundInstrument implements LongCounter.BoundLongCounter {
+  static class BoundInstrument implements BoundLongCounter {
 
-    private final io.opentelemetry.api.metrics.LongCounter.BoundLongCounter agentBoundLongCounter;
+    private final io.opentelemetry.api.metrics.BoundLongCounter agentBoundLongCounter;
 
-    BoundInstrument(
-        io.opentelemetry.api.metrics.LongCounter.BoundLongCounter agentBoundLongCounter) {
+    BoundInstrument(io.opentelemetry.api.metrics.BoundLongCounter agentBoundLongCounter) {
       this.agentBoundLongCounter = agentBoundLongCounter;
     }
 
@@ -55,22 +56,22 @@ class ApplicationLongCounter implements LongCounter {
     }
   }
 
-  static class Builder implements LongCounter.Builder {
+  static class Builder implements LongCounterBuilder {
 
-    private final io.opentelemetry.api.metrics.LongCounter.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder;
 
-    Builder(io.opentelemetry.api.metrics.LongCounter.Builder agentBuilder) {
+    Builder(io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public LongCounter.Builder setDescription(String description) {
+    public Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public LongCounter.Builder setUnit(String unit) {
+    public Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }

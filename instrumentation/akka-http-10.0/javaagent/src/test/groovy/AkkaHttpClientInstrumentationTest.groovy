@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import akka.actor.ActorSystem
 import akka.http.javadsl.Http
@@ -50,6 +50,11 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest {
   boolean testRemoteConnection() {
     // Not sure how to properly set timeouts...
     return false
+  }
+
+  @Override
+  boolean testCausality() {
+    false
   }
 
   def "singleRequest exception trace"() {

@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.context.Context
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -20,6 +21,12 @@ class BaseTracerTest extends Specification {
 
   def span = Mock(Span)
 
+  @Shared
+  def root = Context.root()
+
+  @Shared
+  def existingSpan = Span.getInvalid()
+
   def newTracer() {
     return new BaseTracer() {
       @Override
@@ -28,6 +35,33 @@ class BaseTracerTest extends Specification {
       }
     }
   }
+
+  def "test shouldStartSpan"() {
+    when:
+    boolean result = tracer.shouldStartSpan(kind, context)
+
+    then:
+    result == expected
+
+    where:
+    kind              | context                                   | expected
+    SpanKind.CLIENT   | root | true
+    SpanKind.SERVER   | root                                      | true
+    SpanKind.INTERNAL | root                                      | true
+    SpanKind.PRODUCER | root                                      | true
+    SpanKind.CONSUMER | root                                      | true
+    SpanKind.CLIENT   | tracer.withClientSpan(root, existingSpan) | false
+    SpanKind.SERVER   | tracer.withClientSpan(root, existingSpan) | true
+    SpanKind.INTERNAL | tracer.withClientSpan(root, existingSpan) | true
+    SpanKind.CONSUMER | tracer.withClientSpan(root, existingSpan) | true
+    SpanKind.PRODUCER | tracer.withClientSpan(root, existingSpan) | true
+    SpanKind.SERVER   | tracer.withServerSpan(root, existingSpan) | false
+    SpanKind.INTERNAL | tracer.withServerSpan(root, existingSpan) | true
+    SpanKind.CONSUMER | tracer.withServerSpan(root, existingSpan) | true
+    SpanKind.PRODUCER | tracer.withServerSpan(root, existingSpan) | true
+    SpanKind.CLIENT   | tracer.withServerSpan(root, existingSpan) | true
+  }
+
 
   class SomeInnerClass implements Runnable {
     void run() {

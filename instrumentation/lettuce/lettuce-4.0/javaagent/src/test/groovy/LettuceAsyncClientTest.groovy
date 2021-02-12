@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import com.lambdaworks.redis.ClientOptions
 import com.lambdaworks.redis.RedisClient
@@ -15,9 +15,9 @@ import com.lambdaworks.redis.api.async.RedisAsyncCommands
 import com.lambdaworks.redis.api.sync.RedisCommands
 import com.lambdaworks.redis.codec.Utf8StringCodec
 import com.lambdaworks.redis.protocol.AsyncCommand
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
@@ -28,7 +28,7 @@ import redis.embedded.RedisServer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
-class LettuceAsyncClientTest extends AgentTestRunner {
+class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
   public static final String HOST = "localhost"
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
@@ -92,8 +92,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set + 1 connect trace
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.clear()
+    testWriter.waitForTraces(2)
+    testWriter.clear()
   }
 
   def cleanup() {
@@ -308,7 +308,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     hmsetFuture.thenApplyAsync(new Function<String, Object>() {
       @Override
       Object apply(String setResult) {
-        TEST_WRITER.waitForTraces(1) // Wait for 'hmset' trace to get written
+        testWriter.waitForTraces(1) // Wait for 'hmset' trace to get written
         conds.evaluate {
           assert setResult == "OK"
         }

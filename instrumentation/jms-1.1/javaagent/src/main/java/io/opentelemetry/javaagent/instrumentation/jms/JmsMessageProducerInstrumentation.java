@@ -114,7 +114,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
       MessageDestination messageDestination = tracer().extractDestination(message, destination);
       span = tracer().startProducerSpan(messageDestination, message);
-      scope = tracer().startScope(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

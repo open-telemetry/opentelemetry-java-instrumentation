@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.rest.api.v2010.account.Call;
@@ -29,7 +29,7 @@ public class TwilioTracer extends BaseTracer {
   }
 
   public boolean shouldStartSpan(Context parentContext) {
-    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) == null;
+    return shouldStartSpan(CLIENT, parentContext);
   }
 
   public Context startSpan(Context parentContext, Object serviceExecutor, String methodName) {
@@ -39,7 +39,7 @@ public class TwilioTracer extends BaseTracer {
             .setSpanKind(CLIENT)
             .setParent(parentContext)
             .startSpan();
-    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    return withClientSpan(parentContext, span);
   }
 
   /** Decorate trace based on service execution metadata. */
@@ -98,10 +98,6 @@ public class TwilioTracer extends BaseTracer {
     }
 
     super.end(span);
-  }
-
-  public void endExceptionally(Context context, Throwable throwable) {
-    super.endExceptionally(Span.fromContext(context), throwable);
   }
 
   /**

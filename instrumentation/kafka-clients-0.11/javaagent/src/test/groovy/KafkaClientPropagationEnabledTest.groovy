@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -53,7 +53,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
     container.setupMessageListener(new MessageListener<String, String>() {
       @Override
       void onMessage(ConsumerRecord<String, String> record) {
-        TEST_WRITER.waitForTraces(1) // ensure consistent ordering of traces
+        testWriter.waitForTraces(1) // ensure consistent ordering of traces
         records.add(record)
       }
     })
@@ -315,7 +315,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
     producer.send(new ProducerRecord<Integer, String>(SHARED_TOPIC, kafkaPartition, null, greeting))
 
     then:
-    TEST_WRITER.waitForTraces(1)
+    testWriter.waitForTraces(1)
     def records = new LinkedBlockingQueue<ConsumerRecord<String, String>>()
     def pollResult = KafkaTestUtils.getRecords(consumer)
 

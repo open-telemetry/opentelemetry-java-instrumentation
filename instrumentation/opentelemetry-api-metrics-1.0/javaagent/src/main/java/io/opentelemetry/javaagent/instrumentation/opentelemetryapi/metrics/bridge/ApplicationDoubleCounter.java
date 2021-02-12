@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
+import application.io.opentelemetry.api.metrics.BoundDoubleCounter;
 import application.io.opentelemetry.api.metrics.DoubleCounter;
+import application.io.opentelemetry.api.metrics.DoubleCounterBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 
 class ApplicationDoubleCounter implements DoubleCounter {
 
@@ -35,13 +37,11 @@ class ApplicationDoubleCounter implements DoubleCounter {
     return new BoundInstrument(agentDoubleCounter.bind(LabelBridging.toAgent(labels)));
   }
 
-  static class BoundInstrument implements DoubleCounter.BoundDoubleCounter {
+  static class BoundInstrument implements BoundDoubleCounter {
 
-    private final io.opentelemetry.api.metrics.DoubleCounter.BoundDoubleCounter
-        agentBoundDoubleCounter;
+    private final io.opentelemetry.api.metrics.BoundDoubleCounter agentBoundDoubleCounter;
 
-    BoundInstrument(
-        io.opentelemetry.api.metrics.DoubleCounter.BoundDoubleCounter agentBoundDoubleCounter) {
+    BoundInstrument(io.opentelemetry.api.metrics.BoundDoubleCounter agentBoundDoubleCounter) {
       this.agentBoundDoubleCounter = agentBoundDoubleCounter;
     }
 
@@ -56,22 +56,22 @@ class ApplicationDoubleCounter implements DoubleCounter {
     }
   }
 
-  static class Builder implements DoubleCounter.Builder {
+  static class Builder implements DoubleCounterBuilder {
 
-    private final io.opentelemetry.api.metrics.DoubleCounter.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.DoubleCounterBuilder agentBuilder;
 
-    Builder(io.opentelemetry.api.metrics.DoubleCounter.Builder agentBuilder) {
+    Builder(io.opentelemetry.api.metrics.DoubleCounterBuilder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public DoubleCounter.Builder setDescription(String description) {
+    public Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public DoubleCounter.Builder setUnit(String unit) {
+    public Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }

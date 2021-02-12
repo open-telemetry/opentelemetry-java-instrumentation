@@ -38,6 +38,11 @@ public class ApacheCamelInstrumentationModule extends InstrumentationModule {
     return singletonList(new CamelContextInstrumentation());
   }
 
+  @Override
+  public String[] additionalHelperClassNames() {
+    return new String[] {"io.opentelemetry.extension.aws.AwsXrayPropagator"};
+  }
+
   public static class CamelContextInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {

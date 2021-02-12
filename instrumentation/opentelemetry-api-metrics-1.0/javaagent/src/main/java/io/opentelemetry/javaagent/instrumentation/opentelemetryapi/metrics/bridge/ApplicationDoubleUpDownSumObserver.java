@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.DoubleUpDownSumObserver;
+import application.io.opentelemetry.api.metrics.DoubleUpDownSumObserverBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 import java.util.function.Consumer;
 
 class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
@@ -50,28 +51,28 @@ class ApplicationDoubleUpDownSumObserver implements DoubleUpDownSumObserver {
     }
   }
 
-  static class Builder implements DoubleUpDownSumObserver.Builder {
+  static class Builder implements DoubleUpDownSumObserverBuilder {
 
-    private final io.opentelemetry.api.metrics.DoubleUpDownSumObserver.Builder agentBuilder;
+    private final io.opentelemetry.api.metrics.DoubleUpDownSumObserverBuilder agentBuilder;
 
-    protected Builder(io.opentelemetry.api.metrics.DoubleUpDownSumObserver.Builder agentBuilder) {
+    protected Builder(io.opentelemetry.api.metrics.DoubleUpDownSumObserverBuilder agentBuilder) {
       this.agentBuilder = agentBuilder;
     }
 
     @Override
-    public DoubleUpDownSumObserver.Builder setDescription(String description) {
+    public Builder setDescription(String description) {
       agentBuilder.setDescription(description);
       return this;
     }
 
     @Override
-    public DoubleUpDownSumObserver.Builder setUnit(String unit) {
+    public Builder setUnit(String unit) {
       agentBuilder.setUnit(unit);
       return this;
     }
 
     @Override
-    public DoubleUpDownSumObserver.Builder setUpdater(Consumer<DoubleResult> callback) {
+    public Builder setUpdater(Consumer<DoubleResult> callback) {
       agentBuilder.setUpdater(
           result ->
               callback.accept((sum, labels) -> result.observe(sum, LabelBridging.toAgent(labels))));

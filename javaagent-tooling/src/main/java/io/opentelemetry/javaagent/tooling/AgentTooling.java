@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import io.opentelemetry.javaagent.bootstrap.WeakCache;
 import io.opentelemetry.javaagent.bootstrap.WeakCache.Provider;
+import io.opentelemetry.javaagent.instrumentation.api.BoundedCache;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.bytebuddy.AgentCachingPoolStrategy;
 import io.opentelemetry.javaagent.tooling.bytebuddy.AgentLocationStrategy;
@@ -31,6 +34,21 @@ public class AgentTooling {
       //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
       //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
     }
+  }
+
+  /**
+   * Instances of BoundCache are backed by a guava instance that lives in the agent classloader and
+   * is bridged to user/instrumentation classloader through the BoundedCache.Provider interface.
+   */
+  static void registerBoundedCacheProvider() {
+    BoundedCache.Provider.registerIfAbsent(
+        new BoundedCache.Builder() {
+          @Override
+          public <K, V> BoundedCache<K, V> build(long maxSize) {
+            Cache<K, V> cache = CacheBuilder.newBuilder().maximumSize(maxSize).build();
+            return new GuavaBoundedCache<>(cache);
+          }
+        });
   }
 
   private static <K, V> Provider loadWeakCacheProvider() {

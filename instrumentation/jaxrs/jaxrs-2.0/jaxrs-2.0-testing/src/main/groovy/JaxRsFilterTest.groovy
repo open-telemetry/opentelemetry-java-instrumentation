@@ -3,21 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
+import org.junit.Assume
 import spock.lang.Shared
 import spock.lang.Unroll
 
 @Unroll
-abstract class JaxRsFilterTest extends AgentTestRunner {
+abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
 
   @Shared
   SimpleRequestFilter simpleRequestFilter = new SimpleRequestFilter()
@@ -27,17 +28,35 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
 
   abstract makeRequest(String url)
 
+  Tuple2<String, String> runRequest(String resource) {
+    if (runsOnServer()) {
+      return makeRequest(resource)
+    }
+    // start a trace because the test doesn't go through any servlet or other instrumentation.
+    return runUnderServerTrace("test.span") {
+      makeRequest(resource)
+    }
+  }
+
+  boolean testAbortPrematch() {
+    true
+  }
+
+  boolean runsOnServer() {
+    false
+  }
+
   def "test #resource, #abortNormal, #abortPrematch"() {
+    Assume.assumeTrue(!abortPrematch || testAbortPrematch())
+
     given:
     simpleRequestFilter.abort = abortNormal
     prematchRequestFilter.abort = abortPrematch
     def abort = abortNormal || abortPrematch
 
     when:
-    // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def (responseText, responseStatus) = runUnderServerTrace("test.span") {
-      makeRequest(resource)
-    }
+
+    def (responseText, responseStatus) = runRequest(resource)
 
     then:
     responseText == expectedResponse
@@ -52,13 +71,19 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           name parentSpanName != null ? parentSpanName : "test.span"
-          attributes {
+          if (runsOnServer()) {
+            errored abortNormal
+          } else {
+            attributes {
+            }
           }
         }
         span(1) {
           childOf span(0)
           name controllerName
-          attributes {
+          if (!runsOnServer()) {
+            attributes {
+            }
           }
         }
       }
@@ -88,10 +113,7 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
     prematchRequestFilter.abort = false
 
     when:
-    // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def (responseText, responseStatus) = runUnderServerTrace("test.span") {
-      makeRequest(resource)
-    }
+    def (responseText, responseStatus) = runRequest(resource)
 
     then:
     responseStatus == Response.Status.OK.statusCode
@@ -101,14 +123,18 @@ abstract class JaxRsFilterTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           name parentResourceName
-          attributes {
+          if (!runsOnServer()) {
+            attributes {
+            }
           }
         }
         span(1) {
           childOf span(0)
           name controller1Name
           kind INTERNAL
-          attributes {
+          if (!runsOnServer()) {
+            attributes {
+            }
           }
         }
       }

@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.connectionFromStatement;
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.normalizeAndExtractInfo;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -71,7 +71,7 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
   }
 
   public Context startSpan(Context parentContext, Statement statement, String query) {
-    return startSpan(parentContext, statement, normalizeAndExtractInfo(query));
+    return startSpan(parentContext, statement, SqlStatementSanitizer.sanitize(query));
   }
 
   private Context startSpan(

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.api.GlobalOpenTelemetry
@@ -11,10 +11,10 @@ import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.Scope
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
-class TracerTest extends AgentTestRunner {
+class TracerTest extends AgentInstrumentationSpecification {
 
   def "capture span, kind, attributes, and status"() {
     when:
@@ -329,6 +329,6 @@ class TracerTest extends AgentTestRunner {
     def context = Context.current().with(span)
 
     then:
-    Span.fromContext(context).getSpanContext().getSpanIdAsHexString() == span.getSpanContext().getSpanIdAsHexString()
+    Span.fromContext(context).getSpanContext().getSpanId() == span.getSpanContext().getSpanId()
   }
 }

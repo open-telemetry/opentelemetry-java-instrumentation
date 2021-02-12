@@ -6,14 +6,11 @@
   </Match>
 
   <Match>
-    <!-- ignore default encoding for auto-genned class -->
-    <Class name="io.opentelemetry.javaagent.instrumentation.api.db.normalizer.SimpleCharStream"/>
-    <Bug pattern="DM_DEFAULT_ENCODING"/>
-  </Match>
-
-  <Match>
     <!-- forced GC only used in testing -->
-    <Class name="io.opentelemetry.instrumentation.util.gc.GcUtils"/>
+    <Or>
+      <Class name="io.opentelemetry.instrumentation.test.utils.GcUtils"/>
+      <Class name="io.opentelemetry.javaagent.util.GcUtils"/>
+    </Or>
     <Bug pattern="DM_GC"/>
   </Match>
 
@@ -44,6 +41,12 @@
     <!-- inner class serialization warning can be ignored for testing purposes -->
     <Class name="~SpymemcachedTest\$.*"/>
     <Bug pattern="SE_BAD_FIELD_INNER_CLASS"/>
+  </Match>
+
+  <Match>
+    <!-- writing to static field in a non-static method (clearAllExportedData()) -->
+    <Class name="io.opentelemetry.instrumentation.testing.LibraryTestRunner"/>
+    <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
   </Match>
 
   <Match>

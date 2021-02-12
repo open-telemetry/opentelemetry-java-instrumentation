@@ -47,7 +47,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         }
 
         span = tracer().startSpan(filterClass, method);
-        scope = tracer().startScope(span);
+        scope = span.makeCurrent();
       }
     }
 

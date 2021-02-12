@@ -5,7 +5,9 @@ muzzle {
     group = "org.apache.tomcat"
     module = "tomcat-jasper"
     // range [7.0.0,7.0.19) and version 8.0.9 missing from maven
-    versions = "[7.0.19,8.0.9),(8.0.9,)"
+    // tomcat 10 uses JSP 3.0
+    versions = "[7.0.19,10)"
+    skipVersions += '8.0.9'
   }
 }
 

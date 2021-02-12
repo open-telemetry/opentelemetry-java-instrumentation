@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 
-import io.opentelemetry.api.trace.Span
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.test.annotation.TracedWithSpan
 
 /**
  * This test verifies that auto instrumentation supports {@link io.opentelemetry.extension.annotations.WithSpan} contrib annotation.
  */
-class WithSpanInstrumentationTest extends AgentTestRunner {
+class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
 
   def "should derive automatic name"() {
     setup:
@@ -25,7 +25,7 @@ class WithSpanInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.otel"
-          kind Span.Kind.INTERNAL
+          kind SpanKind.INTERNAL
           hasNoParent()
           errored false
           attributes {

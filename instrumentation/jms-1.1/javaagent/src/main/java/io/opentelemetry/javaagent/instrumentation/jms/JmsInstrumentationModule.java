@@ -25,8 +25,7 @@ public class JmsInstrumentationModule extends InstrumentationModule {
     return asList(
         new JmsMessageConsumerInstrumentation(),
         new JmsMessageListenerInstrumentation(),
-        new JmsMessageProducerInstrumentation(),
-        new JmsSessionInstrumentation());
+        new JmsMessageProducerInstrumentation());
   }
 
   @Override

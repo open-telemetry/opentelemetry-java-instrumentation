@@ -1,0 +1,14 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "javax.jws"
+    module = "javax.jws-api"
+    versions = "[1.1,]"
+  }
+}
+
+dependencies {
+  library group: 'javax.jws', name: 'javax.jws-api', version: '1.1'
+  implementation project(":instrumentation:jaxws:jaxws-common:javaagent")
+}

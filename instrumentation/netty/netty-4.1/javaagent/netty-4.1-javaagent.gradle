@@ -28,6 +28,7 @@ muzzle {
 
 dependencies {
   library group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
+  api project(':instrumentation:netty:netty-4.1:library')
 
   testLibrary group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
 

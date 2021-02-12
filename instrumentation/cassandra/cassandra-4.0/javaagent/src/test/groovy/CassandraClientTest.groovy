@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -11,10 +11,10 @@ import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentTestRunner
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.time.Duration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,7 +22,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 
-class CassandraClientTest extends AgentTestRunner {
+class CassandraClientTest extends AgentInstrumentationSpecification {
   private static final Logger log = LoggerFactory.getLogger(CassandraClientTest)
 
   @Shared
@@ -113,6 +113,14 @@ class CassandraClientTest extends AgentTestRunner {
         "$SemanticAttributes.DB_SYSTEM.key" "cassandra"
         "$SemanticAttributes.DB_NAME.key" keyspace
         "$SemanticAttributes.DB_STATEMENT.key" statement
+        "$SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL.key" "LOCAL_ONE"
+        "$SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC.key" "datacenter1"
+        "$SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID.key" String
+        "$SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE.key" Boolean
+        "$SemanticAttributes.DB_CASSANDRA_PAGE_SIZE.key" 5000
+        "$SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT.key" 0
+        // the SqlStatementSanitizer can't handle CREATE statements yet
+        "$SemanticAttributes.DB_CASSANDRA_TABLE.key" { table -> (statement.contains("CREATE") || keyspace == null ? true : table == "users") }
       }
     }
   }

@@ -87,10 +87,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
 
     and:
-    traces.findResourceAttribute("os.name")
+    traces.findResourceAttribute("os.type")
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()
@@ -127,10 +130,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 1
 
     and:
-    traces.findResourceAttribute("os.name")
+    traces.findResourceAttribute("os.type")
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()
@@ -166,10 +172,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
 
     and:
-    traces.findResourceAttribute("os.name")
+    traces.findResourceAttribute("os.type")
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()
@@ -207,10 +216,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
 
     and:
-    traces.findResourceAttribute("os.name")
+    traces.findResourceAttribute("os.type")
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()
@@ -251,10 +263,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 1
 
     and:
-    traces.findResourceAttribute("os.name")
+    traces.findResourceAttribute("os.type")
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()
@@ -290,10 +305,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
 
     and:
-    traces.findResourceAttribute("os.name")
+    traces.findResourceAttribute("os.type")
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()
@@ -336,10 +354,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
 
     and:
-    traces.findResourceAttribute("os.name")
+    traces.findResourceAttribute("os.type")
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()
