@@ -83,8 +83,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
     syncCommands.hmset("TESTHM", testHashMap)
 
     // 2 sets
-    testWriter.waitForTraces(2)
-    testWriter.clear()
+    ignoreTracesAndClear(2)
   }
 
   def cleanup() {

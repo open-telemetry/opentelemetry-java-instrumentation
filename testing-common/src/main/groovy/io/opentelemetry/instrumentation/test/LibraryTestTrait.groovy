@@ -14,11 +14,7 @@ import io.opentelemetry.instrumentation.testing.LibraryTestRunner
  */
 trait LibraryTestTrait {
 
-  static InstrumentationTestRunner instrumentationTestRunner = LibraryTestRunner.instance()
-
-  static {
-    instrumentationTestRunner = LibraryTestRunner.instance()
-  }
+  static final InstrumentationTestRunner instrumentationTestRunner = LibraryTestRunner.instance()
 
   InstrumentationTestRunner testRunner() {
     instrumentationTestRunner

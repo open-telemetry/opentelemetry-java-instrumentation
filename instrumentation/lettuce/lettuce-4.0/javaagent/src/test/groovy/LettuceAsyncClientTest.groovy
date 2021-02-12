@@ -92,8 +92,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set + 1 connect trace
-    testWriter.waitForTraces(2)
-    testWriter.clear()
+    ignoreTracesAndClear(2)
   }
 
   def cleanup() {
@@ -308,7 +307,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     hmsetFuture.thenApplyAsync(new Function<String, Object>() {
       @Override
       Object apply(String setResult) {
-        testWriter.waitForTraces(1) // Wait for 'hmset' trace to get written
+        waitForTraces(1) // Wait for 'hmset' trace to get written
         conds.evaluate {
           assert setResult == "OK"
         }

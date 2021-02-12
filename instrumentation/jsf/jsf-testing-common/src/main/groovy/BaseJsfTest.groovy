@@ -108,7 +108,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
         basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     // extract parameters needed to post back form
@@ -168,7 +168,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
         basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     // extract parameters needed to post back form

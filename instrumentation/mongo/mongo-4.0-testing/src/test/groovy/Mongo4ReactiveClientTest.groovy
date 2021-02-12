@@ -121,8 +121,7 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
       latch1.await()
       return db.getCollection(collectionName)
     }
-    testWriter.waitForTraces(2)
-    testWriter.clear()
+    ignoreTracesAndClear(2)
 
     when:
     def count = new CompletableFuture()
@@ -167,8 +166,7 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
       latch2.await()
       return coll
     }
-    testWriter.waitForTraces(1)
-    testWriter.clear()
+    ignoreTracesAndClear(1)
 
     when:
     def result = new CompletableFuture<UpdateResult>()
@@ -218,8 +216,7 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
       latch2.await()
       return coll
     }
-    testWriter.waitForTraces(1)
-    testWriter.clear()
+    ignoreTracesAndClear(1)
 
     when:
     def result = new CompletableFuture<DeleteResult>()

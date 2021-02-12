@@ -14,8 +14,7 @@ import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner
  */
 trait AgentTestTrait {
 
-  static InstrumentationTestRunner agentTestRunner = AgentTestRunner.instance()
-  static InMemoryExporter testWriter = new InMemoryExporter()
+  static final InstrumentationTestRunner agentTestRunner = AgentTestRunner.instance()
 
   InstrumentationTestRunner testRunner() {
     agentTestRunner

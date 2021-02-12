@@ -65,8 +65,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set + 1 connect trace
-    testWriter.waitForTraces(2)
-    testWriter.clear()
+    ignoreTracesAndClear(2)
   }
 
   def cleanup() {
@@ -237,15 +236,12 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
   }
 
   def "non reactive command should not produce span"() {
-    setup:
-    String res = null
-
     when:
-    res = reactiveCommands.digest(null)
+    def res = reactiveCommands.digest(null)
 
     then:
     res != null
-    testWriter.traces.size() == 0
+    traces.size() == 0
   }
 
   def "debug segfault command (returns mono void) with no argument should produce span"() {

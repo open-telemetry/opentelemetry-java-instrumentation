@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.sdk.metrics.data.MetricDataType.DOUBLE_GAUGE
 import static io.opentelemetry.sdk.metrics.data.MetricDataType.DOUBLE_SUM
 import static io.opentelemetry.sdk.metrics.data.MetricDataType.LONG_GAUGE
@@ -11,9 +12,9 @@ import static io.opentelemetry.sdk.metrics.data.MetricDataType.SUMMARY
 import static java.util.concurrent.TimeUnit.SECONDS
 
 import com.google.common.base.Stopwatch
-import io.opentelemetry.api.metrics.common.Labels
 import io.opentelemetry.api.metrics.AsynchronousInstrument
 import io.opentelemetry.api.metrics.GlobalMetricsProvider
+import io.opentelemetry.api.metrics.common.Labels
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.metrics.data.MetricData
 import io.opentelemetry.sdk.metrics.data.PointData
@@ -253,8 +254,7 @@ class MeterTest extends AgentInstrumentationSpecification {
   def findMetric(instrumentationName, metricName) {
     Stopwatch stopwatch = Stopwatch.createStarted()
     while (stopwatch.elapsed(SECONDS) < 10) {
-      def allMetrics = testWriter.getMetrics()
-      for (def metric : allMetrics) {
+      for (def metric : metrics) {
         if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.name == metricName) {
           return metric
         }

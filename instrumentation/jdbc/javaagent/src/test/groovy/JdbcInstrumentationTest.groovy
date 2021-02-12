@@ -526,8 +526,8 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     datasource.getConnection().close()
 
     then:
-    !testWriter.traces.any { it.any { it.name == "database.connection" } }
-    testWriter.clear()
+    !traces.any { it.any { it.name == "database.connection" } }
+    clearExportedData()
 
     when:
     runUnderTrace("parent") {

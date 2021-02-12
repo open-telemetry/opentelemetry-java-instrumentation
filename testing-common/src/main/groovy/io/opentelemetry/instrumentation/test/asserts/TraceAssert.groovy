@@ -9,7 +9,7 @@ import static SpanAssert.assertSpan
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.instrumentation.test.InMemoryExporter
+import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
@@ -77,7 +77,7 @@ class TraceAssert {
   }
 
   private static List<SpanData> getTrace(Supplier<List<SpanData>> spanSupplier, String traceId) {
-    List<List<SpanData>> traces = InMemoryExporter.groupTraces(spanSupplier.get())
+    List<List<SpanData>> traces = TelemetryDataUtil.groupTraces(spanSupplier.get())
     for (List<SpanData> trace : traces) {
       if (trace[0].traceId == traceId) {
         return trace

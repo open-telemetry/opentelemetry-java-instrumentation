@@ -54,7 +54,7 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     Config config = new Config()
     config.useSingleServer().setAddress(address)
     redisson = Redisson.create(config)
-    testWriter.clear()
+    clearExportedData()
   }
 
   def "test future set"() {

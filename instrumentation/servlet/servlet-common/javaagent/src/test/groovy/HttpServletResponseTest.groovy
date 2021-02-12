@@ -32,7 +32,7 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
     def servlet = new AbstractHttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
     servlet.service((ServletRequest) request, (ServletResponse) response)
-    testWriter.clear()
+    clearExportedData()
   }
 
   def "test send no-parent"() {
@@ -91,7 +91,7 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
     def servlet = new AbstractHttpServlet() {}
     // We need to call service so HttpServletAdvice can link the request to the response.
     servlet.service((ServletRequest) request, (ServletResponse) response)
-    testWriter.clear()
+    clearExportedData()
 
     when:
     runUnderTrace("parent") {
