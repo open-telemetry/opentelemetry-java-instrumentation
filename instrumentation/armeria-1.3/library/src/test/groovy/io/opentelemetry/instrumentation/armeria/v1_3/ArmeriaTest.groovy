@@ -21,12 +21,4 @@ class ArmeriaTest extends AbstractArmeriaTest implements LibraryTestTrait {
   WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder.decorator(OpenTelemetryClient.newDecorator())
   }
-
-  def setupSpec() {
-    server.before()
-  }
-
-  def cleanupSpec() {
-    server.after()
-  }
 }
