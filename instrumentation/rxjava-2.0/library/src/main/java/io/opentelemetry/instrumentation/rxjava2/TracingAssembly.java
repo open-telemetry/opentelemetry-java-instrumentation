@@ -3,6 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// Includes work from:
+/*
+ * Copyright 2018 LINE Corporation
+ *
+ * LINE Corporation licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
 package io.opentelemetry.instrumentation.rxjava2;
 
 import io.opentelemetry.context.Context;
@@ -16,7 +33,6 @@ import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
-import io.reactivex.annotations.NonNull;
 import io.reactivex.flowables.ConnectableFlowable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Function;
@@ -27,6 +43,17 @@ import io.reactivex.plugins.RxJavaPlugins;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.reactivestreams.Subscriber;
 
+/**
+ * RxJava2 library instrumentation.
+ *
+ * <p>In order to enable RxJava2 instrumentation one has to call the <code>TracingAssembly.enable()
+ * </code> method.
+ *
+ * <p>Instrumentation uses <code>on*Assembly</code> and <code>on*Subscribe</code> RxJavaPlugin hooks
+ * to wrap RxJava2 classes in their tracing equivalents.
+ *
+ * <p>Instrumentation can be disabled by calling the <code>TracingAssembly.disable()</code> method.
+ */
 public final class TracingAssembly {
 
   @SuppressWarnings("rawtypes")
@@ -129,12 +156,7 @@ public final class TracingAssembly {
     RxJavaPlugins.setOnParallelAssembly(
         compose(
             oldOnParallelAssembly,
-            new ConditionalOnCurrentContextFunction<ParallelFlowable>() {
-              @Override
-              ParallelFlowable applyActual(ParallelFlowable parallelFlowable, Context ctx) {
-                return new TracingParallelFlowable(parallelFlowable, ctx);
-              }
-            }));
+            parallelFlowable -> new TracingParallelFlowable(parallelFlowable, Context.current())));
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -143,13 +165,8 @@ public final class TracingAssembly {
     RxJavaPlugins.setOnConnectableFlowableAssembly(
         compose(
             oldOnConnectableFlowableAssembly,
-            new ConditionalOnCurrentContextFunction<ConnectableFlowable>() {
-              @Override
-              ConnectableFlowable applyActual(
-                  ConnectableFlowable connectableFlowable, Context ctx) {
-                return new TracingConnectableFlowable(connectableFlowable, ctx);
-              }
-            }));
+            connectableFlowable ->
+                new TracingConnectableFlowable(connectableFlowable, Context.current())));
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -158,13 +175,8 @@ public final class TracingAssembly {
     RxJavaPlugins.setOnConnectableObservableAssembly(
         compose(
             oldOnConnectableObservableAssembly,
-            new ConditionalOnCurrentContextFunction<ConnectableObservable>() {
-              @Override
-              ConnectableObservable applyActual(
-                  ConnectableObservable connectableObservable, Context ctx) {
-                return new TracingConnectableObservable(connectableObservable, ctx);
-              }
-            }));
+            connectableObservable ->
+                new TracingConnectableObservable(connectableObservable, Context.current())));
   }
 
   private static void enableCompletable() {
@@ -172,13 +184,10 @@ public final class TracingAssembly {
     RxJavaPlugins.setOnCompletableSubscribe(
         biCompose(
             oldOnCompletableSubscribe,
-            new BiConditionalOnCurrentContextFunction<Completable, CompletableObserver>() {
-              @Override
-              CompletableObserver applyActual(
-                  Completable completable, CompletableObserver observer, Context ctx) {
-                try (Scope ignored = ctx.makeCurrent()) {
-                  return new TracingCompletableObserver(observer, ctx);
-                }
+            (completable, observer) -> {
+              final Context context = Context.current();
+              try (Scope ignored = context.makeCurrent()) {
+                return new TracingCompletableObserver(observer, context);
               }
             }));
   }
@@ -189,17 +198,14 @@ public final class TracingAssembly {
     RxJavaPlugins.setOnFlowableSubscribe(
         biCompose(
             oldOnFlowableSubscribe,
-            new BiConditionalOnCurrentContextFunction<Flowable, Subscriber>() {
-
-              @Override
-              Subscriber applyActual(Flowable flowable, Subscriber subscriber, Context ctx) {
-                try (Scope ignored = ctx.makeCurrent()) {
-                  if (subscriber instanceof ConditionalSubscriber) {
-                    return new TracingConditionalSubscriber<>(
-                        (ConditionalSubscriber) subscriber, ctx);
-                  } else {
-                    return new TracingSubscriber<>(subscriber, ctx);
-                  }
+            (flowable, subscriber) -> {
+              final Context context = Context.current();
+              try (Scope ignored = context.makeCurrent()) {
+                if (subscriber instanceof ConditionalSubscriber) {
+                  return new TracingConditionalSubscriber<>(
+                      (ConditionalSubscriber) subscriber, context);
+                } else {
+                  return new TracingSubscriber<>(subscriber, context);
                 }
               }
             }));
@@ -211,13 +217,10 @@ public final class TracingAssembly {
     RxJavaPlugins.setOnObservableSubscribe(
         biCompose(
             oldOnObservableSubscribe,
-            new BiConditionalOnCurrentContextFunction<Observable, Observer>() {
-
-              @Override
-              Observer applyActual(Observable observable, Observer observer, Context ctx) {
-                try (Scope ignored = ctx.makeCurrent()) {
-                  return new TracingObserver(observer, ctx);
-                }
+            (observable, observer) -> {
+              final Context context = Context.current();
+              try (Scope ignored = context.makeCurrent()) {
+                return new TracingObserver(observer, context);
               }
             }));
   }
@@ -228,14 +231,10 @@ public final class TracingAssembly {
     RxJavaPlugins.setOnSingleSubscribe(
         biCompose(
             oldOnSingleSubscribe,
-            new BiConditionalOnCurrentContextFunction<Single, SingleObserver>() {
-
-              @Override
-              SingleObserver applyActual(
-                  Single single, SingleObserver singleObserver, Context ctx) {
-                try (Scope ignored = ctx.makeCurrent()) {
-                  return new TracingSingleObserver(singleObserver, ctx);
-                }
+            (single, singleObserver) -> {
+              final Context context = Context.current();
+              try (Scope ignored = context.makeCurrent()) {
+                return new TracingSingleObserver(singleObserver, context);
               }
             }));
   }
@@ -247,15 +246,13 @@ public final class TracingAssembly {
         (BiFunction<? super Maybe, MaybeObserver, ? extends MaybeObserver>)
             biCompose(
                 oldOnMaybeSubscribe,
-                new BiConditionalOnCurrentContextFunction<Maybe, MaybeObserver>() {
-
-                  @Override
-                  MaybeObserver applyActual(Maybe maybe, MaybeObserver maybeObserver, Context ctx) {
-                    try (Scope ignored = ctx.makeCurrent()) {
-                      return new TracingMaybeObserver(maybeObserver, ctx);
-                    }
-                  }
-                }));
+                (BiFunction<Maybe, MaybeObserver, MaybeObserver>)
+                    (maybe, maybeObserver) -> {
+                      final Context context = Context.current();
+                      try (Scope ignored = context.makeCurrent()) {
+                        return new TracingMaybeObserver(maybeObserver, context);
+                      }
+                    }));
   }
 
   private static void disableConnectableFlowable() {
@@ -298,25 +295,6 @@ public final class TracingAssembly {
     RxJavaPlugins.setOnMaybeSubscribe(
         (BiFunction<? super Maybe, MaybeObserver, ? extends MaybeObserver>) oldOnMaybeSubscribe);
     oldOnMaybeSubscribe = null;
-  }
-
-  private abstract static class ConditionalOnCurrentContextFunction<T> implements Function<T, T> {
-    @Override
-    public final T apply(T t) {
-      return applyActual(t, Context.current());
-    }
-
-    abstract T applyActual(T t, Context ctx);
-  }
-
-  private abstract static class BiConditionalOnCurrentContextFunction<T, U>
-      implements BiFunction<T, U, U> {
-    @Override
-    public U apply(@NonNull T t, @NonNull U u) {
-      return applyActual(t, u, Context.current());
-    }
-
-    abstract U applyActual(T t, U u, Context ctx);
   }
 
   private static <T> Function<? super T, ? extends T> compose(

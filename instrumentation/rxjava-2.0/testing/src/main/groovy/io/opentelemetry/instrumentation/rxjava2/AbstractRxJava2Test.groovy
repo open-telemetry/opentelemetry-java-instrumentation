@@ -11,8 +11,12 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import io.reactivex.BackpressureStrategy
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
+import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
@@ -58,12 +62,11 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     and:
     assertTraces(1) {
       sortSpansByStartTime()
-      trace(0, workSpans + 2) {
-        basicSpan(it, 0, "trace-parent")
+      trace(0, workSpans + 1) {
 
-        basicSpan(it, 1, "publisher-parent", span(0))
-        for (int i = 2; i < workSpans + 2; ++i) {
-          basicSpan(it, i, "addOne", span(1))
+        basicSpan(it, 0, "publisher-parent")
+        for (int i = 1; i < workSpans + 1; ++i) {
+          basicSpan(it, i, "addOne", span(0))
         }
       }
     }
@@ -93,6 +96,8 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     "maybe from callable"     | 12       | 2         | { ->
       Maybe.fromCallable({ addOneFunc(10) }).map(addOne)
     }
+    "basic single"            | 1        | 1         | { -> Single.just(0).map(addOne) }
+    "basic observable"        | [1]      | 1         | { -> Observable.just(0).map(addOne) }
   }
 
   def "Publisher error '#name' test"() {
@@ -105,22 +110,22 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     and:
     assertTraces(1) {
       sortSpansByStartTime()
-      trace(0, 2) {
-        basicSpan(it, 0, "trace-parent", null, thrownException)
-
-
+      trace(0, 1) {
         // It's important that we don't attach errors at the Reactor level so that we don't
         // impact the spans on reactor integrations such as netty and lettuce, as reactor is
         // more of a context propagation mechanism than something we would be tracking for
         // errors this is ok.
-        basicSpan(it, 1, "publisher-parent", span(0))
+        basicSpan(it, 0, "publisher-parent")
       }
     }
 
     where:
-    name       | publisherSupplier
-    "maybe"    | { -> Maybe.error(new RuntimeException(EXCEPTION_MESSAGE)) }
-    "flowable" | { -> Flowable.error(new RuntimeException(EXCEPTION_MESSAGE)) }
+    name          | publisherSupplier
+    "maybe"       | { -> Maybe.error(new RuntimeException(EXCEPTION_MESSAGE)) }
+    "flowable"    | { -> Flowable.error(new RuntimeException(EXCEPTION_MESSAGE)) }
+    "single"      | { -> Single.error(new RuntimeException(EXCEPTION_MESSAGE)) }
+    "observable"  | { -> Observable.error(new RuntimeException(EXCEPTION_MESSAGE)) }
+    "completable" | { -> Completable.error(new RuntimeException(EXCEPTION_MESSAGE)) }
   }
 
   def "Publisher step '#name' test"() {
@@ -133,18 +138,15 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     and:
     assertTraces(1) {
       sortSpansByStartTime()
-      trace(0, workSpans + 2) {
-        basicSpan(it, 0, "trace-parent", null, exception)
-
-
+      trace(0, workSpans + 1) {
         // It's important that we don't attach errors at the Reactor level so that we don't
         // impact the spans on reactor integrations such as netty and lettuce, as reactor is
         // more of a context propagation mechanism than something we would be tracking for
         // errors this is ok.
-        basicSpan(it, 1, "publisher-parent", span(0))
+        basicSpan(it, 0, "publisher-parent")
 
-        for (int i = 2; i < workSpans + 2; i++) {
-          basicSpan(it, i, "addOne", span(1))
+        for (int i = 1; i < workSpans + 1; i++) {
+          basicSpan(it, i, "addOne", span(0))
         }
       }
     }
@@ -165,16 +167,18 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 2) {
-        basicSpan(it, 0, "trace-parent")
-        basicSpan(it, 1, "publisher-parent", span(0))
+      trace(0, 1) {
+        basicSpan(it, 0, "publisher-parent")
       }
     }
 
     where:
-    name             | publisherSupplier
-    "basic maybe"    | { -> Maybe.just(1) }
-    "basic flowable" | { -> Flowable.fromIterable([5, 6]) }
+    name                | publisherSupplier
+    "basic maybe"       | { -> Maybe.just(1) }
+    "basic flowable"    | { -> Flowable.fromIterable([5, 6]) }
+    "basic single"      | { -> Single.just(1) }
+    "basic completable" | { -> Completable.fromCallable({ -> 1 }) }
+    "basic observable"  | { -> Observable.just(1) }
   }
 
   def "Publisher chain spans have the correct parent for '#name'"() {
@@ -183,12 +187,11 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, workSpans + 2) {
-        basicSpan(it, 0, "trace-parent")
-        basicSpan(it, 1, "publisher-parent", span(0))
+      trace(0, workSpans + 1) {
+        basicSpan(it, 0, "publisher-parent")
 
-        for (int i = 2; i < workSpans + 2; i++) {
-          basicSpan(it, i, "addOne", span(1))
+        for (int i = 1; i < workSpans + 1; i++) {
+          basicSpan(it, i, "addOne", span(0))
         }
       }
     }
@@ -235,6 +238,12 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
           return ((Maybe) publisher).map(addTwo)
         } else if (publisher instanceof Flowable) {
           return ((Flowable) publisher).map(addTwo)
+        } else if (publisher instanceof Single) {
+          return ((Single) publisher).map(addTwo)
+        } else if (publisher instanceof Observable) {
+          return ((Observable) publisher).map(addTwo)
+        } else if (publisher instanceof Completable) {
+          return ((Completable) publisher).toMaybe().map(addTwo)
         }
         throw new IllegalStateException("Unknown publisher type")
       }
@@ -242,84 +251,104 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 3 + 2 * workItems) {
+      trace(0, 2 + 2 * workItems) {
         sortSpansByStartTime()
-        basicSpan(it, 0, "trace-parent")
+        basicSpan(it, 0, "publisher-parent")
+        basicSpan(it, 1, "intermediate", span(0))
 
-        basicSpan(it, 1, "publisher-parent", span(0))
-        basicSpan(it, 2, "intermediate", span(1))
-
-        for (int i = 3; i < 3 + 2 * workItems; i = i + 2) {
-          basicSpan(it, i, "addOne", span(1))
-          basicSpan(it, i + 1, "addTwo", span(1))
+        for (int i = 2; i < 2 + 2 * workItems; i = i + 2) {
+          basicSpan(it, i, "addOne", span(0))
+          basicSpan(it, i + 1, "addTwo", span(0))
         }
       }
     }
 
     where:
-    name             | workItems | publisherSupplier
-    "basic maybe"    | 1         | { -> Maybe.just(1).map(addOne) }
-    "basic flowable" | 2         | { -> Flowable.fromIterable([1, 2]).map(addOne) }
+    name               | workItems | publisherSupplier
+    "basic maybe"      | 1         | { -> Maybe.just(1).map(addOne) }
+    "basic flowable"   | 2         | { -> Flowable.fromIterable([1, 2]).map(addOne) }
+    "basic single"     | 1         | { -> Single.just(1).map(addOne) }
+    "basic observable" | 1         | { -> Observable.just(1).map(addOne) }
   }
 
   def "Flowables produce the right number of results '#scheduler'"() {
     when:
-    List<String> values = Flowable.fromIterable(Arrays.asList(1, 2, 3, 4))
-      .parallel()
-      .runOn(scheduler)
-      .flatMap({ num -> Maybe.just(num.toString() + " on " + Thread.currentThread().getName()).toFlowable() })
-      .sequential()
-      .toList()
-      .blockingGet()
+    List<String> values = runUnderTrace("flowable root") {
+      Flowable.fromIterable(Arrays.asList(1, 2, 3, 4))
+        .parallel()
+        .runOn(scheduler)
+        .flatMap({ num ->
+          Maybe.just(num).map(addOne).toFlowable()
+        })
+        .sequential()
+        .toList()
+        .blockingGet()
+    }
 
     then:
     values.size() == 4
+    assertTraces(1) {
+      trace(0, 5) {
+        basicSpan(it, 0, "flowable root")
+        for (int i = 1; i < values.size() + 1; i++) {
+          basicSpan(it, i, "addOne", span(0))
+        }
+      }
+    }
 
     where:
     scheduler << [Schedulers.newThread(), Schedulers.computation(), Schedulers.single(), Schedulers.trampoline()]
   }
 
   def cancelUnderTrace(def publisherSupplier) {
-    runUnderTrace("trace-parent") {
-      runUnderTraceWithoutExceptionCatch("publisher-parent") {
-        def publisher = publisherSupplier()
-        if (publisher instanceof Maybe) {
-          publisher = publisher.toFlowable()
+    runUnderTraceWithoutExceptionCatch("publisher-parent") {
+      def publisher = publisherSupplier()
+      if (publisher instanceof Maybe) {
+        publisher = publisher.toFlowable()
+      } else if (publisher instanceof Single) {
+        publisher = publisher.toFlowable()
+      } else if (publisher instanceof Completable) {
+        publisher = publisher.toFlowable()
+      } else if (publisher instanceof Observable) {
+        publisher = publisher.toFlowable(BackpressureStrategy.LATEST)
+      }
+
+      publisher.subscribe(new Subscriber<Integer>() {
+        void onSubscribe(Subscription subscription) {
+          subscription.cancel()
         }
 
-        publisher.subscribe(new Subscriber<Integer>() {
-          void onSubscribe(Subscription subscription) {
-            subscription.cancel()
-          }
+        void onNext(Integer t) {
+        }
 
-          void onNext(Integer t) {
-          }
+        void onError(Throwable error) {
+        }
 
-          void onError(Throwable error) {
-          }
-
-          void onComplete() {
-          }
-        })
-      }
+        void onComplete() {
+        }
+      })
     }
   }
 
   def assemblePublisherUnderTrace(def publisherSupplier) {
-    runUnderTrace("trace-parent") {
-      // The "add two" operations below should be children of this span
-      runUnderTraceWithoutExceptionCatch("publisher-parent") {
-        def publisher = publisherSupplier()
+    // The "add two" operations below should be children of this span
+    runUnderTraceWithoutExceptionCatch("publisher-parent") {
+      def publisher = publisherSupplier()
 
-        // Read all data from publisher
-        if (publisher instanceof Maybe) {
-          return ((Maybe) publisher).blockingGet()
-        } else if (publisher instanceof Flowable) {
-          return ((Flowable) publisher).toList().blockingGet().toArray({ size -> new Integer[size] })
-        }
-
-        throw new RuntimeException("Unknown publisher: " + publisher)
+      // Read all data from publisher
+      if (publisher instanceof Maybe) {
+        return ((Maybe) publisher).blockingGet()
+      } else if (publisher instanceof Flowable) {
+        return ((Flowable) publisher).toList().blockingGet().toArray({ size -> new Integer[size] })
+      } else if (publisher instanceof Single) {
+        return ((Single) publisher).blockingGet()
+      } else if (publisher instanceof Observable) {
+        return ((Observable) publisher).toList().blockingGet().toArray({ size -> new Integer[size] })
+      } else if (publisher instanceof Completable) {
+        return ((Completable) publisher).toMaybe().blockingGet()
       }
+
+      throw new RuntimeException("Unknown publisher: " + publisher)
     }
   }
 }
