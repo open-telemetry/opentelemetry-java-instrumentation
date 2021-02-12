@@ -25,16 +25,21 @@ dependencies {
   // in public API.
   library group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '2.2.1'
 
-  implementation(
+  compileOnly(
     'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
     'com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10',
     'commons-io:commons-io:2.2')
-  implementation deps.slf4j
+  compileOnly deps.slf4j
 
   implementation deps.opentelemetryExtAws
 
   // 1.2.0 allows to get the function ARN
   testLibrary group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.0'
+
+  testImplementation(
+    'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
+    'com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10',
+    'commons-io:commons-io:2.2')
 
   testImplementation deps.opentelemetryTraceProps
   testImplementation deps.guava
