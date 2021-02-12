@@ -28,10 +28,10 @@ import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -90,10 +90,9 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         @Advice.Local("otelHttpUrlState") HttpUrlState httpUrlState,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Origin("#m") String methodName
-        ) {
+        @Advice.Origin("#m") String methodName) {
 
-      if(methodName.equals("getResponseCode")){
+      if (methodName.equals("getResponseCode")) {
         // Nothing to do here, prevent changing/impacting
         return;
       }
@@ -139,16 +138,16 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue) {
 
-      if(methodName.equals("getResponseCode")){
-        if(httpUrlState == null){
+      if (methodName.equals("getResponseCode")) {
+        if (httpUrlState == null) {
           ContextStore<HttpURLConnection, HttpUrlState> storage =
               InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
           httpUrlState = storage.get(connection);
         }
-        if(httpUrlState != null){
+        if (httpUrlState != null) {
           Span span = Span.fromContext(httpUrlState.context);
-          span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (int)returnValue);
-          if((int)returnValue >= 400){
+          span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (int) returnValue);
+          if ((int) returnValue >= 400) {
             span.setStatus(StatusCode.ERROR);
           }
         }
