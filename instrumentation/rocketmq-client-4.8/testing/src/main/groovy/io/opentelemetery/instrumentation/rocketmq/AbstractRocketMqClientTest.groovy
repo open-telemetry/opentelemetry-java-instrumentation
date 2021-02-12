@@ -50,7 +50,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
   int consumeTime = 5000;
 
   @Shared
-  BaseConf baseConf =new BaseConf();
+  def baseConf =new BaseConf();
 
   def setup() {
     sharedTopic =baseConf.initTopic();
