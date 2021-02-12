@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import java.util.Map;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,12 +28,18 @@ public class ParentContextExtractorTest {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
-  @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+  @Rule
+  public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
   @BeforeClass
   public static void setUp() {
     GlobalOpenTelemetry.set(
         OpenTelemetry.getPropagating(ContextPropagators.create(B3Propagator.getInstance())));
+  }
+
+  @AfterClass
+  public static void tearDown() {
+    GlobalOpenTelemetry.resetForTest();
   }
 
   @Test
