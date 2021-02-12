@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.metrics.GlobalMetricsProvider;
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory;
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory;
@@ -17,6 +18,7 @@ import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.File;
 import java.net.MalformedURLException;
@@ -44,6 +46,18 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
 
     maybeConfigureExporterJar(sdkTracerProviderBuilder);
+    maybeEnableLoggingExporter(sdkTracerProviderBuilder);
+  }
+
+  private static void maybeEnableLoggingExporter(SdkTracerProviderBuilder builder) {
+    if (Config.get().isAgentDebugEnabled()) {
+      // todo: is this really a reliable way to detect this?
+      // don't install another instance if the user has already explicitly requested it.
+      if (!Config.get().getProperty("otel.traces.exporter", "").equalsIgnoreCase("logging")
+          && !Config.get().getProperty("otel.exporter", "").equalsIgnoreCase("logging")) {
+        builder.addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()));
+      }
+    }
   }
 
   private static void maybeConfigureExporterJar(SdkTracerProviderBuilder sdkTracerProviderBuilder) {
@@ -72,7 +86,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
         getExporterFactory(SpanExporterFactory.class, exporterLoader);
 
     if (spanExporterFactory != null) {
-      installExporter(spanExporterFactory, config, builder);
+      installSpanExporter(spanExporterFactory, config, builder);
     } else {
       log.warn("No span exporter found in {}", exporterJar);
       log.warn("No valid exporter found. Tracing will run but spans are dropped");
@@ -81,7 +95,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     MetricExporterFactory metricExporterFactory =
         getExporterFactory(MetricExporterFactory.class, exporterLoader);
     if (metricExporterFactory != null) {
-      installExporter(metricExporterFactory, config);
+      installMetricExporter(metricExporterFactory, config);
     }
   }
 
@@ -100,7 +114,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     return null;
   }
 
-  private static void installExporter(
+  private static void installSpanExporter(
       SpanExporterFactory spanExporterFactory,
       Properties config,
       SdkTracerProviderBuilder builder) {
@@ -110,7 +124,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }
 
-  private static void installExporter(
+  private static void installMetricExporter(
       MetricExporterFactory metricExporterFactory, Properties config) {
     MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
     IntervalMetricReader.builder()
