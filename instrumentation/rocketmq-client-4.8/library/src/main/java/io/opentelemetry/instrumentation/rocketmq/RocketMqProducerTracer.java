@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmq;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -25,16 +26,16 @@ public class RocketMqProducerTracer extends BaseTracer {
   }
 
   public Span startProducerSpan(String addr, Message msg) {
-    Span span = startSpan(spanNameOnProduce(msg), PRODUCER);
+    SpanBuilder span = spanBuilder(spanNameOnProduce(msg), PRODUCER);
     onProduce(span, msg, addr);
-    return span;
+    return span.startSpan();
   }
 
   public void onCallback(Span span, SendResult sendResult) {
     span.setAttribute("messaging.rocketmq.callback_result", sendResult.getSendStatus().name());
   }
 
-  public void onProduce(Span span, Message msg, String addr) {
+  public void onProduce(SpanBuilder span, Message msg, String addr) {
     span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq");
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION, msg.getTopic());
