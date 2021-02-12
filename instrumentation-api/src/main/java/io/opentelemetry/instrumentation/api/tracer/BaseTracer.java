@@ -109,6 +109,8 @@ public abstract class BaseTracer {
       case SERVER:
         suppressed = inServerSpan(context);
         break;
+      default:
+        break;
     }
     if (suppressed) {
       suppressionCounter.add(
