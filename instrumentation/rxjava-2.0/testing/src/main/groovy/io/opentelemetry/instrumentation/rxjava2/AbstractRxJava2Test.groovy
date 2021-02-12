@@ -17,6 +17,8 @@ import io.reactivex.Flowable
 import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.internal.operators.flowable.FlowablePublish
+import io.reactivex.internal.operators.observable.ObservablePublish
 import io.reactivex.schedulers.Schedulers
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
@@ -98,6 +100,10 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
     "basic single"            | 1        | 1         | { -> Single.just(0).map(addOne) }
     "basic observable"        | [1]      | 1         | { -> Observable.just(0).map(addOne) }
+    "connectable flowable"    | [1]      | 1         | { ->
+      FlowablePublish.just(0).delay(100, MILLISECONDS).map(addOne) }
+    "connectable observable"  | [1]      | 1         | { ->
+      ObservablePublish.just(0).delay(100, MILLISECONDS).map(addOne) }
   }
 
   def "Publisher error '#name' test"() {

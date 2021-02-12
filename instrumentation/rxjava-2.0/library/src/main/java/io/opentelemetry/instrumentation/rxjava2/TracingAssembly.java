@@ -33,11 +33,9 @@ import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.Single;
 import io.reactivex.SingleObserver;
-import io.reactivex.flowables.ConnectableFlowable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Function;
 import io.reactivex.internal.fuseable.ConditionalSubscriber;
-import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.parallel.ParallelFlowable;
 import io.reactivex.plugins.RxJavaPlugins;
 import org.checkerframework.checker.lock.qual.GuardedBy;
@@ -63,11 +61,6 @@ public final class TracingAssembly {
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
-  private static Function<? super ConnectableObservable, ? extends ConnectableObservable>
-      oldOnConnectableObservableAssembly;
-
-  @SuppressWarnings("rawtypes")
-  @GuardedBy("TracingAssembly.class")
   private static BiFunction<
           ? super Completable, ? super CompletableObserver, ? extends CompletableObserver>
       oldOnCompletableSubscribe;
@@ -89,11 +82,6 @@ public final class TracingAssembly {
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
-  private static Function<? super ConnectableFlowable, ? extends ConnectableFlowable>
-      oldOnConnectableFlowableAssembly;
-
-  @SuppressWarnings("rawtypes")
-  @GuardedBy("TracingAssembly.class")
   private static Function<? super ParallelFlowable, ? extends ParallelFlowable>
       oldOnParallelAssembly;
 
@@ -109,8 +97,6 @@ public final class TracingAssembly {
 
     enableObservable();
 
-    enableConnectableObservable();
-
     enableCompletable();
 
     enableSingle();
@@ -118,8 +104,6 @@ public final class TracingAssembly {
     enableMaybe();
 
     enableFlowable();
-
-    enableConnectableFlowable();
 
     enableParallel();
 
@@ -141,11 +125,7 @@ public final class TracingAssembly {
 
     disableObservable();
 
-    disableConnectableObservable();
-
     disableCompletable();
-
-    disableConnectableFlowable();
 
     enabled = false;
   }
@@ -157,26 +137,6 @@ public final class TracingAssembly {
         compose(
             oldOnParallelAssembly,
             parallelFlowable -> new TracingParallelFlowable(parallelFlowable, Context.current())));
-  }
-
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  private static void enableConnectableFlowable() {
-    oldOnConnectableFlowableAssembly = RxJavaPlugins.getOnConnectableFlowableAssembly();
-    RxJavaPlugins.setOnConnectableFlowableAssembly(
-        compose(
-            oldOnConnectableFlowableAssembly,
-            connectableFlowable ->
-                new TracingConnectableFlowable(connectableFlowable, Context.current())));
-  }
-
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  private static void enableConnectableObservable() {
-    oldOnConnectableObservableAssembly = RxJavaPlugins.getOnConnectableObservableAssembly();
-    RxJavaPlugins.setOnConnectableObservableAssembly(
-        compose(
-            oldOnConnectableObservableAssembly,
-            connectableObservable ->
-                new TracingConnectableObservable(connectableObservable, Context.current())));
   }
 
   private static void enableCompletable() {
@@ -253,16 +213,6 @@ public final class TracingAssembly {
                         return new TracingMaybeObserver(maybeObserver, context);
                       }
                     }));
-  }
-
-  private static void disableConnectableFlowable() {
-    RxJavaPlugins.setOnConnectableFlowableAssembly(oldOnConnectableFlowableAssembly);
-    oldOnConnectableFlowableAssembly = null;
-  }
-
-  private static void disableConnectableObservable() {
-    RxJavaPlugins.setOnConnectableObservableAssembly(oldOnConnectableObservableAssembly);
-    oldOnConnectableObservableAssembly = null;
   }
 
   private static void disableParallel() {
