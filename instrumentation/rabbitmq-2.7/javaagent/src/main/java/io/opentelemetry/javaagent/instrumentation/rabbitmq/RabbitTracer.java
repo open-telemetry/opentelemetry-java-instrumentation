@@ -35,13 +35,14 @@ public class RabbitTracer extends BaseTracer {
 
   public Span startSpan(String method, Connection connection) {
     SpanKind kind = method.equals("Channel.basicPublish") ? PRODUCER : CLIENT;
-    Span span = startSpan(method, kind);
-    span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq");
-    span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue");
+    SpanBuilder span =
+        spanBuilder(method, kind)
+            .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
+            .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue");
 
     NetPeerUtils.INSTANCE.setNetPeer(span, connection.getAddress(), connection.getPort());
 
-    return span;
+    return span.startSpan();
   }
 
   public Span startGetSpan(
@@ -55,20 +56,20 @@ public class RabbitTracer extends BaseTracer {
             .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive")
             .setStartTimestamp(startTime, TimeUnit.MILLISECONDS);
 
-    Span span = spanBuilder.startSpan();
     if (response != null) {
-      span.setAttribute(
+      spanBuilder.setAttribute(
           SemanticAttributes.MESSAGING_DESTINATION,
           normalizeExchangeName(response.getEnvelope().getExchange()));
-      span.setAttribute("messaging.rabbitmq.routing_key", response.getEnvelope().getRoutingKey());
-      span.setAttribute(
+      spanBuilder.setAttribute(
+          "messaging.rabbitmq.routing_key", response.getEnvelope().getRoutingKey());
+      spanBuilder.setAttribute(
           SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
           (long) response.getBody().length);
     }
-    NetPeerUtils.INSTANCE.setNetPeer(span, connection.getAddress(), connection.getPort());
-    onGet(span, queue);
+    NetPeerUtils.INSTANCE.setNetPeer(spanBuilder, connection.getAddress(), connection.getPort());
+    onGet(spanBuilder, queue);
 
-    return span;
+    return spanBuilder.startSpan();
   }
 
   public Span startDeliverySpan(
@@ -120,7 +121,7 @@ public class RabbitTracer extends BaseTracer {
     return (queue.startsWith("amq.gen-") ? "<generated>" : queue) + " receive";
   }
 
-  public void onGet(Span span, String queue) {
+  public void onGet(SpanBuilder span, String queue) {
     span.setAttribute("rabbitmq.command", "basic.get");
     span.setAttribute("rabbitmq.queue", queue);
   }

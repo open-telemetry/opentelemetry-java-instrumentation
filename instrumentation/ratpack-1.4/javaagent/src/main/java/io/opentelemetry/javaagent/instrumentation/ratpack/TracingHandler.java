@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.ratpack;
 import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackTracer.tracer;
 
 import io.netty.util.Attribute;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
@@ -25,21 +24,22 @@ public final class TracingHandler implements Handler {
     io.opentelemetry.context.Context serverSpanContext = spanAttribute.get();
 
     // Relying on executor instrumentation to assume the netty span is in context as the parent.
-    Span ratpackSpan = tracer().startSpan("ratpack.handler", SpanKind.INTERNAL);
-    ctx.getExecution().add(ratpackSpan);
+    io.opentelemetry.context.Context ratpackContext =
+        tracer().startSpan("ratpack.handler", SpanKind.INTERNAL);
+    ctx.getExecution().add(ratpackContext);
 
     ctx.getResponse()
         .beforeSend(
             response -> {
               if (serverSpanContext != null) {
                 // Rename the netty span name with the ratpack route.
-                tracer().onContext(Span.fromContext(serverSpanContext), ctx);
+                tracer().onContext(serverSpanContext, ctx);
               }
-              tracer().onContext(ratpackSpan, ctx);
-              tracer().end(ratpackSpan);
+              tracer().onContext(ratpackContext, ctx);
+              tracer().end(ratpackContext);
             });
 
-    try (Scope ignored = ratpackSpan.makeCurrent()) {
+    try (Scope ignored = ratpackContext.makeCurrent()) {
       ctx.next();
       // exceptions are captured by ServerErrorHandlerInstrumentation
     }

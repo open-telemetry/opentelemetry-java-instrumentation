@@ -35,7 +35,8 @@ public class WithSpanTracer extends BaseTracer {
       Method method,
       io.opentelemetry.api.trace.SpanKind kind) {
     io.opentelemetry.api.trace.Span span =
-        startSpan(spanNameForMethodWithAnnotation(applicationAnnotation, method), kind);
+        spanBuilder(spanNameForMethodWithAnnotation(applicationAnnotation, method), kind)
+            .startSpan();
     if (kind == io.opentelemetry.api.trace.SpanKind.SERVER) {
       return withServerSpan(context, span);
     }

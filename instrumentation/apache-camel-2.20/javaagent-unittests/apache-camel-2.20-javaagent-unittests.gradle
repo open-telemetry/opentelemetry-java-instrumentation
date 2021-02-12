@@ -8,5 +8,5 @@ dependencies {
 
   testImplementation deps.opentelemetryTraceProps
   testImplementation deps.opentelemetryExtAws
-  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
+  testImplementation deps.assertj
 }
