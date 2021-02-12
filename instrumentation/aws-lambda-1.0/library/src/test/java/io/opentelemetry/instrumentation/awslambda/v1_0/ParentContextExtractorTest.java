@@ -28,8 +28,7 @@ public class ParentContextExtractorTest {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
-  @Rule
-  public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+  @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
   @BeforeClass
   public static void setUp() {
