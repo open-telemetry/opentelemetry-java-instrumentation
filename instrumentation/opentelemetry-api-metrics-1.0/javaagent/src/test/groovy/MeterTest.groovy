@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import static io.opentelemetry.sdk.metrics.data.MetricDataType.DOUBLE_GAUGE
 import static io.opentelemetry.sdk.metrics.data.MetricDataType.DOUBLE_SUM
 import static io.opentelemetry.sdk.metrics.data.MetricDataType.LONG_GAUGE
