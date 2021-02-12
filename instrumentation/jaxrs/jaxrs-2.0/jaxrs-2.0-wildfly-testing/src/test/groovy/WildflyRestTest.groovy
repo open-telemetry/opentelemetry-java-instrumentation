@@ -35,6 +35,10 @@ class WildflyRestTest extends AgentInstrumentationSpecification {
       .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
   }
 
+  def getContextRoot() {
+    return url.getPath()
+  }
+
   def "test #path"() {
     when:
     Client client = JerseyClientBuilder.newClient()
@@ -52,7 +56,7 @@ class WildflyRestTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          name ~/.*\${path}/
+          name getContextRoot() + path
           hasNoParent()
         }
         span(1) {
@@ -64,7 +68,7 @@ class WildflyRestTest extends AgentInstrumentationSpecification {
 
     where:
     path        | className
-    "/cdiHello" | "CdiRestResource"
-    "/ejbHello" | "EjbRestResource"
+    "cdiHello" | "CdiRestResource"
+    "ejbHello" | "EjbRestResource"
   }
 }
