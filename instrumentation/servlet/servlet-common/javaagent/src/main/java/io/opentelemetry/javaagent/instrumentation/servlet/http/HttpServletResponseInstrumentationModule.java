@@ -14,7 +14,7 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
@@ -63,33 +63,33 @@ public class HttpServletResponseInstrumentationModule extends InstrumentationMod
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void start(
         @Advice.Origin Method method,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       callDepth = CallDepthThreadLocalMap.getCallDepth(HttpServletResponse.class);
       // Don't want to generate a new top-level span
       if (callDepth.getAndIncrement() == 0
           && Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
-        span = tracer().startSpan(method);
-        scope = span.makeCurrent();
+        context = tracer().startSpan(method);
+        scope = context.makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() == 0 && span != null) {
+      if (callDepth.decrementAndGet() == 0 && context != null) {
         CallDepthThreadLocalMap.reset(HttpServletResponse.class);
 
         scope.close();
 
         if (throwable != null) {
-          tracer().endExceptionally(span, throwable);
+          tracer().endExceptionally(context, throwable);
         } else {
-          tracer().end(span);
+          tracer().end(context);
         }
       }
     }

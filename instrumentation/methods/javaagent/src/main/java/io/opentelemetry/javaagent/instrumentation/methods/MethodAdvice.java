@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
@@ -17,22 +17,22 @@ public class MethodAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
       @Advice.Origin Method method,
-      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    span = tracer().startSpan(method);
-    scope = span.makeCurrent();
+    context = tracer().startSpan(method);
+    scope = context.makeCurrent();
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Local("otelSpan") Span span,
+      @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
       @Advice.Thrown Throwable throwable) {
     scope.close();
     if (throwable != null) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
     } else {
-      tracer().end(span);
+      tracer().end(context);
     }
   }
 }
