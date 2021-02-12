@@ -141,6 +141,11 @@ See [GA Requirements](docs/ga-requirements.md)
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
+
+- [Jason Plumb](https://github.com/breedx-splk), Splunk
+- [Sergei Malafeev](https://github.com/malafeev), Lightstep
+
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 
 - [John Watson](https://github.com/jkwatson), Splunk
