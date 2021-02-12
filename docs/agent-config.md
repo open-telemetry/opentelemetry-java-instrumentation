@@ -30,7 +30,7 @@ The following configuration properties are common to all exporters:
 
 | System property | Environment variable | Purpose                                                                                                                                                 |
 |-----------------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| otel.trace.exporter   | OTEL_TRACE_EXPORTER        | The exporter to be used for tracing. Default is `otlp`. `none` means no exporter. |
+| otel.traces.exporter   | OTEL_TRACES_EXPORTER        | The exporter to be used for tracing. Default is `otlp`. `none` means no exporter. |
 | otel.metrics.exporter   | OTEL_METRICS_EXPORTER        | The exporter to be used for metrics. Default is `otlp`. `none` means no exporter. |
 
 ### OTLP exporter (both span and metric exporters)
@@ -54,7 +54,7 @@ A simple wrapper for the Jaeger exporter of opentelemetry-java. This exporter us
 
 | System property                   | Environment variable              | Description                                                                                        |
 |-----------------------------------|-----------------------------------|----------------------------------------------------------------------------------------------------|
-| otel.trace.exporter=jaeger              | OTEL_TRACE_EXPORTER=jaeger              | Select the Jaeger exporter                                                                         |
+| otel.traces.exporter=jaeger              | OTEL_TRACES_EXPORTER=jaeger              | Select the Jaeger exporter                                                                         |
 | otel.exporter.jaeger.endpoint     | OTEL_EXPORTER_JAEGER_ENDPOINT     | The Jaeger gRPC endpoint to connect to. Default is `localhost:14250`.                              |
 
 ### Zipkin exporter
@@ -62,7 +62,7 @@ A simple wrapper for the Zipkin exporter of opentelemetry-java. It sends JSON in
 
 | System property                   | Environment variable              | Description                                                                                                               |
 |-----------------------------------|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| otel.trace.exporter=zipkin              | OTEL_TRACE_EXPORTER=zipkin              | Select the Zipkin exporter                                                                                             |
+| otel.traces.exporter=zipkin              | OTEL_TRACES_EXPORTER=zipkin              | Select the Zipkin exporter                                                                                             |
 | otel.exporter.zipkin.endpoint     | OTEL_EXPORTER_ZIPKIN_ENDPOINT     | The Zipkin endpoint to connect to. Default is `http://localhost:9411/api/v2/spans`. Currently only HTTP is supported. |
 
 ### Prometheus exporter
@@ -81,7 +81,7 @@ attributes to stdout. It's mainly used for testing and debugging.
 
 | System property              | Environment variable         | Description                                                                  |
 |------------------------------|------------------------------|------------------------------------------------------------------------------|
-| otel.trace.exporter=logging        | OTEL_TRACE_EXPORTER=logging        | Select the logging exporter for tracing                                               |
+| otel.traces.exporter=logging        | OTEL_TRACES_EXPORTER=logging        | Select the logging exporter for tracing                                               |
 | otel.metrics.exporter=logging        | OTEL_METRICS_EXPORTER=logging        | Select the logging exporter for metrics                                               |
 | otel.exporter.logging.prefix | OTEL_EXPORTER_LOGGING_PREFIX | An optional string printed in front of the span name and attributes.         |
 
