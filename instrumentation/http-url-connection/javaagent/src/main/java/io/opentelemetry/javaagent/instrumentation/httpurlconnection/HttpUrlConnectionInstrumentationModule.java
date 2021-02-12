@@ -19,6 +19,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
@@ -92,9 +93,8 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         @Advice.Origin("#m") String methodName
         ) {
 
-      System.out.println("///////////// yes enter " + methodName);
-      System.out.println("/////////////     enter httpUrlState = " + httpUrlState);
       if(methodName.equals("getResponseCode")){
+        // Nothing to do here, prevent changing/impacting
         return;
       }
       callDepth = CallDepthThreadLocalMap.getCallDepth(HttpURLConnection.class);
@@ -122,7 +122,6 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         return;
       }
 
-      System.out.println("///////////// start span in " + methodName);
       Context context = tracer().startSpan(parentContext, connection);
       httpUrlState = new HttpUrlState(context);
       storage.put(connection, httpUrlState);
@@ -140,25 +139,17 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue) {
 
-      System.out.println("///////////// yes exit " + methodName);
-      System.out.println("/////////////     exit httpUrlState = " + httpUrlState);
       if(methodName.equals("getResponseCode")){
-        System.out.println("///////////// EXIT getResponseCode returnValue = "  + returnValue);
-        System.out.println("/////////////     urlState = " + httpUrlState);
-        System.out.println("/////////////     throwable = " + throwable);
-
         if(httpUrlState == null){
-          System.out.println("/////////////     )) param is null");
           ContextStore<HttpURLConnection, HttpUrlState> storage =
               InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
           httpUrlState = storage.get(connection);
-          if(httpUrlState != null){
-            System.out.println("/////////////     )) got one from the storage! " + httpUrlState);
-            Span span = Span.fromContext(httpUrlState.context);
-            span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (int)returnValue);
-          }
-          else{
-            System.out.println("/////////////     )) FAILED to get one from the storage!");
+        }
+        if(httpUrlState != null){
+          Span span = Span.fromContext(httpUrlState.context);
+          span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (int)returnValue);
+          if((int)returnValue >= 400){
+            span.setStatus(StatusCode.ERROR);
           }
         }
         return;
@@ -173,14 +164,12 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
       scope.close();
 
       if (throwable != null) {
-        System.out.println("///////////// tracer endExceptionally() in  " + methodName);
         tracer().endExceptionally(httpUrlState.context, throwable);
         httpUrlState.finished = true;
       } else if (methodName.equals("getInputStream") && responseCode > 0) {
         // responseCode field is sometimes not populated.
         // We can't call getResponseCode() due to some unwanted side-effects
         // (e.g. breaks getOutputStream).
-        System.out.println("///////////// tracer end() in  " + methodName);
         tracer().end(httpUrlState.context, new HttpUrlResponse(connection, responseCode));
         httpUrlState.finished = true;
       }
