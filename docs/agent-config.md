@@ -123,20 +123,20 @@ The [peer service name](https://github.com/open-telemetry/opentelemetry-specific
 
 | System property                 | Environment variable            | Description                                                  |
 |---------------------------------|---------------------------------|--------------------------------------------------------------|
-| otel.trace.sampler              | OTEL_TRACE_SAMPLER              | The sampler to use for tracing. Defaults to `parentbased_always_on` |
-| otel.trace.sampler.arg          | OTEL_TRACE_SAMPLER_ARG          | An argument to the configured tracer if supported, for example a ratio. |
+| otel.traces.sampler             | OTEL_TRACES_SAMPLER              | The sampler to use for tracing. Defaults to `parentbased_always_on` |
+| otel.traces.sampler.arg         | OTEL_TRACES_SAMPLER_ARG          | An argument to the configured tracer if supported, for example a ratio. |
 | otel.span.attribute.count.limit | OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT | The maximum number of attributes per span. Default is `32`.  |
 | otel.span.event.count.limit     | OTEL_SPAN_EVENT_COUNT_LIMIT     | The maximum number of events per span. Default is `128`.     |
 | otel.span.link.count.limit      | OTEL_SPAN_LINK_COUNT_LIMIT      | The maximum number of links per span. Default is `32`        |
 
-Supported values for `otel.trace.sampler` are
+Supported values for `otel.traces.sampler` are
 
 - "always_on": AlwaysOnSampler
 - "always_off": AlwaysOffSampler
-- "traceidratio": TraceIdRatioBased. `otel.trace.sampler.arg` sets the ratio.
+- "traceidratio": TraceIdRatioBased. `otel.traces.sampler.arg` sets the ratio.
 - "parentbased_always_on": ParentBased(root=AlwaysOnSampler)
 - "parentbased_always_off": ParentBased(root=AlwaysOffSampler)
-- "parentbased_traceidratio": ParentBased(root=TraceIdRatioBased). `otel.trace.sampler.arg` sets the ratio.
+- "parentbased_traceidratio": ParentBased(root=TraceIdRatioBased). `otel.traces.sampler.arg` sets the ratio.
 
 ## Interval metric reader
 

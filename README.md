@@ -77,7 +77,7 @@ Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables. See below for a full list of environment variables. For example:
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
-     -Dotel.trace.exporter=zipkin \
+     -Dotel.traces.exporter=zipkin \
      -jar myapp.jar
 ```
 
