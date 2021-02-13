@@ -92,6 +92,9 @@ abstract class AppServerTest extends SmokeTest {
       .findAny()
       .isPresent()
 
+    cleanup:
+    response?.close()
+
     where:
     [appServer, jdk] << getTestParams()
   }
@@ -132,6 +135,9 @@ abstract class AppServerTest extends SmokeTest {
       .findAny()
       .isPresent()
 
+    cleanup:
+    response?.close()
+
     where:
     [appServer, jdk] << getTestParams()
   }
@@ -170,6 +176,9 @@ abstract class AppServerTest extends SmokeTest {
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()
@@ -211,6 +220,9 @@ abstract class AppServerTest extends SmokeTest {
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()
@@ -256,6 +268,9 @@ abstract class AppServerTest extends SmokeTest {
       .findAny()
       .isPresent()
 
+    cleanup:
+    response?.close()
+
     where:
     [appServer, jdk] << getTestParams()
   }
@@ -294,6 +309,9 @@ abstract class AppServerTest extends SmokeTest {
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()
@@ -340,6 +358,9 @@ abstract class AppServerTest extends SmokeTest {
       .map { it.stringValue }
       .findAny()
       .isPresent()
+
+    cleanup:
+    response?.close()
 
     where:
     [appServer, jdk] << getTestParams()

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class DropwizardTracer extends BaseTracer {
@@ -14,10 +12,6 @@ public class DropwizardTracer extends BaseTracer {
 
   public static DropwizardTracer tracer() {
     return TRACER;
-  }
-
-  public Span startSpan(String spanName) {
-    return super.startSpan(spanName, SpanKind.INTERNAL);
   }
 
   @Override

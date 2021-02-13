@@ -32,7 +32,11 @@ public final class NetPeerUtils {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
-        setNetPeer(span, remoteAddress, remoteConnection.getPort());
+        setNetPeer(
+            span::setAttribute,
+            remoteAddress.getHostName(),
+            remoteAddress.getHostAddress(),
+            remoteConnection.getPort());
       } else {
         // Failed DNS lookup, the host string is the name.
         setNetPeer(
@@ -41,7 +45,7 @@ public final class NetPeerUtils {
     }
   }
 
-  public void setNetPeer(Span span, InetAddress remoteAddress, int port) {
+  public void setNetPeer(SpanBuilder span, InetAddress remoteAddress, int port) {
     setNetPeer(
         span::setAttribute, remoteAddress.getHostName(), remoteAddress.getHostAddress(), port);
   }

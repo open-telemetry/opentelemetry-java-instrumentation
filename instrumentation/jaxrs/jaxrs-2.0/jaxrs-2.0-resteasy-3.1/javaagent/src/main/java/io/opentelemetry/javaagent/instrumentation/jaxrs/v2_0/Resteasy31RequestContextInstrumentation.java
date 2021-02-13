@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Method;
@@ -48,7 +46,7 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
 
         span = RequestContextHelper.createOrUpdateAbortSpan(context, resourceClass, method);
         if (span != null) {
-          scope = tracer().startScope(span);
+          scope = span.makeCurrent();
         }
       }
     }

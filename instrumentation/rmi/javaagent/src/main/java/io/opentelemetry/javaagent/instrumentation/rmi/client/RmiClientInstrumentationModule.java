@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
@@ -60,30 +60,30 @@ public class RmiClientInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 1) Method method,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       // TODO replace with client span check
       if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         return;
       }
-      span = tracer().startSpan(method);
-      scope = span.makeCurrent();
+      context = tracer().startSpan(method);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
       scope.close();
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -80,7 +79,7 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
             RequestContextHelper.createOrUpdateAbortSpan(
                 (ContainerRequestContext) context, resourceClass, method);
         if (span != null) {
-          scope = tracer().startScope(span);
+          scope = span.makeCurrent();
         }
       }
     }

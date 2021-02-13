@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.kafka.clients.ApiVersions;
@@ -22,9 +23,9 @@ public class KafkaProducerTracer extends BaseTracer {
   }
 
   public Span startProducerSpan(ProducerRecord<?, ?> record) {
-    Span span = startSpan(spanNameOnProduce(record), PRODUCER);
+    SpanBuilder span = spanBuilder(spanNameOnProduce(record), PRODUCER);
     onProduce(span, record);
-    return span;
+    return span.startSpan();
   }
 
   // Do not inject headers for batch versions below 2
@@ -43,14 +44,14 @@ public class KafkaProducerTracer extends BaseTracer {
     return record.topic() + " send";
   }
 
-  public void onProduce(Span span, ProducerRecord<?, ?> record) {
+  public void onProduce(SpanBuilder span, ProducerRecord<?, ?> record) {
     span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "kafka");
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION, record.topic());
 
     Integer partition = record.partition();
     if (partition != null) {
-      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition);
+      span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition.longValue());
     }
     if (record.value() == null) {
       span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_TOMBSTONE, true);

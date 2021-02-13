@@ -66,7 +66,7 @@ public class TracedDelegatingConsumer implements Consumer {
     Scope scope = null;
     try {
       span = tracer().startDeliverySpan(queue, envelope, properties, body);
-      scope = tracer().startScope(span);
+      scope = span.makeCurrent();
 
     } catch (Exception e) {
       log.debug("Instrumentation error in tracing consumer", e);

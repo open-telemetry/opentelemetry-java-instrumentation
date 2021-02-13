@@ -16,8 +16,8 @@ import java.util.Map;
 public interface PropertySource {
   /**
    * Returns all properties whose default values are overridden by this property source. Key of the
-   * map is the propertyName (same as system property name, e.g. {@code otel.trace.exporter}), value
-   * is the property value.
+   * map is the propertyName (same as system property name, e.g. {@code otel.traces.exporter}),
+   * value is the property value.
    */
   Map<String, String> getProperties();
 }

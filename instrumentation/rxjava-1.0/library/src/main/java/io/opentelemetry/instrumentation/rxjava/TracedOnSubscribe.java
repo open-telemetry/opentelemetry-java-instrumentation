@@ -36,13 +36,10 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
 
   @Override
   public void call(Subscriber<? super T> subscriber) {
-    // TODO pass Context into Tracer.startSpan() and then don't need this outer scoping
-    try (Scope ignored = parentContext.makeCurrent()) {
-      Span span = tracer.startSpan(operationName, spanKind);
-      decorateSpan(span);
-      try (Scope ignored1 = tracer.startScope(span)) {
-        delegate.call(new TracedSubscriber<>(Context.current(), subscriber, tracer));
-      }
+    Context context = tracer.startSpan(parentContext, operationName, spanKind);
+    decorateSpan(Span.fromContext(context));
+    try (Scope ignored = context.makeCurrent()) {
+      delegate.call(new TracedSubscriber<>(context, subscriber, tracer));
     }
   }
 

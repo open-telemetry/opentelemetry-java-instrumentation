@@ -9,8 +9,8 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.grpc.Status;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.RpcClientTracer;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -28,15 +28,18 @@ public class GrpcClientTracer extends RpcClientTracer {
     return "grpc";
   }
 
-  public Span startSpan(String name) {
-    SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(CLIENT);
-    spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, getRpcSystem());
-    return spanBuilder.startSpan();
+  public Context startSpan(String name) {
+    Span span =
+        spanBuilder(name, CLIENT)
+            .setAttribute(SemanticAttributes.RPC_SYSTEM, getRpcSystem())
+            .startSpan();
+    return Context.current().with(span);
   }
 
-  public void endSpan(Span span, Status status) {
-    span.setStatus(GrpcHelper.statusFromGrpcStatus(status), status.getDescription());
-    end(span);
+  public void end(Context context, Status status) {
+    Span.fromContext(context)
+        .setStatus(GrpcHelper.statusFromGrpcStatus(status), status.getDescription());
+    end(context);
   }
 
   @Override

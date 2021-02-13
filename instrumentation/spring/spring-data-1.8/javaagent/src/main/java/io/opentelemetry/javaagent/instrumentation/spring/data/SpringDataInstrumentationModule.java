@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -102,17 +102,15 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
         return methodInvocation.proceed();
       }
 
-      Span span = tracer().startSpan(invokedMethod);
-
-      Object result;
-      try (Scope ignored = span.makeCurrent()) {
-        result = methodInvocation.proceed();
-        tracer().end(span);
+      Context context = tracer().startSpan(invokedMethod);
+      try (Scope ignored = context.makeCurrent()) {
+        Object result = methodInvocation.proceed();
+        tracer().end(context);
+        return result;
       } catch (Throwable t) {
-        tracer().endExceptionally(span, t);
+        tracer().endExceptionally(context, t);
         throw t;
       }
-      return result;
     }
   }
 }
