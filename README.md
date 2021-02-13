@@ -37,11 +37,11 @@
 * [About](#about)
 * [Getting Started](#getting-started)
 * [Configuring the Agent](#configuring-the-agent)
-* [Supported libraries, frameworks, and application servers](#supported-libraries--frameworks--and-application-servers)
+* [Supported libraries, frameworks, and application servers](#supported-libraries-frameworks-and-application-servers)
 * [Manually instrumenting](#manually-instrumenting)
-* [Logger MDC auto-instrumentation](#logger-mdc--mapped-diagnostic-context--auto-instrumentation)
+* [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
 * [Troubleshooting](#troubleshooting)
-* [Roadmap to 1.0 (GA)](#roadmap-to-10--ga-)
+* [Roadmap to 1.0 (GA)](#roadmap-to-10-ga)
 * [Contributing](#contributing)
 
 ## About
