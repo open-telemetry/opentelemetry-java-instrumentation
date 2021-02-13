@@ -199,7 +199,9 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
-        handler = new WrappingStatusSettingResponseHandler(context, (ResponseHandler<?>) handler);
+        handler =
+            new WrappingStatusSettingResponseHandler(
+                context, parentContext, (ResponseHandler<?>) handler);
       }
     }
 
@@ -273,7 +275,9 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
-        handler = new WrappingStatusSettingResponseHandler(context, (ResponseHandler<?>) handler);
+        handler =
+            new WrappingStatusSettingResponseHandler(
+                context, parentContext, (ResponseHandler<?>) handler);
       }
     }
 
