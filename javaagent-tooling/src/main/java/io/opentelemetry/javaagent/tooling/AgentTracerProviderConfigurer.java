@@ -51,13 +51,18 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
 
   private static void maybeEnableLoggingExporter(SdkTracerProviderBuilder builder) {
     if (Config.get().isAgentDebugEnabled()) {
-      // todo: is this really a reliable way to detect this?
       // don't install another instance if the user has already explicitly requested it.
-      if (!Config.get().getProperty("otel.traces.exporter", "").equalsIgnoreCase("logging")
-          && !Config.get().getProperty("otel.exporter", "").equalsIgnoreCase("logging")) {
+      if (loggingExporterIsAlreadyConfigured()) {
         builder.addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()));
       }
     }
+  }
+
+  private static boolean loggingExporterIsAlreadyConfigured() {
+    // todo: is this really a reliable way to detect this?
+    Config config = Config.get();
+    return !config.getProperty("otel.traces.exporter", "").equalsIgnoreCase("logging")
+        && !config.getProperty("otel.exporter", "").equalsIgnoreCase("logging");
   }
 
   private static void maybeConfigureExporterJar(SdkTracerProviderBuilder sdkTracerProviderBuilder) {
