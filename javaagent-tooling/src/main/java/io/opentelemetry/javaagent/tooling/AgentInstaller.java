@@ -320,8 +320,8 @@ public class AgentInstaller {
 
   static class TransformLoggingListener implements AgentBuilder.Listener {
 
-    private static final GradleSafeLogger log =
-        GradleSafeLogger.getLogger(TransformLoggingListener.class);
+    private static final TransformSafeLogger log =
+        TransformSafeLogger.getLogger(TransformLoggingListener.class);
 
     @Override
     public void onError(

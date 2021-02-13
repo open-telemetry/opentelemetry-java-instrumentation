@@ -18,18 +18,18 @@ import org.slf4j.LoggerFactory;
  * <li>(Because gradle hijacks System.out), gradle is called from inside of the class file transform
  * <li>Gradle tries to grab a different lock during it's implementation of System.out
  */
-public class GradleSafeLogger {
+public class TransformSafeLogger {
 
-  private static final boolean ENABLE_GRADLE_SAFE_LOGGING =
-      Boolean.getBoolean("otel.internal.enableGradleSafeLogging");
+  private static final boolean ENABLE_TRANSFORM_SAFE_LOGGING =
+      Boolean.getBoolean("otel.internal.enableTransformSafeLogging");
 
   private static final BlockingQueue<LogMessage> logMessageQueue;
 
   static {
-    if (ENABLE_GRADLE_SAFE_LOGGING) {
+    if (ENABLE_TRANSFORM_SAFE_LOGGING) {
       logMessageQueue = new ArrayBlockingQueue<>(1000);
       Thread thread = new Thread(new LogMessageQueueReader());
-      thread.setName("otel-javaagent-safe-logger");
+      thread.setName("otel-javaagent-transform-safe-logger");
       thread.setDaemon(true);
       thread.start();
     } else {
@@ -39,11 +39,11 @@ public class GradleSafeLogger {
 
   private final Logger logger;
 
-  public static GradleSafeLogger getLogger(Class<?> clazz) {
-    return new GradleSafeLogger(LoggerFactory.getLogger(clazz));
+  public static TransformSafeLogger getLogger(Class<?> clazz) {
+    return new TransformSafeLogger(LoggerFactory.getLogger(clazz));
   }
 
-  private GradleSafeLogger(Logger logger) {
+  private TransformSafeLogger(Logger logger) {
     this.logger = logger;
   }
 

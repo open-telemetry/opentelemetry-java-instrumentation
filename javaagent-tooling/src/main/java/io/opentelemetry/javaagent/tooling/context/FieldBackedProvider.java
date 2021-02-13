@@ -14,9 +14,9 @@ import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
-import io.opentelemetry.javaagent.tooling.GradleSafeLogger;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
@@ -74,7 +74,8 @@ import net.bytebuddy.utility.JavaModule;
  */
 public class FieldBackedProvider implements InstrumentationContextProvider {
 
-  private static final GradleSafeLogger log = GradleSafeLogger.getLogger(FieldBackedProvider.class);
+  private static final TransformSafeLogger log =
+      TransformSafeLogger.getLogger(FieldBackedProvider.class);
 
   /**
    * Note: the value here has to be inside on of the prefixes in
