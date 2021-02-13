@@ -139,11 +139,9 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue) {
 
       if (methodName.equals("getResponseCode")) {
-        if (httpUrlState == null) {
-          ContextStore<HttpURLConnection, HttpUrlState> storage =
-              InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
-          httpUrlState = storage.get(connection);
-        }
+        ContextStore<HttpURLConnection, HttpUrlState> storage =
+            InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
+        httpUrlState = storage.get(connection);
         if (httpUrlState != null) {
           Span span = Span.fromContext(httpUrlState.context);
           span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (int) returnValue);
@@ -180,7 +178,6 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
   public static class HttpUrlState {
     public final Context context;
     public boolean finished;
-    public int responseCode = -1;
 
     public HttpUrlState(Context context) {
       this.context = context;
