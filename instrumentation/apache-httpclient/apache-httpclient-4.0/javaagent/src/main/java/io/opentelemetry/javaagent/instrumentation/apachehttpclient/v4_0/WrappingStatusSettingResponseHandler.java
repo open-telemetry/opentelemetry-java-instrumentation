@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
 
 import io.opentelemetry.context.Context;
-import java.io.IOException;
 import io.opentelemetry.context.Scope;
+import java.io.IOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 
