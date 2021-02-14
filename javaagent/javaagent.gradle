@@ -15,6 +15,12 @@ configurations {
   shadowInclude
 }
 
+processResources {
+  from(rootProject.file("licenses")) {
+    into("META-INF/licenses")
+  }
+}
+
 jar {
   manifest {
     attributes(
