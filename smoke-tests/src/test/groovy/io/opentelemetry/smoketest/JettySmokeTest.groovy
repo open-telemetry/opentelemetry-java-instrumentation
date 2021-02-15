@@ -16,7 +16,7 @@ class JettySmokeTest extends AppServerTest {
   }
 
   def getJettySpanName() {
-    return serverVersion.startsWith("10.") ? "HandlerList.handle" : "HandlerCollection.handle"
+    "HandlerWrapper.handle"
   }
 
   @Override
