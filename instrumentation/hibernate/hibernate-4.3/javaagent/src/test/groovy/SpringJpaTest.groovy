@@ -47,7 +47,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     repo.save(customer)
@@ -56,7 +56,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     then:
     customer.id != null
     // Behavior changed in new version:
-    def extraTrace = testWriter.traces.size() == 2
+    def extraTrace = traces.size() == 2
     assertTraces(extraTrace ? 2 : 1) {
       if (extraTrace) {
         trace(0, 1) {
@@ -87,7 +87,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     customer.firstName = "Bill"
@@ -123,7 +123,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     customer = repo.findByLastName("Anonymous")[0]
@@ -146,7 +146,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     repo.delete(customer)
@@ -180,6 +180,5 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
   }
 }

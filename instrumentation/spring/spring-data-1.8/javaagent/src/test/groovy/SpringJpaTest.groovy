@@ -21,7 +21,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     def repo = context.getBean(JpaCustomerRepository)
 
     // when Spring JPA sets up, it issues metadata queries -- clear those traces
-    testWriter.clear()
+    clearExportedData()
 
     when:
     runUnderTrace("toString test") {
@@ -47,7 +47,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     def repo = context.getBean(JpaCustomerRepository)
 
     // when Spring JPA sets up, it issues metadata queries -- clear those traces
-    testWriter.clear()
+    clearExportedData()
 
     setup:
     def customer = new JpaCustomer("Bob", "Anonymous")
@@ -79,7 +79,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     repo.save(customer) // insert
@@ -110,7 +110,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     customer.firstName = "Bill"
@@ -153,7 +153,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     customer = repo.findByLastName("Anonymous")[0] // select
@@ -182,7 +182,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     repo.delete(customer) // delete
@@ -223,6 +223,5 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
   }
 }

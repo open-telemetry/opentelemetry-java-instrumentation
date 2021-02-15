@@ -8,7 +8,6 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternal
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ThreadPoolExecutor
@@ -53,21 +52,17 @@ class CompletableFutureTest extends AgentInstrumentationSpecification {
       }
     }.get()
 
-    testWriter.waitForTraces(1)
-    List<SpanData> trace = testWriter.traces[0]
-
     expect:
     result == "abc"
 
-    testWriter.traces.size() == 1
-    trace.size() == 4
-    trace.get(0).name == "parent"
-    trace.get(1).name == "supplier"
-    trace.get(1).parentSpanId == trace.get(0).spanId
-    trace.get(2).name == "appendingSupplier"
-    trace.get(2).parentSpanId == trace.get(0).spanId
-    trace.get(3).name == "function"
-    trace.get(3).parentSpanId == trace.get(0).spanId
+    assertTraces(1) {
+      trace(0, 4) {
+        basicSpan(it, 0, "parent")
+        basicSpan(it, 1, "supplier", span(0))
+        basicSpan(it, 2, "appendingSupplier", span(0))
+        basicSpan(it, 3, "function", span(0))
+      }
+    }
 
     cleanup:
     pool?.shutdown()

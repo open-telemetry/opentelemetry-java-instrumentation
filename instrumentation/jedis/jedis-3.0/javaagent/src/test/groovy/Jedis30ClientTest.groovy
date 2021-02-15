@@ -39,7 +39,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
 
   def setup() {
     jedis.flushAll()
-    testWriter.clear()
+    clearExportedData()
   }
 
   def "set command"() {
