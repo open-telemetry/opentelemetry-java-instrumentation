@@ -126,6 +126,6 @@ class JettyHandlerTest extends HttpServerTest<Server> {
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    "TestHandler.handle"
+    "HandlerWrapper.handle"
   }
 }
