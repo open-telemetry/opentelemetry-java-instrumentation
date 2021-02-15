@@ -53,7 +53,7 @@ class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
       // disable periodic refresh in InternalClusterInfoService as it creates spans that tests don't expect
       testNode.client().admin().cluster().updateSettings(new ClusterUpdateSettingsRequest().transientSettings(["cluster.routing.allocation.disk.threshold_enabled": false]))
     }
-    ignoreTracesAndClear(1)
+    waitForTraces(1)
   }
 
   def cleanupSpec() {
