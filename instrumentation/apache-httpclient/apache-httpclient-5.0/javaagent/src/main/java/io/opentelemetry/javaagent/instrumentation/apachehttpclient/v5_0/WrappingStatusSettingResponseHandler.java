@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientTracer.tracer;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import java.io.IOException;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpException;
@@ -15,17 +16,21 @@ import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 
 public class WrappingStatusSettingResponseHandler<T> implements HttpClientResponseHandler<T> {
   final Context context;
+  final Context parentContext;
   final HttpClientResponseHandler<T> handler;
 
   public WrappingStatusSettingResponseHandler(
-      Context context, HttpClientResponseHandler<T> handler) {
+      Context context, Context parentContext, HttpClientResponseHandler<T> handler) {
     this.context = context;
+    this.parentContext = parentContext;
     this.handler = handler;
   }
 
   @Override
   public T handleResponse(ClassicHttpResponse response) throws IOException, HttpException {
     tracer().end(context, response);
-    return handler.handleResponse(response);
+    try (Scope ignored = parentContext.makeCurrent()) {
+      return handler.handleResponse(response);
+    }
   }
 }

@@ -28,7 +28,6 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpHost;
@@ -119,7 +118,8 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
               .and(takesArgument(1, named("org.apache.hc.core5.http.protocol.HttpContext")))
               .and(
                   takesArgument(2, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
-          ApacheHttpClientInstrumentationModule.class.getName() + "$RequestWithHandlerAdvice");
+          ApacheHttpClientInstrumentationModule.class.getName()
+              + "$RequestWithContextAndHandlerAdvice");
 
       transformers.put(
           isMethod()
@@ -144,7 +144,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
               .and(
                   takesArgument(3, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
           ApacheHttpClientInstrumentationModule.class.getName()
-              + "$RequestWithHostAndHandlerAdvice");
+              + "$RequestWithHostAndContextAndHandlerAdvice");
 
       return transformers;
     }
@@ -185,13 +185,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) ClassicHttpRequest request,
-        @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC, readOnly = false) Object arg1,
-        @Advice.Argument(
-                value = 2,
-                optional = true,
-                typing = Assigner.Typing.DYNAMIC,
-                readOnly = false)
-            Object arg2,
+        @Advice.Argument(value = 1, readOnly = false) HttpClientResponseHandler<?> handler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
@@ -203,13 +197,45 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
-      if (arg1 instanceof HttpClientResponseHandler) {
-        arg1 =
-            new WrappingStatusSettingResponseHandler(context, (HttpClientResponseHandler<?>) arg1);
+      if (handler != null) {
+        handler = new WrappingStatusSettingResponseHandler(context, parentContext, handler);
       }
-      if (arg2 instanceof HttpClientResponseHandler) {
-        arg2 =
-            new WrappingStatusSettingResponseHandler(context, (HttpClientResponseHandler<?>) arg2);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void methodExit(
+        @Advice.Return Object result,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+
+      scope.close();
+      ApacheHttpClientHelper.doMethodExit(context, result, throwable);
+    }
+  }
+
+  public static class RequestWithContextAndHandlerAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void methodEnter(
+        @Advice.Argument(0) ClassicHttpRequest request,
+        @Advice.Argument(value = 2, readOnly = false) HttpClientResponseHandler<?> handler,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
+      }
+
+      context = tracer().startSpan(parentContext, request);
+      scope = context.makeCurrent();
+
+      // Wrap the handler so we capture the status code
+      if (handler != null) {
+        handler = new WrappingStatusSettingResponseHandler(context, parentContext, handler);
       }
     }
 
@@ -265,13 +291,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodEnter(
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) ClassicHttpRequest request,
-        @Advice.Argument(value = 2, typing = Assigner.Typing.DYNAMIC, readOnly = false) Object arg2,
-        @Advice.Argument(
-                value = 3,
-                optional = true,
-                typing = Assigner.Typing.DYNAMIC,
-                readOnly = false)
-            Object arg3,
+        @Advice.Argument(value = 2, readOnly = false) HttpClientResponseHandler<?> handler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
@@ -283,13 +303,46 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
-      if (arg2 instanceof HttpClientResponseHandler) {
-        arg2 =
-            new WrappingStatusSettingResponseHandler(context, (HttpClientResponseHandler<?>) arg2);
+      if (handler != null) {
+        handler = new WrappingStatusSettingResponseHandler(context, parentContext, handler);
       }
-      if (arg3 instanceof HttpClientResponseHandler) {
-        arg3 =
-            new WrappingStatusSettingResponseHandler(context, (HttpClientResponseHandler<?>) arg3);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void methodExit(
+        @Advice.Return Object result,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+
+      scope.close();
+      ApacheHttpClientHelper.doMethodExit(context, result, throwable);
+    }
+  }
+
+  public static class RequestWithHostAndContextAndHandlerAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void methodEnter(
+        @Advice.Argument(0) HttpHost host,
+        @Advice.Argument(1) ClassicHttpRequest request,
+        @Advice.Argument(value = 3, readOnly = false) HttpClientResponseHandler<?> handler,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      Context parentContext = currentContext();
+      if (!tracer().shouldStartSpan(parentContext)) {
+        return;
+      }
+
+      context = tracer().startSpan(parentContext, host, request);
+      scope = context.makeCurrent();
+
+      // Wrap the handler so we capture the status code
+      if (handler != null) {
+        handler = new WrappingStatusSettingResponseHandler(context, parentContext, handler);
       }
     }
 
