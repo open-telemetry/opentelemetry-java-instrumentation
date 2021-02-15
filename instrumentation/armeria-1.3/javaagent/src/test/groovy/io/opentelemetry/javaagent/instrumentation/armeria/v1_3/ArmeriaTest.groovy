@@ -20,12 +20,4 @@ class ArmeriaTest extends AbstractArmeriaTest implements AgentTestTrait {
   WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder
   }
-
-  def setupSpec() {
-    server.before()
-  }
-
-  def cleanupSpec() {
-    server.after()
-  }
 }
