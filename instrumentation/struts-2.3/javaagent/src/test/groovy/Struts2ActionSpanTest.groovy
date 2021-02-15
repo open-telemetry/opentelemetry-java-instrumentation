@@ -16,7 +16,6 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import javax.servlet.DispatcherType
 import org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.handler.HandlerCollection
 import org.eclipse.jetty.servlet.DefaultServlet
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.FileResource
@@ -100,11 +99,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
     context.setContextPath(getContextPath())
     def resource = new FileResource(getClass().getResource("/"))
     context.setBaseResource(resource)
-    // jetty integration is disabled for some handler classes, using HandlerCollection here
-    // enables jetty integration
-    HandlerCollection handlerCollection = new HandlerCollection()
-    handlerCollection.addHandler(context)
-    server.setHandler(handlerCollection)
+    server.setHandler(context)
 
     context.addServlet(DefaultServlet, "/")
     context.addFilter(StrutsPrepareAndExecuteFilter, "/*", EnumSet.of(DispatcherType.REQUEST))
