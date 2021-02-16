@@ -9,7 +9,8 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.Dyn
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.Kinesis;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.S3;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.SQS;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.of;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.response;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
@@ -26,16 +27,90 @@ public enum AwsSdkRequest {
   SqsRequest(SQS, "SqsRequest"),
   KinesisRequest(Kinesis, "KinesisRequest"),
   // specific requests
+  BatchGetItem(
+      DynamoDB,
+      "BatchGetItemRequest",
+      request("aws.dynamodb.table_names", "requestItems"),
+      response("aws.dynamodb.consumed_capacity", "consumedCapacity")),
+  BatchWriteItem(
+      DynamoDB,
+      "BatchWriteItemRequest",
+      request("aws.dynamodb.table_names", "requestItems"),
+      response("aws.dynamodb.consumed_capacity", "consumedCapacity"),
+      response("aws.dynamodb.item_collection_metrics", "itemCollectionMetrics")),
   CreateTable(
       DynamoDB,
       "CreateTableRequest",
-      of("awssdk.global_secondary_indexes", "globalSecondaryIndexes"),
-      of("awssdk.local_secondary_indexes", "localSecondaryIndexes"),
-      of(
-          "awssdk.provisioned_throughput.read_capacity_units",
+      request("aws.dynamodb.global_secondary_indexes", "globalSecondaryIndexes"),
+      request("aws.dynamodb.local_secondary_indexes", "localSecondaryIndexes"),
+      request(
+          "aws.dynamodb.provisioned_throughput.read_capacity_units",
           "provisionedThroughput.readCapacityUnits"),
-      of(
-          "awssdk.provisioned_throughput.write_capacity_units",
+      request(
+          "aws.dynamodb.provisioned_throughput.write_capacity_units",
+          "provisionedThroughput.writeCapacityUnits")),
+  DeleteItem(
+      DynamoDB,
+      "DeleteItemRequest",
+      response("aws.dynamodb.consumed_capacity", "consumedCapacity"),
+      response("aws.dynamodb.item_collection_metrics", "itemCollectionMetrics")),
+  GetItem(
+      DynamoDB,
+      "GetItemRequest",
+      request("aws.dynamodb.projection_expression", "projectionExpression"),
+      response("aws.dynamodb.consumed_capacity", "consumedCapacity"),
+      request("aws.dynamodb.consistent_read", "consistentRead")),
+  ListTables(
+      DynamoDB,
+      "ListTablesRequest",
+      request("aws.dynamodb.exclusive_start_table_name", "exclusiveStartTableName"),
+      response("aws.dynamodb.table_count", "tableNames"),
+      request("aws.dynamodb.limit", "limit")),
+  PutItem(
+      DynamoDB,
+      "PutItemRequest",
+      response("aws.dynamodb.consumed_capacity", "consumedCapacity"),
+      response("aws.dynamodb.item_collection_metrics", "itemCollectionMetrics")),
+  Query(
+      DynamoDB,
+      "QueryRequest",
+      request("aws.dynamodb.attributes_to_get", "attributesToGet"),
+      request("aws.dynamodb.consistent_read", "consistentRead"),
+      request("aws.dynamodb.index_name", "indexName"),
+      request("aws.dynamodb.limit", "limit"),
+      request("aws.dynamodb.projection_expression", "projectionExpression"),
+      request("aws.dynamodb.scan_index_forward", "scanIndexForward"),
+      request("aws.dynamodb.select", "select"),
+      response("aws.dynamodb.consumed_capacity", "consumedCapacity")),
+  Scan(
+      DynamoDB,
+      "ScanRequest",
+      request("aws.dynamodb.attributes_to_get", "attributesToGet"),
+      request("aws.dynamodb.consistent_read", "consistentRead"),
+      request("aws.dynamodb.index_name", "indexName"),
+      request("aws.dynamodb.limit", "limit"),
+      request("aws.dynamodb.projection_expression", "projectionExpression"),
+      request("aws.dynamodb.segment", "segment"),
+      request("aws.dynamodb.select", "select"),
+      request("aws.dynamodb.total_segments", "totalSegments"),
+      response("aws.dynamodb.consumed_capacity", "consumedCapacity"),
+      response("aws.dynamodb.count", "count"),
+      response("aws.dynamodb.scanned_count", "scannedCount")),
+  UpdateItem(
+      DynamoDB,
+      "UpdateItemRequest",
+      response("aws.dynamodb.consumed_capacity", "consumedCapacity"),
+      response("aws.dynamodb.item_collection_metrics", "itemCollectionMetrics")),
+  UpdateTable(
+      DynamoDB,
+      "UpdateTableRequest",
+      request("aws.dynamodb.attribute_definitions", "attributeDefinitions"),
+      request("aws.dynamodb.global_secondary_index_updates", "globalSecondaryIndexUpdates"),
+      request(
+          "aws.dynamodb.provisioned_throughput.read_capacity_units",
+          "provisionedThroughput.readCapacityUnits"),
+      request(
+          "aws.dynamodb.provisioned_throughput.write_capacity_units",
           "provisionedThroughput.writeCapacityUnits"));
 
   private final AwsSdkRequestType type;

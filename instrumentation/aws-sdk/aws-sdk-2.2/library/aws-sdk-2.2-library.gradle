@@ -4,7 +4,9 @@ dependencies {
   implementation deps.opentelemetryExtAws
 
   library group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
+  library group: 'software.amazon.awssdk', name: 'aws-json-protocol', version: '2.2.0'
 
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
   testImplementation project(':instrumentation:aws-sdk:aws-sdk-2.2:testing')
+  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
 }

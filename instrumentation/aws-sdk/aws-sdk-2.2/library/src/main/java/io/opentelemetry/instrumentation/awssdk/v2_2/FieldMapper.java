@@ -5,44 +5,57 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.Span;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import software.amazon.awssdk.core.SdkPojo;
 import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.core.SdkResponse;
 
 public class FieldMapper {
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private final Serializer serializer = new Serializer();
 
-  static {
-    OBJECT_MAPPER.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+  private final ClassValue<ConcurrentHashMap<String, MethodHandle>> getterCache =
+      new ClassValue<ConcurrentHashMap<String, MethodHandle>>() {
+        @Override
+        protected ConcurrentHashMap<String, MethodHandle> computeValue(Class<?> type) {
+          return new ConcurrentHashMap<>();
+        }
+      };
+
+  public void mapFields(SdkRequest sdkRequest, AwsSdkRequest request, Span span) {
+    mapFields(
+        field -> sdkRequest.getValueForField(field, Object.class).orElse(null), request, span);
   }
 
-  public void mapFields(AwsSdkRequest request, SdkRequest sdkRequest, Span span) {
+  public void mapFields(SdkResponse sdkResponse, AwsSdkRequest request, Span span) {
+    mapFields(
+        field -> sdkResponse.getValueForField(field, Object.class).orElse(null), request, span);
+  }
+
+  private void mapFields(
+      Function<String, Object> fieldValueProvider, AwsSdkRequest request, Span span) {
     for (FieldMapping fieldMapping : request.fields()) {
-      mapFields(fieldMapping, sdkRequest, span);
+      mapFields(fieldValueProvider, fieldMapping, span);
     }
     for (FieldMapping fieldMapping : request.type().fields()) {
-      mapFields(fieldMapping, sdkRequest, span);
+      mapFields(fieldValueProvider, fieldMapping, span);
     }
   }
 
-  private void mapFields(FieldMapping fieldMapping, SdkRequest sdkRequest, Span span) {
+  private void mapFields(
+      Function<String, Object> fieldValueProvider, FieldMapping fieldMapping, Span span) {
     // traverse path
     String[] path = fieldMapping.getFields();
-    Object target = sdkRequest.getValueForField(camelCase(path[0]), Object.class).orElse(null);
+    Object target = fieldValueProvider.apply(camelCase(path[0]));
     for (int i = 1; i < path.length && target != null; i++) {
       target = next(target, path[i]);
     }
     if (target != null) {
-      String value = serialize(target);
+      String value = serializer.serialize(target);
       if (value != null && !value.isEmpty()) {
         span.setAttribute(fieldMapping.getAttribute(), value);
       }
@@ -54,30 +67,22 @@ public class FieldMapper {
   }
 
   @Nullable
-  private String serialize(Object target) {
-    if (target instanceof SdkPojo) {
-      try {
-        return OBJECT_MAPPER.writeValueAsString(target);
-      } catch (JsonProcessingException e) {
-        return null;
-      }
-    }
-    if (target instanceof List) {
-      List<Object> list = (List<Object>) target;
-      return list.stream().map(this::serialize).collect(Collectors.joining());
-    }
-    // simple type
-    return target.toString();
-  }
-
-  @Nullable
   private Object next(Object current, String fieldName) {
     try {
-      Method method = current.getClass().getMethod(fieldName);
-      return method.invoke(current);
-    } catch (Exception e) {
+      return forField(current.getClass(), fieldName).invoke(current);
+    } catch (Throwable t) {
       // ignore
     }
     return null;
+  }
+
+  private MethodHandle forField(Class clazz, String fieldName)
+      throws NoSuchMethodException, IllegalAccessException {
+    MethodHandle methodHandle = getterCache.get(clazz).get(fieldName);
+    if (methodHandle == null) {
+      methodHandle = MethodHandles.publicLookup().unreflect(clazz.getMethod(fieldName));
+      getterCache.get(clazz).put(fieldName, methodHandle);
+    }
+    return methodHandle;
   }
 }

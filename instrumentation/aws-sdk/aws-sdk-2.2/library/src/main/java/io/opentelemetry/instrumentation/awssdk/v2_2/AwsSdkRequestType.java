@@ -5,15 +5,17 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.of;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 enum AwsSdkRequestType {
-  S3(of("aws.bucket.name", "Bucket")),
-  SQS(of("aws.queue.url", "QueueUrl"), of("aws.queue.name", "QueueName")),
-  Kinesis(of("aws.stream.name", "StreamName")),
-  DynamoDB(of("aws.table.name", "TableName"), of(SemanticAttributes.DB_NAME.getKey(), "TableName"));
+  S3(request("aws.bucket.name", "Bucket")),
+  SQS(request("aws.queue.url", "QueueUrl"), request("aws.queue.name", "QueueName")),
+  Kinesis(request("aws.stream.name", "StreamName")),
+  DynamoDB(
+      request("aws.table.name", "TableName"),
+      request(SemanticAttributes.DB_NAME.getKey(), "TableName"));
 
   private final FieldMapping[] fieldMappings;
 

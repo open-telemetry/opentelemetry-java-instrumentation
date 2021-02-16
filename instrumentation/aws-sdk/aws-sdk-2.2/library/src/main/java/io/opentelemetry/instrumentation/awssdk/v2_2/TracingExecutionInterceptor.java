@@ -32,8 +32,8 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Context");
   static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Scope");
-  static final ExecutionAttribute<AwsSdkRequestType> REQUEST_TYPE_ATTRIBUTE =
-      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestType");
+  static final ExecutionAttribute<AwsSdkRequest> AWS_SDK_REQUEST_ATTRIBUTE =
+      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".AwsSdkRequest");
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
@@ -84,6 +84,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     AwsSdkRequest awsSdkRequest = AwsSdkRequest.ofSdkRequest(context.request());
     if (awsSdkRequest != null) {
+      executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, awsSdkRequest);
       populateRequestAttributes(span, awsSdkRequest, context.request(), executionAttributes);
     }
     populateGenericAttributes(span, executionAttributes);
@@ -95,7 +96,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       SdkRequest sdkRequest,
       ExecutionAttributes attributes) {
 
-    fieldMapper.mapFields(awsSdkRequest, sdkRequest, span);
+    fieldMapper.mapFields(sdkRequest, awsSdkRequest, span);
 
     if (awsSdkRequest.type() == DynamoDB) {
       span.setAttribute(SemanticAttributes.DB_SYSTEM, "dynamodb");
@@ -127,7 +128,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     clearAttributes(executionAttributes);
     Span span = Span.fromContext(otelContext);
     onUserAgentHeaderAvailable(span, context.httpRequest());
-    onSdkResponse(span, context.response());
+    onSdkResponse(span, context.response(), executionAttributes);
     tracer().end(otelContext, context.httpResponse());
   }
 
@@ -137,9 +138,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
         SemanticAttributes.HTTP_USER_AGENT, tracer().requestHeader(request, "User-Agent"));
   }
 
-  private void onSdkResponse(Span span, SdkResponse response) {
+  private void onSdkResponse(
+      Span span, SdkResponse response, ExecutionAttributes executionAttributes) {
     if (response instanceof AwsResponse) {
       span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
+    }
+    AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
+    if (sdkRequest != null) {
+      fieldMapper.mapFields(response, sdkRequest, span);
     }
   }
 
@@ -153,6 +159,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   private void clearAttributes(ExecutionAttributes executionAttributes) {
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, null);
-    executionAttributes.putAttribute(REQUEST_TYPE_ATTRIBUTE, null);
+    executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, null);
   }
 }

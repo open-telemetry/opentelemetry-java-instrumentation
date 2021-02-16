@@ -6,11 +6,22 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 class FieldMapping {
-  static FieldMapping of(String attribute, String fieldPath) {
-    return new FieldMapping(attribute, fieldPath);
+
+  enum Type {
+    REQUEST,
+    RESPONSE;
   }
 
-  FieldMapping(String attribute, String fieldPath) {
+  static FieldMapping request(String attribute, String fieldPath) {
+    return new FieldMapping(Type.REQUEST, attribute, fieldPath);
+  }
+
+  static FieldMapping response(String attribute, String fieldPath) {
+    return new FieldMapping(Type.RESPONSE, attribute, fieldPath);
+  }
+
+  FieldMapping(Type type, String attribute, String fieldPath) {
+    this.type = type;
     this.attribute = attribute;
     this.fieldPath = fieldPath;
     this.fields = fieldPath.split("\\.");
@@ -24,6 +35,11 @@ class FieldMapping {
     return fields;
   }
 
+  Type getType() {
+    return type;
+  }
+
+  private final Type type;
   private final String attribute;
   private final String fieldPath;
   private final String[] fields;
