@@ -193,7 +193,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
 
       // Wrap the handler so we capture the status code
       if (handler != null) {
-        handler = new WrappingStatusSettingResponseHandler<>(context, handler);
+        handler = new WrappingStatusSettingResponseHandler<>(context, parentContext, handler);
       }
     }
 
@@ -262,7 +262,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
 
       // Wrap the handler so we capture the status code
       if (handler != null) {
-        handler = new WrappingStatusSettingResponseHandler<>(context, handler);
+        handler = new WrappingStatusSettingResponseHandler<>(context, parentContext, handler);
       }
     }
 
