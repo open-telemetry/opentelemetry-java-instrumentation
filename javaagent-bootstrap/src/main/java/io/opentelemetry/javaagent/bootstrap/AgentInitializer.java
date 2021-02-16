@@ -25,6 +25,7 @@ public class AgentInitializer {
   // fields must be managed under class lock
   private static ClassLoader AGENT_CLASSLOADER = null;
 
+  // called via reflection in the OpenTelemetryAgent class
   public static void initialize(Instrumentation inst, URL bootstrapUrl) throws Exception {
     startAgent(inst, bootstrapUrl);
   }
