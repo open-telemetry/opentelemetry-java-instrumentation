@@ -280,7 +280,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
   def "Flowables produce the right number of results '#scheduler'"() {
     when:
     List<String> values = runUnderTrace("flowable root") {
-      Flowable.fromIterable(Arrays.asList(1, 2, 3, 4))
+      Flowable.fromIterable([1, 2, 3, 4])
         .parallel()
         .runOn(scheduler)
         .flatMap({ num ->
