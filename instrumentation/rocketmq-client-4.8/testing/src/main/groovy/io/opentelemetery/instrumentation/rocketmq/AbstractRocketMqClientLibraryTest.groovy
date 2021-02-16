@@ -9,25 +9,22 @@ import base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.rocketmq.client.producer.DefaultMQProducer
-import org.apache.rocketmq.client.producer.SendCallback
-import org.apache.rocketmq.client.producer.SendResult
 import org.apache.rocketmq.common.message.Message
-
 import org.apache.rocketmq.remoting.common.RemotingHelper
 import org.apache.rocketmq.test.client.rmq.RMQNormalConsumer
 import org.apache.rocketmq.test.client.rmq.RMQNormalProducer
-import org.apache.rocketmq.test.factory.ProducerFactory
 import org.apache.rocketmq.test.listener.rmq.concurrent.RMQNormalListener
 import org.apache.rocketmq.test.listener.rmq.order.RMQOrderListener
 import spock.lang.Shared
 import spock.lang.Unroll
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 @Unroll
-abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
+abstract class AbstractRocketMqClientLibraryTest extends InstrumentationSpecification{
 
   @Shared
   RMQNormalConsumer consumer;
@@ -53,6 +50,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
   @Shared
   def baseConf =new BaseConf();
 
+  abstract void producerIntercept(String addr,Message msg)
+
+  abstract void consumerIntercept(List<Object> msgs,String type)
+
+
   def setup() {
     sharedTopic =baseConf.initTopic();
     brokerAddr =baseConf.getBrokerAddr()
@@ -61,20 +63,12 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
 
   def "test rocketmq produce callback"() {
     setup:
-    defaultMQProducer = ProducerFactory.getRMQProducer(baseConf.nsAddr);
+    producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic);
 
     when:
     runUnderTrace("parent") {
-      defaultMQProducer.send(msg, new SendCallback() {
-        @Override
-        void onSuccess(SendResult sendResult) {
-        }
-
-        @Override
-        void onException(Throwable throwable) {
-        }
-      });
-
+      producerIntercept(brokerAddr,msg);
+      producer.send(msg);
     }
     then:
     assertTraces(1) {
@@ -98,33 +92,18 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
     }
   }
 
-  def "test rocketmq produce and concurrently consume"() {
+  def "test rocketmq concurrently consume"() {
     setup:
     producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic);
     consumer = baseConf.getConsumer(baseConf.nsAddr, sharedTopic, "*", new RMQNormalListener());
-
     when:
-    runUnderTrace("parent") {
-      producer.send(msg);
-      consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime)
-    }
-
+    producer.send(msg);
+    consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime)
+    consumerIntercept(consumer.getListener().getAllOriginMsg(),"concurrent")
     then:
     assertTraces(1) {
-      trace(0, 3) {
-        basicSpan(it, 0, "parent")
-        span(1) {
-          name sharedTopic + " send"
-          kind PRODUCER
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "messaging.rocketmq.tags" "TagA"
-            "messaging.rocketmq.broker_address" brokerAddr
-          }
-        }
-        span(2) {
+      trace(0, 1) {
+        span(0) {
           name sharedTopic + " process"
           kind CONSUMER
           attributes {
@@ -149,31 +128,18 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
     }
   }
 
-  def "test rocketmq produce and orderly consume"() {
+  def "test rocketmq orderly consume"() {
     setup:
     producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic);
     consumer = baseConf.getConsumer(baseConf.nsAddr, sharedTopic, "*", new RMQOrderListener());
     when:
-    runUnderTrace("parent") {
       producer.send(msg);
       consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime);
-    }
+      consumerIntercept(consumer.getListener().getAllOriginMsg(),"order")
     then:
     assertTraces(1) {
-      trace(0, 3) {
-        basicSpan(it, 0, "parent")
-        span(1) {
-          name sharedTopic + " send"
-          kind PRODUCER
-          attributes {
-            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
-            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
-            "messaging.rocketmq.tags" "TagA"
-            "messaging.rocketmq.broker_address" brokerAddr
-          }
-        }
-        span(2) {
+      trace(0, 1) {
+        span(0) {
           name sharedTopic + " process"
           kind CONSUMER
           attributes {
