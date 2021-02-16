@@ -32,6 +32,8 @@ public class ParentContextExtractorTest {
 
   @BeforeClass
   public static void setUp() {
+    // reset opentelemetry global instance in case any of the previous tests set it
+    GlobalOpenTelemetry.resetForTest();
     GlobalOpenTelemetry.set(
         OpenTelemetry.getPropagating(ContextPropagators.create(B3Propagator.getInstance())));
   }
