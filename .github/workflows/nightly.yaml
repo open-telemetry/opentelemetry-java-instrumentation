@@ -23,14 +23,10 @@ jobs:
           job-id: jdk11
 
       - name: Build
-        uses: nick-invision/retry@v2.4.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        with:
-          command: ./gradlew build --stacktrace
-          timeout_minutes: 90
-          max_attempts: 3
+        run: ./gradlew build --stacktrace
 
   test:
     runs-on: ubuntu-latest
@@ -57,14 +53,10 @@ jobs:
           job-id: jdk${{ matrix.java }}
 
       - name: Test
-        uses: nick-invision/retry@v2.4.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        with:
-          command: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
-          timeout_minutes: 180
-          max_attempts: 3
+        run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
   testLatestDep:
     runs-on: ubuntu-latest
@@ -81,14 +73,10 @@ jobs:
           job-id: latestDepTest
 
       - name: Test
-        uses: nick-invision/retry@v2.4.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        with:
-          command: ./gradlew test -PtestLatestDeps=true --stacktrace
-          timeout_minutes: 60
-          max_attempts: 3
+        run: ./gradlew test -PtestLatestDeps=true --stacktrace
 
   snapshot:
     runs-on: ubuntu-latest

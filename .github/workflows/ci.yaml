@@ -22,6 +22,12 @@ jobs:
         with:
           job-id: jdk11
 
+      - name: Build
+        env:
+          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
+          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+        run: ./gradlew build --stacktrace
+
   example-distro:
     runs-on: ubuntu-latest
     steps:
@@ -64,3 +70,9 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.5
         with:
           job-id: jdk${{ matrix.java }}
+
+      - name: Test
+        env:
+          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
+          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+        run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
