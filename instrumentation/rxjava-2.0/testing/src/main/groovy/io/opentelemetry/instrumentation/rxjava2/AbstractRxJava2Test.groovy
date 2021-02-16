@@ -25,6 +25,12 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Shared
 
+/**
+ * <p>Tests in this class may seem not exhaustive due to the fact that some classes are converted
+ * into others, ie. {@link Completable#toMaybe()}. Fortunately, RxJava2 uses helper classes like
+ * {@link io.reactivex.internal.operators.maybe.MaybeFromCompletable} and as a result we
+ * can test subscriptions and cancellations correctly.
+ */
 abstract class AbstractRxJava2Test extends InstrumentationSpecification {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
