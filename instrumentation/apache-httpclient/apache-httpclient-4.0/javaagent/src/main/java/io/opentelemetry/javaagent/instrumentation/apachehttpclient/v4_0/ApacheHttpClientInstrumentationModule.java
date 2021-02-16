@@ -192,7 +192,9 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
-      handler = new WrappingStatusSettingResponseHandler<>(context, handler);
+      if (handler != null) {
+        handler = new WrappingStatusSettingResponseHandler<>(context, handler);
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -259,7 +261,9 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
-      handler = new WrappingStatusSettingResponseHandler<>(context, handler);
+      if (handler != null) {
+        handler = new WrappingStatusSettingResponseHandler<>(context, handler);
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
