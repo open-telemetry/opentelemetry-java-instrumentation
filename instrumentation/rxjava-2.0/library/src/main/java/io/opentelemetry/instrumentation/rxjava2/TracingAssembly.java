@@ -44,7 +44,8 @@ import org.reactivestreams.Subscriber;
 /**
  * RxJava2 library instrumentation.
  *
- * <p>In order to enable RxJava2 instrumentation one has to call the {@link TracingAssembly#enable()} method.
+ * <p>In order to enable RxJava2 instrumentation one has to call the {@link
+ * TracingAssembly#enable()} method.
  *
  * <p>Instrumentation uses <code>on*Assembly</code> and <code>on*Subscribe</code> RxJavaPlugin hooks
  * to wrap RxJava2 classes in their tracing equivalents.
@@ -114,6 +115,10 @@ public final class TracingAssembly {
       return;
     }
 
+    disableObservable();
+
+    disableCompletable();
+
     disableSingle();
 
     disableMaybe();
@@ -121,10 +126,6 @@ public final class TracingAssembly {
     disableFlowable();
 
     disableParallel();
-
-    disableObservable();
-
-    disableCompletable();
 
     enabled = false;
   }

@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTraceWithoutExceptionCatch
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
+import com.google.common.collect.Lists
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Completable
@@ -101,9 +102,11 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     "basic single"            | 1        | 1         | { -> Single.just(0).map(addOne) }
     "basic observable"        | [1]      | 1         | { -> Observable.just(0).map(addOne) }
     "connectable flowable"    | [1]      | 1         | { ->
-      FlowablePublish.just(0).delay(100, MILLISECONDS).map(addOne) }
+      FlowablePublish.just(0).delay(100, MILLISECONDS).map(addOne)
+    }
     "connectable observable"  | [1]      | 1         | { ->
-      ObservablePublish.just(0).delay(100, MILLISECONDS).map(addOne) }
+      ObservablePublish.just(0).delay(100, MILLISECONDS).map(addOne)
+    }
   }
 
   def "Publisher error '#name' test"() {
@@ -336,6 +339,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
     }
   }
 
+  @SuppressWarnings("unchecked")
   def assemblePublisherUnderTrace(def publisherSupplier) {
     // The "add two" operations below should be children of this span
     runUnderTraceWithoutExceptionCatch("publisher-parent") {
@@ -345,11 +349,11 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
       if (publisher instanceof Maybe) {
         return ((Maybe) publisher).blockingGet()
       } else if (publisher instanceof Flowable) {
-        return ((Flowable) publisher).toList().blockingGet().toArray({ size -> new Integer[size] })
+        return Lists.newArrayList(((Flowable) publisher).blockingIterable())
       } else if (publisher instanceof Single) {
         return ((Single) publisher).blockingGet()
       } else if (publisher instanceof Observable) {
-        return ((Observable) publisher).toList().blockingGet().toArray({ size -> new Integer[size] })
+        return Lists.newArrayList(((Observable) publisher).blockingIterable())
       } else if (publisher instanceof Completable) {
         return ((Completable) publisher).toMaybe().blockingGet()
       }
