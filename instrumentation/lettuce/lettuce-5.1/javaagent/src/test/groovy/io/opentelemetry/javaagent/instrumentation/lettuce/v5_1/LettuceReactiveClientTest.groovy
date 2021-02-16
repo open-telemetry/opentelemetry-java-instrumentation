@@ -68,8 +68,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set
-    testWriter.waitForTraces(1)
-    testWriter.clear()
+    ignoreTracesAndClear(1)
   }
 
   def cleanup() {
@@ -267,15 +266,12 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
   }
 
   def "non reactive command should not produce span"() {
-    setup:
-    String res = null
-
     when:
-    res = reactiveCommands.digest()
+    def res = reactiveCommands.digest()
 
     then:
     res != null
-    testWriter.traces.size() == 0
+    traces.size() == 0
   }
 
   def "blocking subscriber"() {

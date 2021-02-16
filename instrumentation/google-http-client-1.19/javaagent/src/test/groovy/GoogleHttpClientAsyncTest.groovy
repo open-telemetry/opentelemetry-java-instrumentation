@@ -9,10 +9,6 @@ import spock.lang.Timeout
 
 @Timeout(5)
 class GoogleHttpClientAsyncTest extends AbstractGoogleHttpClientTest {
-  def setup() {
-    testWriter.clear()
-  }
-
   @Override
   HttpResponse executeRequest(HttpRequest request) {
     return request.executeAsync().get()

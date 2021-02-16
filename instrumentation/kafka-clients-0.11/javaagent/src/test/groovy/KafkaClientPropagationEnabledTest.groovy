@@ -53,7 +53,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
     container.setupMessageListener(new MessageListener<String, String>() {
       @Override
       void onMessage(ConsumerRecord<String, String> record) {
-        testWriter.waitForTraces(1) // ensure consistent ordering of traces
+        waitForTraces(1) // ensure consistent ordering of traces
         records.add(record)
       }
     })
@@ -315,7 +315,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
     producer.send(new ProducerRecord<Integer, String>(SHARED_TOPIC, kafkaPartition, null, greeting))
 
     then:
-    testWriter.waitForTraces(1)
+    waitForTraces(1)
     def records = new LinkedBlockingQueue<ConsumerRecord<String, String>>()
     def pollResult = KafkaTestUtils.getRecords(consumer)
 

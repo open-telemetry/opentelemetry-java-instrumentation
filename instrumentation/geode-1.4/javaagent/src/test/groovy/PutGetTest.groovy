@@ -158,8 +158,7 @@ class PutGetTest extends AgentInstrumentationSpecification {
 
     region.clear()
     region.put(1, value)
-    testWriter.waitForTraces(2)
-    testWriter.clear()
+    ignoreTracesAndClear(2)
 
     when:
     def results = region.query("SELECT * FROM /test-region p WHERE p.expDate = '10/2020'")

@@ -14,7 +14,7 @@ public class DemoPropertySource implements PropertySource {
   @Override
   public Map<String, String> getProperties() {
     return Map.of(
-        "otel.exporter.otlp.endpoint", "collector:55680",
+        "otel.exporter.otlp.endpoint", "http://collector:55680",
         "otel.exporter.otlp.insecure", "true",
         "otel.config.max.attrs", "16"
     );

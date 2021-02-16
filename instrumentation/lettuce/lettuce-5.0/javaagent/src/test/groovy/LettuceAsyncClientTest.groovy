@@ -95,8 +95,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set + 1 connect trace
-    testWriter.waitForTraces(2)
-    testWriter.clear()
+    ignoreTracesAndClear(2)
   }
 
   def cleanup() {

@@ -3,13 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.test;
+package io.opentelemetry.instrumentation.testing.util;
 
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.trace.SpanId;
-import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
-import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,16 +19,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class InMemoryExporter {
-
-  public List<List<SpanData>> getTraces() {
-    return groupTraces(AgentTestingExporterAccess.getExportedSpans());
-  }
-
-  public List<MetricData> getMetrics() {
-    // TODO do these need grouping?
-    return AgentTestingExporterAccess.getExportedMetrics();
-  }
+public final class TelemetryDataUtil {
 
   public static List<List<SpanData>> groupTraces(List<SpanData> spans) {
     List<List<SpanData>> traces =
@@ -44,20 +33,21 @@ public class InMemoryExporter {
     return traces;
   }
 
-  public List<List<SpanData>> waitForTraces(int number)
+  public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
       throws InterruptedException, TimeoutException {
-    return waitForTraces(AgentTestingExporterAccess::getExportedSpans, number);
+    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS);
   }
 
-  public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
+  public static List<List<SpanData>> waitForTraces(
+      Supplier<List<SpanData>> supplier, int number, long timeout, TimeUnit unit)
       throws InterruptedException, TimeoutException {
     long startTime = System.nanoTime();
     List<List<SpanData>> allTraces = groupTraces(supplier.get());
     List<List<SpanData>> completeTraces =
-        allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
-    while (completeTraces.size() < number && elapsedSeconds(startTime) < 20) {
+        allTraces.stream().filter(TelemetryDataUtil::isCompleted).collect(toList());
+    while (completeTraces.size() < number && elapsedSeconds(startTime) < unit.toSeconds(timeout)) {
       allTraces = groupTraces(supplier.get());
-      completeTraces = allTraces.stream().filter(InMemoryExporter::isCompleted).collect(toList());
+      completeTraces = allTraces.stream().filter(TelemetryDataUtil::isCompleted).collect(toList());
       Thread.sleep(10);
     }
     if (completeTraces.size() < number) {
@@ -78,13 +68,9 @@ public class InMemoryExporter {
     return TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime);
   }
 
-  public void clear() {
-    AgentTestingExporterAccess.reset();
-  }
-
   // must be called under tracesLock
   private static void sortTraces(List<List<SpanData>> traces) {
-    traces.sort(Comparator.comparingLong(InMemoryExporter::getMinSpanOrder));
+    traces.sort(Comparator.comparingLong(TelemetryDataUtil::getMinSpanOrder));
   }
 
   private static long getMinSpanOrder(List<SpanData> spans) {
@@ -166,4 +152,6 @@ public class InMemoryExporter {
       this.span = span;
     }
   }
+
+  private TelemetryDataUtil() {}
 }

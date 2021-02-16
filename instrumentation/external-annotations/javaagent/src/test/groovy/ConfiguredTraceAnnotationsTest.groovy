@@ -14,7 +14,7 @@ class ConfiguredTraceAnnotationsTest extends AgentInstrumentationSpecification {
     SayTracedHello.fromCallableWhenDisabled()
 
     expect:
-    testWriter.traces == []
+    traces.empty
   }
 
   def "method with custom annotation should be traced"() {

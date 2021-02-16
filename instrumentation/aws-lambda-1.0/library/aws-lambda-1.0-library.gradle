@@ -27,7 +27,6 @@ dependencies {
 
   compileOnly(
     'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
-    'com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10',
     'commons-io:commons-io:2.2')
   compileOnly deps.slf4j
 
@@ -38,7 +37,6 @@ dependencies {
 
   testImplementation(
     'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
-    'com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10',
     'commons-io:commons-io:2.2')
 
   testImplementation deps.opentelemetryTraceProps

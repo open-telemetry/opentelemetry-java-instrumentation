@@ -15,7 +15,7 @@ class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(int jdk) {
     return "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk" + jdk
-        + "-20201204.400701583";
+        + "-20210209.550405798";
   }
 
   @Test
@@ -43,9 +43,9 @@ class SpringBootSmokeTest extends SmokeTest {
     Assertions.assertEquals(0, countSpansByName(traces, "WebController.greeting"));
     Assertions.assertEquals(1, countSpansByName(traces, "WebController.withSpan"));
     Assertions.assertEquals(2, countSpansByAttributeValue(traces, "custom", "demo"));
-    Assertions.assertEquals(1,
+    Assertions.assertNotEquals(0,
         countResourcesByValue(traces, "telemetry.auto.version", currentAgentVersion));
-    Assertions.assertEquals(1, countResourcesByValue(traces, "custom.resource", "demo"));
+    Assertions.assertNotEquals(0, countResourcesByValue(traces, "custom.resource", "demo"));
 
     stopTarget();
   }

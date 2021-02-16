@@ -73,7 +73,7 @@ class Elasticsearch53TransportClientTest extends AgentInstrumentationSpecificati
       // disable periodic refresh in InternalClusterInfoService as it creates spans that tests don't expect
       client.admin().cluster().updateSettings(new ClusterUpdateSettingsRequest().transientSettings(["cluster.routing.allocation.disk.threshold_enabled": false]))
     }
-    testWriter.waitForTraces(1)
+    ignoreTracesAndClear(1)
   }
 
   def cleanupSpec() {
@@ -147,13 +147,10 @@ class Elasticsearch53TransportClientTest extends AgentInstrumentationSpecificati
 
   def "test elasticsearch get"() {
     setup:
-    assert testWriter.traces == []
     def indexResult = client.admin().indices().prepareCreate(indexName).get()
-    testWriter.waitForTraces(1)
 
     expect:
     indexResult.acknowledged
-    testWriter.traces.size() == 1
 
     when:
     def emptyResult = client.prepareGet(indexName, indexType, id).get()

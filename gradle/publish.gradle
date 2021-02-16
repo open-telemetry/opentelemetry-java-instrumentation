@@ -26,6 +26,13 @@ publishing {
         from components.java
       }
 
+      def stable = findProperty("otel.stable") ?: false
+      if (!stable) {
+        def versionParts = version.split('-')
+        versionParts[0] += '-alpha'
+        version = versionParts.join('-')
+      }
+
       afterEvaluate {
         def mavenGroupId = project.findProperty('mavenGroupId')
         if (mavenGroupId) {

@@ -37,11 +37,11 @@
 * [About](#about)
 * [Getting Started](#getting-started)
 * [Configuring the Agent](#configuring-the-agent)
-* [Supported libraries, frameworks, and application servers](#supported-libraries--frameworks--and-application-servers)
+* [Supported libraries, frameworks, and application servers](#supported-libraries-frameworks-and-application-servers)
 * [Manually instrumenting](#manually-instrumenting)
-* [Logger MDC auto-instrumentation](#logger-mdc--mapped-diagnostic-context--auto-instrumentation)
+* [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
 * [Troubleshooting](#troubleshooting)
-* [Roadmap to 1.0 (GA)](#roadmap-to-10--ga-)
+* [Roadmap to 1.0 (GA)](#roadmap-to-10-ga)
 * [Contributing](#contributing)
 
 ## About
@@ -77,7 +77,7 @@ Configuration parameters are passed as Java system properties (`-D` flags) or
 as environment variables. See below for a full list of environment variables. For example:
 ```
 java -javaagent:path/to/opentelemetry-javaagent-all.jar \
-     -Dotel.trace.exporter=zipkin \
+     -Dotel.traces.exporter=zipkin \
      -jar myapp.jar
 ```
 
@@ -140,6 +140,11 @@ See [GA Requirements](docs/ga-requirements.md)
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
+
+- [Jason Plumb](https://github.com/breedx-splk), Splunk
+- [Sergei Malafeev](https://github.com/malafeev), Lightstep
 
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 

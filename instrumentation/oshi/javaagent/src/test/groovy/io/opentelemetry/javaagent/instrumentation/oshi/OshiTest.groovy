@@ -33,8 +33,7 @@ class OshiTest extends AgentInstrumentationSpecification {
   def findMetric(instrumentationName, metricName) {
     Stopwatch stopwatch = Stopwatch.createStarted()
     while (stopwatch.elapsed(SECONDS) < 10) {
-      def allMetrics = testWriter.getMetrics()
-      for (def metric : allMetrics) {
+      for (def metric : metrics) {
         if (metric.instrumentationLibraryInfo.name == instrumentationName && metric.name == metricName) {
           return metric
         }

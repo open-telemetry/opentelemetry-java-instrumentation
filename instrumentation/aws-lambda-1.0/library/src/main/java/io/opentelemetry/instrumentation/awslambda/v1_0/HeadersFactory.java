@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import java.io.InputStream;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -20,10 +19,6 @@ class HeadersFactory {
   private static final Logger log = LoggerFactory.getLogger(HeadersFactory.class);
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-  static {
-    OBJECT_MAPPER.registerModule(new AfterburnerModule());
-  }
 
   @Nullable
   static Map<String, String> ofStream(InputStream inputStream) {
