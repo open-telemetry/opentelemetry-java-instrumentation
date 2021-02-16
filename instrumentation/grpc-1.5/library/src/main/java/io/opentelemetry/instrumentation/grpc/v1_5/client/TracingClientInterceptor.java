@@ -142,6 +142,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
         delegate().onMessage(message);
       } catch (Throwable e) {
         tracer.addThrowable(span, e);
+        throw e;
       }
     }
 
