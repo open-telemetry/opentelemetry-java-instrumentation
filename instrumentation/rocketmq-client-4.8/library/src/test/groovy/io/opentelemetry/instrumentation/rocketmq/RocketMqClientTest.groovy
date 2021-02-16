@@ -13,16 +13,16 @@ class RocketMqClientTest extends AbstractRocketMqClientLibraryTest implements Li
   @Override
   void producerIntercept(String addr,Message msg) {
     TracingMessageInterceptor tracingProducerInterceptor=  new TracingMessageInterceptor()
-    tracingProducerInterceptor.producerIntercept(addr,msg);
+    tracingProducerInterceptor.producerIntercept(addr,msg)
   }
 
   @Override
   void consumerIntercept(List<Object> msg, String type) {
     TracingMessageInterceptor tracingProducerInterceptor=  new TracingMessageInterceptor()
     if("concurrent".equals(type)){
-      tracingProducerInterceptor.consumerConcurrentlyIntercept(msg);
+      tracingProducerInterceptor.consumerConcurrentlyIntercept(msg)
     } else {
-      tracingProducerInterceptor.consumerOrderlyIntercept(msg);
+      tracingProducerInterceptor.consumerOrderlyIntercept(msg)
     }
   }
 }
