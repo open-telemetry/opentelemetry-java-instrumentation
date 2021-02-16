@@ -26,7 +26,7 @@ import org.apache.rocketmq.test.util.TestUtils;
 import org.junit.Assert;
 
 public class IntegrationTestBase {
-  public static InternalLogger logger = InternalLoggerFactory.getLogger(IntegrationTestBase.class);
+  public final static InternalLogger logger = InternalLoggerFactory.getLogger(IntegrationTestBase.class);
 
   protected static final String SEP = File.separator;
   protected static final String BROKER_NAME_PREFIX = "TestBrokerName_";
@@ -43,7 +43,7 @@ public class IntegrationTestBase {
     return port.addAndGet(random.nextInt(10) + 10);
   }
 
-  protected static Random random = new Random();
+  protected final static Random random = new Random();
 
   public static String createBaseDir() {
     String baseDir = System.getProperty("user.home") + SEP + "unitteststore-" + UUID.randomUUID();

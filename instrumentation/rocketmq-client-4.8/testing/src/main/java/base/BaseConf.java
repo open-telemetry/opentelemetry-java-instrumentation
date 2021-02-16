@@ -25,16 +25,16 @@ import org.apache.rocketmq.test.util.MQAdmin;
 import org.apache.rocketmq.test.util.MQRandomUtils;
 
 public class BaseConf {
-  public static String nsAddr;
-  public static String broker1Addr;
+  public final static String nsAddr;
+  public final static String broker1Addr;
   protected static String broker1Name;
-  protected static String clusterName;
+  protected final static String clusterName;
   protected static int brokerNum;
-  protected static NamesrvController namesrvController;
-  protected static BrokerController brokerController1;
-  protected static List<Object> mqClients = new ArrayList<Object>();
+  protected final static NamesrvController namesrvController;
+  protected final static BrokerController brokerController1;
+  protected final static List<Object> mqClients = new ArrayList<Object>();
   protected static boolean debug = false;
-  private static Logger log = Logger.getLogger(BaseConf.class);
+  private final static Logger log = Logger.getLogger(BaseConf.class);
 
   static {
     System.setProperty(
