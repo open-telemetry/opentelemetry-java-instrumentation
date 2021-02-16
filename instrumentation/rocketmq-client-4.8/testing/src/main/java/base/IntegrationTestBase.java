@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package base;
 
 import java.io.File;
@@ -41,6 +42,7 @@ public class IntegrationTestBase {
     public static synchronized int nextPort() {
         return port.addAndGet(random.nextInt(10) + 10);
     }
+
     protected static Random random = new Random();
 
     public static String createBaseDir() {

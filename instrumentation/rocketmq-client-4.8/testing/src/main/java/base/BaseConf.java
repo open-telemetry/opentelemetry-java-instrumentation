@@ -25,137 +25,140 @@ import org.apache.rocketmq.test.util.MQAdmin;
 import org.apache.rocketmq.test.util.MQRandomUtils;
 
 public class BaseConf {
-    public static String nsAddr;
+  public static String nsAddr;
   public static String broker1Addr;
-    protected static String broker1Name;
-    protected static String clusterName;
-    protected static int brokerNum;
-    protected static NamesrvController namesrvController;
-    protected static BrokerController brokerController1;
-    protected static List<Object> mqClients = new ArrayList<Object>();
-    protected static boolean debug = false;
-    private static Logger log = Logger.getLogger(BaseConf.class);
+  protected static String broker1Name;
+  protected static String clusterName;
+  protected static int brokerNum;
+  protected static NamesrvController namesrvController;
+  protected static BrokerController brokerController1;
+  protected static List<Object> mqClients = new ArrayList<Object>();
+  protected static boolean debug = false;
+  private static Logger log = Logger.getLogger(BaseConf.class);
 
-    static {
-    	System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
-        namesrvController = IntegrationTestBase.createAndStartNamesrv();
-        nsAddr = "127.0.0.1:" + namesrvController.getNettyServerConfig().getListenPort();
-        brokerController1 = IntegrationTestBase.createAndStartBroker(nsAddr);
-        clusterName = brokerController1.getBrokerConfig().getBrokerClusterName();
-        broker1Name = brokerController1.getBrokerConfig().getBrokerName();
-        broker1Addr = "127.0.0.1:" + brokerController1.getNettyServerConfig().getListenPort();
-        brokerNum = 2;
-    }
+  static {
+    System.setProperty(RemotingCommand.REMOTING_VERSION_KEY,
+        Integer.toString(MQVersion.CURRENT_VERSION));
+    namesrvController = IntegrationTestBase.createAndStartNamesrv();
+    nsAddr = "127.0.0.1:" + namesrvController.getNettyServerConfig().getListenPort();
+    brokerController1 = IntegrationTestBase.createAndStartBroker(nsAddr);
+    clusterName = brokerController1.getBrokerConfig().getBrokerClusterName();
+    broker1Name = brokerController1.getBrokerConfig().getBrokerName();
+    broker1Addr = "127.0.0.1:" + brokerController1.getNettyServerConfig().getListenPort();
+    brokerNum = 2;
+  }
 
-    public BaseConf() {
+  public BaseConf() {
 
-    }
+  }
 
-    public static String initTopic() {
-        String topic = MQRandomUtils.getRandomTopic();
-        IntegrationTestBase.initTopic(topic, nsAddr, clusterName);
+  public static String initTopic() {
+    String topic = MQRandomUtils.getRandomTopic();
+    IntegrationTestBase.initTopic(topic, nsAddr, clusterName);
 
-        return topic;
-    }
+    return topic;
+  }
 
   public static String getBrokerAddr() {
     return broker1Addr;
   }
 
-    public static String initConsumerGroup() {
-        String group = MQRandomUtils.getRandomConsumerGroup();
-        return initConsumerGroup(group);
-    }
+  public static String initConsumerGroup() {
+    String group = MQRandomUtils.getRandomConsumerGroup();
+    return initConsumerGroup(group);
+  }
 
-    public static String initConsumerGroup(String group) {
-        MQAdmin.createSub(nsAddr, clusterName, group);
-        return group;
-    }
+  public static String initConsumerGroup(String group) {
+    MQAdmin.createSub(nsAddr, clusterName, group);
+    return group;
+  }
 
-    public static RMQNormalProducer getProducer(String nsAddr, String topic) {
-        return getProducer(nsAddr, topic, false);
-    }
+  public static RMQNormalProducer getProducer(String nsAddr, String topic) {
+    return getProducer(nsAddr, topic, false);
+  }
 
-    public static RMQNormalProducer getProducer(String nsAddr, String topic, boolean useTLS) {
-        RMQNormalProducer producer = new RMQNormalProducer(nsAddr, topic, useTLS);
-        if (debug) {
-            producer.setDebug();
+  public static RMQNormalProducer getProducer(String nsAddr, String topic, boolean useTls) {
+    RMQNormalProducer producer = new RMQNormalProducer(nsAddr, topic, useTls);
+    if (debug) {
+      producer.setDebug();
+    }
+    mqClients.add(producer);
+    return producer;
+  }
+
+  public static RMQNormalProducer getProducer(String nsAddr, String topic, String producerGoup,
+      String instanceName) {
+    RMQNormalProducer producer = new RMQNormalProducer(nsAddr, topic, producerGoup,
+        instanceName);
+    if (debug) {
+      producer.setDebug();
+    }
+    mqClients.add(producer);
+    return producer;
+  }
+
+  public static RMQTransactionalProducer getTransactionalProducer(String nsAddr, String topic,
+      TransactionListener transactionListener) {
+    RMQTransactionalProducer producer = new RMQTransactionalProducer(nsAddr, topic, false,
+        transactionListener);
+    if (debug) {
+      producer.setDebug();
+    }
+    mqClients.add(producer);
+    return producer;
+  }
+
+  public static RMQAsyncSendProducer getAsyncProducer(String nsAddr, String topic) {
+    RMQAsyncSendProducer producer = new RMQAsyncSendProducer(nsAddr, topic);
+    if (debug) {
+      producer.setDebug();
+    }
+    mqClients.add(producer);
+    return producer;
+  }
+
+  public static RMQNormalConsumer getConsumer(String nsAddr, String topic, String subExpression,
+      AbstractListener listener) {
+    return getConsumer(nsAddr, topic, subExpression, listener, false);
+  }
+
+  public static RMQNormalConsumer getConsumer(String nsAddr, String topic, String subExpression,
+      AbstractListener listener, boolean useTls) {
+    String consumerGroup = initConsumerGroup();
+    return getConsumer(nsAddr, consumerGroup, topic, subExpression, listener, useTls);
+  }
+
+  public static RMQNormalConsumer getConsumer(String nsAddr, String consumerGroup, String topic,
+      String subExpression, AbstractListener listener) {
+    return getConsumer(nsAddr, consumerGroup, topic, subExpression, listener, false);
+  }
+
+  public static RMQNormalConsumer getConsumer(String nsAddr, String consumerGroup, String topic,
+      String subExpression, AbstractListener listener, boolean useTls) {
+    RMQNormalConsumer consumer = ConsumerFactory.getRMQNormalConsumer(nsAddr, consumerGroup,
+        topic, subExpression, listener, useTls);
+    if (debug) {
+      consumer.setDebug();
+    }
+    mqClients.add(consumer);
+    log.info(String.format("consumer[%s] start,topic[%s],subExpression[%s]", consumerGroup,
+        topic, subExpression));
+    return consumer;
+  }
+
+  public static void shutdown() {
+    try {
+      for (Object mqClient : mqClients) {
+        if (mqClient instanceof AbstractMQProducer) {
+          ((AbstractMQProducer) mqClient).shutdown();
+
+        } else {
+          ((AbstractMQConsumer) mqClient).shutdown();
         }
-        mqClients.add(producer);
-        return producer;
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
 
-    public static RMQTransactionalProducer getTransactionalProducer(String nsAddr, String topic, TransactionListener transactionListener) {
-        RMQTransactionalProducer producer = new RMQTransactionalProducer(nsAddr, topic, false, transactionListener);
-        if (debug) {
-            producer.setDebug();
-        }
-        mqClients.add(producer);
-        return producer;
-    }
-
-    public static RMQNormalProducer getProducer(String nsAddr, String topic, String producerGoup,
-        String instanceName) {
-        RMQNormalProducer producer = new RMQNormalProducer(nsAddr, topic, producerGoup,
-            instanceName);
-        if (debug) {
-            producer.setDebug();
-        }
-        mqClients.add(producer);
-        return producer;
-    }
-
-    public static RMQAsyncSendProducer getAsyncProducer(String nsAddr, String topic) {
-        RMQAsyncSendProducer producer = new RMQAsyncSendProducer(nsAddr, topic);
-        if (debug) {
-            producer.setDebug();
-        }
-        mqClients.add(producer);
-        return producer;
-    }
-
-    public static RMQNormalConsumer getConsumer(String nsAddr, String topic, String subExpression,
-        AbstractListener listener) {
-        return getConsumer(nsAddr, topic, subExpression, listener, false);
-    }
-
-    public static RMQNormalConsumer getConsumer(String nsAddr, String topic, String subExpression,
-        AbstractListener listener, boolean useTLS) {
-        String consumerGroup = initConsumerGroup();
-        return getConsumer(nsAddr, consumerGroup, topic, subExpression, listener, useTLS);
-    }
-
-    public static RMQNormalConsumer getConsumer(String nsAddr, String consumerGroup, String topic,
-        String subExpression, AbstractListener listener) {
-        return getConsumer(nsAddr, consumerGroup, topic, subExpression, listener, false);
-    }
-
-    public static RMQNormalConsumer getConsumer(String nsAddr, String consumerGroup, String topic,
-        String subExpression, AbstractListener listener, boolean useTLS) {
-        RMQNormalConsumer consumer = ConsumerFactory.getRMQNormalConsumer(nsAddr, consumerGroup,
-            topic, subExpression, listener, useTLS);
-        if (debug) {
-            consumer.setDebug();
-        }
-        mqClients.add(consumer);
-        log.info(String.format("consumer[%s] start,topic[%s],subExpression[%s]", consumerGroup,
-            topic, subExpression));
-        return consumer;
-    }
-
-    public static void shutdown() {
-        try {
-            for (Object mqClient : mqClients) {
-                if (mqClient instanceof AbstractMQProducer) {
-                    ((AbstractMQProducer) mqClient).shutdown();
-
-                } else {
-                    ((AbstractMQConsumer) mqClient).shutdown();
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
+  }
 }

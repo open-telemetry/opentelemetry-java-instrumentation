@@ -4,6 +4,7 @@
  */
 
 package io.opentelemetry.instrumentation.rocketmq;
+
 import io.opentelemetry.instrumentation.api.config.Config;
 
 public final class RocketMqClientConfig {

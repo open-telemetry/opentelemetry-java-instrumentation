@@ -6,11 +6,11 @@
 package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.api.trace.Span;
+import java.util.List;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageExt;
-import java.util.List;
 
 public class TracingMessageInterceptor {
 
