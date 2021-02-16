@@ -8,7 +8,6 @@ package io.opentelemetery.instrumentation.rocketmq
 import base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.apache.rocketmq.client.producer.DefaultMQProducer
 import org.apache.rocketmq.common.message.Message
 import org.apache.rocketmq.remoting.common.RemotingHelper
 import org.apache.rocketmq.test.client.rmq.RMQNormalConsumer
@@ -33,9 +32,6 @@ abstract class AbstractRocketMqClientLibraryTest extends InstrumentationSpecific
   RMQNormalProducer producer;
 
   @Shared
-  DefaultMQProducer defaultMQProducer;
-
-  @Shared
   String sharedTopic;
 
   @Shared
@@ -54,7 +50,6 @@ abstract class AbstractRocketMqClientLibraryTest extends InstrumentationSpecific
 
   abstract void consumerIntercept(List<Object> msgs,String type)
 
-
   def setup() {
     sharedTopic =baseConf.initTopic();
     brokerAddr =baseConf.getBrokerAddr()
@@ -64,11 +59,10 @@ abstract class AbstractRocketMqClientLibraryTest extends InstrumentationSpecific
   def "test rocketmq produce callback"() {
     setup:
     producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic);
-
     when:
     runUnderTrace("parent") {
-      producerIntercept(brokerAddr,msg);
-      producer.send(msg);
+      producerIntercept(brokerAddr,msg)
+      producer.send(msg)
     }
     then:
     assertTraces(1) {
@@ -83,12 +77,11 @@ abstract class AbstractRocketMqClientLibraryTest extends InstrumentationSpecific
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "messaging.rocketmq.tags" "TagA"
             "messaging.rocketmq.broker_address" brokerAddr
-            "messaging.rocketmq.callback_result" "SEND_OK"
           }
         }
       }
       cleanup:
-      defaultMQProducer.shutdown()
+      producer.shutdown()
     }
   }
 
@@ -97,7 +90,7 @@ abstract class AbstractRocketMqClientLibraryTest extends InstrumentationSpecific
     producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic);
     consumer = baseConf.getConsumer(baseConf.nsAddr, sharedTopic, "*", new RMQNormalListener());
     when:
-    producer.send(msg);
+    producer.send(msg)
     consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime)
     consumerIntercept(consumer.getListener().getAllOriginMsg(),"concurrent")
     then:
@@ -136,6 +129,7 @@ abstract class AbstractRocketMqClientLibraryTest extends InstrumentationSpecific
       producer.send(msg);
       consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime);
       consumerIntercept(consumer.getListener().getAllOriginMsg(),"order")
+
     then:
     assertTraces(1) {
       trace(0, 1) {

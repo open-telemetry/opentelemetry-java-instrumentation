@@ -12,7 +12,6 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer
 import org.apache.rocketmq.client.producer.SendCallback
 import org.apache.rocketmq.client.producer.SendResult
 import org.apache.rocketmq.common.message.Message
-
 import org.apache.rocketmq.remoting.common.RemotingHelper
 import org.apache.rocketmq.test.client.rmq.RMQNormalConsumer
 import org.apache.rocketmq.test.client.rmq.RMQNormalProducer
@@ -21,8 +20,8 @@ import org.apache.rocketmq.test.listener.rmq.concurrent.RMQNormalListener
 import org.apache.rocketmq.test.listener.rmq.order.RMQOrderListener
 import spock.lang.Shared
 import spock.lang.Unroll
-import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -30,28 +29,28 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
 
   @Shared
-  RMQNormalConsumer consumer;
+  private RMQNormalConsumer consumer;
 
   @Shared
-  RMQNormalProducer producer;
+  private RMQNormalProducer producer;
 
   @Shared
   DefaultMQProducer defaultMQProducer;
 
   @Shared
-  String sharedTopic;
+  private String sharedTopic;
 
   @Shared
-  String brokerAddr;
+  private String brokerAddr;
 
   @Shared
   Message msg;
 
   @Shared
-  int consumeTime = 5000;
+  int consumeTime = 1000;
 
   @Shared
-  def baseConf =new BaseConf();
+  BaseConf baseConf =new BaseConf();
 
   def setup() {
     sharedTopic =baseConf.initTopic();
@@ -62,7 +61,6 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
   def "test rocketmq produce callback"() {
     setup:
     defaultMQProducer = ProducerFactory.getRMQProducer(baseConf.nsAddr);
-
     when:
     runUnderTrace("parent") {
       defaultMQProducer.send(msg, new SendCallback() {
@@ -93,8 +91,10 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
           }
         }
       }
+
       cleanup:
       defaultMQProducer.shutdown()
+
     }
   }
 
@@ -102,13 +102,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
     setup:
     producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic);
     consumer = baseConf.getConsumer(baseConf.nsAddr, sharedTopic, "*", new RMQNormalListener());
-
     when:
     runUnderTrace("parent") {
       producer.send(msg);
-      consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime)
+      consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime);
     }
-
     then:
     assertTraces(1) {
       trace(0, 3) {
@@ -148,6 +146,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
 
     }
   }
+
 
   def "test rocketmq produce and orderly consume"() {
     setup:

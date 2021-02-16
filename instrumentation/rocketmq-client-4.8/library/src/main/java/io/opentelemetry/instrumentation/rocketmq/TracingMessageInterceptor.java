@@ -13,9 +13,6 @@ public class TracingMessageInterceptor {
 
   public void producerIntercept(String addr, Message msg) {
     Span span = RocketMqProducerTracer.tracer().startProducerSpan(addr, msg);
-    SendResult sendResult = new SendResult();
-    sendResult.setSendStatus(SendStatus.SEND_OK);
-    RocketMqProducerTracer.tracer().onCallback(span, sendResult);
     RocketMqProducerTracer.tracer().end(span);
   }
 
