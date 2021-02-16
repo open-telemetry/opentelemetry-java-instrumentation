@@ -37,8 +37,8 @@ public class BaseConf {
   private static Logger log = Logger.getLogger(BaseConf.class);
 
   static {
-    System.setProperty(RemotingCommand.REMOTING_VERSION_KEY,
-        Integer.toString(MQVersion.CURRENT_VERSION));
+    System.setProperty(
+        RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
     namesrvController = IntegrationTestBase.createAndStartNamesrv();
     nsAddr = "127.0.0.1:" + namesrvController.getNettyServerConfig().getListenPort();
     brokerController1 = IntegrationTestBase.createAndStartBroker(nsAddr);
@@ -48,9 +48,7 @@ public class BaseConf {
     brokerNum = 2;
   }
 
-  public BaseConf() {
-
-  }
+  public BaseConf() {}
 
   public static String initTopic() {
     String topic = MQRandomUtils.getRandomTopic();
@@ -86,10 +84,9 @@ public class BaseConf {
     return producer;
   }
 
-  public static RMQNormalProducer getProducer(String nsAddr, String topic, String producerGoup,
-      String instanceName) {
-    RMQNormalProducer producer = new RMQNormalProducer(nsAddr, topic, producerGoup,
-        instanceName);
+  public static RMQNormalProducer getProducer(
+      String nsAddr, String topic, String producerGoup, String instanceName) {
+    RMQNormalProducer producer = new RMQNormalProducer(nsAddr, topic, producerGoup, instanceName);
     if (debug) {
       producer.setDebug();
     }
@@ -97,10 +94,10 @@ public class BaseConf {
     return producer;
   }
 
-  public static RMQTransactionalProducer getTransactionalProducer(String nsAddr, String topic,
-      TransactionListener transactionListener) {
-    RMQTransactionalProducer producer = new RMQTransactionalProducer(nsAddr, topic, false,
-        transactionListener);
+  public static RMQTransactionalProducer getTransactionalProducer(
+      String nsAddr, String topic, TransactionListener transactionListener) {
+    RMQTransactionalProducer producer =
+        new RMQTransactionalProducer(nsAddr, topic, false, transactionListener);
     if (debug) {
       producer.setDebug();
     }
@@ -117,32 +114,47 @@ public class BaseConf {
     return producer;
   }
 
-  public static RMQNormalConsumer getConsumer(String nsAddr, String topic, String subExpression,
-      AbstractListener listener) {
+  public static RMQNormalConsumer getConsumer(
+      String nsAddr, String topic, String subExpression, AbstractListener listener) {
     return getConsumer(nsAddr, topic, subExpression, listener, false);
   }
 
-  public static RMQNormalConsumer getConsumer(String nsAddr, String topic, String subExpression,
-      AbstractListener listener, boolean useTls) {
+  public static RMQNormalConsumer getConsumer(
+      String nsAddr,
+      String topic,
+      String subExpression,
+      AbstractListener listener,
+      boolean useTls) {
     String consumerGroup = initConsumerGroup();
     return getConsumer(nsAddr, consumerGroup, topic, subExpression, listener, useTls);
   }
 
-  public static RMQNormalConsumer getConsumer(String nsAddr, String consumerGroup, String topic,
-      String subExpression, AbstractListener listener) {
+  public static RMQNormalConsumer getConsumer(
+      String nsAddr,
+      String consumerGroup,
+      String topic,
+      String subExpression,
+      AbstractListener listener) {
     return getConsumer(nsAddr, consumerGroup, topic, subExpression, listener, false);
   }
 
-  public static RMQNormalConsumer getConsumer(String nsAddr, String consumerGroup, String topic,
-      String subExpression, AbstractListener listener, boolean useTls) {
-    RMQNormalConsumer consumer = ConsumerFactory.getRMQNormalConsumer(nsAddr, consumerGroup,
-        topic, subExpression, listener, useTls);
+  public static RMQNormalConsumer getConsumer(
+      String nsAddr,
+      String consumerGroup,
+      String topic,
+      String subExpression,
+      AbstractListener listener,
+      boolean useTls) {
+    RMQNormalConsumer consumer =
+        ConsumerFactory.getRMQNormalConsumer(
+            nsAddr, consumerGroup, topic, subExpression, listener, useTls);
     if (debug) {
       consumer.setDebug();
     }
     mqClients.add(consumer);
-    log.info(String.format("consumer[%s] start,topic[%s],subExpression[%s]", consumerGroup,
-        topic, subExpression));
+    log.info(
+        String.format(
+            "consumer[%s] start,topic[%s],subExpression[%s]", consumerGroup, topic, subExpression));
     return consumer;
   }
 
@@ -159,6 +171,5 @@ public class BaseConf {
     } catch (Exception e) {
       e.printStackTrace();
     }
-
   }
 }

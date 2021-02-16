@@ -20,13 +20,14 @@ public class TracingMessageInterceptor {
   }
 
   public void consumerConcurrentlyIntercept(List<MessageExt> msgs) {
-    Span span =  RocketMqConsumerTracer.tracer().startSpan(msgs);
-    RocketMqConsumerTracer.tracer().endConcurrentlySpan(span, ConsumeConcurrentlyStatus.CONSUME_SUCCESS);
+    Span span = RocketMqConsumerTracer.tracer().startSpan(msgs);
+    RocketMqConsumerTracer.tracer()
+        .endConcurrentlySpan(span, ConsumeConcurrentlyStatus.CONSUME_SUCCESS);
     RocketMqConsumerTracer.tracer().tracer().end(span);
   }
 
   public void consumerOrderlyIntercept(List<MessageExt> msgs) {
-    Span span =  RocketMqConsumerTracer.tracer().startSpan(msgs);
+    Span span = RocketMqConsumerTracer.tracer().startSpan(msgs);
     RocketMqConsumerTracer.tracer().endOrderlySpan(span, ConsumeOrderlyStatus.SUCCESS);
     RocketMqConsumerTracer.tracer().tracer().end(span);
   }
