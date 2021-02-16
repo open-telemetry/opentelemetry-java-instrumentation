@@ -29,38 +29,38 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
 
   @Shared
-  private RMQNormalConsumer consumer;
+  private RMQNormalConsumer consumer
 
   @Shared
-  private RMQNormalProducer producer;
+  private RMQNormalProducer producer
 
   @Shared
-  DefaultMQProducer defaultMQProducer;
+  DefaultMQProducer defaultMQProducer
 
   @Shared
-  private String sharedTopic;
+  private String sharedTopic
 
   @Shared
-  private String brokerAddr;
+  private String brokerAddr
 
   @Shared
-  Message msg;
+  Message msg
 
   @Shared
-  int consumeTime = 1000;
+  int consumeTime = 1000
 
   @Shared
-  BaseConf baseConf =new BaseConf();
+  BaseConf baseConf =new BaseConf()
 
   def setup() {
-    sharedTopic =baseConf.initTopic();
+    sharedTopic =baseConf.initTopic()
     brokerAddr =baseConf.getBrokerAddr()
-    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET));
+    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
   }
 
   def "test rocketmq produce callback"() {
     setup:
-    defaultMQProducer = ProducerFactory.getRMQProducer(baseConf.nsAddr);
+    defaultMQProducer = ProducerFactory.getRMQProducer(baseConf.nsAddr)
     when:
     runUnderTrace("parent") {
       defaultMQProducer.send(msg, new SendCallback() {
@@ -71,7 +71,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
         @Override
         void onException(Throwable throwable) {
         }
-      });
+      })
 
     }
     then:
@@ -100,12 +100,12 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
 
   def "test rocketmq produce and concurrently consume"() {
     setup:
-    producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic);
-    consumer = baseConf.getConsumer(baseConf.nsAddr, sharedTopic, "*", new RMQNormalListener());
+    producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic)
+    consumer = baseConf.getConsumer(baseConf.nsAddr, sharedTopic, "*", new RMQNormalListener())
     when:
     runUnderTrace("parent") {
-      producer.send(msg);
-      consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime);
+      producer.send(msg)
+      consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime)
     }
     then:
     assertTraces(1) {
@@ -150,12 +150,12 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
 
   def "test rocketmq produce and orderly consume"() {
     setup:
-    producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic);
-    consumer = baseConf.getConsumer(baseConf.nsAddr, sharedTopic, "*", new RMQOrderListener());
+    producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic)
+    consumer = baseConf.getConsumer(baseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
     when:
     runUnderTrace("parent") {
-      producer.send(msg);
-      consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime);
+      producer.send(msg)
+      consumer.getListener().waitForMessageConsume(producer.getAllMsgBody(), consumeTime)
     }
     then:
     assertTraces(1) {
