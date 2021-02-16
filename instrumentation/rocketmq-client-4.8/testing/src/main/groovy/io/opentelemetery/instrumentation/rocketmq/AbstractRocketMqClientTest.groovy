@@ -58,7 +58,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
     msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
   }
 
-  def "test rocketmq produce callback"() {
+  def "test rocketmq produce callback1"() {
     setup:
     defaultMQProducer = ProducerFactory.getRMQProducer(baseConf.nsAddr)
     when:
@@ -91,10 +91,6 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
           }
         }
       }
-
-      cleanup:
-      defaultMQProducer.shutdown()
-
     }
   }
 
