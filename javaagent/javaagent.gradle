@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.github.jk1.license.filter.LicenseBundleNormalizer
 import com.github.jk1.license.render.InventoryMarkdownReportRenderer
 
 plugins {
@@ -151,6 +152,8 @@ licenseReport {
     "io.opentelemetry.instrumentation",
     "io.opentelemetry.javaagent"
   ]
+
+  filters = [new LicenseBundleNormalizer(bundlePath: "$projectDir/license-normalizer-bundle.json")]
 }
 
 def cleanLicenses = tasks.register("cleanLicenses", Delete) {
