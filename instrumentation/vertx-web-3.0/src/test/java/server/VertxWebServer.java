@@ -20,10 +20,11 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
 public class VertxWebServer extends AbstractVerticle {
+  public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
 
   @Override
   public void start(Future<Void> startFuture) {
-    int port = config().getInteger(VertxHttpServerTest.CONFIG_HTTP_SERVER_PORT);
+    int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
     Router router = Router.router(vertx);
 
     //noinspection Convert2Lambda

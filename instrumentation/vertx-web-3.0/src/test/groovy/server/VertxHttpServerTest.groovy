@@ -18,8 +18,6 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
 class VertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrait {
-  public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
-
   @Override
   Vertx startServer(int port) {
     Vertx server = Vertx.vertx(new VertxOptions()
@@ -29,7 +27,7 @@ class VertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrai
     CompletableFuture<Void> future = new CompletableFuture<>()
     server.deployVerticle(verticle().getName(),
       new DeploymentOptions()
-        .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
+        .setConfig(new JsonObject().put(VertxWebServer.CONFIG_HTTP_SERVER_PORT, port))
         .setInstances(3)) { res ->
       if (!res.succeeded()) {
         throw new RuntimeException("Cannot deploy server Verticle", res.cause())
