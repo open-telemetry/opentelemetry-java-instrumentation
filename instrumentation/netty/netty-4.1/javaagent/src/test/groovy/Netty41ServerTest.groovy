@@ -33,9 +33,10 @@ import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.CharsetUtil
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 
-class Netty41ServerTest extends HttpServerTest<EventLoopGroup> {
+class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentTestTrait {
 
   static final LoggingHandler LOGGING_HANDLER = new LoggingHandler(SERVER_LOGGER.name, LogLevel.DEBUG)
 

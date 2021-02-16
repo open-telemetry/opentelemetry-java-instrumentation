@@ -6,6 +6,7 @@
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.ActorMaterializerSettings
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import play.shaded.ahc.org.asynchttpclient.AsyncHttpClient
 import play.shaded.ahc.org.asynchttpclient.AsyncHttpClientConfig
@@ -13,7 +14,7 @@ import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClient
 import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClientConfig
 import spock.lang.Shared
 
-abstract class PlayWsClientTestBase extends HttpClientTest {
+abstract class PlayWsClientTestBase extends HttpClientTest implements AgentTestTrait {
   @Shared
   ActorSystem system
 

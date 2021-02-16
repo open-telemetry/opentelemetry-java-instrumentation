@@ -9,11 +9,12 @@ import com.google.api.client.http.GenericUrl
 import com.google.api.client.http.HttpRequest
 import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
-abstract class AbstractGoogleHttpClientTest extends HttpClientTest {
+abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   def requestFactory = new NetHttpTransport().createRequestFactory()

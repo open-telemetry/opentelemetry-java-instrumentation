@@ -16,6 +16,7 @@ import static java.nio.charset.Charset.defaultCharset
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static org.glassfish.grizzly.memory.Buffers.wrap
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import java.util.concurrent.Executors
 import org.glassfish.grizzly.filterchain.BaseFilter
@@ -36,7 +37,7 @@ import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder
 import org.glassfish.grizzly.utils.DelayedExecutor
 import org.glassfish.grizzly.utils.IdleTimeoutFilter
 
-class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> {
+class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
 
   private TCPNIOTransport transport
   private TCPNIOServerConnection serverConnection

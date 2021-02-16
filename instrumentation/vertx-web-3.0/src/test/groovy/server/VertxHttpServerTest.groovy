@@ -7,6 +7,7 @@ package server
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions
@@ -16,7 +17,7 @@ import io.vertx.core.json.JsonObject
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-class VertxHttpServerTest extends HttpServerTest<Vertx> {
+class VertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrait {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
 
   @Override

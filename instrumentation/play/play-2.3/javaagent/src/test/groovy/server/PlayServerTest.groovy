@@ -9,12 +9,13 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import play.api.test.TestServer
 
-class PlayServerTest extends HttpServerTest<TestServer> {
+class PlayServerTest extends HttpServerTest<TestServer> implements AgentTestTrait {
   @Override
   TestServer startServer(int port) {
     def server = SyncServer.server(port)

@@ -8,6 +8,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
@@ -20,7 +21,7 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-class Netty40ClientTest extends HttpClientTest {
+class Netty40ClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   def clientConfig = DefaultAsyncHttpClientConfig.Builder.newInstance().setRequestTimeout(TimeUnit.SECONDS.toMillis(10).toInteger())

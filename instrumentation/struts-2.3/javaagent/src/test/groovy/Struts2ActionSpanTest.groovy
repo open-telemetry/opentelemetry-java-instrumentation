@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -21,7 +22,7 @@ import org.eclipse.jetty.servlet.DefaultServlet
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.FileResource
 
-class Struts2ActionSpanTest extends HttpServerTest<Server> {
+class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestTrait {
 
   @Override
   boolean testNotFound() {

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -11,10 +12,11 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static java.util.concurrent.TimeUnit.SECONDS
 import static org.junit.Assume.assumeTrue
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletableFuture
 import okhttp3.Call
 import okhttp3.Callback
@@ -24,7 +26,7 @@ import okhttp3.Response
 import spock.lang.Timeout
 import spock.lang.Unroll
 
-abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
+abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements AgentTestTrait {
   @Timeout(10)
   @Unroll
   def "should handle #desc AsyncResponse"() {
