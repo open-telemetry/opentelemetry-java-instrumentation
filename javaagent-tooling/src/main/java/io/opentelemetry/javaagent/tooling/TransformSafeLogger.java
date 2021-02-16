@@ -5,10 +5,14 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static org.slf4j.event.Level.DEBUG;
+import static org.slf4j.event.Level.TRACE;
+
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 /**
  * Debug logging that is performed under class file transform needs to use this class, because
@@ -49,7 +53,7 @@ public class TransformSafeLogger {
 
   public void debug(String format, Object arg) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(logger, format, arg));
+      logMessageQueue.offer(new LogMessage(DEBUG, logger, format, arg));
     } else {
       logger.debug(format, arg);
     }
@@ -57,7 +61,7 @@ public class TransformSafeLogger {
 
   public void debug(String format, Object arg1, Object arg2) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(logger, format, arg1, arg2));
+      logMessageQueue.offer(new LogMessage(DEBUG, logger, format, arg1, arg2));
     } else {
       logger.debug(format, arg1, arg2);
     }
@@ -65,7 +69,7 @@ public class TransformSafeLogger {
 
   public void debug(String format, Object... arguments) {
     if (logMessageQueue != null) {
-      logMessageQueue.offer(new LogMessage(logger, format, arguments));
+      logMessageQueue.offer(new LogMessage(DEBUG, logger, format, arguments));
     } else {
       logger.debug(format, arguments);
     }
@@ -75,13 +79,48 @@ public class TransformSafeLogger {
     return logger.isDebugEnabled();
   }
 
+  public void trace(String format, Object arg) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(TRACE, logger, format, arg));
+    } else {
+      logger.trace(format, arg);
+    }
+  }
+
+  public void trace(String format, Object arg1, Object arg2) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(TRACE, logger, format, arg1, arg2));
+    } else {
+      logger.trace(format, arg1, arg2);
+    }
+  }
+
+  public void trace(String format, Object... arguments) {
+    if (logMessageQueue != null) {
+      logMessageQueue.offer(new LogMessage(TRACE, logger, format, arguments));
+    } else {
+      logger.trace(format, arguments);
+    }
+  }
+
+  public boolean isTraceEnabled() {
+    return logger.isTraceEnabled();
+  }
+
   private static class LogMessageQueueReader implements Runnable {
     @Override
     public void run() {
       try {
         while (true) {
           LogMessage logMessage = logMessageQueue.take();
-          logMessage.logger.debug(logMessage.format, logMessage.arguments);
+          if (logMessage.level == DEBUG) {
+            logMessage.logger.debug(logMessage.format, logMessage.arguments);
+          } else if (logMessage.level == TRACE) {
+            logMessage.logger.trace(logMessage.format, logMessage.arguments);
+          } else {
+            logMessage.logger.warn(
+                "level {} not implemented yet in TransformSafeLogger", logMessage.level);
+          }
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
@@ -90,11 +129,13 @@ public class TransformSafeLogger {
   }
 
   private static class LogMessage {
+    private final Level level;
     private final Logger logger;
     private final String format;
     private final Object[] arguments;
 
-    private LogMessage(Logger logger, String format, Object... arguments) {
+    private LogMessage(Level level, Logger logger, String format, Object... arguments) {
+      this.level = level;
       this.logger = logger;
       this.format = format;
       this.arguments = arguments;
