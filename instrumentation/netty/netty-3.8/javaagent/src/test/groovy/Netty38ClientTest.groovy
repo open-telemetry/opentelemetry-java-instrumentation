@@ -11,13 +11,14 @@ import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
 import com.ning.http.client.AsyncHttpClientConfig
 import com.ning.http.client.Response
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class Netty38ClientTest extends HttpClientTest {
+class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   def clientConfig = new AsyncHttpClientConfig.Builder()

@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -19,7 +20,7 @@ import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import test.boot.SecurityConfig
 
-class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> {
+class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> implements AgentTestTrait {
 
   @Override
   ConfigurableApplicationContext startServer(int port) {

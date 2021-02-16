@@ -26,6 +26,7 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import java.util.concurrent.ExecutionException
@@ -40,7 +41,7 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-class Netty41ClientTest extends HttpClientTest {
+class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   def clientConfig = DefaultAsyncHttpClientConfig.Builder.newInstance().setRequestTimeout(TimeUnit.SECONDS.toMillis(10).toInteger())

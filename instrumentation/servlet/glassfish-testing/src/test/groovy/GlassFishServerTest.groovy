@@ -7,6 +7,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import org.glassfish.embeddable.BootstrapProperties
@@ -21,7 +22,7 @@ import org.glassfish.embeddable.archive.ScatteredArchive
  * OSGi setup that requires {@link io.opentelemetry.javaagent.instrumentation.javaclassloader.ClassloadingInstrumentation}.
  */
 // TODO: Figure out a better way to test with OSGi included.
-class GlassFishServerTest extends HttpServerTest<GlassFish> {
+class GlassFishServerTest extends HttpServerTest<GlassFish> implements AgentTestTrait {
 
   @Override
   URI buildAddress() {

@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -20,7 +21,7 @@ import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
 
-class PlayServerTest extends HttpServerTest<Server> {
+class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   @Override
   Server startServer(int port) {
     def router =

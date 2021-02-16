@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -18,7 +19,7 @@ import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.util.descriptor.web.ErrorPage
 
-class TomcatHandlerTest extends HttpServerTest<Tomcat> {
+class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
 
   def "Tomcat starts"() {
     expect:

@@ -5,8 +5,9 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -17,7 +18,7 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-abstract class JdkHttpClientTest extends HttpClientTest {
+abstract class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   def client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT_MS,

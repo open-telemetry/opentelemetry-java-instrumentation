@@ -18,18 +18,19 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 
-class DropwizardTest extends HttpServerTest<DropwizardTestSupport> {
+class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements AgentTestTrait {
 
   @Override
   DropwizardTestSupport startServer(int port) {

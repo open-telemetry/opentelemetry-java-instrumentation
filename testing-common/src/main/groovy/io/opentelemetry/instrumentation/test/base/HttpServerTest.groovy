@@ -17,7 +17,7 @@ import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -29,7 +29,7 @@ import okhttp3.Response
 import spock.lang.Unroll
 
 @Unroll
-abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification implements HttpServerTestTrait<SERVER> {
+abstract class HttpServerTest<SERVER> extends InstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return endpoint == PATH_PARAM ? getContextPath() + "/path/:id/param" : endpoint.resolvePath(address).path

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import org.apache.http.HttpHost
 import org.apache.http.HttpRequest
@@ -16,7 +17,7 @@ import org.apache.http.protocol.BasicHttpContext
 import spock.lang.Shared
 import spock.lang.Timeout
 
-abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest {
+abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest implements AgentTestTrait {
   @Shared
   def client = new DefaultHttpClient()
 

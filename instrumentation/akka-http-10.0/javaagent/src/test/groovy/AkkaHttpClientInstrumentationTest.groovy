@@ -11,12 +11,13 @@ import akka.http.javadsl.model.HttpMethods
 import akka.http.javadsl.model.HttpRequest
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-class AkkaHttpClientInstrumentationTest extends HttpClientTest {
+class AkkaHttpClientInstrumentationTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   ActorSystem system = ActorSystem.create()

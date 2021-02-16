@@ -4,11 +4,12 @@
  */
 
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.Timeout
 
 @Timeout(5)
-class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest {
+class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {

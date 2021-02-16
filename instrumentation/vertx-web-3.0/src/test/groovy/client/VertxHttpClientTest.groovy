@@ -5,6 +5,7 @@
 
 package client
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
@@ -16,7 +17,7 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(10)
-class VertxHttpClientTest extends HttpClientTest {
+class VertxHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   def vertx = Vertx.vertx(new VertxOptions())

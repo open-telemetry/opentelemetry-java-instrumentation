@@ -5,8 +5,9 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
@@ -23,7 +24,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 import spock.lang.Timeout
 import spock.lang.Unroll
 
-abstract class JaxRsClientTest extends HttpClientTest {
+abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {

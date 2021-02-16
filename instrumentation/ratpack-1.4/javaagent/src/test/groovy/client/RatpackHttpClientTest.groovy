@@ -5,6 +5,7 @@
 
 package client
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.time.Duration
 import ratpack.exec.ExecResult
@@ -15,7 +16,7 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-class RatpackHttpClientTest extends HttpClientTest {
+class RatpackHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @AutoCleanup
   @Shared
