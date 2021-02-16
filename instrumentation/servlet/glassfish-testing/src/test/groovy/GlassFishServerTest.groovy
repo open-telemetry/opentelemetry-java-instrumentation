@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import org.glassfish.embeddable.BootstrapProperties
 import org.glassfish.embeddable.Deployer
@@ -62,5 +67,23 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> {
   @Override
   boolean redirectHasBody() {
     true
+  }
+
+  @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND
+  }
+
+  @Override
+  void responseSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
+    switch (endpoint) {
+      case REDIRECT:
+        redirectSpan(trace, index, parent)
+        break
+      case ERROR:
+      case NOT_FOUND:
+        sendErrorSpan(trace, index, parent)
+        break
+    }
   }
 }

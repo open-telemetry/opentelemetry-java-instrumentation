@@ -24,6 +24,7 @@ dependencies {
   testRuntimeOnly group: 'javax.servlet', name: 'jsp-api', version: '2.0'
 
   testInstrumentation project(":instrumentation:servlet:servlet-3.0:javaagent")
+  testInstrumentation project(':instrumentation:servlet:servlet-common:javaagent')
   testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
 }
 

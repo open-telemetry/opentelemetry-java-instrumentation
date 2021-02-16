@@ -19,21 +19,22 @@ public class TestServlet extends HttpServlet {
 
     HttpServerTest.ServerEndpoint serverEndpoint = HttpServerTest.ServerEndpoint.forPath(path);
     if (serverEndpoint != null) {
-      if (serverEndpoint == HttpServerTest.ServerEndpoint.EXCEPTION) {
-        HttpServerTest.controller(
-            serverEndpoint,
-            () -> {
+      HttpServerTest.controller(
+          serverEndpoint,
+          () -> {
+            if (serverEndpoint == HttpServerTest.ServerEndpoint.EXCEPTION) {
               throw new Exception(serverEndpoint.getBody());
-            });
-      } else {
-        resp.getWriter().print(HttpServerTest.controller(serverEndpoint, serverEndpoint::getBody));
-      }
-
-      if (serverEndpoint == HttpServerTest.ServerEndpoint.REDIRECT) {
-        resp.sendRedirect(serverEndpoint.getBody());
-      } else {
-        resp.setStatus(serverEndpoint.getStatus());
-      }
+            }
+            resp.getWriter().print(serverEndpoint.getBody());
+            if (serverEndpoint == HttpServerTest.ServerEndpoint.REDIRECT) {
+              resp.sendRedirect(serverEndpoint.getBody());
+            } else if (serverEndpoint == HttpServerTest.ServerEndpoint.ERROR) {
+              resp.sendError(serverEndpoint.getStatus());
+            } else {
+              resp.setStatus(serverEndpoint.getStatus());
+            }
+            return null;
+          });
     } else if ("/errorPage".equals(path)) {
       resp.getWriter().print(HttpServerTest.ServerEndpoint.EXCEPTION.getBody());
       resp.setStatus(500);

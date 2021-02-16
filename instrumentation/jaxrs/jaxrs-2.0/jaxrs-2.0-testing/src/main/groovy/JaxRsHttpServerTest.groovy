@@ -49,10 +49,18 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
     assert response.code() == statusCode
     assert bodyPredicate(response.body().string())
 
+    def spanCount = 2
+    def hasSendError = asyncCancelHasSendError() && action == "cancel"
+    if (hasSendError) {
+      spanCount++
+    }
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, spanCount) {
         asyncServerSpan(it, 0, url, statusCode)
         handlerSpan(it, 1, span(0), "asyncOp", isCancelled, isError, errorMessage)
+        if (hasSendError) {
+          sendErrorSpan(it, 2, span(1))
+        }
       }
     }
 
@@ -115,6 +123,10 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> {
   @Override
   boolean testPathParam() {
     true
+  }
+
+  boolean asyncCancelHasSendError() {
+    false
   }
 
   private static boolean shouldTestCompletableStageAsync() {

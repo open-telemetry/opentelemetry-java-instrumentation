@@ -71,9 +71,14 @@ class JettyServlet2Test extends HttpServerTest<Server> {
   }
 
   @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    endpoint == REDIRECT || endpoint == ERROR
+  }
+
+  @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      name endpoint == REDIRECT ? "HttpServletResponse.sendRedirect" : "HttpServletResponse.sendError"
+      name endpoint == REDIRECT ? "Response.sendRedirect" : "Response.sendError"
       kind INTERNAL
       errored false
       childOf((SpanData) parent)

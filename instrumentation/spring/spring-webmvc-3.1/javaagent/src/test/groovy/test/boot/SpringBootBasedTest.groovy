@@ -59,6 +59,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   }
 
   @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    endpoint == REDIRECT
+  }
+
+  @Override
   boolean testNotFound() {
     // FIXME: the instrumentation adds an extra controller span which is not consistent.
     // Fix tests or remove extra span.
@@ -84,9 +89,11 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
     and:
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 4) {
         serverSpan(it, 0, null, null, "GET", null, AUTH_ERROR)
-        errorPageSpans(it, 1, null)
+        sendErrorSpan(it, 1, span(0))
+        forwardSpan(it, 2, span(0))
+        errorPageSpans(it, 3, null)
       }
     }
   }
@@ -111,8 +118,9 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
     and:
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         serverSpan(it, 0, null, null, "POST", response.body()?.contentLength(), LOGIN)
+        redirectSpan(it, 1, span(0))
       }
     }
 
@@ -134,7 +142,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      name "HttpServletResponse.sendRedirect"
+      name "OnCommittedResponseWrapper.sendRedirect"
       kind INTERNAL
       errored false
       attributes {
@@ -173,7 +181,13 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
 
     trace.span(index) {
-      name endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path
+      if (endpoint == PATH_PARAM) {
+        name getContextPath() + "/path/{id}/param"
+      } else if (endpoint == AUTH_ERROR) {
+        name "/error"
+      } else {
+        name endpoint.resolvePath(address).path
+      }
       kind SERVER
       errored endpoint.errored
       if (parentID != null) {
@@ -186,7 +200,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
         errorEvent(Exception, EXCEPTION.body)
       }
       attributes {
-        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
         "${SemanticAttributes.NET_PEER_PORT.key}" Long
         "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key}" method

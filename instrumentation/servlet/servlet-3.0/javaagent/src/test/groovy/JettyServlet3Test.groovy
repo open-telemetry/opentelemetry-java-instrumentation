@@ -109,6 +109,11 @@ class JettyServlet3TestAsync extends JettyServlet3Test {
   }
 
   @Override
+  boolean errorEndpointUsesSendError() {
+    false
+  }
+
+  @Override
   boolean testException() {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
@@ -133,6 +138,11 @@ class JettyServlet3TestForward extends JettyDispatchTest {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.Sync // dispatch to sync servlet
+  }
+
+  @Override
+  boolean hasForwardSpan() {
+    true
   }
 
   @Override
@@ -162,6 +172,11 @@ class JettyServlet3TestInclude extends JettyDispatchTest {
   @Override
   boolean testError() {
     false
+  }
+
+  @Override
+  boolean hasIncludeSpan() {
+    true
   }
 
   @Override
@@ -221,6 +236,11 @@ class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
     addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchAsync)
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
+  }
+
+  @Override
+  boolean errorEndpointUsesSendError() {
+    false
   }
 
   @Override

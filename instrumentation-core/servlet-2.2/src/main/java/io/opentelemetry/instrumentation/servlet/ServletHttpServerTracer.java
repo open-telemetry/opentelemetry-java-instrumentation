@@ -27,9 +27,13 @@ public abstract class ServletHttpServerTracer<RESPONSE>
 
   public Context startSpan(HttpServletRequest request) {
     Context context = startSpan(request, request, request, getSpanName(request));
+    return addServletContextPath(context, request);
+  }
+
+  private static Context addServletContextPath(Context context, HttpServletRequest request) {
     String contextPath = request.getContextPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
-      context = context.with(ServletContextPath.CONTEXT_KEY, contextPath);
+      return context.with(ServletContextPath.CONTEXT_KEY, contextPath);
     }
     return context;
   }
@@ -159,11 +163,13 @@ public abstract class ServletHttpServerTracer<RESPONSE>
    * forward and other scenarios, where servlet path may change, but we don't want this to be
    * reflected in the span name.
    */
-  public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
-    if (AppServerBridge.shouldUpdateServerSpanName(attachedContext)) {
-      updateSpanName(Span.fromContext(attachedContext), request);
-      AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
+  public Context runOnceUnderAppServer(Context context, HttpServletRequest request) {
+    if (AppServerBridge.shouldUpdateServerSpanName(context)) {
+      updateSpanName(Span.fromContext(context), request);
+      AppServerBridge.setServletUpdatedServerSpanName(context, true);
+      return addServletContextPath(context, request);
     }
+    return context;
   }
 
   public void updateSpanName(HttpServletRequest request) {

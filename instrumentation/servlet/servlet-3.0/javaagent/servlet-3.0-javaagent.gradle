@@ -19,6 +19,7 @@ dependencies {
   api(project(':instrumentation-core:servlet-2.2'))
 
   testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
+  testInstrumentation project(':instrumentation:servlet:servlet-common:javaagent')
 
   testImplementation(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
