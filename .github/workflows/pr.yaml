@@ -32,6 +32,25 @@ jobs:
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
+  example-distro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 11 for running checks
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.6
+        with:
+          job-id: jdk11
+
+      - name: Build
+        run: ./gradlew build --stacktrace
+        working-directory: examples/distro
+
   test:
     runs-on: ubuntu-latest
     strategy:
