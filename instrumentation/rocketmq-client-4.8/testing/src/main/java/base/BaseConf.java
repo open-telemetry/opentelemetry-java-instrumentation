@@ -28,7 +28,7 @@ public class BaseConf {
   public static final String nsAddr;
   public static final String broker1Addr;
   protected static String broker1Name;
-  protected static final  String clusterName;
+  protected static final String clusterName;
   protected static int brokerNum;
   protected static final NamesrvController namesrvController;
   protected static final BrokerController brokerController1;

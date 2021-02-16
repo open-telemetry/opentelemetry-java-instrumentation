@@ -26,7 +26,8 @@ import org.apache.rocketmq.test.util.TestUtils;
 import org.junit.Assert;
 
 public class IntegrationTestBase {
-  public static final InternalLogger logger = InternalLoggerFactory.getLogger(IntegrationTestBase.class);
+  public static final InternalLogger logger =
+      InternalLoggerFactory.getLogger(IntegrationTestBase.class);
 
   protected static final String SEP = File.separator;
   protected static final String BROKER_NAME_PREFIX = "TestBrokerName_";
