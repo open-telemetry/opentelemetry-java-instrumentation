@@ -56,7 +56,7 @@ abstract class AbstractRocketMqClientLibraryTest extends InstrumentationSpecific
     msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET));
   }
 
-  def "test rocketmq produce callback"() {
+  def "test rocketmq produce"() {
     setup:
     producer = baseConf.getProducer(baseConf.nsAddr, sharedTopic);
     when:

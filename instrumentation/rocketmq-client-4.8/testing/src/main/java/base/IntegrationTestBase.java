@@ -43,41 +43,6 @@ public class IntegrationTestBase {
     }
     protected static Random random = new Random();
 
-    static {
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    for (BrokerController brokerController : BROKER_CONTROLLERS) {
-                        if (brokerController != null) {
-                            brokerController.shutdown();
-                        }
-                    }
-
-                    // should destroy message store, otherwise could not delete the temp files.
-                    for (BrokerController brokerController : BROKER_CONTROLLERS) {
-                        if (brokerController != null) {
-                            brokerController.getMessageStore().destroy();
-                        }
-                    }
-
-                    for (NamesrvController namesrvController : NAMESRV_CONTROLLERS) {
-                        if (namesrvController != null) {
-                            namesrvController.shutdown();
-                        }
-                    }
-                    for (File file : TMPE_FILES) {
-                        UtilAll.deleteFile(file);
-                    }
-                } catch (Exception e) {
-                    logger.error("Shutdown error", e);
-                }
-            }
-        });
-
-    }
-
     public static String createBaseDir() {
       String baseDir = System.getProperty("user.home") + SEP + "unitteststore-" + UUID.randomUUID();
       final File file = new File(baseDir);
