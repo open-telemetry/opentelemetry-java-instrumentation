@@ -37,7 +37,6 @@ class MongoClientTest extends MongoBaseTest {
   def "test create collection"() {
     setup:
     MongoDatabase db = client.getDatabase(dbName)
-    client.listDatabaseNames()
 
     when:
     db.createCollection(collectionName)
