@@ -306,9 +306,10 @@ class HttpUrlConnectionTest extends HttpClientTest {
     def expectedException = new IOException("Server returned HTTP response code: 500 for URL: $url")
     thrown(IOException)
     assertTraces(1) {
-      trace(0, 2 + extraClientSpans()) {
+      trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent", null, expectedException)
         clientSpan(it, 1, span(0), method, uri, 500, expectedException)
+        serverSpan(it, 2 + extraClientSpans(), span(1 + extraClientSpans()))
       }
     }
 
