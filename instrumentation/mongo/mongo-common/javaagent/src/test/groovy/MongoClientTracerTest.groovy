@@ -81,13 +81,13 @@ class MongoClientTracerTest extends Specification {
       0, null, null, command, new BsonDocument(command, new BsonInt32(1)))
 
     when:
-    def spanName = tracer.spanName(event, null, null);
+    def spanName = tracer.spanName(event, null, null)
 
     then:
-    spanName == command;
+    spanName == command
 
     where:
-    command = "listDatabases";
+    command = "listDatabases"
   }
 
   def normalizeQueryAcrossVersions(MongoClientTracer tracer, BsonDocument query) {
