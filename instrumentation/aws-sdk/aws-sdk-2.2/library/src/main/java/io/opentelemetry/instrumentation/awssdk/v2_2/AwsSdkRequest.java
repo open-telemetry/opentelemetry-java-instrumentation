@@ -12,6 +12,8 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.SQS
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.response;
 
+import java.util.List;
+import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 
@@ -20,7 +22,7 @@ import software.amazon.awssdk.core.SdkRequest;
  * SDK automatically
  * (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2291).
  */
-public enum AwsSdkRequest {
+enum AwsSdkRequest {
   // generic requests
   DynamoDbRequest(DynamoDB, "DynamoDbRequest"),
   S3Request(S3, "S3Request"),
@@ -115,12 +117,12 @@ public enum AwsSdkRequest {
 
   private final AwsSdkRequestType type;
   private final String requestClass;
-  private final FieldMapping[] fields;
+  private final Map<FieldMapping.Type, List<FieldMapping>> fields;
 
   AwsSdkRequest(AwsSdkRequestType type, String requestClass, FieldMapping... fields) {
     this.type = type;
     this.requestClass = requestClass;
-    this.fields = fields;
+    this.fields = FieldMapping.map(fields);
   }
 
   @Nullable
@@ -143,11 +145,11 @@ public enum AwsSdkRequest {
     return null;
   }
 
-  public FieldMapping[] fields() {
-    return fields;
+  List<FieldMapping> fields(FieldMapping.Type type) {
+    return fields.get(type);
   }
 
-  public AwsSdkRequestType type() {
+  AwsSdkRequestType type() {
     return type;
   }
 }

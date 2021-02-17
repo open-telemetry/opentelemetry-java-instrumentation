@@ -23,11 +23,11 @@ import software.amazon.awssdk.protocols.core.ProtocolMarshaller;
 import software.amazon.awssdk.protocols.json.AwsJsonProtocolFactory;
 import software.amazon.awssdk.utils.IoUtils;
 
-public class Serializer {
+class Serializer {
 
   private final ProtocolMarshaller<SdkHttpFullRequest> protocolMarshaller;
 
-  public Serializer() {
+  Serializer() {
     protocolMarshaller =
         AwsJsonProtocolFactory.builder()
             .clientConfiguration(
@@ -63,7 +63,7 @@ public class Serializer {
   }
 
   @Nullable
-  public String serialize(Object target) {
+  String serialize(Object target) {
 
     if (target instanceof SdkPojo) {
       return serialize((SdkPojo) target);

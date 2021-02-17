@@ -8,5 +8,7 @@ dependencies {
 
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
   testImplementation project(':instrumentation:aws-sdk:aws-sdk-2.2:testing')
+
   testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
+  testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
 }

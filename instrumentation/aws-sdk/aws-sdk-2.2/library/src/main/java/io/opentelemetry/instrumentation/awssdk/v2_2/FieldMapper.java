@@ -6,42 +6,51 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.api.trace.Span;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 
-public class FieldMapper {
+class FieldMapper {
 
-  private final Serializer serializer = new Serializer();
+  private final Serializer serializer;
+  private final MethodHandleFactory methodHandleFactory;
 
-  private final ClassValue<ConcurrentHashMap<String, MethodHandle>> getterCache =
-      new ClassValue<ConcurrentHashMap<String, MethodHandle>>() {
-        @Override
-        protected ConcurrentHashMap<String, MethodHandle> computeValue(Class<?> type) {
-          return new ConcurrentHashMap<>();
-        }
-      };
-
-  public void mapFields(SdkRequest sdkRequest, AwsSdkRequest request, Span span) {
-    mapFields(
-        field -> sdkRequest.getValueForField(field, Object.class).orElse(null), request, span);
+  FieldMapper() {
+    serializer = new Serializer();
+    methodHandleFactory = new MethodHandleFactory();
   }
 
-  public void mapFields(SdkResponse sdkResponse, AwsSdkRequest request, Span span) {
+  FieldMapper(Serializer serializer, MethodHandleFactory methodHandleFactory) {
+    this.methodHandleFactory = methodHandleFactory;
+    this.serializer = serializer;
+  }
+
+  void mapFields(SdkRequest sdkRequest, AwsSdkRequest request, Span span) {
     mapFields(
-        field -> sdkResponse.getValueForField(field, Object.class).orElse(null), request, span);
+        field -> sdkRequest.getValueForField(field, Object.class).orElse(null),
+        FieldMapping.Type.REQUEST,
+        request,
+        span);
+  }
+
+  void mapFields(SdkResponse sdkResponse, AwsSdkRequest request, Span span) {
+    mapFields(
+        field -> sdkResponse.getValueForField(field, Object.class).orElse(null),
+        FieldMapping.Type.RESPONSE,
+        request,
+        span);
   }
 
   private void mapFields(
-      Function<String, Object> fieldValueProvider, AwsSdkRequest request, Span span) {
-    for (FieldMapping fieldMapping : request.fields()) {
+      Function<String, Object> fieldValueProvider,
+      FieldMapping.Type type,
+      AwsSdkRequest request,
+      Span span) {
+    for (FieldMapping fieldMapping : request.fields(type)) {
       mapFields(fieldValueProvider, fieldMapping, span);
     }
-    for (FieldMapping fieldMapping : request.type().fields()) {
+    for (FieldMapping fieldMapping : request.type().fields(type)) {
       mapFields(fieldValueProvider, fieldMapping, span);
     }
   }
@@ -69,20 +78,10 @@ public class FieldMapper {
   @Nullable
   private Object next(Object current, String fieldName) {
     try {
-      return forField(current.getClass(), fieldName).invoke(current);
+      return methodHandleFactory.forField(current.getClass(), fieldName).invoke(current);
     } catch (Throwable t) {
       // ignore
     }
     return null;
-  }
-
-  private MethodHandle forField(Class clazz, String fieldName)
-      throws NoSuchMethodException, IllegalAccessException {
-    MethodHandle methodHandle = getterCache.get(clazz).get(fieldName);
-    if (methodHandle == null) {
-      methodHandle = MethodHandles.publicLookup().unreflect(clazz.getMethod(fieldName));
-      getterCache.get(clazz).put(fieldName, methodHandle);
-    }
-    return methodHandle;
   }
 }

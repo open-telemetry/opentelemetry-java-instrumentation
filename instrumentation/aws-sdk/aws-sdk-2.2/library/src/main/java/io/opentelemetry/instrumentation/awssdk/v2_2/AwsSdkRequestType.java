@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
+import java.util.Map;
 
 enum AwsSdkRequestType {
   S3(request("aws.bucket.name", "Bucket")),
@@ -17,13 +19,13 @@ enum AwsSdkRequestType {
       request("aws.table.name", "TableName"),
       request(SemanticAttributes.DB_NAME.getKey(), "TableName"));
 
-  private final FieldMapping[] fieldMappings;
+  private final Map<FieldMapping.Type, List<FieldMapping>> fields;
 
   AwsSdkRequestType(FieldMapping... fieldMappings) {
-    this.fieldMappings = fieldMappings;
+    this.fields = FieldMapping.map(fieldMappings);
   }
 
-  public FieldMapping[] fields() {
-    return fieldMappings;
+  public List<FieldMapping> fields(FieldMapping.Type type) {
+    return fields.get(type);
   }
 }
