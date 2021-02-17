@@ -98,7 +98,6 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
     }
     assertTraces(1) {
       trace(0, spanCount) {
-//        serverSpan(it, 0, getContextPath() + "/HelloService")
         serverSpan(it, 0, serverSpanName(methodName))
         handlerSpan(it, 1, methodName, span(0))
         if (hasAnnotationHandlerSpan(methodName)) {
@@ -127,7 +126,6 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
     def expectedException = new Exception("hello exception")
     assertTraces(1) {
       trace(0, spanCount) {
-//        serverSpan(it, 0, getContextPath() + "/ws", expectedException)
         serverSpan(it, 0, serverSpanName(methodName), expectedException)
         handlerSpan(it, 1, methodName, span(0), expectedException)
         if (hasAnnotationHandlerSpan(methodName)) {

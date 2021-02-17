@@ -17,7 +17,7 @@ configurations {
 dependencies {
   implementation project(':instrumentation:jaxws:jaxws-2.0-axis2-1.6:library')
 
-  def axis2Version = '1.6.0' // '1.7.9'
+  def axis2Version = '1.6.0'
   library group: 'org.apache.axis2', name: 'axis2-jaxws', version: axis2Version
   testLibrary group: 'org.apache.axis2', name: 'axis2-transport-http', version: axis2Version
   testLibrary group: 'org.apache.axis2', name: 'axis2-transport-local', version: axis2Version

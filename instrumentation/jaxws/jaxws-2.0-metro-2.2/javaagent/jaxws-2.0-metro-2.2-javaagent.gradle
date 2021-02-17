@@ -13,7 +13,6 @@ muzzle {
 
 dependencies {
   library group: 'com.sun.xml.ws', name: 'jaxws-rt', version: '2.2.0.1'
-//  library group: 'com.sun.xml.ws', name: 'jaxws-rt', version: '2.3.3'
 
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
 
