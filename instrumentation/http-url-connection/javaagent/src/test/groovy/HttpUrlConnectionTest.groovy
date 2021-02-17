@@ -299,7 +299,7 @@ class HttpUrlConnectionTest extends HttpClientTest {
     when:
     def url = uri.toURL()
     runUnderTrace("parent") {
-      doRequest(method, uri, ["is-test-server": "false"])
+      doRequest(method, uri)
     }
 
     then:
