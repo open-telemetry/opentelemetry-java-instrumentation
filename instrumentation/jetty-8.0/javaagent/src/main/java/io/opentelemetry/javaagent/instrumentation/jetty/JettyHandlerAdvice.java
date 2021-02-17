@@ -55,8 +55,15 @@ public class JettyHandlerAdvice {
 
     tracer().setPrincipal(context, request);
 
-    if (throwable != null) {
-      tracer().endExceptionally(context, throwable, response);
+    // throwable is read-only, copy it to a new local that can be modified
+    Throwable exception = throwable;
+    if (exception == null) {
+      // on jetty versions before 9.4 exceptions from servlet don't propagate to this method
+      // check from request whether a throwable has been stored there
+      exception = (Throwable) request.getAttribute("javax.servlet.error.exception");
+    }
+    if (exception != null) {
+      tracer().endExceptionally(context, exception, response);
       return;
     }
 

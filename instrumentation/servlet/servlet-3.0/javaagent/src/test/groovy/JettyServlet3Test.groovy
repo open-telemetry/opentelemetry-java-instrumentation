@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import javax.servlet.Servlet
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
@@ -27,6 +28,19 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
   @Override
   Class<?> expectedExceptionClass() {
     ServletException
+  }
+
+  @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    return endpoint == EXCEPTION || super.hasResponseSpan(endpoint)
+  }
+
+  @Override
+  void responseSpan(TraceAssert trace, int index, Object controllerSpan, Object handlerSpan, String method, ServerEndpoint endpoint) {
+    if (endpoint == EXCEPTION) {
+      sendErrorSpan(trace, index, handlerSpan)
+    }
+    super.responseSpan(trace, index, controllerSpan, handlerSpan, method, endpoint)
   }
 
   @Override
