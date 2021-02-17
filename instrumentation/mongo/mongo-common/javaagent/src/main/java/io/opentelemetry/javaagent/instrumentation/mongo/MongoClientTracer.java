@@ -85,7 +85,7 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
-  protected String spanName(
+  public String spanName(
       CommandStartedEvent event, BsonDocument document, String normalizedQuery) {
     String dbName = dbName(event);
     if (event.getCommandName() == null) {
@@ -94,7 +94,10 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
 
     String collectionName = collectionName(event);
     StringBuilder name = new StringBuilder();
-    name.append(event.getCommandName()).append(' ');
+    name.append(event.getCommandName());
+    if (dbName != null || collectionName != null) {
+      name.append(' ');
+    }
     if (dbName != null) {
       name.append(dbName);
       if (collectionName != null) {
