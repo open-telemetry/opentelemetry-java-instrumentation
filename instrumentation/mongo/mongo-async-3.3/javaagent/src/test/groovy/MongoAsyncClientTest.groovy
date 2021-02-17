@@ -305,7 +305,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
                 String dbName, Closure<Boolean> statementEval,
                 Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      name { operation + " " + dbName + "." collection }
+      name { operation + " " + dbName + "." + collection }
       kind CLIENT
       if (parentSpan == null) {
         hasNoParent()
