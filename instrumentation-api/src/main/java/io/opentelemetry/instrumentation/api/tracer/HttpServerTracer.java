@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.api.trace.Span.Kind.SERVER;
+import static io.opentelemetry.api.trace.SpanKind.SERVER;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
@@ -42,8 +43,19 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     super();
   }
 
+  /**
+   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
+   * use the GlobalOpenTelemetry Propagator instance.
+   *
+   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
+   */
+  @Deprecated
   public HttpServerTracer(Tracer tracer) {
     super(tracer);
+  }
+
+  public HttpServerTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
   }
 
   public Context startSpan(REQUEST request, CONNECTION connection, STORAGE storage, Method origin) {

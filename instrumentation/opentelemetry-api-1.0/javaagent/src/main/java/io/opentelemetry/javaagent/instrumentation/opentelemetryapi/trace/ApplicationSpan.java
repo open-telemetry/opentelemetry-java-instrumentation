@@ -12,6 +12,7 @@ import application.io.opentelemetry.api.common.Attributes;
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.api.trace.SpanBuilder;
 import application.io.opentelemetry.api.trace.SpanContext;
+import application.io.opentelemetry.api.trace.SpanKind;
 import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
@@ -225,8 +226,8 @@ class ApplicationSpan implements Span {
     }
 
     @Override
-    public SpanBuilder setSpanKind(Span.Kind applicationSpanKind) {
-      io.opentelemetry.api.trace.Span.Kind agentSpanKind = toAgentOrNull(applicationSpanKind);
+    public SpanBuilder setSpanKind(SpanKind applicationSpanKind) {
+      io.opentelemetry.api.trace.SpanKind agentSpanKind = toAgentOrNull(applicationSpanKind);
       if (agentSpanKind != null) {
         agentBuilder.setSpanKind(agentSpanKind);
       }

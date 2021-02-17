@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.test.server.http
 
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.server.http.HttpServletRequestExtractAdapter.GETTER
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanBuilder
 import io.opentelemetry.api.trace.Tracer
@@ -243,7 +242,7 @@ class TestHttpServer implements AutoCloseable {
       req.handled = true
     }
 
-    void handleDistributedRequest() {
+    void handleDistributedRequest(Closure<Void> doInSpan = null) {
       boolean isTestServer = true
       if (request.getHeader("is-test-server") != null) {
         isTestServer = Boolean.parseBoolean(request.getHeader("is-test-server"))
@@ -252,6 +251,12 @@ class TestHttpServer implements AutoCloseable {
         final SpanBuilder spanBuilder = tracer.spanBuilder("test-http-server").setSpanKind(SERVER)
         // using Context.root() to avoid inheriting any potentially leaked context here
         spanBuilder.setParent(GlobalOpenTelemetry.getPropagators().getTextMapPropagator().extract(Context.root(), req, GETTER))
+
+        def traceRequestId = request.getHeader("test-request-id")
+        if (traceRequestId != null) {
+          spanBuilder.setAttribute("test.request.id", Integer.parseInt(traceRequestId))
+        }
+
         final Span span = spanBuilder.startSpan()
         span.end()
       }

@@ -22,19 +22,11 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
   private static final Logger log = LoggerFactory.getLogger(CommonTaskExecutor.class);
 
   public static final CommonTaskExecutor INSTANCE = new CommonTaskExecutor();
-  private static final long SHUTDOWN_WAIT_SECONDS = 5;
 
   private final ScheduledExecutorService executorService =
       Executors.newSingleThreadScheduledExecutor(DaemonThreadFactory.TASK_SCHEDULER);
 
-  private CommonTaskExecutor() {
-    try {
-      Runtime.getRuntime().addShutdownHook(new ShutdownCallback(executorService));
-    } catch (IllegalStateException ex) {
-      // The JVM is already shutting down.
-      log.debug("Error adding shutdown hook", ex);
-    }
-  }
+  private CommonTaskExecutor() {}
 
   /**
    * Run {@code task} periodically providing it with {@code target}
@@ -62,18 +54,14 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
    */
   public <T> ScheduledFuture<?> scheduleAtFixedRate(
       Task<T> task, T target, long initialDelay, long period, TimeUnit unit, String name) {
-    if (CommonTaskExecutor.INSTANCE.isShutdown()) {
-      log.warn("Periodic task scheduler is shutdown. Will not run: {}", name);
-    } else {
-      try {
-        PeriodicTask<T> periodicTask = new PeriodicTask<>(task, target);
-        ScheduledFuture<?> future =
-            executorService.scheduleAtFixedRate(periodicTask, initialDelay, period, unit);
-        periodicTask.setFuture(future);
-        return future;
-      } catch (RejectedExecutionException e) {
-        log.warn("Periodic task rejected. Will not run: {}", name);
-      }
+    try {
+      PeriodicTask<T> periodicTask = new PeriodicTask<>(task, target);
+      ScheduledFuture<?> future =
+          executorService.scheduleAtFixedRate(periodicTask, initialDelay, period, unit);
+      periodicTask.setFuture(future);
+      return future;
+    } catch (RejectedExecutionException e) {
+      log.warn("Periodic task rejected. Will not run: {}", name);
     }
     /*
      * Return a 'fake' unscheduled future to allow caller call 'cancel' on it if needed.
@@ -110,28 +98,6 @@ public final class CommonTaskExecutor extends AbstractExecutorService {
   @Override
   public void execute(Runnable command) {
     executorService.execute(command);
-  }
-
-  private static final class ShutdownCallback extends Thread {
-
-    private final ScheduledExecutorService executorService;
-
-    private ShutdownCallback(ScheduledExecutorService executorService) {
-      super("opentelemetry-exec-shutdown-hook");
-      this.executorService = executorService;
-    }
-
-    @Override
-    public void run() {
-      executorService.shutdown();
-      try {
-        if (!executorService.awaitTermination(SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS)) {
-          executorService.shutdownNow();
-        }
-      } catch (InterruptedException e) {
-        executorService.shutdownNow();
-      }
-    }
   }
 
   public interface Task<T> {

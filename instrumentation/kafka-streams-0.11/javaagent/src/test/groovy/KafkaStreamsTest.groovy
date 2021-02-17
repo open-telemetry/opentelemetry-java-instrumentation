@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CONSUMER
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
@@ -222,8 +222,9 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
       }
     })
     def spanContext = Span.fromContext(context).getSpanContext()
-    spanContext.traceIdAsHexString == testWriter.traces[0][3].traceId
-    spanContext.spanIdAsHexString == testWriter.traces[0][3].spanId
+    def streamSendSpan = traces[0][3]
+    spanContext.traceId == streamSendSpan.traceId
+    spanContext.spanId == streamSendSpan.spanId
 
 
     cleanup:

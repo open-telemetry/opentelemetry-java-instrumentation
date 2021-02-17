@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import org.apache.commons.httpclient.HttpClient
 import org.apache.commons.httpclient.HttpMethod
@@ -17,12 +18,17 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-class CommonsHttpClientTest extends HttpClientTest {
+class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   @Shared
   HttpClient client = new HttpClient()
 
   def setupSpec() {
     client.setConnectionTimeout(CONNECT_TIMEOUT_MS)
+  }
+
+  @Override
+  boolean testCausality() {
+    return false
   }
 
   @Override

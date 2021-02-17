@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
@@ -116,8 +116,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
     runUnderTrace("setup") {
       valuesToSet.each { k, v -> assert memcached.set(key(k), expiration, v).get() }
     }
-    testWriter.waitForTraces(1)
-    testWriter.clear()
+    ignoreTracesAndClear(1)
   }
 
   def "test get hit"() {

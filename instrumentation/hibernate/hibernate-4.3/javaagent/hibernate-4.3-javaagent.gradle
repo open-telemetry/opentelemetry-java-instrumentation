@@ -1,4 +1,5 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
   pass {
@@ -9,8 +10,23 @@ muzzle {
   }
 }
 
+testSets {
+  version5Test {
+    dirName = 'test'
+  }
+  version6Test {
+    dirName = 'test'
+  }
+
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+test.dependsOn version5Test, version6Test
+
 dependencies {
-  library group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
+  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
 
   implementation project(':instrumentation:hibernate:hibernate-common:javaagent')
 
@@ -19,15 +35,26 @@ dependencies {
   testInstrumentation project(':instrumentation:hibernate:hibernate-3.3:javaagent')
   testInstrumentation project(':instrumentation:hibernate:hibernate-4.0:javaagent')
 
-  testLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
+  testImplementation group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
+  testImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
   testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
   //First version to work with Java 14
-  testLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
+  testImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
 
-  // TODO(anuraaga): Investigate why these tests don't pass on 5 or 6
-  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1042
-  latestDepTestLibrary group: 'org.hibernate', name: 'hibernate-core', version: '4.+'
-  latestDepTestLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.+'
+  version5TestImplementation group: 'org.hibernate', name: 'hibernate-core', version: '5.0.0.Final'
+  version5TestImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.0.0.Final'
+  version5TestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '2.3.0.RELEASE'
 
-  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '(,2.4.0)'
+  version6TestImplementation group: 'org.hibernate', name: 'hibernate-core', version: '6.0.0.Alpha6'
+  version6TestImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '6.0.0.Alpha6'
+  version6TestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '2.3.0.RELEASE'
+
+  testImplementation group: 'javax.activation', name: 'javax.activation-api', version: '1.2.0'
+  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+  testImplementation group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: '2.3.3'
+
+  // hibernate 6 is alpha so use 5 as latest version
+  latestDepTestImplementation group: 'org.hibernate', name: 'hibernate-core', version: '5.+'
+  latestDepTestImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.+'
+  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '(2.4.0,)'
 }

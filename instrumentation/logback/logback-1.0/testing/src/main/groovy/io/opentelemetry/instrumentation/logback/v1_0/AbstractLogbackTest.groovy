@@ -79,8 +79,8 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     then:
     events.size() == 3
     events[0].message == "log message 1"
-    events[0].getMDCPropertyMap().get("traceId") == span1.spanContext.traceIdAsHexString
-    events[0].getMDCPropertyMap().get("spanId") == span1.spanContext.spanIdAsHexString
+    events[0].getMDCPropertyMap().get("traceId") == span1.spanContext.traceId
+    events[0].getMDCPropertyMap().get("spanId") == span1.spanContext.spanId
     events[0].getMDCPropertyMap().get("sampled") == "true"
 
     events[1].message == "log message 2"
@@ -89,8 +89,8 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     events[1].getMDCPropertyMap().get("sampled") == null
 
     events[2].message == "log message 3"
-    events[2].getMDCPropertyMap().get("traceId") == span2.spanContext.traceIdAsHexString
-    events[2].getMDCPropertyMap().get("spanId") == span2.spanContext.spanIdAsHexString
+    events[2].getMDCPropertyMap().get("traceId") == span2.spanContext.traceId
+    events[2].getMDCPropertyMap().get("spanId") == span2.spanContext.spanId
     events[2].getMDCPropertyMap().get("sampled") == "true"
   }
 }

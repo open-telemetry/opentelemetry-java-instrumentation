@@ -141,9 +141,9 @@ instrumentation ->
         ...
 ```
 
-### Java agent instrumentation gotchas
+## Java agent instrumentation gotchas
 
-#### Calling Java 8 default methods from advice
+### Calling Java 8 default methods from advice
 
 If you are instrumenting a pre-Java 8 library, then inlining Java 8 default method calls into that
 library will result in a `java.lang.VerifyError` at runtime, since Java 8 default method invocations
@@ -153,7 +153,7 @@ Because OpenTelemetry API has many common default methods (e.g. `Span.current()`
 the `javaagent-api` artifact has a class `Java8BytecodeBridge` which provides static methods
 for accessing these default methods from advice.
 
-#### Why hard code advice class names?
+### Why hard code advice class names?
 
 Implementations of `TypeInstrumentation` will often implement advice classes as static inner classes.
 These classes are referred to by name in the mappings from method descriptor to advice class,
@@ -177,7 +177,7 @@ Instrumentation modules are loaded by the agent's classloader, and this
 string concatenation is an optimization that prevents the actual advice class
 from being loaded.
 
-#### Instrumenting code that is not available as a maven dependency
+### Instrumenting code that is not available as a maven dependency
 
 If instrumented server or library jar isn't available from a maven repository you can create a
 module with stub classes that define only the methods that you need for writing the integration.

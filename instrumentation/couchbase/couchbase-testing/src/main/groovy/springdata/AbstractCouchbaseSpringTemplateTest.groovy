@@ -109,9 +109,9 @@ class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
         assertCouchbaseCall(it, 2, "Bucket.remove", name, span(0))
       }
     }
+    clearExportedData()
 
     when:
-    testWriter.clear()
     def result = template.findById("1", Doc)
 
     then:

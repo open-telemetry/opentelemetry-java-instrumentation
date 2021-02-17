@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 
-abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> {
+abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> implements AgentTestTrait {
 
   @Override
   boolean testExceptionBody() {

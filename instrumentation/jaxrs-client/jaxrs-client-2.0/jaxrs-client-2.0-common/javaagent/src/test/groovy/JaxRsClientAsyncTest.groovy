@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -21,7 +22,7 @@ import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 import spock.lang.Timeout
 
-abstract class JaxRsClientAsyncTest extends HttpClientTest {
+abstract class JaxRsClientAsyncTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
@@ -90,18 +91,10 @@ class CxfClientAsyncTest extends JaxRsClientAsyncTest {
   @Override
   ClientBuilder builder() {
     return new ClientBuilderImpl()
+      .property("http.connection.timeout", (long) CONNECT_TIMEOUT_MS)
   }
 
   boolean testRedirects() {
-    false
-  }
-
-  boolean testConnectionFailure() {
-    false
-  }
-
-  boolean testRemoteConnection() {
-    // FIXME: span not reported correctly.
     false
   }
 }

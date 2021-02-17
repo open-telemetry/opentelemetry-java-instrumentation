@@ -103,7 +103,7 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         contextStore.put(asyncResponse, span);
       }
 
-      scope = tracer().startScope(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

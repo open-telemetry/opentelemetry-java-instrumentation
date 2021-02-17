@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
@@ -22,7 +23,7 @@ import org.glassfish.grizzly.http.server.Request
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
 import org.glassfish.jersey.server.ResourceConfig
 
-class GrizzlyTest extends HttpServerTest<HttpServer> {
+class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
 
   @Override
   HttpServer startServer(int port) {

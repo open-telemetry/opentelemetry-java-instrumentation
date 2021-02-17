@@ -25,6 +25,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
@@ -37,13 +38,14 @@ final class CamelRoutePolicy extends RoutePolicySupport {
   private static final Logger LOG = LoggerFactory.getLogger(CamelRoutePolicy.class);
 
   private Span spanOnExchangeBegin(
-      Route route, Exchange exchange, SpanDecorator sd, Span.Kind spanKind) {
-    Span activeSpan = CamelTracer.TRACER.getCurrentSpan();
+      Route route, Exchange exchange, SpanDecorator sd, SpanKind spanKind) {
+    Span activeSpan = Span.current();
     String name = sd.getOperationName(exchange, route.getEndpoint(), CamelDirection.INBOUND);
     SpanBuilder builder = CamelTracer.TRACER.spanBuilder(name);
     builder.setSpanKind(spanKind);
     if (!activeSpan.getSpanContext().isValid()) {
-      Context parentContext = CamelPropagationUtil.extractParent(exchange.getIn().getHeaders());
+      Context parentContext =
+          CamelPropagationUtil.extractParent(exchange.getIn().getHeaders(), route.getEndpoint());
       if (parentContext != null) {
         builder.setParent(parentContext);
       }
@@ -51,10 +53,10 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     return builder.startSpan();
   }
 
-  private Span.Kind spanKind(SpanDecorator sd) {
-    Span activeSpan = CamelTracer.TRACER.getCurrentSpan();
+  private SpanKind spanKind(SpanDecorator sd) {
+    Span activeSpan = Span.current();
     // if there's an active span, this is not a root span which we always mark as INTERNAL
-    return (activeSpan.getSpanContext().isValid() ? Span.Kind.INTERNAL : sd.getReceiverSpanKind());
+    return (activeSpan.getSpanContext().isValid() ? SpanKind.INTERNAL : sd.getReceiverSpanKind());
   }
 
   /**
@@ -65,7 +67,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
   public void onExchangeBegin(Route route, Exchange exchange) {
     try {
       SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(route.getEndpoint());
-      Span.Kind spanKind = spanKind(sd);
+      SpanKind spanKind = spanKind(sd);
       Span span = spanOnExchangeBegin(route, exchange, sd, spanKind);
       sd.pre(span, exchange, route.getEndpoint(), CamelDirection.INBOUND);
       ActiveSpanManager.activate(exchange, span, spanKind);

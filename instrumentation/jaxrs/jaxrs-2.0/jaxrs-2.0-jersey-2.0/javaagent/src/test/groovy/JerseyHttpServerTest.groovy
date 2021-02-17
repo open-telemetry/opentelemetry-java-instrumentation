@@ -30,4 +30,9 @@ class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
   void stopServer(Server httpServer) {
     httpServer.stop()
   }
+
+  @Override
+  boolean asyncCancelHasSendError() {
+    true
+  }
 }

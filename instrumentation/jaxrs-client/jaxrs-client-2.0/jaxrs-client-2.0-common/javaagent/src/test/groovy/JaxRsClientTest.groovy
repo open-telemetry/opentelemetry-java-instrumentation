@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
@@ -23,7 +24,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 import spock.lang.Timeout
 import spock.lang.Unroll
 
-abstract class JaxRsClientTest extends HttpClientTest {
+abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
@@ -117,20 +118,10 @@ class CxfClientTest extends JaxRsClientTest {
   @Override
   ClientBuilder builder() {
     return new ClientBuilderImpl()
-//      .property(ClientImpl.HTTP_CONNECTION_TIMEOUT_PROP, (long) CONNECT_TIMEOUT_MS)
-//      .property(ClientImpl.HTTP_RECEIVE_TIMEOUT_PROP, (long) READ_TIMEOUT_MS)
+      .property("http.connection.timeout", (long) CONNECT_TIMEOUT_MS)
   }
 
   boolean testRedirects() {
-    false
-  }
-
-  boolean testConnectionFailure() {
-    false
-  }
-
-  boolean testRemoteConnection() {
-    // FIXME: span not reported correctly.
     false
   }
 }

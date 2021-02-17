@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
 import okhttp3.Headers
@@ -14,10 +15,11 @@ import okhttp3.internal.http.HttpMethod
 import spock.lang.Timeout
 
 @Timeout(5)
-class OkHttp3Test extends HttpClientTest {
+class OkHttp3Test extends HttpClientTest implements AgentTestTrait {
 
   def client = new OkHttpClient.Builder()
     .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+    .retryOnConnectionFailure(false)
     .build()
 
   @Override
@@ -35,4 +37,10 @@ class OkHttp3Test extends HttpClientTest {
   boolean testRedirects() {
     false
   }
+
+  @Override
+  boolean testCausality() {
+    false
+  }
+
 }

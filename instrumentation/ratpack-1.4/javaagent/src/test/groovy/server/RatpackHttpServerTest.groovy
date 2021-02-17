@@ -5,7 +5,7 @@
 
 package server
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -21,7 +22,7 @@ import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.handling.Context
 import ratpack.test.embed.EmbeddedApp
 
-class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> {
+class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> implements AgentTestTrait {
 
   @Override
   EmbeddedApp startServer(int bindPort) {

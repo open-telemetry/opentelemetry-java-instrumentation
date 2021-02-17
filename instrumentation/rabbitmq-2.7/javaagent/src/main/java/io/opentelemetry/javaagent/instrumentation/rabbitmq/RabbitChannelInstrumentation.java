@@ -100,7 +100,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
       span = tracer().startSpan(method, channel.getConnection());
       CURRENT_RABBIT_SPAN.set(span);
-      scope = tracer().startScope(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.item;
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -59,21 +58,9 @@ public class ItemTracer extends BaseTracer {
 
     String jobName = chunkContext.getStepContext().getJobName();
     String stepName = chunkContext.getStepContext().getStepName();
-    Span span =
-        tracer
-            .spanBuilder("BatchJob " + jobName + "." + stepName + "." + itemOperationName)
-            .setSpanKind(INTERNAL)
-            .startSpan();
 
-    return currentContext.with(span);
-  }
-
-  public void end(Context context) {
-    end(Span.fromContext(context));
-  }
-
-  public void endExceptionally(Context context, Throwable throwable) {
-    endExceptionally(Span.fromContext(context), throwable);
+    return startSpan(
+        currentContext, "BatchJob " + jobName + "." + stepName + "." + itemOperationName, INTERNAL);
   }
 
   @Override

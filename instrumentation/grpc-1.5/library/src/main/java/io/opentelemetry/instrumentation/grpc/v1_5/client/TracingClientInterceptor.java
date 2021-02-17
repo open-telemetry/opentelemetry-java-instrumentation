@@ -54,16 +54,16 @@ public class TracingClientInterceptor implements ClientInterceptor {
   public <REQUEST, RESPONSE> ClientCall<REQUEST, RESPONSE> interceptCall(
       MethodDescriptor<REQUEST, RESPONSE> method, CallOptions callOptions, Channel next) {
     String methodName = method.getFullMethodName();
-    Span span = tracer.startSpan(methodName);
+    Context context = tracer.startSpan(methodName);
+    Span span = Span.fromContext(context);
     GrpcHelper.prepareSpan(span, methodName);
-    Context context = Context.current().with(span);
     final ClientCall<REQUEST, RESPONSE> result;
     try (Scope ignored = context.makeCurrent()) {
       try {
         // call other interceptors
         result = next.newCall(method, callOptions);
       } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
+        tracer.endExceptionally(context, e);
         throw e;
       }
     }
@@ -98,20 +98,20 @@ public class TracingClientInterceptor implements ClientInterceptor {
     @Override
     public void start(Listener<RESPONSE> responseListener, Metadata headers) {
       GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, headers, SETTER);
-      try (Scope ignored = span.makeCurrent()) {
-        super.start(new TracingClientCallListener<>(responseListener, span, tracer), headers);
+      try (Scope ignored = context.makeCurrent()) {
+        super.start(new TracingClientCallListener<>(responseListener, context, tracer), headers);
       } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
+        tracer.endExceptionally(context, e);
         throw e;
       }
     }
 
     @Override
     public void sendMessage(REQUEST message) {
-      try (Scope ignored = span.makeCurrent()) {
+      try (Scope ignored = context.makeCurrent()) {
         super.sendMessage(message);
       } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
+        tracer.endExceptionally(context, e);
         throw e;
       }
     }
@@ -119,47 +119,50 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
   static final class TracingClientCallListener<RESPONSE>
       extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RESPONSE> {
-    private final Span span;
+    private final Context context;
     private final GrpcClientTracer tracer;
 
     private final AtomicLong messageId = new AtomicLong();
 
-    TracingClientCallListener(Listener<RESPONSE> delegate, Span span, GrpcClientTracer tracer) {
+    TracingClientCallListener(
+        Listener<RESPONSE> delegate, Context context, GrpcClientTracer tracer) {
       super(delegate);
-      this.span = span;
+      this.context = context;
       this.tracer = tracer;
     }
 
     @Override
     public void onMessage(RESPONSE message) {
+      Span span = Span.fromContext(context);
       Attributes attributes =
           Attributes.of(
               GrpcHelper.MESSAGE_TYPE, "SENT", GrpcHelper.MESSAGE_ID, messageId.incrementAndGet());
       span.addEvent("message", attributes);
-      try (Scope ignored = span.makeCurrent()) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate().onMessage(message);
       } catch (Throwable e) {
         tracer.addThrowable(span, e);
+        throw e;
       }
     }
 
     @Override
     public void onClose(Status status, Metadata trailers) {
-      try (Scope ignored = span.makeCurrent()) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate().onClose(status, trailers);
       } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
+        tracer.endExceptionally(context, e);
         throw e;
       }
-      tracer.endSpan(span, status);
+      tracer.end(context, status);
     }
 
     @Override
     public void onReady() {
-      try (Scope ignored = span.makeCurrent()) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate().onReady();
       } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
+        tracer.endExceptionally(context, e);
         throw e;
       }
     }

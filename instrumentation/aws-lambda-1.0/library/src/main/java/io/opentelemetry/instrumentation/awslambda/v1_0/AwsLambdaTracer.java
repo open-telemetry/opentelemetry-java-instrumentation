@@ -5,20 +5,18 @@
 
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.CLOUD_ACCOUNT_ID;
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.CLOUD_ACCOUNT_ID;
+import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.FAAS_ID;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_EXECUTION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_ID;
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_TRIGGER;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
-import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FaasTriggerValues;
 import java.lang.invoke.MethodHandle;
@@ -30,7 +28,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class AwsLambdaTracer extends BaseTracer {
 
-  private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
   private static final MethodHandle GET_FUNCTION_ARN;
 
   static {
@@ -54,40 +51,6 @@ public class AwsLambdaTracer extends BaseTracer {
 
   public AwsLambdaTracer(Tracer tracer) {
     super(tracer);
-  }
-
-  private boolean isValid(io.opentelemetry.context.Context context) {
-    if (context == null) {
-      return false;
-    }
-    Span parentSpan = Span.fromContext(context);
-    SpanContext parentSpanContext = parentSpan.getSpanContext();
-    return parentSpanContext.isValid();
-  }
-
-  private io.opentelemetry.context.Context parent(Map<String, String> headers) {
-
-    io.opentelemetry.context.Context parentContext = null;
-    String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
-    if (parentTraceHeader != null) {
-      parentContext = ParentContextExtractor.fromXRayHeader(parentTraceHeader);
-    }
-    if (!isValid(parentContext)) {
-      // try http
-      parentContext = ParentContextExtractor.fromHttpHeaders(headers);
-    }
-
-    return parentContext;
-  }
-
-  private SpanBuilder createSpan(Context context, Object input, Map<String, String> headers) {
-    SpanBuilder span = tracer.spanBuilder(spanName(context, input));
-    setAttributes(span, context, input);
-    io.opentelemetry.context.Context parent = parent(headers);
-    if (parent != null) {
-      span.setParent(parent);
-    }
-    return span;
   }
 
   private void setAttributes(SpanBuilder span, Context context, Object input) {
@@ -148,25 +111,26 @@ public class AwsLambdaTracer extends BaseTracer {
     return name == null ? context.getFunctionName() : name;
   }
 
-  public Span startSpan(Context context, Kind kind, Object input, Map<String, String> headers) {
-    return createSpan(context, input, headers).setSpanKind(kind).startSpan();
+  public io.opentelemetry.context.Context startSpan(
+      Context awsContext, SpanKind kind, Object input) {
+    return startSpan(awsContext, kind, input, Collections.emptyMap());
   }
 
-  public Span startSpan(Context context, Object input, Kind kind) {
-    return createSpan(context, input, Collections.emptyMap()).setSpanKind(kind).startSpan();
+  public io.opentelemetry.context.Context startSpan(
+      Context awsContext, SpanKind kind, Object input, Map<String, String> headers) {
+    io.opentelemetry.context.Context parentContext = ParentContextExtractor.extract(headers);
+
+    SpanBuilder spanBuilder = tracer.spanBuilder(spanName(awsContext, input));
+    setAttributes(spanBuilder, awsContext, input);
+    Span span = spanBuilder.setParent(parentContext).setSpanKind(kind).startSpan();
+
+    return withServerSpan(parentContext, span);
   }
 
-  /** Creates new scoped context with the given span. */
-  @Override
-  public Scope startScope(Span span) {
-    io.opentelemetry.context.Context newContext =
-        withServerSpan(io.opentelemetry.context.Context.current(), span);
-    return newContext.makeCurrent();
-  }
-
-  public void onOutput(Span span, Object output) {
+  public void onOutput(io.opentelemetry.context.Context context, Object output) {
     if (output instanceof APIGatewayProxyResponseEvent) {
-      httpSpanAttributes.onResponse(span, (APIGatewayProxyResponseEvent) output);
+      httpSpanAttributes.onResponse(
+          Span.fromContext(context), (APIGatewayProxyResponseEvent) output);
     }
   }
 

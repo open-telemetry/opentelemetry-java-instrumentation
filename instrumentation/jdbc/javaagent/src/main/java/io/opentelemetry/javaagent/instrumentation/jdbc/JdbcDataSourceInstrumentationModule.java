@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.DataSourceTracer.tracer;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonList;
@@ -13,7 +13,7 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
@@ -59,7 +59,7 @@ public class JdbcDataSourceInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void start(
         @Advice.This DataSource ds,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       // TODO this is very strange condition
       if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
@@ -67,13 +67,13 @@ public class JdbcDataSourceInstrumentationModule extends InstrumentationModule {
         return;
       }
 
-      span = tracer().startSpan(ds.getClass().getSimpleName() + ".getConnection", CLIENT);
-      scope = span.makeCurrent();
+      context = tracer().startSpan(ds.getClass().getSimpleName() + ".getConnection", CLIENT);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
       if (scope == null) {
@@ -82,9 +82,9 @@ public class JdbcDataSourceInstrumentationModule extends InstrumentationModule {
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }

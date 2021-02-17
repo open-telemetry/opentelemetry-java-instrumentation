@@ -7,12 +7,13 @@ import com.sun.jersey.api.client.Client
 import com.sun.jersey.api.client.ClientResponse
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter
 import com.sun.jersey.api.client.filter.LoggingFilter
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-class JaxRsClientV1Test extends HttpClientTest {
+class JaxRsClientV1Test extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   Client client = Client.create()

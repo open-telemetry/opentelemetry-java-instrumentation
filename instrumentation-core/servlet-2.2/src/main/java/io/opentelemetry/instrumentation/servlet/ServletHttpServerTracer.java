@@ -27,9 +27,13 @@ public abstract class ServletHttpServerTracer<RESPONSE>
 
   public Context startSpan(HttpServletRequest request) {
     Context context = startSpan(request, request, request, getSpanName(request));
+    return addServletContextPath(context, request);
+  }
+
+  private static Context addServletContextPath(Context context, HttpServletRequest request) {
     String contextPath = request.getContextPath();
     if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
-      context = context.with(ServletContextPath.CONTEXT_KEY, contextPath);
+      return context.with(ServletContextPath.CONTEXT_KEY, contextPath);
     }
     return context;
   }
@@ -98,8 +102,8 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   @Override
   public void onRequest(Span span, HttpServletRequest request) {
     // we do this e.g. so that servlet containers can use these values in their access logs
-    request.setAttribute("traceId", span.getSpanContext().getTraceIdAsHexString());
-    request.setAttribute("spanId", span.getSpanContext().getSpanIdAsHexString());
+    request.setAttribute("traceId", span.getSpanContext().getTraceId());
+    request.setAttribute("spanId", span.getSpanContext().getSpanId());
 
     super.onRequest(span, request);
   }
@@ -159,11 +163,13 @@ public abstract class ServletHttpServerTracer<RESPONSE>
    * forward and other scenarios, where servlet path may change, but we don't want this to be
    * reflected in the span name.
    */
-  public void updateServerSpanNameOnce(Context attachedContext, HttpServletRequest request) {
-    if (AppServerBridge.shouldUpdateServerSpanName(attachedContext)) {
-      updateSpanName(Span.fromContext(attachedContext), request);
-      AppServerBridge.setServletUpdatedServerSpanName(attachedContext, true);
+  public Context runOnceUnderAppServer(Context context, HttpServletRequest request) {
+    if (AppServerBridge.shouldUpdateServerSpanName(context)) {
+      updateSpanName(Span.fromContext(context), request);
+      AppServerBridge.setServletUpdatedServerSpanName(context, true);
+      return addServletContextPath(context, request);
     }
+    return context;
   }
 
   public void updateSpanName(HttpServletRequest request) {

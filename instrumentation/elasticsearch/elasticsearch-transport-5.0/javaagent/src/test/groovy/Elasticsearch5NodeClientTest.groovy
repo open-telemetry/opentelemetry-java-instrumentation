@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
@@ -44,6 +44,7 @@ class Elasticsearch5NodeClientTest extends AgentInstrumentationSpecification {
       .put("transport.type", "netty3")
       .put("http.type", "netty3")
       .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+      .put("discovery.type", "local")
       .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
     testNode.start()
@@ -52,7 +53,7 @@ class Elasticsearch5NodeClientTest extends AgentInstrumentationSpecification {
       // into a top level trace to get exactly one trace in the result.
       testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     }
-    testWriter.waitForTraces(1)
+    ignoreTracesAndClear(1)
   }
 
   def cleanupSpec() {
@@ -122,13 +123,10 @@ class Elasticsearch5NodeClientTest extends AgentInstrumentationSpecification {
 
   def "test elasticsearch get"() {
     setup:
-    assert testWriter.traces == []
     def indexResult = client.admin().indices().prepareCreate(indexName).get()
-    testWriter.waitForTraces(1)
 
     expect:
     indexResult.acknowledged
-    testWriter.traces.size() == 1
 
     when:
     client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)

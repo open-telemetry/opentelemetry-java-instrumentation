@@ -16,8 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -57,40 +56,40 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
     public static void onEnter(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Argument(1) Context context,
-        @Advice.Local("otelFunctionSpan") Span functionSpan,
+        @Advice.Local("otelFunctionContext") io.opentelemetry.context.Context functionContext,
         @Advice.Local("otelFunctionScope") Scope functionScope,
-        @Advice.Local("otelMessageSpan") Span messageSpan,
+        @Advice.Local("otelMessageContext") io.opentelemetry.context.Context messageContext,
         @Advice.Local("otelMessageScope") Scope messageScope) {
-      functionSpan = functionTracer().startSpan(context, arg, Kind.SERVER);
-      functionScope = functionTracer().startScope(functionSpan);
+      functionContext = functionTracer().startSpan(context, SpanKind.SERVER, arg);
+      functionScope = functionContext.makeCurrent();
       if (arg instanceof SQSEvent) {
-        messageSpan = messageTracer().startSpan(context, (SQSEvent) arg);
-        messageScope = messageTracer().startScope(messageSpan);
+        messageContext = messageTracer().startSpan((SQSEvent) arg);
+        messageScope = messageContext.makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelFunctionSpan") Span functionSpan,
+        @Advice.Local("otelFunctionContext") io.opentelemetry.context.Context functionContext,
         @Advice.Local("otelFunctionScope") Scope functionScope,
-        @Advice.Local("otelMessageSpan") Span messageSpan,
+        @Advice.Local("otelMessageContext") io.opentelemetry.context.Context messageContext,
         @Advice.Local("otelMessageScope") Scope messageScope) {
 
       if (messageScope != null) {
         messageScope.close();
         if (throwable != null) {
-          messageTracer().endExceptionally(messageSpan, throwable);
+          messageTracer().endExceptionally(messageContext, throwable);
         } else {
-          messageTracer().end(messageSpan);
+          messageTracer().end(messageContext);
         }
       }
 
       functionScope.close();
       if (throwable != null) {
-        functionTracer().endExceptionally(functionSpan, throwable);
+        functionTracer().endExceptionally(functionContext, throwable);
       } else {
-        functionTracer().end(functionSpan);
+        functionTracer().end(functionContext);
       }
       OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);
     }

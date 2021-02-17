@@ -11,12 +11,11 @@ import static io.opentelemetry.instrumentation.test.asserts.EventAssert.assertEv
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.common.Attributes
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanId
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.sdk.trace.data.SpanData
-
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.regex.Pattern
 
 class SpanAssert {
@@ -81,7 +80,7 @@ class SpanAssert {
     checked.name = true
   }
 
-  def kind(Span.Kind kind) {
+  def kind(SpanKind kind) {
     assert span.kind == kind
     checked.kind = true
   }
@@ -113,7 +112,7 @@ class SpanAssert {
   def hasLink(String traceId, String spanId) {
     def found = false
     for (def link : span.links) {
-      if (link.spanContext.traceIdAsHexString == traceId && link.spanContext.spanIdAsHexString == spanId) {
+      if (link.spanContext.traceId == traceId && link.spanContext.spanId == spanId) {
         found = true
         break
       }

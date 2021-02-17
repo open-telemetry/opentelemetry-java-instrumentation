@@ -81,7 +81,7 @@ public class RequestDispatcherInstrumentationModule extends InstrumentationModul
         @Advice.Origin Method method,
         @Advice.This RequestDispatcher dispatcher,
         @Advice.Local("_originalContext") Object originalContext,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Argument(0) ServletRequest request) {
 
@@ -105,8 +105,8 @@ public class RequestDispatcherInstrumentationModule extends InstrumentationModul
           || (parentSpanContext.isValid()
               && servletSpan
                   .getSpanContext()
-                  .getTraceIdAsHexString()
-                  .equals(parentSpanContext.getTraceIdAsHexString()))) {
+                  .getTraceId()
+                  .equals(parentSpanContext.getTraceId()))) {
         // Use the parentSpan if the servletSpan is null or part of the same trace.
         parent = parentContext;
       } else {
@@ -116,7 +116,7 @@ public class RequestDispatcherInstrumentationModule extends InstrumentationModul
       }
 
       try (Scope ignored = parent.makeCurrent()) {
-        span = tracer().startSpan(method);
+        context = tracer().startSpan(method);
 
         // save the original servlet span before overwriting the request attribute, so that it can
         // be
@@ -124,17 +124,16 @@ public class RequestDispatcherInstrumentationModule extends InstrumentationModul
         originalContext = request.getAttribute(CONTEXT_ATTRIBUTE);
 
         // this tells the dispatched servlet to use the current span as the parent for its work
-        Context newContext = Java8BytecodeBridge.currentContext().with(span);
-        request.setAttribute(CONTEXT_ATTRIBUTE, newContext);
+        request.setAttribute(CONTEXT_ATTRIBUTE, context);
       }
-      scope = tracer().startScope(span);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stop(
         @Advice.Local("_originalContext") Object originalContext,
         @Advice.Argument(0) ServletRequest request,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
       if (scope == null) {
@@ -151,9 +150,9 @@ public class RequestDispatcherInstrumentationModule extends InstrumentationModul
       request.setAttribute(CONTEXT_ATTRIBUTE, originalContext);
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }

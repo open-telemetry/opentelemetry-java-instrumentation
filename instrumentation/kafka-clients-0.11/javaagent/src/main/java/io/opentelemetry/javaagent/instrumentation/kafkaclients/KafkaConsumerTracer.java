@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import static io.opentelemetry.api.trace.Span.Kind.CONSUMER;
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.TextMapExtractAdapter.GETTER;
 
 import io.opentelemetry.api.trace.Span;

@@ -12,20 +12,22 @@ The OTel Java agent injects several pieces of information about the current span
 event's MDC copy:
 
 - `traceId` - the current trace id
-  (same as `Span.current().getSpanContext().getTraceIdAsHexString()`);
+  (same as `Span.current().getSpanContext().getTraceId()`);
 - `spanId` - the current span id
-  (same as `Span.current().getSpanContext().getSpanIdAsHexString()`);
+  (same as `Span.current().getSpanContext().getSpanId()`);
 - `sampled` - a boolean flag marking whether the current span is sampled or not
   (same as `Span.current().getSpanContext().isSampled()`).
 
 Those three pieces of information can be included in log statements produced by the logging library
-by specifying them in the pattern/format. Example for Spring Boot configuration (which uses logback):
+by specifying them in the pattern/format. Example for Spring Boot configuration (which uses
+logback):
 
 ```properties
-logging.pattern.console = %d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg t:%X{traceId} s:%X{spanId} %n
+logging.pattern.console = %d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg trace_id=%X{traceId} span_id=%X{spanId} %n
 ```
 
-This way any services or tools that parse the application logs can correlate traces/spans with log statements.
+This way any services or tools that parse the application logs can correlate traces/spans with log
+statements.
 
 ## Supported logging libraries
 

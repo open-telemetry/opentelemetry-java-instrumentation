@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CountDownLatch
 import org.apache.http.HttpResponse
@@ -15,7 +16,7 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-class ApacheHttpAsyncClientTest extends HttpClientTest {
+class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   RequestConfig requestConfig = RequestConfig.custom()
@@ -73,5 +74,10 @@ class ApacheHttpAsyncClientTest extends HttpClientTest {
   @Override
   boolean testRemoteConnection() {
     false // otherwise SocketTimeoutException for https requests
+  }
+
+  @Override
+  boolean testCausality() {
+    return false
   }
 }

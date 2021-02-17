@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.job;
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import org.springframework.batch.core.JobExecution;
@@ -21,12 +20,7 @@ public class JobExecutionTracer extends BaseTracer {
 
   public Context startSpan(JobExecution jobExecution) {
     String jobName = jobExecution.getJobInstance().getJobName();
-    Span span = startSpan("BatchJob " + jobName, INTERNAL);
-    return Context.current().with(span);
-  }
-
-  public void end(Context context) {
-    end(Span.fromContext(context));
+    return startSpan("BatchJob " + jobName, INTERNAL);
   }
 
   @Override

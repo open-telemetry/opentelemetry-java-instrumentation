@@ -1,0 +1,12 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  testImplementation project(':instrumentation:apache-camel-2.20:javaagent')
+  testImplementation group: 'org.apache.camel', name: 'camel-core', version: '2.20.1'
+  testImplementation group: 'org.apache.camel', name: 'camel-aws', version: '2.20.1'
+  testImplementation group: 'org.apache.camel', name: 'camel-http', version: '2.20.1'
+
+  testImplementation deps.opentelemetryTraceProps
+  testImplementation deps.opentelemetryExtAws
+  testImplementation deps.assertj
+}

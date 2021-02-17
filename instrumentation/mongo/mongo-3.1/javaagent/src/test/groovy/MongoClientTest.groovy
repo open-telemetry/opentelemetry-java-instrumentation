@@ -123,8 +123,7 @@ class MongoClientTest extends MongoBaseTest {
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
-    testWriter.waitForTraces(1)
-    testWriter.clear()
+    ignoreTracesAndClear(1)
 
     when:
     collection.insertOne(new Document("password", "SECRET"))
@@ -154,8 +153,7 @@ class MongoClientTest extends MongoBaseTest {
       coll.insertOne(new Document("password", "OLDPW"))
       return coll
     }
-    testWriter.waitForTraces(1)
-    testWriter.clear()
+    ignoreTracesAndClear(1)
 
     when:
     def result = collection.updateOne(
@@ -188,8 +186,7 @@ class MongoClientTest extends MongoBaseTest {
       coll.insertOne(new Document("password", "SECRET"))
       return coll
     }
-    testWriter.waitForTraces(1)
-    testWriter.clear()
+    ignoreTracesAndClear(1)
 
     when:
     def result = collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")))
@@ -219,8 +216,7 @@ class MongoClientTest extends MongoBaseTest {
       coll.insertMany([new Document("_id", 0), new Document("_id", 1), new Document("_id", 2)])
       return coll
     }
-    testWriter.waitForTraces(1)
-    testWriter.clear()
+    ignoreTracesAndClear(1)
 
     when:
     collection.find().filter(new Document("_id", new Document('$gte', 0)))
@@ -248,8 +244,7 @@ class MongoClientTest extends MongoBaseTest {
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
-    testWriter.waitForTraces(1)
-    testWriter.clear()
+    ignoreTracesAndClear(1)
 
     when:
     collection.updateOne(new BsonDocument(), new BsonDocument())

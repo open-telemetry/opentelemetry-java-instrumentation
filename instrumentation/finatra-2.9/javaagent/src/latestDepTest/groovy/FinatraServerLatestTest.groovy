@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import com.twitter.app.lifecycle.Event
@@ -13,11 +13,12 @@ import com.twitter.util.Await
 import com.twitter.util.Closable
 import com.twitter.util.Duration
 import com.twitter.util.Promise
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
 
-class FinatraServerLatestTest extends HttpServerTest<HttpServer> {
+class FinatraServerLatestTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
   private static final Duration TIMEOUT = Duration.fromSeconds(5)
   private static final Duration STARTUP_TIMEOUT = Duration.fromSeconds(20)
 

@@ -17,7 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.dropwizard.views.View;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
@@ -67,27 +67,27 @@ public class DropwizardViewsInstrumentationModule extends InstrumentationModule 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) View view,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
-        span = tracer().startSpan("Render " + view.getTemplateName());
-        scope = span.makeCurrent();
+        context = tracer().startSpan("Render " + view.getTemplateName());
+        scope = context.makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
       scope.close();
       if (throwable == null) {
-        tracer().end(span);
+        tracer().end(context);
       } else {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       }
     }
   }

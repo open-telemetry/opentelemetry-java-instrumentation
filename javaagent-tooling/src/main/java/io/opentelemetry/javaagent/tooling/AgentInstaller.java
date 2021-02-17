@@ -46,7 +46,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AgentInstaller {
-  private static final Logger log = LoggerFactory.getLogger(AgentInstaller.class);
+
+  private static final Logger log;
 
   private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
   private static final String EXCLUDED_CLASSES_CONFIG = "otel.javaagent.exclude-classes";
@@ -65,6 +66,9 @@ public class AgentInstaller {
   }
 
   static {
+    LoggingConfigurer.configureLogger();
+    log = LoggerFactory.getLogger(AgentInstaller.class);
+
     addByteBuddyRawSetting();
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(loadBootstrapPackagePrefixes());
     // WeakMap is used by other classes below, so we need to register the provider first.
@@ -320,7 +324,8 @@ public class AgentInstaller {
 
   static class TransformLoggingListener implements AgentBuilder.Listener {
 
-    private static final Logger log = LoggerFactory.getLogger(TransformLoggingListener.class);
+    private static final TransformSafeLogger log =
+        TransformSafeLogger.getLogger(TransformLoggingListener.class);
 
     @Override
     public void onError(
@@ -353,21 +358,15 @@ public class AgentInstaller {
         TypeDescription typeDescription,
         ClassLoader classLoader,
         JavaModule module,
-        boolean loaded) {
-      //      log.debug("onIgnored {}", typeDescription.getName());
-    }
+        boolean loaded) {}
 
     @Override
     public void onComplete(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      // log.debug("onComplete {}", typeName);
-    }
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
 
     @Override
     public void onDiscovery(
-        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      // log.debug("onDiscovery {}", typeName);
-    }
+        String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
   }
 
   /**

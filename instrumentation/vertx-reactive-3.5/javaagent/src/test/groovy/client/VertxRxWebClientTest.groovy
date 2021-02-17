@@ -5,6 +5,7 @@
 
 package client
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpMethod
@@ -15,7 +16,7 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(10)
-class VertxRxWebClientTest extends HttpClientTest {
+class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   Vertx vertx = Vertx.vertx(new VertxOptions())
@@ -53,6 +54,11 @@ class VertxRxWebClientTest extends HttpClientTest {
 
   boolean testRemoteConnection() {
     // FIXME: figure out how to configure timeouts.
+    false
+  }
+
+  @Override
+  boolean testCausality() {
     false
   }
 }

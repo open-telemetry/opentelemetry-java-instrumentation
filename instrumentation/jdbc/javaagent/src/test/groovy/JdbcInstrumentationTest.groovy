@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -526,8 +526,8 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     datasource.getConnection().close()
 
     then:
-    !testWriter.traces.any { it.any { it.name == "database.connection" } }
-    testWriter.clear()
+    !traces.any { it.any { it.name == "database.connection" } }
+    clearExportedData()
 
     when:
     runUnderTrace("parent") {

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,8 +30,9 @@ public class JspTracer extends BaseTracer {
         : "Compile " + jspCompilationContext.getJspFile();
   }
 
-  public void onCompile(Span span, JspCompilationContext jspCompilationContext) {
+  public void onCompile(Context context, JspCompilationContext jspCompilationContext) {
     if (jspCompilationContext != null) {
+      Span span = Span.fromContext(context);
       Compiler compiler = jspCompilationContext.getCompiler();
       if (compiler != null) {
         span.setAttribute("jsp.compiler", compiler.getClass().getName());
@@ -49,7 +51,9 @@ public class JspTracer extends BaseTracer {
     return "Render " + spanName;
   }
 
-  public void onRender(Span span, HttpServletRequest req) {
+  public void onRender(Context context, HttpServletRequest req) {
+    Span span = Span.fromContext(context);
+
     Object forwardOrigin = req.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH);
     if (forwardOrigin instanceof String) {
       span.setAttribute("jsp.forwardOrigin", forwardOrigin.toString());

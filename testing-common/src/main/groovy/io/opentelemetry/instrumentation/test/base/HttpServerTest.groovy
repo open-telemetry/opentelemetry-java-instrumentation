@@ -16,10 +16,11 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.Callable
 import okhttp3.HttpUrl
 import okhttp3.Request
@@ -28,7 +29,7 @@ import okhttp3.Response
 import spock.lang.Unroll
 
 @Unroll
-abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification implements HttpServerTestTrait<SERVER> {
+abstract class HttpServerTest<SERVER> extends InstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return endpoint == PATH_PARAM ? getContextPath() + "/path/:id/param" : endpoint.resolvePath(address).path
@@ -48,6 +49,18 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
 
   boolean hasResponseSpan(ServerEndpoint endpoint) {
     false
+  }
+
+  boolean hasForwardSpan() {
+    false
+  }
+
+  boolean hasIncludeSpan() {
+    false
+  }
+
+  int getErrorPageSpansCount(ServerEndpoint endpoint) {
+    1
   }
 
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
@@ -340,16 +353,22 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
     if (hasHandlerSpan()) {
       spanCount++
     }
+    if (hasResponseSpan(endpoint)) {
+      spanCount++
+    }
     if (endpoint != NOT_FOUND) {
       spanCount++ // controller span
       if (hasRenderSpan(endpoint)) {
         spanCount++
       }
-      if (hasResponseSpan(endpoint)) {
+      if (hasForwardSpan()) {
+        spanCount++
+      }
+      if (hasIncludeSpan()) {
         spanCount++
       }
       if (hasErrorPageSpans(endpoint)) {
-        spanCount++
+        spanCount += getErrorPageSpansCount(endpoint)
       }
     }
     assertTraces(size) {
@@ -361,21 +380,31 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
           if (endpoint != NOT_FOUND) {
+            def controllerSpanIndex = 0
             if (hasHandlerSpan()) {
-              controllerSpan(it, spanIndex++, span(1), errorMessage, expectedExceptionClass())
-            } else {
-              controllerSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
+              controllerSpanIndex++
             }
+            if (hasForwardSpan()) {
+              forwardSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
+              controllerSpanIndex++
+            }
+            if (hasIncludeSpan()) {
+              includeSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
+              controllerSpanIndex++
+            }
+            controllerSpan(it, spanIndex++, span(controllerSpanIndex), errorMessage, expectedExceptionClass())
             if (hasRenderSpan(endpoint)) {
               renderSpan(it, spanIndex++, span(0), method, endpoint)
             }
             if (hasResponseSpan(endpoint)) {
-              responseSpan(it, spanIndex, span(spanIndex - 1), method, endpoint)
+              responseSpan(it, spanIndex, span(spanIndex - 1), span(0), method, endpoint)
               spanIndex++
             }
             if (hasErrorPageSpans(endpoint)) {
               errorPageSpans(it, spanIndex, span(0), method, endpoint)
             }
+          } else if (hasResponseSpan(endpoint)) {
+            responseSpan(it, 1, span(0), span(0), method, endpoint)
           }
         }
       }
@@ -401,6 +430,10 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
     throw new UnsupportedOperationException("renderSpan not implemented in " + getClass().name)
   }
 
+  void responseSpan(TraceAssert trace, int index, Object controllerSpan, Object handlerSpan, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    responseSpan(trace, index, controllerSpan, method, endpoint)
+  }
+
   void responseSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     throw new UnsupportedOperationException("responseSpan not implemented in " + getClass().name)
   }
@@ -409,11 +442,51 @@ abstract class HttpServerTest<SERVER> extends AgentInstrumentationSpecification 
     throw new UnsupportedOperationException("errorPageSpans not implemented in " + getClass().name)
   }
 
+  void redirectSpan(TraceAssert trace, int index, Object parent) {
+    trace.span(index) {
+      name ~/\.sendRedirect$/
+      kind SpanKind.INTERNAL
+      childOf((SpanData) parent)
+    }
+  }
+
+  void sendErrorSpan(TraceAssert trace, int index, Object parent) {
+    trace.span(index) {
+      name ~/\.sendError$/
+      kind SpanKind.INTERNAL
+      childOf((SpanData) parent)
+    }
+  }
+
+  void forwardSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
+    trace.span(index) {
+      name ~/\.forward$/
+      kind SpanKind.INTERNAL
+      errored errorMessage != null
+      if (errorMessage) {
+        errorEvent(exceptionClass, errorMessage)
+      }
+      childOf((SpanData) parent)
+    }
+  }
+
+  void includeSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
+    trace.span(index) {
+      name ~/\.include$/
+      kind SpanKind.INTERNAL
+      errored errorMessage != null
+      if (errorMessage) {
+        errorEvent(exceptionClass, errorMessage)
+      }
+      childOf((SpanData) parent)
+    }
+  }
+
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       name expectedServerSpanName(endpoint)
-      kind Span.Kind.SERVER // can't use static import because of SERVER type parameter
+      kind SpanKind.SERVER // can't use static import because of SERVER type parameter
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID

@@ -76,11 +76,11 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
     if (!environmentPropertiesWithCopies.containsKey("otel.propagators")) {
       System.setProperty("otel.propagators", "tracecontext,baggage");
     }
-    String traceExporter = environmentPropertiesWithCopies.getProperty("otel.trace.exporter");
+    String traceExporter = environmentPropertiesWithCopies.getProperty("otel.traces.exporter");
     if (traceExporter == null) {
-      System.setProperty("otel.trace.exporter", "otlp");
+      System.setProperty("otel.traces.exporter", "otlp");
     } else if (traceExporter.equals("none")) {
-      System.clearProperty("otel.trace.exporter");
+      System.clearProperty("otel.traces.exporter");
     }
     String metricExporter = environmentPropertiesWithCopies.getProperty("otel.metrics.exporter");
     if (metricExporter == null) {

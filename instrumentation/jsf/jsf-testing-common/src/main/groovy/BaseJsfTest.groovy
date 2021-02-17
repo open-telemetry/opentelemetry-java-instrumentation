@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -108,7 +108,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
         basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     // extract parameters needed to post back form
@@ -168,7 +168,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
         basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     // extract parameters needed to post back form

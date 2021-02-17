@@ -87,36 +87,12 @@ public class MyBatchHandler extends TracingSQSEventHandler {
 
 ## Trace propagation
 
+Context propagation for this instrumentation can be done either with X-Ray propagation or regular HTTP propagation. If X-Ray is enabled for instrumented lambda, it will be preferred. If X-Ray is disabled, HTTP propagation will be tried (that is HTTP headers will be read to check for a valid trace context).
+
+
 ### X-Ray propagation
 This instrumentation supports propagating traces using the `X-Amzn-Trace-Id` format for both normal
-requests and SQS requests. To enable this propagation, in your code as early as possible,
-configure the `AwsXrayPropagator` along with any other propagators you use. If in doubt, you can
-configure X-Ray along with the default W3C propagator like this in a static block of your handler.
-
-```java
-class MyRequestHandler extends TracingRequestHandler<String, String> {
-
-  static {
-    OpenTelemetry.setGlobalPropagators(
-      DefaultContextPropagators.builder()
-        .addTextMapPropagator(HttpTraceContext.getInstance())
-        .addTextMapPropagator(AwsXrayPropagator.getInstance())
-        .build());
-  }
-
-  @Override
-  protected String doHandleRequest(String input, Context context) {
-    // logic
-  }
-}
-```
-
-If you are using this instrumentation with SQS, you should always enable the `AwsXrayPropagator` to
-allow linking between messages in a backend-agnostic way.
-
-Otherwise, only enable the above if you are using AWS X-Ray as your tracing backend. You should not
-enable the X-Ray propagator if you are not using X-Ray as it will cause the spans in Lambda to not
-have the correct parent/child connection between client and server spans.
+requests and SQS requests. X-Ray propagation is always enabled, there is no need to configure it explicitely.
 
 ### HTTP headers based propagation
 For API Gateway (HTTP) requests instrumented by using one of following methods:

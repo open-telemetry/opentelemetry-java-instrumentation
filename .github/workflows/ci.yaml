@@ -23,14 +23,29 @@ jobs:
           job-id: jdk11
 
       - name: Build
-        uses: nick-invision/retry@v2.4.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+        run: ./gradlew build --stacktrace
+
+  example-distro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 11 for running checks
+        uses: actions/setup-java@v1
         with:
-          command: ./gradlew build --stacktrace
-          timeout_minutes: 90
-          max_attempts: 3
+          java-version: 11
+
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.6
+        with:
+          job-id: jdk11
+
+      - name: Build
+        run: ./gradlew build --stacktrace
+        working-directory: examples/distro
 
   test:
     runs-on: ubuntu-latest
@@ -57,11 +72,7 @@ jobs:
           job-id: jdk${{ matrix.java }}
 
       - name: Test
-        uses: nick-invision/retry@v2.4.0
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        with:
-          command: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
-          timeout_minutes: 180
-          max_attempts: 3
+        run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false

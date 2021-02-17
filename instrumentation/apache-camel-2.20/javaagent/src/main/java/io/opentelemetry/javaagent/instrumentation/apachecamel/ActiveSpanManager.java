@@ -24,6 +24,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import org.apache.camel.Exchange;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -54,7 +55,7 @@ class ActiveSpanManager {
    * @param exchange The exchange
    * @param span The span
    */
-  public static void activate(Exchange exchange, Span span, Span.Kind spanKind) {
+  public static void activate(Exchange exchange, Span span, SpanKind spanKind) {
 
     SpanWithScope parent = exchange.getProperty(ACTIVE_SPAN_PROPERTY, SpanWithScope.class);
     SpanWithScope spanWithScope = SpanWithScope.activate(span, parent, spanKind);
@@ -91,19 +92,19 @@ class ActiveSpanManager {
       this.scope = scope;
     }
 
-    public static SpanWithScope activate(Span span, SpanWithScope parent, Span.Kind spanKind) {
+    public static SpanWithScope activate(Span span, SpanWithScope parent, SpanKind spanKind) {
       Scope scope = null;
       if (isClientSpan(spanKind)) {
         scope = CamelTracer.TRACER.startClientScope(span);
       } else {
-        scope = CamelTracer.TRACER.startScope(span);
+        scope = span.makeCurrent();
       }
 
       return new SpanWithScope(parent, span, scope);
     }
 
-    private static boolean isClientSpan(Span.Kind kind) {
-      return (Span.Kind.CLIENT.equals(kind) || Span.Kind.PRODUCER.equals(kind));
+    private static boolean isClientSpan(SpanKind kind) {
+      return (SpanKind.CLIENT.equals(kind) || SpanKind.PRODUCER.equals(kind));
     }
 
     public SpanWithScope getParent() {

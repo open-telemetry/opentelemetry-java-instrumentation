@@ -1,0 +1,13 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api project(':testing-common')
+
+  api group: 'io.reactivex.rxjava2', name: 'rxjava', version: "2.1.3"
+
+  implementation deps.guava
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}

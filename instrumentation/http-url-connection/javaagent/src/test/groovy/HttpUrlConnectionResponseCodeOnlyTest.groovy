@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.Timeout
 
 @Timeout(5)
-class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest {
+class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {

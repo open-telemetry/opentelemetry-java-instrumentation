@@ -22,6 +22,7 @@ import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.util.Future;
 import com.twitter.util.FutureEventListener;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
@@ -74,7 +75,7 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
     public static void nameSpan(
         @Advice.FieldValue("routeInfo") RouteInfo routeInfo,
         @Advice.FieldValue("clazz") Class<?> clazz,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       Span serverSpan = BaseTracer.getCurrentServerSpan();
@@ -82,15 +83,15 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
         serverSpan.updateName(routeInfo.path());
       }
 
-      span = tracer().startSpan(clazz);
-      scope = span.makeCurrent();
+      context = tracer().startSpan(clazz);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void setupCallback(
         @Advice.Thrown Throwable throwable,
         @Advice.Return Some<Future<Response>> responseOption,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       if (scope == null) {
@@ -99,33 +100,33 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
 
       if (throwable != null) {
         scope.close();
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
         return;
       }
 
-      responseOption.get().addEventListener(new Listener(span, scope));
+      responseOption.get().addEventListener(new Listener(context, scope));
     }
   }
 
   public static class Listener implements FutureEventListener<Response> {
-    private final Span span;
+    private final Context context;
     private final Scope scope;
 
-    public Listener(Span span, Scope scope) {
-      this.span = span;
+    public Listener(Context context, Scope scope) {
+      this.context = context;
       this.scope = scope;
     }
 
     @Override
     public void onSuccess(Response response) {
       scope.close();
-      tracer().end(span);
+      tracer().end(context);
     }
 
     @Override
     public void onFailure(Throwable cause) {
       scope.close();
-      tracer().endExceptionally(span, cause);
+      tracer().endExceptionally(context, cause);
     }
   }
 }

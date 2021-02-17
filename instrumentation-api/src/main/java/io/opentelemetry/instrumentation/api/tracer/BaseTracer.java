@@ -6,29 +6,47 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.GlobalMetricsProvider;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.common.Labels;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import java.lang.reflect.Method;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Base class for all instrumentation specific tracer implementations.
+ *
+ * <p>Tracers should not use {@link Span} directly in their public APIs: ideally all lifecycle
+ * methods (ex. start/end methods) should return/accept {@link Context}.
+ *
+ * <p>The {@link BaseTracer} offers several {@code startSpan()} utility methods for creating bare
+ * spans without any attributes. If you want to provide some additional attributes on span start
+ * please consider writing your own specific {@code startSpan()} method in the your tracer.
+ *
+ * <p>When constructing {@link Span}s tracers should set all attributes available during
+ * construction on a {@link SpanBuilder} instead of a {@link Span}. This way {@code SpanProcessor}s
+ * are able to see those attributes in the {@code onStart()} method and can freely read/modify them.
+ */
 public abstract class BaseTracer {
-  private static final Logger log = LoggerFactory.getLogger(HttpServerTracer.class);
+  private static final Meter meterProvider =
+      GlobalMetricsProvider.getMeter("io.opentelemetry.instrumentation.api.tracer");
 
-  private static final boolean FAIL_ON_CONTEXT_LEAK =
-      Boolean.getBoolean("otel.internal.failOnContextLeak");
+  private static final Logger log = LoggerFactory.getLogger(BaseTracer.class);
 
   // Keeps track of the server span for the current trace.
   // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
@@ -41,27 +59,63 @@ public abstract class BaseTracer {
       ContextKey.named("opentelemetry-trace-auto-client-span-key");
 
   protected final Tracer tracer;
+  protected final ContextPropagators propagators;
+  private final LongCounter suppressionCounter =
+      meterProvider
+          .longCounterBuilder("agent.suppressed.spans")
+          .setDescription("The number of spans that have been suppressed by the instrumentation.")
+          .setUnit("1")
+          .build();
 
   public BaseTracer() {
     tracer = GlobalOpenTelemetry.getTracer(getInstrumentationName(), getVersion());
+    propagators = GlobalOpenTelemetry.getPropagators();
   }
 
+  /**
+   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
+   * use the GlobalOpenTelemetry Propagator instance.
+   *
+   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
+   */
+  @Deprecated
   public BaseTracer(Tracer tracer) {
     this.tracer = tracer;
+    this.propagators = GlobalOpenTelemetry.getPropagators();
   }
 
-  public Span startSpan(Class<?> clazz) {
-    String spanName = spanNameForClass(clazz);
-    return startSpan(spanName, Kind.INTERNAL);
+  public BaseTracer(OpenTelemetry openTelemetry) {
+    this.tracer = openTelemetry.getTracer(getInstrumentationName(), getVersion());
+    this.propagators = openTelemetry.getPropagators();
   }
 
-  public Span startSpan(Method method) {
-    String spanName = spanNameForMethod(method);
-    return startSpan(spanName, Kind.INTERNAL);
+  public ContextPropagators getPropagators() {
+    return propagators;
   }
 
-  public Span startSpan(String spanName, Kind kind) {
-    return tracer.spanBuilder(spanName).setSpanKind(kind).startSpan();
+  public Context startSpan(Class<?> clazz) {
+    return startSpan(spanNameForClass(clazz));
+  }
+
+  public Context startSpan(Method method) {
+    return startSpan(spanNameForMethod(method));
+  }
+
+  public Context startSpan(String spanName) {
+    return startSpan(spanName, SpanKind.INTERNAL);
+  }
+
+  public Context startSpan(String spanName, SpanKind kind) {
+    return startSpan(Context.current(), spanName, kind);
+  }
+
+  public Context startSpan(Context parentContext, String spanName, SpanKind kind) {
+    Span span = spanBuilder(spanName, kind).setParent(parentContext).startSpan();
+    return parentContext.with(span);
+  }
+
+  protected SpanBuilder spanBuilder(String spanName, SpanKind kind) {
+    return tracer.spanBuilder(spanName).setSpanKind(kind);
   }
 
   protected final Context withClientSpan(Context parentContext, Span span) {
@@ -72,23 +126,30 @@ public abstract class BaseTracer {
     return parentContext.with(span).with(CONTEXT_SERVER_SPAN_KEY, span);
   }
 
-  public Scope startScope(Span span) {
-    return Context.current().with(span).makeCurrent();
-  }
-
-  public Span getCurrentSpan() {
-    return Span.current();
-  }
-
-  protected final boolean shouldStartSpan(Kind proposedKind, Context context) {
+  protected final boolean shouldStartSpan(SpanKind proposedKind, Context context) {
+    boolean suppressed = false;
     switch (proposedKind) {
       case CLIENT:
-        return !inClientSpan(context);
+        suppressed = inClientSpan(context);
+        break;
       case SERVER:
-        return !inServerSpan(context);
+        suppressed = inServerSpan(context);
+        break;
       default:
-        return true;
+        break;
     }
+    if (suppressed) {
+      suppressionCounter.add(
+          1,
+          // note: an optimization here could be to make sure to re-use the labels,
+          //  since the set of possible labels will be quite small in a given application.
+          //  We could consider lazily creating bound counters for each combination of label values.
+          Labels.of(
+              "span.kind", proposedKind.name(),
+              "instrumentation.name", getInstrumentationName(),
+              "instrumentation.version", getVersion()));
+    }
+    return !suppressed;
   }
 
   private boolean inClientSpan(Context parentContext) {
@@ -146,10 +207,30 @@ public abstract class BaseTracer {
     return className;
   }
 
+  public void end(Context context) {
+    end(context, -1);
+  }
+
+  public void end(Context context, long endTimeNanos) {
+    end(Span.fromContext(context), endTimeNanos);
+  }
+
+  /**
+   * End span.
+   *
+   * @deprecated Use {@link #end(Context)} instead.
+   */
+  @Deprecated
   public void end(Span span) {
     end(span, -1);
   }
 
+  /**
+   * End span.
+   *
+   * @deprecated Use {@link #end(Context, long)} instead.
+   */
+  @Deprecated
   public void end(Span span, long endTimeNanos) {
     if (endTimeNanos > 0) {
       span.end(endTimeNanos, TimeUnit.NANOSECONDS);
@@ -158,10 +239,30 @@ public abstract class BaseTracer {
     }
   }
 
+  public void endExceptionally(Context context, Throwable throwable) {
+    endExceptionally(context, throwable, -1);
+  }
+
+  public void endExceptionally(Context context, Throwable throwable, long endTimeNanos) {
+    endExceptionally(Span.fromContext(context), throwable, endTimeNanos);
+  }
+
+  /**
+   * End span.
+   *
+   * @deprecated Use {@link #endExceptionally(Context, Throwable)} instead.
+   */
+  @Deprecated
   public void endExceptionally(Span span, Throwable throwable) {
     endExceptionally(span, throwable, -1);
   }
 
+  /**
+   * End span.
+   *
+   * @deprecated Use {@link #endExceptionally(Context, Throwable, long)} instead.
+   */
+  @Deprecated
   public void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
     span.setStatus(StatusCode.ERROR);
     onError(span, unwrapThrowable(throwable));
@@ -180,46 +281,29 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
-  public static <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
-    if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
-      debugContextLeak();
-    }
+  /**
+   * Do extraction with the propagators from the GlobalOpenTelemetry instance. Not recommended.
+   *
+   * @deprecated We should eliminate all static usages so we can use the non-global propagators.
+   */
+  @Deprecated
+  public static <C> Context extractWithGlobalPropagators(
+      C carrier, TextMapPropagator.Getter<C> getter) {
+    return extract(GlobalOpenTelemetry.getPropagators(), carrier, getter);
+  }
+
+  public <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
+    return extract(propagators, carrier, getter);
+  }
+
+  private static <C> Context extract(
+      ContextPropagators propagators, C carrier, TextMapPropagator.Getter<C> getter) {
+    ContextPropagationDebug.debugContextLeakIfEnabled();
+
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
-    return GlobalOpenTelemetry.getPropagators()
-        .getTextMapPropagator()
-        .extract(Context.root(), carrier, getter);
-  }
-
-  private static void debugContextLeak() {
-    Context current = Context.current();
-    if (current != Context.root()) {
-      log.error("Unexpected non-root current context found when extracting remote context!");
-      Span currentSpan = Span.fromContextOrNull(current);
-      if (currentSpan != null) {
-        log.error("It contains this span: {}", currentSpan);
-      }
-      List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(current);
-      if (locations != null) {
-        StringBuilder sb = new StringBuilder();
-        Iterator<StackTraceElement[]> i = locations.iterator();
-        while (i.hasNext()) {
-          for (StackTraceElement ste : i.next()) {
-            sb.append("\n");
-            sb.append(ste);
-          }
-          if (i.hasNext()) {
-            sb.append("\nwhich was propagated from:");
-          }
-        }
-        log.error("a context leak was detected. it was propagated from:{}", sb);
-      }
-
-      if (FAIL_ON_CONTEXT_LEAK) {
-        throw new IllegalStateException("Context leak detected");
-      }
-    }
+    return propagators.getTextMapPropagator().extract(Context.root(), carrier, getter);
   }
 
   /** Returns span of type SERVER from the current context or <code>null</code> if not found. */

@@ -96,9 +96,11 @@ shadowJar {
   relocate "io.opentelemetry.spi", "io.opentelemetry.javaagent.shaded.io.opentelemetry.spi"
   relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
 
-  // relocate OpenTelemetry extensions
+  // relocate the OpenTelemetry extensions that are used by instrumentation modules
+  // these extensions live in the AgentClassLoader, and are injected into the user's class loader
+  // by the instrumentation modules that use them
+  relocate "io.opentelemetry.extension.aws", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.aws"
   relocate "io.opentelemetry.extension.kotlin", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.kotlin"
-  relocate "io.opentelemetry.extension.trace.propagation", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.trace.propagation"
 
   // this is for instrumentation on opentelemetry-api itself
   relocate "application.io.opentelemetry", "io.opentelemetry"
@@ -111,14 +113,28 @@ tasks.withType(Test).configureEach {
   jvmArgs "-javaagent:${project(":testing:agent-for-testing").tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dotel.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dinternal.testing.disable.global.library.ignores=true"
+  // always run with the thread propagation debugger to help track down sporadic test failures
+  jvmArgs "-Dotel.threadPropagationDebugger=true"
+  jvmArgs "-Dotel.internal.failOnContextLeak=true"
+  // always print muzzle warnings
+  jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher=warn"
+  // prevent sporadic gradle deadlocks, see SafeLogger for more details
+  jvmArgs "-Dotel.internal.enableTransformSafeLogging=true"
 
   dependsOn shadowJar
   dependsOn ":testing:agent-for-testing:shadowJar"
 
-  // The sources are packaged into the testing jar so we need to make sure to exclude from the test
-  // classpath, which automatically inherits them, to ensure our shaded versions are used.
+  // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
+  // configurations will include transitive dependencies as well, which tests do often need.
   classpath = classpath.filter {
+    // The sources are packaged into the testing jar so we need to make sure to exclude from the test
+    // classpath, which automatically inherits them, to ensure our shaded versions are used.
     if (file("$buildDir/resources/main").equals(it) || file("$buildDir/classes/java/main").equals(it)) {
+      return false
+    }
+    // If agent depends on library instrumentation, it will be packaged into the testing jar so we
+    // need to make sure to exclude from the test classpath.
+    if (it.absolutePath.startsWith(file("${projectDir.parent}/library/build/libs").absolutePath)) {
       return false
     }
     return true

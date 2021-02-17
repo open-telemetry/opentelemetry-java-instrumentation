@@ -11,8 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
@@ -41,27 +41,28 @@ public class JspCompilationContextInstrumentation implements TypeInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This JspCompilationContext jspCompilationContext,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      span = tracer().startSpan(tracer().spanNameOnCompile(jspCompilationContext), Kind.INTERNAL);
-      scope = span.makeCurrent();
+      context =
+          tracer().startSpan(tracer().spanNameOnCompile(jspCompilationContext), SpanKind.INTERNAL);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.This JspCompilationContext jspCompilationContext,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
 
       // Decorate on return because additional properties are available
-      tracer().onCompile(span, jspCompilationContext);
+      tracer().onCompile(context, jspCompilationContext);
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }

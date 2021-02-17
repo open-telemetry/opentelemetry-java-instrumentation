@@ -1,10 +1,11 @@
 package com.example.javaagent;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import io.opentelemetry.sdk.trace.samplers.SamplingDecision;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
 import java.util.List;
 
@@ -19,11 +20,11 @@ import java.util.List;
 public class DemoSampler implements Sampler {
   @Override
   public SamplingResult shouldSample(Context parentContext, String traceId, String name,
-      Span.Kind spanKind, Attributes attributes, List<LinkData> parentLinks) {
-    if (spanKind == Span.Kind.INTERNAL && name.contains("greeting")) {
-      return SamplingResult.create(SamplingResult.Decision.DROP);
+      SpanKind spanKind, Attributes attributes, List<LinkData> parentLinks) {
+    if (spanKind == SpanKind.INTERNAL && name.contains("greeting")) {
+      return SamplingResult.create(SamplingDecision.DROP);
     } else {
-      return SamplingResult.create(SamplingResult.Decision.RECORD_AND_SAMPLE);
+      return SamplingResult.create(SamplingDecision.RECORD_AND_SAMPLE);
     }
   }
 

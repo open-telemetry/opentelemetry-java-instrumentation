@@ -14,8 +14,8 @@ import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Span.Kind;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
@@ -160,7 +160,7 @@ public enum OpenTelemetryTracing implements Tracing {
       spanBuilder =
           TRACER
               .spanBuilder("redis")
-              .setSpanKind(Kind.CLIENT)
+              .setSpanKind(SpanKind.CLIENT)
               .setParent(parent)
               .setAttribute(SemanticAttributes.DB_SYSTEM, DbSystemValues.REDIS);
     }

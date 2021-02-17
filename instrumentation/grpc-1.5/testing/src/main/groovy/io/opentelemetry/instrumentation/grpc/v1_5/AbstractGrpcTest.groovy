@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
-import static io.opentelemetry.api.trace.Span.Kind.SERVER
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -158,7 +158,9 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
 
     then:
-    thrown StatusRuntimeException
+    def e = thrown(StatusRuntimeException)
+    e.status.code == grpcStatus.code
+    e.status.description == grpcStatus.description
 
     assertTraces(1) {
       trace(0, 2) {
@@ -242,7 +244,10 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build())
 
     then:
-    thrown StatusRuntimeException
+    def e = thrown(StatusRuntimeException)
+    // gRPC doesn't appear to propagate server exceptions that are thrown, not onError.
+    e.status.code == Status.UNKNOWN.code
+    e.status.description == null
 
     assertTraces(1) {
       trace(0, 2) {
@@ -444,6 +449,67 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
         }
       }
     }
+
+    cleanup:
+    channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)
+    server?.shutdownNow()?.awaitTermination()
+  }
+
+  // Regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2285
+  def "client error thrown"() {
+    setup:
+    BindableService greeter = new GreeterGrpc.GreeterImplBase() {
+      @Override
+      void sayHello(
+        final Helloworld.Request req, final StreamObserver<Helloworld.Response> responseObserver) {
+        // Send a response but don't complete so client can fail itself
+        responseObserver.onNext(Helloworld.Response.getDefaultInstance())
+      }
+    }
+    def port = PortUtils.randomOpenPort()
+    Server server
+    server = configureServer(ServerBuilder.forPort(port)
+      .addService(greeter))
+      .build().start()
+    ManagedChannelBuilder channelBuilder
+    channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
+
+    // Depending on the version of gRPC usePlainText may or may not take an argument.
+    try {
+      channelBuilder.usePlaintext()
+    } catch (MissingMethodException e) {
+      channelBuilder.usePlaintext(true)
+    }
+    ManagedChannel channel = channelBuilder.build()
+    def client = GreeterGrpc.newStub(channel)
+
+    when:
+    AtomicReference<Throwable> error = new AtomicReference<>()
+    CountDownLatch latch = new CountDownLatch(1)
+    client.sayHello(
+      Helloworld.Request.newBuilder().setName("test").build(),
+      new StreamObserver<Helloworld.Response>() {
+        @Override
+        void onNext(Helloworld.Response r) {
+          throw new IllegalStateException("illegal")
+        }
+
+        @Override
+        void onError(Throwable throwable) {
+          error.set(throwable)
+          latch.countDown()
+        }
+
+        @Override
+        void onCompleted() {
+          latch.countDown()
+        }
+      })
+
+    latch.await(10, TimeUnit.SECONDS)
+
+    then:
+    error.get() != null
 
     cleanup:
     channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)

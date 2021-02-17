@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -39,7 +39,7 @@ class JedisClientTest extends AgentInstrumentationSpecification {
 
   def setup() {
     jedis.flushAll()
-    testWriter.clear()
+    clearExportedData()
   }
 
   def "set command"() {

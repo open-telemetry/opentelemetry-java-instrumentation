@@ -10,12 +10,14 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import javax.servlet.Servlet
 import okhttp3.Request
 import okhttp3.RequestBody
 
-abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER> {
+abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER> implements AgentTestTrait {
   @Override
   URI buildAddress() {
     return new URI("http://localhost:$port$contextPath/")
@@ -48,5 +50,26 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   Request.Builder request(ServerEndpoint uri, String method, RequestBody body) {
     lastRequest = uri
     super.request(uri, method, body)
+  }
+
+  boolean errorEndpointUsesSendError() {
+    true
+  }
+
+  @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    endpoint == REDIRECT || (endpoint == ERROR && errorEndpointUsesSendError())
+  }
+
+  @Override
+  void responseSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
+    switch (endpoint) {
+      case REDIRECT:
+        redirectSpan(trace, index, parent)
+        break
+      case ERROR:
+        sendErrorSpan(trace, index, parent)
+        break
+    }
   }
 }

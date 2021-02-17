@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -54,7 +54,7 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
     Config config = new Config()
     config.useSingleServer().setAddress(address)
     redisson = Redisson.create(config)
-    testWriter.clear()
+    clearExportedData()
   }
 
   def "test future set"() {

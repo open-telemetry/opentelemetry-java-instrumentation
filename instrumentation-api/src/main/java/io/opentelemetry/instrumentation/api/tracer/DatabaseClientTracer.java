@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -21,10 +20,10 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
 
   protected static final String DB_QUERY = "DB Query";
 
-  protected final Tracer tracer;
+  public DatabaseClientTracer() {}
 
-  public DatabaseClientTracer() {
-    tracer = GlobalOpenTelemetry.getTracer(getInstrumentationName(), getVersion());
+  public DatabaseClientTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
   }
 
   public boolean shouldStartSpan(Context parentContext) {
@@ -49,15 +48,6 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     onStatement(span, normalizedQuery);
 
     return withClientSpan(parentContext, span);
-  }
-
-  @Override
-  public Span getCurrentSpan() {
-    return Span.current();
-  }
-
-  public void end(Context context) {
-    Span.fromContext(context).end();
   }
 
   public void endExceptionally(Context context, Throwable throwable) {

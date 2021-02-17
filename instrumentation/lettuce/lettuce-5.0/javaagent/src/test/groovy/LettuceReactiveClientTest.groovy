@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.lettuce.core.ClientOptions
@@ -65,8 +65,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set + 1 connect trace
-    testWriter.waitForTraces(2)
-    testWriter.clear()
+    ignoreTracesAndClear(2)
   }
 
   def cleanup() {
@@ -237,15 +236,12 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
   }
 
   def "non reactive command should not produce span"() {
-    setup:
-    String res = null
-
     when:
-    res = reactiveCommands.digest(null)
+    def res = reactiveCommands.digest(null)
 
     then:
     res != null
-    testWriter.traces.size() == 0
+    traces.size() == 0
   }
 
   def "debug segfault command (returns mono void) with no argument should produce span"() {

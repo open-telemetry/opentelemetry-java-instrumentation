@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.bridge;
 
-import application.io.opentelemetry.api.common.Labels;
 import application.io.opentelemetry.api.metrics.LongValueObserver;
 import application.io.opentelemetry.api.metrics.LongValueObserverBuilder;
+import application.io.opentelemetry.api.metrics.common.Labels;
 import java.util.function.Consumer;
 
 class ApplicationLongValueObserver implements LongValueObserver {

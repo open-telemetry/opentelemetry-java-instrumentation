@@ -7,6 +7,8 @@ dependencies {
   api deps.opentelemetryApi
   api deps.opentelemetryContext
   api deps.opentelemetrySemConv
+
+  implementation deps.opentelemetryApiMetrics
   implementation deps.slf4j
 
   compileOnly deps.autoValueAnnotations
@@ -14,5 +16,5 @@ dependencies {
 
   testImplementation project(':testing-common')
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
-  testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.18.1'
+  testImplementation deps.assertj
 }

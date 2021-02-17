@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import com.lambdaworks.redis.ClientOptions
 import com.lambdaworks.redis.RedisClient
@@ -92,8 +92,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     syncCommands.set("TESTKEY", "TESTVAL")
 
     // 1 set + 1 connect trace
-    testWriter.waitForTraces(2)
-    testWriter.clear()
+    ignoreTracesAndClear(2)
   }
 
   def cleanup() {
@@ -308,7 +307,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     hmsetFuture.thenApplyAsync(new Function<String, Object>() {
       @Override
       Object apply(String setResult) {
-        testWriter.waitForTraces(1) // Wait for 'hmset' trace to get written
+        waitForTraces(1) // Wait for 'hmset' trace to get written
         conds.evaluate {
           assert setResult == "OK"
         }

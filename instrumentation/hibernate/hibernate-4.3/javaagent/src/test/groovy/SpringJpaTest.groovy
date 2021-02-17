@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -41,13 +41,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key}" "test"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/select ([^\.]+)\.id([^\,]*), ([^\.]+)\.firstName([^\,]*), ([^\.]+)\.lastName(.*)from Customer(.*)/
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     repo.save(customer)
@@ -56,7 +56,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     then:
     customer.id != null
     // Behavior changed in new version:
-    def extraTrace = testWriter.traces.size() == 2
+    def extraTrace = traces.size() == 2
     assertTraces(extraTrace ? 2 : 1) {
       if (extraTrace) {
         trace(0, 1) {
@@ -87,7 +87,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     customer.firstName = "Bill"
@@ -104,7 +104,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key}" "test"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/select ([^\.]+)\.id([^\,]*), ([^\.]+)\.firstName([^\,]*), ([^\.]+)\.lastName (.*)from Customer (.*)where ([^\.]+)\.id( ?)=( ?)\?/
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
@@ -123,7 +123,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     customer = repo.findByLastName("Anonymous")[0]
@@ -140,13 +140,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key}" "test"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/select ([^\.]+)\.id([^\,]*), ([^\.]+)\.firstName([^\,]*), ([^\.]+)\.lastName (.*)from Customer (.*)(where ([^\.]+)\.lastName( ?)=( ?)\?|)/
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     repo.delete(customer)
@@ -161,7 +161,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key}" "test"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/select ([^\.]+)\.id([^\,]*), ([^\.]+)\.firstName([^\,]*), ([^\.]+)\.lastName (.*)from Customer (.*)where ([^\.]+)\.id( ?)=( ?)\?/
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
           }
         }
@@ -180,6 +180,5 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    testWriter.clear()
   }
 }

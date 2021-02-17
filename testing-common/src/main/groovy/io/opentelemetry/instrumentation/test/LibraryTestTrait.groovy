@@ -5,45 +5,18 @@
 
 package io.opentelemetry.instrumentation.test
 
-
-import groovy.transform.stc.ClosureParams
-import groovy.transform.stc.SimpleType
-import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
-import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
+import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner
+import io.opentelemetry.instrumentation.testing.LibraryTestRunner
 
 /**
  * A trait which initializes instrumentation library tests, including a test span exporter. All
  * library tests should implement this trait.
  */
 trait LibraryTestTrait {
+  // library test runner has to be initialized statically so that GlobalOpenTelemetry is set as soon as possible
+  private static final InstrumentationTestRunner RUNNER = LibraryTestRunner.instance()
 
-  static InstrumentationTestRunner instrumentationTestRunner
-  static InMemorySpanExporter testWriter
-
-  void runnerSetupSpec() {
-    instrumentationTestRunner = new InstrumentationTestRunnerImpl()
-    testWriter = InstrumentationTestRunner.testExporter
+  InstrumentationTestRunner testRunner() {
+    RUNNER
   }
-
-  void runnerSetup() {
-    instrumentationTestRunner.beforeTest()
-  }
-
-  void runnerCleanupSpec() {
-  }
-
-  boolean forceFlushCalled() {
-    return instrumentationTestRunner.forceFlushCalled()
-  }
-
-  void assertTraces(final int size,
-                    @ClosureParams(
-                      value = SimpleType,
-                      options = "io.opentelemetry.instrumentation.test.asserts.ListWriterAssert")
-                    @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST)
-                    final Closure spec) {
-    instrumentationTestRunner.assertTraces(size, spec)
-  }
-
-  static class InstrumentationTestRunnerImpl extends InstrumentationTestRunner {}
 }

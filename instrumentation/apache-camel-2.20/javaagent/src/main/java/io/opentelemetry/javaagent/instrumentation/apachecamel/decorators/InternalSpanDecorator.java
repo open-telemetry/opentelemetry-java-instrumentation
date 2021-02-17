@@ -23,7 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
@@ -44,7 +44,7 @@ class InternalSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  public Kind getReceiverSpanKind() {
-    return Kind.INTERNAL;
+  public SpanKind getReceiverSpanKind() {
+    return SpanKind.INTERNAL;
   }
 }

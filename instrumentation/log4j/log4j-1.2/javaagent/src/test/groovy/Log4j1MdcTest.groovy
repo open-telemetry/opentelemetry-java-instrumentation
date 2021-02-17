@@ -58,8 +58,8 @@ class Log4j1MdcTest extends AgentInstrumentationSpecification {
 
     events.size() == 3
     events[0].message == "log message 1"
-    events[0].getMDC("traceId") == span1.spanContext.traceIdAsHexString
-    events[0].getMDC("spanId") == span1.spanContext.spanIdAsHexString
+    events[0].getMDC("traceId") == span1.spanContext.traceId
+    events[0].getMDC("spanId") == span1.spanContext.spanId
     events[0].getMDC("sampled") == "true"
 
     events[1].message == "log message 2"
@@ -70,8 +70,8 @@ class Log4j1MdcTest extends AgentInstrumentationSpecification {
     events[2].message == "log message 3"
     // this explicit getMDCCopy() call here is to make sure that whole instrumentation is tested
     events[2].getMDCCopy()
-    events[2].getMDC("traceId") == span2.spanContext.traceIdAsHexString
-    events[2].getMDC("spanId") == span2.spanContext.spanIdAsHexString
+    events[2].getMDC("traceId") == span2.spanContext.traceId
+    events[2].getMDC("spanId") == span2.spanContext.spanId
     events[2].getMDC("sampled") == "true"
   }
 }

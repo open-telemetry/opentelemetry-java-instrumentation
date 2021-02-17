@@ -1,0 +1,5 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  compileOnly group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
+}

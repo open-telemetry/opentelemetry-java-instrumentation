@@ -5,7 +5,7 @@
 
 package util
 
-import static io.opentelemetry.api.trace.Span.Kind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import com.couchbase.client.core.metrics.DefaultLatencyMetricsCollectorConfig
 import com.couchbase.client.core.metrics.DefaultMetricsCollectorConfig

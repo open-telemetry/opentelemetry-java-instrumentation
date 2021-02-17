@@ -53,7 +53,7 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
       MessageDestination destination = tracer().extractDestination(message, null);
       span =
           tracer().startConsumerSpan(destination, "process", message, System.currentTimeMillis());
-      scope = tracer().startScope(span);
+      scope = span.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import static io.opentelemetry.api.trace.Span.Kind.CONSUMER;
-import static io.opentelemetry.api.trace.Span.Kind.PRODUCER;
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.javaagent.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.javaagent.instrumentation.jms.MessageInjectAdapter.SETTER;
 

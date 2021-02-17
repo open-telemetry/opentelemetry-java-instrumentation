@@ -10,9 +10,10 @@ import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.extension.trace.propagation.AwsXrayPropagator;
+import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,7 +48,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   }
 
   public Context startSpan(
-      Span.Kind kind, Context parentContext, Request<?> request, RequestMeta requestMeta) {
+      SpanKind kind, Context parentContext, Request<?> request, RequestMeta requestMeta) {
     Context context = super.startSpan(kind, parentContext, request, request, -1);
     Span span = Span.fromContext(context);
 

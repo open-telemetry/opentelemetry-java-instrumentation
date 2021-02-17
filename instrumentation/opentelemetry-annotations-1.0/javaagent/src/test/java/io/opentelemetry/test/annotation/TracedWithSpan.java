@@ -5,7 +5,7 @@
 
 package io.opentelemetry.test.annotation;
 
-import io.opentelemetry.api.trace.Span.Kind;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.extension.annotations.WithSpan;
 
 public class TracedWithSpan {
@@ -25,32 +25,32 @@ public class TracedWithSpan {
     return "hello!";
   }
 
-  @WithSpan(kind = Kind.PRODUCER)
+  @WithSpan(kind = SpanKind.PRODUCER)
   public String oneOfAKind() {
     return "hello!";
   }
 
-  @WithSpan(kind = Kind.SERVER)
+  @WithSpan(kind = SpanKind.SERVER)
   public String server() {
     return otel();
   }
 
-  @WithSpan(kind = Kind.SERVER)
+  @WithSpan(kind = SpanKind.SERVER)
   public String nestedServers() {
     return innerServer();
   }
 
-  @WithSpan(kind = Kind.SERVER)
+  @WithSpan(kind = SpanKind.SERVER)
   public String innerServer() {
     return "hello!";
   }
 
-  @WithSpan(kind = Kind.CLIENT)
+  @WithSpan(kind = SpanKind.CLIENT)
   public String nestedClients() {
     return innerClient();
   }
 
-  @WithSpan(kind = Kind.CLIENT)
+  @WithSpan(kind = SpanKind.CLIENT)
   public String innerClient() {
     return "hello!";
   }

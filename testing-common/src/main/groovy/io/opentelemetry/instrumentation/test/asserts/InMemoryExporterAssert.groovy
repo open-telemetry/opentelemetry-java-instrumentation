@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.test.asserts
 
+import static TraceAssert.assertTrace
+
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentelemetry.instrumentation.test.InMemoryExporter
+import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
@@ -15,8 +17,6 @@ import org.spockframework.runtime.ConditionNotSatisfiedError
 import org.spockframework.runtime.model.TextPosition
 
 import java.util.function.Supplier
-
-import static TraceAssert.assertTrace
 
 class InMemoryExporterAssert {
   private final List<List<SpanData>> traces
@@ -33,7 +33,7 @@ class InMemoryExporterAssert {
                            @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.ListWriterAssert'])
                            @DelegatesTo(value = InMemoryExporterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     try {
-      def traces = InMemoryExporter.waitForTraces(spanSupplier, expectedSize)
+      def traces = TelemetryDataUtil.waitForTraces(spanSupplier, expectedSize)
       assert traces.size() == expectedSize
       def asserter = new InMemoryExporterAssert(traces, spanSupplier)
       def clone = (Closure) spec.clone()
@@ -84,7 +84,7 @@ class InMemoryExporterAssert {
     assert assertedIndexes.size() == traces.size()
   }
 
-  void sortSpansByStart() {
+  void sortSpansByStartTime() {
     traces.each {
       it.sort { a, b ->
         return a.startEpochNanos <=> b.startEpochNanos

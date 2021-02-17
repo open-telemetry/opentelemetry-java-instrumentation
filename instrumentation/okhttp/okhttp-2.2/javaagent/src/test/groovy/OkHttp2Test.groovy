@@ -9,13 +9,14 @@ import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
 import com.squareup.okhttp.RequestBody
 import com.squareup.okhttp.internal.http.HttpMethod
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
 import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-class OkHttp2Test extends HttpClientTest {
+class OkHttp2Test extends HttpClientTest implements AgentTestTrait {
   @Shared
   def client = new OkHttpClient()
 

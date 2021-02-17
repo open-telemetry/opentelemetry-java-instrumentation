@@ -62,8 +62,8 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
 
       Map<String, String> spanContextData = new HashMap<>();
       SpanContext spanContext = currentSpan.getSpanContext();
-      spanContextData.put(TRACE_ID, spanContext.getTraceIdAsHexString());
-      spanContextData.put(SPAN_ID, spanContext.getSpanIdAsHexString());
+      spanContextData.put(TRACE_ID, spanContext.getTraceId());
+      spanContextData.put(SPAN_ID, spanContext.getSpanId());
       spanContextData.put(SAMPLED, Boolean.toString(spanContext.isSampled()));
 
       if (contextData == null) {
