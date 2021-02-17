@@ -141,8 +141,4 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
     server?.shutdown()
   }
 
-  /*@Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "GET /exception"
-  }*/
 }
