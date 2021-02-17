@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import com.mongodb.event.CommandStartedEvent
 
 import static java.util.Arrays.asList
