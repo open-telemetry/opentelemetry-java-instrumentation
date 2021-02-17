@@ -1,0 +1,6 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+  compileOnly group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxws', version: '3.0.0'
+}

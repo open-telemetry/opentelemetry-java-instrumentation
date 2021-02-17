@@ -192,7 +192,7 @@ public final class ReferenceMatcher {
     List<Mismatch> mismatches = Collections.emptyList();
 
     for (Reference.Flag flag : reference.getFlags()) {
-      if (!flag.matches(typeOnClasspath.getModifiers())) {
+      if (!flag.matches(typeOnClasspath.getActualModifiers(false))) {
         String desc = reference.getClassName();
         mismatches =
             lazyAdd(
@@ -201,7 +201,7 @@ public final class ReferenceMatcher {
                     reference.getSources().toArray(new Source[0]),
                     desc,
                     flag,
-                    typeOnClasspath.getModifiers()));
+                    typeOnClasspath.getActualModifiers(false)));
       }
     }
 

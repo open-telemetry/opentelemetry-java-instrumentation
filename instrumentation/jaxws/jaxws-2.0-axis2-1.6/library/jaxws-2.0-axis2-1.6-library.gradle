@@ -1,0 +1,5 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  compileOnly group: 'org.apache.axis2', name: 'axis2-jaxws', version: '1.6.0'
+}
