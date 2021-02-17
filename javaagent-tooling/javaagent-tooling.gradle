@@ -22,6 +22,9 @@ dependencies {
   implementation project(':javaagent-api')
   implementation project(':instrumentation-api')
 
+  // Runtime metrics which are basically free
+  implementation project(':instrumentation:runtime-metrics:library')
+
   implementation deps.opentelemetryApi
   implementation deps.opentelemetryApiMetrics
   implementation deps.opentelemetryContext

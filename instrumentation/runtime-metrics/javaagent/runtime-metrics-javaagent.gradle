@@ -1,0 +1,4 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+// The agent automatically enables runtime metrics, so there is no additional source code or
+// configuration here, only tests.
