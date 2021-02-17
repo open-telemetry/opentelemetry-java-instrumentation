@@ -36,7 +36,6 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
@@ -162,8 +161,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
 
     @Advice.OnMethodExit
     public static void methodExit(
-        @Advice.This HttpURLConnection connection,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) int returnValue) {
+        @Advice.This HttpURLConnection connection, @Advice.Return int returnValue) {
 
       ContextStore<HttpURLConnection, HttpUrlState> storage =
           InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
