@@ -1,13 +1,15 @@
 # Log4j 2 Integration
 
 This module integrates instrumentation with Log4j 2 by injecting the trace ID and span ID from a
-mounted span into Log4j's [context data](https://logging.apache.org/log4j/2.x/manual/thread-context.html).
+mounted span into
+Log4j's [context data](https://logging.apache.org/log4j/2.x/manual/thread-context.html).
 
 To use it, just add the module to your application's runtime classpath.
 
 **Maven**
 
 ```xml
+
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
@@ -40,12 +42,13 @@ You can use these keys when defining an appender in your `log4j.xml` configurati
 <Configuration>
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} traceId: %X{traceId} spanId: %X{spanId} - %msg%n" />
+      <PatternLayout
+          pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} trace_id=%X{traceId} span_id=%X{spanId} - %msg%n"/>
     </Console>
   </Appenders>
   <Loggers>
     <Root>
-      <AppenderRef ref="Console" level="All" />
+      <AppenderRef ref="Console" level="All"/>
     </Root>
   </Loggers>
 </Configuration>
