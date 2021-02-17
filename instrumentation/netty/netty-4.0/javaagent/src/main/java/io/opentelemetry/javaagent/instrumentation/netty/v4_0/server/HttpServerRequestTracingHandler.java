@@ -32,7 +32,8 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       return;
     }
 
-    Context context = tracer().startSpan((HttpRequest) msg, channel, channel, "netty.request");
+    HttpRequest req = (HttpRequest) msg;
+    Context context = tracer().startSpan(req, channel, channel, req.getMethod() + " " + req.getUri());
     try (Scope ignored = context.makeCurrent()) {
       ctx.fireChannelRead(msg);
       // the span is ended normally in HttpServerResponseTracingHandler

@@ -46,7 +46,7 @@ public class HttpServerRequestTracingHandler extends SimpleChannelUpstreamHandle
     HttpRequest request = (HttpRequest) message;
 
     Context context =
-        tracer().startSpan(request, ctx.getChannel(), channelTraceContext, "netty.request");
+        tracer().startSpan(request, ctx.getChannel(), channelTraceContext, request.getMethod() + " " + request.getUri());
     try (Scope ignored = context.makeCurrent()) {
       ctx.sendUpstream(event);
       // the span is ended normally in HttpServerResponseTracingHandler
