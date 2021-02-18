@@ -41,11 +41,11 @@ task modifyLogbackJar(type: Jar) {
         exclude(
           "/META-INF/services/javax.servlet.ServletContainerInitializer"
         )
-        destinationDirectory = file("$buildDir/tmp")
-        archiveFileName = "logback-classic-modified.jar"
       }
     }
   }
+  destinationDirectory = file("$buildDir/tmp")
+  archiveFileName = "logback-classic-modified.jar"
 }
 
 test.dependsOn modifyLogbackJar, setupServer
