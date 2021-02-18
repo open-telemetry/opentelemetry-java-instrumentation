@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
@@ -49,8 +50,8 @@ class Serializer {
     return optional
         .map(
             csp -> {
-              try {
-                return IoUtils.toUtf8String(csp.newStream());
+              try (InputStream cspIs = csp.newStream()) {
+                return IoUtils.toUtf8String(cspIs);
               } catch (IOException e) {
                 return null;
               }

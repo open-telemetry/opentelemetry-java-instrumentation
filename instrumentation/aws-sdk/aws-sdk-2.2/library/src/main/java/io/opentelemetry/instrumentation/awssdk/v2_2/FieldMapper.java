@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.api.trace.Span;
+import java.util.List;
 import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
@@ -58,10 +59,10 @@ class FieldMapper {
   private void mapFields(
       Function<String, Object> fieldValueProvider, FieldMapping fieldMapping, Span span) {
     // traverse path
-    String[] path = fieldMapping.getFields();
-    Object target = fieldValueProvider.apply(camelCase(path[0]));
-    for (int i = 1; i < path.length && target != null; i++) {
-      target = next(target, path[i]);
+    List<String> path = fieldMapping.getFields();
+    Object target = fieldValueProvider.apply(path.get(0));
+    for (int i = 1; i < path.size() && target != null; i++) {
+      target = next(target, path.get(i));
     }
     if (target != null) {
       String value = serializer.serialize(target);
@@ -69,10 +70,6 @@ class FieldMapper {
         span.setAttribute(fieldMapping.getAttribute(), value);
       }
     }
-  }
-
-  private String camelCase(String string) {
-    return string.substring(0, 1).toUpperCase() + string.substring(1);
   }
 
   @Nullable

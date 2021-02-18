@@ -11,6 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class MethodHandleFactory {
 
+  private String lowerCase(String string) {
+    return string.substring(0, 1).toLowerCase() + string.substring(1);
+  }
+
   private final ClassValue<ConcurrentHashMap<String, MethodHandle>> getterCache =
       new ClassValue<ConcurrentHashMap<String, MethodHandle>>() {
         @Override
@@ -23,7 +27,8 @@ class MethodHandleFactory {
       throws NoSuchMethodException, IllegalAccessException {
     MethodHandle methodHandle = getterCache.get(clazz).get(fieldName);
     if (methodHandle == null) {
-      methodHandle = MethodHandles.publicLookup().unreflect(clazz.getMethod(fieldName));
+      // getter in AWS SDK is lowercased field name
+      methodHandle = MethodHandles.publicLookup().unreflect(clazz.getMethod(lowerCase(fieldName)));
       getterCache.get(clazz).put(fieldName, methodHandle);
     }
     return methodHandle;

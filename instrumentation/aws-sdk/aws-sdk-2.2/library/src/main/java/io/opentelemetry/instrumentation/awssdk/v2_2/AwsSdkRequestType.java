@@ -22,7 +22,7 @@ enum AwsSdkRequestType {
   private final Map<FieldMapping.Type, List<FieldMapping>> fields;
 
   AwsSdkRequestType(FieldMapping... fieldMappings) {
-    this.fields = FieldMapping.map(fieldMappings);
+    this.fields = FieldMapping.groupByType(fieldMappings);
   }
 
   public List<FieldMapping> fields(FieldMapping.Type type) {
