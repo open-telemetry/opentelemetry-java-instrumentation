@@ -13,10 +13,10 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FAAS_
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.FaasTriggerValues;
 import java.lang.invoke.MethodHandle;
@@ -47,10 +47,8 @@ public class AwsLambdaTracer extends BaseTracer {
   // cached accountId value
   private volatile String accountId;
 
-  public AwsLambdaTracer() {}
-
-  public AwsLambdaTracer(Tracer tracer) {
-    super(tracer);
+  public AwsLambdaTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
   }
 
   private void setAttributes(SpanBuilder span, Context context, Object input) {
@@ -118,7 +116,7 @@ public class AwsLambdaTracer extends BaseTracer {
 
   public io.opentelemetry.context.Context startSpan(
       Context awsContext, SpanKind kind, Object input, Map<String, String> headers) {
-    io.opentelemetry.context.Context parentContext = ParentContextExtractor.extract(headers);
+    io.opentelemetry.context.Context parentContext = ParentContextExtractor.extract(headers, this);
 
     SpanBuilder spanBuilder = tracer.spanBuilder(spanName(awsContext, input));
     setAttributes(spanBuilder, awsContext, input);

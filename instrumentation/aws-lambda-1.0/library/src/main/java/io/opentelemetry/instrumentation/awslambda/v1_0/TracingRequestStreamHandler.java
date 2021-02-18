@@ -10,9 +10,12 @@ import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A base class similar to {@link RequestStreamHandler} but will automatically trace invocations of
@@ -20,45 +23,37 @@ import java.io.OutputStream;
  */
 public abstract class TracingRequestStreamHandler implements RequestStreamHandler {
 
-  private static final long DEFAULT_FLUSH_TIMEOUT_SECONDS = 1;
+  private static final Duration DEFAULT_FLUSH_TIMEOUT = Duration.ofSeconds(1);
 
+  private final OpenTelemetrySdk openTelemetrySdk;
+  private final long flushTimeoutNanos;
   private final AwsLambdaTracer tracer;
-  private final long flushTimeout;
 
   /**
    * Creates a new {@link TracingRequestStreamHandler} which traces using the default {@link
    * Tracer}.
    */
-  protected TracingRequestStreamHandler(long flushTimeout) {
-    this.tracer = new AwsLambdaTracer();
-    this.flushTimeout = flushTimeout;
+  protected TracingRequestStreamHandler(OpenTelemetrySdk openTelemetrySdk) {
+    this(openTelemetrySdk, DEFAULT_FLUSH_TIMEOUT);
   }
 
   /**
    * Creates a new {@link TracingRequestStreamHandler} which traces using the default {@link
    * Tracer}.
    */
-  protected TracingRequestStreamHandler() {
-    this.tracer = new AwsLambdaTracer();
-    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
+  protected TracingRequestStreamHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
+    this(openTelemetrySdk, flushTimeout, new AwsLambdaTracer(openTelemetrySdk));
   }
 
   /**
    * Creates a new {@link TracingRequestStreamHandler} which traces using the specified {@link
    * Tracer}.
    */
-  protected TracingRequestStreamHandler(Tracer tracer) {
-    this.tracer = new AwsLambdaTracer(tracer);
-    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
-  }
-
-  /**
-   * Creates a new {@link TracingRequestStreamHandler} which traces using the specified {@link
-   * AwsLambdaTracer}.
-   */
-  protected TracingRequestStreamHandler(AwsLambdaTracer tracer) {
+  protected TracingRequestStreamHandler(
+      OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout, AwsLambdaTracer tracer) {
+    this.openTelemetrySdk = openTelemetrySdk;
+    this.flushTimeoutNanos = flushTimeout.toNanos();
     this.tracer = tracer;
-    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
   }
 
   @Override
@@ -71,10 +66,15 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
 
     try (Scope ignored = otelContext.makeCurrent()) {
       doHandleRequest(
-          proxyRequest.freshStream(), new OutputStreamWrapper(output, otelContext), context);
+          proxyRequest.freshStream(),
+          new OutputStreamWrapper(output, otelContext, openTelemetrySdk),
+          context);
     } catch (Throwable t) {
       tracer.endExceptionally(otelContext, t);
-      LambdaUtils.forceFlush();
+      openTelemetrySdk
+          .getSdkTracerProvider()
+          .forceFlush()
+          .join(flushTimeoutNanos, TimeUnit.NANOSECONDS);
       throw t;
     }
   }
@@ -86,11 +86,15 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
 
     private final OutputStream delegate;
     private final io.opentelemetry.context.Context otelContext;
+    private final OpenTelemetrySdk openTelemetrySdk;
 
     private OutputStreamWrapper(
-        OutputStream delegate, io.opentelemetry.context.Context otelContext) {
+        OutputStream delegate,
+        io.opentelemetry.context.Context otelContext,
+        OpenTelemetrySdk openTelemetrySdk) {
       this.delegate = delegate;
       this.otelContext = otelContext;
+      this.openTelemetrySdk = openTelemetrySdk;
     }
 
     @Override
@@ -117,7 +121,10 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
     public void close() throws IOException {
       delegate.close();
       tracer.end(otelContext);
-      LambdaUtils.forceFlush();
+      openTelemetrySdk
+          .getSdkTracerProvider()
+          .forceFlush()
+          .join(flushTimeoutNanos, TimeUnit.NANOSECONDS);
     }
   }
 }
