@@ -96,7 +96,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       SdkRequest sdkRequest,
       ExecutionAttributes attributes) {
 
-    fieldMapper.mapFields(sdkRequest, awsSdkRequest, span);
+    fieldMapper.mapToAttributes(sdkRequest, awsSdkRequest, span);
 
     if (awsSdkRequest.type() == DynamoDB) {
       span.setAttribute(SemanticAttributes.DB_SYSTEM, "dynamodb");
@@ -145,7 +145,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
     AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
     if (sdkRequest != null) {
-      fieldMapper.mapFields(response, sdkRequest, span);
+      fieldMapper.mapToAttributes(response, sdkRequest, span);
     }
   }
 

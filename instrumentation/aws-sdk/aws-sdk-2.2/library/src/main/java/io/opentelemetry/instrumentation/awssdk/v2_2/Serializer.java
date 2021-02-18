@@ -23,30 +23,33 @@ import software.amazon.awssdk.protocols.core.OperationInfo;
 import software.amazon.awssdk.protocols.core.ProtocolMarshaller;
 import software.amazon.awssdk.protocols.json.AwsJsonProtocolFactory;
 import software.amazon.awssdk.utils.IoUtils;
+import software.amazon.awssdk.utils.StringUtils;
 
 class Serializer {
 
-  private final ProtocolMarshaller<SdkHttpFullRequest> protocolMarshaller;
+  private final AwsJsonProtocolFactory awsJsonProtocolFactory;
 
   Serializer() {
-    protocolMarshaller =
+    awsJsonProtocolFactory =
         AwsJsonProtocolFactory.builder()
             .clientConfiguration(
                 SdkClientConfiguration.builder()
+                    // AwsJsonProtocolFactory requires any URI to be present
                     .option(SdkClientOption.ENDPOINT, URI.create("http://empty"))
                     .build())
-            .build()
-            .createProtocolMarshaller(
-                OperationInfo.builder()
-                    .hasPayloadMembers(true)
-                    .httpMethod(SdkHttpMethod.POST)
-                    .build());
+            .build();
+  }
+
+  private ProtocolMarshaller<SdkHttpFullRequest> createMarshaller() {
+    // apparently AWS SDK serializers can't be reused (throwing NPEs on second use)
+    return awsJsonProtocolFactory.createProtocolMarshaller(
+        OperationInfo.builder().hasPayloadMembers(true).httpMethod(SdkHttpMethod.POST).build());
   }
 
   @Nullable
   private String serialize(SdkPojo sdkPojo) {
     Optional<ContentStreamProvider> optional =
-        protocolMarshaller.marshall(sdkPojo).contentStreamProvider();
+        createMarshaller().marshall(sdkPojo).contentStreamProvider();
     return optional
         .map(
             csp -> {
@@ -60,11 +63,15 @@ class Serializer {
   }
 
   private String serialize(Collection<Object> collection) {
-    return collection.stream().map(this::serialize).collect(Collectors.joining(","));
+    return asJsonArray(collection.stream().map(this::serialize).collect(Collectors.joining(",")));
   }
 
   @Nullable
   String serialize(Object target) {
+
+    if (target == null) {
+      return null;
+    }
 
     if (target instanceof SdkPojo) {
       return serialize((SdkPojo) target);
@@ -77,5 +84,9 @@ class Serializer {
     }
     // simple type
     return target.toString();
+  }
+
+  private String asJsonArray(String value) {
+    return (StringUtils.isEmpty(value) ? null : "[" + value + "]");
   }
 }

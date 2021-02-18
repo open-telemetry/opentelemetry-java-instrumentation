@@ -11,6 +11,7 @@ import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
+import software.amazon.awssdk.utils.StringUtils;
 
 class FieldMapper {
 
@@ -27,36 +28,36 @@ class FieldMapper {
     this.serializer = serializer;
   }
 
-  void mapFields(SdkRequest sdkRequest, AwsSdkRequest request, Span span) {
-    mapFields(
+  void mapToAttributes(SdkRequest sdkRequest, AwsSdkRequest request, Span span) {
+    mapToAttributes(
         field -> sdkRequest.getValueForField(field, Object.class).orElse(null),
         FieldMapping.Type.REQUEST,
         request,
         span);
   }
 
-  void mapFields(SdkResponse sdkResponse, AwsSdkRequest request, Span span) {
-    mapFields(
+  void mapToAttributes(SdkResponse sdkResponse, AwsSdkRequest request, Span span) {
+    mapToAttributes(
         field -> sdkResponse.getValueForField(field, Object.class).orElse(null),
         FieldMapping.Type.RESPONSE,
         request,
         span);
   }
 
-  private void mapFields(
+  private void mapToAttributes(
       Function<String, Object> fieldValueProvider,
       FieldMapping.Type type,
       AwsSdkRequest request,
       Span span) {
     for (FieldMapping fieldMapping : request.fields(type)) {
-      mapFields(fieldValueProvider, fieldMapping, span);
+      mapToAttributes(fieldValueProvider, fieldMapping, span);
     }
     for (FieldMapping fieldMapping : request.type().fields(type)) {
-      mapFields(fieldValueProvider, fieldMapping, span);
+      mapToAttributes(fieldValueProvider, fieldMapping, span);
     }
   }
 
-  private void mapFields(
+  private void mapToAttributes(
       Function<String, Object> fieldValueProvider, FieldMapping fieldMapping, Span span) {
     // traverse path
     List<String> path = fieldMapping.getFields();
@@ -66,7 +67,7 @@ class FieldMapper {
     }
     if (target != null) {
       String value = serializer.serialize(target);
-      if (value != null && !value.isEmpty()) {
+      if (!StringUtils.isEmpty(value)) {
         span.setAttribute(fieldMapping.getAttribute(), value);
       }
     }

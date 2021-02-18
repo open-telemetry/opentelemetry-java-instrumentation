@@ -49,7 +49,7 @@ public class FieldMapperTest {
 
     Span span = mock(Span.class);
     // when
-    underTest.mapFields(sdkRequest, awsSdkRequest, span);
+    underTest.mapToAttributes(sdkRequest, awsSdkRequest, span);
     // then
     verify(span).setAttribute("aws.dynamodb.provisioned_throughput.read_capacity_units", "55");
     verify(span).setAttribute("aws.dynamodb.provisioned_throughput.write_capacity_units", "77");
@@ -70,7 +70,7 @@ public class FieldMapperTest {
 
     Span span = mock(Span.class);
     // when
-    underTest.mapFields(sdkRequest, awsSdkRequest, span);
+    underTest.mapToAttributes(sdkRequest, awsSdkRequest, span);
     // then
     verify(span).setAttribute("aws.dynamodb.table_names", "firstTable,secondTable");
     verifyNoMoreInteractions(span);
@@ -95,7 +95,7 @@ public class FieldMapperTest {
 
     Span span = mock(Span.class);
     // when
-    underTest.mapFields(sdkResponse, awsSdkRequest, span);
+    underTest.mapToAttributes(sdkResponse, awsSdkRequest, span);
     // then
     verify(span).setAttribute("aws.dynamodb.consumed_capacity", "consumedCapacity");
     verify(span).setAttribute("aws.dynamodb.item_collection_metrics", "itemCollectionMetrics");

@@ -45,7 +45,17 @@ public class SerializerTest {
     // when
     String serialized = new Serializer().serialize(collection);
     // then
-    assertThat(serialized).isEqualTo("one,two,three");
+    assertThat(serialized).isEqualTo("[one,two,three]");
+  }
+
+  @Test
+  public void shouldSerializeEmptyCollectionAsNull() {
+    // given
+    List<String> collection = Arrays.asList();
+    // when
+    String serialized = new Serializer().serialize(collection);
+    // then
+    assertThat(serialized).isNull();
   }
 
   @Test
@@ -58,6 +68,6 @@ public class SerializerTest {
     // when
     String serialized = new Serializer().serialize(map);
     // then
-    assertThat(serialized).isEqualTo("uno,dos,tres");
+    assertThat(serialized).isEqualTo("[uno,dos,tres]");
   }
 }
