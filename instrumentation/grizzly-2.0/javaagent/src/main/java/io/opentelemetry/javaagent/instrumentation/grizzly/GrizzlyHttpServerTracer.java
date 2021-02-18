@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -84,7 +84,7 @@ public class GrizzlyHttpServerTracer
   }
 
   @Override
-  protected Getter<HttpRequestPacket> getGetter() {
+  protected TextMapGetter<HttpRequestPacket> getGetter() {
     return ExtractAdapter.GETTER;
   }
 

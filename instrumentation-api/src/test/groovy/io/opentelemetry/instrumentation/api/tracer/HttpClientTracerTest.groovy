@@ -190,7 +190,7 @@ class HttpClientTracerTest extends BaseTracerTest {
       }
 
       @Override
-      protected TextMapPropagator.Setter<Map> getSetter() {
+      protected TextMapSetter<Map> getSetter() {
         return null
       }
 

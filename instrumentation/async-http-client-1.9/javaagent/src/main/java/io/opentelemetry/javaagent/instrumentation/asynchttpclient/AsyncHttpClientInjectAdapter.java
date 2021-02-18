@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 
 import com.ning.http.client.Request;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 
-public class AsyncHttpClientInjectAdapter implements TextMapPropagator.Setter<Request> {
+public class AsyncHttpClientInjectAdapter implements TextMapSetter<Request> {
 
   public static final AsyncHttpClientInjectAdapter SETTER = new AsyncHttpClientInjectAdapter();
 

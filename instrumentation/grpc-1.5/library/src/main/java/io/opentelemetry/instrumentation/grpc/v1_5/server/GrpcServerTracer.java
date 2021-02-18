@@ -12,7 +12,7 @@ import io.grpc.Status;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -52,7 +52,7 @@ public class GrpcServerTracer extends RpcServerTracer<Metadata> {
   }
 
   @Override
-  protected Getter<Metadata> getGetter() {
+  protected TextMapGetter<Metadata> getGetter() {
     return GrpcExtractAdapter.GETTER;
   }
 }

@@ -10,7 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import okhttp3.Request;
@@ -70,7 +70,7 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
   }
 
   @Override
-  protected Setter<Request> getSetter() {
+  protected TextMapSetter<Request> getSetter() {
     // TODO (trask) no propagation implemented yet?
     return null;
   }

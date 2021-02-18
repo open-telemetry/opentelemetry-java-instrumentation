@@ -11,7 +11,7 @@ import com.linecorp.armeria.server.ServiceRequestContext;
 import io.netty.util.AsciiString;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -66,7 +66,7 @@ public class ArmeriaServerTracer
   }
 
   @Override
-  protected Getter<HttpRequest> getGetter() {
+  protected TextMapGetter<HttpRequest> getGetter() {
     return ArmeriaGetter.INSTANCE;
   }
 
@@ -94,7 +94,7 @@ public class ArmeriaServerTracer
   @Override
   protected void attachServerContext(Context context, Void ctx) {}
 
-  private static class ArmeriaGetter implements Getter<HttpRequest> {
+  private static class ArmeriaGetter implements TextMapGetter<HttpRequest> {
 
     private static final ArmeriaGetter INSTANCE = new ArmeriaGetter();
 

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import org.apache.dubbo.rpc.RpcInvocation;
 
-class DubboExtractAdapter implements TextMapPropagator.Getter<RpcInvocation> {
+class DubboExtractAdapter implements TextMapGetter<RpcInvocation> {
 
   static final DubboExtractAdapter GETTER = new DubboExtractAdapter();
 

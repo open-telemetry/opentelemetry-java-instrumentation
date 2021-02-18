@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class AkkaHttpServerHeaders implements TextMapPropagator.Getter<HttpRequest> {
+public class AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
 
   public static final AkkaHttpServerHeaders GETTER = new AkkaHttpServerHeaders();
 

@@ -207,7 +207,7 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
     def headers = received.headers()
     headers.iterator().hasNext()
     def traceparent = new String(headers.headers("traceparent").iterator().next().value())
-    Context context = W3CTraceContextPropagator.instance.extract(Context.root(), "", new TextMapPropagator.Getter<String>() {
+    Context context = W3CTraceContextPropagator.instance.extract(Context.root(), "", new TextMapGetter<String>() {
       @Override
       Iterable<String> keys(String carrier) {
         return Collections.singleton("traceparent")

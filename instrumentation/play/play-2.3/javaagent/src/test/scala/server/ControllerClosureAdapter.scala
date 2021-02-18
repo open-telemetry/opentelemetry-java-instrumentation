@@ -8,8 +8,6 @@ package server
 import groovy.lang.Closure
 import play.api.mvc.Result
 
-import scala.concurrent.Future
-
 class ControllerClosureAdapter(response: Result) extends Closure[Result] {
   override def call(): Result = response
 }

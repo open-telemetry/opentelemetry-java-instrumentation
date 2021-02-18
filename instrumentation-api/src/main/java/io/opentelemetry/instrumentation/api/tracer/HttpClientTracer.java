@@ -13,8 +13,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -70,7 +69,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   @Nullable
   protected abstract String responseHeader(RESPONSE response, String name);
 
-  protected abstract TextMapPropagator.Setter<CARRIER> getSetter();
+  protected abstract TextMapSetter<CARRIER> getSetter();
 
   public boolean shouldStartSpan(Context parentContext) {
     return shouldStartSpan(CLIENT, parentContext);
@@ -96,7 +95,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   }
 
   protected void inject(Context context, CARRIER carrier) {
-    Setter<CARRIER> setter = getSetter();
+    TextMapSetter<CARRIER> setter = getSetter();
     if (setter == null) {
       throw new IllegalStateException(
           "getSetter() not defined but calling inject(), either getSetter must be implemented or the scope should be setup manually");
