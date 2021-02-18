@@ -62,9 +62,9 @@ public class CompletableInstrumentation extends InstrumentationModule {
   public static class CaptureParentSpanAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruct(@Advice.This final Completable completable) {
-      Context parentSpan = Context.current();
-      if (parentSpan != null) {
-        InstrumentationContext.get(Completable.class, Context.class).put(completable, parentSpan);
+      Context context = Context.current();
+      if (context != null) {
+        InstrumentationContext.get(Completable.class, Context.class).put(completable, context);
       }
     }
   }
@@ -75,13 +75,13 @@ public class CompletableInstrumentation extends InstrumentationModule {
         @Advice.This final Completable completable,
         @Advice.Argument(value = 0, readOnly = false) CompletableObserver observer) {
       if (observer != null) {
-        Context parentSpan =
+        Context context =
             InstrumentationContext.get(Completable.class, Context.class).get(completable);
-        if (parentSpan != null) {
+        if (context != null) {
           // wrap the observer so spans from its events treat the captured span as their parent
-          observer = new TracingCompletableObserver(observer, parentSpan);
+          observer = new TracingCompletableObserver(observer, context);
           // activate the span here in case additional observers are created during subscribe
-          return parentSpan.makeCurrent();
+          return context.makeCurrent();
         }
       }
       return null;

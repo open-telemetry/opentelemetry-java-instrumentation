@@ -13,11 +13,11 @@ import io.reactivex.disposables.Disposable;
 public final class TracingCompletableObserver implements CompletableObserver {
 
   private final CompletableObserver observer;
-  private final Context parentSpan;
+  private final Context context;
 
-  public TracingCompletableObserver(final CompletableObserver observer, final Context parentSpan) {
+  public TracingCompletableObserver(final CompletableObserver observer, final Context context) {
     this.observer = observer;
-    this.parentSpan = parentSpan;
+    this.context = context;
   }
 
   @Override
@@ -27,14 +27,14 @@ public final class TracingCompletableObserver implements CompletableObserver {
 
   @Override
   public void onComplete() {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       observer.onComplete();
     }
   }
 
   @Override
   public void onError(final Throwable throwable) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       observer.onError(throwable);
     }
   }

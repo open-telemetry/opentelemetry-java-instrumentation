@@ -62,9 +62,9 @@ public class MaybeInstrumentation extends InstrumentationModule {
   public static class CaptureParentSpanAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruct(@Advice.This final Maybe<?> maybe) {
-      Context parentSpan = Context.current();
-      if (parentSpan != null) {
-        InstrumentationContext.get(Maybe.class, Context.class).put(maybe, parentSpan);
+      Context context = Context.current();
+      if (context != null) {
+        InstrumentationContext.get(Maybe.class, Context.class).put(maybe, context);
       }
     }
   }
@@ -75,12 +75,12 @@ public class MaybeInstrumentation extends InstrumentationModule {
         @Advice.This final Maybe<?> maybe,
         @Advice.Argument(value = 0, readOnly = false) MaybeObserver<?> observer) {
       if (observer != null) {
-        Context parentSpan = InstrumentationContext.get(Maybe.class, Context.class).get(maybe);
-        if (parentSpan != null) {
+        Context context = InstrumentationContext.get(Maybe.class, Context.class).get(maybe);
+        if (context != null) {
           // wrap the observer so spans from its events treat the captured span as their parent
-          observer = new TracingMaybeObserver<>(observer, parentSpan);
+          observer = new TracingMaybeObserver<>(observer, context);
           // activate the span here in case additional observers are created during subscribe
-          return parentSpan.makeCurrent();
+          return context.makeCurrent();
         }
       }
       return null;

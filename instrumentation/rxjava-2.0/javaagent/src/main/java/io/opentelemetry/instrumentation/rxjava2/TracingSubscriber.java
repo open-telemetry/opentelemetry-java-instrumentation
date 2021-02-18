@@ -13,11 +13,11 @@ import org.reactivestreams.Subscription;
 public final class TracingSubscriber<T> implements Subscriber<T> {
 
   private final Subscriber<T> subscriber;
-  private final Context parentSpan;
+  private final Context context;
 
-  public TracingSubscriber(final Subscriber<T> subscriber, final Context parentSpan) {
+  public TracingSubscriber(final Subscriber<T> subscriber, final Context context) {
     this.subscriber = subscriber;
-    this.parentSpan = parentSpan;
+    this.context = context;
   }
 
   @Override
@@ -27,21 +27,21 @@ public final class TracingSubscriber<T> implements Subscriber<T> {
 
   @Override
   public void onNext(final T t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       subscriber.onNext(t);
     }
   }
 
   @Override
   public void onError(final Throwable throwable) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       subscriber.onError(throwable);
     }
   }
 
   @Override
   public void onComplete() {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       subscriber.onComplete();
     }
   }

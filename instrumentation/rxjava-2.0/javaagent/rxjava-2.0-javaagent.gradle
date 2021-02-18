@@ -12,6 +12,5 @@ dependencies {
   implementation group: 'org.reactivestreams', name: 'reactive-streams', version: '1.0.0'
   library group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.0.0'
 
-  testImplementation group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.0.5'
-  latestDepTestLibrary group: 'io.reactivex.rxjava2', name: 'rxjava', version: '+'
+  testImplementation project(':instrumentation:rxjava-2.0:testing')
 }

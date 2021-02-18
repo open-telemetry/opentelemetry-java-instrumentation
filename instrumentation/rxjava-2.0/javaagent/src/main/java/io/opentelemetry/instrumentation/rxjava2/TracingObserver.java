@@ -13,11 +13,11 @@ import io.reactivex.disposables.Disposable;
 public final class TracingObserver<T> implements Observer<T> {
 
   private final Observer<T> observer;
-  private final Context parentSpan;
+  private final Context context;
 
-  public TracingObserver(final Observer<T> observer, final Context parentSpan) {
+  public TracingObserver(final Observer<T> observer, final Context context) {
     this.observer = observer;
-    this.parentSpan = parentSpan;
+    this.context = context;
   }
 
   @Override
@@ -27,21 +27,21 @@ public final class TracingObserver<T> implements Observer<T> {
 
   @Override
   public void onNext(final T t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       observer.onNext(t);
     }
   }
 
   @Override
   public void onError(final Throwable throwable) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       observer.onError(throwable);
     }
   }
 
   @Override
   public void onComplete() {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (final Scope scope = context.makeCurrent()) {
       observer.onComplete();
     }
   }

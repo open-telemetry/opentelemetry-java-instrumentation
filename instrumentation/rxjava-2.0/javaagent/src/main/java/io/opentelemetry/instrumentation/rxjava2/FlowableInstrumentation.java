@@ -62,9 +62,9 @@ public class FlowableInstrumentation extends InstrumentationModule {
   public static class CaptureParentSpanAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruct(@Advice.This final Flowable<?> flowable) {
-      Context parentSpan = Context.current();
-      if (parentSpan != null) {
-        InstrumentationContext.get(Flowable.class, Context.class).put(flowable, parentSpan);
+      Context context = Context.current();
+      if (context != null) {
+        InstrumentationContext.get(Flowable.class, Context.class).put(flowable, context);
       }
     }
   }
@@ -75,13 +75,12 @@ public class FlowableInstrumentation extends InstrumentationModule {
         @Advice.This final Flowable<?> flowable,
         @Advice.Argument(value = 0, readOnly = false) Subscriber<?> subscriber) {
       if (subscriber != null) {
-        Context parentSpan =
-            InstrumentationContext.get(Flowable.class, Context.class).get(flowable);
-        if (parentSpan != null) {
+        Context context = InstrumentationContext.get(Flowable.class, Context.class).get(flowable);
+        if (context != null) {
           // wrap the subscriber so spans from its events treat the captured span as their parent
-          subscriber = new TracingSubscriber<>(subscriber, parentSpan);
+          subscriber = new TracingSubscriber<>(subscriber, context);
           // activate the span here in case additional subscribers are created during subscribe
-          return parentSpan.makeCurrent();
+          return context.makeCurrent();
         }
       }
       return null;

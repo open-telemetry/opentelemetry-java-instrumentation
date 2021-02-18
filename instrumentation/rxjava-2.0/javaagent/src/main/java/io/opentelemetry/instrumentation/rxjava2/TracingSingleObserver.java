@@ -13,11 +13,11 @@ import io.reactivex.disposables.Disposable;
 public final class TracingSingleObserver<T> implements SingleObserver<T> {
 
   private final SingleObserver<T> observer;
-  private final Context parentSpan;
+  private final Context context;
 
-  public TracingSingleObserver(final SingleObserver<T> observer, final Context parentSpan) {
+  public TracingSingleObserver(final SingleObserver<T> observer, final Context context) {
     this.observer = observer;
-    this.parentSpan = parentSpan;
+    this.context = context;
   }
 
   @Override
@@ -27,14 +27,14 @@ public final class TracingSingleObserver<T> implements SingleObserver<T> {
 
   @Override
   public void onSuccess(final T t) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       observer.onSuccess(t);
     }
   }
 
   @Override
   public void onError(final Throwable throwable) {
-    try (final Scope scope = parentSpan.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       observer.onError(throwable);
     }
   }

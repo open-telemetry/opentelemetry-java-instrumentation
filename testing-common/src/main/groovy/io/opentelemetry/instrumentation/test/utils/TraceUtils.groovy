@@ -49,19 +49,6 @@ class TraceUtils {
     }
   }
 
-
-  static <T> T runUnderTraceWithoutExceptionCatch(final String rootOperationName, final Callable<T> r) {
-    final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(Span.Kind.INTERNAL).startSpan()
-
-    try {
-      return span.makeCurrent().withCloseable {
-        r.call()
-      }
-    } finally {
-      span.end()
-    }
-  }
-
   static void runInternalSpan(String spanName) {
     tracer.spanBuilder(spanName).startSpan().end()
   }

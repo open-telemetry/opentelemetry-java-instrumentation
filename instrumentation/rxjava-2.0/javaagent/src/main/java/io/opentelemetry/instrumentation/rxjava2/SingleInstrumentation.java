@@ -62,9 +62,9 @@ public class SingleInstrumentation extends InstrumentationModule {
   public static class CaptureParentSpanAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruct(@Advice.This final Single<?> single) {
-      Context parentSpan = Context.current();
-      if (parentSpan != null) {
-        InstrumentationContext.get(Single.class, Context.class).put(single, parentSpan);
+      Context context = Context.current();
+      if (context != null) {
+        InstrumentationContext.get(Single.class, Context.class).put(single, context);
       }
     }
   }
@@ -75,12 +75,12 @@ public class SingleInstrumentation extends InstrumentationModule {
         @Advice.This final Single<?> single,
         @Advice.Argument(value = 0, readOnly = false) SingleObserver<?> observer) {
       if (observer != null) {
-        Context parentSpan = InstrumentationContext.get(Single.class, Context.class).get(single);
-        if (parentSpan != null) {
+        Context context = InstrumentationContext.get(Single.class, Context.class).get(single);
+        if (context != null) {
           // wrap the observer so spans from its events treat the captured span as their parent
-          observer = new TracingSingleObserver<>(observer, parentSpan);
+          observer = new TracingSingleObserver<>(observer, context);
           // activate the span here in case additional observers are created during subscribe
-          return parentSpan.makeCurrent();
+          return context.makeCurrent();
         }
       }
       return null;
