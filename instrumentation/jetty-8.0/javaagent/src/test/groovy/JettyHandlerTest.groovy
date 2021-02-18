@@ -10,6 +10,8 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import javax.servlet.DispatcherType
 import javax.servlet.ServletException
@@ -22,7 +24,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler
 import org.eclipse.jetty.server.handler.ErrorHandler
 import spock.lang.Shared
 
-class JettyHandlerTest extends HttpServerTest<Server> {
+class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait {
 
   @Shared
   ErrorHandler errorHandler = new ErrorHandler() {
@@ -60,6 +62,23 @@ class JettyHandlerTest extends HttpServerTest<Server> {
   @Override
   boolean testExceptionBody() {
     false
+  }
+
+  @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    endpoint == REDIRECT || endpoint == ERROR
+  }
+
+  @Override
+  void responseSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
+    switch (endpoint) {
+      case REDIRECT:
+        redirectSpan(trace, index, parent)
+        break
+      case ERROR:
+        sendErrorSpan(trace, index, parent)
+        break
+    }
   }
 
   static void handleRequest(Request request, HttpServletResponse response) {
@@ -108,6 +127,6 @@ class JettyHandlerTest extends HttpServerTest<Server> {
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    "TestHandler.handle"
+    "HandlerWrapper.handle"
   }
 }

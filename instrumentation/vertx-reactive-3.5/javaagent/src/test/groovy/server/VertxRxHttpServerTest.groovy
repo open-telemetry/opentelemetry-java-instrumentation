@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
@@ -23,7 +24,7 @@ import io.vertx.reactivex.ext.web.Router
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-class VertxRxHttpServerTest extends HttpServerTest<Vertx> {
+class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrait {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
 
   @Override

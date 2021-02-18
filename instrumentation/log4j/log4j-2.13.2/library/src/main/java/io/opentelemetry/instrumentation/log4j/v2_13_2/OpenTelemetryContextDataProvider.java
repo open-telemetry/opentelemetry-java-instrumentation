@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.v2_13_2;
 
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SAMPLED;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_FLAGS;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 
 import io.opentelemetry.api.trace.Span;
@@ -39,7 +39,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     SpanContext spanContext = currentSpan.getSpanContext();
     contextData.put(TRACE_ID, spanContext.getTraceId());
     contextData.put(SPAN_ID, spanContext.getSpanId());
-    contextData.put(SAMPLED, Boolean.toString(spanContext.isSampled()));
+    contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
     return contextData;
   }
 }

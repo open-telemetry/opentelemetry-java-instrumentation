@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
@@ -48,8 +49,6 @@ import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.utility.JavaModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * InstrumentationContextProvider which stores context in a field that is injected into a class and
@@ -75,14 +74,8 @@ import org.slf4j.LoggerFactory;
  */
 public class FieldBackedProvider implements InstrumentationContextProvider {
 
-  // IMPORTANT: the logging in this class is performed at TRACE level instead of DEBUG level
-  //
-  // BECAUSE: logging in this class occurs frequently and under class file transform,
-  // which can lead gradle to deadlock sporadically when gradle triggers a class to load
-  // while it is holding a lock, and then (because gradle hijacks System.out),
-  // gradle is called from inside of the class file transform,
-  // and then gradle tries to grab a different lock (and then add multiple threads)
-  private static final Logger log = LoggerFactory.getLogger(FieldBackedProvider.class);
+  private static final TransformSafeLogger log =
+      TransformSafeLogger.getLogger(FieldBackedProvider.class);
 
   /**
    * Note: the value here has to be inside on of the prefixes in
@@ -220,7 +213,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     String keyClassName = ((Type) stack[1]).getClassName();
                     TypeDescription contextStoreImplementationClass =
                         getContextStoreImplementation(keyClassName, contextClassName);
-                    if (log.isDebugEnabled()) {
+                    if (log.isTraceEnabled()) {
                       log.trace(
                           "Rewriting context-store map fetch for instrumenter {}: {} -> {}",
                           instrumenterClass.getName(),

@@ -36,19 +36,35 @@ public class Servlet3Advice {
 
     Context attachedContext = tracer().getServerContext(httpServletRequest);
     if (attachedContext != null) {
+      // We are inside nested servlet/filter/app-server span, don't create new span
       if (Servlet3HttpServerTracer.needsRescoping(attachedContext)) {
+        attachedContext = tracer().runOnceUnderAppServer(attachedContext, httpServletRequest);
         scope = attachedContext.makeCurrent();
+        return;
       }
 
-      tracer().updateServerSpanNameOnce(attachedContext, httpServletRequest);
-      // We are inside nested servlet/filter/app-server span, don't create new span
+      // We already have attached context to request but this could have been done by app server
+      // instrumentation, if needed update span with info from current request.
+      Context currentContext = Java8BytecodeBridge.currentContext();
+      Context updatedContext = tracer().runOnceUnderAppServer(currentContext, httpServletRequest);
+      if (updatedContext != currentContext) {
+        // runOnceUnderAppServer updated context, need to re-scope
+        scope = updatedContext.makeCurrent();
+      }
       return;
     }
 
-    Context parentContext = Java8BytecodeBridge.currentContext();
-    if (parentContext != null && Java8BytecodeBridge.spanFromContext(parentContext).isRecording()) {
-      tracer().updateServerSpanNameOnce(parentContext, httpServletRequest);
-      // We are inside nested servlet/filter/app-server span, don't create new span
+    Context currentContext = Java8BytecodeBridge.currentContext();
+    if (currentContext != null
+        && Java8BytecodeBridge.spanFromContext(currentContext).isRecording()) {
+      // We already have a span but it was not created by servlet instrumentation.
+      // In case it was created by app server integration we need to update it with info from
+      // current request.
+      Context updatedContext = tracer().runOnceUnderAppServer(currentContext, httpServletRequest);
+      if (currentContext != updatedContext) {
+        // runOnceUnderAppServer updated context, need to re-scope
+        scope = updatedContext.makeCurrent();
+      }
       return;
     }
 

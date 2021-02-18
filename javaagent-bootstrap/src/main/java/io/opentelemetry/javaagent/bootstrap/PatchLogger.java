@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.bootstrap;
 
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
@@ -326,6 +327,10 @@ public class PatchLogger {
   public void setParent(PatchLogger parent) {}
 
   public void setLevel(Level newLevel) {}
+
+  public Handler[] getHandlers() {
+    return new Handler[0];
+  }
 
   public static PatchLogger getAnonymousLogger() {
     return getLogger("");

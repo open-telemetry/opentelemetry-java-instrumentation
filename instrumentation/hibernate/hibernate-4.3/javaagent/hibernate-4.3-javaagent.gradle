@@ -26,7 +26,7 @@ testSets {
 test.dependsOn version5Test, version6Test
 
 dependencies {
-  implementation group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
+  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
 
   implementation project(':instrumentation:hibernate:hibernate-common:javaagent')
 
@@ -35,6 +35,7 @@ dependencies {
   testInstrumentation project(':instrumentation:hibernate:hibernate-3.3:javaagent')
   testInstrumentation project(':instrumentation:hibernate:hibernate-4.0:javaagent')
 
+  testImplementation group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
   testImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
   testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
   //First version to work with Java 14

@@ -13,6 +13,7 @@ muzzle {
 dependencies {
   library group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
   implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:servlet:servlet-common:javaagent')
 
   // Don't want to conflict with jetty from the test server.
   testImplementation(project(':testing-common')) {

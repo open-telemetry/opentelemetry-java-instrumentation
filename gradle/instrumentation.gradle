@@ -118,6 +118,8 @@ tasks.withType(Test).configureEach {
   jvmArgs "-Dotel.internal.failOnContextLeak=true"
   // always print muzzle warnings
   jvmArgs "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher=warn"
+  // prevent sporadic gradle deadlocks, see SafeLogger for more details
+  jvmArgs "-Dotel.internal.enableTransformSafeLogging=true"
 
   dependsOn shadowJar
   dependsOn ":testing:agent-for-testing:shadowJar"

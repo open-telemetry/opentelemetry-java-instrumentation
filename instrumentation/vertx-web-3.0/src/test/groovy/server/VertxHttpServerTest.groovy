@@ -7,6 +7,7 @@ package server
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions
@@ -16,9 +17,7 @@ import io.vertx.core.json.JsonObject
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-class VertxHttpServerTest extends HttpServerTest<Vertx> {
-  public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
-
+class VertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrait {
   @Override
   Vertx startServer(int port) {
     Vertx server = Vertx.vertx(new VertxOptions()
@@ -28,7 +27,7 @@ class VertxHttpServerTest extends HttpServerTest<Vertx> {
     CompletableFuture<Void> future = new CompletableFuture<>()
     server.deployVerticle(verticle().getName(),
       new DeploymentOptions()
-        .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
+        .setConfig(new JsonObject().put(VertxWebServer.CONFIG_HTTP_SERVER_PORT, port))
         .setInstances(3)) { res ->
       if (!res.succeeded()) {
         throw new RuntimeException("Cannot deploy server Verticle", res.cause())

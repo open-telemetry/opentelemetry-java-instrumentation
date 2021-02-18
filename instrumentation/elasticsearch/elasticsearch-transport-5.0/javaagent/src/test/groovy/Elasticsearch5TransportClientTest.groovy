@@ -69,7 +69,7 @@ class Elasticsearch5TransportClientTest extends AgentInstrumentationSpecificatio
       // into a top level trace to get exactly one trace in the result.
       client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     }
-    testWriter.waitForTraces(1)
+    ignoreTracesAndClear(1)
   }
 
   def cleanupSpec() {
@@ -142,13 +142,10 @@ class Elasticsearch5TransportClientTest extends AgentInstrumentationSpecificatio
 
   def "test elasticsearch get"() {
     setup:
-    assert testWriter.traces == []
     def indexResult = client.admin().indices().prepareCreate(indexName).get()
-    testWriter.waitForTraces(1)
 
     expect:
     indexResult.acknowledged
-    testWriter.traces.size() == 1
 
     when:
     def emptyResult = client.prepareGet(indexName, indexType, id).get()

@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Collections;
+import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
@@ -51,12 +52,14 @@ public class TomcatTracer extends HttpServerTracer<Request, Response, Request, R
 
   @Override
   protected Integer peerPort(Request connection) {
+    connection.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, connection);
     return connection.getRemotePort();
   }
 
   @Override
   protected String peerHostIP(Request connection) {
-    return connection.remoteHost().getString();
+    connection.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, connection);
+    return connection.remoteAddr().toString();
   }
 
   @Override

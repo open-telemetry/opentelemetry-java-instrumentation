@@ -3,10 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -18,7 +21,7 @@ import org.eclipse.jetty.servlet.DefaultServlet
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.FileResource
 
-class Struts2ActionSpanTest extends HttpServerTest<Server> {
+class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestTrait {
 
   @Override
   boolean testNotFound() {
@@ -43,6 +46,24 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> {
   @Override
   boolean hasHandlerSpan() {
     return true
+  }
+
+  @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    endpoint == REDIRECT || endpoint == ERROR || endpoint == EXCEPTION
+  }
+
+  @Override
+  void responseSpan(TraceAssert trace, int index, Object controllerSpan, Object handlerSpan, String method, ServerEndpoint endpoint) {
+    switch (endpoint) {
+      case REDIRECT:
+        redirectSpan(trace, index, handlerSpan)
+        break
+      case ERROR:
+      case EXCEPTION:
+        sendErrorSpan(trace, index, handlerSpan)
+        break
+    }
   }
 
   String expectedServerSpanName(ServerEndpoint endpoint) {

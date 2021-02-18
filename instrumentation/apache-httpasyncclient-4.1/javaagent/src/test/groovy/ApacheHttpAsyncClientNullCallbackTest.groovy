@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.Future
 import org.apache.http.client.config.RequestConfig
@@ -13,7 +14,7 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-class ApacheHttpAsyncClientNullCallbackTest extends HttpClientTest {
+class ApacheHttpAsyncClientNullCallbackTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   RequestConfig requestConfig = RequestConfig.custom()

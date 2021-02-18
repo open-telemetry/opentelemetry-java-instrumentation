@@ -21,12 +21,12 @@ import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ApiGatewayProxyRequestTest {
 
-  @AfterEach
+  @BeforeEach
   void resetOpenTelemetry() {
     GlobalOpenTelemetry.resetForTest();
   }

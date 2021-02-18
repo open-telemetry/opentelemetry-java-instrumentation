@@ -59,12 +59,11 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
 
   def setup() {
     repo.refresh()
-    testWriter.clear()
+    clearExportedData()
     runUnderTrace("delete") {
       repo.deleteAll()
     }
-    testWriter.waitForTraces(1)
-    testWriter.clear()
+    ignoreTracesAndClear(1)
   }
 
   def cleanupSpec() {
@@ -170,7 +169,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     and:
     repo.findById("1").get() == doc
@@ -201,7 +200,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     doc.data = "other data"
@@ -277,7 +276,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
         }
       }
     }
-    testWriter.clear()
+    clearExportedData()
 
     when:
     repo.deleteById("1")

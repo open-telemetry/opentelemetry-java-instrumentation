@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 
 import io.opentelemetry.instrumentation.test.utils.TraceUtils;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -21,13 +21,25 @@ class LibraryInstrumentationExtensionTest {
 
   // repeated test verifies that the telemetry data is cleared between test runs
   @RepeatedTest(5)
-  void shouldCollectTraces() {
+  void shouldCollectTraces() throws TimeoutException, InterruptedException {
     // when
-    TraceUtils.runInternalSpan("test");
+    TraceUtils.runUnderTrace(
+        "parent",
+        () -> {
+          TraceUtils.runInternalSpan("child");
+          return null;
+        });
 
     // then
-    List<SpanData> spans = instrumentation.spans();
-    assertEquals(1, spans.size());
-    assertThat(spans.get(0)).hasName("test");
+    List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+    assertThat(traces)
+        .hasSize(1)
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace
+                    .hasSize(2)
+                    .hasSpansSatisfyingExactly(
+                        parentSpan -> parentSpan.hasName("parent"),
+                        childSpan -> childSpan.hasName("child")));
   }
 }

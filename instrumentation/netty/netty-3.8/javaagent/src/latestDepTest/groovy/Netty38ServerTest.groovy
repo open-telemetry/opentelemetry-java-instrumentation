@@ -15,6 +15,7 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LOCATION
 import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import org.jboss.netty.bootstrap.ServerBootstrap
 import org.jboss.netty.buffer.ChannelBuffer
@@ -41,7 +42,7 @@ import org.jboss.netty.logging.InternalLoggerFactory
 import org.jboss.netty.logging.Slf4JLoggerFactory
 import org.jboss.netty.util.CharsetUtil
 
-class Netty38ServerTest extends HttpServerTest<ServerBootstrap> {
+class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements AgentTestTrait {
 
   static final LoggingHandler LOGGING_HANDLER
   static {

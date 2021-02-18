@@ -48,7 +48,7 @@ class AgentTestRunnerTest extends AgentInstrumentationSpecification {
   def "waiting for child spans times out"() {
     when:
     runUnderTrace("parent") {
-      testWriter.waitForTraces(1)
+      waitForTraces(1)
     }
 
     then:

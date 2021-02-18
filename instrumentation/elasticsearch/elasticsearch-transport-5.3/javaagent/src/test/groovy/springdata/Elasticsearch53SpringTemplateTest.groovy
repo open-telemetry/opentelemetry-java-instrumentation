@@ -67,7 +67,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
       // disable periodic refresh in InternalClusterInfoService as it creates spans that tests don't expect
       testNode.client().admin().cluster().updateSettings(new ClusterUpdateSettingsRequest().transientSettings(["cluster.routing.allocation.disk.threshold_enabled": false]))
     }
-    testWriter.waitForTraces(1)
+    waitForTraces(1)
 
     template = new ElasticsearchTemplate(testNode.client())
   }
@@ -266,8 +266,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
       .withId("b")
       .build())
     template.refresh(indexName)
-    testWriter.waitForTraces(5)
-    testWriter.clear()
+    ignoreTracesAndClear(5)
 
     and:
     def query = new NativeSearchQueryBuilder().withIndices(indexName).build()

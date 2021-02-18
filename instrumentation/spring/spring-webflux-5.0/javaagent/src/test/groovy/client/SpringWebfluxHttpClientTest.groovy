@@ -5,6 +5,7 @@
 
 package client
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
@@ -12,7 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import spock.lang.Timeout
 
 @Timeout(5)
-class SpringWebfluxHttpClientTest extends HttpClientTest {
+class SpringWebfluxHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {

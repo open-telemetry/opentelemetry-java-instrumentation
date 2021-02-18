@@ -9,11 +9,12 @@ import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
 import com.ning.http.client.uri.Uri
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class AsyncHttpClientTest extends HttpClientTest {
+class AsyncHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @AutoCleanup
   @Shared

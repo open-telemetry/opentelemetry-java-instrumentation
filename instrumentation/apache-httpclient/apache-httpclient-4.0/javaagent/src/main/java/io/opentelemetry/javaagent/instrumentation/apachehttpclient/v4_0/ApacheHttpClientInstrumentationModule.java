@@ -28,7 +28,6 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -181,12 +180,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) HttpUriRequest request,
-        @Advice.Argument(
-                value = 1,
-                optional = true,
-                typing = Assigner.Typing.DYNAMIC,
-                readOnly = false)
-            Object handler,
+        @Advice.Argument(value = 1, readOnly = false) ResponseHandler<?> handler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
@@ -198,8 +192,8 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
-      if (handler instanceof ResponseHandler) {
-        handler = new WrappingStatusSettingResponseHandler(context, (ResponseHandler<?>) handler);
+      if (handler != null) {
+        handler = new WrappingStatusSettingResponseHandler<>(context, parentContext, handler);
       }
     }
 
@@ -255,12 +249,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodEnter(
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) HttpRequest request,
-        @Advice.Argument(
-                value = 2,
-                optional = true,
-                typing = Assigner.Typing.DYNAMIC,
-                readOnly = false)
-            Object handler,
+        @Advice.Argument(value = 2, readOnly = false) ResponseHandler<?> handler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
@@ -272,8 +261,8 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
-      if (handler instanceof ResponseHandler) {
-        handler = new WrappingStatusSettingResponseHandler(context, (ResponseHandler<?>) handler);
+      if (handler != null) {
+        handler = new WrappingStatusSettingResponseHandler<>(context, parentContext, handler);
       }
     }
 

@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.server.ServerTraceUtils
 import io.opentelemetry.sdk.trace.data.SpanData
+
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
 
@@ -67,9 +68,21 @@ class TraceUtils {
         errorEvent(exception.class, exception.message)
       }
 
-      if(additionAttributesAssert != null){
+      if (additionAttributesAssert != null) {
         attributes(additionAttributesAssert)
       }
+    }
+  }
+
+  static <T> T runUnderTraceWithoutExceptionCatch(final String rootOperationName, final Callable<T> r) {
+    final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(SpanKind.INTERNAL).startSpan()
+
+    try {
+      return span.makeCurrent().withCloseable {
+        r.call()
+      }
+    } finally {
+      span.end()
     }
   }
 }

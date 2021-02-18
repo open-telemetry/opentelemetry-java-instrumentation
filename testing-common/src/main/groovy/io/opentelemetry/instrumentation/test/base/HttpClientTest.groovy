@@ -16,7 +16,7 @@ import static org.junit.Assume.assumeTrue
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -30,7 +30,7 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 @Unroll
-abstract class HttpClientTest extends AgentInstrumentationSpecification {
+abstract class HttpClientTest extends InstrumentationSpecification {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 5000
   protected static final BASIC_AUTH_KEY = "custom-authorization-header"
@@ -498,7 +498,7 @@ abstract class HttpClientTest extends AgentInstrumentationSpecification {
       } else {
         childOf((SpanData) parentSpan)
       }
-      if(additionAttributesAssert != null){
+      if (additionAttributesAssert != null) {
         attributes(additionAttributesAssert)
       }
     }

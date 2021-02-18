@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import org.apache.http.HttpHost
 import org.apache.http.HttpRequest
@@ -16,7 +17,7 @@ import org.apache.http.protocol.BasicHttpContext
 import spock.lang.Shared
 import spock.lang.Timeout
 
-abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest {
+abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest implements AgentTestTrait {
   @Shared
   def client = new DefaultHttpClient()
 
@@ -37,8 +38,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
       request.addHeader(new BasicHeader(it.key, it.value))
     }
 
-    def response = executeRequest(request, uri)
-    callback?.call()
+    def response = executeRequest(request, uri, callback)
     response.entity?.content?.close() // Make sure the connection is closed.
 
     return response.statusLine.statusCode
@@ -46,7 +46,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 
   abstract T createRequest(String method, URI uri)
 
-  abstract HttpResponse executeRequest(T request, URI uri)
+  abstract HttpResponse executeRequest(T request, URI uri, Closure callback)
 
   static String fullPathFromURI(URI uri) {
     StringBuilder builder = new StringBuilder()
@@ -75,8 +75,10 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   }
 
   @Override
-  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request)
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri, Closure callback) {
+    def response = client.execute(new HttpHost(uri.getHost(), uri.getPort()), request)
+    callback?.call()
+    return response
   }
 
   @Override
@@ -93,8 +95,10 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpReque
   }
 
   @Override
-  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext())
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri, Closure callback) {
+    def response = client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext())
+    callback?.call()
+    return response
   }
 
   @Override
@@ -111,8 +115,11 @@ class ApacheClientHostRequestResponseHandler extends ApacheHttpClientTest<BasicH
   }
 
   @Override
-  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, { response -> response })
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri, Closure callback) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, {
+      callback?.call()
+      return it
+    })
   }
 
   @Override
@@ -129,8 +136,11 @@ class ApacheClientHostRequestResponseHandlerContext extends ApacheHttpClientTest
   }
 
   @Override
-  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, { response -> response }, new BasicHttpContext())
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri, Closure callback) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, {
+      callback?.call()
+      return it
+    }, new BasicHttpContext())
   }
 
   @Override
@@ -147,8 +157,10 @@ class ApacheClientUriRequest extends ApacheHttpClientTest<HttpUriRequest> {
   }
 
   @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(request)
+  HttpResponse executeRequest(HttpUriRequest request, URI uri, Closure callback) {
+    def response = client.execute(request)
+    callback?.call()
+    return response
   }
 }
 
@@ -160,8 +172,10 @@ class ApacheClientUriRequestContext extends ApacheHttpClientTest<HttpUriRequest>
   }
 
   @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(request, new BasicHttpContext())
+  HttpResponse executeRequest(HttpUriRequest request, URI uri, Closure callback) {
+    def response = client.execute(request, new BasicHttpContext())
+    callback?.call()
+    return response
   }
 }
 
@@ -173,8 +187,11 @@ class ApacheClientUriRequestResponseHandler extends ApacheHttpClientTest<HttpUri
   }
 
   @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(request, { response -> response })
+  HttpResponse executeRequest(HttpUriRequest request, URI uri, Closure callback) {
+    return client.execute(request, {
+      callback?.call()
+      it
+    })
   }
 }
 
@@ -186,7 +203,10 @@ class ApacheClientUriRequestResponseHandlerContext extends ApacheHttpClientTest<
   }
 
   @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
-    return client.execute(request, { response -> response })
+  HttpResponse executeRequest(HttpUriRequest request, URI uri, Closure callback) {
+    return client.execute(request, {
+      callback?.call()
+      it
+    }, new BasicHttpContext())
   }
 }

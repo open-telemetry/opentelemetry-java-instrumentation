@@ -53,7 +53,7 @@ class Elasticsearch5NodeClientTest extends AgentInstrumentationSpecification {
       // into a top level trace to get exactly one trace in the result.
       testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     }
-    testWriter.waitForTraces(1)
+    ignoreTracesAndClear(1)
   }
 
   def cleanupSpec() {
@@ -123,13 +123,10 @@ class Elasticsearch5NodeClientTest extends AgentInstrumentationSpecification {
 
   def "test elasticsearch get"() {
     setup:
-    assert testWriter.traces == []
     def indexResult = client.admin().indices().prepareCreate(indexName).get()
-    testWriter.waitForTraces(1)
 
     expect:
     indexResult.acknowledged
-    testWriter.traces.size() == 1
 
     when:
     client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)

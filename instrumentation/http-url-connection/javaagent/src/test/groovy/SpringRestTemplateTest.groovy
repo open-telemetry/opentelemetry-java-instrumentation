@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -15,7 +16,7 @@ import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(5)
-class SpringRestTemplateTest extends HttpClientTest {
+class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   ClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory()

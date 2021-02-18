@@ -59,7 +59,7 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
     Config config = new Config()
     config.useSingleServer().setAddress(address)
     redisson = Redisson.create(config)
-    testWriter.clear()
+    clearExportedData()
   }
 
   def "test string command"() {

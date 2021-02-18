@@ -13,14 +13,10 @@ import io.opentelemetry.instrumentation.testing.LibraryTestRunner
  * library tests should implement this trait.
  */
 trait LibraryTestTrait {
-
-  static InstrumentationTestRunner instrumentationTestRunner = LibraryTestRunner.instance()
-
-  static {
-    instrumentationTestRunner = LibraryTestRunner.instance()
-  }
+  // library test runner has to be initialized statically so that GlobalOpenTelemetry is set as soon as possible
+  private static final InstrumentationTestRunner RUNNER = LibraryTestRunner.instance()
 
   InstrumentationTestRunner testRunner() {
-    instrumentationTestRunner
+    RUNNER
   }
 }

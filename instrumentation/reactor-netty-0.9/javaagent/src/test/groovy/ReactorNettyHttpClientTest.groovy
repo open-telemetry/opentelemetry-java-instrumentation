@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientResponse
 
-class ReactorNettyHttpClientTest extends HttpClientTest {
+class ReactorNettyHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   boolean testRedirects() {

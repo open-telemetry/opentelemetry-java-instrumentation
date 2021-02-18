@@ -9,6 +9,7 @@ To use it, add the module to your application's runtime classpath and add the ap
 **Maven**
 
 ```xml
+
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
@@ -34,13 +35,13 @@ dependencies {
 <configuration>
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} %X{traceId} %X{spanId} %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} trace_id=%X{traceId} span_id=%X{spanId} %msg%n</pattern>
     </encoder>
   </appender>
 
   <!-- Just wrap your logging appender, for example ConsoleAppender, with OpenTelemetryAppender -->
   <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.v1_0.OpenTelemetryAppender">
-    <appender-ref ref="CONSOLE" />
+    <appender-ref ref="CONSOLE"/>
   </appender>
   ...
 </configuration>

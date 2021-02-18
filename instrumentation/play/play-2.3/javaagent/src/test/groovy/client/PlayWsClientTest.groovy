@@ -5,6 +5,7 @@
 
 package client
 
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
 import play.GlobalSettings
@@ -13,7 +14,7 @@ import play.test.FakeApplication
 import play.test.Helpers
 import spock.lang.Shared
 
-class PlayWsClientTest extends HttpClientTest {
+class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   @Shared
   def application = new FakeApplication(
     new File("."),

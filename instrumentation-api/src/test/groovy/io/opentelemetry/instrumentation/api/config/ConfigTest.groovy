@@ -99,4 +99,20 @@ class ConfigTest extends Specification {
     expect:
     config.getMapProperty("property.map").isEmpty()
   }
+
+  def "should expose if agent debug is enabled"() {
+    given:
+    def config = new ConfigBuilder().readProperties([
+      "otel.javaagent.debug": value
+    ]).build()
+
+    expect:
+    config.isAgentDebugEnabled() == result
+
+    where:
+    value     | result
+    "true"    | true
+    "blather" | false
+    null      | false
+  }
 }

@@ -142,7 +142,7 @@ public abstract class Config {
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
     for (String name : instrumentationNames) {
-      String propertyName = String.format("otel.instrumentation.%s.%s", name, suffix);
+      String propertyName = "otel.instrumentation." + name + '.' + suffix;
       boolean enabled = getBooleanProperty(propertyName, defaultEnabled);
 
       if (defaultEnabled) {
@@ -158,5 +158,9 @@ public abstract class Config {
     Properties properties = new Properties();
     properties.putAll(getAllProperties());
     return properties;
+  }
+
+  public boolean isAgentDebugEnabled() {
+    return getBooleanProperty("otel.javaagent.debug", false);
   }
 }

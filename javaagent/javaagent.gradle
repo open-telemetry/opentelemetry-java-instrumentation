@@ -1,7 +1,10 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.github.jk1.license.filter.LicenseBundleNormalizer
+import com.github.jk1.license.render.InventoryMarkdownReportRenderer
 
 plugins {
   id "com.github.johnrengelman.shadow"
+  id "com.github.jk1.dependency-license-report" version "1.16"
 }
 
 description = 'OpenTelemetry Javaagent'
@@ -100,6 +103,10 @@ tasks.withType(ShadowJar).configureEach {
   relocate "io.opentelemetry.extension.kotlin", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.kotlin"
 }
 
+configurations {
+  licenseReportDependencies
+}
+
 dependencies {
   testCompileOnly project(':javaagent-bootstrap')
   testCompileOnly project(':javaagent-api')
@@ -109,6 +116,12 @@ dependencies {
   testImplementation 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
 
   shadowInclude project(path: ':javaagent-bootstrap')
+
+  // TODO ideally this would be :instrumentation instead of :javaagent-tooling
+  //  in case there are dependencies (accidentally) pulled in by instrumentation modules
+  //  but I couldn't get that to work
+  licenseReportDependencies project(':javaagent-tooling')
+  licenseReportDependencies project(':javaagent-bootstrap')
 }
 
 tasks.withType(Test).configureEach {
@@ -127,3 +140,26 @@ tasks.withType(Test).configureEach {
 }
 assemble.dependsOn lightShadow
 assemble.dependsOn shadowJar
+
+licenseReport {
+  outputDir = rootProject.file("licenses")
+
+  renderers = [new InventoryMarkdownReportRenderer()]
+
+  configurations = ["licenseReportDependencies"]
+
+  excludeGroups = [
+    "io.opentelemetry.instrumentation",
+    "io.opentelemetry.javaagent"
+  ]
+
+  filters = [new LicenseBundleNormalizer(bundlePath: "$projectDir/license-normalizer-bundle.json")]
+}
+
+def cleanLicenses = tasks.register("cleanLicenses", Delete) {
+  delete(rootProject.file("licenses"))
+}
+
+tasks.named("generateLicenseReport").configure {
+  dependsOn(cleanLicenses)
+}
