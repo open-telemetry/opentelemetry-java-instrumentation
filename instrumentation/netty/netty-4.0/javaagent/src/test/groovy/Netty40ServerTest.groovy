@@ -113,4 +113,8 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
     server?.shutdownGracefully()
   }
 
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    return "HTTP GET"
+  }
 }

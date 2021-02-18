@@ -111,4 +111,9 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
   void stopServer(EventLoopGroup server) {
     server?.shutdownGracefully()
   }
+
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    return "HTTP GET"
+  }
 }
