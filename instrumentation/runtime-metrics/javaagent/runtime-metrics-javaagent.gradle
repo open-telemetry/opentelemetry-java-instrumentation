@@ -1,0 +1,6 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+dependencies {
+  api project(':javaagent-spi')
+  implementation project(':instrumentation:runtime-metrics:library')
+}
