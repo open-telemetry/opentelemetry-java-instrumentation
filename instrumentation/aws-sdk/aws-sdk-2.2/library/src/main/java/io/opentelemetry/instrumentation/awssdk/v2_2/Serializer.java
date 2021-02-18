@@ -40,32 +40,6 @@ class Serializer {
             .build();
   }
 
-  private ProtocolMarshaller<SdkHttpFullRequest> createMarshaller() {
-    // apparently AWS SDK serializers can't be reused (throwing NPEs on second use)
-    return awsJsonProtocolFactory.createProtocolMarshaller(
-        OperationInfo.builder().hasPayloadMembers(true).httpMethod(SdkHttpMethod.POST).build());
-  }
-
-  @Nullable
-  private String serialize(SdkPojo sdkPojo) {
-    Optional<ContentStreamProvider> optional =
-        createMarshaller().marshall(sdkPojo).contentStreamProvider();
-    return optional
-        .map(
-            csp -> {
-              try (InputStream cspIs = csp.newStream()) {
-                return IoUtils.toUtf8String(cspIs);
-              } catch (IOException e) {
-                return null;
-              }
-            })
-        .orElse(null);
-  }
-
-  private String serialize(Collection<Object> collection) {
-    return asJsonArray(collection.stream().map(this::serialize).collect(Collectors.joining(",")));
-  }
-
   @Nullable
   String serialize(Object target) {
 
@@ -86,7 +60,30 @@ class Serializer {
     return target.toString();
   }
 
-  private String asJsonArray(String value) {
-    return (StringUtils.isEmpty(value) ? null : "[" + value + "]");
+  @Nullable
+  private String serialize(SdkPojo sdkPojo) {
+    Optional<ContentStreamProvider> optional =
+        createMarshaller().marshall(sdkPojo).contentStreamProvider();
+    return optional
+        .map(
+            csp -> {
+              try (InputStream cspIs = csp.newStream()) {
+                return IoUtils.toUtf8String(cspIs);
+              } catch (IOException e) {
+                return null;
+              }
+            })
+        .orElse(null);
+  }
+
+  private String serialize(Collection<Object> collection) {
+    String serialized = collection.stream().map(this::serialize).collect(Collectors.joining(","));
+    return (StringUtils.isEmpty(serialized) ? null : "[" + serialized + "]");
+  }
+
+  private ProtocolMarshaller<SdkHttpFullRequest> createMarshaller() {
+    // apparently AWS SDK serializers can't be reused (throwing NPEs on second use)
+    return awsJsonProtocolFactory.createProtocolMarshaller(
+        OperationInfo.builder().hasPayloadMembers(true).httpMethod(SdkHttpMethod.POST).build());
   }
 }

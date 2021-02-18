@@ -25,7 +25,7 @@ enum AwsSdkRequestType {
     this.fields = FieldMapping.groupByType(fieldMappings);
   }
 
-  public List<FieldMapping> fields(FieldMapping.Type type) {
+  List<FieldMapping> fields(FieldMapping.Type type) {
     return fields.get(type);
   }
 }
