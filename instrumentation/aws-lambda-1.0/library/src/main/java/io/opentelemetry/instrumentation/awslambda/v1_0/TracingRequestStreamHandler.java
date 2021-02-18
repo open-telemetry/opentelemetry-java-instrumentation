@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.io.IOException;
@@ -30,24 +29,26 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
   private final AwsLambdaTracer tracer;
 
   /**
-   * Creates a new {@link TracingRequestStreamHandler} which traces using the default {@link
-   * Tracer}.
+   * Creates a new {@link TracingRequestStreamHandler} which traces using the provided {@link
+   * OpenTelemetrySdk} and has a timeout of 1s when flushing at the end of an invocation.
    */
   protected TracingRequestStreamHandler(OpenTelemetrySdk openTelemetrySdk) {
     this(openTelemetrySdk, DEFAULT_FLUSH_TIMEOUT);
   }
 
   /**
-   * Creates a new {@link TracingRequestStreamHandler} which traces using the default {@link
-   * Tracer}.
+   * Creates a new {@link TracingRequestStreamHandler} which traces using the provided {@link
+   * OpenTelemetrySdk} and has a timeout of {@code flushTimeout} when flushing at the end of an
+   * invocation.
    */
   protected TracingRequestStreamHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
     this(openTelemetrySdk, flushTimeout, new AwsLambdaTracer(openTelemetrySdk));
   }
 
   /**
-   * Creates a new {@link TracingRequestStreamHandler} which traces using the specified {@link
-   * Tracer}.
+   * Creates a new {@link TracingRequestStreamHandler} which flushes the provided {@link
+   * OpenTelemetrySdk}, has a timeout of {@code flushTimeout} when flushing at the end of an
+   * invocation, and traces using the provided {@link AwsLambdaTracer}.
    */
   protected TracingRequestStreamHandler(
       OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout, AwsLambdaTracer tracer) {

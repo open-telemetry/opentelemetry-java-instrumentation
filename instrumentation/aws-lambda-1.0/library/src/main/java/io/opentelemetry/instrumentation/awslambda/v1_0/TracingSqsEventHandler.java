@@ -16,24 +16,26 @@ public abstract class TracingSqsEventHandler extends TracingRequestHandler<SQSEv
   private final AwsLambdaMessageTracer tracer;
 
   /**
-   * Creates a new {@link TracingRequestHandler} which traces using the specified {@link
-   * OpenTelemetrySdk}.
+   * Creates a new {@link TracingSqsEventHandler} which traces using the provided {@link
+   * OpenTelemetrySdk} and has a timeout of 1s when flushing at the end of an invocation.
    */
   protected TracingSqsEventHandler(OpenTelemetrySdk openTelemetrySdk) {
     this(openTelemetrySdk, DEFAULT_FLUSH_TIMEOUT);
   }
 
   /**
-   * Creates a new {@link TracingRequestHandler} which traces using the specified {@link
-   * OpenTelemetrySdk}.
+   * Creates a new {@link TracingSqsEventHandler} which traces using the provided {@link
+   * OpenTelemetrySdk} and has a timeout of {@code flushTimeout} when flushing at the end of an
+   * invocation.
    */
   protected TracingSqsEventHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
     this(openTelemetrySdk, flushTimeout, new AwsLambdaMessageTracer(openTelemetrySdk));
   }
 
   /**
-   * Creates a new {@link TracingRequestHandler} which traces using the specified {@link
-   * OpenTelemetrySdk}.
+   * Creates a new {@link TracingSqsEventHandler} which flushes the provided {@link
+   * OpenTelemetrySdk}, has a timeout of {@code flushTimeout} when flushing at the end of an
+   * invocation, and traces using the provided {@link AwsLambdaTracer}.
    */
   protected TracingSqsEventHandler(
       OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout, AwsLambdaMessageTracer tracer) {

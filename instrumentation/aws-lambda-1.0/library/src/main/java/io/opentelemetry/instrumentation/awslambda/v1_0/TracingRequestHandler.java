@@ -9,7 +9,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.time.Duration;
@@ -30,17 +29,28 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
   private final OpenTelemetrySdk openTelemetrySdk;
   private final long flushTimeoutNanos;
 
-  /** Creates a new {@link TracingRequestHandler} which traces using the default {@link Tracer}. */
+  /**
+   * Creates a new {@link TracingRequestHandler} which traces using the provided {@link
+   * OpenTelemetrySdk} and has a timeout of 1s when flushing at the end of an invocation.
+   */
   protected TracingRequestHandler(OpenTelemetrySdk openTelemetrySdk) {
     this(openTelemetrySdk, DEFAULT_FLUSH_TIMEOUT);
   }
 
-  /** Creates a new {@link TracingRequestHandler} which traces using the default {@link Tracer}. */
+  /**
+   * Creates a new {@link TracingRequestHandler} which traces using the provided {@link
+   * OpenTelemetrySdk} and has a timeout of {@code flushTimeout} when flushing at the end of an
+   * invocation.
+   */
   protected TracingRequestHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
     this(openTelemetrySdk, flushTimeout, new AwsLambdaTracer(openTelemetrySdk));
   }
 
-  /** Creates a new {@link TracingRequestHandler} which traces using the default {@link Tracer}. */
+  /**
+   * Creates a new {@link TracingRequestHandler} which flushes the provided {@link
+   * OpenTelemetrySdk}, has a timeout of {@code flushTimeout} when flushing at the end of an
+   * invocation, and traces using the provided {@link AwsLambdaTracer}.
+   */
   protected TracingRequestHandler(
       OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout, AwsLambdaTracer tracer) {
     this.openTelemetrySdk = openTelemetrySdk;
