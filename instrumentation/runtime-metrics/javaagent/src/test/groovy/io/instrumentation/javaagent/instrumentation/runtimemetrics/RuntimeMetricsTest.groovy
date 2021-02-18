@@ -16,9 +16,9 @@ class RuntimeMetricsTest extends AgentInstrumentationSpecification {
 
     then:
     conditions.eventually {
-      assert metrics.any { it.name == "runtime.jvm.gc.collection" }
-      assert metrics.any { it.name == "runtime.jvm.memory.area" }
-      assert metrics.any { it.name == "runtime.jvm.memory.pool" }
+      assert getMetrics().any { it.name == "runtime.jvm.gc.collection" }
+      assert getMetrics().any { it.name == "runtime.jvm.memory.area" }
+      assert getMetrics().any { it.name == "runtime.jvm.memory.pool" }
     }
   }
 }

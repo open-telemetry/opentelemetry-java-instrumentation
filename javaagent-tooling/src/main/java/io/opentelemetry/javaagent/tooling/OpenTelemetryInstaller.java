@@ -8,13 +8,10 @@ package io.opentelemetry.javaagent.tooling;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder;
-import io.opentelemetry.instrumentation.runtimemetrics.GarbageCollector;
-import io.opentelemetry.instrumentation.runtimemetrics.MemoryPools;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.spi.ComponentInstaller;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
-import java.util.Collections;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,11 +36,6 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
       OpenTelemetrySdk sdk = OpenTelemetrySdkAutoConfiguration.initialize();
       OpenTelemetrySdkAccess.internalSetForceFlush(
           (timeout, unit) -> sdk.getSdkTracerProvider().forceFlush().join(timeout, unit));
-
-      if (Config.get().isInstrumentationEnabled(Collections.singleton("runtime-metrics"), true)) {
-        GarbageCollector.registerObservers();
-        MemoryPools.registerObservers();
-      }
     } else {
       log.info("Tracing is disabled.");
     }
