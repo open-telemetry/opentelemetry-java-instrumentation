@@ -17,12 +17,12 @@ import java.net.URLStreamHandler;
 import java.security.Permission;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class InternalJarUrlHandler extends URLStreamHandler {
 
-  private static final Logger log = LoggerFactory.getLogger(InternalJarUrlHandler.class);
+  // NOTE it's important not to use slf4j in this class, because this class is used before slf4j is
+  // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
+  // configure the logging levels
 
   private static final WeakReference<ResolvedJarEntry> NULL = new WeakReference<>(null);
 
@@ -41,7 +41,7 @@ public class InternalJarUrlHandler extends URLStreamHandler {
         jarFile = new JarFile(new File(bootstrapJarLocation.toURI()), false);
       }
     } catch (URISyntaxException | IOException e) {
-      log.error("Unable to read internal jar", e);
+      throw new IllegalStateException("Unable to read internal jar", e);
     }
 
     bootstrapJarFile = jarFile;

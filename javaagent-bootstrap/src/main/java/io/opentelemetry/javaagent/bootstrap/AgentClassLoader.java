@@ -9,8 +9,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Classloader used to run the core agent.
@@ -19,11 +17,14 @@ import org.slf4j.LoggerFactory;
  * of the internal jar to load classes and resources.
  */
 public class AgentClassLoader extends URLClassLoader {
+
+  // NOTE it's important not to use slf4j in this class, because this class is used before slf4j is
+  // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
+  // configure the logging levels
+
   static {
     ClassLoader.registerAsParallelCapable();
   }
-
-  private static final Logger log = LoggerFactory.getLogger(AgentClassLoader.class);
 
   private static final String AGENT_INITIALIZER_JAR =
       System.getProperty("otel.initializer.jar", "");
@@ -61,7 +62,7 @@ public class AgentClassLoader extends URLClassLoader {
       addURL(new URL("x-internal-jar", null, 0, "/", internalJarUrlHandler));
     } catch (MalformedURLException e) {
       // This can't happen with current URL constructor
-      log.error("URL malformed.  Unsupported JDK?", e);
+      throw new IllegalStateException("URL malformed.  Unsupported JDK?", e);
     }
 
     if (!AGENT_INITIALIZER_JAR.isEmpty()) {
@@ -69,11 +70,11 @@ public class AgentClassLoader extends URLClassLoader {
       try {
         url = new File(AGENT_INITIALIZER_JAR).toURI().toURL();
       } catch (MalformedURLException e) {
-        log.warn(
+        throw new IllegalStateException(
             "Filename could not be parsed: "
                 + AGENT_INITIALIZER_JAR
-                + ". Initializer is not installed");
-        return;
+                + ". Initializer is not installed",
+            e);
       }
 
       addURL(url);
