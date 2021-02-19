@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import java.util.Map;
 
-public class TextMapInjectAdapter implements TextMapPropagator.Setter<Map<String, Object>> {
+public class TextMapInjectAdapter implements TextMapSetter<Map<String, Object>> {
 
   public static final TextMapInjectAdapter SETTER = new TextMapInjectAdapter();
 

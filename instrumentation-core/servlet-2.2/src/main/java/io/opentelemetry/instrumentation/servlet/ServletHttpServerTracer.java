@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.servlet;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
@@ -109,7 +109,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   }
 
   @Override
-  protected Getter<HttpServletRequest> getGetter() {
+  protected TextMapGetter<HttpServletRequest> getGetter() {
     return HttpServletRequestGetter.GETTER;
   }
 

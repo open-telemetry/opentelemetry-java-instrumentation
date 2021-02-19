@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.httpclient;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -72,7 +72,7 @@ public class JdkHttpClientTracer
   }
 
   @Override
-  protected Setter<HttpRequest> getSetter() {
+  protected TextMapSetter<HttpRequest> getSetter() {
     return HttpHeadersInjectAdapter.SETTER;
   }
 

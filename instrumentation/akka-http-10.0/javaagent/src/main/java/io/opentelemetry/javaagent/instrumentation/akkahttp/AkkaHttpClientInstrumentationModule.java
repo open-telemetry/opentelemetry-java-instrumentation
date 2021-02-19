@@ -17,7 +17,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -145,7 +145,7 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
     }
   }
 
-  public static class InjectAdapter implements TextMapPropagator.Setter<AkkaHttpHeaders> {
+  public static class InjectAdapter implements TextMapSetter<AkkaHttpHeaders> {
 
     public static final InjectAdapter SETTER = new InjectAdapter();
 

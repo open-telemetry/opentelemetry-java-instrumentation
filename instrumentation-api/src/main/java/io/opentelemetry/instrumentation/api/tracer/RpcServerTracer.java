@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 
 public abstract class RpcServerTracer<REQUEST> extends BaseTracer {
 
@@ -28,5 +28,5 @@ public abstract class RpcServerTracer<REQUEST> extends BaseTracer {
     super(openTelemetry);
   }
 
-  protected abstract TextMapPropagator.Getter<REQUEST> getGetter();
+  protected abstract TextMapGetter<REQUEST> getGetter();
 }

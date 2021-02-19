@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -71,7 +71,7 @@ public class ApacheHttpClientTracer
   }
 
   @Override
-  protected TextMapPropagator.Setter<ClassicHttpRequest> getSetter() {
+  protected TextMapSetter<ClassicHttpRequest> getSetter() {
     return HttpHeadersInjectAdapter.SETTER;
   }
 

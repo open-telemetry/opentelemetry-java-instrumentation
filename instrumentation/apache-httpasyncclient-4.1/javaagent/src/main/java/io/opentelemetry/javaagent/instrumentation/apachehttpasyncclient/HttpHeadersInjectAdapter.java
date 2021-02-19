@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import org.apache.http.HttpRequest;
 
-public class HttpHeadersInjectAdapter implements TextMapPropagator.Setter<HttpRequest> {
+public class HttpHeadersInjectAdapter implements TextMapSetter<HttpRequest> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 

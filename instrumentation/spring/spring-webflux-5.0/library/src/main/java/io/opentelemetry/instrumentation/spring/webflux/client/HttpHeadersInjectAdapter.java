@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import org.springframework.web.reactive.function.client.ClientRequest;
 
-class HttpHeadersInjectAdapter implements TextMapPropagator.Setter<ClientRequest.Builder> {
+class HttpHeadersInjectAdapter implements TextMapSetter<ClientRequest.Builder> {
 
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 

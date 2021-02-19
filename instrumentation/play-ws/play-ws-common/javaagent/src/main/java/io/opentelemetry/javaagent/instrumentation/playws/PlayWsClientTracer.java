@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.playws;
 
 import static io.opentelemetry.javaagent.instrumentation.playws.HeadersInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -48,7 +48,7 @@ public class PlayWsClientTracer extends HttpClientTracer<Request, HttpHeaders, R
   }
 
   @Override
-  protected Setter<HttpHeaders> getSetter() {
+  protected TextMapSetter<HttpHeaders> getSetter() {
     return SETTER;
   }
 

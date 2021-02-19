@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 
-public class ExtractAdapter implements TextMapPropagator.Getter<HttpRequestPacket> {
+public class ExtractAdapter implements TextMapGetter<HttpRequestPacket> {
   public static final ExtractAdapter GETTER = new ExtractAdapter();
 
   @Override

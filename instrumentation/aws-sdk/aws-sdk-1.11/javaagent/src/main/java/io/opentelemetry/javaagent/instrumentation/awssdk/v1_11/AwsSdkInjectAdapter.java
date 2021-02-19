@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.Request;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 
-final class AwsSdkInjectAdapter implements TextMapPropagator.Setter<Request<?>> {
+final class AwsSdkInjectAdapter implements TextMapSetter<Request<?>> {
 
   static final AwsSdkInjectAdapter INSTANCE = new AwsSdkInjectAdapter();
 

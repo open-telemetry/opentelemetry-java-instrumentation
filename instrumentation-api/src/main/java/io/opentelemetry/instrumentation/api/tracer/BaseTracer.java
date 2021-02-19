@@ -19,7 +19,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import java.lang.reflect.Method;
@@ -287,17 +287,16 @@ public abstract class BaseTracer {
    * @deprecated We should eliminate all static usages so we can use the non-global propagators.
    */
   @Deprecated
-  public static <C> Context extractWithGlobalPropagators(
-      C carrier, TextMapPropagator.Getter<C> getter) {
+  public static <C> Context extractWithGlobalPropagators(C carrier, TextMapGetter<C> getter) {
     return extract(GlobalOpenTelemetry.getPropagators(), carrier, getter);
   }
 
-  public <C> Context extract(C carrier, TextMapPropagator.Getter<C> getter) {
+  public <C> Context extract(C carrier, TextMapGetter<C> getter) {
     return extract(propagators, carrier, getter);
   }
 
   private static <C> Context extract(
-      ContextPropagators propagators, C carrier, TextMapPropagator.Getter<C> getter) {
+      ContextPropagators propagators, C carrier, TextMapGetter<C> getter) {
     ContextPropagationDebug.debugContextLeakIfEnabled();
 
     // Using Context.ROOT here may be quite unexpected, but the reason is simple.

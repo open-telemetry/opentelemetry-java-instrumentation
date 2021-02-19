@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.awslambda.v1_0.MapUtils.lowercase
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.util.Collections;
@@ -58,7 +58,7 @@ public class ParentContextExtractor {
             MapGetter.INSTANCE);
   }
 
-  private static class MapGetter implements TextMapPropagator.Getter<Map<String, String>> {
+  private static class MapGetter implements TextMapGetter<Map<String, String>> {
 
     private static final MapGetter INSTANCE = new MapGetter();
 

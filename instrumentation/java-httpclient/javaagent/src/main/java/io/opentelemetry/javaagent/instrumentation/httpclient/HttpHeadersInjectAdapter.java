@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import java.net.http.HttpRequest;
 
 /** Context propagation is implemented via {@link HttpHeadersInstrumentation}. */
-public class HttpHeadersInjectAdapter implements TextMapPropagator.Setter<HttpRequest> {
+public class HttpHeadersInjectAdapter implements TextMapSetter<HttpRequest> {
   public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 
   @Override

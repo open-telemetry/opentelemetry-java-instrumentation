@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.ResteasyInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import javax.ws.rs.core.Response;
@@ -47,7 +47,7 @@ public class ResteasyClientTracer
   }
 
   @Override
-  protected Setter<ClientInvocation> getSetter() {
+  protected TextMapSetter<ClientInvocation> getSetter() {
     return SETTER;
   }
 

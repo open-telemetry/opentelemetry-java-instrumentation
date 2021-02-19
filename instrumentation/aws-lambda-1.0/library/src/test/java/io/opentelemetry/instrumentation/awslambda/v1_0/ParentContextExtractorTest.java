@@ -28,7 +28,7 @@ public class ParentContextExtractorTest {
   @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
   private static final OpenTelemetry OTEL =
-      OpenTelemetry.getPropagating(ContextPropagators.create(B3Propagator.getInstance()));
+      OpenTelemetry.propagating(ContextPropagators.create(B3Propagator.injectingSingleHeader()));
 
   private static final AwsLambdaTracer TRACER = new AwsLambdaTracer(OTEL);
 

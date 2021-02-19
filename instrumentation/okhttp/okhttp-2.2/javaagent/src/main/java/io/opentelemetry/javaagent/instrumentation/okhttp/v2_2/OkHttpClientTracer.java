@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.okhttp.v2_2.RequestBuil
 
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -47,7 +47,7 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builde
   }
 
   @Override
-  protected Setter<Request.Builder> getSetter() {
+  protected TextMapSetter<Request.Builder> getSetter() {
     return SETTER;
   }
 
