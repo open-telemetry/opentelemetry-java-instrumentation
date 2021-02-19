@@ -108,7 +108,7 @@ abstract class AbstractArmeriaHttpServerTest extends HttpServerTest<Server> {
 
     def server = sb.build()
     server.start().join()
-    return server;
+    return server
   }
 
   @Override
