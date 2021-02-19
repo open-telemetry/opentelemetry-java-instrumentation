@@ -66,9 +66,4 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "PathHandler.handleRequest"
   }
-
-  @Override
-  boolean testExceptionBody() {
-    false
-  }
 }

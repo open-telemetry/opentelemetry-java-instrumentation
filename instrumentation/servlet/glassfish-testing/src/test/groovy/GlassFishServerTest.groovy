@@ -66,11 +66,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> implements AgentTest
   }
 
   @Override
-  boolean redirectHasBody() {
-    true
-  }
-
-  @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
     endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND
   }
