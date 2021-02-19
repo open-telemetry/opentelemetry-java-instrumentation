@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 public final class OpenTelemetrySdkAccess {
 
   /**
-   * Interface matching {@link io.opentelemetry.sdk.trace.SdkTracerManagement#forceFlush()} to allow
+   * Interface matching {@link io.opentelemetry.sdk.trace.SdkTracerProvider#forceFlush()} to allow
    * holding a reference to it.
    */
   public interface ForceFlusher {
@@ -27,7 +27,7 @@ public final class OpenTelemetrySdkAccess {
 
   private static volatile ForceFlusher FORCE_FLUSH;
 
-  /** Forces flush of pending spans and metrics. */
+  /** Forces flushing of pending spans. */
   public static void forceFlush(int timeout, TimeUnit unit) {
     FORCE_FLUSH.run(timeout, unit);
   }
