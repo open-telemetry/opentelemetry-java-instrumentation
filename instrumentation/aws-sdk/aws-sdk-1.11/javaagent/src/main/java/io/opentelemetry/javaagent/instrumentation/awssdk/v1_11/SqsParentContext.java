@@ -6,14 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import java.util.Collections;
 import java.util.Map;
 
 class SqsParentContext {
 
-  private static class MapGetter implements TextMapPropagator.Getter<Map<String, String>> {
+  private static class MapGetter implements TextMapGetter<Map<String, String>> {
 
     private static final MapGetter INSTANCE = new MapGetter();
 

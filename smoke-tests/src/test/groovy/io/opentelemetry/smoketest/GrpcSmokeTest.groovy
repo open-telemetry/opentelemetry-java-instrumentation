@@ -17,7 +17,7 @@ import spock.lang.Unroll
 class GrpcSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-grpc-jdk$jdk-20210209.550405800"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-grpc-jdk$jdk-20210218.577304952"
   }
 
   @Unroll

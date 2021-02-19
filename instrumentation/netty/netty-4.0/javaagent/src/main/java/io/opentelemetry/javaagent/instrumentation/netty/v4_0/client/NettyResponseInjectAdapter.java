@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
 import io.netty.handler.codec.http.HttpHeaders;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 
-public class NettyResponseInjectAdapter implements TextMapPropagator.Setter<HttpHeaders> {
+public class NettyResponseInjectAdapter implements TextMapSetter<HttpHeaders> {
 
   public static final NettyResponseInjectAdapter SETTER = new NettyResponseInjectAdapter();
 

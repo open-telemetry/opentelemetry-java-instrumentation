@@ -490,7 +490,7 @@ public final class AgentTestingExporterAccess {
     for (int i = listMembers.length - 1; i >= 0; i--) {
       String listMember = listMembers[i];
       int index = listMember.indexOf(TRACESTATE_KEY_VALUE_DELIMITER);
-      traceStateBuilder.set(listMember.substring(0, index), listMember.substring(index + 1));
+      traceStateBuilder.put(listMember.substring(0, index), listMember.substring(index + 1));
     }
     return traceStateBuilder.build();
   }

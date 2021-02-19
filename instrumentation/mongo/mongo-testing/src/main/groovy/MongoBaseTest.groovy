@@ -77,7 +77,7 @@ class MongoBaseTest extends AgentInstrumentationSpecification {
                 String dbName, String statement,
                 Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      name { it.replace(" ", "") == statement }
+      name { operation + " " + dbName + "." + collection }
       kind CLIENT
       if (parentSpan == null) {
         hasNoParent()

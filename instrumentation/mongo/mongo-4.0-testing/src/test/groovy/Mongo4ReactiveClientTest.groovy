@@ -281,7 +281,7 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
                 String dbName, Closure<Boolean> statementEval,
                 Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      name statementEval
+      name { operation + " " + dbName + "." + collection }
       kind CLIENT
       if (parentSpan == null) {
         hasNoParent()

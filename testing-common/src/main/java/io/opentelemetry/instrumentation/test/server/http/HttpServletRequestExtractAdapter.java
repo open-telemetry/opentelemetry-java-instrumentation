@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.test.server.http;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 
@@ -15,8 +15,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author Pavol Loffay
  */
 // FIXME:  This code is duplicated in several places.  Extract to a common dependency.
-public class HttpServletRequestExtractAdapter
-    implements TextMapPropagator.Getter<HttpServletRequest> {
+public class HttpServletRequestExtractAdapter implements TextMapGetter<HttpServletRequest> {
 
   public static final HttpServletRequestExtractAdapter GETTER =
       new HttpServletRequestExtractAdapter();

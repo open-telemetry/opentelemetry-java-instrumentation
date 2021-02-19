@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,8 +46,8 @@ public class LibertyDispatcherTracer
     return libertyConnectionWrapper.getProtocol();
   }
 
-  private static final TextMapPropagator.Getter<LibertyRequestWrapper> GETTER =
-      new TextMapPropagator.Getter<LibertyRequestWrapper>() {
+  private static final TextMapGetter<LibertyRequestWrapper> GETTER =
+      new TextMapGetter<LibertyRequestWrapper>() {
 
         @Override
         public Iterable<String> keys(LibertyRequestWrapper carrier) {
@@ -61,7 +61,7 @@ public class LibertyDispatcherTracer
       };
 
   @Override
-  protected TextMapPropagator.Getter<LibertyRequestWrapper> getGetter() {
+  protected TextMapGetter<LibertyRequestWrapper> getGetter() {
     return GETTER;
   }
 

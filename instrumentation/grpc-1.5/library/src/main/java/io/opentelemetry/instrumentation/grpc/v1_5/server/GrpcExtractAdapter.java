@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.grpc.v1_5.server;
 
 import io.grpc.Metadata;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 
-final class GrpcExtractAdapter implements TextMapPropagator.Getter<Metadata> {
+final class GrpcExtractAdapter implements TextMapGetter<Metadata> {
 
   static final GrpcExtractAdapter GETTER = new GrpcExtractAdapter();
 

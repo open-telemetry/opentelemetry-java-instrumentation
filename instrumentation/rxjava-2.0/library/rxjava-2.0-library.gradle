@@ -1,0 +1,8 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  library group: 'io.reactivex.rxjava2', name: 'rxjava', version: "2.1.3"
+
+  testImplementation project(':instrumentation:rxjava-2.0:testing')
+  latestDepTestLibrary group: 'io.reactivex.rxjava2', name: 'rxjava', version: "(,2.2.0)"
+}

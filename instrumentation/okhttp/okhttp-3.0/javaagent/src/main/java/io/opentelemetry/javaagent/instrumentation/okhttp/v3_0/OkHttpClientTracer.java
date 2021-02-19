@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.RequestBuilderInjectAdapter.SETTER;
 
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import okhttp3.Request;
@@ -46,7 +46,7 @@ public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builde
   }
 
   @Override
-  protected Setter<Request.Builder> getSetter() {
+  protected TextMapSetter<Request.Builder> getSetter() {
     return SETTER;
   }
 

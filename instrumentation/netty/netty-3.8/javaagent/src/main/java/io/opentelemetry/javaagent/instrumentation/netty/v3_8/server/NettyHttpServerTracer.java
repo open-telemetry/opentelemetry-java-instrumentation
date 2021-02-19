@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.ChannelTraceContext;
 import java.net.InetSocketAddress;
@@ -75,7 +75,7 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected Getter<HttpRequest> getGetter() {
+  protected TextMapGetter<HttpRequest> getGetter() {
     return NettyRequestExtractAdapter.GETTER;
   }
 

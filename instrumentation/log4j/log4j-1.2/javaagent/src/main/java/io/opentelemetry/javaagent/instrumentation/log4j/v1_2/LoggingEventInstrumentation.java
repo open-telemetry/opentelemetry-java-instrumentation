@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.v1_2;
 
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SAMPLED;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
+import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_FLAGS;
 import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -59,7 +59,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This LoggingEvent event,
         @Advice.Argument(0) String key,
         @Advice.Return(readOnly = false) Object value) {
-      if (TRACE_ID.equals(key) || SPAN_ID.equals(key) || SAMPLED.equals(key)) {
+      if (TRACE_ID.equals(key) || SPAN_ID.equals(key) || TRACE_FLAGS.equals(key)) {
         if (value != null) {
           // Assume already instrumented event if traceId/spanId/sampled is present.
           return;
@@ -78,8 +78,8 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
           case SPAN_ID:
             value = spanContext.getSpanId();
             break;
-          case SAMPLED:
-            value = Boolean.toString(spanContext.isSampled());
+          case TRACE_FLAGS:
+            value = spanContext.getTraceFlags().asHex();
             break;
           default:
             // do nothing
@@ -114,7 +114,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
             SpanContext spanContext = span.getSpanContext();
             mdc.put(TRACE_ID, spanContext.getTraceId());
             mdc.put(SPAN_ID, spanContext.getSpanId());
-            mdc.put(SAMPLED, Boolean.toString(spanContext.isSampled()));
+            mdc.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
           }
         }
 

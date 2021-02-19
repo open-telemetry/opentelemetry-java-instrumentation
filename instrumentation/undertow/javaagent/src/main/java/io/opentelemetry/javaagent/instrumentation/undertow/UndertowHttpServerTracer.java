@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.api.undertow.KeyHolder;
@@ -71,7 +71,7 @@ public class UndertowHttpServerTracer
   }
 
   @Override
-  protected TextMapPropagator.Getter<HttpServerExchange> getGetter() {
+  protected TextMapGetter<HttpServerExchange> getGetter() {
     return UndertowExchangeGetter.GETTER;
   }
 

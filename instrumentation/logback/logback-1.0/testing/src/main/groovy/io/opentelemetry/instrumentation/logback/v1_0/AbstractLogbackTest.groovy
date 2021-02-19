@@ -48,30 +48,28 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     then:
     events.size() == 2
     events[0].message == "log message 1"
-    events[0].getMDCPropertyMap().get("traceId") == null
-    events[0].getMDCPropertyMap().get("spanId") == null
-    events[0].getMDCPropertyMap().get("traceFlags") == null
+    events[0].getMDCPropertyMap().get("trace_id") == null
+    events[0].getMDCPropertyMap().get("span_id") == null
+    events[0].getMDCPropertyMap().get("trace_flags") == null
 
     events[1].message == "log message 2"
-    events[1].getMDCPropertyMap().get("traceId") == null
-    events[1].getMDCPropertyMap().get("spanId") == null
-    events[1].getMDCPropertyMap().get("traceFlags") == null
+    events[1].getMDCPropertyMap().get("trace_id") == null
+    events[1].getMDCPropertyMap().get("span_id") == null
+    events[1].getMDCPropertyMap().get("trace_flags") == null
   }
 
   def "ids when span"() {
     when:
-    Span span1
-    TraceUtils.runUnderTrace("test") {
-      span1 = Span.current()
+    Span span1 = TraceUtils.runUnderTrace("test") {
       logger.info("log message 1")
+      Span.current()
     }
 
     logger.info("log message 2")
 
-    Span span2
-    TraceUtils.runUnderTrace("test 2") {
-      span2 = Span.current()
+    Span span2 = TraceUtils.runUnderTrace("test 2") {
       logger.info("log message 3")
+      Span.current()
     }
 
     def events = listAppender.list
@@ -79,18 +77,18 @@ abstract class AbstractLogbackTest extends InstrumentationSpecification {
     then:
     events.size() == 3
     events[0].message == "log message 1"
-    events[0].getMDCPropertyMap().get("traceId") == span1.spanContext.traceId
-    events[0].getMDCPropertyMap().get("spanId") == span1.spanContext.spanId
-    events[0].getMDCPropertyMap().get("sampled") == "true"
+    events[0].getMDCPropertyMap().get("trace_id") == span1.spanContext.traceId
+    events[0].getMDCPropertyMap().get("span_id") == span1.spanContext.spanId
+    events[0].getMDCPropertyMap().get("trace_flags") == "01"
 
     events[1].message == "log message 2"
-    events[1].getMDCPropertyMap().get("traceId") == null
-    events[1].getMDCPropertyMap().get("spanId") == null
-    events[1].getMDCPropertyMap().get("sampled") == null
+    events[1].getMDCPropertyMap().get("trace_id") == null
+    events[1].getMDCPropertyMap().get("span_id") == null
+    events[1].getMDCPropertyMap().get("trace_flags") == null
 
     events[2].message == "log message 3"
-    events[2].getMDCPropertyMap().get("traceId") == span2.spanContext.traceId
-    events[2].getMDCPropertyMap().get("spanId") == span2.spanContext.spanId
-    events[2].getMDCPropertyMap().get("sampled") == "true"
+    events[2].getMDCPropertyMap().get("trace_id") == span2.spanContext.traceId
+    events[2].getMDCPropertyMap().get("span_id") == span2.spanContext.spanId
+    events[2].getMDCPropertyMap().get("trace_flags") == "01"
   }
 }

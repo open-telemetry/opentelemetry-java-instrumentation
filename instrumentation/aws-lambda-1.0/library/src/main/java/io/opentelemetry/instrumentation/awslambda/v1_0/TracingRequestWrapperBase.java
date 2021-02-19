@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -16,7 +18,12 @@ import java.lang.reflect.Method;
 abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, O> {
 
   protected TracingRequestWrapperBase() {
-    super(WrapperConfiguration.flushTimeout());
+    this(OpenTelemetrySdkAutoConfiguration.initialize());
+  }
+
+  // Visible for testing
+  TracingRequestWrapperBase(OpenTelemetrySdk openTelemetrySdk) {
+    super(openTelemetrySdk, WrapperConfiguration.flushTimeout());
   }
 
   // visible for testing

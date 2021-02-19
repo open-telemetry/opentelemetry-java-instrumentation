@@ -19,13 +19,15 @@ event's MDC copy:
   (same as `Span.current().getSpanContext().isSampled()`).
 
 Those three pieces of information can be included in log statements produced by the logging library
-by specifying them in the pattern/format. Example for Spring Boot configuration (which uses logback):
+by specifying them in the pattern/format. Example for Spring Boot configuration (which uses
+logback):
 
 ```properties
-logging.pattern.console = %d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg t:%X{traceId} s:%X{spanId} %n
+logging.pattern.console = %d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg trace_id=%X{traceId} span_id=%X{spanId} %n
 ```
 
-This way any services or tools that parse the application logs can correlate traces/spans with log statements.
+This way any services or tools that parse the application logs can correlate traces/spans with log
+statements.
 
 ## Supported logging libraries
 

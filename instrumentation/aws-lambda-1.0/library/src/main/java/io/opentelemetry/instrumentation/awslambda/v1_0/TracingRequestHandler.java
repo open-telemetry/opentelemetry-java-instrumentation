@@ -9,10 +9,12 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A base class similar to {@link RequestHandler} but will automatically trace invocations of {@link
@@ -21,38 +23,39 @@ import java.util.Map;
  */
 public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O> {
 
-  private static final long DEFAULT_FLUSH_TIMEOUT_SECONDS = 1;
+  protected static final Duration DEFAULT_FLUSH_TIMEOUT = Duration.ofSeconds(1);
 
   private final AwsLambdaTracer tracer;
-  private final long flushTimeout;
+  private final OpenTelemetrySdk openTelemetrySdk;
+  private final long flushTimeoutNanos;
 
-  /** Creates a new {@link TracingRequestHandler} which traces using the default {@link Tracer}. */
-  protected TracingRequestHandler(long flushTimeout) {
-    this.tracer = new AwsLambdaTracer();
-    this.flushTimeout = flushTimeout;
-  }
-
-  /** Creates a new {@link TracingRequestHandler} which traces using the default {@link Tracer}. */
-  protected TracingRequestHandler() {
-    this.tracer = new AwsLambdaTracer();
-    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
+  /**
+   * Creates a new {@link TracingRequestHandler} which traces using the provided {@link
+   * OpenTelemetrySdk} and has a timeout of 1s when flushing at the end of an invocation.
+   */
+  protected TracingRequestHandler(OpenTelemetrySdk openTelemetrySdk) {
+    this(openTelemetrySdk, DEFAULT_FLUSH_TIMEOUT);
   }
 
   /**
-   * Creates a new {@link TracingRequestHandler} which traces using the specified {@link Tracer}.
+   * Creates a new {@link TracingRequestHandler} which traces using the provided {@link
+   * OpenTelemetrySdk} and has a timeout of {@code flushTimeout} when flushing at the end of an
+   * invocation.
    */
-  protected TracingRequestHandler(Tracer tracer) {
-    this.tracer = new AwsLambdaTracer(tracer);
-    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
+  protected TracingRequestHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
+    this(openTelemetrySdk, flushTimeout, new AwsLambdaTracer(openTelemetrySdk));
   }
 
   /**
-   * Creates a new {@link TracingRequestHandler} which traces using the specified {@link
-   * AwsLambdaTracer}.
+   * Creates a new {@link TracingRequestHandler} which flushes the provided {@link
+   * OpenTelemetrySdk}, has a timeout of {@code flushTimeout} when flushing at the end of an
+   * invocation, and traces using the provided {@link AwsLambdaTracer}.
    */
-  protected TracingRequestHandler(AwsLambdaTracer tracer) {
+  protected TracingRequestHandler(
+      OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout, AwsLambdaTracer tracer) {
+    this.openTelemetrySdk = openTelemetrySdk;
+    this.flushTimeoutNanos = flushTimeout.toNanos();
     this.tracer = tracer;
-    this.flushTimeout = DEFAULT_FLUSH_TIMEOUT_SECONDS;
   }
 
   private Map<String, String> getHeaders(I input) {
@@ -81,7 +84,10 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
       } else {
         tracer.end(otelContext);
       }
-      LambdaUtils.forceFlush();
+      openTelemetrySdk
+          .getSdkTracerProvider()
+          .forceFlush()
+          .join(flushTimeoutNanos, TimeUnit.NANOSECONDS);
     }
   }
 

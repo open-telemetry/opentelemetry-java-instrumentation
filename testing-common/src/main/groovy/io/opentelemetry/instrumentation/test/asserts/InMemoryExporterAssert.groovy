@@ -11,11 +11,12 @@ import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
 import io.opentelemetry.sdk.trace.data.SpanData
-import java.util.function.Supplier
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
 import org.spockframework.runtime.ConditionNotSatisfiedError
 import org.spockframework.runtime.model.TextPosition
+
+import java.util.function.Supplier
 
 class InMemoryExporterAssert {
   private final List<List<SpanData>> traces
@@ -81,5 +82,13 @@ class InMemoryExporterAssert {
 
   void assertTracesAllVerified() {
     assert assertedIndexes.size() == traces.size()
+  }
+
+  void sortSpansByStartTime() {
+    traces.each {
+      it.sort { a, b ->
+        return a.startEpochNanos <=> b.startEpochNanos
+      }
+    }
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -27,28 +28,38 @@ import java.util.List;
  */
 public final class LibraryTestRunner implements InstrumentationTestRunner {
 
-  protected static final InMemorySpanExporter testExporter;
+  private static final OpenTelemetrySdk openTelemetry;
+  private static final InMemorySpanExporter testExporter;
   private static boolean forceFlushCalled;
   private static final LibraryTestRunner INSTANCE = new LibraryTestRunner();
 
   static {
+    GlobalOpenTelemetry.resetForTest();
+
     testExporter = InMemorySpanExporter.create();
-    OpenTelemetrySdk.builder()
-        .setTracerProvider(
-            SdkTracerProvider.builder()
-                .addSpanProcessor(new FlushTrackingSpanProcessor())
-                .addSpanProcessor(SimpleSpanProcessor.create(testExporter))
-                .build())
-        .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-        .buildAndRegisterGlobal();
+    openTelemetry =
+        OpenTelemetrySdk.builder()
+            .setTracerProvider(
+                SdkTracerProvider.builder()
+                    .addSpanProcessor(new FlushTrackingSpanProcessor())
+                    .addSpanProcessor(SimpleSpanProcessor.create(testExporter))
+                    .build())
+            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+            .buildAndRegisterGlobal();
   }
 
-  public static InstrumentationTestRunner instance() {
+  public static LibraryTestRunner instance() {
     return INSTANCE;
   }
 
   @Override
-  public void beforeTestClass() {}
+  public void beforeTestClass() {
+    // just in case: if there was any test that modified the global instance, reset it
+    if (GlobalOpenTelemetry.get() != openTelemetry) {
+      GlobalOpenTelemetry.resetForTest();
+      GlobalOpenTelemetry.set(openTelemetry);
+    }
+  }
 
   @Override
   public void afterTestClass() {}
@@ -68,6 +79,10 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
   public List<MetricData> getExportedMetrics() {
     // no metrics support yet
     return Collections.emptyList();
+  }
+
+  public OpenTelemetrySdk getOpenTelemetrySdk() {
+    return openTelemetry;
   }
 
   @Override

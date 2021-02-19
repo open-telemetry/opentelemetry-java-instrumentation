@@ -12,7 +12,7 @@ import com.amazonaws.Response;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -119,7 +119,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   }
 
   @Override
-  protected TextMapPropagator.Setter<Request<?>> getSetter() {
+  protected TextMapSetter<Request<?>> getSetter() {
     // We override injection and don't want to have the base class do it accidentally.
     return null;
   }

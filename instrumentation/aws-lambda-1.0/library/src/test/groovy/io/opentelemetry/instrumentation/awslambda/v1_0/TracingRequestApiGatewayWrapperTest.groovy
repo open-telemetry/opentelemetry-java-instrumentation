@@ -38,7 +38,7 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
 
   def "handler traced with trace propagation"() {
     given:
-    setLambda(TestApiGatewayHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper)
+    setLambda(TestApiGatewayHandler.getName() + "::handleRequest", { new TracingRequestApiGatewayWrapper(it) })
 
     def headers = ImmutableMap.builder()
       .putAll(propagationHeaders())
@@ -83,7 +83,7 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
 
   def "test empty request & response"() {
     given:
-    setLambda(TestApiGatewayHandler.getName() + "::handleRequest", TracingRequestApiGatewayWrapper)
+    setLambda(TestApiGatewayHandler.getName() + "::handleRequest", { new TracingRequestApiGatewayWrapper(it) })
 
     def input = new APIGatewayProxyRequestEvent()
       .withBody("empty")

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat7;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.lang.reflect.Method;
@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TomcatTracer extends HttpServerTracer<Request, Response, Request, Request>
-    implements TextMapPropagator.Getter<Request> {
+    implements TextMapGetter<Request> {
 
   private static final Logger log = LoggerFactory.getLogger(TomcatTracer.class);
   private static final TomcatTracer TRACER = new TomcatTracer();
@@ -68,7 +68,7 @@ public class TomcatTracer extends HttpServerTracer<Request, Response, Request, R
   }
 
   @Override
-  protected TextMapPropagator.Getter<Request> getGetter() {
+  protected TextMapGetter<Request> getGetter() {
     return this;
   }
 
