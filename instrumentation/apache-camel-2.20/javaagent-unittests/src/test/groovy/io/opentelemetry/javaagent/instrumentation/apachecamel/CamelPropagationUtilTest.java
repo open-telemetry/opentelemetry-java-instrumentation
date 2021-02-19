@@ -31,7 +31,7 @@ public class CamelPropagationUtilTest {
   @BeforeAll
   public static void setUp() {
     GlobalOpenTelemetry.set(
-        OpenTelemetry.getPropagating(ContextPropagators.create(JaegerPropagator.getInstance())));
+        OpenTelemetry.propagating(ContextPropagators.create(JaegerPropagator.getInstance())));
   }
 
   @Test

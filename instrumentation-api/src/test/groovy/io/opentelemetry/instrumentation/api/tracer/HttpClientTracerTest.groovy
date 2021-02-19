@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.context.propagation.TextMapPropagator
+import io.opentelemetry.context.propagation.TextMapSetter
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
 import spock.lang.Shared

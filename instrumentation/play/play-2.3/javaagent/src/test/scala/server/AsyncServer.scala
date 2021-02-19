@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.
 import play.api.mvc.{Action, Handler, Results}
 import play.api.test.{FakeApplication, TestServer}
 
+import scala.concurrent.Future
+
 object AsyncServer {
   val routes: PartialFunction[(String, String), Handler] = {
     case ("GET", "/success") =>

@@ -8,6 +8,8 @@ package server
 import play.api.GlobalSettings
 import play.api.mvc.{RequestHeader, Result, Results}
 
+import scala.concurrent.Future
+
 class Settings extends GlobalSettings {
   override def onError(
       request: RequestHeader,
