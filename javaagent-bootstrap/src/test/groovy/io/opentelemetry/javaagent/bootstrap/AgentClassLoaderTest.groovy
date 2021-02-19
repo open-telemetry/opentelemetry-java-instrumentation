@@ -16,8 +16,7 @@ class AgentClassLoaderTest extends Specification {
     setup:
     def className1 = 'some/class/Name1'
     def className2 = 'some/class/Name2'
-    URL loc = getClass().getProtectionDomain().getCodeSource().getLocation()
-    AgentClassLoader loader = new AgentClassLoader(loc, null, null)
+    AgentClassLoader loader = new AgentClassLoader(null, null, null)
     Phaser threadHoldLockPhase = new Phaser(2)
     Phaser acquireLockFromMainThreadPhase = new Phaser(2)
 
