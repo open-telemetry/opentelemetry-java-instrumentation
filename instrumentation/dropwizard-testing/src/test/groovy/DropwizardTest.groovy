@@ -71,10 +71,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
     true
   }
 
-  boolean testExceptionBody() {
-    false
-  }
-
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
