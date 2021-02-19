@@ -48,7 +48,7 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
             .buildAndRegisterGlobal();
   }
 
-  public static InstrumentationTestRunner instance() {
+  public static LibraryTestRunner instance() {
     return INSTANCE;
   }
 
@@ -79,6 +79,10 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
   public List<MetricData> getExportedMetrics() {
     // no metrics support yet
     return Collections.emptyList();
+  }
+
+  public OpenTelemetrySdk getOpenTelemetrySdk() {
+    return openTelemetry;
   }
 
   @Override

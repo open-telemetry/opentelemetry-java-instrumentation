@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -16,8 +15,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import java.util.Map;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -30,18 +27,10 @@ public class ParentContextExtractorTest {
 
   @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
-  @BeforeClass
-  public static void setUp() {
-    // reset opentelemetry global instance in case any of the previous tests set it
-    GlobalOpenTelemetry.resetForTest();
-    GlobalOpenTelemetry.set(
-        OpenTelemetry.getPropagating(ContextPropagators.create(B3Propagator.getInstance())));
-  }
+  private static final OpenTelemetry OTEL =
+      OpenTelemetry.getPropagating(ContextPropagators.create(B3Propagator.getInstance()));
 
-  @AfterClass
-  public static void tearDown() {
-    GlobalOpenTelemetry.resetForTest();
-  }
+  private static final AwsLambdaTracer TRACER = new AwsLambdaTracer(OTEL);
 
   @Test
   public void shouldUseHttpIfAwsParentNotSampled() {
@@ -59,7 +48,7 @@ public class ParentContextExtractorTest {
         "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=0");
 
     // when
-    Context context = ParentContextExtractor.extract(headers);
+    Context context = ParentContextExtractor.extract(headers, TRACER);
     // then
     Span span = Span.fromContext(context);
     SpanContext spanContext = span.getSpanContext();
@@ -85,7 +74,7 @@ public class ParentContextExtractorTest {
         "Root=1-8a3c60f7-d188f8fa79d48a391a778fa6;Parent=0000000000000456;Sampled=1");
 
     // when
-    Context context = ParentContextExtractor.extract(headers);
+    Context context = ParentContextExtractor.extract(headers, TRACER);
     // then
     Span span = Span.fromContext(context);
     SpanContext spanContext = span.getSpanContext();
@@ -108,7 +97,7 @@ public class ParentContextExtractorTest {
             "true");
 
     // when
-    Context context = ParentContextExtractor.extract(headers);
+    Context context = ParentContextExtractor.extract(headers, TRACER);
     // then
     Span span = Span.fromContext(context);
     SpanContext spanContext = span.getSpanContext();

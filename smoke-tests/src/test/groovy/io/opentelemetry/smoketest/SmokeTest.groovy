@@ -31,7 +31,7 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 abstract class SmokeTest extends Specification {
-  private static final Pattern TRACE_ID_PATTERN = Pattern.compile(".*traceId=(?<traceId>[a-zA-Z0-9]+).*")
+  private static final Pattern TRACE_ID_PATTERN = Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*")
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
 

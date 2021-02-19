@@ -9,10 +9,16 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
+import io.opentelemetry.sdk.OpenTelemetrySdk
 
 class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements LibraryTestTrait {
 
   static class TestHandler extends TracingSqsEventHandler {
+
+    TestHandler(OpenTelemetrySdk openTelemetrySdk) {
+      super(openTelemetrySdk)
+    }
+
     @Override
     protected void handleEvent(SQSEvent event, Context context) {
     }
@@ -20,6 +26,6 @@ class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements
 
   @Override
   RequestHandler<SQSEvent, Void> handler() {
-    return new TestHandler()
+    return new TestHandler(testRunner().openTelemetrySdk)
   }
 }

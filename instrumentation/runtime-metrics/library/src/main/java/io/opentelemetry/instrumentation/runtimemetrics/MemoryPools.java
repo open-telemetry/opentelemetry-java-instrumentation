@@ -137,4 +137,6 @@ public final class MemoryPools {
       observer.observe(usage.getMax(), maxLabels);
     }
   }
+
+  private MemoryPools() {}
 }
