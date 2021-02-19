@@ -17,6 +17,23 @@ import org.junit.jupiter.api.Test;
 
 class SupportabilityMetricsTest {
   @Test
+  void disabled() {
+    List<String> reports = new ArrayList<>();
+    SupportabilityMetrics metrics =
+        new SupportabilityMetrics(
+            Config.create(Collections.singletonMap("otel.javaagent.debug", "false")), reports::add);
+
+    metrics.recordSuppressedSpan(SpanKind.CLIENT, "favoriteInstrumentation");
+    metrics.recordSuppressedSpan(SpanKind.SERVER, "favoriteInstrumentation");
+    metrics.recordSuppressedSpan(SpanKind.CLIENT, "favoriteInstrumentation");
+    metrics.recordSuppressedSpan(SpanKind.INTERNAL, "otherInstrumentation");
+
+    metrics.report();
+
+    assertThat(reports).isEmpty();
+  }
+
+  @Test
   void reportsMetrics() {
     List<String> reports = new ArrayList<>();
     SupportabilityMetrics metrics =
