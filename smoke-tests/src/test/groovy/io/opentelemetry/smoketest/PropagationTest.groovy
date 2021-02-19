@@ -75,7 +75,7 @@ class JaegerPropagationTest extends PropagationTest {
   }
 }
 
-class OtTracerPropagationTest extends SmokeTest {
+class OtTracePropagationTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
@@ -109,7 +109,7 @@ class OtTracerPropagationTest extends SmokeTest {
 
   @Override
   protected Map<String, String> getExtraEnv() {
-    return ["otel.propagators": "ottracer"]
+    return ["otel.propagators": "ottrace"]
   }
 }
 
