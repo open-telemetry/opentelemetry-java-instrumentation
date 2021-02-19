@@ -29,7 +29,7 @@ public class SupportabilityMetrics {
     this(config, log::debug);
   }
 
-  //visible for testing
+  // visible for testing
   SupportabilityMetrics(Config config, Consumer<String> reporter) {
     agentDebugEnabled = config.isAgentDebugEnabled();
     this.reporter = reporter;
@@ -48,7 +48,7 @@ public class SupportabilityMetrics {
     countersByKind.computeIfAbsent(kind, k -> new AtomicInteger()).incrementAndGet();
   }
 
-  //visible for testing
+  // visible for testing
   void report() {
     suppressionCounters.forEach(
         (instrumentationName, countsByKind) -> {
@@ -67,8 +67,7 @@ public class SupportabilityMetrics {
 
   public SupportabilityMetrics start() {
     if (agentDebugEnabled) {
-      Executors.newScheduledThreadPool(1)
-          .scheduleAtFixedRate(this::report,5, 5, TimeUnit.SECONDS);
+      Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::report, 5, 5, TimeUnit.SECONDS);
     }
     return this;
   }
