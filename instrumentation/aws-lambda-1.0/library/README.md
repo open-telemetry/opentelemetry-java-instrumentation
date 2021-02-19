@@ -15,10 +15,20 @@ Available wrappers:
 
 ## Using handlers
 To use the instrumentation, replace your function classes that implement `RequestHandler` (or `RequestStreamHandler`) with those
-that extend `TracingRequestHandler` (or `TracingRequestStreamHandler`). You will need to change the method name to `doHandleRequest`.
+that extend `TracingRequestHandler` (or `TracingRequestStreamHandler`). You will need to change the method name to `doHandleRequest`
+and pass an initialized `OpenTelemetrySdk` to the base class.
 
 ```java
 public class MyRequestHandler extends TracingRequestHandler<String, String> {
+
+  private static final OpenTelemetrySdk SDK = OpenTelemetrySdk.builder()
+      .addSpanProcessor(spanProcessor)
+      .buildAndRegisterGlobal();
+
+  public MyRequestHandler() {
+    super(SDK);
+  }
+
   // Note the method is named doHandleRequest instead of handleRequest.
   @Override
   protected String doHandleRequest(String input, Context context) {
@@ -100,13 +110,15 @@ For API Gateway (HTTP) requests instrumented by using one of following methods:
 - wrapping with `TracingRequestStreamWrapper` or `TracingRequestApiGatewayWrapper`
 traces can be propagated with supported HTTP headers (see https://github.com/open-telemetry/opentelemetry-java/tree/master/extensions/trace_propagators).
 
-In order to enable requested propagation, configure it in your code as early as possible. For example B3 propagation configuration would look like as follows:
+In order to enable requested propagation for a handler, configure it on the SDK you build.
 
 ```java
   static {
-    OpenTelemetry.setGlobalPropagators(
-      DefaultContextPropagators.builder()
-        .addTextMapPropagator(B3Propagator.getInstance())
-        .build());
+    OpenTelemetrySdk.builder()
+      ...
+      .setPropagators(ContextPropagators.create(B3Propagator.injectingSingleHeader()))
+      .buildAndRegisterGlobal();
   }
 ```
+
+If using the wrappers, set the `OTEL_PROPAGATORS` environment variable as descibed [here](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#propagator).

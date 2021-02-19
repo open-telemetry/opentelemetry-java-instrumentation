@@ -9,7 +9,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
-import spock.lang.Shared
+import spock.lang.Shared 
 
 class TracingRequestWrapperTestBase extends LibraryInstrumentationSpecification {
 
@@ -29,9 +29,9 @@ class TracingRequestWrapperTestBase extends LibraryInstrumentationSpecification 
     context.getInvokedFunctionArn() >> "arn:aws:lambda:us-east-1:123456789:function:test"
   }
 
-  def setLambda(handler, wrapperClass) {
+  def setLambda(handler, Closure<TracingRequestWrapperBase> wrapperConstructor) {
     environmentVariables.set(WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY, handler)
     TracingRequestWrapper.WRAPPED_LAMBDA = WrappedLambda.fromConfiguration()
-    wrapper = wrapperClass.getDeclaredConstructor().newInstance()
+    wrapper = wrapperConstructor.call(testRunner().openTelemetrySdk)
   }
 }

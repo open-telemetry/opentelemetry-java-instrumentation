@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,7 +25,12 @@ public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
   static WrappedLambda WRAPPED_LAMBDA = WrappedLambda.fromConfiguration();
 
   public TracingRequestStreamWrapper() {
-    super(WrapperConfiguration.flushTimeout());
+    this(OpenTelemetrySdkAutoConfiguration.initialize());
+  }
+
+  // Visible for testing
+  TracingRequestStreamWrapper(OpenTelemetrySdk openTelemetrySdk) {
+    super(openTelemetrySdk, WrapperConfiguration.flushTimeout());
   }
 
   @Override

@@ -20,7 +20,7 @@ public class ParentContextExtractor {
 
   private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
 
-  static Context extract(Map<String, String> headers) {
+  static Context extract(Map<String, String> headers, BaseTracer tracer) {
     Context parentContext = null;
     String parentTraceHeader = System.getenv(AWS_TRACE_HEADER_ENV_KEY);
     if (parentTraceHeader != null) {
@@ -28,7 +28,7 @@ public class ParentContextExtractor {
     }
     if (!isValidAndSampled(parentContext)) {
       // try http
-      parentContext = fromHttpHeaders(headers);
+      parentContext = fromHttpHeaders(headers, tracer);
     }
     return parentContext;
   }
@@ -42,8 +42,8 @@ public class ParentContextExtractor {
     return (parentSpanContext.isValid() && parentSpanContext.isSampled());
   }
 
-  private static Context fromHttpHeaders(Map<String, String> headers) {
-    return BaseTracer.extractWithGlobalPropagators(lowercaseMap(headers), MapGetter.INSTANCE);
+  private static Context fromHttpHeaders(Map<String, String> headers, BaseTracer tracer) {
+    return tracer.extract(lowercaseMap(headers), MapGetter.INSTANCE);
   }
 
   // lower-case map getter used for extraction
