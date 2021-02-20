@@ -6,11 +6,9 @@
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-import static org.asynchttpclient.Dsl.asyncHttpClient
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
-import io.netty.channel.AbstractChannel
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
@@ -29,14 +27,10 @@ import io.netty.handler.codec.http.HttpVersion
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-import org.asynchttpclient.AsyncCompletionHandler
-import org.asynchttpclient.AsyncHttpClient
-import org.asynchttpclient.DefaultAsyncHttpClientConfig
-import org.asynchttpclient.Response
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Timeout
 
@@ -44,28 +38,35 @@ import spock.lang.Timeout
 class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
-  def clientConfig = DefaultAsyncHttpClientConfig.Builder.newInstance().setRequestTimeout(TimeUnit.SECONDS.toMillis(10).toInteger())
-  @Shared
-  AsyncHttpClient asyncHttpClient = asyncHttpClient(clientConfig)
+  private Bootstrap bootstrap
 
-  @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    def methodName = "prepare" + method.toLowerCase().capitalize()
-    def requestBuilder = asyncHttpClient."$methodName"(uri.toString())
-    headers.each { requestBuilder.setHeader(it.key, it.value) }
-    def response = requestBuilder.execute(new AsyncCompletionHandler() {
-      @Override
-      Object onCompleted(Response response) throws Exception {
-        callback?.call()
-        return response
-      }
-    }).get()
-    return response.statusCode
+  def setupSpec() {
+    EventLoopGroup group = new NioEventLoopGroup()
+    bootstrap = new Bootstrap()
+    bootstrap.group(group)
+      .channel(NioSocketChannel)
+      .handler(new ChannelInitializer<SocketChannel>() {
+        @Override
+        protected void initChannel(SocketChannel socketChannel) throws Exception {
+          ChannelPipeline pipeline = socketChannel.pipeline()
+          pipeline.addLast(new HttpClientCodec())
+        }
+      })
+
   }
 
   @Override
-  String userAgent() {
-    return "AHC"
+  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+    Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
+    def result = new CompletableFuture<Integer>()
+    ch.pipeline().addLast(new ClientHandler(callback, result))
+
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.toString(), Unpooled.EMPTY_BUFFER)
+    request.headers().set(HttpHeaderNames.HOST, uri.host)
+    headers.each { k, v -> request.headers().set(k, v) }
+
+    ch.writeAndFlush(request).get()
+    return result.get(20, TimeUnit.SECONDS)
   }
 
   @Override
@@ -83,7 +84,6 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
     return false
   }
 
-  @Ignore("this test currently fails. See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1312")
   def "test connection interference"() {
     setup:
     //Create a simple Netty pipeline
@@ -104,7 +104,6 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
 
     def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, server.address.resolve("/success").toString(), Unpooled.EMPTY_BUFFER)
     request.headers().set(HttpHeaderNames.HOST, server.address.host)
-    request.headers().set(HttpHeaderNames.USER_AGENT, userAgent())
 
     when:
     runUnderTrace("parent1") {
@@ -148,7 +147,6 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
       })
     def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, server.address.resolve("/success").toString(), Unpooled.EMPTY_BUFFER)
     request.headers().set(HttpHeaderNames.HOST, server.address.host)
-    request.headers().set(HttpHeaderNames.USER_AGENT, userAgent())
     Channel ch = null
 
     when:
@@ -204,8 +202,8 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
 
     then:
     def ex = thrown(Exception)
-    ex.cause instanceof ConnectException || ex.cause instanceof TimeoutException
     def thrownException = ex instanceof ExecutionException ? ex.cause : ex
+    thrownException instanceof ConnectException || thrownException instanceof TimeoutException
 
     and:
     assertTraces(1) {
@@ -220,7 +218,7 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
             name "CONNECT"
             childOf span(0)
             errored true
-            errorEvent(AbstractChannel.AnnotatedConnectException, ~/Connection refused:( no further information:)? localhost\/\[?[0-9.:]+\]?:$UNUSABLE_PORT/)
+            errorEvent(thrownException.class, ~/Connection refused:( no further information:)? localhost\/\[?[0-9.:]+\]?:$UNUSABLE_PORT/)
           }
         }
       }
@@ -287,21 +285,6 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
     null != channel.pipeline().remove('Netty41ClientTest$OtherSimpleHandler#0')
   }
 
-  def "when a traced handler is added from an initializer we still detect it and add our channel handlers"() {
-    // This test method replicates a scenario similar to how reactor 0.8.x register the `HttpClientCodec` handler
-    // into the pipeline.
-
-    setup:
-    def channel = new EmbeddedChannel()
-
-    when:
-    channel.pipeline().addLast(new TracedHandlerFromInitializerHandler())
-
-    then:
-    null != channel.pipeline().remove("added_in_initializer")
-    null != channel.pipeline().remove(HttpClientTracingHandler.getName())
-  }
-
   def "request with trace annotated method"() {
     given:
     def annotatedClass = new TracedClass()
@@ -365,14 +348,6 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
 
     @Override
     void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-    }
-  }
-
-  static class TracedHandlerFromInitializerHandler extends ChannelInitializer<Channel> implements ChannelHandler {
-    @Override
-    protected void initChannel(Channel ch) throws Exception {
-      // This replicates how reactor 0.8.x add the HttpClientCodec
-      ch.pipeline().addLast("added_in_initializer", new HttpClientCodec())
     }
   }
 }
