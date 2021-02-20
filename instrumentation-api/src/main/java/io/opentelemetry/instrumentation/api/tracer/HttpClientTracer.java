@@ -61,6 +61,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     return "1.1";
   }
 
+  @Nullable
   protected abstract Integer status(RESPONSE response);
 
   @Nullable

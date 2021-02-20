@@ -5,20 +5,13 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3
 
-import com.linecorp.armeria.client.WebClientBuilder
 import com.linecorp.armeria.server.ServerBuilder
-import io.opentelemetry.instrumentation.armeria.v1_3.client.OpenTelemetryClient
 import io.opentelemetry.instrumentation.armeria.v1_3.server.OpenTelemetryService
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 
-class ArmeriaTest extends AbstractArmeriaTest implements LibraryTestTrait {
+class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest implements LibraryTestTrait{
   @Override
   ServerBuilder configureServer(ServerBuilder sb) {
     return sb.decorator(OpenTelemetryService.newDecorator())
-  }
-
-  @Override
-  WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
-    return clientBuilder.decorator(OpenTelemetryClient.newDecorator())
   }
 }

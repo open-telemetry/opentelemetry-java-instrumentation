@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.armeria.v1_3.server;
 
 import com.linecorp.armeria.common.HttpRequest;
+import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.netty.util.AsciiString;
@@ -62,7 +63,12 @@ public class ArmeriaServerTracer
 
   @Override
   protected String flavor(ServiceRequestContext ctx, HttpRequest req) {
-    return ctx.sessionProtocol().toString();
+    SessionProtocol protocol = ctx.sessionProtocol();
+    if (protocol.isMultiplex()) {
+      return "HTTP/2.0";
+    } else {
+      return "HTTP/1.1";
+    }
   }
 
   @Override
