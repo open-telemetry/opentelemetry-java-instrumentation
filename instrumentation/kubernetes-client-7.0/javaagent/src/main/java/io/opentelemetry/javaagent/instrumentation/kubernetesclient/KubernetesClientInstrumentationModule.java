@@ -32,13 +32,6 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  protected String[] additionalHelperClassNames() {
-    return new String[] {
-      "com.google.common.base.Strings",
-    };
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ApiClientInstrumentation());
   }

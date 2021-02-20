@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.matcher;
 
-import com.google.common.collect.Sets;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -314,21 +315,31 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     return false;
   }
 
-  private static final Set<String> INSTRUMENTED_SPRING_BOOT_CLASSES =
-      Sets.newHashSet(
-          "org.springframework.boot.autoconfigure.BackgroundPreinitializer$",
-          "org.springframework.boot.autoconfigure.condition.OnClassCondition$",
-          "org.springframework.boot.web.embedded.netty.NettyWebServer$",
-          "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$",
-          "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader",
-          "org.springframework.boot.context.embedded.EmbeddedWebApplicationContext",
-          "org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext",
-          // spring boot 2 classes
-          "org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext",
-          "org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext",
-          "org.springframework.boot.web.embedded.tomcat.TomcatWebServer$",
-          "org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader",
-          "org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$");
+  private static final Set<String> INSTRUMENTED_SPRING_BOOT_CLASSES;
+
+  static {
+    Set<String> instrumented = new HashSet<>();
+    instrumented.add("org.springframework.boot.autoconfigure.BackgroundPreinitializer$");
+    instrumented.add("org.springframework.boot.autoconfigure.condition.OnClassCondition$");
+    instrumented.add("org.springframework.boot.web.embedded.netty.NettyWebServer$");
+    instrumented.add(
+        "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$");
+    instrumented.add(
+        "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader");
+    instrumented.add("org.springframework.boot.context.embedded.EmbeddedWebApplicationContext");
+    instrumented.add(
+        "org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext");
+    // spring boot 2 classes
+    instrumented.add(
+        "org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext");
+    instrumented.add(
+        "org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext");
+    instrumented.add("org.springframework.boot.web.embedded.tomcat.TomcatWebServer$");
+    instrumented.add(
+        "org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader");
+    instrumented.add("org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$");
+    INSTRUMENTED_SPRING_BOOT_CLASSES = Collections.unmodifiableSet(instrumented);
+  }
 
   private static String outerClassName(final String name) {
     int separator = name.indexOf('$');
