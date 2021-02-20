@@ -1,0 +1,11 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api project(':testing-common')
+
+  api group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}

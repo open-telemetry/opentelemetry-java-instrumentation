@@ -4,13 +4,18 @@
  */
 
 package io.opentelemetry.instrumentation.reactor
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import java.time.Duration
 import org.reactivestreams.Publisher
@@ -22,17 +27,9 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 @Unroll
-class ReactorCoreTest extends LibraryInstrumentationSpecification {
+abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
 
   public static final String EXCEPTION_MESSAGE = "test exception"
-
-  def setupSpec() {
-    TracingOperator.registerOnEachOperator()
-  }
-
-  def cleanupSpec() {
-    TracingOperator.resetOnEachOperator()
-  }
 
   @Shared
   def addOne = { i ->

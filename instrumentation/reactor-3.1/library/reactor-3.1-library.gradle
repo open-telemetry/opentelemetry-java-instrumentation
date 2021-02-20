@@ -1,18 +1,7 @@
-apply from: "$rootDir/gradle/instrumentation.gradle"
-
-muzzle {
-  pass {
-    group = "io.projectreactor"
-    module = "reactor-core"
-    versions = "[3.1.0.RELEASE,)"
-    assertInverse = true
-  }
-}
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
 dependencies {
-  implementation project(':instrumentation:reactor-3.1:library')
-
-  testLibrary group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
+  library group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
 
   testImplementation project(':instrumentation:reactor-3.1:testing')
 
