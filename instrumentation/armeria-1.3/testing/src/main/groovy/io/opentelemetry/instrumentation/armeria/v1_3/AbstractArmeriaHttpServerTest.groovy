@@ -120,9 +120,4 @@ abstract class AbstractArmeriaHttpServerTest extends HttpServerTest<Server> {
   boolean testPathParam() {
     true
   }
-
-  @Override
-  boolean testExceptionBody() {
-    false
-  }
 }
