@@ -48,9 +48,10 @@ public class ChannelInstrumentation implements TypeInstrumentation {
 
   public static class AttachContextAdvice {
     @Advice.OnMethodEnter
-    public static void attachContext(
-        @Advice.This Channel channel) {
-      channel.attr(AttributeKeys.WRITE_CONTEXT).compareAndSet(null, Java8BytecodeBridge.currentContext());
+    public static void attachContext(@Advice.This Channel channel) {
+      channel
+          .attr(AttributeKeys.WRITE_CONTEXT)
+          .compareAndSet(null, Java8BytecodeBridge.currentContext());
     }
   }
 }
