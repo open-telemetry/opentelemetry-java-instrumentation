@@ -23,7 +23,7 @@ by specifying them in the pattern/format. Example for Spring Boot configuration 
 logback):
 
 ```properties
-logging.pattern.console = %d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg trace_id:%X{trace_id} span_id:%X{span_id} trace_flags:%X{trace_flags} %n
+logging.pattern.console = %d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg trace_id=%X{trace_id} span_id=%X{span_id} trace_flags=%X{trace_flags} %n
 ```
 
 This way any services or tools that parse the application logs can correlate traces/spans with log
