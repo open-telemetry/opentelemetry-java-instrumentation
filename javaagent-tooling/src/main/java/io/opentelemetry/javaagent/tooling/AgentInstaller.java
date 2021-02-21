@@ -33,7 +33,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -489,16 +491,18 @@ public class AgentInstaller {
     @Override
     public Iterable<Iterable<Class<?>>> resolve(Instrumentation instrumentation) {
       // filter out our agent classes and injected helper classes
-      return () ->
-          StreamSupport.stream(delegate.resolve(instrumentation).spliterator(), false)
-              .map(
-                  classes ->
-                      (Iterable<Class<?>>)
-                          () ->
-                              StreamSupport.stream(classes.spliterator(), false)
-                                  .filter(c -> !isIgnored(c))
-                                  .iterator())
-              .iterator();
+      return iterableOf(
+          () ->
+              streamOf(delegate.resolve(instrumentation))
+                  .map(classes -> iterableOf(() -> streamOf(classes).filter(c -> !isIgnored(c)))));
+    }
+
+    private static <T> Stream<T> streamOf(Iterable<T> iterable) {
+      return StreamSupport.stream(iterable.spliterator(), false);
+    }
+
+    private static <T> Iterable<T> iterableOf(Supplier<Stream<T>> stream) {
+      return () -> stream.get().iterator();
     }
 
     private static boolean isIgnored(Class<?> c) {
