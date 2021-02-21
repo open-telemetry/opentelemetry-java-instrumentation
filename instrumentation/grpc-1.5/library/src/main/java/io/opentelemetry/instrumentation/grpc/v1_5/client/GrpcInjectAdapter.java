@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.grpc.v1_5.client;
 
 import io.grpc.Metadata;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 
-final class GrpcInjectAdapter implements TextMapPropagator.Setter<Metadata> {
+final class GrpcInjectAdapter implements TextMapSetter<Metadata> {
 
   static final GrpcInjectAdapter SETTER = new GrpcInjectAdapter();
 

@@ -9,7 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
@@ -65,7 +65,7 @@ final class AwsSdkHttpClientTracer
   }
 
   @Override
-  protected TextMapPropagator.Setter<SdkHttpRequest.Builder> getSetter() {
+  protected TextMapSetter<SdkHttpRequest.Builder> getSetter() {
     return AwsSdkInjectAdapter.INSTANCE;
   }
 

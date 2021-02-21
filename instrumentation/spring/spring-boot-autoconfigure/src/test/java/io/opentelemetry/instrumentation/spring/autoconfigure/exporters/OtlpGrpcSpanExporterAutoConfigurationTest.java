@@ -51,13 +51,14 @@ class OtlpGrpcSpanExporterAutoConfigurationTest {
     this.contextRunner
         .withPropertyValues(
             "opentelemetry.trace.exporter.otlp.enabled=true",
-            "opentelemetry.trace.exporter.otlp.endpoint=localhost:8080/test",
+            "opentelemetry.trace.exporter.otlp.endpoint=http://localhost:8080/test",
             "opentelemetry.trace.exporter.otlp.spantimeout=69ms")
         .run(
             (context) -> {
               OtlpGrpcSpanExporterProperties otlpSpanExporterProperties =
                   context.getBean(OtlpGrpcSpanExporterProperties.class);
-              assertThat(otlpSpanExporterProperties.getEndpoint()).isEqualTo("localhost:8080/test");
+              assertThat(otlpSpanExporterProperties.getEndpoint())
+                  .isEqualTo("http://localhost:8080/test");
               assertThat(otlpSpanExporterProperties.getSpanTimeout()).hasMillis(69);
             });
   }

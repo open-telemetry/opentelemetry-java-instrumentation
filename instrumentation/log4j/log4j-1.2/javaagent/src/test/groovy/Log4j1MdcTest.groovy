@@ -26,14 +26,14 @@ class Log4j1MdcTest extends AgentInstrumentationSpecification {
 
     events.size() == 2
     events[0].message == "log message 1"
-    events[0].getMDC("traceId") == null
-    events[0].getMDC("spanId") == null
-    events[0].getMDC("sampled") == null
+    events[0].getMDC("trace_id") == null
+    events[0].getMDC("span_id") == null
+    events[0].getMDC("trace_flags") == null
 
     events[1].message == "log message 2"
-    events[1].getMDC("traceId") == null
-    events[1].getMDC("spanId") == null
-    events[1].getMDC("sampled") == null
+    events[1].getMDC("trace_id") == null
+    events[1].getMDC("span_id") == null
+    events[1].getMDC("trace_flags") == null
   }
 
   def "ids when span"() {
@@ -58,20 +58,20 @@ class Log4j1MdcTest extends AgentInstrumentationSpecification {
 
     events.size() == 3
     events[0].message == "log message 1"
-    events[0].getMDC("traceId") == span1.spanContext.traceId
-    events[0].getMDC("spanId") == span1.spanContext.spanId
-    events[0].getMDC("sampled") == "true"
+    events[0].getMDC("trace_id") == span1.spanContext.traceId
+    events[0].getMDC("span_id") == span1.spanContext.spanId
+    events[0].getMDC("trace_flags") == "01"
 
     events[1].message == "log message 2"
-    events[1].getMDC("traceId") == null
-    events[1].getMDC("spanId") == null
-    events[1].getMDC("sampled") == null
+    events[1].getMDC("trace_id") == null
+    events[1].getMDC("span_id") == null
+    events[1].getMDC("trace_flags") == null
 
     events[2].message == "log message 3"
     // this explicit getMDCCopy() call here is to make sure that whole instrumentation is tested
     events[2].getMDCCopy()
-    events[2].getMDC("traceId") == span2.spanContext.traceId
-    events[2].getMDC("spanId") == span2.spanContext.spanId
-    events[2].getMDC("sampled") == "true"
+    events[2].getMDC("trace_id") == span2.spanContext.traceId
+    events[2].getMDC("span_id") == span2.spanContext.spanId
+    events[2].getMDC("trace_flags") == "01"
   }
 }

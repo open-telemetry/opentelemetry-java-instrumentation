@@ -33,11 +33,6 @@ import spock.lang.Unroll
 abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
 
   @Override
-  boolean testExceptionBody() {
-    return false
-  }
-
-  @Override
   Class<?> expectedExceptionClass() {
     ServletException
   }

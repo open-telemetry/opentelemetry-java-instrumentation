@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import okhttp3.Request;
 
 /**
@@ -13,7 +13,7 @@ import okhttp3.Request;
  *
  * @author Pavol Loffay
  */
-public class RequestBuilderInjectAdapter implements TextMapPropagator.Setter<Request.Builder> {
+public class RequestBuilderInjectAdapter implements TextMapSetter<Request.Builder> {
 
   public static final RequestBuilderInjectAdapter SETTER = new RequestBuilderInjectAdapter();
 

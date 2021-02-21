@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import com.mongodb.event.CommandStartedEvent
+
 import static java.util.Arrays.asList
 
 import io.opentelemetry.javaagent.instrumentation.mongo.MongoClientTracer
@@ -69,6 +71,22 @@ class MongoClientTracerTest extends Specification {
     expect:
     // this can vary because of different whitespace for different mongo versions
     normalized == '{"cmd": "c", "f1": ["?", "?' || normalized == '{"cmd": "c", "f1": ["?",'
+  }
+
+  def 'test span name with no dbName'() {
+    setup:
+    def tracer = new MongoClientTracer()
+    def event = new CommandStartedEvent(
+      0, null, null, command, new BsonDocument(command, new BsonInt32(1)))
+
+    when:
+    def spanName = tracer.spanName(event, null, null)
+
+    then:
+    spanName == command
+
+    where:
+    command = "listDatabases"
   }
 
   def normalizeQueryAcrossVersions(MongoClientTracer tracer, BsonDocument query) {

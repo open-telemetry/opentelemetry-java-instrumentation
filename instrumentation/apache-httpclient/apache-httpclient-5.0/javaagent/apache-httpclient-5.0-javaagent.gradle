@@ -1,0 +1,13 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.apache.httpcomponents.client5"
+    module = "httpclient5"
+    versions = "[5.0,)"
+  }
+}
+
+dependencies {
+  library group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.0'
+}

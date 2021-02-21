@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.awslambda.v1_0;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -20,10 +20,8 @@ public class AwsLambdaMessageTracer extends BaseTracer {
 
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
 
-  public AwsLambdaMessageTracer() {}
-
-  public AwsLambdaMessageTracer(Tracer tracer) {
-    super(tracer);
+  public AwsLambdaMessageTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
   }
 
   public Context startSpan(SQSEvent event) {

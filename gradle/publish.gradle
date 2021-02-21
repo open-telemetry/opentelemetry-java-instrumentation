@@ -23,7 +23,12 @@ publishing {
         artifact sourcesJar
         artifact javadocJar
       } else {
-        from components.java
+        project.plugins.withId("java-platform") {
+          from(components["javaPlatform"])
+        }
+        project.plugins.withId("java-library") {
+          from components.java
+        }
       }
 
       def stable = findProperty("otel.stable") ?: false
@@ -47,7 +52,6 @@ publishing {
 
       pom {
         name = 'OpenTelemetry Instrumentation for Java'
-        packaging = 'jar'
         url = 'https://github.com/open-telemetry/opentelemetry-java-instrumentation'
 
         licenses {

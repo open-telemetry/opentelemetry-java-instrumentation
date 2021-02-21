@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 
-public class TextMapExtractAdapter implements TextMapPropagator.Getter<Headers> {
+public class TextMapExtractAdapter implements TextMapGetter<Headers> {
 
   public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
 

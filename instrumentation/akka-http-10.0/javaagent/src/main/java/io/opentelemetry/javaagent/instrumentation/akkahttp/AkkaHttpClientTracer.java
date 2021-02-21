@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClient
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentationModule.AkkaHttpHeaders;
 import java.net.URI;
@@ -55,7 +55,7 @@ public class AkkaHttpClientTracer
   }
 
   @Override
-  protected Setter<AkkaHttpHeaders> getSetter() {
+  protected TextMapSetter<AkkaHttpHeaders> getSetter() {
     return SETTER;
   }
 

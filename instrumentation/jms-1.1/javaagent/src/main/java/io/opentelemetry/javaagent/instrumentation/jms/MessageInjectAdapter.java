@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessageInjectAdapter implements TextMapPropagator.Setter<Message> {
+public class MessageInjectAdapter implements TextMapSetter<Message> {
 
   private static final Logger log = LoggerFactory.getLogger(MessageInjectAdapter.class);
 

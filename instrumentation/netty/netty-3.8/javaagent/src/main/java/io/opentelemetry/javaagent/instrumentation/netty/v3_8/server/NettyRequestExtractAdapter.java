@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 
-public class NettyRequestExtractAdapter implements TextMapPropagator.Getter<HttpRequest> {
+public class NettyRequestExtractAdapter implements TextMapGetter<HttpRequest> {
 
   public static final NettyRequestExtractAdapter GETTER = new NettyRequestExtractAdapter();
 

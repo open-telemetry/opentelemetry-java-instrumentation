@@ -54,11 +54,6 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
   }
 
   @Override
-  boolean testExceptionBody() {
-    return false
-  }
-
-  @Override
   boolean testException() {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false

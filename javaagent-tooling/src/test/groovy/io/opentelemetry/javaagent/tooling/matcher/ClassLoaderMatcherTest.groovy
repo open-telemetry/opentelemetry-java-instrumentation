@@ -6,18 +6,17 @@
 package io.opentelemetry.javaagent.tooling.matcher
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader
-import io.opentelemetry.javaagent.tooling.ExporterClassLoader
 import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider
+import io.opentelemetry.javaagent.tooling.ExporterClassLoader
 import spock.lang.Specification
 
 class ClassLoaderMatcherTest extends Specification {
 
-  private final IgnoreMatcherProvider matcherProvider = [classloader: {cl -> IgnoreMatcherProvider.Result.DEFAULT}] as IgnoreMatcherProvider
+  private final IgnoreMatcherProvider matcherProvider = [classloader: { cl -> IgnoreMatcherProvider.Result.DEFAULT }] as IgnoreMatcherProvider
 
   def "skips agent classloader"() {
     setup:
-    URL root = new URL("file://")
-    URLClassLoader agentLoader = new AgentClassLoader(root, null, null)
+    URLClassLoader agentLoader = new AgentClassLoader(null, null, null)
     expect:
     GlobalClassloaderIgnoresMatcher.skipClassLoader(matcherProvider).matches(agentLoader)
   }
@@ -43,7 +42,7 @@ class ClassLoaderMatcherTest extends Specification {
   }
 
   def "skip bootstrap classloader"() {
-    IgnoreMatcherProvider skipBootstrapClMatcherProvider = [classloader: {cl -> cl == null ? IgnoreMatcherProvider.Result.IGNORE : IgnoreMatcherProvider.Result.DEFAULT}] as IgnoreMatcherProvider
+    IgnoreMatcherProvider skipBootstrapClMatcherProvider = [classloader: { cl -> cl == null ? IgnoreMatcherProvider.Result.IGNORE : IgnoreMatcherProvider.Result.DEFAULT }] as IgnoreMatcherProvider
     expect:
     GlobalClassloaderIgnoresMatcher.skipClassLoader(skipBootstrapClMatcherProvider).matches(null)
   }

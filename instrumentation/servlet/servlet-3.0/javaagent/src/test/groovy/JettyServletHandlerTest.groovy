@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import javax.servlet.Servlet
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
@@ -11,6 +14,28 @@ import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletHandler
 
 class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandler> {
+
+  private static final boolean IS_BEFORE_94 = isBefore94()
+
+  static isBefore94() {
+    def version = Server.getVersion().split("\\.")
+    def major = Integer.parseInt(version[0])
+    def minor = Integer.parseInt(version[1])
+    return major < 9 || (major == 9 && minor < 4)
+  }
+
+  @Override
+  boolean hasResponseSpan(ServerEndpoint endpoint) {
+    return (IS_BEFORE_94 && endpoint == EXCEPTION) || super.hasResponseSpan(endpoint)
+  }
+
+  @Override
+  void responseSpan(TraceAssert trace, int index, Object controllerSpan, Object handlerSpan, String method, ServerEndpoint endpoint) {
+    if (IS_BEFORE_94 && endpoint == EXCEPTION) {
+      sendErrorSpan(trace, index, handlerSpan)
+    }
+    super.responseSpan(trace, index, controllerSpan, handlerSpan, method, endpoint)
+  }
 
   @Override
   Server startServer(int port) {

@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1.Inject
 
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 
@@ -48,7 +48,7 @@ public class JaxRsClientV1Tracer
   }
 
   @Override
-  protected Setter<ClientRequest> getSetter() {
+  protected TextMapSetter<ClientRequest> getSetter() {
     return SETTER;
   }
 

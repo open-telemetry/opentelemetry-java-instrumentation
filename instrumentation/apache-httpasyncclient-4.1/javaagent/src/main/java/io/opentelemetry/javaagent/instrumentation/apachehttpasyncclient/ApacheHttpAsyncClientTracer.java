@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.H
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -89,7 +89,7 @@ public class ApacheHttpAsyncClientTracer
   }
 
   @Override
-  protected Setter<HttpRequest> getSetter() {
+  protected TextMapSetter<HttpRequest> getSetter() {
     return SETTER;
   }
 

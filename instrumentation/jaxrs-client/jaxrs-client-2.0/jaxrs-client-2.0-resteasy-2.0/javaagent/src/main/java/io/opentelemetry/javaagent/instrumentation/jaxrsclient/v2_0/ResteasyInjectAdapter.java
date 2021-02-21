@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 
-public final class ResteasyInjectAdapter implements TextMapPropagator.Setter<ClientInvocation> {
+public final class ResteasyInjectAdapter implements TextMapSetter<ClientInvocation> {
 
   public static final ResteasyInjectAdapter SETTER = new ResteasyInjectAdapter();
 

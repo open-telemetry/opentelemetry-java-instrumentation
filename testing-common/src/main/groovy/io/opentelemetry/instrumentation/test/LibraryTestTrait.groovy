@@ -5,18 +5,17 @@
 
 package io.opentelemetry.instrumentation.test
 
-import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner
-import io.opentelemetry.instrumentation.testing.LibraryTestRunner
 
+import io.opentelemetry.instrumentation.testing.LibraryTestRunner
 /**
  * A trait which initializes instrumentation library tests, including a test span exporter. All
  * library tests should implement this trait.
  */
 trait LibraryTestTrait {
   // library test runner has to be initialized statically so that GlobalOpenTelemetry is set as soon as possible
-  private static final InstrumentationTestRunner RUNNER = LibraryTestRunner.instance()
+  private static final LibraryTestRunner RUNNER = LibraryTestRunner.instance()
 
-  InstrumentationTestRunner testRunner() {
+  LibraryTestRunner testRunner() {
     RUNNER
   }
 }

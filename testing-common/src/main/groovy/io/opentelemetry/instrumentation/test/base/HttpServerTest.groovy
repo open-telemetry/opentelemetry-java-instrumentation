@@ -67,10 +67,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
-  boolean redirectHasBody() {
-    false
-  }
-
   boolean testNotFound() {
     true
   }
@@ -80,10 +76,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   boolean testErrorBody() {
-    true
-  }
-
-  boolean testExceptionBody() {
     true
   }
 
@@ -261,7 +253,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     response.code() == REDIRECT.status
     response.header("location") == REDIRECT.body ||
       response.header("location") == "${address.resolve(REDIRECT.body)}"
-    response.body().contentLength() < 1 || redirectHasBody()
 
     and:
     assertTheTraces(1, null, null, method, REDIRECT, null, response)
@@ -299,9 +290,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
     expect:
     response.code() == EXCEPTION.status
-    if (testExceptionBody()) {
-      assert response.body().string() == EXCEPTION.body
-    }
 
     and:
     assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body, response)
