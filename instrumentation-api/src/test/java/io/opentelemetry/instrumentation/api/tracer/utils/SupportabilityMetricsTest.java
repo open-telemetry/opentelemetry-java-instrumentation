@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer.utils;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -71,10 +72,8 @@ class SupportabilityMetricsTest {
 
     assertThat(reports)
         .isNotEmpty()
-        .hasSize(2)
+        .hasSize(1)
         .hasSameElementsAs(
-            Arrays.asList(
-                "Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 1",
-                "Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 0"));
+            singletonList("Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 1"));
   }
 }
