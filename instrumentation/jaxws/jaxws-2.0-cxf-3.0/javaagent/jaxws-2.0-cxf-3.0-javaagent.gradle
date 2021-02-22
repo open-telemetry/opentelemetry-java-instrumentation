@@ -5,14 +5,13 @@ muzzle {
     group = "org.apache.cxf"
     module = "cxf-rt-frontend-jaxws"
     versions = "[3.0.0,)"
-    assertInverse
+    assertInverse = true
+    extraDependency "javax.servlet:javax.servlet-api:3.0.1"
   }
 }
 
 dependencies {
   implementation project(':instrumentation:jaxws:jaxws-2.0-cxf-3.0:library')
-
-  api group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
 
   library group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxws', version: '3.0.0'
   testLibrary group: 'org.apache.cxf', name: 'cxf-rt-transports-http', version: '3.0.0'
@@ -25,6 +24,7 @@ dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
 
+  testImplementation group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.11'
   testImplementation group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.2.11'
   testImplementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.2.11'

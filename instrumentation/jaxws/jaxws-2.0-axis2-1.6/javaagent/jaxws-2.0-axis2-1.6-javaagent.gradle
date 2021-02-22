@@ -5,7 +5,8 @@ muzzle {
     group = "org.apache.axis2"
     module = "axis2-jaxws"
     versions = "[1.6.0,)"
-    assertInverse
+    assertInverse = true
+    skipVersions += ['1.2', '1.3']
   }
 }
 
