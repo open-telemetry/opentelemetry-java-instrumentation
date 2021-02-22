@@ -32,7 +32,7 @@ class UtilsTest extends Specification {
     result == "com/example/Something"
   }
 
-  def "convertToInnerClassName()"(){
+  def "convertToInnerClassName() makes dollar into dots"(){
     setup:
     def result = Utils.convertToInnerClassName("com/example/MyOuter.MyInner")
     expect:
