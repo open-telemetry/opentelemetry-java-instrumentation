@@ -20,7 +20,7 @@ public class DemoSdkTracerProviderConfigurer implements SdkTracerProviderConfigu
   public void configure(SdkTracerProviderBuilder tracerProvider) {
     tracerProvider
         .setIdGenerator(new DemoIdGenerator())
-        .setSpanLimits(SpanLimits.builder().setMaxLengthOfAttributeValues(128).build())
+        .setSpanLimits(SpanLimits.builder().setMaxNumberOfAttributes(1024).build())
         .setSampler(new DemoSampler())
         .addSpanProcessor(new DemoSpanProcessor())
         .addSpanProcessor(SimpleSpanProcessor.create(new DemoSpanExporter()));

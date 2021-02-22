@@ -11,8 +11,8 @@ subprojects {
 
       dependencies {
         compileOnly("io.opentelemetry:opentelemetry-sdk:${versions.opentelemetry}")
-        compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-api:${versions.opentelemetryJavaagent}")
-        compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagent}")
+        compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-api:${versions.opentelemetryJavaagentAlpha}")
+        compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
 
         compileOnly deps.bytebuddy
         compileOnly deps.bytebuddyagent
