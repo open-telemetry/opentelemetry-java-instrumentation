@@ -4,12 +4,6 @@ plugins {
 
 apply from: "$rootDir/gradle/java.gradle"
 
-sourceSets {
-  main {
-    resources.srcDirs "src/main/schema"
-  }
-}
-
 checkstyle {
   // exclude generated web service classes
   checkstyleMain.exclude "**/hello_web_service/**"

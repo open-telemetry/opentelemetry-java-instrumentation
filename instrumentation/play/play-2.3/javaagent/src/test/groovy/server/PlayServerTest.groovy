@@ -48,6 +48,6 @@ class PlayServerTest extends HttpServerTest<TestServer> implements AgentTestTrai
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "netty.request"
+    return "HTTP GET"
   }
 }
