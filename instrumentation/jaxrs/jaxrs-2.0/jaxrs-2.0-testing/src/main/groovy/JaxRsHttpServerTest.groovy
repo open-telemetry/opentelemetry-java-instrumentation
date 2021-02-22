@@ -189,7 +189,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
         "${SemanticAttributes.HTTP_URL.key}" fullUrl.toString()
         "${SemanticAttributes.HTTP_METHOD.key}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" statusCode
-        "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+        "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
       }

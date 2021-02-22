@@ -195,6 +195,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   protected void onConnectionAndRequest(Span span, CONNECTION connection, REQUEST request) {
     String flavor = flavor(connection, request);
     if (flavor != null) {
+      // remove HTTP/ prefix to comply with semantic conventions
+      if (flavor.startsWith("HTTP/")) {
+        flavor = flavor.substring("HTTP/".length());
+      }
       span.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
     }
     span.setAttribute(SemanticAttributes.HTTP_CLIENT_IP, clientIP(connection, request));
