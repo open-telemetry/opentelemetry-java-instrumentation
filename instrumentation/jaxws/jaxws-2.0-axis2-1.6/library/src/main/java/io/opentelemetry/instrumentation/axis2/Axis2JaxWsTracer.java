@@ -68,7 +68,7 @@ public class Axis2JaxWsTracer extends BaseTracer {
     message.setProperty(SCOPE_KEY, null);
 
     if (throwable != null) {
-      tracer().endExceptionally(context, throwable);
+      endExceptionally(context, throwable);
     } else {
       tracer().end(context);
     }
