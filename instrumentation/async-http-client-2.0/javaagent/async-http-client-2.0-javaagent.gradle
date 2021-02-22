@@ -1,6 +1,6 @@
 ext {
   //AHC uses Unsafe and so does not run on later java version
-  maxJavaVersionForTests = JavaVersion.VERSION_1_9
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
