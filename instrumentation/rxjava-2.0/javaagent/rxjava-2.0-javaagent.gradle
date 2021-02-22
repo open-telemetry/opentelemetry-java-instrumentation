@@ -1,0 +1,15 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "io.reactivex.rxjava2"
+    module = "rxjava"
+    versions = "[2.0.0,)"
+  }
+}
+
+dependencies {
+  implementation project(":instrumentation:rxjava-2.0:library")
+
+  testImplementation project(':instrumentation:rxjava-2.0:testing')
+}
