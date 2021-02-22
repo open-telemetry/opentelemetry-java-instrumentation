@@ -83,6 +83,9 @@ abstract class AppServerTest extends SmokeTest {
     and: "Client and server spans for the remote call"
     traces.countFilteredAttributes("http.url", "http://localhost:8080/app/headers") == 2
 
+    and: "Number of spans with http protocol version"
+    traces.countFilteredAttributes("http.flavor", "1.1") == 3
+
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
 
@@ -212,6 +215,9 @@ abstract class AppServerTest extends SmokeTest {
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1
 
+    and: "Number of spans with http protocol version"
+    traces.countFilteredAttributes("http.flavor", "1.1") == 1
+
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
 
@@ -301,6 +307,9 @@ abstract class AppServerTest extends SmokeTest {
     and: "The span for the initial web request"
     traces.countFilteredAttributes("http.url", url) == 1
 
+    and: "Number of spans with http protocol version"
+    traces.countFilteredAttributes("http.flavor", "1.1") == 1
+
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
 
@@ -349,6 +358,9 @@ abstract class AppServerTest extends SmokeTest {
 
     and: "Client and server spans for the remote call"
     traces.countFilteredAttributes("http.url", "http://localhost:8080/app/headers") == 2
+
+    and: "Number of spans with http protocol version"
+    traces.countFilteredAttributes("http.flavor", "1.1") == 3
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
