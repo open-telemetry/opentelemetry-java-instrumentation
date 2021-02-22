@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader.BootstrapClassLoaderProxy;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.regex.Pattern;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 
@@ -30,6 +31,8 @@ public class Utils {
     }
   }
 
+  private static final Pattern CLASS_SUFFIX_PATTERN = Pattern.compile("\\.class$");
+
   /** Return the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
     return AgentInstaller.class.getClassLoader();
@@ -39,29 +42,31 @@ public class Utils {
   public static BootstrapClassLoaderProxy getBootstrapProxy() {
     if (getAgentClassLoader() instanceof AgentClassLoader) {
       return ((AgentClassLoader) getAgentClassLoader()).getBootstrapProxy();
-    } else {
-      // in a unit test
-      return unitTestBootstrapProxy;
     }
+    // in a unit test
+    return unitTestBootstrapProxy;
   }
 
   /** com.foo.Bar to com/foo/Bar.class */
   public static String getResourceName(String className) {
-    if (!className.endsWith(".class")) {
-      return className.replace('.', '/') + ".class";
-    } else {
+    if (className.endsWith(".class")) {
       return className;
     }
+    return className.replace('.', '/') + ".class";
   }
 
   /** com/foo/Bar.class to com.foo.Bar */
   public static String getClassName(String resourceName) {
-    return resourceName.replaceAll("\\.class\\$", "").replace('/', '.');
+    return stripDotClassSuffix(resourceName).replace('/', '.');
   }
 
   /** com.foo.Bar to com/foo/Bar */
   public static String getInternalName(String resourceName) {
-    return resourceName.replaceAll("\\.class\\$", "").replace('.', '/');
+    return stripDotClassSuffix(resourceName).replace('.', '/');
+  }
+
+  private static String stripDotClassSuffix(String resourceName) {
+    return CLASS_SUFFIX_PATTERN.matcher(resourceName).replaceAll("");
   }
 
   /**
@@ -72,7 +77,7 @@ public class Utils {
    * @return converted name
    */
   public static String convertToInnerClassName(String className) {
-    return className.replaceAll("\\.", "\\$");
+    return className.replace('.', '$');
   }
 
   /**
