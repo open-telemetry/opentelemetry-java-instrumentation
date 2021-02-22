@@ -1,0 +1,40 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.apache.axis2"
+    module = "axis2-jaxws"
+    versions = "[1.6.0,)"
+    assertInverse = true
+    skipVersions += ['1.2', '1.3']
+  }
+}
+
+configurations {
+  // axis has a dependency on servlet api, get rid of it
+  all*.exclude group: 'javax.servlet', module: 'servlet-api'
+}
+
+dependencies {
+  implementation project(':instrumentation:jaxws:jaxws-2.0-axis2-1.6:library')
+
+  def axis2Version = '1.6.0'
+  library group: 'org.apache.axis2', name: 'axis2-jaxws', version: axis2Version
+  testLibrary group: 'org.apache.axis2', name: 'axis2-transport-http', version: axis2Version
+  testLibrary group: 'org.apache.axis2', name: 'axis2-transport-local', version: axis2Version
+
+  testImplementation project(":instrumentation:jaxws:jaxws-2.0-testing")
+
+  testInstrumentation project(":instrumentation:jaxws:jaxws-2.0:javaagent")
+  testInstrumentation project(":instrumentation:jaxws:jws-1.1:javaagent")
+
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
+
+  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.11'
+  testImplementation group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.2.11'
+  testImplementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.2.11'
+
+  testImplementation group: 'com.sun.xml.ws', name: 'jaxws-rt', version: '2.2.8'
+  testImplementation group: 'com.sun.xml.ws', name: 'jaxws-tools', version: '2.2.8'
+}
