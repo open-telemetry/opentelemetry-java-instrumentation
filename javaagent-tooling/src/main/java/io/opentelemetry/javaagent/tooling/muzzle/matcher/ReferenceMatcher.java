@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPred
 import static java.util.Collections.emptyList;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
-import com.google.common.collect.Sets;
 import io.opentelemetry.javaagent.bootstrap.WeakCache;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -160,9 +159,8 @@ public final class ReferenceMatcher {
     Set<HelperReferenceWrapper.Method> plainMethods = new HashSet<>();
     collectMethodsFromTypeHierarchy(helperWrapper, abstractMethods, plainMethods);
 
-    Set<HelperReferenceWrapper.Method> unimplementedMethods =
-        Sets.difference(abstractMethods, plainMethods);
-    for (HelperReferenceWrapper.Method unimplementedMethod : unimplementedMethods) {
+    abstractMethods.removeAll(plainMethods);
+    for (HelperReferenceWrapper.Method unimplementedMethod : abstractMethods) {
       mismatches =
           lazyAdd(
               mismatches,

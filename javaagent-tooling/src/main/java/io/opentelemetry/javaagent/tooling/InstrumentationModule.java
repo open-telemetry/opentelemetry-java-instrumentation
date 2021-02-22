@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.failSafe;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -91,7 +90,9 @@ public abstract class InstrumentationModule {
    * @see #InstrumentationModule(String, String...)
    */
   public InstrumentationModule(List<String> instrumentationNames) {
-    checkArgument(instrumentationNames.size() > 0, "InstrumentationModules must be named");
+    if (instrumentationNames.isEmpty()) {
+      throw new IllegalArgumentException("InstrumentationModules must be named");
+    }
     this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
     enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
   }
