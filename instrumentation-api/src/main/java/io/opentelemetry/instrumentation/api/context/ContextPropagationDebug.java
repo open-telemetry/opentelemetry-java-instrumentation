@@ -59,7 +59,7 @@ public final class ContextPropagationDebug {
     }
   }
 
-  public static void debugContextPropagation(Context context) {
+  private static void debugContextPropagation(Context context) {
     List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(context);
     if (locations != null) {
       StringBuilder sb = new StringBuilder();
