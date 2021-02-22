@@ -54,9 +54,4 @@ class VertxHttpClientTest extends HttpClientTest implements AgentTestTrait {
     // FIXME: figure out how to configure timeouts.
     false
   }
-
-  @Override
-  boolean testCausality() {
-    false
-  }
 }

@@ -24,7 +24,9 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.netty.channel.AbstractChannelHandlerContext");
+    // Different classes depending on Netty version
+    return named("io.netty.channel.AbstractChannelHandlerContext")
+        .or(named("io.netty.channel.DefaultChannelHandlerContext"));
   }
 
   @Override

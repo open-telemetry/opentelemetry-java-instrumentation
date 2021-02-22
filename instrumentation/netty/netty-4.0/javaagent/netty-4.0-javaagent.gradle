@@ -28,11 +28,7 @@ muzzle {
 
 dependencies {
   library group: 'io.netty', name: 'netty-codec-http', version: '4.0.0.Final'
-
-  testLibrary group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.9'
-
   latestDepTestLibrary group: 'io.netty', name: 'netty-codec-http', version: '4.0.56.Final'
-  latestDepTestLibrary group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.+'
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.

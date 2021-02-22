@@ -57,4 +57,9 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   boolean testRemoteConnection() {
     return false
   }
+
+  @Override
+  boolean testCausality() {
+    return false
+  }
 }
