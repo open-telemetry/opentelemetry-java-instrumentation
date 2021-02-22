@@ -61,8 +61,8 @@ public class SupportabilityMetrics {
     if (agentDebugEnabled) {
       Executors.newScheduledThreadPool(
               1,
-              r -> {
-                Thread result = new Thread("supportability_metrics_reporter");
+              runnable -> {
+                Thread result = new Thread(runnable, "supportability_metrics_reporter");
                 result.setDaemon(true);
                 return result;
               })
