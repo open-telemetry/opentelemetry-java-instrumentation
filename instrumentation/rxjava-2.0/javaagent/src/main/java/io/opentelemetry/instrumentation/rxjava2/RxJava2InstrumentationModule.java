@@ -38,7 +38,9 @@ public class RxJava2InstrumentationModule extends InstrumentationModule {
 
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return Collections.singletonMap(isTypeInitializer(), RxJava2InstrumentationModule.class.getName() + "$RxJavaPluginsAdvice");
+      return Collections.singletonMap(
+          isTypeInitializer(),
+          RxJava2InstrumentationModule.class.getName() + "$RxJavaPluginsAdvice");
     }
   }
 
