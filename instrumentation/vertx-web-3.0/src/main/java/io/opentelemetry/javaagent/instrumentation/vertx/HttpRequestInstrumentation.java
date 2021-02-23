@@ -59,8 +59,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         HttpRequestInstrumentation.class.getName() + "$AttachContextAdvice");
 
     transformers.put(
-        isMethod().and(isPrivate()).and(
-            nameStartsWith("write").or(nameStartsWith("connected"))),
+        isMethod().and(isPrivate()).and(nameStartsWith("write").or(nameStartsWith("connected"))),
         HttpRequestInstrumentation.class.getName() + "$MountContextAdvice");
     return transformers;
   }
