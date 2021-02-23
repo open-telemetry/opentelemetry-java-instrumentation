@@ -26,7 +26,12 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest implements Ag
   }
 
   @Override
-  boolean testCircularRedirects() {
-    false
+  int maxRedirects() {
+    20
+  }
+
+  @Override
+  Integer statusOnRedirectError() {
+    return 302
   }
 }
