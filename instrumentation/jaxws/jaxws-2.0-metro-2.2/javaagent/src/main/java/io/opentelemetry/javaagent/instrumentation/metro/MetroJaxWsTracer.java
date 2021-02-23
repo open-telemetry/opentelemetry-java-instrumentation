@@ -14,11 +14,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.javaagent.instrumentation.metro.TracingPropertySet.ThrowableHolder;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.ws.handler.MessageContext;
 
 public class MetroJaxWsTracer extends BaseTracer {
+  private static final String CONTEXT_KEY = "TracingPropertySet.Context";
+  private static final String SCOPE_KEY = "TracingPropertySet.Scope";
+  private static final String THROWABLE_KEY = "TracingPropertySet.Throwable";
+
   private static final MetroJaxWsTracer TRACER = new MetroJaxWsTracer();
 
   public static MetroJaxWsTracer tracer() {
@@ -33,7 +36,8 @@ public class MetroJaxWsTracer extends BaseTracer {
     Scope scope = context.makeCurrent();
 
     // store context and scope
-    packet.addSatellite(new TracingPropertySet(context, scope));
+    packet.invocationProperties.put(CONTEXT_KEY, context);
+    packet.invocationProperties.put(SCOPE_KEY, scope);
 
     Span serverSpan = getCurrentServerSpan();
     if (serverSpan != null) {
@@ -61,15 +65,13 @@ public class MetroJaxWsTracer extends BaseTracer {
   }
 
   public void end(Packet packet, Throwable throwable) {
-    Scope scope = (Scope) packet.get(TracingPropertySet.SCOPE_KEY);
+    Scope scope = (Scope) packet.invocationProperties.remove(SCOPE_KEY);
     if (scope != null) {
       scope.close();
 
-      Context context = (Context) packet.get(TracingPropertySet.CONTEXT_KEY);
+      Context context = (Context) packet.invocationProperties.remove(CONTEXT_KEY);
       if (throwable == null) {
-        ThrowableHolder throwableHolder =
-            (ThrowableHolder) packet.get(TracingPropertySet.THROWABLE_KEY);
-        throwable = throwableHolder.getThrowable();
+        throwable = (Throwable) packet.invocationProperties.remove(THROWABLE_KEY);
       }
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);
@@ -77,6 +79,10 @@ public class MetroJaxWsTracer extends BaseTracer {
         tracer().end(context);
       }
     }
+  }
+
+  public void storeThrowable(Packet packet, Throwable throwable) {
+    packet.invocationProperties.put(THROWABLE_KEY, throwable);
   }
 
   @Override

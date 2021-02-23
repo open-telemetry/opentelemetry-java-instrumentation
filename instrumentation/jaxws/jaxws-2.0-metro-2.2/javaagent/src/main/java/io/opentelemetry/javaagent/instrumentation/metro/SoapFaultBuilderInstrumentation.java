@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.metro;
 
+import static io.opentelemetry.javaagent.instrumentation.metro.MetroJaxWsTracer.tracer;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.sun.xml.ws.api.message.Packet;
 import com.sun.xml.ws.api.pipe.Fiber;
-import io.opentelemetry.javaagent.instrumentation.metro.TracingPropertySet.ThrowableHolder;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -42,10 +42,17 @@ public class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
       if (throwable == null) {
         return;
       }
-      Packet request = Fiber.current().getPacket();
-      ThrowableHolder throwableHolder =
-          (ThrowableHolder) request.get(TracingPropertySet.THROWABLE_KEY);
-      throwableHolder.setThrowable(throwable);
+      Packet request = null;
+      // we expect this to be called with attached fiber
+      // if fiber is not attached current() throws IllegalStateException
+      try {
+        request = Fiber.current().getPacket();
+      } catch (IllegalStateException ignore) {
+        // fiber not available
+      }
+      if (request != null) {
+        tracer().storeThrowable(request, throwable);
+      }
     }
   }
 }
