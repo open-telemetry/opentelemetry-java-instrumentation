@@ -76,5 +76,5 @@ dependencies {
 
   mojarra2TestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2.3.12'
 
-  latestDepTestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2+'
+  latestDepTestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2.3.14'
 }
