@@ -10,7 +10,6 @@ ENV SERVER_BASE=/usr/local/tomee
 COPY --from=default $SERVER_BASE $SERVER_BASE
 WORKDIR $SERVER_BASE
 
-COPY app.war $SERVER_BASE/webapps/
-
 EXPOSE 8080
 CMD ["bin/catalina.sh", "run"]
+COPY app.war $SERVER_BASE/webapps/

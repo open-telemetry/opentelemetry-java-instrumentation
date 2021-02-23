@@ -28,7 +28,6 @@ RUN rm ${PAYARA_DIR}/glassfish/modules/phonehome-bootstrap.jar
 
 WORKDIR $HOME_DIR
 
-COPY app.war $DEPLOY_DIR
-
 EXPOSE 8080
 CMD ["entrypoint.sh"]
+COPY app.war $DEPLOY_DIR
