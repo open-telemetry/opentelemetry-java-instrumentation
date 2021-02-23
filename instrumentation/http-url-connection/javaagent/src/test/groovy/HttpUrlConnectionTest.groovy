@@ -61,7 +61,7 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
     runUnderTrace("someTrace") {
       HttpURLConnection connection = url.openConnection()
       connection.useCaches = useCaches
-      assert Span.current() != null
+      assert Span.current().getSpanContext().isValid()
       def stream = connection.inputStream
       def lines = stream.readLines()
       stream.close()
@@ -71,7 +71,7 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
       // call again to ensure the cycling is ok
       connection = url.openConnection()
       connection.useCaches = useCaches
-      assert Span.current() != null
+      assert Span.current().getSpanContext().isValid()
       // call before input stream to test alternate behavior
       assert connection.getResponseCode() == STATUS
       connection.inputStream
@@ -151,7 +151,7 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
       HttpURLConnection connection = url.openConnection()
       connection.useCaches = useCaches
       connection.addRequestProperty("is-test-server", "false")
-      assert Span.current() != null
+      assert Span.current().getSpanContext().isValid()
       def stream = connection.inputStream
       connection.inputStream // one more to ensure state is working
       def lines = stream.readLines()
@@ -163,7 +163,7 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
       connection = url.openConnection()
       connection.useCaches = useCaches
       connection.addRequestProperty("is-test-server", "false")
-      assert Span.current() != null
+      assert Span.current().getSpanContext().isValid()
       // call before input stream to test alternate behavior
       assert connection.getResponseCode() == STATUS
       stream = connection.inputStream
@@ -226,7 +226,7 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
       HttpURLConnection connection = url.openConnection()
       connection.setRequestProperty("Connection", "close")
       connection.addRequestProperty("is-test-server", "false")
-      assert Span.current() != null
+      assert Span.current().getSpanContext().isValid()
       assert connection.getResponseCode() == STATUS
       return connection
     }
