@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -25,6 +26,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.jaxrs.experimental-span-attributes", false);
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -95,7 +100,9 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
       Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
-        span.setAttribute("jaxrs.canceled", true);
+        if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+          span.setAttribute("jaxrs.canceled", true);
+        }
         tracer().end(span);
       }
     }

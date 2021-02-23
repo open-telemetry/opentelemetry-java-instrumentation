@@ -9,16 +9,22 @@ import static io.opentelemetry.javaagent.instrumentation.spymemcached.MemcacheCl
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import net.spy.memcached.MemcachedConnection;
 
 public abstract class CompletionListener<T> {
 
-  static final String DB_COMMAND_CANCELLED = "lettuce.command.cancelled";
-  static final String MEMCACHED_RESULT = "memcached.result";
-  static final String HIT = "hit";
-  static final String MISS = "miss";
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty(
+              "otel.instrumentation.spymemcached.experimental-span-attributes", false);
+
+  private static final String DB_COMMAND_CANCELLED = "spymemcached.command.cancelled";
+  private static final String MEMCACHED_RESULT = "spymemcached.result";
+  private static final String HIT = "hit";
+  private static final String MISS = "miss";
 
   private final Context context;
 
@@ -32,12 +38,16 @@ public abstract class CompletionListener<T> {
     try {
       processResult(span, future);
     } catch (CancellationException e) {
-      span.setAttribute(DB_COMMAND_CANCELLED, true);
+      if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+        span.setAttribute(DB_COMMAND_CANCELLED, true);
+      }
     } catch (ExecutionException e) {
       if (e.getCause() instanceof CancellationException) {
         // Looks like underlying OperationFuture wraps CancellationException into
         // ExecutionException
-        span.setAttribute(DB_COMMAND_CANCELLED, true);
+        if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+          span.setAttribute(DB_COMMAND_CANCELLED, true);
+        }
       } else {
         tracer().endExceptionally(span, e);
       }
@@ -61,6 +71,8 @@ public abstract class CompletionListener<T> {
       throws ExecutionException, InterruptedException;
 
   protected void setResultTag(Span span, boolean hit) {
-    span.setAttribute(MEMCACHED_RESULT, hit ? HIT : MISS);
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      span.setAttribute(MEMCACHED_RESULT, hit ? HIT : MISS);
+    }
   }
 }

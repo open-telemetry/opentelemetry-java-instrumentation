@@ -364,7 +364,7 @@ class RabbitMQTest extends AgentInstrumentationSpecification {
         "${SemanticAttributes.MESSAGING_DESTINATION.key}" exchange
         "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
         //TODO add to SemanticAttributes
-        "messaging.rabbitmq.routing_key" { it == null || it == routingKey || it.startsWith("amq.gen-") }
+        "rabbitmq.routing_key" { it == null || it == routingKey || it.startsWith("amq.gen-") }
         if (operation != null && operation != "send") {
           "${SemanticAttributes.MESSAGING_OPERATION.key}" operation
         }

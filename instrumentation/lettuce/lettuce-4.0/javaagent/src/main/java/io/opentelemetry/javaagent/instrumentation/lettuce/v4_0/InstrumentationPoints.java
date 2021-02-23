@@ -16,11 +16,16 @@ import com.lambdaworks.redis.protocol.ProtocolKeyword;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
 public final class InstrumentationPoints {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.lettuce.experimental-span-attributes", false);
 
   private static final Set<CommandType> NON_INSTRUMENTING_COMMANDS = EnumSet.of(SHUTDOWN, DEBUG);
 
@@ -37,8 +42,10 @@ public final class InstrumentationPoints {
             if (ex == null) {
               tracer().end(context);
             } else if (ex instanceof CancellationException) {
-              Span span = Span.fromContext(context);
-              span.setAttribute("lettuce.command.cancelled", true);
+              if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+                Span span = Span.fromContext(context);
+                span.setAttribute("lettuce.command.cancelled", true);
+              }
               tracer().end(context);
             } else {
               tracer().endExceptionally(context, ex);

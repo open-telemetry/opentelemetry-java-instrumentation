@@ -17,3 +17,8 @@ dependencies {
 
   latestDepTestLibrary group: 'com.twilio.sdk', name: 'twilio', version: '7.+'
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.twilio.experimental-span-attributes=true"
+}

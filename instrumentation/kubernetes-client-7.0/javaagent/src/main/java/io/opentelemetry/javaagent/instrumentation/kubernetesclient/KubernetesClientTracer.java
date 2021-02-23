@@ -9,14 +9,22 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
 public class KubernetesClientTracer extends HttpClientTracer<Request, Request, Response> {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty(
+              "otel.instrumentation.kubernetes-client.experimental-span-attributes", false);
+
   private static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
 
   public static KubernetesClientTracer tracer() {
@@ -29,14 +37,14 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
    */
   public Context startSpan(Context parentContext, Request request) {
     KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
-    Span span =
-        tracer
-            .spanBuilder(digest.toString())
-            .setSpanKind(CLIENT)
-            .setParent(parentContext)
-            .setAttribute("namespace", digest.getResourceMeta().getNamespace())
-            .setAttribute("name", digest.getResourceMeta().getName())
-            .startSpan();
+    SpanBuilder spanBuilder =
+        tracer.spanBuilder(digest.toString()).setSpanKind(CLIENT).setParent(parentContext);
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      spanBuilder
+          .setAttribute("kubernetes-client.namespace", digest.getResourceMeta().getNamespace())
+          .setAttribute("kubernetes-client.name", digest.getResourceMeta().getName());
+    }
+    Span span = spanBuilder.startSpan();
     Context context = withClientSpan(parentContext, span);
     GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()

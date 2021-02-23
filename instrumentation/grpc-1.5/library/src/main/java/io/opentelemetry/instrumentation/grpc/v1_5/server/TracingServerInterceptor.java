@@ -19,6 +19,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
@@ -26,6 +27,10 @@ import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TracingServerInterceptor implements ServerInterceptor {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.grpc.experimental-span-attributes", false);
 
   public static ServerInterceptor newInterceptor() {
     return newInterceptor(new GrpcServerTracer());
@@ -139,7 +144,9 @@ public class TracingServerInterceptor implements ServerInterceptor {
     public void onCancel() {
       try (Scope ignored = span.makeCurrent()) {
         delegate().onCancel();
-        span.setAttribute("grpc.canceled", true);
+        if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+          span.setAttribute("grpc.canceled", true);
+        }
       } catch (Throwable e) {
         tracer.endExceptionally(span, e);
         throw e;

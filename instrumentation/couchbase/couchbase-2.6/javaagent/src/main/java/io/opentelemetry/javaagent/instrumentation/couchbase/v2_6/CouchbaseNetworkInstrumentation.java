@@ -79,7 +79,9 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
           }
         }
 
-        span.setAttribute("couchbase.local.address", localSocket);
+        if (CouchbaseConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+          span.setAttribute("couchbase.local.address", localSocket);
+        }
       }
     }
   }
