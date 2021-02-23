@@ -270,10 +270,12 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
     and:
     assertTraces(1) {
-      trace(0, 3 + extraClientSpans()) {
+      trace(0, 1 + extraClientSpans() + maxRedirects()) {
         clientSpan(it, 0, null, method, uri, statusOnRedirectError(), thrownException)
-        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
-        serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
+        def start = 1 + extraClientSpans()
+        for (int i = start; i < maxRedirects() + start; i++) {
+          serverSpan(it, i, span(extraClientSpans()))
+        }
       }
     }
 
@@ -518,6 +520,11 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   boolean testCircularRedirects() {
     true
+  }
+
+  // maximum number of redirects that http client follows before giving up
+  int maxRedirects() {
+    2
   }
 
   boolean testConnectionFailure() {

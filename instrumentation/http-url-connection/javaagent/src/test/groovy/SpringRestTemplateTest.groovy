@@ -11,6 +11,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.http.client.ClientHttpRequestFactory
 import org.springframework.http.client.SimpleClientHttpRequestFactory
+import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
 import spock.lang.Timeout
@@ -29,27 +30,25 @@ class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    def httpHeaders = new HttpHeaders()
-    headers.each { httpHeaders.put(it.key, [it.value]) }
-    def request = new HttpEntity<String>(httpHeaders)
-    ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.resolve(method), request, String)
-    callback?.call()
-    return response.statusCode.value()
+    try {
+      def httpHeaders = new HttpHeaders()
+      headers.each { httpHeaders.put(it.key, [it.value]) }
+      def request = new HttpEntity<String>(httpHeaders)
+      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.resolve(method), request, String)
+      callback?.call()
+      return response.statusCode.value()
+    } catch (ResourceAccessException exception) {
+      throw exception.getCause()
+    }
   }
 
   @Override
-  boolean testCircularRedirects() {
-    false
+  int maxRedirects() {
+    20
   }
 
   @Override
-  boolean testConnectionFailure() {
-    false
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    // FIXME: exception wrapped in ResourceAccessException
-    return false
+  Integer statusOnRedirectError() {
+    return 302
   }
 }
