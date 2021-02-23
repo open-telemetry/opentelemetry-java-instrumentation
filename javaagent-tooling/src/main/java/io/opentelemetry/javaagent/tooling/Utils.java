@@ -11,7 +11,6 @@ import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader.BootstrapClassLoaderProxy;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.regex.Pattern;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 
@@ -30,8 +29,6 @@ public class Utils {
       throw new IllegalStateException(e);
     }
   }
-
-  private static final Pattern CLASS_SUFFIX_PATTERN = Pattern.compile("\\.class$");
 
   /** Return the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
@@ -66,7 +63,11 @@ public class Utils {
   }
 
   private static String stripDotClassSuffix(String resourceName) {
-    return CLASS_SUFFIX_PATTERN.matcher(resourceName).replaceAll("");
+    String suffix = ".class";
+    if (resourceName.endsWith(suffix)) {
+      return resourceName.substring(0, resourceName.length() - suffix.length());
+    }
+    return resourceName;
   }
 
   /**
