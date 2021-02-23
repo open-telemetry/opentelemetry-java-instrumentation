@@ -30,6 +30,8 @@ public class Utils {
     }
   }
 
+  private static final String CLASS_SUFFIX = ".class";
+
   /** Return the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
     return AgentInstaller.class.getClassLoader();
@@ -46,10 +48,10 @@ public class Utils {
 
   /** com.foo.Bar to com/foo/Bar.class */
   public static String getResourceName(String className) {
-    if (className.endsWith(".class")) {
+    if (className.endsWith(CLASS_SUFFIX)) {
       return className;
     }
-    return className.replace('.', '/') + ".class";
+    return className.replace('.', '/') + CLASS_SUFFIX;
   }
 
   /** com/foo/Bar.class to com.foo.Bar */
@@ -63,9 +65,8 @@ public class Utils {
   }
 
   private static String stripDotClassSuffix(String resourceName) {
-    String suffix = ".class";
-    if (resourceName.endsWith(suffix)) {
-      return resourceName.substring(0, resourceName.length() - suffix.length());
+    if (resourceName.endsWith(CLASS_SUFFIX)) {
+      return resourceName.substring(0, resourceName.length() - CLASS_SUFFIX.length());
     }
     return resourceName;
   }
