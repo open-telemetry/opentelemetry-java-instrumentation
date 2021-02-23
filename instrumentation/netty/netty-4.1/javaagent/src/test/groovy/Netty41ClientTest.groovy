@@ -6,6 +6,7 @@
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static org.junit.Assume.assumeTrue
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
@@ -285,6 +286,21 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
     null != channel.pipeline().remove('Netty41ClientTest$OtherSimpleHandler#0')
   }
 
+  def "when a traced handler is added from an initializer we still detect it and add our channel handlers"() {
+    // This test method replicates a scenario similar to how reactor 0.8.x register the `HttpClientCodec` handler
+    // into the pipeline.
+    setup:
+    assumeTrue(Boolean.getBoolean("testLatestDeps"))
+    def channel = new EmbeddedChannel()
+
+    when:
+    channel.pipeline().addLast(new TracedHandlerFromInitializerHandler())
+
+    then:
+    null != channel.pipeline().remove("added_in_initializer")
+    null != channel.pipeline().remove(HttpClientTracingHandler.getName())
+  }
+
   def "request with trace annotated method"() {
     given:
     def annotatedClass = new TracedClass()
@@ -348,6 +364,14 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
 
     @Override
     void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    }
+  }
+
+  static class TracedHandlerFromInitializerHandler extends ChannelInitializer<Channel> implements ChannelHandler {
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+      // This replicates how reactor 0.8.x add the HttpClientCodec
+      ch.pipeline().addLast("added_in_initializer", new HttpClientCodec())
     }
   }
 }
