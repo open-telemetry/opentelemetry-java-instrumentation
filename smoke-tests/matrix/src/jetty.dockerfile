@@ -1,8 +1,9 @@
 ARG version
 ARG jdk
+ARG vm
 FROM jetty:${version}-jre11-slim as jetty
 
-FROM adoptopenjdk:${jdk}
+FROM adoptopenjdk:${jdk}-jdk-${vm}
 ENV JETTY_HOME /usr/local/jetty
 ENV JETTY_BASE /var/lib/jetty
 ENV TMPDIR /tmp/jetty
