@@ -19,6 +19,7 @@ import org.springframework.util.ClassUtils
 import org.springframework.ws.client.core.WebServiceTemplate
 import org.springframework.ws.soap.client.SoapFaultClientException
 import spock.lang.Shared
+import spock.lang.Unroll
 
 abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification implements HttpServerTestTrait<Server> {
 
@@ -84,6 +85,7 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
     return webServiceTemplate.marshalSendAndReceive(getServiceAddress("HelloService"), request)
   }
 
+  @Unroll
   def "test #methodName"() {
     setup:
     def response = makeRequest(methodName, "Test")
@@ -110,7 +112,8 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
     methodName << ["hello", "hello2"]
   }
 
-  def "test #methodName exception"(methodName) {
+  @Unroll
+  def "test #methodName exception"() {
     when:
     makeRequest(methodName, "exception")
 
