@@ -26,7 +26,7 @@ These are the supported libraries and frameworks:
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Apache Wicket](https://wicket.apache.org/)                                                                                           | 8.0+                           |
 | [Armeria](https://armeria.dev)                                                                                                        | 1.3+                           |
-| [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+ (not including 2.x yet)   |
+| [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+                           |
 | [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)                                                          | 1.0+                           |
 | [AWS SDK](https://aws.amazon.com/sdk-for-java/)                                                                                       | 1.11.x and 2.2.0+              |
 | [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+                           |

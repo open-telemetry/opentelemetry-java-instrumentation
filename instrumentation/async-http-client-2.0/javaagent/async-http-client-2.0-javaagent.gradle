@@ -1,0 +1,21 @@
+ext {
+  //AHC uses Unsafe and so does not run on later java version
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.asynchttpclient"
+    module = "async-http-client"
+    versions = "[2.0.0,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  library group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.0'
+
+  testInstrumentation project(':instrumentation:netty:netty-4.0:javaagent')
+}
