@@ -1,9 +1,15 @@
 plugins {
   id("com.github.johnrengelman.shadow") version "6.0.0"
 }
+
+apply from: "$rootDir/gradle/shadow.gradle"
+
+def relocatePackages = ext.relocatePackages
+
 configurations {
   customShadow
 }
+
 dependencies {
   customShadow project(path: ":custom", configuration: "shadow")
   customShadow project(path: ":instrumentation", configuration: "shadow")
@@ -35,17 +41,7 @@ tasks {
     }
     exclude("**/module-info.class")
 
-    // Prevents conflict with other SLF4J instances. Important for premain.
-    relocate("org.slf4j", "io.opentelemetry.javaagent.slf4j")
-    // rewrite dependencies calling Logger.getLogger
-    relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
-
-    // prevents conflict with library instrumentation
-    relocate("io.opentelemetry.instrumentation.api", "io.opentelemetry.javaagent.shaded.instrumentation.api")
-
-    // relocate OpenTelemetry API
-    relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
-    relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
+    relocatePackages(it)
 
     manifest {
       attributes.put("Main-Class", "io.opentelemetry.javaagent.OpenTelemetryAgent")
