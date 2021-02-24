@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 11 for running checks
         uses: actions/setup-java@v1
@@ -32,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 11 for running checks
         uses: actions/setup-java@v1
@@ -55,6 +59,8 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - id: setup-test-java
         name: Set up JDK ${{ matrix.java }} for running tests
         uses: actions/setup-java@v1
