@@ -33,12 +33,12 @@ use the `@WithSpan` annotation, also include the `opentelemetry-extension-annota
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-api</artifactId>
-      <version>0.15.0</version>
+      <version>0.17.1</version>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-extension-annotations</artifactId>
-      <version>0.15.0</version>
+      <version>0.17.1</version>
     </dependency>
   </dependencies>
 ```
@@ -47,8 +47,8 @@ use the `@WithSpan` annotation, also include the `opentelemetry-extension-annota
 
 ```groovy
 dependencies {
-    implementation('io.opentelemetry:opentelemetry-api:0.15.0')
-    implementation('io.opentelemetry:opentelemetry-extension-annotations:0.15.0')
+    implementation('io.opentelemetry:opentelemetry-api:0.17.1')
+    implementation('io.opentelemetry:opentelemetry-extension-annotations:0.17.1')
 }
 ```
 
