@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
@@ -19,6 +18,5 @@ import java.sql.PreparedStatement;
  */
 public class JdbcMaps {
   public static final WeakMap<Connection, DbInfo> connectionInfo = newWeakMap();
-  public static final WeakMap<PreparedStatement, SqlStatementInfo> preparedStatements =
-      newWeakMap();
+  public static final WeakMap<PreparedStatement, String> preparedStatements = newWeakMap();
 }

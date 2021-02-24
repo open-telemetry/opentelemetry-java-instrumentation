@@ -9,8 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.connecti
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
 import java.net.InetSocketAddress;
@@ -20,7 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
+public class JdbcTracer extends DatabaseClientTracer<DbInfo, String, SqlStatementInfo> {
   private static final JdbcTracer TRACER = new JdbcTracer();
 
   public static JdbcTracer tracer() {
@@ -30,6 +28,33 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.jdbc";
+  }
+
+  public Context startSpan(Context parentContext, PreparedStatement statement) {
+    return startSpan(parentContext, statement, JdbcMaps.preparedStatements.get(statement));
+  }
+
+  public Context startSpan(Context parentContext, Statement statement, String query) {
+    Connection connection = connectionFromStatement(statement);
+    if (connection == null) {
+      return null;
+    }
+
+    DbInfo dbInfo = extractDbInfo(connection);
+
+    return startSpan(parentContext, dbInfo, query);
+  }
+
+  @Override
+  protected SqlStatementInfo sanitizeStatement(String statement) {
+    return SqlStatementSanitizer.sanitize(statement);
+  }
+
+  @Override
+  protected String spanName(
+      DbInfo connection, String statement, SqlStatementInfo sanitizedStatement) {
+    return conventionSpanName(
+        dbName(connection), sanitizedStatement.getOperation(), sanitizedStatement.getTable());
   }
 
   @Override
@@ -51,6 +76,11 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
     }
   }
 
+  @Override
+  protected String dbConnectionString(DbInfo info) {
+    return info.getShortUrl();
+  }
+
   // TODO find a way to implement
   @Override
   protected InetSocketAddress peerAddress(DbInfo dbInfo) {
@@ -58,58 +88,9 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, SqlStatementInfo> {
   }
 
   @Override
-  protected String dbConnectionString(DbInfo info) {
-    return info.getShortUrl();
-  }
-
-  public CallDepth getCallDepth() {
-    return CallDepthThreadLocalMap.getCallDepth(Statement.class);
-  }
-
-  public Context startSpan(Context parentContext, PreparedStatement statement) {
-    return startSpan(parentContext, statement, JdbcMaps.preparedStatements.get(statement));
-  }
-
-  public Context startSpan(Context parentContext, Statement statement, String query) {
-    return startSpan(parentContext, statement, SqlStatementSanitizer.sanitize(query));
-  }
-
-  private Context startSpan(
-      Context parentContext, Statement statement, SqlStatementInfo queryInfo) {
-    Connection connection = connectionFromStatement(statement);
-    if (connection == null) {
-      return null;
-    }
-
-    DbInfo dbInfo = extractDbInfo(connection);
-
-    return startSpan(parentContext, dbInfo, queryInfo);
-  }
-
-  @Override
-  protected String normalizeQuery(SqlStatementInfo query) {
-    return query.getFullStatement();
-  }
-
-  @Override
-  protected String spanName(DbInfo connection, SqlStatementInfo query, String normalizedQuery) {
-    String dbName = dbName(connection);
-    if (query.getOperation() == null) {
-      return dbName == null ? DB_QUERY : dbName;
-    }
-
-    StringBuilder name = new StringBuilder();
-    name.append(query.getOperation()).append(' ');
-    if (dbName != null) {
-      name.append(dbName);
-      if (query.getTable() != null) {
-        name.append('.');
-      }
-    }
-    if (query.getTable() != null) {
-      name.append(query.getTable());
-    }
-    return name.toString();
+  protected String dbStatement(
+      DbInfo connection, String statement, SqlStatementInfo sanitizedStatement) {
+    return sanitizedStatement.getFullStatement();
   }
 
   private DbInfo extractDbInfo(Connection connection) {

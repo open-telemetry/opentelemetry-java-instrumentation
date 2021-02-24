@@ -8,13 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import org.apache.geode.cache.Region;
 
-public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
+public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String, SqlStatementInfo> {
   private static final GeodeTracer TRACER = new GeodeTracer();
 
   public static GeodeTracer tracer() {
@@ -22,33 +24,30 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
   }
 
   public Span startSpan(String operation, Region<?, ?> connection, String query) {
-    String normalizedQuery = normalizeQuery(query);
+    SqlStatementInfo sanitizedStatement = sanitizeStatement(query);
 
-    Span span =
+    SpanBuilder span =
         tracer
             .spanBuilder(operation)
             .setSpanKind(CLIENT)
             .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection))
-            .setAttribute(SemanticAttributes.DB_OPERATION, operation)
-            .startSpan();
+            .setAttribute(SemanticAttributes.DB_OPERATION, operation);
 
     onConnection(span, connection);
     setNetSemanticConvention(span, connection);
-    onStatement(span, normalizedQuery);
+    onStatement(span, connection, query, sanitizedStatement);
 
-    return span;
+    return span.startSpan();
   }
 
   @Override
-  protected String normalizeQuery(String query) {
-    return SqlStatementSanitizer.sanitize(query).getFullStatement();
+  protected SqlStatementInfo sanitizeStatement(String statement) {
+    return SqlStatementSanitizer.sanitize(statement);
   }
 
   @Override
   protected String dbSystem(Region<?, ?> region) {
-    // TODO(anuraaga): Replace with semantic attribute
-    // https://github.com/open-telemetry/opentelemetry-specification/pull/1321
-    return "geode";
+    return SemanticAttributes.DbSystemValues.GEODE;
   }
 
   @Override
@@ -59,6 +58,12 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String> {
   @Override
   protected InetSocketAddress peerAddress(Region<?, ?> region) {
     return null;
+  }
+
+  @Override
+  protected String dbStatement(
+      Region<?, ?> connection, String statement, SqlStatementInfo sanitizedStatement) {
+    return sanitizedStatement.getFullStatement();
   }
 
   @Override

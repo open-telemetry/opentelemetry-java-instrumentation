@@ -13,7 +13,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import org.elasticsearch.client.Response;
 
-public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, String> {
+public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, String, String> {
   private static final ElasticsearchRestClientTracer TRACER = new ElasticsearchRestClientTracer();
 
   public static ElasticsearchRestClientTracer tracer() {
@@ -29,13 +29,8 @@ public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, St
   }
 
   @Override
-  protected void onStatement(Span span, String statement) {
-    span.setAttribute(SemanticAttributes.DB_OPERATION, statement);
-  }
-
-  @Override
-  protected String normalizeQuery(String query) {
-    return query;
+  protected String sanitizeStatement(String operation) {
+    return operation;
   }
 
   @Override
@@ -46,6 +41,11 @@ public class ElasticsearchRestClientTracer extends DatabaseClientTracer<Void, St
   @Override
   protected InetSocketAddress peerAddress(Void connection) {
     return null;
+  }
+
+  @Override
+  protected String dbOperation(Void connection, String operation, String ignored) {
+    return operation;
   }
 
   @Override

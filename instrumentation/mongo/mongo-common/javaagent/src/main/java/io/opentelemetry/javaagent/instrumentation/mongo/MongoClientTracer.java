@@ -10,7 +10,7 @@ import static java.util.Arrays.asList;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
@@ -20,7 +20,6 @@ import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -30,7 +29,8 @@ import org.bson.BsonValue;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
 
-public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent, BsonDocument> {
+public class MongoClientTracer
+    extends DatabaseClientTracer<CommandStartedEvent, BsonDocument, String> {
   private static final MongoClientTracer TRACER = new MongoClientTracer();
 
   private final int maxNormalizedQueryLength;
@@ -55,58 +55,38 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
   }
 
   @Override
+  protected String sanitizeStatement(BsonDocument command) {
+    StringWriter stringWriter = new StringWriter(128);
+    writeScrubbed(command, new JsonWriter(stringWriter, jsonWriterSettings), true);
+    // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
+    // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
+    return stringWriter
+        .getBuffer()
+        .substring(0, Math.min(maxNormalizedQueryLength, stringWriter.getBuffer().length()));
+  }
+
+  @Override
+  public String spanName(CommandStartedEvent event, BsonDocument document, String normalizedQuery) {
+    return conventionSpanName(dbName(event), event.getCommandName(), collectionName(event));
+  }
+
+  @Override
   protected String dbSystem(CommandStartedEvent event) {
     return DbSystemValues.MONGODB;
   }
 
   @Override
-  protected Span onConnection(Span span, CommandStartedEvent event) {
-    span.setAttribute(SemanticAttributes.DB_OPERATION, event.getCommandName());
+  protected void onConnection(SpanBuilder span, CommandStartedEvent event) {
     String collection = collectionName(event);
     if (collection != null) {
       span.setAttribute(SemanticAttributes.DB_MONGODB_COLLECTION, collection);
     }
-    return super.onConnection(span, event);
+    super.onConnection(span, event);
   }
 
   @Override
   protected String dbName(CommandStartedEvent event) {
     return event.getDatabaseName();
-  }
-
-  @Override
-  protected InetSocketAddress peerAddress(CommandStartedEvent event) {
-    if (event.getConnectionDescription() != null
-        && event.getConnectionDescription().getServerAddress() != null) {
-      return event.getConnectionDescription().getServerAddress().getSocketAddress();
-    } else {
-      return null;
-    }
-  }
-
-  @Override
-  public String spanName(CommandStartedEvent event, BsonDocument document, String normalizedQuery) {
-    String dbName = dbName(event);
-    if (event.getCommandName() == null) {
-      return dbName == null ? DB_QUERY : dbName;
-    }
-
-    String collectionName = collectionName(event);
-    StringBuilder name = new StringBuilder();
-    name.append(event.getCommandName());
-    if (dbName != null || collectionName != null) {
-      name.append(' ');
-    }
-    if (dbName != null) {
-      name.append(dbName);
-      if (collectionName != null) {
-        name.append('.');
-      }
-    }
-    if (collectionName != null) {
-      name.append(collectionName);
-    }
-    return name.toString();
   }
 
   @Override
@@ -126,6 +106,28 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     return null;
   }
 
+  @Override
+  protected InetSocketAddress peerAddress(CommandStartedEvent event) {
+    if (event.getConnectionDescription() != null
+        && event.getConnectionDescription().getServerAddress() != null) {
+      return event.getConnectionDescription().getServerAddress().getSocketAddress();
+    } else {
+      return null;
+    }
+  }
+
+  @Override
+  protected String dbStatement(
+      CommandStartedEvent event, BsonDocument command, String sanitizedStatement) {
+    return sanitizedStatement;
+  }
+
+  @Override
+  protected String dbOperation(
+      CommandStartedEvent event, BsonDocument command, String sanitizedStatement) {
+    return event.getCommandName();
+  }
+
   private static final Method IS_TRUNCATED_METHOD;
 
   static {
@@ -135,13 +137,6 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
             .findFirst()
             .orElse(null);
   }
-
-  /**
-   * The values of these mongo fields will not be scrubbed out. This allows the non-sensitive
-   * collection names to be captured.
-   */
-  private static final List<String> UNSCRUBBED_FIELDS =
-      asList("ordered", "insert", "count", "find", "create");
 
   private JsonWriterSettings createJsonWriterSettings(int maxNormalizedQueryLength) {
     JsonWriterSettings settings = null;
@@ -190,17 +185,6 @@ public class MongoClientTracer extends DatabaseClientTracer<CommandStartedEvent,
     }
 
     return settings;
-  }
-
-  @Override
-  public String normalizeQuery(BsonDocument command) {
-    StringWriter stringWriter = new StringWriter(128);
-    writeScrubbed(command, new JsonWriter(stringWriter, jsonWriterSettings), true);
-    // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
-    // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
-    return stringWriter
-        .getBuffer()
-        .substring(0, Math.min(maxNormalizedQueryLength, stringWriter.getBuffer().length()));
   }
 
   private static final String HIDDEN_CHAR = "?";

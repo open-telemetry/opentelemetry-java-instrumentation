@@ -16,7 +16,7 @@ public class LettuceConnectionDatabaseClientTracer
   }
 
   @Override
-  protected String normalizeQuery(String command) {
+  protected String sanitizeStatement(String command) {
     return command;
   }
 }
