@@ -95,7 +95,9 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
       Span span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
-        span.setAttribute("jaxrs.canceled", true);
+        if (JaxrsConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+          span.setAttribute("jaxrs.canceled", true);
+        }
         tracer().end(span);
       }
     }

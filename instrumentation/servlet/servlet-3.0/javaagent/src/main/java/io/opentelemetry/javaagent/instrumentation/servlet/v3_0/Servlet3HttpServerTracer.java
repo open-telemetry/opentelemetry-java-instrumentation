@@ -8,11 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServletResponse> {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.servlet.experimental-span-attributes", false);
 
   private static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
 
@@ -43,7 +48,9 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
   public void onTimeout(Context context, long timeout) {
     Span span = Span.fromContext(context);
     span.setStatus(StatusCode.ERROR);
-    span.setAttribute("servlet.timeout", timeout);
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      span.setAttribute("servlet.timeout", timeout);
+    }
     span.end();
   }
 

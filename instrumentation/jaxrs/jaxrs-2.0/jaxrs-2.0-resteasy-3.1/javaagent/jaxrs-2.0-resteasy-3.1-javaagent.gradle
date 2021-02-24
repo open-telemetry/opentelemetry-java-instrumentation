@@ -49,3 +49,8 @@ if (findProperty('testLatestDeps')) {
     testImplementation.exclude group: 'org.jboss.resteasy', module: 'resteasy-jaxrs'
   }
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.jaxrs.experimental-span-attributes=true"
+}

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -18,6 +19,11 @@ import org.apache.jasper.compiler.Compiler;
 import org.slf4j.LoggerFactory;
 
 public class JspTracer extends BaseTracer {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.jsp.experimental-span-attributes", false);
+
   private static final JspTracer TRACER = new JspTracer();
 
   public static JspTracer tracer() {
@@ -31,7 +37,7 @@ public class JspTracer extends BaseTracer {
   }
 
   public void onCompile(Context context, JspCompilationContext jspCompilationContext) {
-    if (jspCompilationContext != null) {
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES && jspCompilationContext != null) {
       Span span = Span.fromContext(context);
       Compiler compiler = jspCompilationContext.getCompiler();
       if (compiler != null) {
@@ -52,6 +58,9 @@ public class JspTracer extends BaseTracer {
   }
 
   public void onRender(Context context, HttpServletRequest req) {
+    if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      return;
+    }
     Span span = Span.fromContext(context);
 
     Object forwardOrigin = req.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH);

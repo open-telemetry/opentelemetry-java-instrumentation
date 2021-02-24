@@ -19,6 +19,7 @@ import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -26,6 +27,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class RabbitTracer extends BaseTracer {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.rabbitmq.experimental-span-attributes", false);
 
   private static final RabbitTracer TRACER = new RabbitTracer();
 
@@ -60,8 +65,9 @@ public class RabbitTracer extends BaseTracer {
       spanBuilder.setAttribute(
           SemanticAttributes.MESSAGING_DESTINATION,
           normalizeExchangeName(response.getEnvelope().getExchange()));
-      spanBuilder.setAttribute(
-          "messaging.rabbitmq.routing_key", response.getEnvelope().getRoutingKey());
+      if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+        spanBuilder.setAttribute("rabbitmq.routing_key", response.getEnvelope().getRoutingKey());
+      }
       spanBuilder.setAttribute(
           SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
           (long) response.getBody().length);
@@ -92,7 +98,7 @@ public class RabbitTracer extends BaseTracer {
       span.setAttribute(
           SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length);
     }
-    if (properties.getTimestamp() != null) {
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES && properties.getTimestamp() != null) {
       // this will be set if the sender sets the timestamp,
       // or if a plugin is installed on the rabbitmq broker
       long produceTime = properties.getTimestamp().getTime();
@@ -111,9 +117,11 @@ public class RabbitTracer extends BaseTracer {
             ? "<all>"
             : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
     span.updateName(exchangeName + " -> " + routing + " send");
-    span.setAttribute("rabbitmq.command", "basic.publish");
-    if (routingKey != null && !routingKey.isEmpty()) {
-      span.setAttribute("messaging.rabbitmq.routing_key", routingKey);
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      span.setAttribute("rabbitmq.command", "basic.publish");
+      if (routingKey != null && !routingKey.isEmpty()) {
+        span.setAttribute("rabbitmq.routing_key", routingKey);
+      }
     }
   }
 
@@ -122,8 +130,10 @@ public class RabbitTracer extends BaseTracer {
   }
 
   public void onGet(SpanBuilder span, String queue) {
-    span.setAttribute("rabbitmq.command", "basic.get");
-    span.setAttribute("rabbitmq.queue", queue);
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      span.setAttribute("rabbitmq.command", "basic.get");
+      span.setAttribute("rabbitmq.queue", queue);
+    }
   }
 
   public String spanNameOnDeliver(String queue) {
@@ -137,14 +147,18 @@ public class RabbitTracer extends BaseTracer {
   }
 
   public void onDeliver(Span span, Envelope envelope) {
-    span.setAttribute("rabbitmq.command", "basic.deliver");
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      span.setAttribute("rabbitmq.command", "basic.deliver");
+    }
 
     if (envelope != null) {
       String exchange = envelope.getExchange();
       span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION, normalizeExchangeName(exchange));
-      String routingKey = envelope.getRoutingKey();
-      if (routingKey != null && !routingKey.isEmpty()) {
-        span.setAttribute("messaging.rabbitmq.routing_key", routingKey);
+      if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+        String routingKey = envelope.getRoutingKey();
+        if (routingKey != null && !routingKey.isEmpty()) {
+          span.setAttribute("rabbitmq.routing_key", routingKey);
+        }
       }
     }
   }
@@ -159,7 +173,9 @@ public class RabbitTracer extends BaseTracer {
     if (!name.equals("basic.publish")) {
       span.updateName(name);
     }
-    span.setAttribute("rabbitmq.command", name);
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      span.setAttribute("rabbitmq.command", name);
+    }
   }
 
   @Override

@@ -25,3 +25,8 @@ dependencies {
   testLibrary group: 'org.apache.cxf', name: 'cxf-rt-transports-http-jetty', version: '3.2.0'
   testLibrary group: 'org.apache.cxf', name: 'cxf-rt-ws-policy', version: '3.2.0'
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.jaxrs.experimental-span-attributes=true"
+}
