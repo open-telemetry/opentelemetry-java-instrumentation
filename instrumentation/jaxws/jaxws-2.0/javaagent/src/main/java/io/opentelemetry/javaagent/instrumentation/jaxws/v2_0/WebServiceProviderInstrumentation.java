@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -51,19 +51,19 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
     public static void startSpan(
         @Advice.This Object target,
         @Advice.Origin Method method,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Provider.class) > 0) {
         return;
       }
-      span = tracer().startSpan(target.getClass(), method);
-      scope = span.makeCurrent();
+      context = tracer().startSpan(target.getClass(), method);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
@@ -72,9 +72,9 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
 
       scope.close();
       if (throwable == null) {
-        tracer().end(span);
+        tracer().end(context);
       } else {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       }
     }
   }

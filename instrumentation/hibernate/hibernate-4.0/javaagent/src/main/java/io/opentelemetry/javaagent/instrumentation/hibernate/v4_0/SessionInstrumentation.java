@@ -23,7 +23,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionMethodUtils;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
@@ -115,11 +114,10 @@ public class SessionInstrumentation implements TypeInstrumentation {
       if (sessionContext == null) {
         return;
       }
-      Span sessionSpan = Java8BytecodeBridge.spanFromContext(sessionContext);
       if (throwable != null) {
-        tracer().endExceptionally(sessionSpan, throwable);
+        tracer().endExceptionally(sessionContext, throwable);
       } else {
-        tracer().end(sessionSpan);
+        tracer().end(sessionContext);
       }
     }
   }

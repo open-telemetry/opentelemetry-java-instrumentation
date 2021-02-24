@@ -50,17 +50,16 @@ public class SessionMethodUtils {
       return;
     }
 
-    Span span = Span.fromContext(context);
     if (operationName != null && entity != null) {
       String entityName = tracer().entityName(entity);
       if (entityName != null) {
-        span.updateName(operationName + " " + entityName);
+        Span.fromContext(context).updateName(operationName + " " + entityName);
       }
     }
     if (throwable != null) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
     } else {
-      tracer().end(span);
+      tracer().end(context);
     }
   }
 

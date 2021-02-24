@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
@@ -33,14 +35,14 @@ public class SpringWebMvcTracer extends BaseTracer {
     return TRACER;
   }
 
-  public Span startHandlerSpan(Object handler) {
-    return tracer.spanBuilder(spanNameOnHandle(handler)).startSpan();
+  public Context startHandlerSpan(Context parentContext, Object handler) {
+    return startSpan(parentContext, spanNameOnHandle(handler), SpanKind.INTERNAL);
   }
 
-  public Span startSpan(ModelAndView mv) {
-    Span span = tracer.spanBuilder(spanNameOnRender(mv)).startSpan();
+  public Context startSpan(ModelAndView mv) {
+    SpanBuilder span = tracer.spanBuilder(spanNameOnRender(mv));
     onRender(span, mv);
-    return span;
+    return Context.current().with(span.startSpan());
   }
 
   public void onRequest(Context context, Span span, HttpServletRequest request) {
@@ -96,7 +98,7 @@ public class SpringWebMvcTracer extends BaseTracer {
     return "Render <unknown>";
   }
 
-  private void onRender(Span span, ModelAndView mv) {
+  private void onRender(SpanBuilder span, ModelAndView mv) {
     if (captureExperimentalSpanAttributes) {
       span.setAttribute("spring-webmvc.view.name", mv.getViewName());
       View view = mv.getView();

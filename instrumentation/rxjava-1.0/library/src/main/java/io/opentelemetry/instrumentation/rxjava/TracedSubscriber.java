@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rxjava;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -61,11 +60,10 @@ public class TracedSubscriber<T> extends Subscriber<T> {
         error = t;
         throw t;
       } finally {
-        Span span = Span.fromContext(context);
         if (error != null) {
-          tracer.endExceptionally(span, error);
+          tracer.endExceptionally(context, error);
         } else {
-          tracer.end(span);
+          tracer.end(context);
         }
       }
     } else {
@@ -77,7 +75,7 @@ public class TracedSubscriber<T> extends Subscriber<T> {
   public void onError(Throwable e) {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
-      tracer.endExceptionally(Span.fromContext(context), e);
+      tracer.endExceptionally(context, e);
     }
     // TODO (trask) should this be wrapped in parent of context(?)
     delegate.onError(e);

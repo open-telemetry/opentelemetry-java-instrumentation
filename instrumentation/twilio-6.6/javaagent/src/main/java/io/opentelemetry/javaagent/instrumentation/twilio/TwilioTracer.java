@@ -104,7 +104,8 @@ public class TwilioTracer extends BaseTracer {
         setTagIfPresent(span, result, "twilio.status", "getStatus");
       }
     }
-    super.end(span);
+
+    super.end(context);
   }
 
   /**
