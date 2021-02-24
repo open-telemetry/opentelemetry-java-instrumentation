@@ -514,7 +514,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
     // drops "$1" suffix for enum constants that override/implement super class methods
     private String getEnumClassInternalName(Reference.Flag flag) {
-      String fullInternalName = Utils.getInternalName(flag.getClass().getName());
+      String fullInternalName = Utils.getInternalName(flag.getClass());
       Matcher m = ANONYMOUS_ENUM_CONSTANT_CLASS.matcher(fullInternalName);
       return m.matches() ? m.group("enumClass") : fullInternalName;
     }
