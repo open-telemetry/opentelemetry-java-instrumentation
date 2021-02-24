@@ -9,28 +9,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader.BootstrapClassLoaderProxy;
-import java.lang.reflect.Method;
 import java.net.URL;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 
 public class Utils {
 
-  // This is used in HelperInjectionTest.groovy
-  private static Method findLoadedClassMethod = null;
-
   private static final BootstrapClassLoaderProxy unitTestBootstrapProxy =
       new BootstrapClassLoaderProxy(new URL[0]);
-
-  static {
-    try {
-      findLoadedClassMethod = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
-    } catch (NoSuchMethodException | SecurityException e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
-  private static final String CLASS_SUFFIX = ".class";
 
   /** Return the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
@@ -48,27 +34,17 @@ public class Utils {
 
   /** com.foo.Bar to com/foo/Bar.class */
   public static String getResourceName(String className) {
-    if (className.endsWith(CLASS_SUFFIX)) {
-      return className;
-    }
-    return className.replace('.', '/') + CLASS_SUFFIX;
+    return className.replace('.', '/') + ".class";
   }
 
-  /** com/foo/Bar.class to com.foo.Bar */
-  public static String getClassName(String resourceName) {
-    return stripDotClassSuffix(resourceName).replace('/', '.');
+  /** com/foo/Bar to com.foo.Bar */
+  public static String getClassName(String internalName) {
+    return internalName.replace('/', '.');
   }
 
   /** com.foo.Bar to com/foo/Bar */
-  public static String getInternalName(String resourceName) {
-    return stripDotClassSuffix(resourceName).replace('.', '/');
-  }
-
-  private static String stripDotClassSuffix(String resourceName) {
-    if (resourceName.endsWith(CLASS_SUFFIX)) {
-      return resourceName.substring(0, resourceName.length() - CLASS_SUFFIX.length());
-    }
-    return resourceName;
+  public static String getInternalName(Class<?> clazz) {
+    return clazz.getName().replace('.', '/');
   }
 
   /**

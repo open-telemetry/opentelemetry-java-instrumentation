@@ -18,21 +18,28 @@ class UtilsTest extends Specification {
     stackTrace.contains(System.getProperty("line.separator"))
   }
 
-  def "getClassName() removes suffix and slashes to dots"(){
+  def "getResourceName() adds suffix and converts dots to slashes"() {
     setup:
-    def result = Utils.getClassName("com/example/Something.class")
+    def result = Utils.getResourceName("com.example.Something")
+    expect:
+    result == "com/example/Something.class"
+  }
+
+  def "getClassName() converts slashes to dots"() {
+    setup:
+    def result = Utils.getClassName("com/example/Something")
     expect:
     result == "com.example.Something"
   }
 
-  def "getInternalName() removes suffix and slashes to dots"(){
+  def "getInternalName() converts slashes to dots"() {
     setup:
-    def result = Utils.getInternalName("com.example.Something.class")
+    def result = Utils.getInternalName(UtilsTest)
     expect:
-    result == "com/example/Something"
+    result == "io/opentelemetry/javaagent/tooling/UtilsTest"
   }
 
-  def "convertToInnerClassName() makes dollar into dots"(){
+  def "convertToInnerClassName() makes dollar into dots"() {
     setup:
     def result = Utils.convertToInnerClassName("com/example/MyOuter.MyInner")
     expect:
