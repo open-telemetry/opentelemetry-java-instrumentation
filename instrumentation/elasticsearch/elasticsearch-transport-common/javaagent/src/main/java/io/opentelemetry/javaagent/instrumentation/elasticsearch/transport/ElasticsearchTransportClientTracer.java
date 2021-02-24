@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
@@ -14,6 +15,12 @@ import org.elasticsearch.action.Action;
 
 public class ElasticsearchTransportClientTracer
     extends DatabaseClientTracer<Void, Action<?, ?, ?>> {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty(
+              "otel.instrumentation.elasticsearch.experimental-span-attributes", false);
+
   private static final ElasticsearchTransportClientTracer TRACER =
       new ElasticsearchTransportClientTracer();
 
@@ -22,9 +29,11 @@ public class ElasticsearchTransportClientTracer
   }
 
   public void onRequest(Context context, Class action, Class request) {
-    Span span = Span.fromContext(context);
-    span.setAttribute("elasticsearch.action", action.getSimpleName());
-    span.setAttribute("elasticsearch.request", request.getSimpleName());
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      Span span = Span.fromContext(context);
+      span.setAttribute("elasticsearch.action", action.getSimpleName());
+      span.setAttribute("elasticsearch.request", request.getSimpleName());
+    }
   }
 
   @Override

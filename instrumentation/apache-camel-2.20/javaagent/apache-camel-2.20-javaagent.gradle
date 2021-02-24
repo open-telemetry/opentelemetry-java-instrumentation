@@ -52,3 +52,8 @@ dependencies {
   latestDepTestLibrary group: 'org.apache.camel', name: 'camel-undertow', version: '2.+'
   latestDepTestLibrary group: 'org.apache.camel', name: 'camel-aws', version: '2.+'
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.apache-camel.experimental-span-attributes=true"
+}
