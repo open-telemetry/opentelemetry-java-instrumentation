@@ -12,7 +12,7 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import java.net.InetSocketAddress;
@@ -85,7 +85,7 @@ public class NettyHttpClientTracer
   }
 
   @Override
-  protected TextMapPropagator.Setter<HttpHeaders> getSetter() {
+  protected TextMapSetter<HttpHeaders> getSetter() {
     return SETTER;
   }
 

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling;
 
 import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.MapMaker;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +34,8 @@ class WeakMapSuppliers {
    */
   static class WeakConcurrent implements WeakMap.Implementation {
 
-    @VisibleForTesting static final long CLEAN_FREQUENCY_SECONDS = 1;
+    // Visible for testing
+    static final long CLEAN_FREQUENCY_SECONDS = 1;
 
     @Override
     public <K, V> WeakMap<K, V> get() {

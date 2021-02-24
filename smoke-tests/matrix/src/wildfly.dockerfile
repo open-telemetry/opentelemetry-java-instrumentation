@@ -1,5 +1,6 @@
 ARG jdk
-FROM adoptopenjdk:${jdk}
+ARG vm
+FROM adoptopenjdk:${jdk}-jdk-${vm}
 
 # Create a user and group used to launch processes
 # The user ID 1000 is the default for the first "regular" user on Fedora/RHEL,

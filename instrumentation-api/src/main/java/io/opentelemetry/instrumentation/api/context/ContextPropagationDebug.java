@@ -50,25 +50,30 @@ public final class ContextPropagationDebug {
       if (currentSpan != null) {
         log.error("It contains this span: {}", currentSpan);
       }
-      List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(current);
-      if (locations != null) {
-        StringBuilder sb = new StringBuilder();
-        Iterator<StackTraceElement[]> i = locations.iterator();
-        while (i.hasNext()) {
-          for (StackTraceElement ste : i.next()) {
-            sb.append("\n");
-            sb.append(ste);
-          }
-          if (i.hasNext()) {
-            sb.append("\nwhich was propagated from:");
-          }
-        }
-        log.error("a context leak was detected. it was propagated from:{}", sb);
-      }
+
+      debugContextPropagation(current);
 
       if (FAIL_ON_CONTEXT_LEAK) {
         throw new IllegalStateException("Context leak detected");
       }
+    }
+  }
+
+  private static void debugContextPropagation(Context context) {
+    List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(context);
+    if (locations != null) {
+      StringBuilder sb = new StringBuilder();
+      Iterator<StackTraceElement[]> i = locations.iterator();
+      while (i.hasNext()) {
+        for (StackTraceElement ste : i.next()) {
+          sb.append("\n");
+          sb.append(ste);
+        }
+        if (i.hasNext()) {
+          sb.append("\nwhich was propagated from:");
+        }
+      }
+      log.error("a context leak was detected. it was propagated from:{}", sb);
     }
   }
 

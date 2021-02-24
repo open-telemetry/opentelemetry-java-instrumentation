@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import java.nio.charset.StandardCharsets;
 import org.apache.kafka.common.header.Headers;
 
-public class TextMapInjectAdapter implements TextMapPropagator.Setter<Headers> {
+public class TextMapInjectAdapter implements TextMapSetter<Headers> {
 
   public static final TextMapInjectAdapter SETTER = new TextMapInjectAdapter();
 

@@ -12,7 +12,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
@@ -195,6 +195,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   protected void onConnectionAndRequest(Span span, CONNECTION connection, REQUEST request) {
     String flavor = flavor(connection, request);
     if (flavor != null) {
+      // remove HTTP/ prefix to comply with semantic conventions
+      if (flavor.startsWith("HTTP/")) {
+        flavor = flavor.substring("HTTP/".length());
+      }
       span.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
     }
     span.setAttribute(SemanticAttributes.HTTP_CLIENT_IP, clientIP(connection, request));
@@ -272,7 +276,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   protected abstract String flavor(CONNECTION connection, REQUEST request);
 
-  protected abstract TextMapPropagator.Getter<REQUEST> getGetter();
+  protected abstract TextMapGetter<REQUEST> getGetter();
 
   protected abstract String url(REQUEST request);
 

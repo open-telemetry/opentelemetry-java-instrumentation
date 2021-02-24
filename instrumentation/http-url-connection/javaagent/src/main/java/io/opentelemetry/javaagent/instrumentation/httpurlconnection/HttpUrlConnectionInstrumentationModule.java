@@ -26,6 +26,7 @@ import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -167,7 +168,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
           InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
       HttpUrlState httpUrlState = storage.get(connection);
       if (httpUrlState != null) {
-        Span span = Span.fromContext(httpUrlState.context);
+        Span span = Java8BytecodeBridge.spanFromContext(httpUrlState.context);
         span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, returnValue);
         span.setStatus(HttpStatusConverter.statusFromHttpStatus(returnValue));
       }

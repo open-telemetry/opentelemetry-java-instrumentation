@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Map;
 
-public class TextMapExtractAdapter implements TextMapPropagator.Getter<Map<String, Object>> {
+public class TextMapExtractAdapter implements TextMapGetter<Map<String, Object>> {
 
   public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
 

@@ -73,11 +73,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
   }
 
   @Override
-  boolean testExceptionBody() {
-    false
-  }
-
-  @Override
   boolean testNotFound() {
     // FIXME: the instrumentation adds an extra controller span which is not consistent.
     // Fix tests or remove extra span.

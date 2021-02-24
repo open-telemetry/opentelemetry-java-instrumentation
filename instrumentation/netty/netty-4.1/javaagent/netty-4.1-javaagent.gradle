@@ -4,13 +4,13 @@ muzzle {
   pass {
     group = "io.netty"
     module = "netty-codec-http"
-    versions = "[4.1.0.Final,)"
+    versions = "[4.1.0.Final,5.0.0)"
     assertInverse = true
   }
   pass {
     group = "io.netty"
     module = "netty-all"
-    versions = "[4.1.0.Final,)"
+    versions = "[4.1.0.Final,5.0.0)"
     assertInverse = true
   }
   fail {
@@ -30,19 +30,13 @@ dependencies {
   library group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
   api project(':instrumentation:netty:netty-4.1:library')
 
-  testLibrary group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
+  //Contains logging handler
+  testLibrary group: 'io.netty', name: 'netty-handler', version: '4.1.0.Final'
 
   latestDepTestLibrary group: 'io.netty', name: 'netty-codec-http', version: '(,5.0)'
+  latestDepTestLibrary group: 'io.netty', name: 'netty-handler', version: '(,5.0)'
 }
 
-// We need to force the dependency to the earliest supported version because other libraries declare newer versions.
-configurations.testImplementation {
-  resolutionStrategy {
-    eachDependency { DependencyResolveDetails details ->
-      //specifying a fixed version for all libraries with io.netty' group
-      if (details.requested.group == 'io.netty') {
-        details.useVersion "4.1.0.Final"
-      }
-    }
-  }
+test {
+  systemProperty "testLatestDeps", testLatestDeps
 }

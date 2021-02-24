@@ -6,12 +6,13 @@
 package io.opentelemetry.instrumentation.armeria.v1_3.server;
 
 import com.linecorp.armeria.common.HttpRequest;
+import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.netty.util.AsciiString;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -62,11 +63,16 @@ public class ArmeriaServerTracer
 
   @Override
   protected String flavor(ServiceRequestContext ctx, HttpRequest req) {
-    return ctx.sessionProtocol().toString();
+    SessionProtocol protocol = ctx.sessionProtocol();
+    if (protocol.isMultiplex()) {
+      return "HTTP/2.0";
+    } else {
+      return "HTTP/1.1";
+    }
   }
 
   @Override
-  protected Getter<HttpRequest> getGetter() {
+  protected TextMapGetter<HttpRequest> getGetter() {
     return ArmeriaGetter.INSTANCE;
   }
 
@@ -94,7 +100,7 @@ public class ArmeriaServerTracer
   @Override
   protected void attachServerContext(Context context, Void ctx) {}
 
-  private static class ArmeriaGetter implements Getter<HttpRequest> {
+  private static class ArmeriaGetter implements TextMapGetter<HttpRequest> {
 
     private static final ArmeriaGetter INSTANCE = new ArmeriaGetter();
 

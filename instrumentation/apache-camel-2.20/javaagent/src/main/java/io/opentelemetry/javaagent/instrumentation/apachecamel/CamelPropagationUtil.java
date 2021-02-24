@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import java.util.Collections;
 import java.util.Map;
@@ -48,7 +48,7 @@ final class CamelPropagationUtil {
         .inject(context, exchangeHeaders, MapSetter.INSTANCE);
   }
 
-  private static class MapGetter implements Getter<Map<String, Object>> {
+  private static class MapGetter implements TextMapGetter<Map<String, Object>> {
 
     private static final MapGetter INSTANCE = new MapGetter();
 
@@ -64,7 +64,7 @@ final class CamelPropagationUtil {
     }
   }
 
-  private static class MapSetter implements Setter<Map<String, Object>> {
+  private static class MapSetter implements TextMapSetter<Map<String, Object>> {
 
     private static final MapSetter INSTANCE = new MapSetter();
 

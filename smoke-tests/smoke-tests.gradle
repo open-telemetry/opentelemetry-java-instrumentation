@@ -32,7 +32,9 @@ test {
   inputs.files(tasks.findByPath(':javaagent:shadowJar').outputs.files)
   maxParallelForks = 2
 
-  timeout = Duration.ofMinutes(30)
+  timeout.set(Duration.ofMinutes(30))
+
+  enabled = System.getenv("CI") != null || findProperty('runSmokeTests')
   
   doFirst {
     jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':javaagent').tasks.shadowJar.archivePath}"

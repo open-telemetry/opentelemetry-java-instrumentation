@@ -1,0 +1,21 @@
+plugins {
+  id "org.unbroken-dome.xjc" version "2.0.0"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+
+checkstyle {
+  // exclude generated web service classes
+  checkstyleMain.exclude "**/hello_web_service/**"
+}
+
+dependencies {
+  api group: 'javax.xml.ws', name: 'jaxws-api', version: '2.0'
+  api group: 'javax.jws', name: 'javax.jws-api', version: '1.1'
+
+  api deps.testLogging
+  api group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '9.4.35.v20201120'
+  api group: 'org.springframework.ws', name: 'spring-ws-core', version: '3.0.0.RELEASE'
+
+  implementation(project(':testing-common'))
+}

@@ -14,4 +14,6 @@ dependencies {
   library group: 'org.apache.dubbo', name: 'dubbo', version: '2.7.0'
 
   testImplementation project(':instrumentation:apache-dubbo:apache-dubbo-2.7:testing')
+
+  testLibrary group: 'org.apache.dubbo', name: 'dubbo-config-api', version: '2.7.0'
 }

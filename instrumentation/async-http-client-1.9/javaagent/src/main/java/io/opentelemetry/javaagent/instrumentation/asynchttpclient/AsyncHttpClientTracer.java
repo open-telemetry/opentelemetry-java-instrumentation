@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,7 +46,7 @@ public class AsyncHttpClientTracer extends HttpClientTracer<Request, Request, Re
   }
 
   @Override
-  protected Setter<Request> getSetter() {
+  protected TextMapSetter<Request> getSetter() {
     return AsyncHttpClientInjectAdapter.SETTER;
   }
 

@@ -8,11 +8,6 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 
 abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> implements AgentTestTrait {
 
-  @Override
-  boolean testExceptionBody() {
-    false
-  }
-
 // FIXME: This doesn't work because we don't support bindAndHandle.
 //  @Override
 //  def startServer(int port) {

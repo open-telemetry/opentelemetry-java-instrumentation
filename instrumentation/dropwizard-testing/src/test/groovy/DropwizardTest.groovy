@@ -71,10 +71,6 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
     true
   }
 
-  boolean testExceptionBody() {
-    false
-  }
-
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
@@ -108,7 +104,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
         "${SemanticAttributes.HTTP_URL.key}" { it == "${endpoint.resolve(address)}" || it == "${endpoint.resolveWithoutFragment(address)}" }
         "${SemanticAttributes.HTTP_METHOD.key}" method
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" endpoint.status
-        "${SemanticAttributes.HTTP_FLAVOR.key}" "HTTP/1.1"
+        "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
         "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
       }

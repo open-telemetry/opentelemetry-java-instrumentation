@@ -33,6 +33,7 @@ public class NettyInstrumentationModule extends InstrumentationModule {
     return asList(
         new ChannelFutureListenerInstrumentation(),
         new NettyChannelPipelineInstrumentation(),
-        new AbstractChannelHandlerContextInstrumentation());
+        new AbstractChannelHandlerContextInstrumentation(),
+        new ChannelInstrumentation());
   }
 }

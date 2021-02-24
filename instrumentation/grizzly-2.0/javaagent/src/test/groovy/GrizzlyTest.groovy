@@ -106,9 +106,4 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
       }
     }
   }
-
-  @Override
-  boolean testExceptionBody() {
-    false
-  }
 }

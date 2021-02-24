@@ -10,9 +10,11 @@ muzzle {
 }
 
 dependencies {
-  implementation project(':instrumentation-core:reactor-3.1')
+  implementation project(':instrumentation:reactor-3.1:library')
 
   testLibrary group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
+
+  testImplementation project(':instrumentation:reactor-3.1:testing')
 
   latestDepTestLibrary group: 'io.projectreactor', name: 'reactor-core', version: '3.+'
   // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.

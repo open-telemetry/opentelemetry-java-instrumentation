@@ -11,7 +11,7 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -63,7 +63,7 @@ public class GoogleHttpClientTracer
   }
 
   @Override
-  protected TextMapPropagator.Setter<HttpHeaders> getSetter() {
+  protected TextMapSetter<HttpHeaders> getSetter() {
     return SETTER;
   }
 

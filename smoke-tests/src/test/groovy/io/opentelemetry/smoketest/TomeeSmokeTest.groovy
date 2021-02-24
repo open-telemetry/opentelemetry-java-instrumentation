@@ -10,12 +10,15 @@ import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.containers.wait.strategy.WaitStrategy
 
 @AppServer(version = "7.0.0", jdk = "8")
+@AppServer(version = "7.0.0", jdk = "8-openj9")
 @AppServer(version = "8.0.6", jdk = "8")
+@AppServer(version = "8.0.6", jdk = "8-openj9")
 @AppServer(version = "8.0.6", jdk = "11")
+@AppServer(version = "8.0.6", jdk = "11-openj9")
 class TomeeSmokeTest extends AppServerTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:tomee-${serverVersion}-jdk$jdk-20210202.531569197"
+    "ghcr.io/open-telemetry/java-test-containers:tomee-${serverVersion}-jdk$jdk-20210223.592806654"
   }
 
   @Override

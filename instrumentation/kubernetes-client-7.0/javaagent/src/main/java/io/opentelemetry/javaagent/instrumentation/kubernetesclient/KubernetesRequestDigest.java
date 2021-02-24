@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-import com.google.common.base.Strings;
 import java.util.regex.Pattern;
 import okhttp3.Request;
 
@@ -59,11 +58,11 @@ class KubernetesRequestDigest {
   }
 
   private static boolean hasWatchParameter(Request request) {
-    return !Strings.isNullOrEmpty(request.url().queryParameter("watch"));
+    return !isNullOrEmpty(request.url().queryParameter("watch"));
   }
 
   private static boolean hasNamePathParameter(KubernetesResource resource) {
-    return !Strings.isNullOrEmpty(resource.getName());
+    return !isNullOrEmpty(resource.getName());
   }
 
   private final String urlPath;
@@ -95,14 +94,14 @@ class KubernetesRequestDigest {
     }
 
     String groupVersion;
-    if (Strings.isNullOrEmpty(resourceMeta.getApiGroup())) { // core resource
+    if (isNullOrEmpty(resourceMeta.getApiGroup())) { // core resource
       groupVersion = "";
     } else { // regular resource
       groupVersion = resourceMeta.getApiGroup() + "/" + resourceMeta.getApiVersion();
     }
 
     String targetResourceName;
-    if (Strings.isNullOrEmpty(resourceMeta.getSubResource())) {
+    if (isNullOrEmpty(resourceMeta.getSubResource())) {
       targetResourceName = resourceMeta.getResource();
     } else { // subresource
       targetResourceName = resourceMeta.getResource() + "/" + resourceMeta.getSubResource();
@@ -115,5 +114,9 @@ class KubernetesRequestDigest {
         .append(' ')
         .append(targetResourceName)
         .toString();
+  }
+
+  private static boolean isNullOrEmpty(String s) {
+    return s == null || s.isEmpty();
   }
 }

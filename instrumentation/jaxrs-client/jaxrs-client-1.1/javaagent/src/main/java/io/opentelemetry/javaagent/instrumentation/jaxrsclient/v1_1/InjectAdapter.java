@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v1_1;
 
 import com.sun.jersey.api.client.ClientRequest;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 
-public final class InjectAdapter implements TextMapPropagator.Setter<ClientRequest> {
+public final class InjectAdapter implements TextMapSetter<ClientRequest> {
 
   public static final InjectAdapter SETTER = new InjectAdapter();
 

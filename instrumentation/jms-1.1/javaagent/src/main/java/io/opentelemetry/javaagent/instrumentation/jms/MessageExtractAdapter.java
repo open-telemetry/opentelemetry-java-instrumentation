@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-public class MessageExtractAdapter implements TextMapPropagator.Getter<Message> {
+public class MessageExtractAdapter implements TextMapGetter<Message> {
 
   public static final MessageExtractAdapter GETTER = new MessageExtractAdapter();
 

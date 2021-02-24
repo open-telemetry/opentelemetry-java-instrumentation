@@ -14,7 +14,7 @@ To use it, just add the module to your application's runtime classpath.
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-log4j-2.13.2</artifactId>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.17.0-alpha</version>
     <scope>runtime</scope>
   </dependency>
 </dependencies>
@@ -24,16 +24,16 @@ To use it, just add the module to your application's runtime classpath.
 
 ```kotlin
 dependencies {
-  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-2.13.2:0.7.0-SNAPSHOT")
+  runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-2.13.2:0.17.0-alpha")
 }
 ```
 
 Log4j will automatically pick up our integration and will have these keys added to the context when
 a log statement is made when a span is active.
 
-- `traceId`
-- `spanId`
-- `sampled`
+- `trace_id`
+- `span_id`
+- `trace_flags`
 
 You can use these keys when defining an appender in your `log4j.xml` configuration, for example
 
@@ -43,7 +43,7 @@ You can use these keys when defining an appender in your `log4j.xml` configurati
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout
-          pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} trace_id=%X{traceId} span_id=%X{spanId} - %msg%n"/>
+          pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} trace_id=%X{trace_id} span_id=%X{span_id} trace_flags=%X{trace_flags} - %msg%n"/>
     </Console>
   </Appenders>
   <Loggers>

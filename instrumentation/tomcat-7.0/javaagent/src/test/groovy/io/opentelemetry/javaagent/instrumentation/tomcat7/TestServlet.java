@@ -35,9 +35,6 @@ public class TestServlet extends HttpServlet {
             }
             return null;
           });
-    } else if ("/errorPage".equals(path)) {
-      resp.getWriter().print(HttpServerTest.ServerEndpoint.EXCEPTION.getBody());
-      resp.setStatus(500);
     } else {
       resp.getWriter().println("No cookie for you: " + path);
       resp.setStatus(400);

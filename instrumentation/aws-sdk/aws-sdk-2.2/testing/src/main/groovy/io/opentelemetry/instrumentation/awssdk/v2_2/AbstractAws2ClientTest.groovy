@@ -9,8 +9,8 @@ import static com.google.common.collect.ImmutableMap.of
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.time.Duration
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
@@ -29,6 +29,9 @@ import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
 import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
+import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndex
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement
+import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest
@@ -97,7 +100,16 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
     expect:
     response != null
     response.class.simpleName.startsWith(operation)
-    assertDynamoDbRequest(service, operation, path, method, requestId)
+    switch (operation) {
+      case "CreateTable":
+        assertCreateTableRequest(path, method, requestId)
+        break
+      case "Query":
+        assertQueryRequest(path, method, requestId)
+        break
+      default:
+        assertDynamoDbRequest(service, operation, path, method, requestId)
+    }
 
     where:
     [service, operation, method, path, requestId, builder, call] << dynamoDbRequestDataTable(DynamoDbClient.builder())
@@ -120,10 +132,90 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
 
     expect:
     response != null
-    assertDynamoDbRequest(service, operation, path, method, requestId)
+    switch (operation) {
+      case "CreateTable":
+        assertCreateTableRequest(path, method, requestId)
+        break
+      case "Query":
+        assertQueryRequest(path, method, requestId)
+        break
+      default:
+        assertDynamoDbRequest(service, operation, path, method, requestId)
+    }
 
     where:
     [service, operation, method, path, requestId, builder, call] << dynamoDbRequestDataTable(DynamoDbAsyncClient.builder())
+  }
+
+  def assertCreateTableRequest(path, method, requestId) {
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "DynamoDb.CreateTable"
+          kind CLIENT
+          errored false
+          hasNoParent()
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" { it.startsWith("${server.address}${path}") }
+            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith("aws-sdk-java/") }
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "aws.service" "DynamoDb"
+            "aws.operation" "CreateTable"
+            "aws.agent" "java-aws-sdk"
+            "aws.requestId" "$requestId"
+            "aws.table.name" "sometable"
+            "${SemanticAttributes.DB_SYSTEM.key}" "dynamodb"
+            "${SemanticAttributes.DB_NAME.key}" "sometable"
+            "${SemanticAttributes.DB_OPERATION.key}" "CreateTable"
+            "aws.dynamodb.global_secondary_indexes" "[{\"IndexName\":\"globalIndex\",\"KeySchema\":[{\"AttributeName\":\"attribute\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":10,\"WriteCapacityUnits\":12}},{\"IndexName\":\"globalIndexSecondary\",\"KeySchema\":[{\"AttributeName\":\"attributeSecondary\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":7,\"WriteCapacityUnits\":8}}]"
+            "aws.dynamodb.provisioned_throughput.read_capacity_units" "1"
+            "aws.dynamodb.provisioned_throughput.write_capacity_units" "1"
+          }
+        }
+      }
+    }
+    server.lastRequest.headers.get("X-Amzn-Trace-Id") != null
+    server.lastRequest.headers.get("traceparent") == null
+  }
+
+  def assertQueryRequest(path, method, requestId) {
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "DynamoDb.Query"
+          kind CLIENT
+          errored false
+          hasNoParent()
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" { it.startsWith("${server.address}${path}") }
+            "${SemanticAttributes.HTTP_METHOD.key}" "$method"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith("aws-sdk-java/") }
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "aws.service" "DynamoDb"
+            "aws.operation" "Query"
+            "aws.agent" "java-aws-sdk"
+            "aws.requestId" "$requestId"
+            "aws.table.name" "sometable"
+            "${SemanticAttributes.DB_SYSTEM.key}" "dynamodb"
+            "${SemanticAttributes.DB_NAME.key}" "sometable"
+            "${SemanticAttributes.DB_OPERATION.key}" "Query"
+            "aws.dynamodb.limit" "10"
+            "aws.dynamodb.select" "ALL_ATTRIBUTES"
+          }
+        }
+      }
+    }
+    server.lastRequest.headers.get("X-Amzn-Trace-Id") != null
+    server.lastRequest.headers.get("traceparent") == null
   }
 
   def assertDynamoDbRequest(service, operation, path, method, requestId) {
@@ -162,7 +254,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
   static dynamoDbRequestDataTable(client) {
     [
       ["DynamoDb", "CreateTable", "POST", "/", "UNKNOWN", client,
-       { c -> c.createTable(CreateTableRequest.builder().tableName("sometable").build()) }],
+       { c -> c.createTable(createTableRequest()) }],
       ["DynamoDb", "DeleteItem", "POST", "/", "UNKNOWN", client,
        { c -> c.deleteItem(DeleteItemRequest.builder().tableName("sometable").key(of("anotherKey", val("value"), "key", val("value"))).conditionExpression("property in (:one :two)").build()) }],
       ["DynamoDb", "DeleteTable", "POST", "/", "UNKNOWN", client,
@@ -176,6 +268,45 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
       ["DynamoDb", "UpdateItem", "POST", "/", "UNKNOWN", client,
        { c -> c.updateItem(UpdateItemRequest.builder().tableName("sometable").key(of("keyOne", val("value"), "keyTwo", val("differentValue"))).conditionExpression("attributeOne <> :someVal").updateExpression("set attributeOne = :updateValue").build()) }]
     ]
+  }
+
+  static CreateTableRequest createTableRequest() {
+    return CreateTableRequest.builder()
+      .tableName("sometable")
+      .globalSecondaryIndexes(Arrays.asList(
+        GlobalSecondaryIndex.builder()
+          .indexName("globalIndex")
+          .keySchema(
+            KeySchemaElement.builder()
+              .attributeName("attribute")
+              .build())
+          .provisionedThroughput(
+            ProvisionedThroughput.builder()
+              .readCapacityUnits(10)
+              .writeCapacityUnits(12)
+              .build()
+          )
+          .build(),
+        GlobalSecondaryIndex.builder()
+          .indexName("globalIndexSecondary")
+          .keySchema(
+            KeySchemaElement.builder()
+              .attributeName("attributeSecondary")
+              .build())
+          .provisionedThroughput(
+            ProvisionedThroughput.builder()
+              .readCapacityUnits(7)
+              .writeCapacityUnits(8)
+              .build()
+          )
+          .build()))
+      .provisionedThroughput(
+        ProvisionedThroughput.builder()
+          .readCapacityUnits(1)
+          .writeCapacityUnits(1)
+          .build()
+      )
+      .build()
   }
 
   static val(String value) {

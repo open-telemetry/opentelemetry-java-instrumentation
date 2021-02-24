@@ -100,7 +100,7 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
     @Override
     public void accept(HttpClientRequest r, Connection c) {
       Context context = r.currentContextView().get(MapConnect.CONTEXT_ATTRIBUTE);
-      c.channel().attr(AttributeKeys.CONNECT_CONTEXT).set(context);
+      c.channel().attr(AttributeKeys.WRITE_CONTEXT).set(context);
     }
   }
 }

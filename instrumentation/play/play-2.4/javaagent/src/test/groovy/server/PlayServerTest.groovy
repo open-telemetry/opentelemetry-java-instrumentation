@@ -65,11 +65,6 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
     true
   }
 
-  boolean testExceptionBody() {
-    // I can't figure out how to set a proper exception handler to customize the response body.
-    false
-  }
-
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
@@ -85,7 +80,7 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "netty.request"
+    return "HTTP GET"
   }
 
 }

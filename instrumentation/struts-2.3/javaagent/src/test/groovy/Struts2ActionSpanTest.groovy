@@ -34,11 +34,6 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
   }
 
   @Override
-  boolean testExceptionBody() {
-    return false
-  }
-
-  @Override
   boolean testErrorBody() {
     return false
   }

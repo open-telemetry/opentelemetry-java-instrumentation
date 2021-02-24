@@ -1,0 +1,35 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://opentelemetry.io/test/hello-web-service"
+  targetNamespace="http://opentelemetry.io/test/hello-web-service" elementFormDefault="qualified">
+
+  <xs:element name="helloRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" type="xs:string" form="unqualified"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="helloResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="message" type="xs:string" form="unqualified"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="hello2Request">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="name" type="xs:string" form="unqualified"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="hello2Response">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="message" type="xs:string" form="unqualified"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

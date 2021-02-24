@@ -17,12 +17,13 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import com.google.common.collect.Sets;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.config.MethodsConfigurationParser;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,18 +50,17 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
           + PACKAGE_CLASS_NAME_REGEX
           + "\\s*;?\\s*";
 
-  private static final String[] DEFAULT_ANNOTATIONS =
-      new String[] {
-        "com.appoptics.api.ext.LogMethod",
-        "com.newrelic.api.agent.Trace",
-        "com.signalfx.tracing.api.Trace",
-        "com.tracelytics.api.ext.LogMethod",
-        "datadog.trace.api.Trace",
-        "io.opentracing.contrib.dropwizard.Trace",
-        "kamon.annotation.Trace",
-        "kamon.annotation.api.Trace",
-        "org.springframework.cloud.sleuth.annotation.NewSpan"
-      };
+  private static final List<String> DEFAULT_ANNOTATIONS =
+      Arrays.asList(
+          "com.appoptics.api.ext.LogMethod",
+          "com.newrelic.api.agent.Trace",
+          "com.signalfx.tracing.api.Trace",
+          "com.tracelytics.api.ext.LogMethod",
+          "datadog.trace.api.Trace",
+          "io.opentracing.contrib.dropwizard.Trace",
+          "kamon.annotation.Trace",
+          "kamon.annotation.api.Trace",
+          "org.springframework.cloud.sleuth.annotation.NewSpan");
 
   private static final String TRACE_ANNOTATIONS_CONFIG =
       "otel.instrumentation.external-annotations.include";
@@ -128,7 +128,7 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
     private static Set<String> configureAdditionalTraceAnnotations(Config config) {
       String configString = config.getProperty(TRACE_ANNOTATIONS_CONFIG);
       if (configString == null) {
-        return Collections.unmodifiableSet(Sets.newHashSet(DEFAULT_ANNOTATIONS));
+        return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));
       } else if (configString.isEmpty()) {
         return Collections.emptySet();
       } else if (!configString.matches(CONFIG_FORMAT)) {
@@ -137,7 +137,7 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
             configString);
         return Collections.emptySet();
       } else {
-        Set<String> annotations = Sets.newHashSet();
+        Set<String> annotations = new HashSet<>();
         String[] annotationClasses = configString.split(";", -1);
         for (String annotationClass : annotationClasses) {
           if (!annotationClass.trim().isEmpty()) {

@@ -10,7 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
@@ -36,7 +36,7 @@ public class RmiServerTracer extends RpcServerTracer {
   }
 
   @Override
-  protected Getter getGetter() {
+  protected TextMapGetter getGetter() {
     return null;
   }
 

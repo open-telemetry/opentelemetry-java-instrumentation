@@ -51,14 +51,14 @@ class JaegerSpanExporterAutoConfigurationTest {
     this.contextRunner
         .withPropertyValues(
             "opentelemetry.trace.exporter.jaeger.enabled=true",
-            "opentelemetry.trace.exporter.jaeger.endpoint=localhost:8080/test",
+            "opentelemetry.trace.exporter.jaeger.endpoint=http://localhost:8080/test",
             "opentelemetry.trace.exporter.jaeger.spantimeout=420ms")
         .run(
             (context) -> {
               JaegerSpanExporterProperties jaegerSpanExporterProperties =
                   context.getBean(JaegerSpanExporterProperties.class);
               assertThat(jaegerSpanExporterProperties.getEndpoint())
-                  .isEqualTo("localhost:8080/test");
+                  .isEqualTo("http://localhost:8080/test");
               assertThat(jaegerSpanExporterProperties.getSpanTimeout()).hasMillis(420);
             });
   }

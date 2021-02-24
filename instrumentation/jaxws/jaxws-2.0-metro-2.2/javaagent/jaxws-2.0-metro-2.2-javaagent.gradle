@@ -1,0 +1,28 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "com.sun.xml.ws"
+    module = "jaxws-rt"
+    versions = "[2.2.0.1,3)"
+    assertInverse = true
+    extraDependency "javax.servlet:javax.servlet-api:3.0.1"
+    skipVersions += ['2.2', '2.3.1', 'EA3', '2.1EA2']
+  }
+}
+
+dependencies {
+  library group: 'com.sun.xml.ws', name: 'jaxws-rt', version: '2.2.0.1'
+
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+
+  testImplementation project(":instrumentation:jaxws:jaxws-2.0-testing")
+
+  testInstrumentation project(":instrumentation:jaxws:jaxws-2.0:javaagent")
+  testInstrumentation project(":instrumentation:jaxws:jws-1.1:javaagent")
+
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
+
+  latestDepTestLibrary group: 'com.sun.xml.ws', name: 'jaxws-rt', version: '2+'
+}

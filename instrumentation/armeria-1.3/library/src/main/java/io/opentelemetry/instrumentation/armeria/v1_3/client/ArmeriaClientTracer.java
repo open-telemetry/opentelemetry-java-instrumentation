@@ -6,10 +6,12 @@
 package io.opentelemetry.instrumentation.armeria.v1_3.client;
 
 import com.linecorp.armeria.client.ClientRequestContext;
+import com.linecorp.armeria.client.UnprocessedRequestException;
 import com.linecorp.armeria.common.HttpRequest;
+import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.propagation.TextMapPropagator.Setter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,8 +32,13 @@ public class ArmeriaClientTracer
   }
 
   @Override
-  protected @Nullable String flavor(ClientRequestContext clientRequestContext) {
-    return clientRequestContext.sessionProtocol().toString();
+  protected @Nullable String flavor(ClientRequestContext ctx) {
+    SessionProtocol protocol = ctx.sessionProtocol();
+    if (protocol.isMultiplex()) {
+      return "HTTP/2.0";
+    } else {
+      return "HTTP/1.1";
+    }
   }
 
   @Override
@@ -42,7 +49,11 @@ public class ArmeriaClientTracer
   }
 
   @Override
+  @Nullable
   protected Integer status(RequestLog log) {
+    if (log.responseCause() instanceof UnprocessedRequestException) {
+      return null;
+    }
     return log.responseHeaders().status().code();
   }
 
@@ -60,7 +71,7 @@ public class ArmeriaClientTracer
   }
 
   @Override
-  protected Setter<ClientRequestContext> getSetter() {
+  protected TextMapSetter<ClientRequestContext> getSetter() {
     return ArmeriaSetter.INSTANCE;
   }
 
@@ -69,7 +80,7 @@ public class ArmeriaClientTracer
     return "io.opentelemetry.armeria";
   }
 
-  private static class ArmeriaSetter implements Setter<ClientRequestContext> {
+  private static class ArmeriaSetter implements TextMapSetter<ClientRequestContext> {
 
     private static final ArmeriaSetter INSTANCE = new ArmeriaSetter();
 

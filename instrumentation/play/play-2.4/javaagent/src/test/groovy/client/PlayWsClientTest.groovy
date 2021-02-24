@@ -38,10 +38,11 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
     return status.toCompletableFuture().get()
   }
 
-  @Override
-  String userAgent() {
-    return "AHC"
-  }
+  //TODO see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2347
+//  @Override
+//  String userAgent() {
+//    return "AHC"
+//  }
 
   @Override
   boolean testRedirects() {
@@ -57,4 +58,5 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   boolean testRemoteConnection() {
     return false
   }
+
 }

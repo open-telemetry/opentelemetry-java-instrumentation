@@ -60,11 +60,6 @@ class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait 
   }
 
   @Override
-  boolean testExceptionBody() {
-    false
-  }
-
-  @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
     endpoint == REDIRECT || endpoint == ERROR
   }

@@ -1,0 +1,39 @@
+plugins {
+  id("java-platform")
+}
+
+apply from: "$rootDir/gradle/publish.gradle"
+
+description = "OpenTelemetry Instrumentation Bill of Materials (Alpha)"
+group = "io.opentelemetry.instrumentation"
+archivesBaseName = "opentelemetry-instrumentation-bom-alpha"
+
+rootProject.subprojects.forEach { subproject ->
+  if (!project.name.startsWith("bom")) {
+    evaluationDependsOn(subproject.path)
+  }
+}
+
+javaPlatform {
+  allowDependencies()
+}
+
+dependencies {
+  api(platform("io.opentelemetry:opentelemetry-bom:${versions.opentelemetry}"))
+  api(platform("io.opentelemetry:opentelemetry-bom-alpha:${versions.opentelemetryAlpha}"))
+}
+
+afterEvaluate {
+  dependencies {
+    constraints {
+      rootProject.subprojects.sort { "$it.archivesBaseName" }
+        .collect { it }
+        .findAll { it.name != project.name && it.name != 'javaagent'}
+        .forEach { project ->
+          project.plugins.withId("maven-publish") {
+            api(project)
+          }
+        }
+    }
+  }
+}

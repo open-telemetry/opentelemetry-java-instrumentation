@@ -9,7 +9,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -69,7 +70,7 @@ public class ContextPayload {
     out.writeObject(context);
   }
 
-  public static class ExtractAdapter implements TextMapPropagator.Getter<ContextPayload> {
+  public static class ExtractAdapter implements TextMapGetter<ContextPayload> {
     @Override
     public Iterable<String> keys(ContextPayload contextPayload) {
       return contextPayload.getSpanContext().keySet();
@@ -81,7 +82,7 @@ public class ContextPayload {
     }
   }
 
-  public static class InjectAdapter implements TextMapPropagator.Setter<ContextPayload> {
+  public static class InjectAdapter implements TextMapSetter<ContextPayload> {
     @Override
     public void set(ContextPayload carrier, String key, String value) {
       carrier.getSpanContext().put(key, value);

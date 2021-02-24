@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
 import com.google.api.client.http.HttpHeaders;
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 
-public class HeadersInjectAdapter implements TextMapPropagator.Setter<HttpHeaders> {
+public class HeadersInjectAdapter implements TextMapSetter<HttpHeaders> {
 
   public static final HeadersInjectAdapter SETTER = new HeadersInjectAdapter();
 

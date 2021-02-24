@@ -15,16 +15,12 @@ public class AttributeKeys {
   private static final WeakMap<ClassLoader, ConcurrentMap<String, AttributeKey<?>>> map =
       WeakMap.Implementation.DEFAULT.get();
   private static final WeakMap.ValueSupplier<ClassLoader, ConcurrentMap<String, AttributeKey<?>>>
-      mapSupplier =
-          new WeakMap.ValueSupplier<ClassLoader, ConcurrentMap<String, AttributeKey<?>>>() {
-            @Override
-            public ConcurrentMap<String, AttributeKey<?>> get(ClassLoader ignore) {
-              return new ConcurrentHashMap<>();
-            }
-          };
+      mapSupplier = ignore -> new ConcurrentHashMap<>();
 
   public static final AttributeKey<Context> CONNECT_CONTEXT =
       attributeKey(AttributeKeys.class.getName() + ".connect-context");
+  public static final AttributeKey<Context> WRITE_CONTEXT =
+      attributeKey(AttributeKeys.class.getName() + ".write-context");
 
   // this is the context that has the server span
   public static final AttributeKey<Context> SERVER_SPAN =

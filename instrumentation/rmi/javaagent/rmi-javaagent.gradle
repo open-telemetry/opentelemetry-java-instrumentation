@@ -8,7 +8,14 @@ muzzle {
 
 task "rmic", dependsOn: testClasses {
   def clazz = 'rmi.app.ServerLegacy'
-  String command = """rmic -g -keep -classpath ${sourceSets.test.output.classesDirs.asPath} -d ${buildDir}/classes/java/test ${clazz}"""
+
+  // Try one level up too in case java.home refers to jre directory inside jdk directory
+  def rmicBinaryPath = ['/bin/rmic', '/../bin/rmic'].findResult {
+    def path = new File(System.getProperty("java.home"), it).getAbsoluteFile()
+    path.isFile() ? path.toString() : null
+  } ?: "rmic"
+
+  String command = """$rmicBinaryPath -g -keep -classpath ${sourceSets.test.output.classesDirs.asPath} -d ${buildDir}/classes/java/test ${clazz}"""
   command.execute().text
 }
 

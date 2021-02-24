@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
-import com.google.common.collect.Iterables;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
@@ -35,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -489,8 +490,15 @@ public class AgentInstaller {
     @Override
     public Iterable<Iterable<Class<?>>> resolve(Instrumentation instrumentation) {
       // filter out our agent classes and injected helper classes
-      return Iterables.transform(
-          delegate.resolve(instrumentation), i -> Iterables.filter(i, c -> !isIgnored(c)));
+      return () -> streamOf(delegate.resolve(instrumentation)).map(this::filterClasses).iterator();
+    }
+
+    private Iterable<Class<?>> filterClasses(Iterable<Class<?>> classes) {
+      return () -> streamOf(classes).filter(c -> !isIgnored(c)).iterator();
+    }
+
+    private static <T> Stream<T> streamOf(Iterable<T> iterable) {
+      return StreamSupport.stream(iterable.spliterator(), false);
     }
 
     private static boolean isIgnored(Class<?> c) {

@@ -12,7 +12,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator.Getter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -63,7 +63,7 @@ class DubboTracer extends RpcServerTracer<RpcInvocation> {
   }
 
   @Override
-  protected Getter<RpcInvocation> getGetter() {
+  protected TextMapGetter<RpcInvocation> getGetter() {
     return DubboExtractAdapter.GETTER;
   }
 }

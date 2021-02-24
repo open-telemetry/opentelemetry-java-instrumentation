@@ -143,6 +143,6 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return "netty.request"
+    return "HTTP GET"
   }
 }

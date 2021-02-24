@@ -128,7 +128,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
             "$SemanticAttributes.NET_PEER_PORT.key" Number
             "$SemanticAttributes.NET_PEER_IP.key" InetAddress.getLocalHost().getHostAddress().toString()
             "$SemanticAttributes.HTTP_USER_AGENT.key" "Jakarta Commons-HttpClient/3.1"
-            "$SemanticAttributes.HTTP_FLAVOR.key" "HTTP/1.1"
+            "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
             "$SemanticAttributes.HTTP_CLIENT_IP.key" InetAddress.getLocalHost().getHostAddress().toString()
 
           }
