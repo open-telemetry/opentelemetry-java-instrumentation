@@ -59,6 +59,10 @@ public class GreetingAction extends ActionSupport {
     return "greeting";
   }
 
+  public String dispatch_servlet() {
+    return "greetingServlet";
+  }
+
   public void setId(String id) {
     responseBody = id;
   }
