@@ -15,3 +15,8 @@ dependencies {
   testImplementation deps.guava
   testImplementation deps.testcontainers
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.spymemcached.experimental-span-attributes=true"
+}
