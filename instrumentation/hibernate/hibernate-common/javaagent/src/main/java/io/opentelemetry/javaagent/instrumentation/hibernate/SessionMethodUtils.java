@@ -37,8 +37,7 @@ public class SessionMethodUtils {
       return null; // This method call is being traced already.
     }
 
-    Span span = tracer().startSpan(sessionContext, operationName, entity);
-    return sessionContext.with(span);
+    return tracer().startSpan(sessionContext, operationName, entity);
   }
 
   public static void end(

@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,12 +65,12 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
       }
       destination = tracer().extractDestination(message, null);
 
-      Span span = tracer().startConsumerSpan(destination, "receive", message, startTime);
+      Context context = tracer().startConsumerSpan(destination, "receive", message, startTime);
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }

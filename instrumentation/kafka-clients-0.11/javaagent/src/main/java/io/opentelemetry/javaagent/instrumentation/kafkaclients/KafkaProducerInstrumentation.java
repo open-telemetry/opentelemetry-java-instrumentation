@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -52,21 +51,20 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("apiVersions") ApiVersions apiVersions,
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord<?, ?> record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      Context parent = Java8BytecodeBridge.currentContext();
+      Context parentContext = Java8BytecodeBridge.currentContext();
 
-      span = tracer().startProducerSpan(record);
-      Context newContext = parent.with(span);
+      context = tracer().startProducerSpan(parentContext, record);
 
-      callback = new ProducerCallback(callback, parent, span);
+      callback = new ProducerCallback(callback, parentContext, context);
 
       if (tracer().shouldPropagate(apiVersions)) {
         try {
           Java8BytecodeBridge.getGlobalPropagators()
               .getTextMapPropagator()
-              .inject(newContext, record.headers(), SETTER);
+              .inject(context, record.headers(), SETTER);
         } catch (IllegalStateException e) {
           // headers must be read-only from reused record. try again with new one.
           record =
@@ -80,23 +78,23 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
 
           Java8BytecodeBridge.getGlobalPropagators()
               .getTextMapPropagator()
-              .inject(newContext, record.headers(), SETTER);
+              .inject(context, record.headers(), SETTER);
         }
       }
 
-      scope = newContext.makeCurrent();
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       }
       // span finished by ProducerCallback
     }

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.KafkaProducerTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import org.apache.kafka.clients.producer.Callback;
@@ -15,29 +14,25 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 
 public class ProducerCallback implements Callback {
   private final Callback callback;
-  private final Context parent;
-  private final Span span;
+  private final Context parentContext;
+  private final Context context;
 
-  public ProducerCallback(Callback callback, Context parent, Span span) {
+  public ProducerCallback(Callback callback, Context parentContext, Context context) {
     this.callback = callback;
-    this.parent = parent;
-    this.span = span;
+    this.parentContext = parentContext;
+    this.context = context;
   }
 
   @Override
   public void onCompletion(RecordMetadata metadata, Exception exception) {
     if (exception != null) {
-      tracer().endExceptionally(span, exception);
+      tracer().endExceptionally(context, exception);
     } else {
-      tracer().end(span);
+      tracer().end(context);
     }
 
     if (callback != null) {
-      if (parent != null) {
-        try (Scope ignored = parent.makeCurrent()) {
-          callback.onCompletion(metadata, exception);
-        }
-      } else {
+      try (Scope ignored = parentContext.makeCurrent()) {
         callback.onCompletion(metadata, exception);
       }
     }
