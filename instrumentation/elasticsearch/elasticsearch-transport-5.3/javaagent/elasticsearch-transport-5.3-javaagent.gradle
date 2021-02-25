@@ -47,5 +47,5 @@ dependencies {
 
 tasks.withType(Test) {
   // TODO run tests both with and without experimental span attributes
-  jvmArgs "-Dotel.instrumentation.elasticsearc.experimental-span-attributes=true"
+  jvmArgs "-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true"
 }
