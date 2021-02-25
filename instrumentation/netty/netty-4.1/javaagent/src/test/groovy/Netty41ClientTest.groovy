@@ -301,7 +301,7 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
     null != channel.pipeline().remove(HttpClientTracingHandler.getName())
   }
 
-  def "request with trace annotated method"() {
+  def "request with trace annotated method #method"() {
     given:
     def annotatedClass = new TracedClass()
 
