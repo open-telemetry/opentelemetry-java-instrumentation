@@ -5,7 +5,6 @@
 
 package io.opentelemetry.smoketest
 
-@AppServer(version = "9.4.35", jdk = "11")
 @AppServer(version = "9.4.35", jdk = "8")
 @AppServer(version = "9.4.35", jdk = "8-openj9")
 @AppServer(version = "9.4.35", jdk = "11")
