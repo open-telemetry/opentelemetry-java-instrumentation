@@ -11,5 +11,13 @@ muzzle {
 
 dependencies {
   library(group: 'io.kubernetes', name: 'client-java-api', version: '7.0.0')
+
+  implementation(project(':instrumentation:okhttp:okhttp-3.0:javaagent'))
+
+  testInstrumentation(project(':instrumentation:okhttp:okhttp-3.0:javaagent'))
 }
 
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.kubernetes-client.experimental-span-attributes=true"
+}
