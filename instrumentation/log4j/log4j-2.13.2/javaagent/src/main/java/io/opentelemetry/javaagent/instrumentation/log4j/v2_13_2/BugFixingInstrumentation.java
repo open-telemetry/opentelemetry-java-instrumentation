@@ -43,7 +43,7 @@ public class BugFixingInstrumentation implements TypeInstrumentation {
   }
 
   public static class BugFixingAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(value = 0, readOnly = false) List<Property> props) {
       if (props == null) {
         props = Collections.emptyList();
