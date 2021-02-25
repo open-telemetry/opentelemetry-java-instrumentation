@@ -17,7 +17,7 @@ import javax.faces.event.ActionEvent;
 
 public abstract class JsfTracer extends BaseTracer {
 
-  public Span startSpan(ActionEvent event) {
+  public Context startSpan(ActionEvent event) {
     // https://jakarta.ee/specifications/faces/2.3/apidocs/index.html?javax/faces/component/ActionSource2.html
     // ActionSource2 was added in JSF 1.2 and is implemented by components that have an action
     // attribute such as a button or a link
@@ -28,7 +28,7 @@ public abstract class JsfTracer extends BaseTracer {
         String expressionString = actionSource.getActionExpression().getExpressionString();
         // start span only if expression string is really an expression
         if (expressionString.startsWith("#{") || expressionString.startsWith("${")) {
-          return tracer.spanBuilder(expressionString).startSpan();
+          return startSpan(expressionString);
         }
       }
     }

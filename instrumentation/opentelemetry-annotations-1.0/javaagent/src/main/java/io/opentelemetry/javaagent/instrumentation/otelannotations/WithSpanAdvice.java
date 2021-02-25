@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.otelannotations;
 import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanTracer.tracer;
 
 import application.io.opentelemetry.extension.annotations.WithSpan;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -47,11 +46,10 @@ public class WithSpanAdvice {
     }
     scope.close();
 
-    Span span = Span.fromContext(context);
     if (throwable != null) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
     } else {
-      tracer().end(span);
+      tracer().end(context);
     }
   }
 }

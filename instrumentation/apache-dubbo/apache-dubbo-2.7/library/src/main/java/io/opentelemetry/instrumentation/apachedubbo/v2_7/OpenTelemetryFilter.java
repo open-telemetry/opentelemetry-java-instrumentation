@@ -9,7 +9,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -49,25 +48,24 @@ public class OpenTelemetryFilter implements Filter {
     } else {
       context = tracer.startServerSpan(interfaceName, methodName, (RpcInvocation) invocation);
     }
-    Span span = Span.fromContext(context);
     final Result result;
     boolean isSynchronous = true;
-    try (Scope ignored = span.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       result = invoker.invoke(invocation);
       if (kind.equals(CLIENT)) {
         CompletableFuture<Object> future = rpcContext.getCompletableFuture();
         if (future != null) {
           isSynchronous = false;
-          future.whenComplete((o, throwable) -> tracer.endSpan(span, result));
+          future.whenComplete((o, throwable) -> tracer.end(context, result));
         }
       }
 
     } catch (Throwable e) {
-      tracer.endExceptionally(span, e);
+      tracer.endExceptionally(context, e);
       throw e;
     }
     if (isSynchronous) {
-      tracer.endSpan(span, result);
+      tracer.end(context, result);
     }
     return result;
   }

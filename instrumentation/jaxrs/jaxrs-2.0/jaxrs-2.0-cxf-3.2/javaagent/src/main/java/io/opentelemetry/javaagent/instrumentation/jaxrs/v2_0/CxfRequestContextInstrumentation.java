@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Method;
@@ -57,13 +57,13 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
   public static class ContainerRequestContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
-        @Advice.This AbstractRequestContextImpl context,
-        @Local("otelSpan") Span span,
+        @Advice.This AbstractRequestContextImpl requestContext,
+        @Local("otelContext") Context context,
         @Local("otelScope") Scope scope) {
 
-      if (context.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null
-          && context instanceof ContainerRequestContext) {
-        Message message = context.getMessage();
+      if (requestContext.getProperty(JaxRsAnnotationsTracer.ABORT_HANDLED) == null
+          && requestContext instanceof ContainerRequestContext) {
+        Message message = requestContext.getMessage();
         OperationResourceInfoStack resourceInfoStack =
             (OperationResourceInfoStack)
                 message.get("org.apache.cxf.jaxrs.model.OperationResourceInfoStack");
@@ -75,21 +75,21 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
         Method method = invocationInfo.getMethodInfo().getMethodToInvoke();
         Class<?> resourceClass = invocationInfo.getRealClass();
 
-        span =
+        context =
             RequestContextHelper.createOrUpdateAbortSpan(
-                (ContainerRequestContext) context, resourceClass, method);
-        if (span != null) {
-          scope = span.makeCurrent();
+                (ContainerRequestContext) requestContext, resourceClass, method);
+        if (context != null) {
+          scope = context.makeCurrent();
         }
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Local("otelSpan") Span span,
+        @Local("otelContext") Context context,
         @Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      RequestContextHelper.closeSpanAndScope(span, scope, throwable);
+      RequestContextHelper.closeSpanAndScope(context, scope, throwable);
     }
   }
 }

@@ -17,7 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
@@ -62,7 +61,7 @@ public class RmiServerInstrumentation extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Origin Method method,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(RemoteServer.class);
       if (callDepth > 0) {
@@ -70,16 +69,16 @@ public class RmiServerInstrumentation extends InstrumentationModule {
       }
 
       // TODO review and unify with all other SERVER instrumentation
-      Context context = THREAD_LOCAL_CONTEXT.getAndResetContext();
+      Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
 
-      span = tracer().startSpan(method, context);
-      scope = span.makeCurrent();
+      context = tracer().startSpan(parentContext, method);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
@@ -88,9 +87,9 @@ public class RmiServerInstrumentation extends InstrumentationModule {
 
       CallDepthThreadLocalMap.reset(RemoteServer.class);
       if (throwable != null) {
-        RmiServerTracer.tracer().endExceptionally(span, throwable);
+        RmiServerTracer.tracer().endExceptionally(context, throwable);
       } else {
-        RmiServerTracer.tracer().end(span);
+        RmiServerTracer.tracer().end(context);
       }
     }
   }

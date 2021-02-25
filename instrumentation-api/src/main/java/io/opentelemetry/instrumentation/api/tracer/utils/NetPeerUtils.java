@@ -29,18 +29,25 @@ public final class NetPeerUtils {
   }
 
   public void setNetPeer(Span span, @Nullable InetSocketAddress remoteConnection) {
+    setNetPeer(span::setAttribute, remoteConnection);
+  }
+
+  public void setNetPeer(SpanBuilder span, @Nullable InetSocketAddress remoteConnection) {
+    setNetPeer(span::setAttribute, remoteConnection);
+  }
+
+  public void setNetPeer(SpanAttributeSetter span, @Nullable InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
         setNetPeer(
-            span::setAttribute,
+            span,
             remoteAddress.getHostName(),
             remoteAddress.getHostAddress(),
             remoteConnection.getPort());
       } else {
         // Failed DNS lookup, the host string is the name.
-        setNetPeer(
-            span::setAttribute, remoteConnection.getHostString(), null, remoteConnection.getPort());
+        setNetPeer(span, remoteConnection.getHostString(), null, remoteConnection.getPort());
       }
     }
   }
