@@ -52,6 +52,9 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
       transformers.put(
+          isPublic().and(named("buildRequest")).and(takesArguments(10)),
+          KubernetesClientInstrumentationModule.class.getName() + "$BuildRequestAdvice");
+      transformers.put(
           isPublic()
               .and(named("execute"))
               .and(takesArguments(2))
@@ -68,32 +71,29 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
     }
   }
 
-  public static class ExecuteAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Call httpCall,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+  public static class BuildRequestAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(@Advice.Return(readOnly = false) Request request) {
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
       }
 
-      Request request = httpCall.request();
-      context = tracer().startSpan(parentContext, request, request.newBuilder());
-      scope = context.makeCurrent();
+      Request.Builder requestWithPropagation = request.newBuilder();
+      Context context = tracer().startSpan(parentContext, request, requestWithPropagation);
+      CurrentContextAndScope.set(parentContext, context);
+      request = requestWithPropagation.build();
     }
+  }
 
+  public static class ExecuteAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
-        @Advice.Return ApiResponse<?> response,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+        @Advice.Return ApiResponse<?> response, @Advice.Thrown Throwable throwable) {
+      Context context = CurrentContextAndScope.removeAndClose();
+      if (context == null) {
         return;
       }
-      scope.close();
       if (throwable == null) {
         tracer().end(context, response);
       } else {
@@ -109,15 +109,13 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
         @Advice.Argument(value = 2, readOnly = false) ApiCallback<?> callback,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
-        return;
-      }
 
-      Request request = httpCall.request();
-      context = tracer().startSpan(parentContext, request, request.newBuilder());
-      scope = context.makeCurrent();
-      callback = new TracingApiCallback<>(callback, context);
+      CurrentContextAndScope current = CurrentContextAndScope.remove();
+      if (current != null) {
+        context = current.getContext();
+        scope = current.getScope();
+        callback = new TracingApiCallback<>(callback, current.getParentContext(), context);
+      }
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
