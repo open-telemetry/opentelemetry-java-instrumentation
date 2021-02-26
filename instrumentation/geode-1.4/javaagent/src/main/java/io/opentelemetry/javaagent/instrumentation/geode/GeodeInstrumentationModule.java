@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
@@ -85,19 +85,19 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
     public static void onEnter(
         @Advice.This Region<?, ?> thiz,
         @Advice.Origin Method method,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return;
       }
-      span = tracer().startSpan(method.getName(), thiz, null);
-      scope = span.makeCurrent();
+      context = tracer().startSpan(method.getName(), thiz, null);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
@@ -106,9 +106,9 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
 
       CallDepthThreadLocalMap.reset(Region.class);
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }
@@ -119,19 +119,19 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
         @Advice.This Region<?, ?> thiz,
         @Advice.Origin Method method,
         @Advice.Argument(0) String query,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
         return;
       }
-      span = tracer().startSpan(method.getName(), thiz, query);
-      scope = span.makeCurrent();
+      context = tracer().startSpan(method.getName(), thiz, query);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
@@ -140,9 +140,9 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
 
       CallDepthThreadLocalMap.reset(Region.class);
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }

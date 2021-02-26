@@ -38,22 +38,22 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
   private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
     if (context != null) {
-      Span span = Span.fromContext(context);
       if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+        Span span = Span.fromContext(context);
         span.setAttribute("lettuce.command.results.count", numResults);
         if (isCommandCancelled) {
           span.setAttribute("lettuce.command.cancelled", true);
         }
       }
       if (throwable == null) {
-        tracer().end(span);
+        tracer().end(context);
       } else {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       }
     } else {
       LoggerFactory.getLogger(Flux.class)
           .error(
-              "Failed to finish this.span, LettuceFluxTerminationRunnable cannot find this.span "
+              "Failed to end this.context, LettuceFluxTerminationRunnable cannot find this.context "
                   + "because it probably wasn't started.");
     }
   }
