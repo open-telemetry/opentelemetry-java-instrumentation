@@ -64,11 +64,11 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     assertTraces(keyspace ? 2 : 1) {
       if (keyspace) {
         trace(0, 1) {
-          cassandraSpan(it, 0, "USE $keyspace", null)
+          cassandraSpan(it, 0, "USE $keyspace", "USE $keyspace")
         }
       }
       trace(keyspace ? 1 : 0, 1) {
-        cassandraSpan(it, 0, expectedStatement, keyspace)
+        cassandraSpan(it, 0, spanName, expectedStatement, operation, keyspace, table)
       }
     }
 
@@ -76,12 +76,12 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     session.close()
 
     where:
-    keyspace    | statement                                                                                         | expectedStatement
-    null        | "DROP KEYSPACE IF EXISTS sync_test"                                                               | "DROP KEYSPACE IF EXISTS sync_test"
-    null        | "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}"
-    "sync_test" | "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"                                 | "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"
-    "sync_test" | "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "INSERT INTO sync_test.users (id, name) values (uuid(), ?)"
-    "sync_test" | "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                        | "SELECT * FROM users where name = ? ALLOW FILTERING"
+    keyspace    | statement                                                                                         | expectedStatement                                                 | spanName                 | operation | table
+    null        | "DROP KEYSPACE IF EXISTS sync_test"                                                               | "DROP KEYSPACE IF EXISTS sync_test"                               | expectedStatement        | null      | null
+    null        | "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}"         | expectedStatement        | null      | null
+    "sync_test" | "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"                                 | "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )" | "sync_test"              | null      | null
+    "sync_test" | "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "INSERT INTO sync_test.users (id, name) values (uuid(), ?)"       | "INSERT sync_test.users" | "INSERT"  | "users"
+    "sync_test" | "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                        | "SELECT * FROM users where name = ? ALLOW FILTERING"              | "SELECT sync_test.users" | "SELECT"  | "users"
   }
 
   def "test async"() {
@@ -101,12 +101,12 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     assertTraces(keyspace ? 2 : 1) {
       if (keyspace) {
         trace(0, 1) {
-          cassandraSpan(it, 0, "USE $keyspace", null)
+          cassandraSpan(it, 0, "USE $keyspace", "USE $keyspace")
         }
       }
       trace(keyspace ? 1 : 0, 3) {
         basicSpan(it, 0, "parent")
-        cassandraSpan(it, 1, expectedStatement, keyspace, span(0))
+        cassandraSpan(it, 1, spanName, expectedStatement, operation, keyspace, table, span(0))
         basicSpan(it, 2, "callbackListener", span(0))
       }
     }
@@ -115,17 +115,21 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     session.close()
 
     where:
-    keyspace     | statement                                                                                          | expectedStatement
-    null         | "DROP KEYSPACE IF EXISTS async_test"                                                               | "DROP KEYSPACE IF EXISTS async_test"
-    null         | "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}"
-    "async_test" | "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"                                 | "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"
-    "async_test" | "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "INSERT INTO async_test.users (id, name) values (uuid(), ?)"
-    "async_test" | "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                         | "SELECT * FROM users where name = ? ALLOW FILTERING"
+    keyspace     | statement                                                                                          | expectedStatement                                                  | spanName                  | operation | table
+    null         | "DROP KEYSPACE IF EXISTS async_test"                                                               | "DROP KEYSPACE IF EXISTS async_test"                               | expectedStatement         | null      | null
+    null         | "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}"         | expectedStatement         | null      | null
+    "async_test" | "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"                                 | "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )" | "async_test"              | null      | null
+    "async_test" | "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "INSERT INTO async_test.users (id, name) values (uuid(), ?)"       | "INSERT async_test.users" | "INSERT"  | "users"
+    "async_test" | "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                         | "SELECT * FROM users where name = ? ALLOW FILTERING"               | "SELECT async_test.users" | "SELECT"  | "users"
   }
 
-  def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, Object parentSpan = null, Throwable exception = null) {
+  def cassandraSpan(TraceAssert trace, int index, String spanName, String statement,
+                    String operation = null,
+                    String keyspace = null,
+                    String table = null,
+                    Object parentSpan = null) {
     trace.span(index) {
-      name statement
+      name spanName
       kind CLIENT
       if (parentSpan == null) {
         hasNoParent()
@@ -139,7 +143,9 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.DB_SYSTEM.key" "cassandra"
         "$SemanticAttributes.DB_NAME.key" keyspace
         "$SemanticAttributes.DB_STATEMENT.key" statement
+        "$SemanticAttributes.DB_OPERATION.key" operation
         "$SemanticAttributes.DB_CASSANDRA_KEYSPACE.key" keyspace
+        "$SemanticAttributes.DB_CASSANDRA_TABLE.key" table
       }
     }
   }
