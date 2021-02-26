@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import io.lettuce.core.RedisURI;
+
 public class LettuceConnectionDatabaseClientTracer
     extends LettuceAbstractDatabaseClientTracer<String> {
   private static final LettuceConnectionDatabaseClientTracer TRACER =
@@ -15,7 +17,12 @@ public class LettuceConnectionDatabaseClientTracer
   }
 
   @Override
-  protected String normalizeQuery(String query) {
-    return query;
+  protected String sanitizeStatement(String command) {
+    return command;
+  }
+
+  @Override
+  protected String spanName(RedisURI connection, String command, String ignored) {
+    return command;
   }
 }

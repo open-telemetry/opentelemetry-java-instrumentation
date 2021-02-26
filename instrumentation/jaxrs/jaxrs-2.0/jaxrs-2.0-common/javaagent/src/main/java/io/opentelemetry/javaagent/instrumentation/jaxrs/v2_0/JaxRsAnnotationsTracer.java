@@ -34,14 +34,18 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   private final WeakMap<Class<?>, Map<Method, String>> spanNames = newWeakMap();
 
-  public Span startSpan(Class<?> target, Method method) {
+  public Context startSpan(Class<?> target, Method method) {
+    return startSpan(Context.current(), target, method);
+  }
+
+  public Context startSpan(Context parentContext, Class<?> target, Method method) {
     // We create span and immediately update its name
     // We do that in order to reuse logic inside updateSpanNames method, which is used externally as
     // well.
-    Context context = Context.current();
-    Span span = tracer.spanBuilder("jax-rs.request").setParent(context).startSpan();
-    updateSpanNames(context, span, BaseTracer.getCurrentServerSpan(context), target, method);
-    return span;
+    Span span = tracer.spanBuilder("jax-rs.request").setParent(parentContext).startSpan();
+    updateSpanNames(
+        parentContext, span, BaseTracer.getCurrentServerSpan(parentContext), target, method);
+    return parentContext.with(span);
   }
 
   public void updateSpanNames(

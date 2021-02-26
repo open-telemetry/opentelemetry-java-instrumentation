@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.log4j.v2_13_2;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
@@ -28,13 +30,14 @@ public class ListAppender extends AbstractAppender {
 
   private static final ListAppender INSTANCE = new ListAppender();
 
-  private final List<LogEvent> events = Collections.synchronizedList(new ArrayList<LogEvent>());
+  private final List<LoggedEvent> events =
+      Collections.synchronizedList(new ArrayList<LoggedEvent>());
 
   public ListAppender() {
     super("ListAppender", null, null, true);
   }
 
-  public List<LogEvent> getEvents() {
+  public List<LoggedEvent> getEvents() {
     return events;
   }
 
@@ -44,7 +47,12 @@ public class ListAppender extends AbstractAppender {
 
   @Override
   public void append(LogEvent logEvent) {
-    events.add(logEvent);
+    // Event object may be reused by the framework so copy the data we need.
+    LoggedEvent copied =
+        new LoggedEvent(
+            logEvent.getMessage().getFormattedMessage(),
+            new HashMap<>(logEvent.getContextData().toMap()));
+    events.add(copied);
   }
 
   @PluginFactory
@@ -54,5 +62,23 @@ public class ListAppender extends AbstractAppender {
           "Use name=\"ListAppender\" in log4j2-test.xml instead of " + name);
     }
     return INSTANCE;
+  }
+
+  public static class LoggedEvent {
+    private final String message;
+    private final Map<String, String> contextData;
+
+    LoggedEvent(String message, Map<String, String> contextData) {
+      this.message = message;
+      this.contextData = contextData;
+    }
+
+    public String getMessage() {
+      return message;
+    }
+
+    public Map<String, String> getContextData() {
+      return contextData;
+    }
   }
 }

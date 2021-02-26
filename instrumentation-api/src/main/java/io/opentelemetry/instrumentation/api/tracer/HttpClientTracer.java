@@ -111,7 +111,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   public void end(Context context, RESPONSE response, long endTimeNanos) {
     Span span = Span.fromContext(context);
     onResponse(span, response);
-    super.end(span, endTimeNanos);
+    super.end(context, endTimeNanos);
   }
 
   public void endExceptionally(Context context, RESPONSE response, Throwable throwable) {
@@ -122,7 +122,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       Context context, RESPONSE response, Throwable throwable, long endTimeNanos) {
     Span span = Span.fromContext(context);
     onResponse(span, response);
-    super.endExceptionally(span, throwable, endTimeNanos);
+    super.endExceptionally(context, throwable, endTimeNanos);
   }
 
   // TODO (trask) see if we can reduce the number of end..() variants

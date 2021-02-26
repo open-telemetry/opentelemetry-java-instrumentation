@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
 import javax.ws.rs.container.ContainerRequestContext;
 
 public final class RequestContextHelper {
-  public static Span createOrUpdateAbortSpan(
+  public static Context createOrUpdateAbortSpan(
       ContainerRequestContext requestContext, Class<?> resourceClass, Method method) {
 
     if (method != null && resourceClass != null) {
@@ -30,7 +30,7 @@ public final class RequestContextHelper {
       // in other case, DefaultRequestContextInstrumentation must have already run so it's enough
       // to just update the names
       if (currentSpan == null || currentSpan == serverSpan) {
-        return tracer().startSpan(resourceClass, method);
+        return tracer().startSpan(context, resourceClass, method);
       } else {
         tracer().updateSpanNames(context, currentSpan, serverSpan, resourceClass, method);
       }
@@ -38,15 +38,15 @@ public final class RequestContextHelper {
     return null;
   }
 
-  public static void closeSpanAndScope(Span span, Scope scope, Throwable throwable) {
-    if (span == null || scope == null) {
+  public static void closeSpanAndScope(Context context, Scope scope, Throwable throwable) {
+    if (context == null || scope == null) {
       return;
     }
 
     if (throwable != null) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
     } else {
-      tracer().end(span);
+      tracer().end(context);
     }
 
     scope.close();

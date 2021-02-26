@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.log4j.v2_13_2;
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
@@ -39,8 +39,7 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    // have to return at least 1 type instrumentation so that helpers get injected
-    return singletonList(new EmptyTypeInstrumentation());
+    return Arrays.asList(new BugFixingInstrumentation(), new EmptyTypeInstrumentation());
   }
 
   public static class EmptyTypeInstrumentation implements TypeInstrumentation {

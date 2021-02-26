@@ -152,7 +152,7 @@ public abstract class BaseTracer {
    * reference. Anonymous classes are named based on their parent.
    */
   public String spanNameForMethod(Method method) {
-    return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
+    return spanNameForMethod(method.getDeclaringClass(), method.getName());
   }
 
   /**
@@ -206,13 +206,7 @@ public abstract class BaseTracer {
     end(span, -1);
   }
 
-  /**
-   * End span.
-   *
-   * @deprecated Use {@link #end(Context, long)} instead.
-   */
-  @Deprecated
-  public void end(Span span, long endTimeNanos) {
+  private void end(Span span, long endTimeNanos) {
     if (endTimeNanos > 0) {
       span.end(endTimeNanos, TimeUnit.NANOSECONDS);
     } else {
@@ -238,13 +232,7 @@ public abstract class BaseTracer {
     endExceptionally(span, throwable, -1);
   }
 
-  /**
-   * End span.
-   *
-   * @deprecated Use {@link #endExceptionally(Context, Throwable, long)} instead.
-   */
-  @Deprecated
-  public void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
+  private void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
     span.setStatus(StatusCode.ERROR);
     onError(span, unwrapThrowable(throwable));
     end(span, endTimeNanos);

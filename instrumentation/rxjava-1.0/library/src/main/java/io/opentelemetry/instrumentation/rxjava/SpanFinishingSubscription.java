@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rxjava;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.util.concurrent.atomic.AtomicReference;
@@ -24,10 +23,7 @@ public class SpanFinishingSubscription implements Subscription {
   public void unsubscribe() {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
-      Span span = Span.fromContext(context);
-      if (span.getSpanContext().isValid()) {
-        tracer.end(span);
-      }
+      tracer.end(context);
     }
   }
 

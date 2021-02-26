@@ -37,8 +37,7 @@ public class SessionMethodUtils {
       return null; // This method call is being traced already.
     }
 
-    Span span = tracer().startSpan(sessionContext, operationName, entity);
-    return sessionContext.with(span);
+    return tracer().startSpan(sessionContext, operationName, entity);
   }
 
   public static void end(
@@ -50,17 +49,16 @@ public class SessionMethodUtils {
       return;
     }
 
-    Span span = Span.fromContext(context);
     if (operationName != null && entity != null) {
       String entityName = tracer().entityName(entity);
       if (entityName != null) {
-        span.updateName(operationName + " " + entityName);
+        Span.fromContext(context).updateName(operationName + " " + entityName);
       }
     }
     if (throwable != null) {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
     } else {
-      tracer().end(span);
+      tracer().end(context);
     }
   }
 

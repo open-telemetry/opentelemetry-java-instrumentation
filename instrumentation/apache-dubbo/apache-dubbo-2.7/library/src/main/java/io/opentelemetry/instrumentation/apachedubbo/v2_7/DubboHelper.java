@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.dubbo.rpc.Result;
@@ -14,7 +14,7 @@ class DubboHelper {
 
   private DubboHelper() {}
 
-  static void prepareSpan(Span span, String interfaceName, String methodName) {
+  static void prepareSpan(SpanBuilder span, String interfaceName, String methodName) {
     span.setAttribute(SemanticAttributes.RPC_SERVICE, interfaceName);
     span.setAttribute(SemanticAttributes.RPC_METHOD, methodName);
   }

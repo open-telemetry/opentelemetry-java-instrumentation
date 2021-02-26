@@ -17,13 +17,13 @@ import spock.lang.Unroll
 class GrpcSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:smoke-grpc-jdk$jdk-20210218.577304952"
+    "ghcr.io/open-telemetry/java-test-containers:smoke-grpc-jdk$jdk-20210225.598590600"
   }
 
   @Unroll
   def "grpc smoke test on JDK #jdk"(int jdk) {
     setup:
-    startTarget(jdk)
+    def output = startTarget(jdk)
 
     def channel = ManagedChannelBuilder.forAddress("localhost", target.getMappedPort(8080))
       .usePlaintext()
@@ -43,6 +43,13 @@ class GrpcSmokeTest extends SmokeTest {
     [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
       .map { it.stringValue }
       .collect(toSet())
+
+    then: "correct traceIds are logged via MDC instrumentation"
+    def loggedTraceIds = getLoggedTraceIds(output)
+    def spanTraceIds = getSpanStream(traces)
+      .map({ bytesToHex(it.getTraceId().toByteArray()) })
+      .collect(toSet())
+    loggedTraceIds == spanTraceIds
 
     cleanup:
     stopTarget()

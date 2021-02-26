@@ -57,32 +57,32 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
     public static void nameResourceAndStartSpan(
         @Advice.Argument(0) HttpServletRequest request,
         @Advice.Argument(2) Object handler,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      Context context = Java8BytecodeBridge.currentContext();
-      Span serverSpan = BaseTracer.getCurrentServerSpan(context);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      Span serverSpan = BaseTracer.getCurrentServerSpan(parentContext);
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
-        tracer().onRequest(context, serverSpan, request);
+        tracer().onRequest(parentContext, serverSpan, request);
         // Now create a span for handler/controller execution.
-        span = tracer().startHandlerSpan(handler);
-        scope = context.with(span).makeCurrent();
+        context = tracer().startHandlerSpan(parentContext, handler);
+        scope = context.makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
       scope.close();
       if (throwable == null) {
-        tracer().end(span);
+        tracer().end(context);
       } else {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       }
     }
   }

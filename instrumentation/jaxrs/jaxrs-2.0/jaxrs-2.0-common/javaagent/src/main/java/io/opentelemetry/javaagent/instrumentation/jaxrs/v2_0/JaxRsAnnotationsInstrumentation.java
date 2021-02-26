@@ -16,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -72,14 +72,14 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.This Object target,
         @Advice.Origin Method method,
         @Advice.AllArguments Object[] args,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
-      ContextStore<AsyncResponse, Span> contextStore = null;
+      ContextStore<AsyncResponse, Context> contextStore = null;
       for (Object arg : args) {
         if (arg instanceof AsyncResponse) {
           asyncResponse = (AsyncResponse) arg;
-          contextStore = InstrumentationContext.get(AsyncResponse.class, Span.class);
+          contextStore = InstrumentationContext.get(AsyncResponse.class, Context.class);
           if (contextStore.get(asyncResponse) != null) {
             /*
              * We are probably in a recursive call and don't want to start a new span because it
@@ -97,29 +97,29 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      span = tracer().startSpan(target.getClass(), method);
+      context = tracer().startSpan(target.getClass(), method);
 
       if (contextStore != null && asyncResponse != null) {
-        contextStore.put(asyncResponse, span);
+        contextStore.put(asyncResponse, context);
       }
 
-      scope = span.makeCurrent();
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Return(readOnly = false, typing = Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelAsyncResponse") AsyncResponse asyncResponse) {
-      if (span == null || scope == null) {
+      if (context == null || scope == null) {
         return;
       }
       CallDepthThreadLocalMap.reset(Path.class);
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
         scope.close();
         return;
       }
@@ -129,14 +129,14 @@ public class JaxRsAnnotationsInstrumentation implements TypeInstrumentation {
 
       if (asyncResponse != null && !asyncResponse.isSuspended()) {
         // Clear span from the asyncResponse. Logically this should never happen. Added to be safe.
-        InstrumentationContext.get(AsyncResponse.class, Span.class).put(asyncResponse, null);
+        InstrumentationContext.get(AsyncResponse.class, Context.class).put(asyncResponse, null);
       }
       if (asyncReturnValue != null) {
         // span finished by CompletionStageFinishCallback
-        asyncReturnValue = asyncReturnValue.handle(new CompletionStageFinishCallback<>(span));
+        asyncReturnValue = asyncReturnValue.handle(new CompletionStageFinishCallback<>(context));
       }
       if ((asyncResponse == null || !asyncResponse.isSuspended()) && asyncReturnValue == null) {
-        tracer().end(span);
+        tracer().end(context);
       }
       // else span finished by AsyncResponseAdvice
 

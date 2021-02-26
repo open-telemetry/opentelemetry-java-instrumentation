@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.mojarra.MojarraTracer.t
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
@@ -38,26 +38,27 @@ public class ActionListenerImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) ActionEvent event,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      span = tracer().startSpan(event);
-      if (span != null) {
-        scope = span.makeCurrent();
+      context = tracer().startSpan(event);
+      if (context != null) {
+        scope = context.makeCurrent();
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (scope != null) {
-        scope.close();
-        if (throwable != null) {
-          tracer().endExceptionally(span, throwable);
-        } else {
-          tracer().end(span);
-        }
+      if (scope == null) {
+        return;
+      }
+      scope.close();
+      if (throwable != null) {
+        tracer().endExceptionally(context, throwable);
+      } else {
+        tracer().end(context);
       }
     }
   }
