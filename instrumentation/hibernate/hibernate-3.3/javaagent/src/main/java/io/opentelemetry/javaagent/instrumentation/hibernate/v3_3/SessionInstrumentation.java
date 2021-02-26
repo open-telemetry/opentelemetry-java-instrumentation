@@ -17,7 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
@@ -163,8 +162,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
       }
 
       if (!SCOPE_ONLY_METHODS.contains(name)) {
-        Span span = tracer().startSpan(sessionContext, "Session." + name, entity);
-        spanContext = sessionContext.with(span);
+        spanContext = tracer().startSpan(sessionContext, "Session." + name, entity);
         scope = spanContext.makeCurrent();
       } else {
         scope = sessionContext.makeCurrent();

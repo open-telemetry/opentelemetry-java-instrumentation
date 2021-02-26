@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
@@ -60,17 +59,17 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return Object session) {
 
-      Context context = Java8BytecodeBridge.currentContext();
-      Span span = tracer().startSpan(context, "Session");
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context context = tracer().startSpan(parentContext, "Session");
 
       if (session instanceof Session) {
         ContextStore<Session, Context> contextStore =
             InstrumentationContext.get(Session.class, Context.class);
-        contextStore.putIfAbsent((Session) session, context.with(span));
+        contextStore.putIfAbsent((Session) session, context);
       } else if (session instanceof StatelessSession) {
         ContextStore<StatelessSession, Context> contextStore =
             InstrumentationContext.get(StatelessSession.class, Context.class);
-        contextStore.putIfAbsent((StatelessSession) session, context.with(span));
+        contextStore.putIfAbsent((StatelessSession) session, context);
       }
     }
   }

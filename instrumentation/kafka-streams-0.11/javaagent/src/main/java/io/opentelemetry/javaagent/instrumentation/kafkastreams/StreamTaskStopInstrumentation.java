@@ -5,15 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
+import static io.opentelemetry.javaagent.instrumentation.kafkastreams.ContextScopeHolder.HOLDER;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.KafkaStreamsTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.kafkastreams.SpanScopeHolder.HOLDER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -38,24 +38,24 @@ public class StreamTaskStopInstrumentation implements TypeInstrumentation {
   public static class StopSpanAdvice {
 
     @Advice.OnMethodEnter
-    public static SpanScopeHolder onEnter() {
-      SpanScopeHolder holder = new SpanScopeHolder();
+    public static ContextScopeHolder onEnter() {
+      ContextScopeHolder holder = new ContextScopeHolder();
       HOLDER.set(holder);
       return holder;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter SpanScopeHolder holder, @Advice.Thrown Throwable throwable) {
+        @Advice.Enter ContextScopeHolder holder, @Advice.Thrown Throwable throwable) {
       HOLDER.remove();
-      Span span = holder.getSpan();
-      if (span != null) {
+      Context context = holder.getContext();
+      if (context != null) {
         holder.closeScope();
 
         if (throwable != null) {
-          tracer().endExceptionally(span, throwable);
+          tracer().endExceptionally(context, throwable);
         } else {
-          tracer().end(span);
+          tracer().end(context);
         }
       }
     }

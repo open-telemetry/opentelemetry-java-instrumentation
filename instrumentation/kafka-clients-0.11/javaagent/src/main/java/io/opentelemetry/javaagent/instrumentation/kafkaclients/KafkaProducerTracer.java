@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.kafka.clients.ApiVersions;
@@ -22,10 +22,10 @@ public class KafkaProducerTracer extends BaseTracer {
     return TRACER;
   }
 
-  public Span startProducerSpan(ProducerRecord<?, ?> record) {
-    SpanBuilder span = spanBuilder(spanNameOnProduce(record), PRODUCER);
+  public Context startProducerSpan(Context parentContext, ProducerRecord<?, ?> record) {
+    SpanBuilder span = spanBuilder(spanNameOnProduce(record), PRODUCER).setParent(parentContext);
     onProduce(span, record);
-    return span.startSpan();
+    return parentContext.with(span.startSpan());
   }
 
   // Do not inject headers for batch versions below 2

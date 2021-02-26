@@ -19,6 +19,7 @@ import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
@@ -38,7 +39,7 @@ public class RabbitTracer extends BaseTracer {
     return TRACER;
   }
 
-  public Span startSpan(String method, Connection connection) {
+  public Context startSpan(String method, Connection connection) {
     SpanKind kind = method.equals("Channel.basicPublish") ? PRODUCER : CLIENT;
     SpanBuilder span =
         spanBuilder(method, kind)
@@ -47,10 +48,10 @@ public class RabbitTracer extends BaseTracer {
 
     NetPeerUtils.INSTANCE.setNetPeer(span, connection.getAddress(), connection.getPort());
 
-    return span.startSpan();
+    return Context.current().with(span.startSpan());
   }
 
-  public Span startGetSpan(
+  public Context startGetSpan(
       String queue, long startTime, GetResponse response, Connection connection) {
     SpanBuilder spanBuilder =
         tracer
@@ -75,18 +76,20 @@ public class RabbitTracer extends BaseTracer {
     NetPeerUtils.INSTANCE.setNetPeer(spanBuilder, connection.getAddress(), connection.getPort());
     onGet(spanBuilder, queue);
 
-    return spanBuilder.startSpan();
+    return Context.current().with(spanBuilder.startSpan());
   }
 
-  public Span startDeliverySpan(
+  public Context startDeliverySpan(
       String queue, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
     Map<String, Object> headers = properties.getHeaders();
+    Context parentContext = extract(headers, GETTER);
+
     long startTimeMillis = System.currentTimeMillis();
     Span span =
         tracer
             .spanBuilder(spanNameOnDeliver(queue))
             .setSpanKind(CONSUMER)
-            .setParent(extract(headers, GETTER))
+            .setParent(parentContext)
             .setStartTimestamp(startTimeMillis, TimeUnit.MILLISECONDS)
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue")
@@ -106,7 +109,7 @@ public class RabbitTracer extends BaseTracer {
       span.setAttribute("rabbitmq.record.queue_time_ms", Math.max(0L, consumeTime - produceTime));
     }
 
-    return span;
+    return parentContext.with(span);
   }
 
   public void onPublish(Span span, String exchange, String routingKey) {
