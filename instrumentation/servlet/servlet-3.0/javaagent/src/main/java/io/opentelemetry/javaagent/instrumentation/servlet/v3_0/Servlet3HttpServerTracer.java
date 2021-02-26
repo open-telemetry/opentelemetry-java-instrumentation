@@ -36,7 +36,7 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
     // server span name shouldn't be update when server span was created from a call to Servlet
     // if server span was created from a call to Filter then name may be updated from updateContext.
     if (servletOrFilter instanceof Servlet) {
-      ServletSpanNaming.setServletUpdatedServerSpanName(context, true);
+      ServletSpanNaming.setServletUpdatedServerSpanName(context);
     }
     return context;
   }
@@ -119,7 +119,7 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
       if (spanName != null) {
         Span span = getCurrentServerSpan(context);
         span.updateName(spanName);
-        ServletSpanNaming.setServletUpdatedServerSpanName(context, true);
+        ServletSpanNaming.setServletUpdatedServerSpanName(context);
       }
     }
 

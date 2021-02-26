@@ -22,7 +22,7 @@ public class Servlet2HttpServerTracer extends ServletHttpServerTracer<ResponseWi
     Context context = startSpan(request, getSpanName(request));
     // server span name shouldn't be update when server span was created by servlet 2.2
     // instrumentation
-    ServletSpanNaming.setServletUpdatedServerSpanName(context, true);
+    ServletSpanNaming.setServletUpdatedServerSpanName(context);
     return context;
   }
 
@@ -30,7 +30,7 @@ public class Servlet2HttpServerTracer extends ServletHttpServerTracer<ResponseWi
     if (ServletSpanNaming.shouldUpdateServerSpanName(context)) {
       Span span = getCurrentServerSpan(context);
       span.updateName(getSpanName(request));
-      ServletSpanNaming.setServletUpdatedServerSpanName(context, true);
+      ServletSpanNaming.setServletUpdatedServerSpanName(context);
     }
 
     return super.updateContext(context, request);

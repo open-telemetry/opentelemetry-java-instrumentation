@@ -56,7 +56,7 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         String filterPath = RequestCycle.get().getRequest().getFilterPath();
         serverSpan.updateName(ServletContextPath.prepend(context, filterPath + "/" + pageName));
         // prevent servlet integration from doing further updates to server span name
-        ServletSpanNaming.setServletUpdatedServerSpanName(context, true);
+        ServletSpanNaming.setServletUpdatedServerSpanName(context);
       }
     }
   }

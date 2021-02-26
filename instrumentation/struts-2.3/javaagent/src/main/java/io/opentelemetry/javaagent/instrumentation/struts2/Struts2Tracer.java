@@ -67,7 +67,7 @@ public class Struts2Tracer extends BaseTracer {
 
     serverSpan.updateName(ServletContextPath.prepend(context, result));
     // prevent servlet integration from doing further updates to server span name
-    ServletSpanNaming.setServletUpdatedServerSpanName(context, true);
+    ServletSpanNaming.setServletUpdatedServerSpanName(context);
   }
 
   @Override
