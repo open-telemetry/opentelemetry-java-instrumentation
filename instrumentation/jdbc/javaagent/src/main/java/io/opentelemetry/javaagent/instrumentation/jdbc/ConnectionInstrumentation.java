@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.sql.PreparedStatement;
 import java.util.Map;
@@ -49,7 +48,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(
         @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
-      JdbcMaps.preparedStatements.put(statement, SqlStatementSanitizer.sanitize(sql));
+      JdbcMaps.preparedStatements.put(statement, sql);
     }
   }
 }

@@ -15,7 +15,7 @@ import java.util.List;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol.Command;
 
-public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandWithArgs> {
+public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandWithArgs, String> {
   private static final JedisClientTracer TRACER = new JedisClientTracer();
 
   public static JedisClientTracer tracer() {
@@ -23,13 +23,14 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
   }
 
   @Override
-  protected String spanName(Connection connection, CommandWithArgs query, String normalizedQuery) {
-    return query.getStringCommand();
+  protected String sanitizeStatement(CommandWithArgs command) {
+    return RedisCommandSanitizer.sanitize(command.getStringCommand(), command.getArgs());
   }
 
   @Override
-  protected String normalizeQuery(CommandWithArgs command) {
-    return RedisCommandSanitizer.sanitize(command.getStringCommand(), command.getArgs());
+  protected String spanName(
+      Connection connection, CommandWithArgs command, String sanitizedStatement) {
+    return command.getStringCommand();
   }
 
   @Override
@@ -45,6 +46,12 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
   @Override
   protected InetSocketAddress peerAddress(Connection connection) {
     return new InetSocketAddress(connection.getHost(), connection.getPort());
+  }
+
+  @Override
+  protected String dbStatement(
+      Connection connection, CommandWithArgs command, String sanitizedStatement) {
+    return sanitizedStatement;
   }
 
   @Override

@@ -21,18 +21,18 @@ public class LettuceDatabaseClientTracer
   }
 
   @Override
-  protected String spanName(
-      RedisURI connection, RedisCommand<?, ?, ?> query, String normalizedQuery) {
-    return LettuceInstrumentationUtil.getCommandName(query);
-  }
-
-  @Override
-  protected String normalizeQuery(RedisCommand<?, ?, ?> redisCommand) {
+  protected String sanitizeStatement(RedisCommand<?, ?, ?> redisCommand) {
     String command = LettuceInstrumentationUtil.getCommandName(redisCommand);
     List<String> args =
         redisCommand.getArgs() == null
             ? Collections.emptyList()
             : LettuceArgSplitter.splitArgs(redisCommand.getArgs().toCommandString());
     return RedisCommandSanitizer.sanitize(command, args);
+  }
+
+  @Override
+  protected String spanName(
+      RedisURI connection, RedisCommand<?, ?, ?> command, String sanitizedStatement) {
+    return LettuceInstrumentationUtil.getCommandName(command);
   }
 }

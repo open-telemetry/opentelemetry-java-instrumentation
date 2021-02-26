@@ -64,7 +64,11 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeSyncSpan(Throwable thrown) {
-    tracer().endExceptionally(context, thrown);
+    if (thrown == null) {
+      tracer().end(context);
+    } else {
+      tracer().endExceptionally(context, thrown);
+    }
   }
 
   protected abstract void processResult(Span span, T future)
