@@ -24,7 +24,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
@@ -38,11 +37,6 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
   private static final String KEY = "kafka.KEY";
   private static final String TOPIC = "kafka.TOPIC";
   private static final String OFFSET = "kafka.OFFSET";
-
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
-          .getBooleanProperty(
-              "otel.instrumentation.apache-camel.experimental-span-attributes", false);
 
   public KafkaSpanDecorator() {
     super("kafka");

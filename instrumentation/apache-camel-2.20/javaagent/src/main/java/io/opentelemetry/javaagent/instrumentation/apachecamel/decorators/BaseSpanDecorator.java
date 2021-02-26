@@ -40,7 +40,7 @@ import org.apache.camel.util.URISupport;
 /** An abstract base implementation of the {@link SpanDecorator} interface. */
 class BaseSpanDecorator implements SpanDecorator {
 
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+  static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
           .getBooleanProperty(
               "otel.instrumentation.apache-camel.experimental-span-attributes", false);
