@@ -26,15 +26,15 @@ abstract class Log4j2Test extends InstrumentationSpecification {
 
     then:
     events.size() == 2
-    events[0].message.formattedMessage == "log message 1"
-    events[0].getContextData().getValue("trace_id") == null
-    events[0].getContextData().getValue("span_id") == null
-    events[0].getContextData().getValue("trace_flags") == null
+    events[0].message == "log message 1"
+    events[0].contextData["trace_id"] == null
+    events[0].contextData["span_id"] == null
+    events[0].contextData["trace_flags"] == null
 
-    events[1].message.formattedMessage == "log message 2"
-    events[1].getContextData().getValue("trace_id") == null
-    events[1].getContextData().getValue("span_id") == null
-    events[1].getContextData().getValue("trace_flags") == null
+    events[1].message == "log message 2"
+    events[1].contextData["trace_id"] == null
+    events[1].contextData["span_id"] == null
+    events[1].contextData["trace_flags"] == null
   }
 
   def "ids when span"() {
@@ -58,19 +58,19 @@ abstract class Log4j2Test extends InstrumentationSpecification {
 
     then:
     events.size() == 3
-    events[0].message.formattedMessage == "log message 1"
-    events[0].getContextData().getValue("trace_id") == span1.spanContext.traceId
-    events[0].getContextData().getValue("span_id") == span1.spanContext.spanId
-    events[0].getContextData().getValue("trace_flags") == "01"
+    events[0].message == "log message 1"
+    events[0].contextData["trace_id"] == span1.spanContext.traceId
+    events[0].contextData["span_id"] == span1.spanContext.spanId
+    events[0].contextData["trace_flags"] == "01"
 
-    events[1].message.formattedMessage == "log message 2"
-    events[1].getContextData().getValue("trace_id") == null
-    events[1].getContextData().getValue("span_id") == null
-    events[1].getContextData().getValue("trace_flags") == null
+    events[1].message == "log message 2"
+    events[1].contextData["trace_id"] == null
+    events[1].contextData["span_id"] == null
+    events[1].contextData["trace_flags"] == null
 
-    events[2].message.formattedMessage == "log message 3"
-    events[2].getContextData().getValue("trace_id") == span2.spanContext.traceId
-    events[2].getContextData().getValue("span_id") == span2.spanContext.spanId
-    events[2].getContextData().getValue("trace_flags") == "01"
+    events[2].message == "log message 3"
+    events[2].contextData["trace_id"] == span2.spanContext.traceId
+    events[2].contextData["span_id"] == span2.spanContext.spanId
+    events[2].contextData["trace_flags"] == "01"
   }
 }
