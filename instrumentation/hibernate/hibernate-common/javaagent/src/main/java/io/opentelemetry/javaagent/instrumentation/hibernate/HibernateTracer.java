@@ -64,6 +64,6 @@ public class HibernateTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.hibernate";
+    return "io.opentelemetry.javaagent.hibernate-common";
   }
 }

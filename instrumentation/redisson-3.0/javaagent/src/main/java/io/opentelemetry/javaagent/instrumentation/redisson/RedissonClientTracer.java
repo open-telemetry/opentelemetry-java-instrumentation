@@ -54,7 +54,7 @@ public class RedissonClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.redisson";
+    return "io.opentelemetry.javaagent.redisson-3.0";
   }
 
   @Override

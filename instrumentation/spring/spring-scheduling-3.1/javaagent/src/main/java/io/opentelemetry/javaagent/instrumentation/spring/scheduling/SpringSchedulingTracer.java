@@ -19,7 +19,7 @@ public class SpringSchedulingTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-scheduling";
+    return "io.opentelemetry.javaagent.spring-scheduling-3.1";
   }
 
   public Context startSpan(Runnable runnable) {

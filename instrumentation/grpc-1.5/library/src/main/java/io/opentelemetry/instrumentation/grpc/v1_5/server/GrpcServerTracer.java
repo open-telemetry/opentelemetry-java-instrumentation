@@ -50,7 +50,7 @@ public class GrpcServerTracer extends RpcServerTracer<Metadata> {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.grpc";
+    return "io.opentelemetry.javaagent.grpc-1.5";
   }
 
   @Override

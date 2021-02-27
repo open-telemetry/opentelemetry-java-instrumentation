@@ -16,6 +16,6 @@ public class FinatraTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.finatra";
+    return "io.opentelemetry.javaagent.finatra-2.9";
   }
 }

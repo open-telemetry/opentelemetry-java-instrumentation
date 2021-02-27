@@ -134,6 +134,6 @@ public class AwsLambdaTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.aws-lambda";
+    return "io.opentelemetry.aws-lambda-1.0";
   }
 }

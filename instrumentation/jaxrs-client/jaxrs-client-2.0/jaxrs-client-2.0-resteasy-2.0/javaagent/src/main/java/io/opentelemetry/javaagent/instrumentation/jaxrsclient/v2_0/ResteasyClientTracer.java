@@ -53,6 +53,6 @@ public class ResteasyClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.jaxrs-client";
+    return "io.opentelemetry.javaagent.jaxrs-client-2.0-resteasy-2.0";
   }
 }

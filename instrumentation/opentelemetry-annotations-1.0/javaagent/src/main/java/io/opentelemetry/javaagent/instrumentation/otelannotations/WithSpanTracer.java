@@ -78,6 +78,6 @@ public class WithSpanTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.opentelemetry-annotations";
+    return "io.opentelemetry.javaagent.opentelemetry-annotations-1.0";
   }
 }
