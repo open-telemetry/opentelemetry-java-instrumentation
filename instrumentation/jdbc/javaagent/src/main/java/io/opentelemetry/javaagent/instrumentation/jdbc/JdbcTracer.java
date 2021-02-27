@@ -7,10 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.connectionFromStatement;
 
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -88,9 +90,25 @@ public class JdbcTracer extends DatabaseClientTracer<DbInfo, String, SqlStatemen
   }
 
   @Override
+  protected void onStatement(
+      SpanBuilder span, DbInfo connection, String statement, SqlStatementInfo sanitizedStatement) {
+    super.onStatement(span, connection, statement, sanitizedStatement);
+    String table = sanitizedStatement.getTable();
+    if (table != null) {
+      span.setAttribute(SemanticAttributes.DB_SQL_TABLE, table);
+    }
+  }
+
+  @Override
   protected String dbStatement(
       DbInfo connection, String statement, SqlStatementInfo sanitizedStatement) {
     return sanitizedStatement.getFullStatement();
+  }
+
+  @Override
+  protected String dbOperation(
+      DbInfo connection, String statement, SqlStatementInfo sanitizedStatement) {
+    return sanitizedStatement.getOperation();
   }
 
   private DbInfo extractDbInfo(Connection connection) {
