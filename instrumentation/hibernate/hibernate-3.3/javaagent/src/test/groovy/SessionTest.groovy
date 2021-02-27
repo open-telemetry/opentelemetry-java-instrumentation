@@ -67,8 +67,10 @@ class SessionTest extends AbstractHibernateTest {
               "${SemanticAttributes.DB_SYSTEM.key}" "h2"
               "${SemanticAttributes.DB_NAME.key}" "db1"
               "${SemanticAttributes.DB_USER.key}" "sa"
-              "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
               "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
+              "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
+              "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
+              "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
             }
           }
           span(3) {
@@ -142,8 +144,10 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_SYSTEM.key}" "h2"
             "${SemanticAttributes.DB_NAME.key}" "db1"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
+            "${SemanticAttributes.DB_STATEMENT.key}" String
+            "${SemanticAttributes.DB_OPERATION.key}" String
+            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
           }
         }
       }
@@ -208,8 +212,10 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_SYSTEM.key}" "h2"
             "${SemanticAttributes.DB_NAME.key}" "db1"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^select /
+            "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
+            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
           }
         }
         span(3) {
@@ -226,8 +232,10 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_SYSTEM.key}" "h2"
             "${SemanticAttributes.DB_NAME.key}" "db1"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
+            "${SemanticAttributes.DB_STATEMENT.key}" String
+            "${SemanticAttributes.DB_OPERATION.key}" String
+            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
           }
         }
       }
@@ -340,8 +348,10 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_SYSTEM.key}" "h2"
             "${SemanticAttributes.DB_NAME.key}" "db1"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
+            "${SemanticAttributes.DB_STATEMENT.key}" String
+            "${SemanticAttributes.DB_OPERATION.key}" String
+            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
           }
         }
       }
@@ -412,8 +422,10 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_SYSTEM.key}" "h2"
             "${SemanticAttributes.DB_NAME.key}" "db1"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" String
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
+            "${SemanticAttributes.DB_STATEMENT.key}" String
+            "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
+            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
           }
         }
         span(3) {
@@ -499,8 +511,10 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_SYSTEM.key}" "h2"
             "${SemanticAttributes.DB_NAME.key}" "db1"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" ~/^insert /
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^insert /
+            "${SemanticAttributes.DB_OPERATION.key}" "INSERT"
+            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
           }
         }
         span(6) {
@@ -511,8 +525,10 @@ class SessionTest extends AbstractHibernateTest {
             "${SemanticAttributes.DB_SYSTEM.key}" "h2"
             "${SemanticAttributes.DB_NAME.key}" "db1"
             "${SemanticAttributes.DB_USER.key}" "sa"
-            "${SemanticAttributes.DB_STATEMENT.key}" ~/^delete /
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "h2:mem:"
+            "${SemanticAttributes.DB_STATEMENT.key}" ~/^delete /
+            "${SemanticAttributes.DB_OPERATION.key}" "DELETE"
+            "${SemanticAttributes.DB_SQL_TABLE.key}" "Value"
           }
         }
         span(7) {
