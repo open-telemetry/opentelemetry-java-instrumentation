@@ -84,3 +84,8 @@ test {
 if (!testLatestDeps) {
   test.dependsOn test_before_1_11_106
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true"
+}
