@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.Dyn
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.ClientType;
@@ -25,6 +26,10 @@ import software.amazon.awssdk.http.SdkHttpRequest;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", false);
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
@@ -108,13 +113,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   private void populateGenericAttributes(Span span, ExecutionAttributes attributes) {
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
+      String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
 
-    String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
-    String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
-
-    span.setAttribute("aws.agent", COMPONENT_NAME);
-    span.setAttribute("aws.service", awsServiceName);
-    span.setAttribute("aws.operation", awsOperation);
+      span.setAttribute("aws.agent", COMPONENT_NAME);
+      span.setAttribute("aws.service", awsServiceName);
+      span.setAttribute("aws.operation", awsOperation);
+    }
   }
 
   @Override
@@ -140,12 +146,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   private void onSdkResponse(
       Span span, SdkResponse response, ExecutionAttributes executionAttributes) {
-    if (response instanceof AwsResponse) {
-      span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
-    }
-    AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
-    if (sdkRequest != null) {
-      fieldMapper.mapToAttributes(response, sdkRequest, span);
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      if (response instanceof AwsResponse) {
+        span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
+      }
+      AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
+      if (sdkRequest != null) {
+        fieldMapper.mapToAttributes(response, sdkRequest, span);
+      }
     }
   }
 
