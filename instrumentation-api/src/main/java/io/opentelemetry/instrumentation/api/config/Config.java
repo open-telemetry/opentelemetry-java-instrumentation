@@ -42,8 +42,7 @@ public abstract class Config {
     if (INSTANCE == null) {
       // this should only happen in library instrumentation
       //
-      // no need to synchronize because worst case is a small performance blip of creating INSTANCE
-      // more than once
+      // no need to synchronize because worst case is creating INSTANCE more than once
       INSTANCE = new ConfigBuilder().readEnvironmentVariables().readSystemProperties().build();
     }
     return INSTANCE;
