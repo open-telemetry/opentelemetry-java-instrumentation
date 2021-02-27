@@ -62,9 +62,9 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
           "kamon.annotation.api.Trace",
           "org.springframework.cloud.sleuth.annotation.NewSpan");
 
-  private static final String TRACE_ANNOTATIONS_CONFIG =
+  private static final String EXTERNAL_ANNOTATIONS_INCLUDE =
       "otel.instrumentation.external-annotations.include";
-  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
+  private static final String EXTERNAL_ANNOTATIONS_EXCLUDE_METHODS =
       "otel.instrumentation.external-annotations.exclude-methods";
 
   public TraceAnnotationsInstrumentationModule() {
@@ -77,14 +77,15 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
   }
 
   public static class AnnotatedMethodsInstrumentation implements TypeInstrumentation {
-    private final Set<String> additionalTraceAnnotations;
     private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
     private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
     /** This matcher matches all methods that should be excluded from transformation. */
     private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
     public AnnotatedMethodsInstrumentation() {
-      additionalTraceAnnotations = configureAdditionalTraceAnnotations(Config.get());
+      Set<String> additionalTraceAnnotations =
+          configureAdditionalTraceAnnotations(
+              Config.get().getProperty(EXTERNAL_ANNOTATIONS_INCLUDE));
 
       if (additionalTraceAnnotations.isEmpty()) {
         classLoaderOptimization = none();
@@ -125,20 +126,19 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
           TraceAdvice.class.getName());
     }
 
-    private static Set<String> configureAdditionalTraceAnnotations(Config config) {
-      String configString = config.getProperty(TRACE_ANNOTATIONS_CONFIG);
-      if (configString == null) {
+    private static Set<String> configureAdditionalTraceAnnotations(String include) {
+      if (include == null) {
         return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));
-      } else if (configString.isEmpty()) {
+      } else if (include.isEmpty()) {
         return Collections.emptySet();
-      } else if (!configString.matches(CONFIG_FORMAT)) {
+      } else if (!include.matches(CONFIG_FORMAT)) {
         log.warn(
             "Invalid trace annotations config '{}'. Must match 'package.Annotation$Name;*'.",
-            configString);
+            include);
         return Collections.emptySet();
       } else {
         Set<String> annotations = new HashSet<>();
-        String[] annotationClasses = configString.split(";", -1);
+        String[] annotationClasses = include.split(";", -1);
         for (String annotationClass : annotationClasses) {
           if (!annotationClass.trim().isEmpty()) {
             annotations.add(annotationClass.trim());
@@ -157,7 +157,7 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
 
       Map<String, Set<String>> excludedMethods =
           MethodsConfigurationParser.parse(
-              Config.get().getProperty(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
+              Config.get().getProperty(EXTERNAL_ANNOTATIONS_EXCLUDE_METHODS));
       for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
         String className = entry.getKey();
         ElementMatcher.Junction<ByteCodeElement> classMather =

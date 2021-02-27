@@ -5,26 +5,14 @@
 
 import static io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule.DEFAULT_ANNOTATIONS
 
-import io.opentelemetry.instrumentation.api.config.Config
-import io.opentelemetry.instrumentation.api.config.ConfigBuilder
 import io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule
 import spock.lang.Specification
 
 class IncludeTest extends Specification {
 
   def "test configuration #value"() {
-    setup:
-    Config config
-    if (value) {
-      config = new ConfigBuilder().readProperties([
-        "otel.instrumentation.external-annotations.include": value
-      ]).build()
-    } else {
-      config = Config.DEFAULT
-    }
-
     expect:
-    TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation.configureAdditionalTraceAnnotations(config) == expected.toSet()
+    TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation.configureAdditionalTraceAnnotations(value) == expected.toSet()
 
     where:
     value                               | expected

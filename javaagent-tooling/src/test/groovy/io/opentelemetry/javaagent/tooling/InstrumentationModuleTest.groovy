@@ -77,7 +77,7 @@ class InstrumentationModuleTest extends Specification {
     target.applyCalled == enabled
 
     cleanup:
-    Config.INSTANCE = Config.DEFAULT
+    Config.INSTANCE = null
 
     where:
     enabled << [true, false]
@@ -96,7 +96,7 @@ class InstrumentationModuleTest extends Specification {
     target.applyCalled == enabled
 
     cleanup:
-    Config.INSTANCE = Config.DEFAULT
+    Config.INSTANCE = null
 
     where:
     value   | enabled
@@ -120,7 +120,7 @@ class InstrumentationModuleTest extends Specification {
     target.applyCalled == enabled
 
     cleanup:
-    Config.INSTANCE = Config.DEFAULT
+    Config.INSTANCE = null
 
     where:
     value             | enabled | name          | altName
