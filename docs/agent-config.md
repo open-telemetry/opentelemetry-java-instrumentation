@@ -16,7 +16,7 @@ behavior you find.
 ## SDK Autoconfiguration
 
 The SDK's autoconfiguration module is used for basic configuration of the agent. Read the
-[docs](https://github.com/open-telemetry/opentelemetry-java/tree/v0.17.0/sdk-extensions/autoconfigure#customizing-the-opentelemetry-sdk)
+[docs](https://github.com/open-telemetry/opentelemetry-java/tree/v1.0.0/sdk-extensions/autoconfigure#customizing-the-opentelemetry-sdk)
 to find settings such as configuring export or sampling.
 
 ## Peer service name
