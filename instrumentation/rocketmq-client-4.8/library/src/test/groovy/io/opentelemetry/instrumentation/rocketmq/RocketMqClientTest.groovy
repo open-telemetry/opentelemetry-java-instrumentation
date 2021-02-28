@@ -83,8 +83,6 @@ class RocketMqClientTest extends InstrumentationSpecification implements Library
         }
       }
       cleanup:
-      producer.shutdown()
-      consumer.shutdown()
       BaseConf.deleteTempDir()
     }
   }

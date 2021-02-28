@@ -49,9 +49,7 @@ final class BaseConf {
 
   public static String initTopic() {
     String topic = MQRandomUtils.getRandomTopic();
-    if (!IntegrationTestBase.initTopic(topic, nsAddr, clusterName)) {
-      log.error("Topic init failed");
-    }
+    IntegrationTestBase.initTopic(topic, nsAddr, clusterName);
     return topic;
   }
 
