@@ -8,8 +8,8 @@ configurations.all {
 
 ext {
   versions = [
-    opentelemetry     : '0.17.0',
-    opentelemetryAlpha: "0.17.0-alpha",
+    opentelemetry     : '1.0.0',
+    opentelemetryAlpha: "1.0.0-alpha",
 
     slf4j             : "1.7.30",
     guava             : "30.1-jre",
@@ -51,7 +51,7 @@ ext {
     opentelemetryZipkin          : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-zipkin', version: versions.opentelemetry),
     opentelemetryPrometheus      : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-prometheus', version: versions.opentelemetryAlpha),
     opentelemetryLogging         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-exporter-logging', version: versions.opentelemetry),
-    opentelemetryProto           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetry),
+    opentelemetryProto           : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-proto', version: versions.opentelemetryAlpha),
     opentelemetryResources       : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-extension-resources', version: versions.opentelemetry),
     opentelemetrySdkTesting      : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-sdk-testing', version: versions.opentelemetry),
     opentelemetrySemConv         : dependencies.create(group: 'io.opentelemetry', name: 'opentelemetry-semconv', version: versions.opentelemetryAlpha),
