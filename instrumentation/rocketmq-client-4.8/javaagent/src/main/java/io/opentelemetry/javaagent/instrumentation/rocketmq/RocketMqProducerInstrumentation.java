@@ -43,7 +43,8 @@ public class RocketMqProducerInstrumentation implements TypeInstrumentation {
   public static class AdviceStart {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.FieldValue(value = "defaultMQProducerImpl", declaringType = DefaultMQProducer.class)  DefaultMQProducerImpl defaultMqProducerImpl) {
+        @Advice.FieldValue(value = "defaultMQProducerImpl", declaringType = DefaultMQProducer.class)
+            DefaultMQProducerImpl defaultMqProducerImpl) {
       defaultMqProducerImpl.registerSendMessageHook(new TracingSendMessageHookImpl());
     }
   }

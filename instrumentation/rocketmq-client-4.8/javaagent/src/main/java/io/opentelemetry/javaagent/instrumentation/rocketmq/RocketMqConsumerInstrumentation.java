@@ -43,7 +43,10 @@ public class RocketMqConsumerInstrumentation implements TypeInstrumentation {
   public static class AdviceStart {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.FieldValue(value = "defaultMQPushConsumerImpl", declaringType = DefaultMQPushConsumer.class) DefaultMQPushConsumerImpl defaultMqPushConsumerImpl) {
+        @Advice.FieldValue(
+                value = "defaultMQPushConsumerImpl",
+                declaringType = DefaultMQPushConsumer.class)
+            DefaultMQPushConsumerImpl defaultMqPushConsumerImpl) {
       defaultMqPushConsumerImpl.registerConsumeMessageHook(new TracingConsumeMessageHookImpl());
     }
   }

@@ -47,7 +47,7 @@ public class IntegrationTestBase {
 
   protected static final Random random = new Random();
 
-  private static String createTempDir()  {
+  private static String createTempDir() {
     String path = null;
     try {
       File file = Files.createTempDirectory("opentelemetry-rocketmq-client-temp").toFile();
@@ -161,5 +161,4 @@ public class IntegrationTestBase {
   public static boolean initTopic(String topic, String nsAddr, String clusterName) {
     return initTopic(topic, nsAddr, clusterName, 8);
   }
-
 }

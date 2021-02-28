@@ -32,8 +32,7 @@ public class RocketMqConsumerTracer extends BaseTracer {
   public Context startSpan(Context parentContext, List<MessageExt> msgs) {
     MessageExt msg = msgs.get(0);
     if (msgs.size() == 1) {
-      SpanBuilder spanBuilder = startSpanBuilder(msg)
-          .setParent(extractParent(msg));
+      SpanBuilder spanBuilder = startSpanBuilder(msg).setParent(extractParent(msg));
       return withClientSpan(parentContext, spanBuilder.startSpan());
     } else {
       SpanBuilder spanBuilder =
@@ -51,22 +50,26 @@ public class RocketMqConsumerTracer extends BaseTracer {
   }
 
   public void createChildSpan(Context parentContext, MessageExt msg) {
-    SpanBuilder childSpanBuilder = startSpanBuilder(msg)
-        .setParent(parentContext)
-        .addLink(Span.fromContext(extractParent(msg)).getSpanContext());
+    SpanBuilder childSpanBuilder =
+        startSpanBuilder(msg)
+            .setParent(parentContext)
+            .addLink(Span.fromContext(extractParent(msg)).getSpanContext());
     end(withClientSpan(parentContext, childSpanBuilder.startSpan()));
   }
 
   public SpanBuilder startSpanBuilder(MessageExt msg) {
-    SpanBuilder spanBuilder = tracer.spanBuilder(spanNameOnConsume(msg))
-        .setSpanKind(CONSUMER)
-        .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq")
-        .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, msg.getTopic())
-        .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
-        .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
-        .setAttribute(SemanticAttributes.MESSAGING_MESSAGE_ID, msg.getMsgId())
-        .setAttribute(
-            SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) msg.getBody().length);
+    SpanBuilder spanBuilder =
+        tracer
+            .spanBuilder(spanNameOnConsume(msg))
+            .setSpanKind(CONSUMER)
+            .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq")
+            .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, msg.getTopic())
+            .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
+            .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
+            .setAttribute(SemanticAttributes.MESSAGING_MESSAGE_ID, msg.getMsgId())
+            .setAttribute(
+                SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                (long) msg.getBody().length);
     onConsume(spanBuilder, msg);
     return spanBuilder;
   }

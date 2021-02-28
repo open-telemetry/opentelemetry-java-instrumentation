@@ -69,8 +69,8 @@ final class BaseConf {
     return group;
   }
 
-  public static DefaultMQPushConsumer getConsumer(String nsAddr, String topic, String subExpression,
-      AbstractListener listener)
+  public static DefaultMQPushConsumer getConsumer(
+      String nsAddr, String topic, String subExpression, AbstractListener listener)
       throws MQClientException {
     String consumerGroup = initConsumerGroup();
     DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(consumerGroup);

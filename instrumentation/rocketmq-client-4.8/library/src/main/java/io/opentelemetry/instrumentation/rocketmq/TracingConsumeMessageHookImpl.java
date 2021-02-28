@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.rocketmq;
 
 import static io.opentelemetry.instrumentation.rocketmq.RocketMqConsumerTracer.tracer;
@@ -14,8 +19,7 @@ public class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
   }
 
   @Override
-  public void consumeMessageBefore(ConsumeMessageContext context) {
-  }
+  public void consumeMessageBefore(ConsumeMessageContext context) {}
 
   @Override
   public void consumeMessageAfter(ConsumeMessageContext context) {
@@ -25,5 +29,4 @@ public class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     Context traceContext = tracer().startSpan(Context.current(), context.getMsgList());
     tracer().end(traceContext);
   }
-
 }

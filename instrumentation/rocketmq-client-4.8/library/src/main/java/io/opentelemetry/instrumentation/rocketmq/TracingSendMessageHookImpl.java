@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.rocketmq;
 
 import static io.opentelemetry.instrumentation.rocketmq.RocketMqProducerTracer.tracer;
@@ -20,7 +25,9 @@ public class TracingSendMessageHookImpl implements SendMessageHook {
     if (context == null) {
       return;
     }
-    Context traceContext = tracer().startProducerSpan(context.getBrokerAddr(), context.getMessage(), Context.current());
+    Context traceContext =
+        tracer()
+            .startProducerSpan(context.getBrokerAddr(), context.getMessage(), Context.current());
     if (RocketMqClientConfig.isPropagationEnabled()) {
       GlobalOpenTelemetry.getPropagators()
           .getTextMapPropagator()
