@@ -8,16 +8,22 @@ package io.opentelemetry.instrumentation.api.tracer;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
-import java.util.concurrent.ExecutionException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer {
-
+/**
+ * Base class for implementing Tracers for database clients.
+ *
+ * @param <CONNECTION> type of the database connection.
+ * @param <STATEMENT> type of the database statement being executed.
+ * @param <SANITIZEDSTATEMENT> type of the database statement after sanitization.
+ */
+public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATEMENT>
+    extends BaseTracer {
   protected static final String DB_QUERY = "DB Query";
 
   public DatabaseClientTracer() {}
@@ -30,60 +36,67 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     return shouldStartSpan(CLIENT, parentContext);
   }
 
-  public Context startSpan(Context parentContext, CONNECTION connection, QUERY query) {
-    String normalizedQuery = normalizeQuery(query);
+  public Context startSpan(Context parentContext, CONNECTION connection, STATEMENT statement) {
+    SANITIZEDSTATEMENT sanitizedStatement = sanitizeStatement(statement);
 
-    Span span =
+    SpanBuilder span =
         tracer
-            .spanBuilder(spanName(connection, query, normalizedQuery))
+            .spanBuilder(spanName(connection, statement, sanitizedStatement))
             .setParent(parentContext)
             .setSpanKind(CLIENT)
-            .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection))
-            .startSpan();
+            .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection));
 
     if (connection != null) {
       onConnection(span, connection);
       setNetSemanticConvention(span, connection);
     }
-    onStatement(span, normalizedQuery);
+    onStatement(span, connection, statement, sanitizedStatement);
 
-    return withClientSpan(parentContext, span);
+    return withClientSpan(parentContext, span.startSpan());
   }
 
-  public void endExceptionally(Context context, Throwable throwable) {
-    Span span = Span.fromContext(context);
-    onError(span, throwable);
-    end(span);
+  protected abstract SANITIZEDSTATEMENT sanitizeStatement(STATEMENT statement);
+
+  protected String spanName(
+      CONNECTION connection, STATEMENT statement, SANITIZEDSTATEMENT sanitizedStatement) {
+    return conventionSpanName(
+        dbName(connection), dbOperation(connection, statement, sanitizedStatement), null);
   }
+
+  /**
+   * A helper method for constructing the span name formatting according to DB semantic conventions:
+   * {@code <db.operation> <db.name><table>}.
+   */
+  public static String conventionSpanName(
+      @Nullable String dbName, @Nullable String operation, @Nullable String table) {
+    if (operation == null) {
+      return dbName == null ? DB_QUERY : dbName;
+    }
+
+    StringBuilder name = new StringBuilder(operation);
+    if (dbName != null || table != null) {
+      name.append(' ');
+    }
+    if (dbName != null) {
+      name.append(dbName);
+      if (table != null) {
+        name.append('.');
+      }
+    }
+    if (table != null) {
+      name.append(table);
+    }
+    return name.toString();
+  }
+
+  protected abstract String dbSystem(CONNECTION connection);
 
   /** This should be called when the connection is being used, not when it's created. */
-  protected Span onConnection(Span span, CONNECTION connection) {
+  protected void onConnection(SpanBuilder span, CONNECTION connection) {
     span.setAttribute(SemanticAttributes.DB_USER, dbUser(connection));
     span.setAttribute(SemanticAttributes.DB_NAME, dbName(connection));
     span.setAttribute(SemanticAttributes.DB_CONNECTION_STRING, dbConnectionString(connection));
-    return span;
   }
-
-  @Override
-  protected void onError(Span span, Throwable throwable) {
-    if (throwable != null) {
-      span.setStatus(StatusCode.ERROR);
-      addThrowable(
-          span, throwable instanceof ExecutionException ? throwable.getCause() : throwable);
-    }
-  }
-
-  protected void setNetSemanticConvention(Span span, CONNECTION connection) {
-    NetPeerUtils.INSTANCE.setNetPeer(span, peerAddress(connection));
-  }
-
-  protected void onStatement(Span span, String statement) {
-    span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
-  }
-
-  protected abstract String normalizeQuery(QUERY query);
-
-  protected abstract String dbSystem(CONNECTION connection);
 
   protected String dbUser(CONNECTION connection) {
     return null;
@@ -97,17 +110,30 @@ public abstract class DatabaseClientTracer<CONNECTION, QUERY> extends BaseTracer
     return null;
   }
 
+  protected void setNetSemanticConvention(SpanBuilder span, CONNECTION connection) {
+    NetPeerUtils.INSTANCE.setNetPeer(span, peerAddress(connection));
+  }
+
   protected abstract InetSocketAddress peerAddress(CONNECTION connection);
 
-  protected String spanName(CONNECTION connection, QUERY query, String normalizedQuery) {
-    if (normalizedQuery != null) {
-      return normalizedQuery;
-    }
+  protected void onStatement(
+      SpanBuilder span,
+      CONNECTION connection,
+      STATEMENT statement,
+      SANITIZEDSTATEMENT sanitizedStatement) {
+    span.setAttribute(
+        SemanticAttributes.DB_STATEMENT, dbStatement(connection, statement, sanitizedStatement));
+    span.setAttribute(
+        SemanticAttributes.DB_OPERATION, dbOperation(connection, statement, sanitizedStatement));
+  }
 
-    String result = null;
-    if (connection != null) {
-      result = dbName(connection);
-    }
-    return result == null ? DB_QUERY : result;
+  protected String dbStatement(
+      CONNECTION connection, STATEMENT statement, SANITIZEDSTATEMENT sanitizedStatement) {
+    return null;
+  }
+
+  protected String dbOperation(
+      CONNECTION connection, STATEMENT statement, SANITIZEDSTATEMENT sanitizedStatement) {
+    return null;
   }
 }

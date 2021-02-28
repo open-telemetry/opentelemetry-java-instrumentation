@@ -64,19 +64,21 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
       span.setAttribute(SemanticAttributes.MESSAGING_KAFKA_PARTITION, partition);
     }
 
-    String partitionKey = (String) exchange.getIn().getHeader(PARTITION_KEY);
-    if (partitionKey != null) {
-      span.setAttribute("apache-camel.kafka.partitionKey", partitionKey);
-    }
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      String partitionKey = (String) exchange.getIn().getHeader(PARTITION_KEY);
+      if (partitionKey != null) {
+        span.setAttribute("apache-camel.kafka.partitionKey", partitionKey);
+      }
 
-    String key = (String) exchange.getIn().getHeader(KEY);
-    if (key != null) {
-      span.setAttribute("apache-camel.kafka.key", key);
-    }
+      String key = (String) exchange.getIn().getHeader(KEY);
+      if (key != null) {
+        span.setAttribute("apache-camel.kafka.key", key);
+      }
 
-    String offset = getValue(exchange, OFFSET, Long.class);
-    if (offset != null) {
-      span.setAttribute("apache-camel.kafka.offset", offset);
+      String offset = getValue(exchange, OFFSET, Long.class);
+      if (offset != null) {
+        span.setAttribute("apache-camel.kafka.offset", offset);
+      }
     }
   }
 

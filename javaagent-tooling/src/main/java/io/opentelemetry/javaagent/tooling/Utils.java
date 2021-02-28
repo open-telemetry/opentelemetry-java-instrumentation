@@ -9,26 +9,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader.BootstrapClassLoaderProxy;
-import java.lang.reflect.Method;
 import java.net.URL;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 
 public class Utils {
 
-  // This is used in HelperInjectionTest.groovy
-  private static Method findLoadedClassMethod = null;
-
   private static final BootstrapClassLoaderProxy unitTestBootstrapProxy =
       new BootstrapClassLoaderProxy(new URL[0]);
-
-  static {
-    try {
-      findLoadedClassMethod = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
-    } catch (NoSuchMethodException | SecurityException e) {
-      throw new IllegalStateException(e);
-    }
-  }
 
   /** Return the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
@@ -39,29 +27,24 @@ public class Utils {
   public static BootstrapClassLoaderProxy getBootstrapProxy() {
     if (getAgentClassLoader() instanceof AgentClassLoader) {
       return ((AgentClassLoader) getAgentClassLoader()).getBootstrapProxy();
-    } else {
-      // in a unit test
-      return unitTestBootstrapProxy;
     }
+    // in a unit test
+    return unitTestBootstrapProxy;
   }
 
   /** com.foo.Bar to com/foo/Bar.class */
   public static String getResourceName(String className) {
-    if (!className.endsWith(".class")) {
-      return className.replace('.', '/') + ".class";
-    } else {
-      return className;
-    }
+    return className.replace('.', '/') + ".class";
   }
 
-  /** com/foo/Bar.class to com.foo.Bar */
-  public static String getClassName(String resourceName) {
-    return resourceName.replaceAll("\\.class\\$", "").replace('/', '.');
+  /** com/foo/Bar to com.foo.Bar */
+  public static String getClassName(String internalName) {
+    return internalName.replace('/', '.');
   }
 
   /** com.foo.Bar to com/foo/Bar */
-  public static String getInternalName(String resourceName) {
-    return resourceName.replaceAll("\\.class\\$", "").replace('.', '/');
+  public static String getInternalName(Class<?> clazz) {
+    return clazz.getName().replace('.', '/');
   }
 
   /**
@@ -72,7 +55,7 @@ public class Utils {
    * @return converted name
    */
   public static String convertToInnerClassName(String className) {
-    return className.replaceAll("\\.", "\\$");
+    return className.replace('.', '$');
   }
 
   /**

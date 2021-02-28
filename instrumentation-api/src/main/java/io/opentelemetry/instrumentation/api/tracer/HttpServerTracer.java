@@ -112,7 +112,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   public void end(Context context, RESPONSE response, long timestamp) {
     Span span = Span.fromContext(context);
     setStatus(span, responseStatus(response));
-    endSpan(span, timestamp);
+    end(context, timestamp);
   }
 
   /**
@@ -144,7 +144,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     } else {
       setStatus(span, responseStatus(response));
     }
-    endSpan(span, timestamp);
+    end(context, timestamp);
   }
 
   public Span getServerSpan(STORAGE storage) {
@@ -258,14 +258,6 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     // TODO status_message
     // See https://github.com/open-telemetry/opentelemetry-specification/issues/950
     span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
-  }
-
-  private static void endSpan(Span span, long timestamp) {
-    if (timestamp >= 0) {
-      span.end(timestamp, TimeUnit.NANOSECONDS);
-    } else {
-      span.end();
-    }
   }
 
   @Nullable

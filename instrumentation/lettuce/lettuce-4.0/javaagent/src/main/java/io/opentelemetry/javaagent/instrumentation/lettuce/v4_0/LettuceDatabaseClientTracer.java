@@ -17,7 +17,7 @@ public class LettuceDatabaseClientTracer
   }
 
   @Override
-  protected String normalizeQuery(RedisCommand<?, ?, ?> command) {
+  protected String sanitizeStatement(RedisCommand<?, ?, ?> command) {
     return command.getType().name();
   }
 }

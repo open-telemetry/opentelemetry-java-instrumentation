@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import application.io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -24,23 +25,21 @@ public class WithSpanTracer extends BaseTracer {
 
   // we can't conditionally start a span in startSpan() below, because the caller won't know
   // whether to call end() or not on the Span in the returned Context
-  public boolean shouldStartSpan(Context context, io.opentelemetry.api.trace.SpanKind kind) {
+  public boolean shouldStartSpan(Context context, SpanKind kind) {
     // don't create a nested span if you're not supposed to.
     return shouldStartSpan(kind, context);
   }
 
-  public io.opentelemetry.context.Context startSpan(
-      Context context,
-      WithSpan applicationAnnotation,
-      Method method,
-      io.opentelemetry.api.trace.SpanKind kind) {
-    io.opentelemetry.api.trace.Span span =
+  public Context startSpan(
+      Context context, WithSpan applicationAnnotation, Method method, SpanKind kind) {
+    Span span =
         spanBuilder(spanNameForMethodWithAnnotation(applicationAnnotation, method), kind)
+            .setParent(context)
             .startSpan();
-    if (kind == io.opentelemetry.api.trace.SpanKind.SERVER) {
+    if (kind == SpanKind.SERVER) {
       return withServerSpan(context, span);
     }
-    if (kind == io.opentelemetry.api.trace.SpanKind.CLIENT) {
+    if (kind == SpanKind.CLIENT) {
       return withClientSpan(context, span);
     }
     return context.with(span);

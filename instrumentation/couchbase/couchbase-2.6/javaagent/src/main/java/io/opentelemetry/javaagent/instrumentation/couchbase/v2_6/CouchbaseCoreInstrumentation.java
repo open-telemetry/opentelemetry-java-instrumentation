@@ -57,8 +57,9 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
         if (span == null) {
           span = parentSpan;
           contextStore.put(request, span);
-
-          span.setAttribute("couchbase.operation_id", request.operationId());
+          if (CouchbaseConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+            span.setAttribute("couchbase.operation_id", request.operationId());
+          }
         }
       }
     }

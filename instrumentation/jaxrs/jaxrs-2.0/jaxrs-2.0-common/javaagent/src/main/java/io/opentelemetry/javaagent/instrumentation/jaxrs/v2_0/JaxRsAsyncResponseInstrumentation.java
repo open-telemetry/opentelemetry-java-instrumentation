@@ -12,9 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,13 +57,13 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
-      ContextStore<AsyncResponse, Span> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, Span.class);
+      ContextStore<AsyncResponse, Context> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, Context.class);
 
-      Span span = contextStore.get(asyncResponse);
-      if (span != null) {
+      Context context = contextStore.get(asyncResponse);
+      if (context != null) {
         contextStore.put(asyncResponse, null);
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }
@@ -73,13 +74,13 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.This AsyncResponse asyncResponse, @Advice.Argument(0) Throwable throwable) {
 
-      ContextStore<AsyncResponse, Span> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, Span.class);
+      ContextStore<AsyncResponse, Context> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, Context.class);
 
-      Span span = contextStore.get(asyncResponse);
-      if (span != null) {
+      Context context = contextStore.get(asyncResponse);
+      if (context != null) {
         contextStore.put(asyncResponse, null);
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       }
     }
   }
@@ -89,14 +90,16 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This AsyncResponse asyncResponse) {
 
-      ContextStore<AsyncResponse, Span> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, Span.class);
+      ContextStore<AsyncResponse, Context> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, Context.class);
 
-      Span span = contextStore.get(asyncResponse);
-      if (span != null) {
+      Context context = contextStore.get(asyncResponse);
+      if (context != null) {
         contextStore.put(asyncResponse, null);
-        span.setAttribute("jaxrs.canceled", true);
-        tracer().end(span);
+        if (JaxrsConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+          Java8BytecodeBridge.spanFromContext(context).setAttribute("jaxrs.canceled", true);
+        }
+        tracer().end(context);
       }
     }
   }

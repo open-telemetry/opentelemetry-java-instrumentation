@@ -22,3 +22,8 @@ configurations.testRuntime {
     force group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
   }
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true"
+}

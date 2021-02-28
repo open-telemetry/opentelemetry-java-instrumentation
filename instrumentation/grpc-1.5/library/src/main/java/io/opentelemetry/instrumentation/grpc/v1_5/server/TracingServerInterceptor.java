@@ -19,6 +19,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
@@ -26,6 +27,10 @@ import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TracingServerInterceptor implements ServerInterceptor {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.grpc.experimental-span-attributes", false);
 
   public static ServerInterceptor newInterceptor() {
     return newInterceptor(new GrpcServerTracer());
@@ -52,7 +57,8 @@ public class TracingServerInterceptor implements ServerInterceptor {
       ServerCallHandler<REQUEST, RESPONSE> next) {
 
     String methodName = call.getMethodDescriptor().getFullMethodName();
-    Span span = tracer.startSpan(methodName, headers);
+    Context context = tracer.startSpan(methodName, headers);
+    Span span = Span.fromContext(context);
 
     SocketAddress address = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
     if (address instanceof InetSocketAddress) {
@@ -63,35 +69,34 @@ public class TracingServerInterceptor implements ServerInterceptor {
     }
     GrpcHelper.prepareSpan(span, methodName);
 
-    Context context = Context.current().with(span);
-
     try (Scope ignored = context.makeCurrent()) {
       return new TracingServerCallListener<>(
-          next.startCall(new TracingServerCall<>(call, span, tracer), headers), span, tracer);
+          next.startCall(new TracingServerCall<>(call, context, tracer), headers), context, tracer);
     } catch (Throwable e) {
-      tracer.endExceptionally(span, e);
+      tracer.endExceptionally(context, e);
       throw e;
     }
   }
 
   static final class TracingServerCall<REQUEST, RESPONSE>
       extends ForwardingServerCall.SimpleForwardingServerCall<REQUEST, RESPONSE> {
-    private final Span span;
+    private final Context context;
     private final GrpcServerTracer tracer;
 
-    TracingServerCall(ServerCall<REQUEST, RESPONSE> delegate, Span span, GrpcServerTracer tracer) {
+    TracingServerCall(
+        ServerCall<REQUEST, RESPONSE> delegate, Context context, GrpcServerTracer tracer) {
       super(delegate);
-      this.span = span;
+      this.context = context;
       this.tracer = tracer;
     }
 
     @Override
     public void close(Status status, Metadata trailers) {
-      tracer.setStatus(span, status);
-      try (Scope ignored = span.makeCurrent()) {
+      tracer.setStatus(context, status);
+      try (Scope ignored = context.makeCurrent()) {
         delegate().close(status, trailers);
       } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
+        tracer.endExceptionally(context, e);
         throw e;
       }
     }
@@ -99,14 +104,15 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
   static final class TracingServerCallListener<REQUEST>
       extends ForwardingServerCallListener.SimpleForwardingServerCallListener<REQUEST> {
-    private final Span span;
+    private final Context context;
     private final GrpcServerTracer tracer;
 
     private final AtomicLong messageId = new AtomicLong();
 
-    TracingServerCallListener(Listener<REQUEST> delegate, Span span, GrpcServerTracer tracer) {
+    TracingServerCallListener(
+        Listener<REQUEST> delegate, Context context, GrpcServerTracer tracer) {
       super(delegate);
-      this.span = span;
+      this.context = context;
       this.tracer = tracer;
     }
 
@@ -119,51 +125,53 @@ public class TracingServerInterceptor implements ServerInterceptor {
               "RECEIVED",
               GrpcHelper.MESSAGE_ID,
               messageId.incrementAndGet());
-      span.addEvent("message", attributes);
-      try (Scope ignored = span.makeCurrent()) {
+      Span.fromContext(context).addEvent("message", attributes);
+      try (Scope ignored = context.makeCurrent()) {
         delegate().onMessage(message);
       }
     }
 
     @Override
     public void onHalfClose() {
-      try (Scope ignored = span.makeCurrent()) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate().onHalfClose();
       } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
+        tracer.endExceptionally(context, e);
         throw e;
       }
     }
 
     @Override
     public void onCancel() {
-      try (Scope ignored = span.makeCurrent()) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate().onCancel();
-        span.setAttribute("grpc.canceled", true);
+        if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+          Span.fromContext(context).setAttribute("grpc.canceled", true);
+        }
       } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
+        tracer.endExceptionally(context, e);
         throw e;
       }
-      tracer.end(span);
+      tracer.end(context);
     }
 
     @Override
     public void onComplete() {
-      try (Scope ignored = span.makeCurrent()) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate().onComplete();
       } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
+        tracer.endExceptionally(context, e);
         throw e;
       }
-      tracer.end(span);
+      tracer.end(context);
     }
 
     @Override
     public void onReady() {
-      try (Scope ignored = span.makeCurrent()) {
+      try (Scope ignored = context.makeCurrent()) {
         delegate().onReady();
       } catch (Throwable e) {
-        tracer.endExceptionally(span, e);
+        tracer.endExceptionally(context, e);
         throw e;
       }
     }

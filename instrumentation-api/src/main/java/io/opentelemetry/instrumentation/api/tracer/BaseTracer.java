@@ -7,10 +7,6 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.metrics.GlobalMetricsProvider;
-import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.common.Labels;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -21,12 +17,11 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class for all instrumentation specific tracer implementations.
@@ -43,10 +38,9 @@ import org.slf4j.LoggerFactory;
  * are able to see those attributes in the {@code onStart()} method and can freely read/modify them.
  */
 public abstract class BaseTracer {
-  private static final Meter meterProvider =
-      GlobalMetricsProvider.getMeter("io.opentelemetry.instrumentation.api.tracer");
-
-  private static final Logger log = LoggerFactory.getLogger(BaseTracer.class);
+  // should we make this injectable?
+  private static final SupportabilityMetrics supportability =
+      new SupportabilityMetrics(Config.get()).start();
 
   // Keeps track of the server span for the current trace.
   // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
@@ -60,12 +54,6 @@ public abstract class BaseTracer {
 
   protected final Tracer tracer;
   protected final ContextPropagators propagators;
-  private final LongCounter suppressionCounter =
-      meterProvider
-          .longCounterBuilder("agent.suppressed.spans")
-          .setDescription("The number of spans that have been suppressed by the instrumentation.")
-          .setUnit("1")
-          .build();
 
   public BaseTracer() {
     tracer = GlobalOpenTelemetry.getTracer(getInstrumentationName(), getVersion());
@@ -139,15 +127,7 @@ public abstract class BaseTracer {
         break;
     }
     if (suppressed) {
-      suppressionCounter.add(
-          1,
-          // note: an optimization here could be to make sure to re-use the labels,
-          //  since the set of possible labels will be quite small in a given application.
-          //  We could consider lazily creating bound counters for each combination of label values.
-          Labels.of(
-              "span.kind", proposedKind.name(),
-              "instrumentation.name", getInstrumentationName(),
-              "instrumentation.version", getVersion()));
+      supportability.recordSuppressedSpan(proposedKind, getInstrumentationName());
     }
     return !suppressed;
   }
@@ -171,7 +151,7 @@ public abstract class BaseTracer {
    * reference. Anonymous classes are named based on their parent.
    */
   public String spanNameForMethod(Method method) {
-    return spanNameForClass(method.getDeclaringClass()) + "." + method.getName();
+    return spanNameForMethod(method.getDeclaringClass(), method.getName());
   }
 
   /**
@@ -225,13 +205,7 @@ public abstract class BaseTracer {
     end(span, -1);
   }
 
-  /**
-   * End span.
-   *
-   * @deprecated Use {@link #end(Context, long)} instead.
-   */
-  @Deprecated
-  public void end(Span span, long endTimeNanos) {
+  private void end(Span span, long endTimeNanos) {
     if (endTimeNanos > 0) {
       span.end(endTimeNanos, TimeUnit.NANOSECONDS);
     } else {
@@ -257,13 +231,7 @@ public abstract class BaseTracer {
     endExceptionally(span, throwable, -1);
   }
 
-  /**
-   * End span.
-   *
-   * @deprecated Use {@link #endExceptionally(Context, Throwable, long)} instead.
-   */
-  @Deprecated
-  public void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
+  private void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
     span.setStatus(StatusCode.ERROR);
     onError(span, unwrapThrowable(throwable));
     end(span, endTimeNanos);

@@ -11,7 +11,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
 import org.slf4j.Logger;
@@ -62,11 +62,11 @@ public class TracedDelegatingConsumer implements Consumer {
   public void handleDelivery(
       String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
       throws IOException {
-    Span span = null;
+    Context context = null;
     Scope scope = null;
     try {
-      span = tracer().startDeliverySpan(queue, envelope, properties, body);
-      scope = span.makeCurrent();
+      context = tracer().startDeliverySpan(queue, envelope, properties, body);
+      scope = context.makeCurrent();
 
     } catch (Exception e) {
       log.debug("Instrumentation error in tracing consumer", e);
@@ -77,12 +77,12 @@ public class TracedDelegatingConsumer implements Consumer {
         // Call delegate.
         delegate.handleDelivery(consumerTag, envelope, properties, body);
 
-        if (span != null) {
-          tracer().end(span);
+        if (context != null) {
+          tracer().end(context);
         }
       } catch (Throwable throwable) {
-        if (span != null) {
-          tracer().endExceptionally(span, throwable);
+        if (context != null) {
+          tracer().endExceptionally(context, throwable);
         }
 
         throw throwable;

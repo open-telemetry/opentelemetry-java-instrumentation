@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.kafkastreams.TextMapExt
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -25,19 +26,20 @@ public class KafkaStreamsTracer extends BaseTracer {
     return TRACER;
   }
 
-  public Span startSpan(StampedRecord record) {
+  public Context startSpan(StampedRecord record) {
+    Context parentContext = extract(record.value.headers(), GETTER);
     Span span =
         tracer
             .spanBuilder(spanNameForConsume(record))
             .setSpanKind(SpanKind.CONSUMER)
-            .setParent(extract(record.value.headers(), GETTER))
+            .setParent(parentContext)
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "kafka")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, record.topic())
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
             .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
             .startSpan();
     onConsume(span, record);
-    return span;
+    return parentContext.with(span);
   }
 
   public String spanNameForConsume(StampedRecord record) {

@@ -332,6 +332,8 @@ public class PatchLogger {
     return new Handler[0];
   }
 
+  public void addHandler(Handler handler) {}
+
   public static PatchLogger getAnonymousLogger() {
     return getLogger("");
   }

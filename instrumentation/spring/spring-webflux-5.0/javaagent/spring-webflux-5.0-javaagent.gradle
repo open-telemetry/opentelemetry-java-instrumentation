@@ -43,6 +43,7 @@ dependencies {
 
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
   testInstrumentation project(':instrumentation:reactor-3.1:javaagent')
+  testInstrumentation project(':instrumentation:reactor-netty-1.0:javaagent')
 
   testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
   testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'

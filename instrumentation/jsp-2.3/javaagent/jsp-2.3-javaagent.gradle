@@ -40,4 +40,7 @@ tasks.withType(Test) {
   // JarScanFilter did not exist in the tomcat 7 api
   jvmArgs '-Dorg.apache.catalina.startup.ContextConfig.jarsToSkip=*'
   jvmArgs '-Dorg.apache.catalina.startup.TldConfig.jarsToSkip=*'
+
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.jsp.experimental-span-attributes=true"
 }

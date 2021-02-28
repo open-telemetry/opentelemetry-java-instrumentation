@@ -12,6 +12,7 @@ import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TwilioTracer extends BaseTracer {
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.twilio.experimental-span-attributes", false);
 
   private static final Logger log = LoggerFactory.getLogger(TwilioTracer.class);
 
@@ -67,37 +72,40 @@ public class TwilioTracer extends BaseTracer {
       return;
     }
 
-    // Provide helpful metadata for some of the more common response types
-    span.setAttribute("twilio.type", result.getClass().getCanonicalName());
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      // Provide helpful metadata for some of the more common response types
+      span.setAttribute("twilio.type", result.getClass().getCanonicalName());
 
-    // Instrument the most popular resource types directly
-    if (result instanceof Message) {
-      Message message = (Message) result;
-      span.setAttribute("twilio.account", message.getAccountSid());
-      span.setAttribute("twilio.sid", message.getSid());
-      Message.Status status = message.getStatus();
-      if (status != null) {
-        span.setAttribute("twilio.status", status.toString());
+      // Instrument the most popular resource types directly
+      if (result instanceof Message) {
+        Message message = (Message) result;
+        span.setAttribute("twilio.account", message.getAccountSid());
+        span.setAttribute("twilio.sid", message.getSid());
+        Message.Status status = message.getStatus();
+        if (status != null) {
+          span.setAttribute("twilio.status", status.toString());
+        }
+      } else if (result instanceof Call) {
+        Call call = (Call) result;
+        span.setAttribute("twilio.account", call.getAccountSid());
+        span.setAttribute("twilio.sid", call.getSid());
+        span.setAttribute("twilio.parentSid", call.getParentCallSid());
+        Call.Status status = call.getStatus();
+        if (status != null) {
+          span.setAttribute("twilio.status", status.toString());
+        }
+      } else {
+        // Use reflection to gather insight from other types; note that Twilio requests take close
+        // to
+        // 1 second, so the added hit from reflection here is relatively minimal in the grand scheme
+        // of things
+        setTagIfPresent(span, result, "twilio.sid", "getSid");
+        setTagIfPresent(span, result, "twilio.account", "getAccountSid");
+        setTagIfPresent(span, result, "twilio.status", "getStatus");
       }
-    } else if (result instanceof Call) {
-      Call call = (Call) result;
-      span.setAttribute("twilio.account", call.getAccountSid());
-      span.setAttribute("twilio.sid", call.getSid());
-      span.setAttribute("twilio.parentSid", call.getParentCallSid());
-      Call.Status status = call.getStatus();
-      if (status != null) {
-        span.setAttribute("twilio.status", status.toString());
-      }
-    } else {
-      // Use reflection to gather insight from other types; note that Twilio requests take close to
-      // 1 second, so the added hit from reflection here is relatively minimal in the grand scheme
-      // of things
-      setTagIfPresent(span, result, "twilio.sid", "getSid");
-      setTagIfPresent(span, result, "twilio.account", "getAccountSid");
-      setTagIfPresent(span, result, "twilio.status", "getStatus");
     }
 
-    super.end(span);
+    super.end(context);
   }
 
   /**

@@ -26,6 +26,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
 import java.util.Collections;
@@ -38,6 +39,11 @@ import org.apache.camel.util.URISupport;
 
 /** An abstract base implementation of the {@link SpanDecorator} interface. */
 class BaseSpanDecorator implements SpanDecorator {
+
+  static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty(
+              "otel.instrumentation.apache-camel.experimental-span-attributes", false);
 
   static final String DEFAULT_OPERATION_NAME = "CamelOperation";
 
@@ -92,7 +98,9 @@ class BaseSpanDecorator implements SpanDecorator {
 
   @Override
   public void pre(Span span, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-    span.setAttribute("apache-camel.uri", URISupport.sanitizeUri(endpoint.getEndpointUri()));
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      span.setAttribute("apache-camel.uri", URISupport.sanitizeUri(endpoint.getEndpointUri()));
+    }
   }
 
   @Override

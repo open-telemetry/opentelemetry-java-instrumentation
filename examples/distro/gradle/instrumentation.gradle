@@ -1,0 +1,61 @@
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+apply from: "$rootDir/gradle/shadow.gradle"
+
+def relocatePackages = ext.relocatePackages
+
+configurations {
+  testInstrumentation
+  testAgent
+}
+
+dependencies {
+  compileOnly("io.opentelemetry:opentelemetry-sdk:${versions.opentelemetry}")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-api:${versions.opentelemetryJavaagentAlpha}")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
+
+  compileOnly deps.bytebuddy
+  compileOnly deps.bytebuddyagent
+  annotationProcessor deps.autoservice
+  compileOnly deps.autoservice
+
+  // the javaagent that is going to be used when running instrumentation unit tests
+  testAgent("io.opentelemetry.javaagent:opentelemetry-agent-for-testing:${versions.opentelemetryJavaagentAlpha}")
+  // test dependencies
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common:${versions.opentelemetryJavaagentAlpha}")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-testing:${versions.opentelemetry}")
+  testImplementation("org.assertj:assertj-core:3.19.0")
+}
+
+shadowJar {
+  configurations = [project.configurations.runtimeClasspath, project.configurations.testInstrumentation]
+  mergeServiceFiles()
+
+  archiveFileName = 'agent-testing.jar'
+
+  relocatePackages(it)
+}
+
+tasks.withType(Test).configureEach {
+  jvmArgs "-Dotel.javaagent.debug=true"
+  jvmArgs "-javaagent:${configurations.testAgent.files.first().absolutePath}"
+  jvmArgs "-Dotel.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
+  jvmArgs "-Dinternal.testing.disable.global.library.ignores=true"
+  // always run with the thread propagation debugger to help track down sporadic test failures
+  jvmArgs "-Dotel.threadPropagationDebugger=true"
+  jvmArgs "-Dotel.internal.failOnContextLeak=true"
+  // prevent sporadic gradle deadlocks, see SafeLogger for more details
+  jvmArgs "-Dotel.internal.enableTransformSafeLogging=true"
+
+  dependsOn shadowJar
+
+  // The sources are packaged into the testing jar so we need to make sure to exclude from the test
+  // classpath, which automatically inherits them, to ensure our shaded versions are used.
+  classpath = classpath.filter {
+    if (it == file("$buildDir/resources/main") || it == file("$buildDir/classes/java/main")) {
+      return false
+    }
+    return true
+  }
+}

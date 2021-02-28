@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -18,13 +18,12 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
 
   private final Iterator<ConsumerRecord<?, ?>> delegateIterator;
   private final KafkaConsumerTracer tracer;
-  private final boolean propagationEnabled;
 
   /**
    * Note: this may potentially create problems if this iterator is used from different threads. But
    * at the moment we cannot do much about this.
    */
-  private Span currentSpan;
+  private Context currentContext;
 
   private Scope currentScope;
 
@@ -32,7 +31,6 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
       Iterator<ConsumerRecord<?, ?>> delegateIterator, KafkaConsumerTracer tracer) {
     this.delegateIterator = delegateIterator;
     this.tracer = tracer;
-    this.propagationEnabled = KafkaClientsConfig.isPropagationEnabled();
   }
 
   @Override
@@ -50,8 +48,8 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
 
     try {
       if (next != null) {
-        currentSpan = tracer.startSpan(next);
-        currentScope = currentSpan.makeCurrent();
+        currentContext = tracer.startSpan(next);
+        currentScope = currentContext.makeCurrent();
       }
     } catch (Exception e) {
       log.debug("Error during decoration", e);
@@ -63,8 +61,8 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
     if (currentScope != null) {
       currentScope.close();
       currentScope = null;
-      tracer.end(currentSpan);
-      currentSpan = null;
+      tracer.end(currentContext);
+      currentContext = null;
     }
   }
 

@@ -42,3 +42,8 @@ dependencies {
   latestDepTestLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '(6.1,6.5)'
   latestDepTestLibrary group: 'org.elasticsearch.client', name: 'transport', version: '(6.1,6.5)'
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true"
+}

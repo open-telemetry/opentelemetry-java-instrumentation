@@ -8,7 +8,6 @@ dependencies {
   api deps.opentelemetryContext
   api deps.opentelemetrySemConv
 
-  implementation deps.opentelemetryApiMetrics
   implementation deps.slf4j
 
   compileOnly deps.autoValueAnnotations

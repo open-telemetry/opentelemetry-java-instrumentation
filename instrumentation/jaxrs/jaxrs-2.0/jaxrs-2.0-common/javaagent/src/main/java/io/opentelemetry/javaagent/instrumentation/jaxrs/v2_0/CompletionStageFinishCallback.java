@@ -7,22 +7,22 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxRsAnnotationsTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import java.util.function.BiFunction;
 
 public class CompletionStageFinishCallback<T> implements BiFunction<T, Throwable, T> {
-  private final Span span;
+  private final Context context;
 
-  public CompletionStageFinishCallback(Span span) {
-    this.span = span;
+  public CompletionStageFinishCallback(Context context) {
+    this.context = context;
   }
 
   @Override
   public T apply(T result, Throwable throwable) {
     if (throwable == null) {
-      tracer().end(span);
+      tracer().end(context);
     } else {
-      tracer().endExceptionally(span, throwable);
+      tracer().endExceptionally(context, throwable);
     }
     return result;
   }

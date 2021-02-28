@@ -87,7 +87,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
       "io.opentelemetry.javaagent.bootstrap.instrumentation.context.";
 
   private static final String INJECTED_FIELDS_MARKER_CLASS_NAME =
-      Utils.getInternalName(FieldBackedContextStoreAppliedMarker.class.getName());
+      Utils.getInternalName(FieldBackedContextStoreAppliedMarker.class);
 
   private static final Method CONTEXT_GET_METHOD;
   private static final Method GET_CONTEXT_STORE_METHOD;
@@ -194,8 +194,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               public void visitMethodInsn(
                   int opcode, String owner, String name, String descriptor, boolean isInterface) {
                 pushOpcode(opcode);
-                if (Utils.getInternalName(CONTEXT_GET_METHOD.getDeclaringClass().getName())
-                        .equals(owner)
+                if (Utils.getInternalName(CONTEXT_GET_METHOD.getDeclaringClass()).equals(owner)
                     && CONTEXT_GET_METHOD.getName().equals(name)
                     && Type.getMethodDescriptor(CONTEXT_GET_METHOD).equals(descriptor)) {
                   log.trace("Found context-store access in {}", instrumenterClass.getName());

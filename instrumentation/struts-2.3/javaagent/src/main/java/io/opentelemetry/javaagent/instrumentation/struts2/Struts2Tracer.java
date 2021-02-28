@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.struts2;
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ActionProxy;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -21,26 +22,26 @@ public class Struts2Tracer extends BaseTracer {
     return TRACER;
   }
 
-  public Span startSpan(ActionInvocation actionInvocation) {
+  public Context startSpan(Context parentContext, ActionInvocation actionInvocation) {
     Object action = actionInvocation.getAction();
     Class<?> actionClass = action.getClass();
 
     String method = actionInvocation.getProxy().getMethod();
     String spanName = spanNameForMethod(actionClass, method);
 
-    Span strutsSpan = tracer.spanBuilder(spanName).startSpan();
+    SpanBuilder strutsSpan = tracer.spanBuilder(spanName).setParent(parentContext);
 
     strutsSpan.setAttribute(SemanticAttributes.CODE_NAMESPACE, actionClass.getName());
     if (method != null) {
       strutsSpan.setAttribute(SemanticAttributes.CODE_FUNCTION, method);
     }
 
-    return strutsSpan;
+    return parentContext.with(strutsSpan.startSpan());
   }
 
   // Handle cases where action parameters are encoded into URL path
   public void updateServerSpanName(Context context, ActionProxy actionProxy) {
-    Span serverSpan = getCurrentServerSpan();
+    Span serverSpan = getCurrentServerSpan(context);
     if (serverSpan == null) {
       return;
     }

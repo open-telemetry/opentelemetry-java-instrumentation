@@ -24,19 +24,21 @@ public class JaxWsTracer extends BaseTracer {
     return "io.opentelemetry.javaagent.jaxws";
   }
 
-  public Span startSpan(Class<?> target, Method method) {
+  public Context startSpan(Class<?> target, Method method) {
     String spanName = spanNameForMethod(target, method);
 
-    Context context = Context.current();
-    Span serverSpan = BaseTracer.getCurrentServerSpan(context);
+    Context parentContext = Context.current();
+    Span serverSpan = BaseTracer.getCurrentServerSpan(parentContext);
     if (serverSpan != null) {
       serverSpan.updateName(spanName);
     }
 
-    return tracer
-        .spanBuilder(spanName)
-        .setAttribute(SemanticAttributes.CODE_NAMESPACE, method.getDeclaringClass().getName())
-        .setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName())
-        .startSpan();
+    return parentContext.with(
+        tracer
+            .spanBuilder(spanName)
+            .setParent(parentContext)
+            .setAttribute(SemanticAttributes.CODE_NAMESPACE, method.getDeclaringClass().getName())
+            .setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName())
+            .startSpan());
   }
 }

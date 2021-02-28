@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -30,10 +31,10 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   private final WeakMap<Class<?>, Map<Method, String>> spanNames = newWeakMap();
 
-  public Span startSpan(Class<?> target, Method method) {
+  public Context startSpan(Class<?> target, Method method) {
     String pathBasedSpanName = getPathSpanName(target, method);
-    Context context = Context.current();
-    Span serverSpan = BaseTracer.getCurrentServerSpan(context);
+    Context parentContext = Context.current();
+    Span serverSpan = BaseTracer.getCurrentServerSpan(parentContext);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     String spanName;
@@ -41,10 +42,10 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
       spanName = pathBasedSpanName;
     } else {
       spanName = spanNameForMethod(target, method);
-      updateServerSpanName(context, serverSpan, pathBasedSpanName);
+      updateServerSpanName(parentContext, serverSpan, pathBasedSpanName);
     }
 
-    return tracer.spanBuilder(spanName).startSpan();
+    return startSpan(parentContext, spanName, SpanKind.INTERNAL);
   }
 
   private void updateServerSpanName(Context context, Span span, String spanName) {

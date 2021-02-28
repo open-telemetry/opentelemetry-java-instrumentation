@@ -12,6 +12,7 @@ import io.grpc.Status;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
 import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
@@ -25,14 +26,15 @@ public class GrpcServerTracer extends RpcServerTracer<Metadata> {
     super(tracer);
   }
 
-  public Span startSpan(String name, Metadata headers) {
+  public Context startSpan(String name, Metadata headers) {
     SpanBuilder spanBuilder =
         tracer.spanBuilder(name).setSpanKind(SERVER).setParent(extract(headers, getGetter()));
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "grpc");
-    return spanBuilder.startSpan();
+    return Context.current().with(spanBuilder.startSpan());
   }
 
-  public void setStatus(Span span, Status status) {
+  public void setStatus(Context context, Status status) {
+    Span span = Span.fromContext(context);
     span.setStatus(GrpcHelper.statusFromGrpcStatus(status), status.getDescription());
     if (status.getCause() != null) {
       addThrowable(span, status.getCause());
