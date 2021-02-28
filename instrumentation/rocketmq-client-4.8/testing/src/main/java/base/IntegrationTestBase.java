@@ -52,7 +52,7 @@ public class IntegrationTestBase {
     try {
       File file = Files.createTempDirectory("opentelemetry-rocketmq-client-temp").toFile();
       TMPE_FILES.add(file);
-      path= file.getCanonicalPath();
+      path = file.getCanonicalPath();
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -60,7 +60,7 @@ public class IntegrationTestBase {
   }
 
   public static void deleteTempDir() {
-    for(File file:TMPE_FILES){
+    for (File file : TMPE_FILES) {
       boolean deleted = file.delete();
       if (!deleted) {
         file.deleteOnExit();
@@ -70,8 +70,8 @@ public class IntegrationTestBase {
 
   public static NamesrvController createAndStartNamesrv() {
     String baseDir = createTempDir();
-    Path kvConfigPath = Paths.get(baseDir,"namesrv","kvConfig.json");
-    Path namesrvPath = Paths.get(baseDir,"namesrv","namesrv.properties");
+    Path kvConfigPath = Paths.get(baseDir, "namesrv", "kvConfig.json");
+    Path namesrvPath = Paths.get(baseDir, "namesrv", "namesrv.properties");
 
     NamesrvConfig namesrvConfig = new NamesrvConfig();
     NettyServerConfig nameServerNettyServerConfig = new NettyServerConfig();
@@ -95,7 +95,7 @@ public class IntegrationTestBase {
 
   public static BrokerController createAndStartBroker(String nsAddr) {
     String baseDir = createTempDir();
-    Path commitLogPath = Paths.get(baseDir,"commitlog");
+    Path commitLogPath = Paths.get(baseDir, "commitlog");
 
     BrokerConfig brokerConfig = new BrokerConfig();
     MessageStoreConfig storeConfig = new MessageStoreConfig();

@@ -21,7 +21,7 @@ public class TracingSendMessageHookImpl implements SendMessageHook {
       return;
     }
     Context traceContext = tracer().startProducerSpan(context.getBrokerAddr(), context.getMessage(), Context.current());
-    if (RocketMqClientConfig.isPropagationEnabled()){
+    if (RocketMqClientConfig.isPropagationEnabled()) {
       GlobalOpenTelemetry.getPropagators()
           .getTextMapPropagator()
           .inject(traceContext, context.getMessage().getProperties(), SETTER);
@@ -34,7 +34,7 @@ public class TracingSendMessageHookImpl implements SendMessageHook {
     if (context == null || context.getMqTraceContext() == null || context.getSendResult() == null) {
       return;
     }
-    tracer().afterProduce((Context)context.getMqTraceContext(), context.getSendResult());
-    tracer().end((Context)context.getMqTraceContext());
+    tracer().afterProduce((Context) context.getMqTraceContext(), context.getSendResult());
+    tracer().end((Context) context.getMqTraceContext());
   }
 }

@@ -49,7 +49,7 @@ final class BaseConf {
 
   public static String initTopic() {
     String topic = MQRandomUtils.getRandomTopic();
-    if(!IntegrationTestBase.initTopic(topic, nsAddr, clusterName)){
+    if (!IntegrationTestBase.initTopic(topic, nsAddr, clusterName)) {
       log.error("Topic init failed");
     }
     return topic;
@@ -82,7 +82,7 @@ final class BaseConf {
     return consumer;
   }
 
-  public static DefaultMQProducer getRMQProducer(String ns) throws MQClientException {
+  public static DefaultMQProducer getProducer(String ns) throws MQClientException {
     DefaultMQProducer producer = new DefaultMQProducer(RandomUtil.getStringByUUID());
     producer.setInstanceName(UUID.randomUUID().toString());
     producer.setNamesrvAddr(ns);

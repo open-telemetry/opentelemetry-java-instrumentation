@@ -5,21 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmq;
 
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+
 import io.opentelemetry.instrumentation.rocketmq.TracingConsumeMessageHookImpl;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.impl.consumer.DefaultMQPushConsumerImpl;
-import java.util.Map;
-
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 public class RocketMqConsumerInstrumentation implements TypeInstrumentation {
 
@@ -43,8 +43,8 @@ public class RocketMqConsumerInstrumentation implements TypeInstrumentation {
   public static class AdviceStart {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.FieldValue(value = "defaultMQPushConsumerImpl",declaringType = DefaultMQPushConsumer.class) DefaultMQPushConsumerImpl defaultMQPushConsumerImpl){
-      defaultMQPushConsumerImpl.registerConsumeMessageHook(new TracingConsumeMessageHookImpl());
+        @Advice.FieldValue(value = "defaultMQPushConsumerImpl", declaringType = DefaultMQPushConsumer.class) DefaultMQPushConsumerImpl defaultMqPushConsumerImpl) {
+      defaultMqPushConsumerImpl.registerConsumeMessageHook(new TracingConsumeMessageHookImpl());
     }
   }
 }

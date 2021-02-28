@@ -1,10 +1,10 @@
 package io.opentelemetry.instrumentation.rocketmq;
 
+import static io.opentelemetry.instrumentation.rocketmq.RocketMqConsumerTracer.tracer;
+
 import io.opentelemetry.context.Context;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
-
-import static io.opentelemetry.instrumentation.rocketmq.RocketMqConsumerTracer.tracer;
 
 public class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
 
@@ -22,7 +22,7 @@ public class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     if (context == null || context.getMsgList() == null || context.getMsgList().isEmpty()) {
       return;
     }
-    Context traceContext =tracer().startSpan(Context.current(),context.getMsgList());
+    Context traceContext = tracer().startSpan(Context.current(), context.getMsgList());
     tracer().end(traceContext);
   }
 

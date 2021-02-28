@@ -49,7 +49,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
 
   def "test rocketmq produce callback"() {
     setup:
-    producer = BaseConf.getRMQProducer(BaseConf.nsAddr)
+    producer = BaseConf.getProducer(BaseConf.nsAddr)
     when:
     runUnderTrace("parent") {
       producer.send(msg, new SendCallback() {
@@ -89,7 +89,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
 
   def "test rocketmq produce and concurrently consume"() {
     setup:
-    producer = BaseConf.getRMQProducer(BaseConf.nsAddr)
+    producer = BaseConf.getProducer(BaseConf.nsAddr)
     consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQNormalListener())
     when:
     runUnderTrace("parent") {
@@ -140,7 +140,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
 
   def "test rocketmq produce and orderly consume"() {
     setup:
-    producer = BaseConf.getRMQProducer(BaseConf.nsAddr)
+    producer = BaseConf.getProducer(BaseConf.nsAddr)
     consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
     when:
     runUnderTrace("parent") {

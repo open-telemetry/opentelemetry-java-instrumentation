@@ -14,6 +14,6 @@ public class TextMapInjectAdapter implements TextMapSetter<Map<String, String>> 
 
   @Override
   public void set(Map<String, String> carrier, String key, String value) {
-    carrier.put(key,value);
+    carrier.put(key, value);
   }
 }

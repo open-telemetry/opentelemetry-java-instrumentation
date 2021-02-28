@@ -46,7 +46,7 @@ class RocketMqClientTest extends InstrumentationSpecification implements Library
 
   def "test rocketmq produce and consume"() {
     setup:
-    producer = BaseConf.getRMQProducer(BaseConf.nsAddr)
+    producer = BaseConf.getProducer(BaseConf.nsAddr)
     producer.getDefaultMQProducerImpl().registerSendMessageHook(new TracingSendMessageHookImpl())
 
     consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
