@@ -77,8 +77,10 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key}" "test"
             "${SemanticAttributes.DB_USER.key}" "SA"
-            "${SemanticAttributes.DB_STATEMENT.key}" "SELECT id, name, price, weight FROM products"
             "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
+            "${SemanticAttributes.DB_STATEMENT.key}" "SELECT id, name, price, weight FROM products"
+            "${SemanticAttributes.DB_OPERATION.key}" "SELECT"
+            "${SemanticAttributes.DB_SQL_TABLE.key}" "products"
           }
         }
       }
