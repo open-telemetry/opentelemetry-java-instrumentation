@@ -126,19 +126,19 @@ public class TraceAnnotationsInstrumentationModule extends InstrumentationModule
           TraceAdvice.class.getName());
     }
 
-    private static Set<String> configureAdditionalTraceAnnotations(String include) {
-      if (include == null) {
+    private static Set<String> configureAdditionalTraceAnnotations(String config) {
+      if (config == null) {
         return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));
-      } else if (include.isEmpty()) {
+      } else if (config.isEmpty()) {
         return Collections.emptySet();
-      } else if (!include.matches(CONFIG_FORMAT)) {
+      } else if (!config.matches(CONFIG_FORMAT)) {
         log.warn(
             "Invalid trace annotations config '{}'. Must match 'package.Annotation$Name;*'.",
-            include);
+            config);
         return Collections.emptySet();
       } else {
         Set<String> annotations = new HashSet<>();
-        String[] annotationClasses = include.split(";", -1);
+        String[] annotationClasses = config.split(";", -1);
         for (String annotationClass : annotationClasses) {
           if (!annotationClass.trim().isEmpty()) {
             annotations.add(annotationClass.trim());
