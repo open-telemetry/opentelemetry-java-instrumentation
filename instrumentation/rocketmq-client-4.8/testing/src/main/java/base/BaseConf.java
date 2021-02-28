@@ -5,10 +5,7 @@
 
 package base;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import org.apache.log4j.Logger;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -29,9 +26,6 @@ final class BaseConf {
   protected static int brokerNum;
   protected static final NamesrvController namesrvController;
   protected static final BrokerController brokerController1;
-  protected static final List<Object> mqClients = new ArrayList<Object>();
-  protected static boolean debug = false;
-  private static final Logger log = Logger.getLogger(BaseConf.class);
 
   static {
     System.setProperty(

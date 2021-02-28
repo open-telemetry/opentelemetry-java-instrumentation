@@ -24,7 +24,6 @@ import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.apache.rocketmq.test.util.MQAdmin;
-import org.apache.rocketmq.test.util.TestUtils;
 import org.junit.Assert;
 
 public class IntegrationTestBase {
@@ -36,7 +35,6 @@ public class IntegrationTestBase {
   protected static final List<File> TMPE_FILES = new ArrayList<>();
   protected static final List<BrokerController> BROKER_CONTROLLERS = new ArrayList<>();
   protected static final List<NamesrvController> NAMESRV_CONTROLLERS = new ArrayList<>();
-  protected static int topicCreateTime = 30 * 1000;
   protected static final int COMMIT_LOG_SIZE = 1024 * 1024 * 100;
   protected static final int INDEX_NUM = 1000;
   private static final AtomicInteger port = new AtomicInteger(40000);
