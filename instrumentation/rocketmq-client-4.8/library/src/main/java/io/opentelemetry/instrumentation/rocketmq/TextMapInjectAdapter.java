@@ -5,20 +5,15 @@
 
 package io.opentelemetry.instrumentation.rocketmq;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
-import org.apache.rocketmq.common.protocol.header.SendMessageRequestHeader;
+import io.opentelemetry.context.propagation.TextMapSetter;
+import java.util.Map;
 
-public class TextMapInjectAdapter implements TextMapPropagator.Setter<SendMessageRequestHeader> {
+public class TextMapInjectAdapter implements TextMapSetter<Map<String, String>> {
 
   public static final TextMapInjectAdapter SETTER = new TextMapInjectAdapter();
 
   @Override
-  public void set(SendMessageRequestHeader header, String key, String value) {
-    StringBuilder properties = new StringBuilder(header.getProperties());
-    properties.append(key);
-    properties.append('\u0001');
-    properties.append(value);
-    properties.append('\u0002');
-    header.setProperties(properties.toString());
+  public void set(Map<String, String> carrier, String key, String value) {
+    carrier.put(key,value);
   }
 }

@@ -10,5 +10,4 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 
 class RocketMqClientTest extends AbstractRocketMqClientTest implements AgentTestTrait {
 
-
 }

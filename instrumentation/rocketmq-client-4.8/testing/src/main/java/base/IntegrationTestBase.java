@@ -6,14 +6,16 @@
 package base;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.BrokerConfig;
-import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.namesrv.NamesrvConfig;
 import org.apache.rocketmq.logging.InternalLogger;
 import org.apache.rocketmq.logging.InternalLoggerFactory;
@@ -29,7 +31,6 @@ public class IntegrationTestBase {
   public static final InternalLogger logger =
       InternalLoggerFactory.getLogger(IntegrationTestBase.class);
 
-  protected static final String SEP = File.separator;
   protected static final String BROKER_NAME_PREFIX = "TestBrokerName_";
   protected static final AtomicInteger BROKER_INDEX = new AtomicInteger(0);
   protected static final List<File> TMPE_FILES = new ArrayList<>();
@@ -46,26 +47,37 @@ public class IntegrationTestBase {
 
   protected static final Random random = new Random();
 
-  public static String createBaseDir() {
-    String baseDir = System.getProperty("user.home") + SEP + "unitteststore-" + UUID.randomUUID();
-    final File file = new File(baseDir);
-    if (file.exists()) {
-      logger.info(
-          String.format(
-              "[%s] has already existed, please back up and remove it for integration tests",
-              baseDir));
-      System.exit(1);
+  private static String createTempDir()  {
+    String path = null;
+    try {
+      File file = Files.createTempDirectory("opentelemetry-rocketmq-client-temp").toFile();
+      TMPE_FILES.add(file);
+      path= file.getCanonicalPath();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
-    TMPE_FILES.add(file);
-    return baseDir;
+    return path;
+  }
+
+  public static void deleteTempDir() {
+    for(File file:TMPE_FILES){
+      boolean deleted = file.delete();
+      if (!deleted) {
+        file.deleteOnExit();
+      }
+    }
   }
 
   public static NamesrvController createAndStartNamesrv() {
-    String baseDir = createBaseDir();
+    String baseDir = createTempDir();
+    Path kvConfigPath = Paths.get(baseDir,"namesrv","kvConfig.json");
+    Path namesrvPath = Paths.get(baseDir,"namesrv","namesrv.properties");
+
     NamesrvConfig namesrvConfig = new NamesrvConfig();
     NettyServerConfig nameServerNettyServerConfig = new NettyServerConfig();
-    namesrvConfig.setKvConfigPath(baseDir + SEP + "namesrv" + SEP + "kvConfig.json");
-    namesrvConfig.setConfigStorePath(baseDir + SEP + "namesrv" + SEP + "namesrv.properties");
+
+    namesrvConfig.setKvConfigPath(kvConfigPath.toString());
+    namesrvConfig.setConfigStorePath(namesrvPath.toString());
 
     nameServerNettyServerConfig.setListenPort(nextPort());
     NamesrvController namesrvController =
@@ -76,14 +88,15 @@ public class IntegrationTestBase {
       namesrvController.start();
     } catch (Exception e) {
       logger.info("Name Server start failed", e);
-      System.exit(1);
     }
     NAMESRV_CONTROLLERS.add(namesrvController);
     return namesrvController;
   }
 
   public static BrokerController createAndStartBroker(String nsAddr) {
-    String baseDir = createBaseDir();
+    String baseDir = createTempDir();
+    Path commitLogPath = Paths.get(baseDir,"commitlog");
+
     BrokerConfig brokerConfig = new BrokerConfig();
     MessageStoreConfig storeConfig = new MessageStoreConfig();
     brokerConfig.setBrokerName(BROKER_NAME_PREFIX + BROKER_INDEX.getAndIncrement());
@@ -91,7 +104,7 @@ public class IntegrationTestBase {
     brokerConfig.setNamesrvAddr(nsAddr);
     brokerConfig.setEnablePropertyFilter(true);
     storeConfig.setStorePathRootDir(baseDir);
-    storeConfig.setStorePathCommitLog(baseDir + SEP + "commitlog");
+    storeConfig.setStorePathCommitLog(commitLogPath.toString());
     storeConfig.setMappedFileSizeCommitLog(COMMIT_LOG_SIZE);
     storeConfig.setMaxIndexNum(INDEX_NUM);
     storeConfig.setMaxHashSlotNum(INDEX_NUM * 4);
@@ -149,10 +162,4 @@ public class IntegrationTestBase {
     return initTopic(topic, nsAddr, clusterName, 8);
   }
 
-  public static void deleteFile(File file) {
-    if (!file.exists()) {
-      return;
-    }
-    UtilAll.deleteFile(file);
-  }
 }

@@ -9,12 +9,11 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.instrumentation.rocketmq.TextMapExtractAdapter.GETTER;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
-import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
 import org.apache.rocketmq.common.message.MessageExt;
 
 public class RocketMqConsumerTracer extends BaseTracer {
@@ -30,22 +29,46 @@ public class RocketMqConsumerTracer extends BaseTracer {
     return "io.opentelemetry.javaagent.rocketmq-client";
   }
 
-  public Span startSpan(List<MessageExt> msgs) {
+  public Context startSpan(Context parentContext, List<MessageExt> msgs) {
     MessageExt msg = msgs.get(0);
-    Span span =
-        tracer
-            .spanBuilder(spanNameOnConsume(msg))
-            .setSpanKind(CONSUMER)
-            .setParent(extractParent(msg))
-            .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq")
-            .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, msg.getTopic())
-            .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
-            .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
-            .setAttribute(
-                SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, getStoreSize(msgs))
-            .startSpan();
-    onConsume(span, msg);
-    return span;
+    if (msgs.size() == 1) {
+      SpanBuilder spanBuilder = startSpanBuilder(msg)
+          .setParent(extractParent(msg));
+      return withClientSpan(parentContext, spanBuilder.startSpan());
+    } else {
+      SpanBuilder spanBuilder =
+          tracer
+              .spanBuilder(msg.getTopic() + " receive")
+              .setSpanKind(CONSUMER)
+              .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq")
+              .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive");
+      Context rootContext = withClientSpan(parentContext, spanBuilder.startSpan());
+      for (MessageExt message : msgs) {
+        createChildSpan(rootContext, message);
+      }
+      return rootContext;
+    }
+  }
+
+  public void createChildSpan(Context parentContext, MessageExt msg) {
+    SpanBuilder childSpanBuilder = startSpanBuilder(msg)
+        .setParent(parentContext)
+        .addLink(Span.fromContext(extractParent(msg)).getSpanContext());
+    end(withClientSpan(parentContext, childSpanBuilder.startSpan()));
+  }
+
+  public SpanBuilder startSpanBuilder(MessageExt msg) {
+    SpanBuilder spanBuilder = tracer.spanBuilder(spanNameOnConsume(msg))
+        .setSpanKind(CONSUMER)
+        .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq")
+        .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, msg.getTopic())
+        .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
+        .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
+        .setAttribute(SemanticAttributes.MESSAGING_MESSAGE_ID, msg.getMsgId())
+        .setAttribute(
+            SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) msg.getBody().length);
+    onConsume(spanBuilder, msg);
+    return spanBuilder;
   }
 
   private Context extractParent(MessageExt msg) {
@@ -56,16 +79,13 @@ public class RocketMqConsumerTracer extends BaseTracer {
     }
   }
 
-  void onConsume(Span span, MessageExt msg) {
-    span.setAttribute("messaging.rocketmq.tags", msg.getTags());
-    span.setAttribute("messaging.rocketmq.queue_id", msg.getQueueId());
-    span.setAttribute("messaging.rocketmq.queue_offset", msg.getQueueOffset());
-    span.setAttribute("messaging.rocketmq.broker_address", getBrokerHost(msg));
-  }
-
-  long getStoreSize(List<MessageExt> msgs) {
-    long storeSize = msgs.stream().mapToInt(item -> item.getStoreSize()).sum();
-    return storeSize;
+  void onConsume(SpanBuilder spanBuilder, MessageExt msg) {
+    if (RocketMqClientConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      spanBuilder.setAttribute("messaging.rocketmq.tags", msg.getTags());
+      spanBuilder.setAttribute("messaging.rocketmq.queue_id", msg.getQueueId());
+      spanBuilder.setAttribute("messaging.rocketmq.queue_offset", msg.getQueueOffset());
+      spanBuilder.setAttribute("messaging.rocketmq.broker_address", getBrokerHost(msg));
+    }
   }
 
   String spanNameOnConsume(MessageExt msg) {
@@ -78,13 +98,5 @@ public class RocketMqConsumerTracer extends BaseTracer {
     } else {
       return null;
     }
-  }
-
-  public void endConcurrentlySpan(Span span, ConsumeConcurrentlyStatus status) {
-    span.setAttribute("messaging.rocketmq.consume_concurrently_status", status.name());
-  }
-
-  public void endOrderlySpan(Span span, ConsumeOrderlyStatus status) {
-    span.setAttribute("messaging.rocketmq.consume_orderly_status", status.name());
   }
 }

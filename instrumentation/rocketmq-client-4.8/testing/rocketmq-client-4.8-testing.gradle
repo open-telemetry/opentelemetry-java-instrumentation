@@ -3,8 +3,6 @@ apply from: "$rootDir/gradle/java.gradle"
 dependencies {
   api project(':testing-common')
   api group: 'org.apache.rocketmq', name: 'rocketmq-test', version: '4.8.0'
-  api group: 'io.openmessaging', name: 'openmessaging-api', version: '0.3.1-alpha'
-  api group: 'org.apache.rocketmq', name: 'rocketmq-openmessaging', version: '4.8.0'
 
   implementation deps.guava
   implementation deps.groovy

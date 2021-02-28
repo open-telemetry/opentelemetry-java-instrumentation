@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -27,25 +28,38 @@ public class RocketMqProducerTracer extends BaseTracer {
     return "io.opentelemetry.javaagent.rocketmq-client";
   }
 
-  public Span startProducerSpan(String addr, Message msg) {
-    SpanBuilder span = spanBuilder(spanNameOnProduce(msg), PRODUCER);
-    onProduce(span, msg, addr);
-    return span.startSpan();
+  public Context startProducerSpan(String addr, Message msg, Context parentContext) {
+    SpanBuilder spanBuilder = spanBuilder(spanNameOnProduce(msg), PRODUCER);
+    onProduce(spanBuilder, msg, addr);
+    return withClientSpan(parentContext, spanBuilder.startSpan());
   }
 
-  public void onCallback(Span span, SendResult sendResult) {
-    span.setAttribute("messaging.rocketmq.callback_result", sendResult.getSendStatus().name());
+  public void onCallback(Context context, SendResult sendResult) {
+    if (RocketMqClientConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      Span span = Span.fromContext(context);
+      span.setAttribute("messaging.rocketmq.callback_result", sendResult.getSendStatus().name());
+    }
   }
 
-  public void onProduce(SpanBuilder span, Message msg, String addr) {
-    span.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq");
-    span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
-    span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION, msg.getTopic());
-    span.setAttribute("messaging.rocketmq.tags", msg.getTags());
-    span.setAttribute("messaging.rocketmq.broker_address", addr);
+  private void onProduce(SpanBuilder spanBuilder, Message msg, String addr) {
+    spanBuilder.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq");
+    spanBuilder.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
+    spanBuilder.setAttribute(SemanticAttributes.MESSAGING_DESTINATION, msg.getTopic());
+    if (RocketMqClientConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      spanBuilder.setAttribute("messaging.rocketmq.tags", msg.getTags());
+      spanBuilder.setAttribute("messaging.rocketmq.broker_address", addr);
+    }
   }
 
-  public String spanNameOnProduce(Message msg) {
+  public void afterProduce(Context context, SendResult sendResult) {
+    Span span = Span.fromContext(context);
+    span.setAttribute(SemanticAttributes.MESSAGING_MESSAGE_ID, sendResult.getMsgId());
+    if (RocketMqClientConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      span.setAttribute("messaging.rocketmq.send_result", sendResult.getSendStatus().name());
+    }
+  }
+
+  private String spanNameOnProduce(Message msg) {
     return msg.getTopic() + " send";
   }
 }

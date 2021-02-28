@@ -1,8 +1,11 @@
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
-
 dependencies {
   library group: 'org.apache.rocketmq', name: 'rocketmq-client', version: '4.8.0'
   testImplementation project(':instrumentation:rocketmq-client-4.8:testing')
 
+}
+
+tasks.withType(Test) {
+  jvmArgs "-Dotel.instrumentation.rocketmq.client.experimental-span-attributes=true"
 }

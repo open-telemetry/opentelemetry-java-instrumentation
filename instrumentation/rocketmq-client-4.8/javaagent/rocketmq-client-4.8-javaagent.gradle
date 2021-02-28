@@ -5,8 +5,10 @@ muzzle {
     group = "org.apache.rocketmq"
     module = 'rocketmq-client'
     versions = "[4.8.0,)"
+    assertInverse = true
   }
 }
+
 dependencies {
   library group: 'org.apache.rocketmq', name: 'rocketmq-client', version: '4.8.0'
   implementation project(':instrumentation:rocketmq-client-4.8:library')
@@ -14,3 +16,6 @@ dependencies {
 
 }
 
+tasks.withType(Test) {
+  jvmArgs "-Dotel.instrumentation.rocketmq.client.experimental-span-attributes=true"
+}

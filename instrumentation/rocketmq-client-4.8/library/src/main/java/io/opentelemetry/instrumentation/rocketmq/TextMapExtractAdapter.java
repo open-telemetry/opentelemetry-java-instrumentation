@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.rocketmq;
 
-import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Map;
 
-public class TextMapExtractAdapter implements TextMapPropagator.Getter<Map<String, String>> {
+public class TextMapExtractAdapter implements TextMapGetter<Map<String, String>> {
 
   public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
 
@@ -19,7 +19,6 @@ public class TextMapExtractAdapter implements TextMapPropagator.Getter<Map<Strin
 
   @Override
   public String get(Map<String, String> carrier, String key) {
-    String obj = carrier.get(key);
-    return obj;
+    return carrier.get(key);
   }
 }

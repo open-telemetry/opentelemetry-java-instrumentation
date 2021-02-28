@@ -14,5 +14,9 @@ public final class RocketMqClientConfig {
         .getBooleanProperty("otel.instrumentation.rocketmq.client-propagation", true);
   }
 
+  public static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.rocketmq.client.experimental-span-attributes", false);
+
   private RocketMqClientConfig() {}
 }

@@ -7,24 +7,21 @@ package base;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.apache.log4j.Logger;
 import org.apache.rocketmq.broker.BrokerController;
-import org.apache.rocketmq.client.producer.TransactionListener;
+import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
+import org.apache.rocketmq.client.exception.MQClientException;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.MQVersion;
 import org.apache.rocketmq.namesrv.NamesrvController;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
-import org.apache.rocketmq.test.client.rmq.RMQAsyncSendProducer;
-import org.apache.rocketmq.test.client.rmq.RMQNormalConsumer;
-import org.apache.rocketmq.test.client.rmq.RMQNormalProducer;
-import org.apache.rocketmq.test.client.rmq.RMQTransactionalProducer;
-import org.apache.rocketmq.test.clientinterface.AbstractMQConsumer;
-import org.apache.rocketmq.test.clientinterface.AbstractMQProducer;
-import org.apache.rocketmq.test.factory.ConsumerFactory;
 import org.apache.rocketmq.test.listener.AbstractListener;
 import org.apache.rocketmq.test.util.MQAdmin;
 import org.apache.rocketmq.test.util.MQRandomUtils;
+import org.apache.rocketmq.test.util.RandomUtil;
 
-public class BaseConf {
+final class BaseConf {
   public static final String nsAddr;
   public static final String broker1Addr;
   protected static String broker1Name;
@@ -48,12 +45,13 @@ public class BaseConf {
     brokerNum = 2;
   }
 
-  public BaseConf() {}
+  private BaseConf() {}
 
   public static String initTopic() {
     String topic = MQRandomUtils.getRandomTopic();
-    IntegrationTestBase.initTopic(topic, nsAddr, clusterName);
-
+    if(!IntegrationTestBase.initTopic(topic, nsAddr, clusterName)){
+      log.error("Topic init failed");
+    }
     return topic;
   }
 
@@ -71,105 +69,28 @@ public class BaseConf {
     return group;
   }
 
-  public static RMQNormalProducer getProducer(String nsAddr, String topic) {
-    return getProducer(nsAddr, topic, false);
-  }
-
-  public static RMQNormalProducer getProducer(String nsAddr, String topic, boolean useTls) {
-    RMQNormalProducer producer = new RMQNormalProducer(nsAddr, topic, useTls);
-    if (debug) {
-      producer.setDebug();
-    }
-    mqClients.add(producer);
-    return producer;
-  }
-
-  public static RMQNormalProducer getProducer(
-      String nsAddr, String topic, String producerGoup, String instanceName) {
-    RMQNormalProducer producer = new RMQNormalProducer(nsAddr, topic, producerGoup, instanceName);
-    if (debug) {
-      producer.setDebug();
-    }
-    mqClients.add(producer);
-    return producer;
-  }
-
-  public static RMQTransactionalProducer getTransactionalProducer(
-      String nsAddr, String topic, TransactionListener transactionListener) {
-    RMQTransactionalProducer producer =
-        new RMQTransactionalProducer(nsAddr, topic, false, transactionListener);
-    if (debug) {
-      producer.setDebug();
-    }
-    mqClients.add(producer);
-    return producer;
-  }
-
-  public static RMQAsyncSendProducer getAsyncProducer(String nsAddr, String topic) {
-    RMQAsyncSendProducer producer = new RMQAsyncSendProducer(nsAddr, topic);
-    if (debug) {
-      producer.setDebug();
-    }
-    mqClients.add(producer);
-    return producer;
-  }
-
-  public static RMQNormalConsumer getConsumer(
-      String nsAddr, String topic, String subExpression, AbstractListener listener) {
-    return getConsumer(nsAddr, topic, subExpression, listener, false);
-  }
-
-  public static RMQNormalConsumer getConsumer(
-      String nsAddr,
-      String topic,
-      String subExpression,
-      AbstractListener listener,
-      boolean useTls) {
+  public static DefaultMQPushConsumer getConsumer(String nsAddr, String topic, String subExpression,
+      AbstractListener listener)
+      throws MQClientException {
     String consumerGroup = initConsumerGroup();
-    return getConsumer(nsAddr, consumerGroup, topic, subExpression, listener, useTls);
-  }
-
-  public static RMQNormalConsumer getConsumer(
-      String nsAddr,
-      String consumerGroup,
-      String topic,
-      String subExpression,
-      AbstractListener listener) {
-    return getConsumer(nsAddr, consumerGroup, topic, subExpression, listener, false);
-  }
-
-  public static RMQNormalConsumer getConsumer(
-      String nsAddr,
-      String consumerGroup,
-      String topic,
-      String subExpression,
-      AbstractListener listener,
-      boolean useTls) {
-    RMQNormalConsumer consumer =
-        ConsumerFactory.getRMQNormalConsumer(
-            nsAddr, consumerGroup, topic, subExpression, listener, useTls);
-    if (debug) {
-      consumer.setDebug();
-    }
-    mqClients.add(consumer);
-    log.info(
-        String.format(
-            "consumer[%s] start,topic[%s],subExpression[%s]", consumerGroup, topic, subExpression));
+    DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(consumerGroup);
+    consumer.setInstanceName(RandomUtil.getStringByUUID());
+    consumer.setNamesrvAddr(nsAddr);
+    consumer.subscribe(topic, subExpression);
+    consumer.setMessageListener(listener);
+    consumer.start();
     return consumer;
   }
 
-  public static void shutdown() {
-    try {
-      for (Object mqClient : mqClients) {
-        if (mqClient instanceof AbstractMQProducer) {
-          ((AbstractMQProducer) mqClient).shutdown();
+  public static DefaultMQProducer getRMQProducer(String ns) throws MQClientException {
+    DefaultMQProducer producer = new DefaultMQProducer(RandomUtil.getStringByUUID());
+    producer.setInstanceName(UUID.randomUUID().toString());
+    producer.setNamesrvAddr(ns);
+    producer.start();
+    return producer;
+  }
 
-        } else {
-          ((AbstractMQConsumer) mqClient).shutdown();
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  private static void deleteTempDir() {
+    IntegrationTestBase.deleteTempDir();
   }
 }
