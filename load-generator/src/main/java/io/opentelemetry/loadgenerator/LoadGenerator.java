@@ -22,7 +22,7 @@ import picocli.CommandLine.Option;
     description = "Generates traces and spans at a specified rate")
 public class LoadGenerator implements Callable<Integer> {
 
-  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   @Option(names = "--rate", required = true, description = "rate, per second, to generate traces")
   private int rate;

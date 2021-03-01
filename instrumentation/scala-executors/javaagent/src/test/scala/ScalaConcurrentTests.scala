@@ -13,7 +13,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
 
 class ScalaConcurrentTests {
-  val tracer: Tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
+  val tracer: Tracer = GlobalOpenTelemetry.getTracer("test")
 
   /** @return Number of expected spans in the trace */
   def traceWithFutureAndCallbacks() {

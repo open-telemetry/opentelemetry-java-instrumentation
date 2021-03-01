@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 
 // ! == send-message
 object AkkaActors {
-  val tracer: Tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
+  val tracer: Tracer = GlobalOpenTelemetry.getTracer("test")
 
   val system: ActorSystem = ActorSystem("helloAkka")
 

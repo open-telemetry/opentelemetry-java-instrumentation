@@ -24,7 +24,8 @@ public class ContextPayload {
 
   private static final Logger log = LoggerFactory.getLogger(ContextPayload.class);
 
-  private static final Tracer TRACER = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto.rmi");
+  private static final Tracer TRACER =
+      GlobalOpenTelemetry.getTracer("io.opentelemetry.javaagent.rmi");
 
   public static Tracer tracer() {
     return TRACER;
