@@ -124,7 +124,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
       }
     }
 
-    tracer().end(span);
+    tracer().end(context);
     listener.onResponse(response);
   }
 

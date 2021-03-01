@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
@@ -23,7 +23,7 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String, SqlS
     return TRACER;
   }
 
-  public Span startSpan(String operation, Region<?, ?> connection, String query) {
+  public Context startSpan(String operation, Region<?, ?> connection, String query) {
     SqlStatementInfo sanitizedStatement = sanitizeStatement(query);
 
     SpanBuilder span =
@@ -37,7 +37,7 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String, SqlS
     setNetSemanticConvention(span, connection);
     onStatement(span, connection, query, sanitizedStatement);
 
-    return span.startSpan();
+    return Context.current().with(span.startSpan());
   }
 
   @Override
