@@ -5,20 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.ApiResponse;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanBuilder;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.RequestBuilderInjectAdapter;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import okhttp3.Request;
-import okhttp3.Response;
 
-public class KubernetesClientTracer extends HttpClientTracer<Request, Request, Response> {
+public class KubernetesClientTracer
+    extends HttpClientTracer<Request, Request.Builder, ApiResponse<?>> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
@@ -31,40 +33,24 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
     return TRACER;
   }
 
-  /**
-   * This method is used to generate an acceptable CLIENT span (operation) name based on a given
-   * KubernetesRequestDigest.
-   */
-  public Context startSpan(Context parentContext, Request request) {
-    KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
-    SpanBuilder spanBuilder =
-        tracer.spanBuilder(digest.toString()).setSpanKind(CLIENT).setParent(parentContext);
-    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      spanBuilder
-          .setAttribute("kubernetes-client.namespace", digest.getResourceMeta().getNamespace())
-          .setAttribute("kubernetes-client.name", digest.getResourceMeta().getName());
-    }
-    Span span = spanBuilder.startSpan();
-    Context context = withClientSpan(parentContext, span);
-    GlobalOpenTelemetry.getPropagators()
-        .getTextMapPropagator()
-        .inject(context, request, getSetter());
-    return context;
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.javaagent.kubernetes-client";
   }
 
   @Override
-  protected String method(Request httpRequest) {
-    return httpRequest.method();
+  protected String method(Request request) {
+    return request.method();
   }
 
   @Override
-  protected URI url(Request httpRequest) {
-    return httpRequest.url().uri();
+  protected URI url(Request request) {
+    return request.url().uri();
   }
 
   @Override
-  protected Integer status(Response httpResponse) {
-    return httpResponse.code();
+  protected Integer status(ApiResponse<?> response) {
+    return response.getStatusCode();
   }
 
   @Override
@@ -73,24 +59,42 @@ public class KubernetesClientTracer extends HttpClientTracer<Request, Request, R
   }
 
   @Override
-  protected String responseHeader(Response response, String name) {
-    return response.header(name);
+  protected String responseHeader(ApiResponse<?> response, String name) {
+    Map<String, List<String>> responseHeaders =
+        response.getHeaders() == null ? Collections.emptyMap() : response.getHeaders();
+    return responseHeaders.getOrDefault(name, Collections.emptyList()).stream()
+        .findFirst()
+        .orElse(null);
   }
 
   @Override
-  protected TextMapSetter<Request> getSetter() {
-    // TODO (trask) no propagation implemented yet?
-    return null;
+  protected TextMapSetter<Request.Builder> getSetter() {
+    return RequestBuilderInjectAdapter.SETTER;
   }
 
   @Override
-  protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.kubernetes-client";
+  protected void onError(Span span, Throwable throwable) {
+    super.onError(span, throwable);
+    if (throwable instanceof ApiException) {
+      int status = ((ApiException) throwable).getCode();
+      if (status != 0) {
+        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, status);
+      }
+    }
   }
 
-  /** This method is overridden to allow other classes in this package to call it. */
   @Override
   protected void onRequest(Span span, Request request) {
     super.onRequest(span, request);
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
+      span.setAttribute("kubernetes-client.namespace", digest.getResourceMeta().getNamespace())
+          .setAttribute("kubernetes-client.name", digest.getResourceMeta().getName());
+    }
+  }
+
+  @Override
+  protected String spanNameForRequest(Request request) {
+    return KubernetesRequestDigest.parse(request).toString();
   }
 }
