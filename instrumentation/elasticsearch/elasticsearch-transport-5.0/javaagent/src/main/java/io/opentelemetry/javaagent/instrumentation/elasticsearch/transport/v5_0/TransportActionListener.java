@@ -36,7 +36,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   private final Context context;
 
   public TransportActionListener(
-      ActionRequest actionRequest, ActionListener<T> listener, Context context) {
+      ActionRequest<?> actionRequest, ActionListener<T> listener, Context context) {
     this.listener = listener;
     this.context = context;
     onRequest(actionRequest);
@@ -123,7 +123,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
       }
     }
 
-    tracer().end(span);
+    tracer().end(context);
     listener.onResponse(response);
   }
 
