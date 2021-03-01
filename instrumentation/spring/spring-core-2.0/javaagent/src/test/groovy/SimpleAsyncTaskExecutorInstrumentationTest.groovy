@@ -68,7 +68,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest extends AgentInstrumentationSpe
 }
 
 class AsyncTask implements Runnable, Callable<Object> {
-  private static final TRACER = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
+  private static final TRACER = GlobalOpenTelemetry.getTracer("test")
 
   final latch = new CountDownLatch(1)
   boolean startSpan

@@ -17,7 +17,7 @@ import javax.ws.rs.client.ClientResponseFilter;
 
 @Priority(Priorities.HEADER_DECORATOR)
 public class ClientTracingFilter implements ClientRequestFilter, ClientResponseFilter {
-  public static final String CONTEXT_PROPERTY_NAME = "io.opentelemetry.auto.jax-rs-client.context";
+  public static final String CONTEXT_PROPERTY_NAME = "io.opentelemetry.javaagent.context";
 
   @Override
   public void filter(ClientRequestContext requestContext) {

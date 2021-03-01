@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutionException
 
 class TraceUtils {
 
-  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test")
 
   static <T> T runUnderServerTrace(final String rootOperationName, final Callable<T> r) {
     return ServerTraceUtils.runUnderServerTrace(rootOperationName, r)
