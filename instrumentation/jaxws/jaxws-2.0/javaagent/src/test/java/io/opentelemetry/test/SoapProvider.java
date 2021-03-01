@@ -3,10 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
+package io.opentelemetry.test;
 
 import javax.xml.ws.Provider;
 
+/**
+ * Note: this has to stay outside of 'io.opentelemetry.javaagent' package to be considered for
+ * instrumentation
+ */
 public class SoapProvider implements Provider<SoapProvider.Message> {
 
   @Override
