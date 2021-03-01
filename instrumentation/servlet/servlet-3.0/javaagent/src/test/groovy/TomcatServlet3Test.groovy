@@ -14,6 +14,8 @@ import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import java.nio.file.Files
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import javax.servlet.Servlet
 import javax.servlet.ServletException
 import org.apache.catalina.AccessLog
@@ -130,6 +132,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
 
     and:
     assertTraces(count) {
+      accessLogValue.waitForLoggedIds(count)
       assert accessLogValue.loggedIds.size() == count
       def loggedTraces = accessLogValue.loggedIds*.first
       def loggedSpans = accessLogValue.loggedIds*.second
@@ -201,6 +204,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
         }
       }
 
+      accessLogValue.waitForLoggedIds(1)
       def (String traceId, String spanId) = accessLogValue.loggedIds[0]
       assert traces[0][0].traceId == traceId
       assert traces[0][0].spanId == spanId
@@ -260,15 +264,34 @@ class ErrorHandlerValve extends ErrorReportValve {
 }
 
 class TestAccessLogValve extends ValveBase implements AccessLog {
-  List<Tuple2<String, String>> loggedIds = []
+  final List<Tuple2<String, String>> loggedIds = []
 
   TestAccessLogValve() {
     super(true)
   }
 
   void log(Request request, Response response, long time) {
-    loggedIds.add(new Tuple2(request.getAttribute("traceId"),
-      request.getAttribute("spanId")))
+    synchronized (loggedIds) {
+      loggedIds.add(new Tuple2(request.getAttribute("traceId"),
+        request.getAttribute("spanId")))
+      loggedIds.notifyAll()
+    }
+  }
+
+  void waitForLoggedIds(int expected) {
+    def timeout = TimeUnit.SECONDS.toMillis(20)
+    def startTime = System.currentTimeMillis()
+    def endTime = startTime + timeout
+    def toWait = timeout
+    synchronized (loggedIds) {
+      while (loggedIds.size() < expected && toWait > 0) {
+        loggedIds.wait(toWait)
+        toWait = endTime - System.currentTimeMillis()
+      }
+      if (toWait <= 0) {
+        throw new TimeoutException("Timeout waiting for " + expected + " access log ids, got " + loggedIds.size())
+      }
+    }
   }
 
   @Override
