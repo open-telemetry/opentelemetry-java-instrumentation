@@ -20,7 +20,7 @@ class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name 'SoapProvider.invoke'
           attributes {
-            attribute('code.namespace', 'io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.SoapProvider')
+            attribute('code.namespace', 'io.opentelemetry.test.SoapProvider')
             attribute('code.function', 'invoke')
           }
         }
