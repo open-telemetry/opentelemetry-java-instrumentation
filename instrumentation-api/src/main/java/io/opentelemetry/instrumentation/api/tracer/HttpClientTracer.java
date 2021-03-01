@@ -101,7 +101,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       throw new IllegalStateException(
           "getSetter() not defined but calling inject(), either getSetter must be implemented or the scope should be setup manually");
     }
-    propagators.getTextMapPropagator().inject(context, carrier, setter);
+    inject(context, carrier, setter);
   }
 
   public void end(Context context, RESPONSE response) {
