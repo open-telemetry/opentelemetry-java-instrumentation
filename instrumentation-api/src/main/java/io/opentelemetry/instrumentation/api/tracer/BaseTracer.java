@@ -56,8 +56,7 @@ public abstract class BaseTracer {
   protected final ContextPropagators propagators;
 
   public BaseTracer() {
-    tracer = GlobalOpenTelemetry.getTracer(getInstrumentationName(), getVersion());
-    propagators = GlobalOpenTelemetry.getPropagators();
+    this(GlobalOpenTelemetry.get());
   }
 
   /**
@@ -229,25 +228,10 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
-  /**
-   * Do extraction with the propagators from the GlobalOpenTelemetry instance. Not recommended.
-   *
-   * @deprecated We should eliminate all static usages so we can use the non-global propagators.
-   */
-  @Deprecated
-  public static <C> Context extractWithGlobalPropagators(C carrier, TextMapGetter<C> getter) {
-    return extract(GlobalOpenTelemetry.getPropagators(), carrier, getter);
-  }
-
   public <C> Context extract(C carrier, TextMapGetter<C> getter) {
-    return extract(propagators, carrier, getter);
-  }
-
-  private static <C> Context extract(
-      ContextPropagators propagators, C carrier, TextMapGetter<C> getter) {
     ContextPropagationDebug.debugContextLeakIfEnabled();
 
-    // Using Context.ROOT here may be quite unexpected, but the reason is simple.
+    // Using Context.root() here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
     return propagators.getTextMapPropagator().extract(Context.root(), carrier, getter);
