@@ -18,7 +18,7 @@ class CouchbaseQuerySanitizerTest extends Specification {
   @Unroll
   def "should normalize #desc query"() {
     when:
-    def normalized = CouchbaseQuerySanitizer.sanitize(query)
+    def normalized = CouchbaseQuerySanitizer.sanitize(query).getFullStatement()
 
     then:
     // the analytics query ends up with trailing ';' in earlier couchbase version, but no trailing ';' in later couchbase version
