@@ -57,7 +57,7 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
         (key, value) -> {
           String keyStr = (String) key;
           if (!environmentProperties.containsKey(key)
-              && !keyStr.equals("otel.endpoint.peer.service.mapping")
+              && !keyStr.equals("otel.experimental.peer.service.mapping")
               && keyStr.startsWith("otel.")
               && !keyStr.startsWith("otel.instrumentation")) {
             System.setProperty(keyStr, (String) value);
