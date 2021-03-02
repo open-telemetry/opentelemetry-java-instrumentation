@@ -12,10 +12,6 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
-import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-import com.amazonaws.services.sqs.model.ReceiveMessageResult;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -48,23 +44,25 @@ public class TracingRequestHandler extends RequestHandler2 {
   }
 
   private boolean isSqsProducer(AmazonWebServiceRequest request) {
-    return (request instanceof SendMessageRequest);
+    return request
+        .getClass()
+        .getName()
+        .equals("com.amazonaws.services.sqs.model.SendMessageRequest");
   }
 
   @Override
   public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
-    if (isSqsConsumer(request)) {
-      ReceiveMessageRequest receiveMessageRequest = (ReceiveMessageRequest) request;
-      receiveMessageRequest.withAttributeNames(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
+    if (SqsReceiveMessageRequestAccess.isInstance(request)) {
+      SqsReceiveMessageRequestAccess.withAttributeNames(
+          request, SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
     }
     return request;
   }
 
   @Override
   public void afterResponse(Request<?> request, Response<?> response) {
-    if (isSqsConsumer(request.getOriginalRequest())) {
-      afterConsumerResponse(
-          (Request<ReceiveMessageRequest>) request, (Response<ReceiveMessageResult>) response);
+    if (SqsReceiveMessageRequestAccess.isInstance(request.getOriginalRequest())) {
+      afterConsumerResponse(request, response);
     }
     // close outstanding "client" span
     ContextScopePair scope = request.getHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY);
@@ -76,22 +74,18 @@ public class TracingRequestHandler extends RequestHandler2 {
     tracer().end(scope.getContext(), response);
   }
 
-  private boolean isSqsConsumer(AmazonWebServiceRequest request) {
-    return (request instanceof ReceiveMessageRequest);
-  }
-
   /** Create and close CONSUMER span for each message consumed. */
-  private void afterConsumerResponse(
-      Request<ReceiveMessageRequest> request, Response<ReceiveMessageResult> response) {
-    ReceiveMessageResult receiveMessageResult = response.getAwsResponse();
-    List<Message> messages = receiveMessageResult.getMessages();
-    for (Message message : messages) {
+  private void afterConsumerResponse(Request<?> request, Response<?> response) {
+    Object receiveMessageResult = response.getAwsResponse();
+    List<?> messages = SqsReceiveMessageResultAccess.getMessages(receiveMessageResult);
+    for (Object message : messages) {
       createConsumerSpan(message, request, response);
     }
   }
 
-  private void createConsumerSpan(Message message, Request<?> request, Response<?> response) {
-    Context parentContext = SqsParentContext.ofSystemAttributes(message.getAttributes());
+  private void createConsumerSpan(Object message, Request<?> request, Response<?> response) {
+    Context parentContext =
+        SqsParentContext.ofSystemAttributes(SqsMessageAccess.getAttributes(message));
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     RequestMeta requestMeta = contextStore.get(originalRequest);
     Context context = tracer().startSpan(SpanKind.CONSUMER, parentContext, request, requestMeta);
