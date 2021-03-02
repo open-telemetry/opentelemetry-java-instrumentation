@@ -13,7 +13,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -43,16 +42,6 @@ public abstract class BaseTracer {
   // should we make this injectable?
   private static final SupportabilityMetrics supportability =
       new SupportabilityMetrics(Config.get()).start();
-
-  // Keeps track of the server span for the current trace.
-  // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
-  // or other non-server root.
-  private static final ContextKey<Span> CONTEXT_SERVER_SPAN_KEY =
-      ContextKey.named("opentelemetry-trace-server-span-key");
-
-  // Keeps track of the client span in a subtree corresponding to a client request.
-  private static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
-      ContextKey.named("opentelemetry-trace-auto-client-span-key");
 
   protected final Tracer tracer;
   protected final ContextPropagators propagators;
@@ -104,11 +93,11 @@ public abstract class BaseTracer {
   }
 
   protected final Context withClientSpan(Context parentContext, Span span) {
-    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    return ClientSpan.with(parentContext.with(span), span);
   }
 
   protected final Context withServerSpan(Context parentContext, Span span) {
-    return parentContext.with(span).with(CONTEXT_SERVER_SPAN_KEY, span);
+    return ServerSpan.with(parentContext.with(span), span);
   }
 
   protected final boolean shouldStartSpan(SpanKind proposedKind, Context context) {
@@ -129,12 +118,12 @@ public abstract class BaseTracer {
     return !suppressed;
   }
 
-  private boolean inClientSpan(Context parentContext) {
-    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
+  private boolean inClientSpan(Context context) {
+    return ClientSpan.fromContextOrNull(context) != null;
   }
 
   private boolean inServerSpan(Context context) {
-    return getCurrentServerSpan(context) != null;
+    return ServerSpan.fromContextOrNull(context) != null;
   }
 
   protected abstract String getInstrumentationName();
@@ -243,15 +232,5 @@ public abstract class BaseTracer {
    */
   public <C> void inject(Context context, C carrier, TextMapSetter<C> setter) {
     propagators.getTextMapPropagator().inject(context, carrier, setter);
-  }
-
-  /** Returns span of type SERVER from the current context or <code>null</code> if not found. */
-  public static Span getCurrentServerSpan() {
-    return getCurrentServerSpan(Context.current());
-  }
-
-  /** Returns span of type SERVER from the given context or <code>null</code> if not found. */
-  public static Span getCurrentServerSpan(Context context) {
-    return context.get(CONTEXT_SERVER_SPAN_KEY);
   }
 }

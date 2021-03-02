@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
 import java.lang.annotation.Annotation;
@@ -44,7 +45,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     // well.
     Span span = tracer.spanBuilder("jax-rs.request").setParent(parentContext).startSpan();
     updateSpanNames(
-        parentContext, span, BaseTracer.getCurrentServerSpan(parentContext), target, method);
+        parentContext, span, ServerSpan.fromContextOrNull(parentContext), target, method);
     return parentContext.with(span);
   }
 

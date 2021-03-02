@@ -149,7 +149,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   public Span getServerSpan(STORAGE storage) {
     Context attachedContext = getServerContext(storage);
-    return attachedContext == null ? null : getCurrentServerSpan(attachedContext);
+    return attachedContext == null ? null : ServerSpan.fromContextOrNull(attachedContext);
   }
 
   /**
