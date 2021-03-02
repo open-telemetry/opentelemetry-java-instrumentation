@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
@@ -24,13 +22,6 @@ public class ContextPayload {
 
   private static final Logger log = LoggerFactory.getLogger(ContextPayload.class);
 
-  private static final Tracer TRACER =
-      GlobalOpenTelemetry.getTracer("io.opentelemetry.javaagent.rmi");
-
-  public static Tracer tracer() {
-    return TRACER;
-  }
-
   private final Map<String, String> context;
   public static final ExtractAdapter GETTER = new ExtractAdapter();
   public static final InjectAdapter SETTER = new InjectAdapter();
@@ -43,9 +34,8 @@ public class ContextPayload {
     this.context = context;
   }
 
-  public static ContextPayload from(Span span) {
+  public static ContextPayload from(Context context) {
     ContextPayload payload = new ContextPayload();
-    Context context = Context.current().with(span);
     GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, payload, SETTER);
     return payload;
   }
