@@ -11,7 +11,8 @@ import io.opentelemetry.instrumentation.api.config.Config;
 final class StatementSanitizationConfig {
 
   private static final boolean STATEMENT_SANITIZATION_ENABLED =
-      Config.get().getBooleanProperty("otel.instrumentation.db-statement-sanitizer.enabled", true);
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
 
   static boolean isStatementSanitizationEnabled() {
     return STATEMENT_SANITIZATION_ENABLED;
