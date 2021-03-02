@@ -20,7 +20,7 @@ class IncludeTest extends Specification {
         "otel.instrumentation.external-annotations.include": value
       ]).build()
     } else {
-      config = Config.DEFAULT
+      config = null
     }
 
     expect:
