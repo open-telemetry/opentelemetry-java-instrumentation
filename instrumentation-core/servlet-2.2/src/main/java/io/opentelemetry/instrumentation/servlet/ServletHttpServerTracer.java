@@ -164,9 +164,8 @@ public abstract class ServletHttpServerTracer<RESPONSE>
    * reflected in the span name.
    */
   public Context runOnceUnderAppServer(Context context, HttpServletRequest request) {
-    if (AppServerBridge.shouldUpdateServerSpanName(context)) {
+    if (AppServerBridge.setUpdatedServerSpanName(context)) {
       updateSpanName(Span.fromContext(context), request);
-      AppServerBridge.setServletUpdatedServerSpanName(context, true);
       return addServletContextPath(context, request);
     }
     return context;
