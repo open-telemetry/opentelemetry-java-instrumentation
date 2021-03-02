@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -68,7 +69,7 @@ public final class CouchbaseQuerySanitizer {
     ANALYTICS_GET_STATEMENT = analyticsGetStatement;
   }
 
-  public static String sanitize(Object query) {
+  public static SqlStatementInfo sanitize(Object query) {
     if (query instanceof String) {
       return sanitizeString((String) query);
     }
@@ -82,7 +83,7 @@ public final class CouchbaseQuerySanitizer {
     String queryClassName = query.getClass().getName();
     if (queryClassName.equals("com.couchbase.client.java.view.ViewQuery")
         || queryClassName.equals("com.couchbase.client.java.view.SpatialViewQuery")) {
-      return query.toString();
+      return new SqlStatementInfo(query.toString(), null, null);
     }
     // N1qlQuery is present starting from Couchbase 2.2.0
     if (N1QL_QUERY_CLASS != null && N1QL_QUERY_CLASS.isAssignableFrom(query.getClass())) {
@@ -98,7 +99,7 @@ public final class CouchbaseQuerySanitizer {
         return sanitizeString(statement);
       }
     }
-    return query.getClass().getSimpleName();
+    return new SqlStatementInfo(query.getClass().getSimpleName(), null, null);
   }
 
   private static String getStatementString(MethodHandle handle, Object query) {
@@ -112,8 +113,8 @@ public final class CouchbaseQuerySanitizer {
     }
   }
 
-  private static String sanitizeString(String query) {
-    return SqlStatementSanitizer.sanitize(query).getFullStatement();
+  private static SqlStatementInfo sanitizeString(String query) {
+    return SqlStatementSanitizer.sanitize(query);
   }
 
   private CouchbaseQuerySanitizer() {}

@@ -5,14 +5,14 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 class CouchbaseSpanUtil {
   // Reusable span assertion method.  Cannot directly override AbstractCouchbaseTest.assertCouchbaseSpan because
   // Of the class hierarchy of these tests
-  static void assertCouchbaseCall(TraceAssert trace, int index, Object spanName, String bucketName = null, Object parentSpan = null) {
+  static void assertCouchbaseCall(TraceAssert trace, int index, Object spanName, String bucketName = null, Object parentSpan = null, Object statement = null) {
     trace.span(index) {
       name spanName
       kind CLIENT
@@ -41,7 +41,7 @@ class CouchbaseSpanUtil {
         // that do have operation ids
         "couchbase.operation_id" { it == null || String }
 
-        "${SemanticAttributes.DB_STATEMENT.key}" spanName
+        "${SemanticAttributes.DB_STATEMENT.key}" (statement ?: spanName)
       }
     }
   }

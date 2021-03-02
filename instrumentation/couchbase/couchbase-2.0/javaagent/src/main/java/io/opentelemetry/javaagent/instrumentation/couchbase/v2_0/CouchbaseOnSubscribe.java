@@ -6,10 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer.conventionSpanName;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe;
+import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.lang.reflect.Method;
@@ -24,18 +26,23 @@ public class CouchbaseOnSubscribe<T> extends TracedOnSubscribe<T> {
     Class<?> declaringClass = method.getDeclaringClass();
     String className =
         declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
-    return new CouchbaseOnSubscribe<>(
-        originalObservable, bucket, className + "." + method.getName());
+    String operation = className + "." + method.getName();
+    return new CouchbaseOnSubscribe<>(originalObservable, operation, bucket, operation);
   }
 
   public static <T> CouchbaseOnSubscribe<T> create(
       Observable<T> originalObservable, String bucket, Object query) {
+    SqlStatementInfo statement = CouchbaseQuerySanitizer.sanitize(query);
+    String spanName =
+        conventionSpanName(
+            bucket, statement.getOperation(), statement.getTable(), statement.getFullStatement());
     return new CouchbaseOnSubscribe<>(
-        originalObservable, bucket, CouchbaseQuerySanitizer.sanitize(query));
+        originalObservable, spanName, bucket, statement.getFullStatement());
   }
 
-  private CouchbaseOnSubscribe(Observable<T> originalObservable, String bucket, String query) {
-    super(originalObservable, query, tracer(), CLIENT);
+  private CouchbaseOnSubscribe(
+      Observable<T> originalObservable, String spanName, String bucket, String query) {
+    super(originalObservable, spanName, tracer(), CLIENT);
 
     this.bucket = bucket;
     this.query = query;
