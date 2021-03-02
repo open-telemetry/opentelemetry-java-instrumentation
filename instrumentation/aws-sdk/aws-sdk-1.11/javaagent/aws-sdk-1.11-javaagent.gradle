@@ -53,8 +53,6 @@ dependencies {
 
   library group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
 
-  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
-
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'
