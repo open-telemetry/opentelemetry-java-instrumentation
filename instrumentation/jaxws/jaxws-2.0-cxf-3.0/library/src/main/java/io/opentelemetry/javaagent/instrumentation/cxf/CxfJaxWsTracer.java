@@ -79,6 +79,6 @@ public class CxfJaxWsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.cxf";
+    return "io.opentelemetry.javaagent.jaxws-2.0-cxf-3.0";
   }
 }

@@ -35,7 +35,7 @@ public class KubernetesClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.kubernetes-client";
+    return "io.opentelemetry.javaagent.kubernetes-client-7.0";
   }
 
   @Override

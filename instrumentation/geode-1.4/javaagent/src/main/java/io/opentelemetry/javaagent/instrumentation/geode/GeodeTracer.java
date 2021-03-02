@@ -68,6 +68,6 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String, SqlS
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.geode";
+    return "io.opentelemetry.javaagent.geode-1.4";
   }
 }

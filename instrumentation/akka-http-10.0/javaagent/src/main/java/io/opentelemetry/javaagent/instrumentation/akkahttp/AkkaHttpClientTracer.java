@@ -61,6 +61,6 @@ public class AkkaHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.akka-http";
+    return "io.opentelemetry.javaagent.akka-http-10.0";
   }
 }

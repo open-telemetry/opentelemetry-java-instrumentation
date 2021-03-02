@@ -30,7 +30,7 @@ public class GoogleHttpClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.google-http-client";
+    return "io.opentelemetry.javaagent.google-http-client-1.19";
   }
 
   @Override

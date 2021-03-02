@@ -16,6 +16,6 @@ public class MojarraTracer extends JsfTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.mojarra";
+    return "io.opentelemetry.javaagent.mojarra-1.2";
   }
 }

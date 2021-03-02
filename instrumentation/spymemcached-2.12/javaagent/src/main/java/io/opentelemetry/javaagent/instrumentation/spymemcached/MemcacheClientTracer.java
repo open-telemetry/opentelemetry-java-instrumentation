@@ -50,6 +50,6 @@ public class MemcacheClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spymemcached";
+    return "io.opentelemetry.javaagent.spymemcached-2.12";
   }
 }

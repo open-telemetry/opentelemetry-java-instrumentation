@@ -21,7 +21,7 @@ public class JaxWsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.jaxws";
+    return "io.opentelemetry.javaagent.jaxws-common";
   }
 
   public Context startSpan(Class<?> target, Method method) {

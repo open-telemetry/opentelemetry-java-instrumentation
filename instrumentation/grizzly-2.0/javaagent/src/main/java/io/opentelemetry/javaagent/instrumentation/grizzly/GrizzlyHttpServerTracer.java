@@ -90,7 +90,7 @@ public class GrizzlyHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.grizzly";
+    return "io.opentelemetry.javaagent.grizzly-2.0";
   }
 
   @Override

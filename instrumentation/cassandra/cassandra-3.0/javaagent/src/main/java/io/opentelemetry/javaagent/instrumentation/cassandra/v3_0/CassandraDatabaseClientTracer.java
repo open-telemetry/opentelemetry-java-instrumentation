@@ -29,7 +29,7 @@ public class CassandraDatabaseClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.cassandra";
+    return "io.opentelemetry.javaagent.cassandra-3.0";
   }
 
   @Override
