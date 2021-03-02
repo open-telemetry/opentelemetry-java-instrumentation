@@ -6,12 +6,11 @@
 package io.opentelemetry.instrumentation.armeria.v1_3
 
 import com.linecorp.armeria.server.ServerBuilder
-import io.opentelemetry.instrumentation.armeria.v1_3.server.OpenTelemetryService
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 
 class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest implements LibraryTestTrait{
   @Override
   ServerBuilder configureServer(ServerBuilder sb) {
-    return sb.decorator(OpenTelemetryService.newDecorator())
+    return sb.decorator(ArmeriaTracing.create(getOpenTelemetry()).newServiceDecorator())
   }
 }

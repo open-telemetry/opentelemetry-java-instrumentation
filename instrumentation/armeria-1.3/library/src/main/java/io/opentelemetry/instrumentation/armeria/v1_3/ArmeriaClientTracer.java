@@ -3,27 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.armeria.v1_3.client;
+package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.client.ClientRequestContext;
 import com.linecorp.armeria.client.UnprocessedRequestException;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ArmeriaClientTracer
+final class ArmeriaClientTracer
     extends HttpClientTracer<ClientRequestContext, ClientRequestContext, RequestLog> {
 
-  ArmeriaClientTracer() {}
-
-  ArmeriaClientTracer(Tracer tracer) {
-    super(tracer);
+  ArmeriaClientTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
   }
 
   @Override
