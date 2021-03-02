@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.config.Config;
@@ -234,6 +235,12 @@ public abstract class BaseTracer {
     return propagators.getTextMapPropagator().extract(Context.root(), carrier, getter);
   }
 
+  /**
+   * Injects {@code context} data into {@code carrier} using the propagator embedded in this tracer.
+   * This method can be used to propagate passed {@code context} to downstream services.
+   *
+   * @see TextMapPropagator#inject(Context, Object, TextMapSetter)
+   */
   public <C> void inject(Context context, C carrier, TextMapSetter<C> setter) {
     propagators.getTextMapPropagator().inject(context, carrier, setter);
   }
