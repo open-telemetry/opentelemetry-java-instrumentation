@@ -10,6 +10,7 @@ behavior you find.
 
 * [SDK Autoconfiguration](#sdk-autoconfiguration)
 * [Peer service name](#peer-service-name)
+* [DB statement sanitization](#db-statement-sanitization)
 * [Customizing the OpenTelemetry SDK](#customizing-the-opentelemetry-sdk)
 * [Suppressing specific auto-instrumentation](#suppressing-specific-auto-instrumentation)
 
@@ -23,10 +24,25 @@ to find settings such as configuring export or sampling.
 
 The [peer service name](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes) is the name of a remote service being connected to. It corresponds to `service.name` in the [Resource](https://github.com/open-telemetry/opentelemetry-specification/tree/master/specification/resource/semantic_conventions#service) for the local service.
 
-| System property                     | Environment variable              | Description                                                                      |
-|------------------------------------|------------------------------------|----------------------------------------------------------------------------------|
-| otel.endpoint.peer.service.mapping | OTEL_ENDPOINT_PEER_SERVICE_MAPPING | Used to specify a mapping from hostnames or IP addresses to peer services, as a comma-separated list of host=name pairs. The peer service is added as an attribute to a span whose host or IP match the mapping. For example, if set to 1.2.3.4=cats-service,dogs-abcdef123.serverlessapis.com=dogs-api, requests to `1.2.3.4` will have a `peer.service` attribute of `cats-service` and requests to `dogs-abcdef123.serverlessapis.com` will have an attribute of `dogs-api`. |
+| System property                      | Environment variable                 | Description                                                                      |
+|--------------------------------------|--------------------------------------|----------------------------------------------------------------------------------|
+| `otel.endpoint.peer.service.mapping` | `OTEL_ENDPOINT_PEER_SERVICE_MAPPING` | Used to specify a mapping from hostnames or IP addresses to peer services, as a comma-separated list of host=name pairs. The peer service is added as an attribute to a span whose host or IP match the mapping. For example, if set to 1.2.3.4=cats-service,dogs-abcdef123.serverlessapis.com=dogs-api, requests to `1.2.3.4` will have a `peer.service` attribute of `cats-service` and requests to `dogs-abcdef123.serverlessapis.com` will have an attribute of `dogs-api`. |
 
+## DB statement sanitization
+
+The agent sanitizes all database queries/statements before setting the `db.statement` semantic attribute:
+all values (strings, numbers) in the query string are replaced with a question mark `?`.
+
+Examples:
+* SQL query `SELECT a from b where password="secret"` will appear as `SELECT a from b where password=?` in the exported span;
+* Redis command `HSET map password "secret"` will appear as `HSET map password ?` in the exported span.
+
+This behavior is turned on by default for all database instrumentations.
+The following property may be used to disable it:
+
+| System property                                       | Environment variable                                  | Description                                                         |
+|-------------------------------------------------------|-------------------------------------------------------|---------------------------------------------------------------------|
+| `otel.instrumentation.db-statement-sanitizer.enabled` | `OTEL_INSTRUMENTATION_DB_STATEMENT_SANITIZER_ENABLED` | Enables the DB statement sanitization. The default value is `true`. |
 
 ## Customizing the OpenTelemetry SDK
 
