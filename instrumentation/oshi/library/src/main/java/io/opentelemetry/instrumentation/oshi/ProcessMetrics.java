@@ -26,7 +26,7 @@ public class ProcessMetrics {
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());
 
     meter
-        .longUpDownSumObserverBuilder("runtime.java.memory")
+        .longValueObserverBuilder("runtime.java.memory")
         .setDescription("Runtime Java memory")
         .setUnit("bytes")
         .setUpdater(
@@ -38,14 +38,16 @@ public class ProcessMetrics {
         .build();
 
     meter
-        .doubleValueObserverBuilder("runtime.java.cpu_time")
+        .doubleSumObserverBuilder("runtime.java.cpu_time")
         .setDescription("Runtime Java CPU time")
         .setUnit("seconds")
         .setUpdater(
             r -> {
               processInfo.updateAttributes();
-              r.observe(processInfo.getUserTime() * 1000, Labels.of(TYPE_LABEL_KEY, "user"));
-              r.observe(processInfo.getKernelTime() * 1000, Labels.of(TYPE_LABEL_KEY, "system"));
+              // getUserTime() returns the number of milliseconds the process has executed in user mode.
+              r.observe(processInfo.getUserTime()  * 0.001 /*convert to s*/, Labels.of(TYPE_LABEL_KEY, "user"));
+              // getKernelTime() returns the number of milliseconds the process has executed in kernel/system mode.
+              r.observe(processInfo.getKernelTime()  * 0.001 /*convert to s*/, Labels.of(TYPE_LABEL_KEY, "system"));
             })
         .build();
   }
