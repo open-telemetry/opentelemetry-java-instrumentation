@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.config
+package io.opentelemetry.javaagent.tooling.config
 
 import spock.lang.Specification
 
