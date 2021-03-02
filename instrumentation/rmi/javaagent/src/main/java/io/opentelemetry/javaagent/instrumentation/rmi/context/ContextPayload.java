@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import static io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientTracer.tracer;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
@@ -36,7 +37,7 @@ public class ContextPayload {
 
   public static ContextPayload from(Context context) {
     ContextPayload payload = new ContextPayload();
-    GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, payload, SETTER);
+    tracer().inject(context, payload, SETTER);
     return payload;
   }
 

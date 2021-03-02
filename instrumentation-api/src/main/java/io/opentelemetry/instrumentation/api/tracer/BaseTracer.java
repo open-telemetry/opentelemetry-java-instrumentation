@@ -16,6 +16,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
@@ -74,10 +76,6 @@ public abstract class BaseTracer {
   public BaseTracer(OpenTelemetry openTelemetry) {
     this.tracer = openTelemetry.getTracer(getInstrumentationName(), getVersion());
     this.propagators = openTelemetry.getPropagators();
-  }
-
-  public ContextPropagators getPropagators() {
-    return propagators;
   }
 
   public Context startSpan(Class<?> clazz) {
@@ -235,6 +233,16 @@ public abstract class BaseTracer {
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
     return propagators.getTextMapPropagator().extract(Context.root(), carrier, getter);
+  }
+
+  /**
+   * Injects {@code context} data into {@code carrier} using the propagator embedded in this tracer.
+   * This method can be used to propagate passed {@code context} to downstream services.
+   *
+   * @see TextMapPropagator#inject(Context, Object, TextMapSetter)
+   */
+  public <C> void inject(Context context, C carrier, TextMapSetter<C> setter) {
+    propagators.getTextMapPropagator().inject(context, carrier, setter);
   }
 
   /** Returns span of type SERVER from the current context or <code>null</code> if not found. */

@@ -62,9 +62,7 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
 
       if (tracer().shouldPropagate(apiVersions)) {
         try {
-          Java8BytecodeBridge.getGlobalPropagators()
-              .getTextMapPropagator()
-              .inject(context, record.headers(), SETTER);
+          tracer().inject(context, record.headers(), SETTER);
         } catch (IllegalStateException e) {
           // headers must be read-only from reused record. try again with new one.
           record =
@@ -76,9 +74,7 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
                   record.value(),
                   record.headers());
 
-          Java8BytecodeBridge.getGlobalPropagators()
-              .getTextMapPropagator()
-              .inject(context, record.headers(), SETTER);
+          tracer().inject(context, record.headers(), SETTER);
         }
       }
 
