@@ -44,10 +44,8 @@ public class ProcessMetrics {
         .setUpdater(
             r -> {
               processInfo.updateAttributes();
-              // getUserTime() returns the number of milliseconds the process has executed in user mode.
-              r.observe(processInfo.getUserTime()  * 0.001 /*convert to s*/, Labels.of(TYPE_LABEL_KEY, "user"));
-              // getKernelTime() returns the number of milliseconds the process has executed in kernel/system mode.
-              r.observe(processInfo.getKernelTime()  * 0.001 /*convert to s*/, Labels.of(TYPE_LABEL_KEY, "system"));
+              r.observe(processInfo.getUserTime() * 0.001, Labels.of(TYPE_LABEL_KEY, "user"));
+              r.observe(processInfo.getKernelTime() * 0.001, Labels.of(TYPE_LABEL_KEY, "system"));
             })
         .build();
   }
