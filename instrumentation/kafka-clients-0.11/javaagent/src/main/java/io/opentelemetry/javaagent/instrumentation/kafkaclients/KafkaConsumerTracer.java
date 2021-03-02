@@ -23,14 +23,15 @@ public class KafkaConsumerTracer extends BaseTracer {
     return TRACER;
   }
 
-  public Span startSpan(ConsumerRecord<?, ?> record) {
+  public Context startSpan(ConsumerRecord<?, ?> record) {
     long now = System.currentTimeMillis();
 
+    Context parentContext = extractParent(record);
     Span span =
         tracer
             .spanBuilder(spanNameOnConsume(record))
             .setSpanKind(CONSUMER)
-            .setParent(extractParent(record))
+            .setParent(parentContext)
             .setStartTimestamp(now, TimeUnit.MILLISECONDS)
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "kafka")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, record.topic())
@@ -42,7 +43,7 @@ public class KafkaConsumerTracer extends BaseTracer {
             .startSpan();
 
     onConsume(span, now, record);
-    return span;
+    return parentContext.with(span);
   }
 
   private Context extractParent(ConsumerRecord<?, ?> record) {
@@ -80,6 +81,6 @@ public class KafkaConsumerTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.kafka-clients";
+    return "io.opentelemetry.javaagent.kafka-clients-0.11";
   }
 }

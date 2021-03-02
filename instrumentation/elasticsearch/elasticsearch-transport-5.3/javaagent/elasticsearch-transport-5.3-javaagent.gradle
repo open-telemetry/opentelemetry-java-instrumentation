@@ -44,3 +44,8 @@ dependencies {
   latestDepTestLibrary group: 'org.elasticsearch.client', name: 'transport', version: '5.+'
   latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.+'
 }
+
+tasks.withType(Test) {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true"
+}

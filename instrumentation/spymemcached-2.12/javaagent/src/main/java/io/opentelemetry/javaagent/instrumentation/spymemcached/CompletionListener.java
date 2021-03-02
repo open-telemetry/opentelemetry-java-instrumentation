@@ -49,22 +49,26 @@ public abstract class CompletionListener<T> {
           span.setAttribute(DB_COMMAND_CANCELLED, true);
         }
       } else {
-        tracer().endExceptionally(span, e);
+        tracer().endExceptionally(context, e);
       }
     } catch (InterruptedException e) {
       // Avoid swallowing InterruptedException
-      tracer().endExceptionally(span, e);
+      tracer().endExceptionally(context, e);
       Thread.currentThread().interrupt();
     } catch (Exception e) {
       // This should never happen, just in case to make sure we cover all unexpected exceptions
-      tracer().endExceptionally(span, e);
+      tracer().endExceptionally(context, e);
     } finally {
-      tracer().end(span);
+      tracer().end(context);
     }
   }
 
   protected void closeSyncSpan(Throwable thrown) {
-    tracer().endExceptionally(context, thrown);
+    if (thrown == null) {
+      tracer().end(context);
+    } else {
+      tracer().endExceptionally(context, thrown);
+    }
   }
 
   protected abstract void processResult(Span span, T future)

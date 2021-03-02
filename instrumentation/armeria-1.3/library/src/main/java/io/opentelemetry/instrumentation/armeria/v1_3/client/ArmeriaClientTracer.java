@@ -77,7 +77,7 @@ public class ArmeriaClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.armeria";
+    return "io.opentelemetry.armeria-1.3";
   }
 
   private static class ArmeriaSetter implements TextMapSetter<ClientRequestContext> {

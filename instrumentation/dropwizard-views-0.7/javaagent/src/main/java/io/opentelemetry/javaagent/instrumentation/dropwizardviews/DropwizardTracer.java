@@ -16,6 +16,6 @@ public class DropwizardTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.dropwizard-views";
+    return "io.opentelemetry.javaagent.dropwizard-views-0.7";
   }
 }

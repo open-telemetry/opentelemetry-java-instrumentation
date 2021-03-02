@@ -10,7 +10,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValu
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 
-public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method> {
+public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method, Void> {
   private static final CouchbaseClientTracer TRACER = new CouchbaseClientTracer();
 
   public static CouchbaseClientTracer tracer() {
@@ -18,11 +18,16 @@ public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method> {
   }
 
   @Override
-  protected String normalizeQuery(Method method) {
+  protected String spanName(Void connection, Method method, Void sanitizedStatement) {
     Class<?> declaringClass = method.getDeclaringClass();
     String className =
         declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
     return className + "." + method.getName();
+  }
+
+  @Override
+  protected Void sanitizeStatement(Method method) {
+    return null;
   }
 
   @Override
@@ -37,6 +42,6 @@ public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method> {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.couchbase";
+    return "io.opentelemetry.javaagent.couchbase-2.0";
   }
 }

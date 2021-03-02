@@ -19,7 +19,6 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
-import io.opentelemetry.instrumentation.api.tracer.utils.SupportabilityMetrics;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -196,16 +195,6 @@ public abstract class BaseTracer {
     end(Span.fromContext(context), endTimeNanos);
   }
 
-  /**
-   * End span.
-   *
-   * @deprecated Use {@link #end(Context)} instead.
-   */
-  @Deprecated
-  public void end(Span span) {
-    end(span, -1);
-  }
-
   private void end(Span span, long endTimeNanos) {
     if (endTimeNanos > 0) {
       span.end(endTimeNanos, TimeUnit.NANOSECONDS);
@@ -220,16 +209,6 @@ public abstract class BaseTracer {
 
   public void endExceptionally(Context context, Throwable throwable, long endTimeNanos) {
     endExceptionally(Span.fromContext(context), throwable, endTimeNanos);
-  }
-
-  /**
-   * End span.
-   *
-   * @deprecated Use {@link #endExceptionally(Context, Throwable)} instead.
-   */
-  @Deprecated
-  public void endExceptionally(Span span, Throwable throwable) {
-    endExceptionally(span, throwable, -1);
   }
 
   private void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {

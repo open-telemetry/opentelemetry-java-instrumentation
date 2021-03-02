@@ -106,7 +106,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       return true;
     }
 
-    if (name.startsWith("io.opentelemetry.auto.")) {
+    if (name.startsWith("io.opentelemetry.javaagent.")) {
       // FIXME: We should remove this once
       // https://github.com/raphw/byte-buddy/issues/558 is fixed
       if (name.equals("io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper")

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer.utils;
+package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.Config;
@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SupportabilityMetrics {
+class SupportabilityMetrics {
   private static final Logger log = LoggerFactory.getLogger(SupportabilityMetrics.class);
   private final boolean agentDebugEnabled;
   private final Consumer<String> reporter;
@@ -33,7 +33,7 @@ public class SupportabilityMetrics {
     this.reporter = reporter;
   }
 
-  public void recordSuppressedSpan(SpanKind kind, String instrumentationName) {
+  void recordSuppressedSpan(SpanKind kind, String instrumentationName) {
     if (!agentDebugEnabled) {
       return;
     }
@@ -57,7 +57,7 @@ public class SupportabilityMetrics {
         });
   }
 
-  public SupportabilityMetrics start() {
+  SupportabilityMetrics start() {
     if (agentDebugEnabled) {
       Executors.newScheduledThreadPool(
               1,

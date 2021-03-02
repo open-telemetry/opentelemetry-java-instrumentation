@@ -16,6 +16,7 @@ import org.redisson.api.RList
 import org.redisson.api.RSet
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
+import org.redisson.config.SingleServerConfig
 import redis.embedded.RedisServer
 import spock.lang.Shared
 
@@ -52,7 +53,10 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
 
   def setup() {
     Config config = new Config()
-    config.useSingleServer().setAddress(address)
+    SingleServerConfig singleServerConfig = config.useSingleServer()
+    singleServerConfig.setAddress(address)
+    // disable connection ping if it exists
+    singleServerConfig.metaClass.getMetaMethod("setPingConnectionInterval", int)?.invoke(singleServerConfig, 0)
     redisson = Redisson.create(config)
     clearExportedData()
   }

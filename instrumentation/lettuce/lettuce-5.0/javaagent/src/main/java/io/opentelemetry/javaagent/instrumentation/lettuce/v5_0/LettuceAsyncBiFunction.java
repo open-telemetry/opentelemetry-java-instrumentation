@@ -37,10 +37,11 @@ public class LettuceAsyncBiFunction<T, U extends Throwable, R>
 
   @Override
   public R apply(T t, Throwable throwable) {
-    if (throwable instanceof CancellationException) {
+    if (throwable == null) {
+      tracer().end(context);
+    } else if (throwable instanceof CancellationException) {
       if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-        Span span = Span.fromContext(context);
-        span.setAttribute("lettuce.command.cancelled", true);
+        Span.fromContext(context).setAttribute("lettuce.command.cancelled", true);
       }
       tracer().end(context);
     } else {

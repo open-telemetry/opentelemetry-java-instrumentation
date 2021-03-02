@@ -28,7 +28,7 @@ public class ContextPropagator {
 
   // RMI object id used to identify agent instrumentation
   public static final ObjID CONTEXT_CALL_ID =
-      new ObjID("io.opentelemetry.auto.v1.context_call".hashCode());
+      new ObjID("io.opentelemetry.javaagent.context-call".hashCode());
 
   // Operation id used for checking context propagation is possible
   // RMI expects these operations to have negative identifier, as positive ones mean legacy

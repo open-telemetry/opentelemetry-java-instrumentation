@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.elasticsearch.action.ActionListener;
@@ -26,37 +27,44 @@ import org.elasticsearch.action.support.replication.ReplicationResponse;
 
 public class TransportActionListener<T extends ActionResponse> implements ActionListener<T> {
 
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty(
+              "otel.instrumentation.elasticsearch.experimental-span-attributes", false);
+
   private final ActionListener<T> listener;
   private final Context context;
 
   public TransportActionListener(
-      ActionRequest actionRequest, ActionListener<T> listener, Context context) {
+      ActionRequest<?> actionRequest, ActionListener<T> listener, Context context) {
     this.listener = listener;
     this.context = context;
     onRequest(actionRequest);
   }
 
-  private void onRequest(ActionRequest request) {
-    Span span = Span.fromContext(context);
+  private void onRequest(ActionRequest<?> request) {
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      Span span = Span.fromContext(context);
 
-    if (request instanceof IndicesRequest) {
-      IndicesRequest req = (IndicesRequest) request;
-      String[] indices = req.indices();
-      if (indices != null && indices.length > 0) {
-        span.setAttribute("elasticsearch.request.indices", String.join(",", indices));
+      if (request instanceof IndicesRequest) {
+        IndicesRequest req = (IndicesRequest) request;
+        String[] indices = req.indices();
+        if (indices != null && indices.length > 0) {
+          span.setAttribute("elasticsearch.request.indices", String.join(",", indices));
+        }
       }
-    }
-    if (request instanceof SearchRequest) {
-      SearchRequest req = (SearchRequest) request;
-      String[] types = req.types();
-      if (types != null && types.length > 0) {
-        span.setAttribute("elasticsearch.request.search.types", String.join(",", types));
+      if (request instanceof SearchRequest) {
+        SearchRequest req = (SearchRequest) request;
+        String[] types = req.types();
+        if (types != null && types.length > 0) {
+          span.setAttribute("elasticsearch.request.search.types", String.join(",", types));
+        }
       }
-    }
-    if (request instanceof DocumentRequest) {
-      DocumentRequest req = (DocumentRequest) request;
-      span.setAttribute("elasticsearch.request.write.type", req.type());
-      span.setAttribute("elasticsearch.request.write.routing", req.routing());
+      if (request instanceof DocumentRequest) {
+        DocumentRequest<?> req = (DocumentRequest<?>) request;
+        span.setAttribute("elasticsearch.request.write.type", req.type());
+        span.setAttribute("elasticsearch.request.write.routing", req.routing());
+      }
     }
   }
 
@@ -71,48 +79,51 @@ public class TransportActionListener<T extends ActionResponse> implements Action
           SemanticAttributes.NET_PEER_PORT, (long) response.remoteAddress().getPort());
     }
 
-    if (response instanceof GetResponse) {
-      GetResponse resp = (GetResponse) response;
-      span.setAttribute("elasticsearch.type", resp.getType());
-      span.setAttribute("elasticsearch.id", resp.getId());
-      span.setAttribute("elasticsearch.version", resp.getVersion());
-    }
-
-    if (response instanceof BroadcastResponse) {
-      BroadcastResponse resp = (BroadcastResponse) response;
-      span.setAttribute("elasticsearch.shard.broadcast.total", resp.getTotalShards());
-      span.setAttribute("elasticsearch.shard.broadcast.successful", resp.getSuccessfulShards());
-      span.setAttribute("elasticsearch.shard.broadcast.failed", resp.getFailedShards());
-    }
-
-    if (response instanceof ReplicationResponse) {
-      ReplicationResponse resp = (ReplicationResponse) response;
-      span.setAttribute("elasticsearch.shard.replication.total", resp.getShardInfo().getTotal());
-      span.setAttribute(
-          "elasticsearch.shard.replication.successful", resp.getShardInfo().getSuccessful());
-      span.setAttribute("elasticsearch.shard.replication.failed", resp.getShardInfo().getFailed());
-    }
-
-    if (response instanceof IndexResponse) {
-      span.setAttribute(
-          "elasticsearch.response.status", ((IndexResponse) response).status().getStatus());
-    }
-
-    if (response instanceof BulkShardResponse) {
-      BulkShardResponse resp = (BulkShardResponse) response;
-      span.setAttribute("elasticsearch.shard.bulk.id", resp.getShardId().getId());
-      span.setAttribute("elasticsearch.shard.bulk.index", resp.getShardId().getIndexName());
-    }
-
-    if (response instanceof BaseNodesResponse) {
-      BaseNodesResponse resp = (BaseNodesResponse) response;
-      if (resp.hasFailures()) {
-        span.setAttribute("elasticsearch.node.failures", resp.failures().size());
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      if (response instanceof GetResponse) {
+        GetResponse resp = (GetResponse) response;
+        span.setAttribute("elasticsearch.type", resp.getType());
+        span.setAttribute("elasticsearch.id", resp.getId());
+        span.setAttribute("elasticsearch.version", resp.getVersion());
       }
-      span.setAttribute("elasticsearch.node.cluster.name", resp.getClusterName().value());
+
+      if (response instanceof BroadcastResponse) {
+        BroadcastResponse resp = (BroadcastResponse) response;
+        span.setAttribute("elasticsearch.shard.broadcast.total", resp.getTotalShards());
+        span.setAttribute("elasticsearch.shard.broadcast.successful", resp.getSuccessfulShards());
+        span.setAttribute("elasticsearch.shard.broadcast.failed", resp.getFailedShards());
+      }
+
+      if (response instanceof ReplicationResponse) {
+        ReplicationResponse resp = (ReplicationResponse) response;
+        span.setAttribute("elasticsearch.shard.replication.total", resp.getShardInfo().getTotal());
+        span.setAttribute(
+            "elasticsearch.shard.replication.successful", resp.getShardInfo().getSuccessful());
+        span.setAttribute(
+            "elasticsearch.shard.replication.failed", resp.getShardInfo().getFailed());
+      }
+
+      if (response instanceof IndexResponse) {
+        span.setAttribute(
+            "elasticsearch.response.status", ((IndexResponse) response).status().getStatus());
+      }
+
+      if (response instanceof BulkShardResponse) {
+        BulkShardResponse resp = (BulkShardResponse) response;
+        span.setAttribute("elasticsearch.shard.bulk.id", resp.getShardId().getId());
+        span.setAttribute("elasticsearch.shard.bulk.index", resp.getShardId().getIndexName());
+      }
+
+      if (response instanceof BaseNodesResponse) {
+        BaseNodesResponse<?> resp = (BaseNodesResponse<?>) response;
+        if (resp.hasFailures()) {
+          span.setAttribute("elasticsearch.node.failures", resp.failures().size());
+        }
+        span.setAttribute("elasticsearch.node.cluster.name", resp.getClusterName().value());
+      }
     }
 
-    tracer().end(span);
+    tracer().end(context);
     listener.onResponse(response);
   }
 

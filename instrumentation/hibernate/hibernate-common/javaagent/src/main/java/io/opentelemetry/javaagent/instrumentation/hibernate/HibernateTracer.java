@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.annotation.Annotation;
@@ -20,12 +20,12 @@ public class HibernateTracer extends BaseTracer {
     return TRACER;
   }
 
-  public Span startSpan(Context context, String operationName, Object entity) {
-    return startSpan(context, spanNameForOperation(operationName, entity));
+  public Context startSpan(Context parentContext, String operationName, Object entity) {
+    return startSpan(parentContext, spanNameForOperation(operationName, entity));
   }
 
-  public Span startSpan(Context context, String spanName) {
-    return tracer.spanBuilder(spanName).setParent(context).startSpan();
+  public Context startSpan(Context parentContext, String spanName) {
+    return startSpan(parentContext, spanName, SpanKind.INTERNAL);
   }
 
   private String spanNameForOperation(String operationName, Object entity) {
@@ -64,6 +64,6 @@ public class HibernateTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.hibernate";
+    return "io.opentelemetry.javaagent.hibernate-common";
   }
 }

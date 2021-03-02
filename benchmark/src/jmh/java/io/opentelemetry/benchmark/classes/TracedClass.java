@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 
 public class TracedClass extends UntracedClass {
-  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   @Override
   public void f() {

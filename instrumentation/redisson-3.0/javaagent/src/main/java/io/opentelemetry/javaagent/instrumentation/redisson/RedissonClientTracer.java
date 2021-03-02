@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
@@ -13,11 +16,13 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValu
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.redisson.client.RedisConnection;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
 
-public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, Object> {
+public class RedissonClientTracer
+    extends DatabaseClientTracer<RedisConnection, Object, List<String>> {
   private static final String UNKNOWN_COMMAND = "Redis Command";
 
   private static final RedissonClientTracer TRACER = new RedissonClientTracer();
@@ -27,46 +32,41 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
   }
 
   @Override
-  protected String spanName(RedisConnection connection, Object query, String normalizedQuery) {
-    if (query instanceof CommandsData) {
-      List<CommandData<?, ?>> commands = ((CommandsData) query).getCommands();
-      StringBuilder commandStrings = new StringBuilder();
-      for (CommandData<?, ?> commandData : commands) {
-        commandStrings.append(commandData.getCommand().getName()).append(";");
-      }
-      if (commandStrings.length() > 0) {
-        commandStrings.deleteCharAt(commandStrings.length() - 1);
-      }
-      return commandStrings.toString();
-    } else if (query instanceof CommandData) {
-      return ((CommandData<?, ?>) query).getCommand().getName();
+  protected String spanName(
+      RedisConnection connection, Object ignored, List<String> sanitizedStatements) {
+    switch (sanitizedStatements.size()) {
+      case 0:
+        return UNKNOWN_COMMAND;
+        // optimize for the most common case
+      case 1:
+        return getCommandName(sanitizedStatements.get(0));
+      default:
+        return sanitizedStatements.stream()
+            .map(this::getCommandName)
+            .collect(Collectors.joining(";"));
     }
+  }
 
-    return UNKNOWN_COMMAND;
+  private String getCommandName(String statement) {
+    int spacePos = statement.indexOf(' ');
+    return spacePos == -1 ? statement : statement.substring(0, spacePos);
   }
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.redisson";
+    return "io.opentelemetry.javaagent.redisson-3.0";
   }
 
   @Override
-  protected String normalizeQuery(Object command) {
+  protected List<String> sanitizeStatement(Object command) {
     // get command
     if (command instanceof CommandsData) {
       List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
-      StringBuilder commandStrings = new StringBuilder();
-      for (CommandData<?, ?> commandData : commands) {
-        commandStrings.append(normalizeSingleCommand(commandData)).append(";");
-      }
-      if (commandStrings.length() > 0) {
-        commandStrings.deleteCharAt(commandStrings.length() - 1);
-      }
-      return commandStrings.toString();
+      return commands.stream().map(this::normalizeSingleCommand).collect(Collectors.toList());
     } else if (command instanceof CommandData) {
-      return normalizeSingleCommand((CommandData<?, ?>) command);
+      return singletonList(normalizeSingleCommand((CommandData<?, ?>) command));
     }
-    return UNKNOWN_COMMAND;
+    return emptyList();
   }
 
   private String normalizeSingleCommand(CommandData<?, ?> command) {
@@ -109,5 +109,19 @@ public class RedissonClientTracer extends DatabaseClientTracer<RedisConnection, 
     Channel channel = connection.getChannel();
     InetSocketAddress remoteAddress = (InetSocketAddress) channel.remoteAddress();
     return remoteAddress.getHostString() + ":" + remoteAddress.getPort();
+  }
+
+  @Override
+  protected String dbStatement(
+      RedisConnection connection, Object ignored, List<String> sanitizedStatements) {
+    switch (sanitizedStatements.size()) {
+      case 0:
+        return UNKNOWN_COMMAND;
+        // optimize for the most common case
+      case 1:
+        return sanitizedStatements.get(0);
+      default:
+        return String.join(";", sanitizedStatements);
+    }
   }
 }

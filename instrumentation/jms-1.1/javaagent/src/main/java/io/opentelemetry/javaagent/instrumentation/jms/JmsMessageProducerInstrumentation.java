@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -60,7 +60,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) Message message,
         @Advice.This MessageProducer producer,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
       if (callDepth > 0) {
@@ -76,13 +76,15 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
       MessageDestination messageDestination =
           tracer().extractDestination(message, defaultDestination);
-      span = tracer().startProducerSpan(messageDestination, message);
-      scope = tracer().startProducerScope(span, message);
+      context = tracer().startProducerSpan(messageDestination, message);
+      // TODO: why are we propagating context only in this advice class? the other one does not
+      // inject current span context into JMS message
+      scope = tracer().startProducerScope(context, message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
       if (scope == null) {
@@ -92,9 +94,9 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }
@@ -105,7 +107,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) Destination destination,
         @Advice.Argument(1) Message message,
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
       if (callDepth > 0) {
@@ -113,13 +115,13 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       }
 
       MessageDestination messageDestination = tracer().extractDestination(message, destination);
-      span = tracer().startProducerSpan(messageDestination, message);
-      scope = span.makeCurrent();
+      context = tracer().startProducerSpan(messageDestination, message);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Local("otelSpan") Span span,
+        @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
       if (scope == null) {
@@ -128,9 +130,9 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
       if (throwable != null) {
-        tracer().endExceptionally(span, throwable);
+        tracer().endExceptionally(context, throwable);
       } else {
-        tracer().end(span);
+        tracer().end(context);
       }
     }
   }

@@ -11,7 +11,7 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class JavaAsyncChild extends ForkJoinTask implements Runnable, Callable {
-  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;

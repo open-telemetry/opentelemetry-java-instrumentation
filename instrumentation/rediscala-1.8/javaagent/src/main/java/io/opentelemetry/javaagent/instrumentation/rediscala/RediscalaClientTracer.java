@@ -11,7 +11,7 @@ import java.net.InetSocketAddress;
 import redis.RedisCommand;
 
 public class RediscalaClientTracer
-    extends DatabaseClientTracer<RedisCommand<?, ?>, RedisCommand<?, ?>> {
+    extends DatabaseClientTracer<RedisCommand<?, ?>, RedisCommand<?, ?>, String> {
 
   private static final RediscalaClientTracer TRACER = new RediscalaClientTracer();
 
@@ -20,22 +20,34 @@ public class RediscalaClientTracer
   }
 
   @Override
-  protected String normalizeQuery(RedisCommand redisCommand) {
+  protected String sanitizeStatement(RedisCommand<?, ?> redisCommand) {
     return spanNameForClass(redisCommand.getClass());
   }
 
   @Override
-  protected String dbSystem(RedisCommand redisCommand) {
+  protected String spanName(
+      RedisCommand<?, ?> connection, RedisCommand<?, ?> statement, String operation) {
+    return operation;
+  }
+
+  @Override
+  protected String dbSystem(RedisCommand<?, ?> redisCommand) {
     return DbSystemValues.REDIS;
   }
 
   @Override
-  protected InetSocketAddress peerAddress(RedisCommand redisCommand) {
+  protected InetSocketAddress peerAddress(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
+  protected String dbStatement(
+      RedisCommand<?, ?> connection, RedisCommand<?, ?> command, String operation) {
+    return operation;
+  }
+
+  @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.rediscala";
+    return "io.opentelemetry.javaagent.rediscala-1.8";
   }
 }

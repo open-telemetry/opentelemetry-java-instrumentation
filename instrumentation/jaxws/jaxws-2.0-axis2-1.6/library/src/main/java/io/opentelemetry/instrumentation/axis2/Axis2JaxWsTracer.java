@@ -84,6 +84,6 @@ public class Axis2JaxWsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.axis2";
+    return "io.opentelemetry.javaagent.jaxws-2.0-axis2-1.6";
   }
 }

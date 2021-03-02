@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import com.mongodb.event.CommandStartedEvent
-
 import static java.util.Arrays.asList
 
+import com.mongodb.event.CommandStartedEvent
 import io.opentelemetry.javaagent.instrumentation.mongo.MongoClientTracer
 import org.bson.BsonArray
 import org.bson.BsonDocument
@@ -15,21 +14,21 @@ import org.bson.BsonString
 import spock.lang.Specification
 
 class MongoClientTracerTest extends Specification {
-  def 'should normalize queries to json'() {
+  def 'should sanitize statements to json'() {
     setup:
     def tracer = new MongoClientTracer()
 
     expect:
-    normalizeQueryAcrossVersions(tracer,
+    sanitizeStatementAcrossVersions(tracer,
       new BsonDocument("cmd", new BsonInt32(1))) ==
       '{"cmd": "?"}'
 
-    normalizeQueryAcrossVersions(tracer,
+    sanitizeStatementAcrossVersions(tracer,
       new BsonDocument("cmd", new BsonInt32(1))
         .append("sub", new BsonDocument("a", new BsonInt32(1)))) ==
       '{"cmd": "?", "sub": {"a": "?"}}'
 
-    normalizeQueryAcrossVersions(tracer,
+    sanitizeStatementAcrossVersions(tracer,
       new BsonDocument("cmd", new BsonInt32(1))
         .append("sub", new BsonArray(asList(new BsonInt32(1))))) ==
       '{"cmd": "?", "sub": ["?"]}'
@@ -40,7 +39,7 @@ class MongoClientTracerTest extends Specification {
     def tracer = new MongoClientTracer()
 
     expect:
-    normalizeQueryAcrossVersions(tracer,
+    sanitizeStatementAcrossVersions(tracer,
       new BsonDocument("cmd", new BsonString("c"))
         .append("f", new BsonString("c"))
         .append("sub", new BsonString("c"))) ==
@@ -51,7 +50,7 @@ class MongoClientTracerTest extends Specification {
     setup:
     def tracer = new MongoClientTracer(20)
 
-    def normalized = normalizeQueryAcrossVersions(tracer,
+    def normalized = sanitizeStatementAcrossVersions(tracer,
       new BsonDocument("cmd", new BsonString("c"))
         .append("f1", new BsonString("c1"))
         .append("f2", new BsonString("c2")))
@@ -64,7 +63,7 @@ class MongoClientTracerTest extends Specification {
     setup:
     def tracer = new MongoClientTracer(27)
 
-    def normalized = normalizeQueryAcrossVersions(tracer,
+    def normalized = sanitizeStatementAcrossVersions(tracer,
       new BsonDocument("cmd", new BsonString("c"))
         .append("f1", new BsonArray(Arrays.asList(new BsonString("c1"), new BsonString("c2"))))
         .append("f2", new BsonString("c3")))
@@ -89,11 +88,11 @@ class MongoClientTracerTest extends Specification {
     command = "listDatabases"
   }
 
-  def normalizeQueryAcrossVersions(MongoClientTracer tracer, BsonDocument query) {
-    return normalizeAcrossVersions(tracer.normalizeQuery(query))
+  def sanitizeStatementAcrossVersions(MongoClientTracer tracer, BsonDocument query) {
+    return sanitizeAcrossVersions(tracer.sanitizeStatement(query))
   }
 
-  def normalizeAcrossVersions(String json) {
+  def sanitizeAcrossVersions(String json) {
     json = json.replaceAll('\\{ ', '{')
     json = json.replaceAll(' }', '}')
     json = json.replaceAll(' :', ':')
