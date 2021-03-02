@@ -18,6 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.tooling.Constants;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.invoke.MethodHandle;
@@ -75,15 +76,14 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
     public static final List<String> bootstrapPackagesPrefixes = findBootstrapPackagePrefixes();
 
     /**
-     * We have to make sure that {@link
-     * io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder} is loaded from
-     * bootstrap classloader. After that we can use in {@link LoadClassAdvice}.
+     * We have to make sure that {@link BootstrapPackagePrefixesHolder} is loaded from bootstrap
+     * classloader. After that we can use in {@link LoadClassAdvice}.
      */
     private static List<String> findBootstrapPackagePrefixes() {
       try {
         Class<?> holderClass =
             Class.forName(
-                "io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder",
+                "io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder",
                 true,
                 null);
         MethodHandle methodHandle =
