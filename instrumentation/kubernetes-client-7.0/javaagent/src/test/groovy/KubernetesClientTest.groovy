@@ -25,6 +25,8 @@ import spock.lang.AutoCleanup
 import spock.lang.Shared
 
 class KubernetesClientTest extends AgentInstrumentationSpecification {
+  private static final String TEST_USER_AGENT = "test-user-agent"
+
   @Shared
   def responseStatus = new AtomicInteger()
 
@@ -50,6 +52,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
 
     if (api == null) {
       def apiClient = new ApiClient()
+      apiClient.setUserAgent(TEST_USER_AGENT)
       apiClient.basePath = server.address.toString()
       api = new CoreV1Api(apiClient)
     }
@@ -177,7 +180,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.HTTP_URL.key" url
         "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
         "$SemanticAttributes.HTTP_METHOD.key" "GET"
-        "$SemanticAttributes.HTTP_USER_AGENT" "OpenAPI-Generator/1.0-SNAPSHOT/java"
+        "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
         "$SemanticAttributes.HTTP_STATUS_CODE" responseStatus.get()
         "$SemanticAttributes.NET_TRANSPORT" "IP.TCP"
         "$SemanticAttributes.NET_PEER_NAME" server.address.host
