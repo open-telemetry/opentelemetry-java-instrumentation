@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.armeria.v1_3.server;
+package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.netty.util.AsciiString;
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
@@ -19,13 +19,11 @@ import java.net.SocketAddress;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ArmeriaServerTracer
+final class ArmeriaServerTracer
     extends HttpServerTracer<HttpRequest, RequestLog, ServiceRequestContext, Void> {
 
-  ArmeriaServerTracer() {}
-
-  ArmeriaServerTracer(Tracer tracer) {
-    super(tracer);
+  ArmeriaServerTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
   }
 
   @Override

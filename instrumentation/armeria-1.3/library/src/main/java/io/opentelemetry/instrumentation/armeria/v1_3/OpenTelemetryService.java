@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.armeria.v1_3.server;
+package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
@@ -13,37 +13,16 @@ import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.SimpleDecoratingHttpService;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 /** Decorates an {@link HttpService} to trace inbound {@link HttpRequest}s. */
-public class OpenTelemetryService extends SimpleDecoratingHttpService {
-
-  /** Creates a new tracing {@link HttpService} decorator using the default {@link Tracer}. */
-  public static Function<? super HttpService, OpenTelemetryService> newDecorator() {
-    return newDecorator(new ArmeriaServerTracer());
-  }
-
-  /** Creates a new tracing {@link HttpService} decorator using the specified {@link Tracer}. */
-  public static Function<? super HttpService, OpenTelemetryService> newDecorator(Tracer tracer) {
-    return newDecorator(new ArmeriaServerTracer(tracer));
-  }
-
-  /**
-   * Creates a new tracing {@link HttpService} decorator using the specified {@link
-   * ArmeriaServerTracer}.
-   */
-  public static Function<? super HttpService, OpenTelemetryService> newDecorator(
-      ArmeriaServerTracer serverTracer) {
-    return new Decorator(serverTracer);
-  }
+final class OpenTelemetryService extends SimpleDecoratingHttpService {
 
   private final ArmeriaServerTracer serverTracer;
 
-  private OpenTelemetryService(HttpService delegate, ArmeriaServerTracer serverTracer) {
+  OpenTelemetryService(HttpService delegate, ArmeriaServerTracer serverTracer) {
     super(delegate);
     this.serverTracer = serverTracer;
   }
@@ -81,20 +60,6 @@ public class OpenTelemetryService extends SimpleDecoratingHttpService {
 
     try (Scope ignored = context.makeCurrent()) {
       return unwrap().serve(ctx, req);
-    }
-  }
-
-  private static class Decorator implements Function<HttpService, OpenTelemetryService> {
-
-    private final ArmeriaServerTracer serverTracer;
-
-    private Decorator(ArmeriaServerTracer serverTracer) {
-      this.serverTracer = serverTracer;
-    }
-
-    @Override
-    public OpenTelemetryService apply(HttpService httpService) {
-      return new OpenTelemetryService(httpService, serverTracer);
     }
   }
 }
