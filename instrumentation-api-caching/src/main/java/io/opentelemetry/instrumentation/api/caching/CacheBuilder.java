@@ -7,20 +7,27 @@ package io.opentelemetry.instrumentation.api.caching;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+/** A builder of {@link Cache}. */
 public final class CacheBuilder {
 
   private final Caffeine<?, ?> caffeine = Caffeine.newBuilder();
 
+  /** Sets the maximum size of the cache. */
   public CacheBuilder setMaximumSize(long maximumSize) {
     caffeine.maximumSize(maximumSize);
     return this;
   }
 
+  /**
+   * Sets that keys should be referenced weakly. If used, keys will use identity comparison, not
+   * {@link Object#equals(Object)}.
+   */
   public CacheBuilder setWeakKeys() {
     caffeine.weakKeys();
     return this;
   }
 
+  /** Returns a new {@link Cache} with the settings of this {@link CacheBuilder}. */
   public <K, V> Cache<K, V> build() {
     @SuppressWarnings("unchecked")
     com.github.benmanes.caffeine.cache.Cache<K, V> delegate =
