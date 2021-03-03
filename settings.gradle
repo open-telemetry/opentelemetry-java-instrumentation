@@ -42,6 +42,7 @@ include ':load-generator'
 
 include ':bom-alpha'
 include ':instrumentation-api'
+include ':instrumentation-api-caching'
 include ':javaagent-api'
 
 // misc
