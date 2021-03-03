@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.grpc.v1_5.client;
+package io.opentelemetry.instrumentation.grpc.v1_5;
 
 import io.grpc.Metadata;
 import io.opentelemetry.context.propagation.TextMapSetter;

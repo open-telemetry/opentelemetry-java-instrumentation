@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.grpc.v1_5.common
+package io.opentelemetry.instrumentation.grpc.v1_5
 
 import io.grpc.Status
 import io.opentelemetry.api.trace.StatusCode

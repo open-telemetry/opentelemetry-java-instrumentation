@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.grpc.v1_5.server;
+package io.opentelemetry.instrumentation.grpc.v1_5;
 
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
@@ -16,38 +16,21 @@ import io.grpc.ServerInterceptor;
 import io.grpc.Status;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class TracingServerInterceptor implements ServerInterceptor {
-
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.grpc.experimental-span-attributes", false);
-
-  public static ServerInterceptor newInterceptor() {
-    return newInterceptor(new GrpcServerTracer());
-  }
-
-  public static ServerInterceptor newInterceptor(Tracer tracer) {
-    return newInterceptor(new GrpcServerTracer(tracer));
-  }
-
-  public static ServerInterceptor newInterceptor(GrpcServerTracer tracer) {
-    return new TracingServerInterceptor(tracer);
-  }
+final class TracingServerInterceptor implements ServerInterceptor {
 
   private final GrpcServerTracer tracer;
+  private final boolean captureExperimentalSpanAttributes;
 
-  private TracingServerInterceptor(GrpcServerTracer tracer) {
+  TracingServerInterceptor(GrpcServerTracer tracer, boolean captureExperimentalSpanAttributes) {
     this.tracer = tracer;
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
   @Override
@@ -71,23 +54,20 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     try (Scope ignored = context.makeCurrent()) {
       return new TracingServerCallListener<>(
-          next.startCall(new TracingServerCall<>(call, context, tracer), headers), context, tracer);
+          next.startCall(new TracingServerCall<>(call, context), headers), context);
     } catch (Throwable e) {
       tracer.endExceptionally(context, e);
       throw e;
     }
   }
 
-  static final class TracingServerCall<REQUEST, RESPONSE>
+  final class TracingServerCall<REQUEST, RESPONSE>
       extends ForwardingServerCall.SimpleForwardingServerCall<REQUEST, RESPONSE> {
     private final Context context;
-    private final GrpcServerTracer tracer;
 
-    TracingServerCall(
-        ServerCall<REQUEST, RESPONSE> delegate, Context context, GrpcServerTracer tracer) {
+    TracingServerCall(ServerCall<REQUEST, RESPONSE> delegate, Context context) {
       super(delegate);
       this.context = context;
-      this.tracer = tracer;
     }
 
     @Override
@@ -102,18 +82,15 @@ public class TracingServerInterceptor implements ServerInterceptor {
     }
   }
 
-  static final class TracingServerCallListener<REQUEST>
+  final class TracingServerCallListener<REQUEST>
       extends ForwardingServerCallListener.SimpleForwardingServerCallListener<REQUEST> {
     private final Context context;
-    private final GrpcServerTracer tracer;
 
     private final AtomicLong messageId = new AtomicLong();
 
-    TracingServerCallListener(
-        Listener<REQUEST> delegate, Context context, GrpcServerTracer tracer) {
+    TracingServerCallListener(Listener<REQUEST> delegate, Context context) {
       super(delegate);
       this.context = context;
-      this.tracer = tracer;
     }
 
     @Override
@@ -145,7 +122,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     public void onCancel() {
       try (Scope ignored = context.makeCurrent()) {
         delegate().onCancel();
-        if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+        if (captureExperimentalSpanAttributes) {
           Span.fromContext(context).setAttribute("grpc.canceled", true);
         }
       } catch (Throwable e) {
