@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.play.v2_3.PlayTracer.tr
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
 import play.api.mvc.Headers;
@@ -37,6 +37,9 @@ public class PlayAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
+    // set the span name on the upstream akka/netty span
+    tracer().updateSpanName(ServerSpan.fromContextOrNull(context), req);
+
     scope.close();
     // span finished in RequestCompleteCallback
     if (throwable == null) {
@@ -45,9 +48,6 @@ public class PlayAdvice {
     } else {
       tracer().endExceptionally(context, throwable);
     }
-
-    // set the span name on the upstream akka/netty span
-    tracer().updateSpanName(BaseTracer.getCurrentServerSpan(), req);
   }
 
   // With this muzzle prevents this instrumentation from applying on Play 2.4+
