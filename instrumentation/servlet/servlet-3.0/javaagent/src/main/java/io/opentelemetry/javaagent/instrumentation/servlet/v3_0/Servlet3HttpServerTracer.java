@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import java.util.Collection;
 import javax.servlet.Servlet;
@@ -118,10 +119,10 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
 
   public Context updateContext(
       Context context, Object servletOrFilter, HttpServletRequest request) {
-    if (ServletSpanNaming.shouldUpdateServerSpanName(context)) {
+    Span span = ServerSpan.fromContextOrNull(context);
+    if (span != null && ServletSpanNaming.shouldUpdateServerSpanName(context)) {
       String spanName = getSpanName(servletOrFilter, request, true);
       if (spanName != null) {
-        Span span = getCurrentServerSpan(context);
         span.updateName(spanName);
         ServletSpanNaming.setServletUpdatedServerSpanName(context);
       }
