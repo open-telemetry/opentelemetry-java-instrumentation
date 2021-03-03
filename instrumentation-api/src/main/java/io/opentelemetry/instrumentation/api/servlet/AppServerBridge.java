@@ -19,7 +19,7 @@ public class AppServerBridge {
       ContextKey.named("opentelemetry-servlet-app-server-bridge");
 
   private static final AtomicIntegerFieldUpdater<AppServerBridge>
-      servlerUpdatedServerSpanNameUpdater =
+      servletUpdatedServerSpanNameUpdater =
           AtomicIntegerFieldUpdater.newUpdater(
               AppServerBridge.class, "servletUpdatedServerSpanName");
 
@@ -69,7 +69,7 @@ public class AppServerBridge {
   public static boolean setUpdatedServerSpanName(Context ctx) {
     AppServerBridge appServerBridge = ctx.get(AppServerBridge.CONTEXT_KEY);
     if (appServerBridge != null) {
-      return servlerUpdatedServerSpanNameUpdater.compareAndSet(appServerBridge, FALSE, TRUE);
+      return servletUpdatedServerSpanNameUpdater.compareAndSet(appServerBridge, FALSE, TRUE);
     }
     return false;
   }
