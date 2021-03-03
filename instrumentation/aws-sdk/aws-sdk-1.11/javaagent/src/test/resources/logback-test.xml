@@ -9,10 +9,12 @@
     </layout>
   </appender>
 
-  <root level="DEBUG">
+  <root level="INFO">
     <appender-ref ref="console"/>
   </root>
 
-  <logger name="org.elasticmq" level="debug" />
-
+  <logger name="org.elasticmq" level="INFO" />
+  <logger name="test" level="WARN"/>
+  <logger name="org.testcontainers" level="WARN" />
+  <logger name="com.amazonaws" level="DEBUG" />
 </configuration>
