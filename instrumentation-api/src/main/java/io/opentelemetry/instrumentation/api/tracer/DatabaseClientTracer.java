@@ -33,7 +33,7 @@ public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATE
   }
 
   public boolean shouldStartSpan(Context parentContext) {
-    return shouldStartSpan(CLIENT, parentContext);
+    return shouldStartSpan(parentContext, CLIENT);
   }
 
   public Context startSpan(Context parentContext, CONNECTION connection, STATEMENT statement) {
