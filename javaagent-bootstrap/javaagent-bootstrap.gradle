@@ -7,6 +7,18 @@ apply from: "$rootDir/gradle/publish.gradle"
 minimumBranchCoverage = 0.0
 minimumInstructionCoverage = 0.0
 
+// patch inner class from Caffeine to avoid ForkJoinTask from being loaded too early
+sourceSets {
+  patch {
+    java {}
+  }
+}
+jar {
+  from(sourceSets.patch.output) {
+    include 'com/github/benmanes/caffeine/cache/BoundedLocalCache$PerformCleanupTask.class'
+  }
+}
+
 configurations {
   // classpath used by the instrumentation muzzle plugin
   instrumentationMuzzle {

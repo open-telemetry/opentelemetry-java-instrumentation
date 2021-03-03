@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.api.db;
 
 import static io.opentelemetry.javaagent.instrumentation.api.db.StatementSanitizationConfig.isStatementSanitizationEnabled;
 
-import io.opentelemetry.javaagent.instrumentation.api.BoundedCache;
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,14 +18,14 @@ import org.slf4j.LoggerFactory;
 public final class SqlStatementSanitizer {
   private static final Logger log = LoggerFactory.getLogger(SqlStatementSanitizer.class);
 
-  private static final BoundedCache<String, SqlStatementInfo> sqlToStatementInfoCache =
-      BoundedCache.build(1000);
+  private static final Cache<String, SqlStatementInfo> sqlToStatementInfoCache =
+      Cache.newBuilder().setMaximumSize(1000).build();
 
   public static SqlStatementInfo sanitize(String statement) {
     if (!isStatementSanitizationEnabled() || statement == null) {
       return new SqlStatementInfo(statement, null, null);
     }
-    return sqlToStatementInfoCache.get(
+    return sqlToStatementInfoCache.computeIfAbsent(
         statement,
         k -> {
           log.trace("SQL statement cache miss");
