@@ -14,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class ClientSpan {
   // Keeps track of the client span in a subtree corresponding to a client request.
   private static final ContextKey<Span> KEY =
-      ContextKey.named("opentelemetry-trace-client-span-key");
+      ContextKey.named("opentelemetry-traces-client-span-key");
 
   /**
    * Returns span of type {@link SpanKind#CLIENT} from the given context or {@code null} if not

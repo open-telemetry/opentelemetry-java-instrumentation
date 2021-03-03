@@ -18,7 +18,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class ServerSpan {
   // Keeps track of the server span for the current trace.
   private static final ContextKey<Span> KEY =
-      ContextKey.named("opentelemetry-trace-server-span-key");
+      ContextKey.named("opentelemetry-traces-server-span-key");
 
   /**
    * Returns span of type {@link SpanKind#SERVER} from the given context or {@code null} if not
