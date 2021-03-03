@@ -71,6 +71,11 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
   }
 
   @Override
+  public OpenTelemetrySdk getOpenTelemetry() {
+    return openTelemetry;
+  }
+
+  @Override
   public List<SpanData> getExportedSpans() {
     return testExporter.getFinishedSpanItems();
   }
@@ -79,10 +84,6 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
   public List<MetricData> getExportedMetrics() {
     // no metrics support yet
     return Collections.emptyList();
-  }
-
-  public OpenTelemetrySdk getOpenTelemetrySdk() {
-    return openTelemetry;
   }
 
   @Override

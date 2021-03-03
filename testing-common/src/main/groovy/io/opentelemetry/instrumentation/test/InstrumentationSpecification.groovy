@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.test
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner
@@ -37,6 +38,11 @@ abstract class InstrumentationSpecification extends Specification {
 
   def cleanupSpec() {
     testRunner().afterTestClass()
+  }
+
+  /** Return the {@link OpenTelemetry} instance used to produce telemetry data. */
+  OpenTelemetry getOpenTelemetry() {
+    testRunner().openTelemetry
   }
 
   /** Return a list of all captured traces, where each trace is a sorted list of spans. */

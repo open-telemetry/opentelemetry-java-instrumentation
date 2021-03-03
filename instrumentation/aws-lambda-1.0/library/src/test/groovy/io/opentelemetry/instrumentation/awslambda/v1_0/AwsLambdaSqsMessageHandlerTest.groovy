@@ -49,7 +49,7 @@ class AwsLambdaSqsMessageHandlerTest extends LibraryInstrumentationSpecification
     def event = new SQSEvent()
     event.setRecords([message1, message2])
 
-    new TestHandler(testRunner().openTelemetrySdk).handleRequest(event, context)
+    new TestHandler(testRunner().openTelemetry).handleRequest(event, context)
 
     then:
     assertTraces(1) {

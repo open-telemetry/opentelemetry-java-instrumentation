@@ -30,6 +30,6 @@ class AwsLambdaTest extends AbstractAwsLambdaRequestHandlerTest implements Libra
 
   @Override
   RequestHandler<String, String> handler() {
-    return new TestRequestHandler(testRunner().openTelemetrySdk)
+    return new TestRequestHandler(testRunner().openTelemetry)
   }
 }

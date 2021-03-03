@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.annotations.WithSpan;
@@ -29,11 +27,10 @@ import org.aspectj.lang.reflect.MethodSignature;
  */
 @Aspect
 public class WithSpanAspect {
+  private final WithSpanAspectTracer tracer;
 
-  private final Tracer tracer;
-
-  public WithSpanAspect(Tracer tracer) {
-    this.tracer = tracer;
+  public WithSpanAspect(OpenTelemetry openTelemetry) {
+    tracer = new WithSpanAspectTracer(openTelemetry);
   }
 
   @Around("@annotation(io.opentelemetry.extension.annotations.WithSpan)")
@@ -42,29 +39,19 @@ public class WithSpanAspect {
     Method method = signature.getMethod();
     WithSpan withSpan = method.getAnnotation(WithSpan.class);
 
-    Context parent = Context.current();
-    Span span =
-        tracer
-            .spanBuilder(getSpanName(withSpan, method))
-            .setSpanKind(withSpan.kind())
-            .setParent(parent)
-            .startSpan();
-    try (Scope ignored = parent.with(span).makeCurrent()) {
+    Context parentContext = Context.current();
+    if (!tracer.shouldStartSpan(parentContext, withSpan.kind())) {
       return pjp.proceed();
-    } catch (Throwable t) {
-      span.setStatus(StatusCode.ERROR);
-      span.recordException(t);
-      throw t;
-    } finally {
-      span.end();
     }
-  }
 
-  private String getSpanName(WithSpan withSpan, Method method) {
-    String spanName = withSpan.value();
-    if (spanName.isEmpty()) {
-      return method.getDeclaringClass().getSimpleName() + "." + method.getName();
+    Context context = tracer.startSpan(parentContext, withSpan, method);
+    try (Scope ignored = context.makeCurrent()) {
+      Object result = pjp.proceed();
+      tracer.end(context);
+      return result;
+    } catch (Throwable t) {
+      tracer.endExceptionally(context, t);
+      throw t;
     }
-    return spanName;
   }
 }
