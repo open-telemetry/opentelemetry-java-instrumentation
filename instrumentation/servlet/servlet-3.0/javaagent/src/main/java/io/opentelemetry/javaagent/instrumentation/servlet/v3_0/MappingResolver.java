@@ -36,9 +36,8 @@ public class MappingResolver {
       } else if (mapping.startsWith("*.") && mapping.length() > 2) {
         wildcardMatchers.add(new SuffixMatcher("/" + mapping, mapping.substring(1)));
       } else if (mapping.endsWith("/*")) {
-        exactMatches.add(mapping.substring(0, mapping.length() - 2));
         wildcardMatchers.add(
-            new PrefixMatcher(mapping, mapping.substring(0, mapping.length() - 1)));
+            new PrefixMatcher(mapping, mapping.substring(0, mapping.length() - 2)));
       } else {
         exactMatches.add(mapping);
       }
@@ -107,7 +106,7 @@ public class MappingResolver {
 
     @Override
     public boolean match(String path) {
-      return path.startsWith(prefix);
+      return path.equals(prefix) || path.startsWith(prefix + "/");
     }
 
     @Override

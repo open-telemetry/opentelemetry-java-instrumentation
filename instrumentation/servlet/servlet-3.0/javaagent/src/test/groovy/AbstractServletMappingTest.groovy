@@ -67,8 +67,8 @@ abstract class AbstractServletMappingTest<SERVER, CONTEXT> extends AgentInstrume
 
     where:
     path        | spanName    | success
-    'prefix'    | '/prefix'   | true
-    'prefix/'   | '/prefix'   | true
+    'prefix'    | '/prefix/*' | true
+    'prefix/'   | '/prefix/*' | true
     'prefix/a'  | '/prefix/*' | true
     'prefixa'   | '/*'        | false
     'a.suffix'  | '/*.suffix' | true

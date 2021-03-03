@@ -45,7 +45,11 @@ public class Servlet3HttpServerTracer extends ServletHttpServerTracer<HttpServle
       Object servletOrFilter, HttpServletRequest request, boolean allowNull) {
     String spanName = getSpanName(servletOrFilter, request);
     if (spanName == null && !allowNull) {
-      return "HTTP " + request.getMethod();
+      String contextPath = request.getContextPath();
+      if (contextPath == null || contextPath.isEmpty() || contextPath.equals("/")) {
+        return "HTTP " + request.getMethod();
+      }
+      return contextPath;
     }
     return spanName;
   }
