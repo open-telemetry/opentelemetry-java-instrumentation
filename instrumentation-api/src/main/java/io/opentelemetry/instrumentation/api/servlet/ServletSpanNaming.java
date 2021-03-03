@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Helper container for tracking whether servlet integration should update server span name or not.
@@ -24,7 +23,7 @@ public class ServletSpanNaming {
     return context.with(CONTEXT_KEY, new ServletSpanNaming());
   }
 
-  private final AtomicBoolean servletUpdatedServerSpanName = new AtomicBoolean(false);
+  private volatile boolean servletUpdatedServerSpanName = false;
 
   private ServletSpanNaming() {}
 
@@ -40,7 +39,7 @@ public class ServletSpanNaming {
   public static boolean shouldUpdateServerSpanName(Context context) {
     ServletSpanNaming servletSpanNaming = context.get(CONTEXT_KEY);
     if (servletSpanNaming != null) {
-      return !servletSpanNaming.servletUpdatedServerSpanName.get();
+      return !servletSpanNaming.servletUpdatedServerSpanName;
     }
     return false;
   }
@@ -53,7 +52,7 @@ public class ServletSpanNaming {
   public static void setServletUpdatedServerSpanName(Context context) {
     ServletSpanNaming servletSpanNaming = context.get(CONTEXT_KEY);
     if (servletSpanNaming != null) {
-      servletSpanNaming.servletUpdatedServerSpanName.set(true);
+      servletSpanNaming.servletUpdatedServerSpanName = true;
     }
   }
 }
