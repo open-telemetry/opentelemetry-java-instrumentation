@@ -105,7 +105,6 @@ class CacheTest {
 
       assertThat(cache.computeIfAbsent(dog, unused -> "bark")).isEqualTo("bark");
       caffeineCache.cleanup();
-      // Caffeine evicts asynchronously so wait for the size to reach what we expect.
       assertThat(caffeineCache.keySet()).hasSize(1);
       dog = null;
       System.gc();
