@@ -30,12 +30,13 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return TRACER;
   }
 
-  private final ClassValue<Map<Method, String>> spanNames = new ClassValue<Map<Method, String>>() {
-    @Override
-    protected Map<Method, String> computeValue(Class<?> type) {
-      return new ConcurrentHashMap<>();
-    }
-  };
+  private final ClassValue<Map<Method, String>> spanNames =
+      new ClassValue<Map<Method, String>>() {
+        @Override
+        protected Map<Method, String> computeValue(Class<?> type) {
+          return new ConcurrentHashMap<>();
+        }
+      };
 
   public Context startSpan(Class<?> target, Method method) {
     return startSpan(Context.current(), target, method);
