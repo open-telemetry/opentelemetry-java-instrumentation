@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.api.db;
 
 import com.google.auto.value.AutoValue;
+import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @AutoValue
@@ -17,7 +18,7 @@ public abstract class SqlStatementInfo {
   }
 
   public SqlStatementInfo mapTable(Function<String, String> mapper) {
-    return new SqlStatementInfo(fullStatement, operation, mapper.apply(table));
+    return SqlStatementInfo.create(getFullStatement(), getOperation(), mapper.apply(getTable()));
   }
 
   @Nullable
