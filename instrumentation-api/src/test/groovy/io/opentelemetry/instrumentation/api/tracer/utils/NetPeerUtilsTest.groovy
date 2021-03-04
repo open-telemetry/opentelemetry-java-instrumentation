@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.tracer.utils
 
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
 import io.opentelemetry.instrumentation.api.tracer.BaseTracerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 class NetPeerUtilsTest extends BaseTracerTest {
 
@@ -40,7 +40,7 @@ class NetPeerUtilsTest extends BaseTracerTest {
   def "test setAttributes with mapped peer"() {
     setup:
     def config = new ConfigBuilder().readProperties([
-      "otel.endpoint.peer.service.mapping": "1.2.3.4=catservice,dogs.com=dogsservice"
+      "otel.instrumentation.common.peer-service-mapping": "1.2.3.4=catservice,dogs.com=dogsservice"
     ]).build()
     def utils = new NetPeerUtils(config)
 

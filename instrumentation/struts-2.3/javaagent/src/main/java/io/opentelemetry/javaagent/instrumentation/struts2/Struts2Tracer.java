@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 public class Struts2Tracer extends BaseTracer {
@@ -41,7 +42,7 @@ public class Struts2Tracer extends BaseTracer {
 
   // Handle cases where action parameters are encoded into URL path
   public void updateServerSpanName(Context context, ActionProxy actionProxy) {
-    Span serverSpan = getCurrentServerSpan(context);
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }

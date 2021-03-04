@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk.getContext;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkHttpClientTracer.tracer;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DynamoDB;
 
 import io.opentelemetry.api.trace.Span;
@@ -37,17 +35,26 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
-  private final FieldMapper fieldMapper = new FieldMapper();
+  private final AwsSdkHttpClientTracer tracer;
+  private final boolean captureExperimentalSpanAttributes;
+  private final FieldMapper fieldMapper;
+
+  TracingExecutionInterceptor(
+      AwsSdkHttpClientTracer tracer, boolean captureExperimentalSpanAttributes) {
+    this.tracer = tracer;
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    fieldMapper = new FieldMapper();
+  }
 
   @Override
   public void beforeExecution(
       Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context parentOtelContext = io.opentelemetry.context.Context.current();
-    if (!tracer().shouldStartSpan(parentOtelContext)) {
+    if (!tracer.shouldStartSpan(parentOtelContext)) {
       return;
     }
     io.opentelemetry.context.Context otelContext =
-        tracer().startSpan(parentOtelContext, executionAttributes);
+        tracer.startSpan(parentOtelContext, executionAttributes);
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, otelContext);
     if (executionAttributes
         .getAttribute(SdkExecutionAttribute.CLIENT_TYPE)
@@ -67,7 +74,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
-    tracer().inject(otelContext, builder);
+    tracer.inject(otelContext, builder);
     return builder.build();
   }
 
@@ -80,7 +87,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
 
     Span span = Span.fromContext(otelContext);
-    tracer().onRequest(span, context.httpRequest());
+    tracer.onRequest(span, context.httpRequest());
 
     AwsSdkRequest awsSdkRequest = AwsSdkRequest.ofSdkRequest(context.request());
     if (awsSdkRequest != null) {
@@ -108,13 +115,14 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   private void populateGenericAttributes(Span span, ExecutionAttributes attributes) {
+    if (captureExperimentalSpanAttributes) {
+      String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
+      String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
 
-    String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
-    String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
-
-    span.setAttribute("aws.agent", COMPONENT_NAME);
-    span.setAttribute("aws.service", awsServiceName);
-    span.setAttribute("aws.operation", awsOperation);
+      span.setAttribute("aws.agent", COMPONENT_NAME);
+      span.setAttribute("aws.service", awsServiceName);
+      span.setAttribute("aws.operation", awsOperation);
+    }
   }
 
   @Override
@@ -129,23 +137,25 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     Span span = Span.fromContext(otelContext);
     onUserAgentHeaderAvailable(span, context.httpRequest());
     onSdkResponse(span, context.response(), executionAttributes);
-    tracer().end(otelContext, context.httpResponse());
+    tracer.end(otelContext, context.httpResponse());
   }
 
   // Certain headers in the request like User-Agent are only available after execution.
   private void onUserAgentHeaderAvailable(Span span, SdkHttpRequest request) {
     span.setAttribute(
-        SemanticAttributes.HTTP_USER_AGENT, tracer().requestHeader(request, "User-Agent"));
+        SemanticAttributes.HTTP_USER_AGENT, tracer.requestHeader(request, "User-Agent"));
   }
 
   private void onSdkResponse(
       Span span, SdkResponse response, ExecutionAttributes executionAttributes) {
-    if (response instanceof AwsResponse) {
-      span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
-    }
-    AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
-    if (sdkRequest != null) {
-      fieldMapper.mapToAttributes(response, sdkRequest, span);
+    if (captureExperimentalSpanAttributes) {
+      if (response instanceof AwsResponse) {
+        span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
+      }
+      AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
+      if (sdkRequest != null) {
+        fieldMapper.mapToAttributes(response, sdkRequest, span);
+      }
     }
   }
 
@@ -154,11 +164,19 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     clearAttributes(executionAttributes);
-    tracer().endExceptionally(otelContext, context.exception());
+    tracer.endExceptionally(otelContext, context.exception());
   }
 
   private void clearAttributes(ExecutionAttributes executionAttributes) {
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, null);
     executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, null);
+  }
+
+  /**
+   * Returns the {@link Context} stored in the {@link ExecutionAttributes}, or {@code null} if there
+   * is no operation set.
+   */
+  private static io.opentelemetry.context.Context getContext(ExecutionAttributes attributes) {
+    return attributes.getAttribute(CONTEXT_ATTRIBUTE);
   }
 }

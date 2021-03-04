@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import io.opentelemetry.javaagent.tooling.ClassHierarchyIterable;
 import java.lang.annotation.Annotation;
@@ -34,7 +35,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
   public Context startSpan(Class<?> target, Method method) {
     String pathBasedSpanName = getPathSpanName(target, method);
     Context parentContext = Context.current();
-    Span serverSpan = BaseTracer.getCurrentServerSpan(parentContext);
+    Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
     String spanName;

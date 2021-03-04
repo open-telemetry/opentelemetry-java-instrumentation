@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdk;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTracing;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -33,7 +35,7 @@ import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
 /**
- * {@link ExecutionInterceptor} that delegates to {@link AwsSdk}, augmenting {@link
+ * {@link ExecutionInterceptor} that delegates to {@link AwsSdkTracing}, augmenting {@link
  * #beforeTransmission(BeforeTransmission, ExecutionAttributes)} to make sure the span is set to the
  * current context to allow downstream instrumentation like Netty to pick it up.
  */
@@ -42,7 +44,14 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final ExecutionInterceptor delegate;
 
   public TracingExecutionInterceptor() {
-    delegate = AwsSdk.newInterceptor();
+    delegate =
+        AwsSdkTracing.newBuilder(GlobalOpenTelemetry.get())
+            .setCaptureExperimentalSpanAttributes(
+                Config.get()
+                    .getBooleanProperty(
+                        "otel.instrumentation.aws-sdk.experimental-span-attributes", false))
+            .build()
+            .newExecutionInterceptor();
   }
 
   @Override

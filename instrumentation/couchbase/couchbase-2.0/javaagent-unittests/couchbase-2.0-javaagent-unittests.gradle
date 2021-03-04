@@ -1,0 +1,10 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  testImplementation deps.groovy
+  testImplementation deps.spock
+
+  testImplementation project(':javaagent-api')
+  testImplementation project(':instrumentation:couchbase:couchbase-2.0:javaagent')
+  testImplementation group: 'com.couchbase.client', name: 'java-client', version: '2.5.0'
+}

@@ -16,6 +16,10 @@ public abstract class SqlStatementInfo {
     return new AutoValue_SqlStatementInfo(fullStatement, operation, table);
   }
 
+  public SqlStatementInfo mapTable(Function<String, String> mapper) {
+    return new SqlStatementInfo(fullStatement, operation, mapper.apply(table));
+  }
+
   @Nullable
   public abstract String getFullStatement();
 

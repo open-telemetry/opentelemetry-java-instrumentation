@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebM
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.io.IOException;
 import java.util.List;
 import javax.servlet.Filter;
@@ -41,7 +41,7 @@ public class HandlerMappingResourceNameFilter implements Filter, Ordered {
     }
 
     Context context = Context.current();
-    Span serverSpan = BaseTracer.getCurrentServerSpan(context);
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
 
     if (handlerMappings != null && serverSpan != null) {
       try {

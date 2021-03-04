@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
@@ -22,10 +23,8 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 final class AwsSdkHttpClientTracer
     extends HttpClientTracer<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> {
 
-  private static final AwsSdkHttpClientTracer TRACER = new AwsSdkHttpClientTracer();
-
-  static AwsSdkHttpClientTracer tracer() {
-    return TRACER;
+  AwsSdkHttpClientTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
   }
 
   public Context startSpan(Context parentContext, ExecutionAttributes attributes) {

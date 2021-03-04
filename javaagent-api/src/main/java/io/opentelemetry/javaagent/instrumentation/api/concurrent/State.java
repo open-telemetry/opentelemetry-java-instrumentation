@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,30 +15,37 @@ public class State {
 
   private static final Logger log = LoggerFactory.getLogger(State.class);
 
+  private static final AtomicReferenceFieldUpdater<State, Context> parentContextUpdater =
+      AtomicReferenceFieldUpdater.newUpdater(State.class, Context.class, "parentContext");
+
   public static final ContextStore.Factory<State> FACTORY = State::new;
 
-  private final AtomicReference<Context> parentContextRef = new AtomicReference<>(null);
+  private volatile Context parentContext;
 
   private State() {}
 
   public void setParentContext(Context parentContext) {
-    boolean result = parentContextRef.compareAndSet(null, parentContext);
-    if (!result && parentContextRef.get() != parentContext) {
-      if (log.isDebugEnabled()) {
-        log.debug(
-            "Failed to set parent context because another parent context is already set {}: new: {}, old: {}",
-            this,
-            parentContext,
-            parentContextRef.get());
+    boolean result = parentContextUpdater.compareAndSet(this, null, parentContext);
+    if (!result) {
+      Context currentParent = parentContextUpdater.get(this);
+      if (currentParent != parentContext) {
+        if (log.isDebugEnabled()) {
+          log.debug(
+              "Failed to set parent context because another parent context is "
+                  + "already set {}: new: {}, old: {}",
+              this,
+              parentContext,
+              currentParent);
+        }
       }
     }
   }
 
   public void clearParentContext() {
-    parentContextRef.set(null);
+    parentContextUpdater.set(this, null);
   }
 
   public Context getAndResetParentContext() {
-    return parentContextRef.getAndSet(null);
+    return parentContextUpdater.getAndSet(this, null);
   }
 }

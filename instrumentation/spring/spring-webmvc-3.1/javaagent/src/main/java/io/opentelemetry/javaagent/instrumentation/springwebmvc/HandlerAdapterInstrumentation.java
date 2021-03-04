@@ -19,7 +19,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
@@ -60,7 +60,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Java8BytecodeBridge.currentContext();
-      Span serverSpan = BaseTracer.getCurrentServerSpan(parentContext);
+      Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
         tracer().onRequest(parentContext, serverSpan, request);
