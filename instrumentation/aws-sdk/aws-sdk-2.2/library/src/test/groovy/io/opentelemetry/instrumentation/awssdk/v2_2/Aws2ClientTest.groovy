@@ -13,7 +13,11 @@ class Aws2ClientTest extends AbstractAws2ClientTest implements LibraryTestTrait 
   @Override
   void configureSdkClient(SdkClientBuilder builder) {
     builder.overrideConfiguration(ClientOverrideConfiguration.builder()
-      .addExecutionInterceptor(AwsSdk.newInterceptor())
+      .addExecutionInterceptor(
+        AwsSdkTracing.newBuilder(getOpenTelemetry())
+          .setCaptureExperimentalSpanAttributes(true)
+          .build()
+          .newExecutionInterceptor())
       .build())
   }
 }
