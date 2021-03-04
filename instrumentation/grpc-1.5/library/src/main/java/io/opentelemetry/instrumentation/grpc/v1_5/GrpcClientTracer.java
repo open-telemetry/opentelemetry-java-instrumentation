@@ -3,24 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.grpc.v1_5.client;
+package io.opentelemetry.instrumentation.grpc.v1_5;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.grpc.Status;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.RpcClientTracer;
-import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
-public class GrpcClientTracer extends RpcClientTracer {
+final class GrpcClientTracer extends RpcClientTracer {
 
-  protected GrpcClientTracer() {}
-
-  protected GrpcClientTracer(Tracer tracer) {
-    super(tracer);
+  GrpcClientTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
   }
 
   @Override
