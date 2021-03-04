@@ -28,6 +28,6 @@ public class MyFacesTracer extends JsfTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.myfaces";
+    return "io.opentelemetry.javaagent.myfaces-1.2";
   }
 }

@@ -57,6 +57,6 @@ public class ElasticsearchTransportClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.elasticsearch";
+    return "io.opentelemetry.javaagent.elasticsearch-transport-common";
   }
 }

@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.lang.reflect.InvocationTargetException;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.axis2.jaxws.core.MessageContext;
@@ -36,7 +37,7 @@ public class Axis2JaxWsTracer extends BaseTracer {
     message.setProperty(CONTEXT_KEY, context);
     message.setProperty(SCOPE_KEY, scope);
 
-    Span serverSpan = getCurrentServerSpan();
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
     if (serverSpan != null) {
       String serverSpanName = spanName;
       HttpServletRequest request =
@@ -84,6 +85,6 @@ public class Axis2JaxWsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.axis2";
+    return "io.opentelemetry.javaagent.jaxws-2.0-axis2-1.6";
   }
 }

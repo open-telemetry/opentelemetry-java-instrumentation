@@ -130,7 +130,8 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
         @Advice.Argument(5) byte[] body) {
-      Span span = Java8BytecodeBridge.currentSpan();
+      Context context = Java8BytecodeBridge.currentContext();
+      Span span = Java8BytecodeBridge.spanFromContext(context);
 
       if (span.getSpanContext().isValid()) {
         tracer().onPublish(span, exchange, routingKey);
@@ -152,11 +153,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
-        Context context = Java8BytecodeBridge.currentContext().with(span);
-
-        Java8BytecodeBridge.getGlobalPropagators()
-            .getTextMapPropagator()
-            .inject(context, headers, TextMapInjectAdapter.SETTER);
+        tracer().inject(context, headers, TextMapInjectAdapter.SETTER);
 
         props =
             new AMQP.BasicProperties(

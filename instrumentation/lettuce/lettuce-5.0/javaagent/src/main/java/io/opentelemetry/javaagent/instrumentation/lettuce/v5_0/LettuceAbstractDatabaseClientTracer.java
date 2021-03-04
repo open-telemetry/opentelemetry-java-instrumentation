@@ -16,7 +16,7 @@ public abstract class LettuceAbstractDatabaseClientTracer<STATEMENT>
     extends DatabaseClientTracer<RedisURI, STATEMENT, String> {
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.lettuce";
+    return "io.opentelemetry.javaagent.lettuce-5.0";
   }
 
   @Override

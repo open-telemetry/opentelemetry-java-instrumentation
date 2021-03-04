@@ -18,6 +18,7 @@ import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class CassandraDatabaseClientTracer
     extends DatabaseClientTracer<Session, String, SqlStatementInfo> {
@@ -29,27 +30,32 @@ public class CassandraDatabaseClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.cassandra";
+    return "io.opentelemetry.javaagent.cassandra-3.0";
   }
 
   @Override
   protected SqlStatementInfo sanitizeStatement(String statement) {
-    return SqlStatementSanitizer.sanitize(statement);
+    return SqlStatementSanitizer.sanitize(statement).mapTable(this::stripKeyspace);
   }
 
-  // TODO: use the <operation> <db.name>.<table> naming scheme
+  // account for splitting out the keyspace, <keyspace>.<table>
+  @Nullable
+  private String stripKeyspace(String table) {
+    int i;
+    if (table == null || (i = table.indexOf('.')) == -1) {
+      return table;
+    }
+    return table.substring(i + 1);
+  }
+
+  @Override
   protected String spanName(
       Session connection, String statement, SqlStatementInfo sanitizedStatement) {
-    String fullStatement = sanitizedStatement.getFullStatement();
-    if (fullStatement != null) {
-      return fullStatement;
-    }
-
-    String result = null;
-    if (connection != null) {
-      result = dbName(connection);
-    }
-    return result == null ? DB_QUERY : result;
+    return conventionSpanName(
+        dbName(connection),
+        sanitizedStatement.getOperation(),
+        sanitizedStatement.getTable(),
+        sanitizedStatement.getFullStatement());
   }
 
   @Override
@@ -74,9 +80,25 @@ public class CassandraDatabaseClientTracer
   }
 
   @Override
+  protected void onStatement(
+      SpanBuilder span, Session connection, String statement, SqlStatementInfo sanitizedStatement) {
+    super.onStatement(span, connection, statement, sanitizedStatement);
+    String table = sanitizedStatement.getTable();
+    if (table != null) {
+      span.setAttribute(SemanticAttributes.DB_CASSANDRA_TABLE, table);
+    }
+  }
+
+  @Override
   protected String dbStatement(
       Session connection, String statement, SqlStatementInfo sanitizedStatement) {
     return sanitizedStatement.getFullStatement();
+  }
+
+  @Override
+  protected String dbOperation(
+      Session connection, String statement, SqlStatementInfo sanitizedStatement) {
+    return sanitizedStatement.getOperation();
   }
 
   public void end(Context context, ExecutionInfo executionInfo) {

@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Worker {
 
-  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto");
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   /** Simulate work for the give number of milliseconds. */
   public static void doWork(long workTimeMillis) {

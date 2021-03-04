@@ -10,6 +10,7 @@ dependencies {
   implementation deps.junitApi
 
   api deps.opentelemetryApi
+  api deps.opentelemetrySemConv
   api deps.opentelemetrySdk
   api deps.opentelemetrySdkMetrics
   api deps.opentelemetrySdkTesting

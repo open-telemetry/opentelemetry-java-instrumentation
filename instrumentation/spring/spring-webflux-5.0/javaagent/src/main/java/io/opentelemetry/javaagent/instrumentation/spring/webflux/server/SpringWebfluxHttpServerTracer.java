@@ -16,6 +16,6 @@ public class SpringWebfluxHttpServerTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-webflux";
+    return "io.opentelemetry.javaagent.spring-webflux-5.0";
   }
 }

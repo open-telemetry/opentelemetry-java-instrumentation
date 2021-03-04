@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.ws.handler.MessageContext;
 
@@ -39,7 +40,7 @@ public class MetroJaxWsTracer extends BaseTracer {
     packet.invocationProperties.put(CONTEXT_KEY, context);
     packet.invocationProperties.put(SCOPE_KEY, scope);
 
-    Span serverSpan = getCurrentServerSpan();
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
     if (serverSpan != null) {
       String serverSpanName = spanName;
       HttpServletRequest request = (HttpServletRequest) packet.get(MessageContext.SERVLET_REQUEST);
@@ -87,6 +88,6 @@ public class MetroJaxWsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.metro";
+    return "io.opentelemetry.javaagent.jaxws-2.0-metro-2.2";
   }
 }

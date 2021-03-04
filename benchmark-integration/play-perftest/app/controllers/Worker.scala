@@ -16,13 +16,11 @@
 
 package controllers
 
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.Tracer
 import java.util.concurrent.TimeUnit
 
 object Worker {
   val TRACER: Tracer =
-    OpenTelemetry.getTracerProvider.get("io.opentelemetry.auto")
+    OpenTelemetry.getTracerProvider.get("test")
 
   def doWork(workTimeMillis: Long) = {
     val span = tracer().spanBuilder("work").startSpan()

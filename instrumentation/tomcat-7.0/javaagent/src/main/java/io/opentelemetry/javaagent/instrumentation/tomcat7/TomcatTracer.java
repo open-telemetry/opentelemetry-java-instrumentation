@@ -41,7 +41,7 @@ public class TomcatTracer extends HttpServerTracer<Request, Response, Request, R
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.tomcat";
+    return "io.opentelemetry.javaagent.tomcat-7.0";
   }
 
   @Override

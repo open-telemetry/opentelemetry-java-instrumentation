@@ -13,9 +13,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
@@ -42,22 +43,11 @@ public abstract class BaseTracer {
   private static final SupportabilityMetrics supportability =
       new SupportabilityMetrics(Config.get()).start();
 
-  // Keeps track of the server span for the current trace.
-  // TODO(anuraaga): Should probably be renamed to local root key since it could be a consumer span
-  // or other non-server root.
-  private static final ContextKey<Span> CONTEXT_SERVER_SPAN_KEY =
-      ContextKey.named("opentelemetry-trace-server-span-key");
-
-  // Keeps track of the client span in a subtree corresponding to a client request.
-  private static final ContextKey<Span> CONTEXT_CLIENT_SPAN_KEY =
-      ContextKey.named("opentelemetry-trace-auto-client-span-key");
-
   protected final Tracer tracer;
   protected final ContextPropagators propagators;
 
   public BaseTracer() {
-    tracer = GlobalOpenTelemetry.getTracer(getInstrumentationName(), getVersion());
-    propagators = GlobalOpenTelemetry.getPropagators();
+    this(GlobalOpenTelemetry.get());
   }
 
   /**
@@ -75,10 +65,6 @@ public abstract class BaseTracer {
   public BaseTracer(OpenTelemetry openTelemetry) {
     this.tracer = openTelemetry.getTracer(getInstrumentationName(), getVersion());
     this.propagators = openTelemetry.getPropagators();
-  }
-
-  public ContextPropagators getPropagators() {
-    return propagators;
   }
 
   public Context startSpan(Class<?> clazz) {
@@ -107,11 +93,11 @@ public abstract class BaseTracer {
   }
 
   protected final Context withClientSpan(Context parentContext, Span span) {
-    return parentContext.with(span).with(CONTEXT_CLIENT_SPAN_KEY, span);
+    return ClientSpan.with(parentContext.with(span), span);
   }
 
   protected final Context withServerSpan(Context parentContext, Span span) {
-    return parentContext.with(span).with(CONTEXT_SERVER_SPAN_KEY, span);
+    return ServerSpan.with(parentContext.with(span), span);
   }
 
   protected final boolean shouldStartSpan(SpanKind proposedKind, Context context) {
@@ -132,12 +118,12 @@ public abstract class BaseTracer {
     return !suppressed;
   }
 
-  private boolean inClientSpan(Context parentContext) {
-    return parentContext.get(CONTEXT_CLIENT_SPAN_KEY) != null;
+  private boolean inClientSpan(Context context) {
+    return ClientSpan.fromContextOrNull(context) != null;
   }
 
   private boolean inServerSpan(Context context) {
-    return getCurrentServerSpan(context) != null;
+    return ServerSpan.fromContextOrNull(context) != null;
   }
 
   protected abstract String getInstrumentationName();
@@ -195,16 +181,6 @@ public abstract class BaseTracer {
     end(Span.fromContext(context), endTimeNanos);
   }
 
-  /**
-   * End span.
-   *
-   * @deprecated Use {@link #end(Context)} instead.
-   */
-  @Deprecated
-  public void end(Span span) {
-    end(span, -1);
-  }
-
   private void end(Span span, long endTimeNanos) {
     if (endTimeNanos > 0) {
       span.end(endTimeNanos, TimeUnit.NANOSECONDS);
@@ -219,16 +195,6 @@ public abstract class BaseTracer {
 
   public void endExceptionally(Context context, Throwable throwable, long endTimeNanos) {
     endExceptionally(Span.fromContext(context), throwable, endTimeNanos);
-  }
-
-  /**
-   * End span.
-   *
-   * @deprecated Use {@link #endExceptionally(Context, Throwable)} instead.
-   */
-  @Deprecated
-  public void endExceptionally(Span span, Throwable throwable) {
-    endExceptionally(span, throwable, -1);
   }
 
   private void endExceptionally(Span span, Throwable throwable, long endTimeNanos) {
@@ -249,37 +215,22 @@ public abstract class BaseTracer {
     span.recordException(throwable);
   }
 
-  /**
-   * Do extraction with the propagators from the GlobalOpenTelemetry instance. Not recommended.
-   *
-   * @deprecated We should eliminate all static usages so we can use the non-global propagators.
-   */
-  @Deprecated
-  public static <C> Context extractWithGlobalPropagators(C carrier, TextMapGetter<C> getter) {
-    return extract(GlobalOpenTelemetry.getPropagators(), carrier, getter);
-  }
-
   public <C> Context extract(C carrier, TextMapGetter<C> getter) {
-    return extract(propagators, carrier, getter);
-  }
-
-  private static <C> Context extract(
-      ContextPropagators propagators, C carrier, TextMapGetter<C> getter) {
     ContextPropagationDebug.debugContextLeakIfEnabled();
 
-    // Using Context.ROOT here may be quite unexpected, but the reason is simple.
+    // Using Context.root() here may be quite unexpected, but the reason is simple.
     // We want either span context extracted from the carrier or invalid one.
     // We DO NOT want any span context potentially lingering in the current context.
     return propagators.getTextMapPropagator().extract(Context.root(), carrier, getter);
   }
 
-  /** Returns span of type SERVER from the current context or <code>null</code> if not found. */
-  public static Span getCurrentServerSpan() {
-    return getCurrentServerSpan(Context.current());
-  }
-
-  /** Returns span of type SERVER from the given context or <code>null</code> if not found. */
-  public static Span getCurrentServerSpan(Context context) {
-    return context.get(CONTEXT_SERVER_SPAN_KEY);
+  /**
+   * Injects {@code context} data into {@code carrier} using the propagator embedded in this tracer.
+   * This method can be used to propagate passed {@code context} to downstream services.
+   *
+   * @see TextMapPropagator#inject(Context, Object, TextMapSetter)
+   */
+  public <C> void inject(Context context, C carrier, TextMapSetter<C> setter) {
+    propagators.getTextMapPropagator().inject(context, carrier, setter);
   }
 }

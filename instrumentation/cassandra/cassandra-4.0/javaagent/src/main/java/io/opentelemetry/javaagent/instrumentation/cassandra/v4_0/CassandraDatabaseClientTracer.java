@@ -24,6 +24,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class CassandraDatabaseClientTracer
     extends DatabaseClientTracer<CqlSession, String, SqlStatementInfo> {
@@ -36,27 +37,32 @@ public class CassandraDatabaseClientTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.cassandra";
+    return "io.opentelemetry.javaagent.cassandra-4.0";
   }
 
   @Override
   protected SqlStatementInfo sanitizeStatement(String statement) {
-    return SqlStatementSanitizer.sanitize(statement);
+    return SqlStatementSanitizer.sanitize(statement).mapTable(this::stripKeyspace);
   }
 
-  // TODO: use the <operation> <db.name>.<table> naming scheme
+  // account for splitting out the keyspace, <keyspace>.<table>
+  @Nullable
+  private String stripKeyspace(String table) {
+    int i;
+    if (table == null || (i = table.indexOf('.')) == -1) {
+      return table;
+    }
+    return table.substring(i + 1);
+  }
+
+  @Override
   protected String spanName(
       CqlSession connection, String statement, SqlStatementInfo sanitizedStatement) {
-    String fullStatement = sanitizedStatement.getFullStatement();
-    if (fullStatement != null) {
-      return fullStatement;
-    }
-
-    String result = null;
-    if (connection != null) {
-      result = dbName(connection);
-    }
-    return result == null ? DB_QUERY : result;
+    return conventionSpanName(
+        dbName(connection),
+        sanitizedStatement.getOperation(),
+        sanitizedStatement.getTable(),
+        sanitizedStatement.getFullStatement());
   }
 
   @Override
@@ -72,6 +78,31 @@ public class CassandraDatabaseClientTracer
   @Override
   protected InetSocketAddress peerAddress(CqlSession cqlSession) {
     return null;
+  }
+
+  @Override
+  protected void onStatement(
+      SpanBuilder span,
+      CqlSession connection,
+      String statement,
+      SqlStatementInfo sanitizedStatement) {
+    super.onStatement(span, connection, statement, sanitizedStatement);
+    String table = sanitizedStatement.getTable();
+    if (table != null) {
+      span.setAttribute(SemanticAttributes.DB_CASSANDRA_TABLE, table);
+    }
+  }
+
+  @Override
+  protected String dbStatement(
+      CqlSession connection, String statement, SqlStatementInfo sanitizedStatement) {
+    return sanitizedStatement.getFullStatement();
+  }
+
+  @Override
+  protected String dbOperation(
+      CqlSession connection, String statement, SqlStatementInfo sanitizedStatement) {
+    return sanitizedStatement.getOperation();
   }
 
   public void onResponse(Context context, CqlSession cqlSession, ExecutionInfo executionInfo) {
@@ -142,29 +173,5 @@ public class CassandraDatabaseClientTracer
   public void endExceptionally(Context context, final Throwable throwable) {
     throw new IllegalStateException(
         "use the endExceptionally method with a CqlSession in CassandraDatabaseClientTracer");
-  }
-
-  @Override
-  protected void onStatement(
-      SpanBuilder span,
-      CqlSession connection,
-      String statement,
-      SqlStatementInfo sanitizedStatement) {
-    super.onStatement(span, connection, statement, sanitizedStatement);
-    String table = sanitizedStatement.getTable();
-    if (table != null) {
-      // account for splitting out the keyspace, <keyspace>.<table>
-      int i = table.indexOf('.');
-      if (i > -1 && i + 1 < table.length()) {
-        table = table.substring(i + 1);
-      }
-      span.setAttribute(SemanticAttributes.DB_CASSANDRA_TABLE, table);
-    }
-  }
-
-  @Override
-  protected String dbStatement(
-      CqlSession connection, String statement, SqlStatementInfo sanitizedStatement) {
-    return sanitizedStatement.getFullStatement();
   }
 }

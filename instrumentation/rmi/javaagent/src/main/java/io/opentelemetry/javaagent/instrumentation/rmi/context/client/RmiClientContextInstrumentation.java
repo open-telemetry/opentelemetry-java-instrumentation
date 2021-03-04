@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -71,7 +72,8 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
       if (PROPAGATOR.isRmiInternalObject(id)) {
         return;
       }
-      Span activeSpan = Java8BytecodeBridge.currentSpan();
+      Context currentContext = Java8BytecodeBridge.currentContext();
+      Span activeSpan = Java8BytecodeBridge.spanFromContext(currentContext);
       if (!activeSpan.getSpanContext().isValid()) {
         return;
       }
@@ -79,7 +81,7 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
       ContextStore<Connection, Boolean> knownConnections =
           InstrumentationContext.get(Connection.class, Boolean.class);
 
-      PROPAGATOR.attemptToPropagateContext(knownConnections, c, activeSpan);
+      PROPAGATOR.attemptToPropagateContext(knownConnections, c, currentContext);
     }
   }
 }

@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Exchange;
@@ -43,7 +44,7 @@ public class CxfJaxWsTracer extends BaseTracer {
     exchange.put(CONTEXT_KEY, context);
     exchange.put(SCOPE_KEY, scope);
 
-    Span serverSpan = getCurrentServerSpan();
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
     if (serverSpan != null) {
       String serverSpanName = spanName;
       HttpServletRequest request = (HttpServletRequest) message.get("HTTP.REQUEST");
@@ -79,6 +80,6 @@ public class CxfJaxWsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.cxf";
+    return "io.opentelemetry.javaagent.jaxws-2.0-cxf-3.0";
   }
 }

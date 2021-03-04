@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
@@ -87,12 +86,10 @@ public class JdkHttpClientTracer
   public HttpHeaders inject(HttpHeaders original) {
     Map<String, List<String>> headerMap = new HashMap<>();
 
-    GlobalOpenTelemetry.getPropagators()
-        .getTextMapPropagator()
-        .inject(
-            Context.current(),
-            headerMap,
-            (carrier, key, value) -> carrier.put(key, Collections.singletonList(value)));
+    inject(
+        Context.current(),
+        headerMap,
+        (carrier, key, value) -> carrier.put(key, Collections.singletonList(value)));
     headerMap.putAll(original.map());
 
     return HttpHeaders.of(headerMap, (s, s2) -> true);
