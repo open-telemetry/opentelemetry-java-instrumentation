@@ -13,6 +13,7 @@ repository:
   (there will be some guarantees about telemetry stability in the future, see discussions
   in https://github.com/open-telemetry/opentelemetry-specification/issues/1301)
 * Changes to configuration properties that contain the word `experimental`
+* Changes to configuration properties under the namespace `otel.javaagent.debug`
 * Changes to configuration properties under the namespace `otel.javaagent.testing`
 
 ## Stable vs alpha
