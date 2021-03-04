@@ -73,7 +73,7 @@ dependencies {
 
   // needed for SNS
   testImplementation deps.testcontainers
-  testImplementation "org.testcontainers:localstack:1.15.2"
+  testImplementation "org.testcontainers:localstack:${versions.testcontainers}"
 
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.0')
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.0')

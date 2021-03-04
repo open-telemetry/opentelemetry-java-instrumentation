@@ -9,7 +9,6 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import com.amazonaws.services.sns.AmazonSNSAsyncClient
 import com.amazonaws.services.sns.model.CreateTopicResult
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
-import com.amazonaws.services.sqs.model.CreateQueueResult
 import com.amazonaws.services.sqs.model.GetQueueAttributesRequest
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -23,16 +22,9 @@ import spock.lang.Shared
 class SnsTracingTest extends AgentInstrumentationSpecification {
 
   @Shared
-  int sqsPort
-  @Shared
   LocalStackContainer localstack
   @Shared
   AmazonSQSAsyncClient sqsClient
-
-  @Shared
-  int snsPort
-  @Shared
-  LocalStackContainer sns
   @Shared
   AmazonSNSAsyncClient snsClient
 
@@ -44,14 +36,11 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
       .withEnv("SQS_PROVIDER", "elasticmq")
     localstack.start()
 
-    sqsPort = localstack.getMappedPort(4566)
-
     sqsClient = AmazonSQSAsyncClient.asyncBuilder()
       .withEndpointConfiguration(localstack.getEndpointConfiguration(LocalStackContainer.Service.SQS))
       .withCredentials(localstack.getDefaultCredentialsProvider())
       .build()
 
-    snsPort = localstack.getMappedPort(4566)
     snsClient = AmazonSNSAsyncClient.asyncBuilder()
       .withEndpointConfiguration(localstack.getEndpointConfiguration(LocalStackContainer.Service.SNS))
       .withCredentials(localstack.getDefaultCredentialsProvider())
@@ -64,15 +53,10 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
     if (localstack != null) {
       localstack.stop()
     }
-    if (sns != null) {
-      sns.stop()
-    }
   }
 
   def createQueue(String queueName) {
-    CreateQueueResult cqr = sqsClient.createQueue(queueName)
-    sqsClient.setQueueAttributes(cqr.getQueueUrl(), Collections.singletonMap("Policy", policy(queueName)))
-    return cqr.getQueueUrl()
+    return sqsClient.createQueue(queueName).getQueueUrl()
   }
 
   def getQueueArn(String queueUrl) {
@@ -80,6 +64,10 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
       new GetQueueAttributesRequest(queueUrl)
         .withAttributeNames("QueueArn")).getAttributes()
       .get("QueueArn")
+  }
+
+  def setQueuePolicy(String queueUrl, String queueArn) {
+    sqsClient.setQueueAttributes(queueUrl, Collections.singletonMap("Policy", policy(queueArn)))
   }
 
   def createAndSubscribeTopic(String topicName, String queueArn) {
@@ -96,11 +84,12 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
 
     String queueUrl = createQueue(queueName)
     String queueArn = getQueueArn(queueUrl)
+    setQueuePolicy(queueUrl, queueArn)
     String topicArn = createAndSubscribeTopic(topicName, queueArn)
 
     when:
     snsClient.publish(topicArn, "Hello There")
-    Thread.sleep(1000)
+    Thread.sleep(3000)
     ReceiveMessageRequest rmr = new ReceiveMessageRequest(queueUrl).withMessageAttributeNames("test")
     sqsClient.receiveMessage(rmr)
     Thread.sleep(1000)
@@ -132,13 +121,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
       trace(1, 1) {
 
         span(0) {
-          name "SQS.SetQueueAttributes"
+          name "SQS.GetQueueAttributes"
           kind CLIENT
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "SetQueueAttributesRequest"
+            "aws.operation" "GetQueueAttributesRequest"
             "aws.queue.url" queueUrl
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -154,13 +143,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
       trace(2, 1) {
 
         span(0) {
-          name "SQS.GetQueueAttributes"
+          name "SQS.SetQueueAttributes"
           kind CLIENT
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "GetQueueAttributesRequest"
+            "aws.operation" "SetQueueAttributesRequest"
             "aws.queue.url" queueUrl
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -283,8 +272,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def policy(String queueName) {
-    return String.format(SQS_POLICY, queueName)
+  def policy(String queueArn) {
+    return String.format(SQS_POLICY, queueArn)
   }
 
   private static final String SQS_POLICY = "{" +
@@ -293,7 +282,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
     "      \"Effect\": \"Allow\"," +
     "      \"Principal\": \"*\"," +
     "      \"Action\": \"sqs:SendMessage\"," +
-    "      \"Resource\": \"arn:aws:sqs:us-east-1:906383545488:%s\"" +
+    "      \"Resource\": \"%s\"" +
     "    }]" +
     "}"
 }
