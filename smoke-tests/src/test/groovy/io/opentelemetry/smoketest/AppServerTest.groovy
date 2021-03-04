@@ -378,7 +378,19 @@ abstract class AppServerTest extends SmokeTest {
     [appServer, jdk] << getTestParams()
   }
 
-  protected abstract String getSpanName(String path);
+  protected String getSpanName(String path) {
+    switch (path) {
+      case "/app/greeting":
+      case "/app/headers":
+      case "/app/exception":
+      case "/app/asyncgreeting":
+        return path
+      case "/app/hello.txt":
+      case "/app/file-that-does-not-exist":
+        return "/app/*"
+    }
+    return "HTTP GET"
+  }
 
   protected List<List<Object>> getTestParams() {
     return [

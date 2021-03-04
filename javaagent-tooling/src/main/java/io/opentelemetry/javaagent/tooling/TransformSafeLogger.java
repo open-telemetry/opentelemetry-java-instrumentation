@@ -25,7 +25,7 @@ import org.slf4j.event.Level;
 public class TransformSafeLogger {
 
   private static final boolean ENABLE_TRANSFORM_SAFE_LOGGING =
-      Boolean.getBoolean("otel.internal.enableTransformSafeLogging");
+      Boolean.getBoolean("otel.javaagent.testing.transform-safe-logging.enabled");
 
   private static final BlockingQueue<LogMessage> logMessageQueue;
 

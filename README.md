@@ -122,7 +122,7 @@ or they might want to manually create spans for their own custom code.
 
 It is possible to inject trace information like trace id and span id into your custom application logs.
 
-See [Logger MDC auto-instrumentation](logger-mdc-instrumentation.md)
+See [Logger MDC auto-instrumentation](docs/logger-mdc-instrumentation.md)
 
 ## Troubleshooting
 

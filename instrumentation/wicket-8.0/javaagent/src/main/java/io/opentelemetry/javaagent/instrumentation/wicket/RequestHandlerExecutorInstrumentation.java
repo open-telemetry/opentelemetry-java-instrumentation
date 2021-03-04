@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
+import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -54,6 +55,8 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         // this will be an empty string
         String filterPath = RequestCycle.get().getRequest().getFilterPath();
         serverSpan.updateName(ServletContextPath.prepend(context, filterPath + "/" + pageName));
+        // prevent servlet integration from doing further updates to server span name
+        ServletSpanNaming.setServletUpdatedServerSpanName(context);
       }
     }
   }

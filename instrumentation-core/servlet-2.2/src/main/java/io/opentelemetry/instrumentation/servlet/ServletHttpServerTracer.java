@@ -10,6 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
+import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -25,8 +26,16 @@ public abstract class ServletHttpServerTracer<RESPONSE>
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
 
-  public Context startSpan(HttpServletRequest request) {
-    Context context = startSpan(request, request, request, getSpanName(request));
+  public Context startSpan(HttpServletRequest request, String spanName) {
+    return startSpan(request, request, request, spanName);
+  }
+
+  @Override
+  protected Context customizeContext(Context context, HttpServletRequest request) {
+    // add context for tracking whether servlet instrumentation has updated
+    // server span
+    context = ServletSpanNaming.init(context);
+    // add context for current request's context path
     return addServletContextPath(context, request);
   }
 
@@ -158,24 +167,16 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   }
 
   /**
-   * When server spans are managed by app server instrumentation, servlet must update server span
-   * name only once and only during the first pass through the servlet stack. There are potential
-   * forward and other scenarios, where servlet path may change, but we don't want this to be
-   * reflected in the span name.
+   * When server spans are managed by app server instrumentation we need to add context path of
+   * current request to context if it isn't already added. Servlet instrumentation adds it when it
+   * starts server span.
    */
-  public Context runOnceUnderAppServer(Context context, HttpServletRequest request) {
-    if (AppServerBridge.setUpdatedServerSpanName(context)) {
-      updateSpanName(Span.fromContext(context), request);
-      return addServletContextPath(context, request);
+  public Context updateContext(Context context, HttpServletRequest request) {
+    String contextPath = context.get(ServletContextPath.CONTEXT_KEY);
+    if (contextPath == null) {
+      context = addServletContextPath(context, request);
     }
+
     return context;
-  }
-
-  public void updateSpanName(HttpServletRequest request) {
-    updateSpanName(getServerSpan(request), request);
-  }
-
-  private static void updateSpanName(Span span, HttpServletRequest request) {
-    span.updateName(getSpanName(request));
   }
 }
