@@ -20,7 +20,6 @@ public class RmiClientTracer extends RpcClientTracer {
     return TRACER;
   }
 
-  @Override
   public Context startSpan(Method method) {
     String serviceName = method.getDeclaringClass().getName();
     String methodName = method.getName();

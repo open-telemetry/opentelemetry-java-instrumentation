@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.grpc.v1_5.client;
+package io.opentelemetry.instrumentation.grpc.v1_5;
 
-import static io.opentelemetry.instrumentation.grpc.v1_5.client.GrpcInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.grpc.v1_5.GrpcInjectAdapter.SETTER;
 
 import io.grpc.CallOptions;
 import io.grpc.Channel;
@@ -20,32 +20,18 @@ import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.instrumentation.grpc.v1_5.common.GrpcHelper;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class TracingClientInterceptor implements ClientInterceptor {
-
-  public static ClientInterceptor newInterceptor() {
-    return newInterceptor(new GrpcClientTracer());
-  }
-
-  public static ClientInterceptor newInterceptor(Tracer tracer) {
-    return newInterceptor(new GrpcClientTracer(tracer));
-  }
-
-  public static ClientInterceptor newInterceptor(GrpcClientTracer tracer) {
-    return new TracingClientInterceptor(tracer);
-  }
+final class TracingClientInterceptor implements ClientInterceptor {
 
   private final GrpcClientTracer tracer;
 
-  private TracingClientInterceptor(GrpcClientTracer tracer) {
+  TracingClientInterceptor(GrpcClientTracer tracer) {
     this.tracer = tracer;
   }
 
@@ -73,32 +59,26 @@ public class TracingClientInterceptor implements ClientInterceptor {
       NetPeerUtils.INSTANCE.setNetPeer(span, inetSocketAddress);
     }
 
-    return new TracingClientCall<>(result, span, context, tracer);
+    return new TracingClientCall<>(result, span, context);
   }
 
-  static final class TracingClientCall<REQUEST, RESPONSE>
+  final class TracingClientCall<REQUEST, RESPONSE>
       extends ForwardingClientCall.SimpleForwardingClientCall<REQUEST, RESPONSE> {
 
     private final Span span;
     private final Context context;
-    private final GrpcClientTracer tracer;
 
-    TracingClientCall(
-        ClientCall<REQUEST, RESPONSE> delegate,
-        Span span,
-        Context context,
-        GrpcClientTracer tracer) {
+    TracingClientCall(ClientCall<REQUEST, RESPONSE> delegate, Span span, Context context) {
       super(delegate);
       this.span = span;
       this.context = context;
-      this.tracer = tracer;
     }
 
     @Override
     public void start(Listener<RESPONSE> responseListener, Metadata headers) {
       tracer.inject(context, headers, SETTER);
       try (Scope ignored = context.makeCurrent()) {
-        super.start(new TracingClientCallListener<>(responseListener, context, tracer), headers);
+        super.start(new TracingClientCallListener<>(responseListener, context), headers);
       } catch (Throwable e) {
         tracer.endExceptionally(context, e);
         throw e;
@@ -116,18 +96,15 @@ public class TracingClientInterceptor implements ClientInterceptor {
     }
   }
 
-  static final class TracingClientCallListener<RESPONSE>
+  final class TracingClientCallListener<RESPONSE>
       extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RESPONSE> {
     private final Context context;
-    private final GrpcClientTracer tracer;
 
     private final AtomicLong messageId = new AtomicLong();
 
-    TracingClientCallListener(
-        Listener<RESPONSE> delegate, Context context, GrpcClientTracer tracer) {
+    TracingClientCallListener(Listener<RESPONSE> delegate, Context context) {
       super(delegate);
       this.context = context;
-      this.tracer = tracer;
     }
 
     @Override

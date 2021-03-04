@@ -73,7 +73,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   protected abstract TextMapSetter<CARRIER> getSetter();
 
   public boolean shouldStartSpan(Context parentContext) {
-    return shouldStartSpan(CLIENT, parentContext);
+    return shouldStartSpan(parentContext, CLIENT);
   }
 
   public Context startSpan(Context parentContext, REQUEST request, CARRIER carrier) {

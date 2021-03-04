@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.grpc.v1_5.common;
+package io.opentelemetry.instrumentation.grpc.v1_5;
 
 import io.grpc.Status.Code;
 import io.opentelemetry.api.common.AttributeKey;
@@ -11,7 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
-public final class GrpcHelper {
+final class GrpcHelper {
 
   public static final AttributeKey<String> MESSAGE_TYPE = AttributeKey.stringKey("message.type");
   public static final AttributeKey<Long> MESSAGE_ID = AttributeKey.longKey("message.id");
