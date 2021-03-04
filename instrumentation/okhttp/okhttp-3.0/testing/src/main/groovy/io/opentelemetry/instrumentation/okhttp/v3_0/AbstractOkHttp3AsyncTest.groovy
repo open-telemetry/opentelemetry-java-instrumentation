@@ -4,10 +4,6 @@
  */
 
 package io.opentelemetry.instrumentation.okhttp.v3_0
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
 
 import static java.util.concurrent.TimeUnit.SECONDS
 
