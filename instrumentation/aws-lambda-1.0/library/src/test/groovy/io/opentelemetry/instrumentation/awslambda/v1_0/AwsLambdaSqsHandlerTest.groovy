@@ -26,6 +26,6 @@ class AwsLambdaSqsHandlerTest extends AbstractAwsLambdaSqsHandlerTest implements
 
   @Override
   RequestHandler<SQSEvent, Void> handler() {
-    return new TestHandler(testRunner().openTelemetry)
+    return new TestHandler(testRunner().openTelemetrySdk)
   }
 }

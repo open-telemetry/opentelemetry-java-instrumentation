@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -21,10 +20,6 @@ class WithSpanAspectTracer extends BaseTracer {
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.spring-boot-autoconfigure-aspect";
-  }
-
-  boolean shouldStartSpan(Context parentContext, SpanKind proposedKind) {
-    return shouldStartSpan(proposedKind, parentContext);
   }
 
   Context startSpan(Context parentContext, WithSpan annotation, Method method) {

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -71,7 +72,11 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
   }
 
   @Override
-  public OpenTelemetrySdk getOpenTelemetry() {
+  public OpenTelemetry getOpenTelemetry() {
+    return openTelemetry;
+  }
+
+  public OpenTelemetrySdk getOpenTelemetrySdk() {
     return openTelemetry;
   }
 

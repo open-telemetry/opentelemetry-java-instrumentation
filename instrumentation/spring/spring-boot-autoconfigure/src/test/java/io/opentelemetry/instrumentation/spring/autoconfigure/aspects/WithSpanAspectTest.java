@@ -95,19 +95,16 @@ public class WithSpanAspectTest {
     // then
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
     assertThat(traces)
-        .hasSize(1)
         .hasTracesSatisfyingExactly(
             trace ->
-                trace
-                    .hasSize(2)
-                    .hasSpansSatisfyingExactly(
-                        parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-                        span ->
-                            span.hasName("WithSpanTester.testWithSpan")
-                                .hasKind(INTERNAL)
-                                // otel SDK assertions need some work before we can comfortably use
-                                // them in this project...
-                                .hasParentSpanId(traces.get(0).get(0).getSpanId())));
+                trace.hasSpansSatisfyingExactly(
+                    parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                    span ->
+                        span.hasName("WithSpanTester.testWithSpan")
+                            .hasKind(INTERNAL)
+                            // otel SDK assertions need some work before we can comfortably use
+                            // them in this project...
+                            .hasParentSpanId(traces.get(0).get(0).getSpanId())));
   }
 
   @Test
@@ -125,17 +122,14 @@ public class WithSpanAspectTest {
     // then
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
     assertThat(traces)
-        .hasSize(1)
         .hasTracesSatisfyingExactly(
             trace ->
-                trace
-                    .hasSize(2)
-                    .hasSpansSatisfyingExactly(
-                        parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-                        span ->
-                            span.hasName("greatestSpanEver")
-                                .hasKind(INTERNAL)
-                                .hasParentSpanId(traces.get(0).get(0).getSpanId())));
+                trace.hasSpansSatisfyingExactly(
+                    parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                    span ->
+                        span.hasName("greatestSpanEver")
+                            .hasKind(INTERNAL)
+                            .hasParentSpanId(traces.get(0).get(0).getSpanId())));
   }
 
   @Test
@@ -147,16 +141,13 @@ public class WithSpanAspectTest {
 
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
     assertThat(traces)
-        .hasSize(1)
         .hasTracesSatisfyingExactly(
             trace ->
-                trace
-                    .hasSize(1)
-                    .hasSpansSatisfyingExactly(
-                        span ->
-                            span.hasName("WithSpanTester.testWithSpanWithException")
-                                .hasKind(INTERNAL)
-                                .hasStatus(StatusData.error())));
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("WithSpanTester.testWithSpanWithException")
+                            .hasKind(INTERNAL)
+                            .hasStatus(StatusData.error())));
   }
 
   @Test
@@ -174,17 +165,14 @@ public class WithSpanAspectTest {
     // then
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
     assertThat(traces)
-        .hasSize(1)
         .hasTracesSatisfyingExactly(
             trace ->
-                trace
-                    .hasSize(2)
-                    .hasSpansSatisfyingExactly(
-                        parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-                        span ->
-                            span.hasName("WithSpanTester.testWithClientSpan")
-                                .hasKind(CLIENT)
-                                .hasParentSpanId(traces.get(0).get(0).getSpanId())));
+                trace.hasSpansSatisfyingExactly(
+                    parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                    span ->
+                        span.hasName("WithSpanTester.testWithClientSpan")
+                            .hasKind(CLIENT)
+                            .hasParentSpanId(traces.get(0).get(0).getSpanId())));
   }
 
   @Test
@@ -197,16 +185,11 @@ public class WithSpanAspectTest {
     // then
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
     assertThat(traces)
-        .hasSize(1)
         .hasTracesSatisfyingExactly(
             trace ->
-                trace
-                    .hasSize(1)
-                    .hasSpansSatisfyingExactly(
-                        parentSpan ->
-                            parentSpan
-                                .hasName("WithSpanTester.testWithClientSpan")
-                                .hasKind(CLIENT)));
+                trace.hasSpansSatisfyingExactly(
+                    parentSpan ->
+                        parentSpan.hasName("WithSpanTester.testWithClientSpan").hasKind(CLIENT)));
   }
 
   @Test
@@ -219,15 +202,10 @@ public class WithSpanAspectTest {
     // then
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
     assertThat(traces)
-        .hasSize(1)
         .hasTracesSatisfyingExactly(
             trace ->
-                trace
-                    .hasSize(1)
-                    .hasSpansSatisfyingExactly(
-                        parentSpan ->
-                            parentSpan
-                                .hasName("WithSpanTester.testWithServerSpan")
-                                .hasKind(SERVER)));
+                trace.hasSpansSatisfyingExactly(
+                    parentSpan ->
+                        parentSpan.hasName("WithSpanTester.testWithServerSpan").hasKind(SERVER)));
   }
 }
