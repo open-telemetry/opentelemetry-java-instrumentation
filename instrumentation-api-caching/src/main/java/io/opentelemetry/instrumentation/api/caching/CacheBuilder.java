@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.caching;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.concurrent.Executor;
 
 /** A builder of {@link Cache}. */
 public final class CacheBuilder {
@@ -24,6 +25,12 @@ public final class CacheBuilder {
    */
   public CacheBuilder setWeakKeys() {
     caffeine.weakKeys();
+    return this;
+  }
+
+  // Visible for testing
+  CacheBuilder setExecutor(Executor executor) {
+    caffeine.executor(executor);
     return this;
   }
 
