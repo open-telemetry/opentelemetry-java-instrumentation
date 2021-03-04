@@ -29,8 +29,7 @@ final class AwsSdkHttpClientTracer
 
   public Context startSpan(Context parentContext, ExecutionAttributes attributes) {
     String spanName = spanName(attributes);
-    Span span =
-        tracer.spanBuilder(spanName).setSpanKind(CLIENT).setParent(parentContext).startSpan();
+    Span span = spanBuilder(parentContext, spanName, CLIENT).startSpan();
     return withClientSpan(parentContext, span);
   }
 

@@ -38,12 +38,8 @@ public class TwilioTracer extends BaseTracer {
   }
 
   public Context startSpan(Context parentContext, Object serviceExecutor, String methodName) {
-    Span span =
-        tracer
-            .spanBuilder(spanNameOnServiceExecution(serviceExecutor, methodName))
-            .setSpanKind(CLIENT)
-            .setParent(parentContext)
-            .startSpan();
+    String spanName = spanNameOnServiceExecution(serviceExecutor, methodName);
+    Span span = spanBuilder(parentContext, spanName, CLIENT).startSpan();
     return withClientSpan(parentContext, span);
   }
 

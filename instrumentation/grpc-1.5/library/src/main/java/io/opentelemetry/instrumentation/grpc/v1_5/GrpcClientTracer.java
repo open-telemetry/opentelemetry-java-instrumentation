@@ -26,11 +26,13 @@ final class GrpcClientTracer extends RpcClientTracer {
   }
 
   public Context startSpan(String name) {
+    Context parentContext = Context.current();
     Span span =
-        spanBuilder(name, CLIENT)
+        spanBuilder(parentContext, name, CLIENT)
             .setAttribute(SemanticAttributes.RPC_SYSTEM, getRpcSystem())
             .startSpan();
-    return Context.current().with(span);
+    // TODO: withClientSpan()
+    return parentContext.with(span);
   }
 
   public void end(Context context, Status status) {
