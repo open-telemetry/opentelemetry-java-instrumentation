@@ -20,7 +20,7 @@ public final class SpringBatchInstrumentationConfig {
       Config.get().isInstrumentationPropertyEnabled(instrumentationNames(), "item.enabled", false);
   private static final boolean CREATE_ROOT_SPAN_FOR_CHUNK =
       Config.get()
-          .isInstrumentationPropertyEnabled(instrumentationNames(), "chunk.root-span", false);
+          .isInstrumentationPropertyEnabled(instrumentationNames(), "chunk.new-trace", false);
 
   public static List<String> instrumentationNames() {
     return INSTRUMENTATION_NAMES;

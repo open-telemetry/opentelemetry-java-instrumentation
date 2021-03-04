@@ -22,9 +22,9 @@ public final class ContextPropagationDebug {
       ContextKey.named("thread-propagation-locations");
 
   private static final boolean THREAD_PROPAGATION_DEBUGGER =
-      Boolean.getBoolean("otel.threadPropagationDebugger");
+      Boolean.getBoolean("otel.javaagent.experimental.thread-propagation-debugger.enabled");
   private static final boolean FAIL_ON_CONTEXT_LEAK =
-      Boolean.getBoolean("otel.internal.failOnContextLeak");
+      Boolean.getBoolean("otel.javaagent.internal.fail-on-context-leak");
 
   public static boolean isThreadPropagationDebuggerEnabled() {
     return THREAD_PROPAGATION_DEBUGGER;
