@@ -45,7 +45,7 @@ class WithSpanAspectTracer extends BaseTracer {
   private String spanName(WithSpan annotation, Method method) {
     String spanName = annotation.value();
     if (spanName.isEmpty()) {
-      return method.getDeclaringClass().getSimpleName() + "." + method.getName();
+      return spanNameForMethod(method);
     }
     return spanName;
   }
