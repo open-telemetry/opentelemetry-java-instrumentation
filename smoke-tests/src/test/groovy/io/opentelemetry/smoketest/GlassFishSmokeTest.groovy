@@ -34,12 +34,15 @@ class GlassFishSmokeTest extends AppServerTest {
 
   @Override
   protected String getSpanName(String path) {
-    return path
+    switch (path) {
+      case "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless":
+        return "/*"
+    }
+    return super.getSpanName(path)
   }
 
   @Override
   boolean testRequestWebInfWebXml() {
     false
   }
-
 }

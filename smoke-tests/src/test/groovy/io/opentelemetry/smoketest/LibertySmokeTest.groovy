@@ -29,12 +29,10 @@ class LibertySmokeTest extends AppServerTest {
   @Override
   protected String getSpanName(String path) {
     switch (path) {
-      case "/app/greeting":
-      case "/app/headers":
-      case "/app/exception":
-      case "/app/asyncgreeting":
-        return path
+      case "/app/hello.txt":
+      case "/app/file-that-does-not-exist":
+        return "HTTP GET"
     }
-    return 'HTTP GET'
+    return super.getSpanName(path)
   }
 }

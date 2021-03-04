@@ -7,6 +7,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentTestTrait
@@ -14,7 +15,9 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.struts.GreetingServlet
 import javax.servlet.DispatcherType
+import okhttp3.HttpUrl
 import org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.DefaultServlet
@@ -98,6 +101,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
     server.setHandler(context)
 
     context.addServlet(DefaultServlet, "/")
+    context.addServlet(GreetingServlet, "/greetingServlet")
     context.addFilter(StrutsPrepareAndExecuteFilter, "/*", EnumSet.of(DispatcherType.REQUEST))
 
     server.start()
@@ -109,5 +113,28 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
   void stopServer(Server server) {
     server.stop()
     server.destroy()
+  }
+
+  // Struts runs from a servlet filter. Test that dispatching from struts action to a servlet
+  // does not overwrite server span name given by struts instrumentation.
+  def "test dispatch to servlet"() {
+    setup:
+    def url = HttpUrl.get(address.resolve("dispatch")).newBuilder()
+      .build()
+    def request = request(url, "GET", null).build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.code() == 200
+    response.body().string() == "greeting"
+
+    and:
+    assertTraces(1) {
+      trace(0, 3) {
+        basicSpan(it, 0, getContextPath() + "/dispatch", null)
+        basicSpan(it, 1, "GreetingAction.dispatch_servlet", span(0))
+        basicSpan(it, 2, "Dispatcher.forward", span(0))
+      }
+    }
   }
 }

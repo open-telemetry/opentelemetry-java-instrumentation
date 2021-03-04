@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 /**
  * Helper container for Context attributes for transferring certain information between servlet
@@ -17,14 +16,6 @@ public class AppServerBridge {
 
   private static final ContextKey<AppServerBridge> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-app-server-bridge");
-
-  private static final AtomicIntegerFieldUpdater<AppServerBridge>
-      servletUpdatedServerSpanNameUpdater =
-          AtomicIntegerFieldUpdater.newUpdater(
-              AppServerBridge.class, "servletUpdatedServerSpanName");
-
-  private static final int FALSE = 0;
-  private static final int TRUE = 1;
 
   /**
    * Attach AppServerBridge to context.
@@ -52,26 +43,8 @@ public class AppServerBridge {
 
   private final boolean servletShouldRecordException;
 
-  private volatile int servletUpdatedServerSpanName = FALSE;
-
   private AppServerBridge(boolean shouldRecordException) {
     servletShouldRecordException = shouldRecordException;
-  }
-
-  /**
-   * Returns true, if servlet integration has not already updated the server span name. Subsequent
-   * invocations will return {@code false}. This is meant to be used in a compare-and-set fashion.
-   *
-   * @param ctx server context
-   * @return <code>true</code>, if the server span name had not already been updated by servlet
-   *     integration, or <code>false</code> otherwise.
-   */
-  public static boolean setUpdatedServerSpanName(Context ctx) {
-    AppServerBridge appServerBridge = ctx.get(AppServerBridge.CONTEXT_KEY);
-    if (appServerBridge != null) {
-      return servletUpdatedServerSpanNameUpdater.compareAndSet(appServerBridge, FALSE, TRUE);
-    }
-    return false;
   }
 
   /**

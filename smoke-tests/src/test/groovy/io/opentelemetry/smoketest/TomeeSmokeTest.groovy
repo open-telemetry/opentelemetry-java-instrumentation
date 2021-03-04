@@ -31,9 +31,9 @@ class TomeeSmokeTest extends AppServerTest {
   @Override
   protected String getSpanName(String path) {
     switch (path) {
-      case "/app/WEB-INF/web.xml":
-        return "CoyoteAdapter.service"
+      case "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless":
+        return "/*"
     }
-    return path
+    return super.getSpanName(path)
   }
 }

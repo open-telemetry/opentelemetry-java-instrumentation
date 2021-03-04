@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.api.undertow.KeyHolder;
 import io.undertow.server.HttpServerExchange;
@@ -31,13 +32,14 @@ public class UndertowHttpServerTracer
   }
 
   public Context startServerSpan(HttpServerExchange exchange, Method instrumentedMethod) {
-    Context context =
-        AppServerBridge.init(startSpan(exchange, exchange, exchange, instrumentedMethod));
+    return startSpan(
+        exchange, exchange, exchange, "HTTP " + exchange.getRequestMethod().toString());
+  }
 
-    // context must be reattached, because it has new attributes compared to the one returned from
-    // startSpan().
-    attachServerContext(context, exchange);
-    return context;
+  @Override
+  protected Context customizeContext(Context context, HttpServerExchange exchange) {
+    context = ServletSpanNaming.init(context);
+    return AppServerBridge.init(context);
   }
 
   @SuppressWarnings("unchecked")
