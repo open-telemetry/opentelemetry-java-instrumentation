@@ -5,52 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.api.db;
 
-import java.util.Objects;
+import com.google.auto.value.AutoValue;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class SqlStatementInfo {
-  @Nullable private final String fullStatement;
-  @Nullable private final String operation;
-  @Nullable private final String table;
+@AutoValue
+public abstract class SqlStatementInfo {
 
-  public SqlStatementInfo(
+  public static SqlStatementInfo create(
       @Nullable String fullStatement, @Nullable String operation, @Nullable String table) {
-    this.fullStatement = fullStatement;
-    this.operation = operation;
-    this.table = table;
+    return new AutoValue_SqlStatementInfo(fullStatement, operation, table);
   }
 
   @Nullable
-  public String getFullStatement() {
-    return fullStatement;
-  }
+  public abstract String getFullStatement();
 
   @Nullable
-  public String getOperation() {
-    return operation;
-  }
+  public abstract String getOperation();
 
   @Nullable
-  public String getTable() {
-    return table;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
-    }
-    if (!(obj instanceof SqlStatementInfo)) {
-      return false;
-    }
-    SqlStatementInfo other = (SqlStatementInfo) obj;
-    return Objects.equals(fullStatement, other.fullStatement)
-        && Objects.equals(operation, other.operation)
-        && Objects.equals(table, other.table);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(fullStatement, operation, table);
-  }
+  public abstract String getTable();
 }
