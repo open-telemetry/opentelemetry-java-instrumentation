@@ -25,17 +25,21 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicLong
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Timeout
 
-@Timeout(5)
 class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
@@ -68,6 +72,24 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
 
     ch.writeAndFlush(request).get()
     return result.get(20, TimeUnit.SECONDS)
+  }
+
+  int doRequest(String method, URI uri, Map<String, String> headers, Channel connection) {
+    def result = new CompletableFuture<Integer>()
+    def requestId = headers.get("test-request-id")
+    connection.pipeline().addLast(new ClientHandler(null, result, requestId))
+
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.toString(), Unpooled.EMPTY_BUFFER)
+    request.headers().set(HttpHeaderNames.HOST, uri.host)
+    headers.each { k, v -> request.headers().set(k, v) }
+
+    println "Requesting $requestId"
+    connection.writeAndFlush(request).get()
+    return result.get(20, TimeUnit.SECONDS)
+  }
+
+  Channel connect(URI uri) {
+    return bootstrap.connect(uri.host, uri.port).sync().channel()
   }
 
   @Override
@@ -228,6 +250,51 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
     where:
     method = "GET"
   }
+
+  def "high concurrency test over single connection"() {
+    setup:
+    assumeTrue(testCausality())
+    int count = 2
+    def method = 'GET'
+    def url = server.address.resolve("/success")
+    def latch = new CountDownLatch(1)
+    def pool = Executors.newFixedThreadPool(4)
+    def channel = connect(url)
+
+    when:
+    count.times { index ->
+      def job = {
+        latch.await()
+        runUnderTrace("Parent span " + index) {
+          Span.current().setAttribute("test.request.id", index)
+          doRequest(method, url, ["test-request-id": index.toString()], channel)
+        }
+      }
+      pool.submit(job)
+    }
+    latch.countDown()
+
+    then:
+    assertTraces(count) {
+      count.times { idx ->
+        trace(idx, 3) {
+          def rootSpan = it.span(0)
+          //Traces can be in arbitrary order, let us find out the request id of the current one
+          def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
+
+          basicSpan(it, 0, "Parent span " + requestId, null, null) {
+            it."test.request.id" requestId
+          }
+          clientSpan(it, 1, span(0), method, url)
+          serverSpan(it, 2, span(1)) {
+            it."test.request.id" requestId
+          }
+        }
+      }
+    }
+
+  }
+
 
   def "when a handler is added to the netty pipeline we add our tracing handler"() {
     setup:

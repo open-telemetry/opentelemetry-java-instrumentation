@@ -43,7 +43,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
       prefix("success") {
         handleDistributedRequest()
         String msg = "Hello."
-        response.status(200).send(msg)
+        response.status(200).id(request.getHeader("test-request-id")).send(msg)
       }
       prefix("client-error") {
         handleDistributedRequest()
@@ -439,7 +439,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
       count.times { idx ->
         trace(idx, 3) {
           def rootSpan = it.span(0)
-          //Traces can be in arbitrary order, let us find out the request id if the current one
+          //Traces can be in arbitrary order, let us find out the request id of the current one
           def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
 
           basicSpan(it, 0, "Parent span " + requestId, null, null) {
@@ -452,7 +452,6 @@ abstract class HttpClientTest extends InstrumentationSpecification {
         }
       }
     }
-
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)

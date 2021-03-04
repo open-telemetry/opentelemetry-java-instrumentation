@@ -242,7 +242,7 @@ class TestHttpServer implements AutoCloseable {
       req.handled = true
     }
 
-    void handleDistributedRequest(Closure<Void> doInSpan = null) {
+    void handleDistributedRequest() {
       boolean isTestServer = true
       if (request.getHeader("is-test-server") != null) {
         isTestServer = Boolean.parseBoolean(request.getHeader("is-test-server"))
@@ -301,9 +301,15 @@ class TestHttpServer implements AutoCloseable {
 
     class ResponseApi {
       private int status = 200
+      private String id
 
       ResponseApi status(int status) {
         this.status = status
+        return this
+      }
+
+      ResponseApi id(String id) {
+        this.id = id
         return this
       }
 
@@ -311,6 +317,7 @@ class TestHttpServer implements AutoCloseable {
         assert !req.handled
         req.contentType = "text/plain;charset=utf-8"
         resp.status = status
+        resp.setHeader("test-request-id", id)
         req.handled = true
       }
 
