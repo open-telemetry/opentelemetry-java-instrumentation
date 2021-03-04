@@ -3,6 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.instrumentation.okhttp.v3_0
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import static java.util.concurrent.TimeUnit.SECONDS
 
 import java.util.concurrent.CountDownLatch
@@ -16,7 +22,7 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import okhttp3.internal.http.HttpMethod
 
-class OkHttp3AsyncTest extends OkHttp3Test {
+abstract class AbstractOkHttp3AsyncTest extends AbstractOkHttp3Test {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
