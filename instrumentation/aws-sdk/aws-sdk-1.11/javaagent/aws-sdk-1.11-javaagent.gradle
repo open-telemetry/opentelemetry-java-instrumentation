@@ -51,6 +51,9 @@ dependencies {
 
   compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
 
+  compileOnly deps.autoValueAnnotations
+  annotationProcessor deps.autoValue
+
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'

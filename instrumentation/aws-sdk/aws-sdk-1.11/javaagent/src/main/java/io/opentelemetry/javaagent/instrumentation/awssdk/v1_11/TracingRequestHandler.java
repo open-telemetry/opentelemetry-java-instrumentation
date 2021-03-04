@@ -21,13 +21,15 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.List;
+import java.util.Optional;
 
 /** Tracing Request Handler. */
 public class TracingRequestHandler extends RequestHandler2 {
 
-  private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
+  private final ContextStore<AmazonWebServiceRequest, RequestMeta.Builder> contextStore;
 
-  public TracingRequestHandler(ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
+  public TracingRequestHandler(
+      ContextStore<AmazonWebServiceRequest, RequestMeta.Builder> contextStore) {
     this.contextStore = contextStore;
   }
 
@@ -37,7 +39,10 @@ public class TracingRequestHandler extends RequestHandler2 {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     SpanKind kind = (isSqsProducer(originalRequest) ? SpanKind.PRODUCER : SpanKind.CLIENT);
 
-    RequestMeta requestMeta = contextStore.get(originalRequest);
+    RequestMeta requestMeta =
+        Optional.ofNullable(contextStore.get(originalRequest))
+            .map(RequestMeta.Builder::build)
+            .orElse(null);
     Context parentContext = Context.current();
     if (!tracer().shouldStartSpan(parentContext)) {
       return;
@@ -93,7 +98,10 @@ public class TracingRequestHandler extends RequestHandler2 {
   private void createConsumerSpan(Message message, Request<?> request, Response<?> response) {
     Context parentContext = SqsParentContext.ofSystemAttributes(message.getAttributes());
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
-    RequestMeta requestMeta = contextStore.get(originalRequest);
+    RequestMeta requestMeta =
+        Optional.ofNullable(contextStore.get(originalRequest))
+            .map(RequestMeta.Builder::build)
+            .orElse(null);
     Context context = tracer().startSpan(SpanKind.CONSUMER, parentContext, request, requestMeta);
     tracer().end(context, response);
   }
