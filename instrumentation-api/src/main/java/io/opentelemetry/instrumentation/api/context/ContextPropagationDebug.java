@@ -24,7 +24,7 @@ public final class ContextPropagationDebug {
   private static final boolean THREAD_PROPAGATION_DEBUGGER =
       Boolean.getBoolean("otel.javaagent.experimental.thread-propagation-debugger.enabled");
   private static final boolean FAIL_ON_CONTEXT_LEAK =
-      Boolean.getBoolean("otel.javaagent.internal.fail-on-context-leak");
+      Boolean.getBoolean("otel.javaagent.testing.fail-on-context-leak");
 
   public static boolean isThreadPropagationDebuggerEnabled() {
     return THREAD_PROPAGATION_DEBUGGER;

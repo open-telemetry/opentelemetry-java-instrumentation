@@ -57,7 +57,7 @@ public class AgentInstaller {
   // don't ignore libraries that we actually attempt to instrument. It means either the list is
   // wrong or a type matcher is.
   private static final String ADDITIONAL_LIBRARY_IGNORES_ENABLED =
-      "otel.javaagent.internal.additional-library-ignores.enabled";
+      "otel.javaagent.testing.additional-library-ignores.enabled";
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
   private static volatile Instrumentation INSTRUMENTATION;
