@@ -11,6 +11,7 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -143,5 +144,21 @@ class SqsTracingTest extends AgentInstrumentationSpecification {
         }
       }
     }
+  }
+
+  def "only adds attribute name once when request reused"() {
+    setup:
+    client.createQueue("testSdkSqs2")
+
+    when:
+    SendMessageRequest send = new SendMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs2", "{\"type\": \"hello\"}")
+    client.sendMessage(send)
+    ReceiveMessageRequest receive = new ReceiveMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs2")
+    client.receiveMessage(receive)
+    client.sendMessage(send)
+    client.receiveMessage(receive)
+
+    then:
+    receive.getAttributeNames() == ["AWSTraceHeader"]
   }
 }
