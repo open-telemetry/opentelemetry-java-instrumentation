@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
-import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging.LoggingSpanExporterAutoConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +24,8 @@ class LoggingSpanExporterAutoConfigurationTest {
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  TracerAutoConfiguration.class, LoggingSpanExporterAutoConfiguration.class));
+                  OpenTelemetryAutoConfiguration.class,
+                  LoggingSpanExporterAutoConfiguration.class));
 
   @AfterEach
   void tearDown() {

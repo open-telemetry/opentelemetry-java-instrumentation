@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.extension.annotations.WithSpan;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 public class TraceAspectAutoConfiguration {
 
   @Bean
-  public WithSpanAspect withSpanAspect(Tracer tracer) {
-    return new WithSpanAspect(tracer);
+  public WithSpanAspect withSpanAspect(OpenTelemetry openTelemetry) {
+    return new WithSpanAspect(openTelemetry);
   }
 }

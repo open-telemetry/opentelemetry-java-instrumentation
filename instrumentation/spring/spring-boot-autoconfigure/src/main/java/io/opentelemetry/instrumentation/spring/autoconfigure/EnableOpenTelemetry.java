@@ -12,9 +12,9 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-/** Auto-configures OpenTelemetry. Enables OpenTelemetry Tracing in Spring applications */
+/** Auto-configures OpenTelemetry. Enables OpenTelemetry in Spring applications */
 @Configuration
 @ComponentScan(basePackages = "io.opentelemetry.instrumentation.spring.autoconfigure")
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface EnableOpenTelemetryTracing {}
+public @interface EnableOpenTelemetry {}

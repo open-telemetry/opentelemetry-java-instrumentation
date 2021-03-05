@@ -7,21 +7,19 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.restte
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
 class RestTemplateBeanPostProcessorTest {
-  @Mock Tracer tracer;
 
   RestTemplateBeanPostProcessor restTemplateBeanPostProcessor =
-      new RestTemplateBeanPostProcessor(tracer);
+      new RestTemplateBeanPostProcessor(OpenTelemetry.noop());
 
   @Test
   @DisplayName("when processed bean is not of type RestTemplate should return object")
