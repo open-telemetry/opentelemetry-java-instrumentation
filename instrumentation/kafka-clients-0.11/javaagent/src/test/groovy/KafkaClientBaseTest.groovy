@@ -23,7 +23,7 @@ abstract class KafkaClientBaseTest extends AgentInstrumentationSpecification {
   protected static final SHARED_TOPIC = "shared.topic"
 
   private static final boolean propagationEnabled = Boolean.parseBoolean(
-    System.getProperty("otel.instrumentation.kafka.client-propagation", "true"))
+    System.getProperty("otel.instrumentation.kafka.client-propagation.enabled", "true"))
 
   @Rule
   KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, SHARED_TOPIC)

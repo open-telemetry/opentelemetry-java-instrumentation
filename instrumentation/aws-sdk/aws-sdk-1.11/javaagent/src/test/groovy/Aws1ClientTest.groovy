@@ -148,7 +148,7 @@ class Aws1ClientTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "aws.service" { it.contains(service) }
             "aws.endpoint" "$server.address"
-            "aws.operation" "${operation}Request"
+            "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
@@ -209,7 +209,7 @@ class Aws1ClientTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.NET_PEER_PORT.key}" 61
             "aws.service" { it.contains(service) }
             "aws.endpoint" "http://localhost:${UNUSABLE_PORT}"
-            "aws.operation" "${operation}Request"
+            "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
@@ -256,7 +256,7 @@ class Aws1ClientTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.NET_PEER_NAME.key}" "s3.amazonaws.com"
             "aws.service" "Amazon S3"
             "aws.endpoint" "https://s3.amazonaws.com"
-            "aws.operation" "HeadBucketRequest"
+            "aws.operation" "HeadBucket"
             "aws.agent" "java-aws-sdk"
           }
         }
@@ -306,7 +306,7 @@ class Aws1ClientTest extends AgentInstrumentationSpecification {
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
             "aws.service" "Amazon S3"
             "aws.endpoint" "$server.address"
-            "aws.operation" "GetObjectRequest"
+            "aws.operation" "GetObject"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
           }

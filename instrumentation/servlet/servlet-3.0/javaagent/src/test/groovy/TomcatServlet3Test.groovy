@@ -54,6 +54,14 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     super.responseSpan(trace, index, parent, method, endpoint)
   }
 
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    if (endpoint == NOT_FOUND) {
+      return getContextPath() + "/*"
+    }
+    return super.expectedServerSpanName(endpoint)
+  }
+
   @Shared
   def accessLogValue = new TestAccessLogValve()
 

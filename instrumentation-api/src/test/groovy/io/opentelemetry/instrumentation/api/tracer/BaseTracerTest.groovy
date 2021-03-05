@@ -38,7 +38,7 @@ class BaseTracerTest extends Specification {
 
   def "test shouldStartSpan"() {
     when:
-    boolean result = tracer.shouldStartSpan(kind, context)
+    boolean result = tracer.shouldStartSpan(context, kind)
 
     then:
     result == expected

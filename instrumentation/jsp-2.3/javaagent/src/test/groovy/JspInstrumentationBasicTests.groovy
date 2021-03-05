@@ -540,7 +540,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           hasNoParent()
-          name "/$jspWebappContext/$staticFile"
+          name "/$jspWebappContext/*"
           kind SERVER
           errored false
           attributes {

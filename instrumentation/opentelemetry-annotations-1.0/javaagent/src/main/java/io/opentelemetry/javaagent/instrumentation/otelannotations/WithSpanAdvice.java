@@ -30,6 +30,8 @@ public class WithSpanAdvice {
 
     SpanKind kind = tracer().extractSpanKind(applicationAnnotation);
     Context current = Context.current();
+
+    // don't create a nested span if you're not supposed to.
     if (tracer().shouldStartSpan(current, kind)) {
       context = tracer().startSpan(current, applicationAnnotation, method, kind);
       scope = context.makeCurrent();
