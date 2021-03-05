@@ -34,7 +34,7 @@ class SqsParentContext {
     String traceHeader = systemAttributes.get(AWS_TRACE_SYSTEM_ATTRIBUTE);
     return AwsXrayPropagator.getInstance()
         .extract(
-            Context.current(),
+            Context.root(),
             Collections.singletonMap("X-Amzn-Trace-Id", traceHeader),
             MapGetter.INSTANCE);
   }
