@@ -10,6 +10,7 @@
     <Or>
       <Class name="io.opentelemetry.instrumentation.test.utils.GcUtils"/>
       <Class name="io.opentelemetry.javaagent.util.GcUtils"/>
+      <Class name="~io.opentelemetry.instrumentation.api.caching.CacheTest.*"/>
     </Or>
     <Bug pattern="DM_GC"/>
   </Match>
