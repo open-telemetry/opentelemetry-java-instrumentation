@@ -32,7 +32,8 @@ ext {
     assertj           : '3.19.0',
     awaitility        : '4.0.3',
     // Caffeine 2.x to support Java 8+. 3.x is 11+.
-    caffeine          : '2.9.0'
+    caffeine          : '2.9.0',
+    testcontainers    : '1.15.2'
   ]
 
   deps = [
@@ -88,7 +89,7 @@ ext {
     ],
     groovy                       : "org.codehaus.groovy:groovy-all:${versions.groovy}",
     systemLambda                 : "com.github.stefanbirkner:system-lambda:${versions.systemLambda}",
-    testcontainers               : "org.testcontainers:testcontainers:1.15.1",
+    testcontainers               : "org.testcontainers:testcontainers:${versions.testcontainers}",
     testLogging                  : [
       dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: versions.logback),
       dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: versions.slf4j),

@@ -103,7 +103,7 @@ abstract class AbstractCouchbaseTest extends AgentInstrumentationSpecification {
       .socketConnectTimeout(timeout.intValue())
   }
 
-  void assertCouchbaseCall(TraceAssert trace, int index, Object spanName, String bucketName = null, Object parentSpan = null) {
+  void assertCouchbaseCall(TraceAssert trace, int index, Object spanName, String bucketName = null, Object parentSpan = null, Object statement = null) {
     trace.span(index) {
       name spanName
       kind CLIENT
@@ -118,7 +118,7 @@ abstract class AbstractCouchbaseTest extends AgentInstrumentationSpecification {
         if (bucketName != null) {
           "${SemanticAttributes.DB_NAME.key}" bucketName
         }
-        "${SemanticAttributes.DB_STATEMENT.key}" spanName
+        "${SemanticAttributes.DB_STATEMENT.key}" (statement ?: spanName)
       }
     }
   }

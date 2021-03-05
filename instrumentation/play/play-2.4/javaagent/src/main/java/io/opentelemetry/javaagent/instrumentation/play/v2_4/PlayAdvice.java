@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.play.v2_4.PlayTracer.tr
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
@@ -39,6 +39,8 @@ public class PlayAdvice {
       @Advice.Local("otelScope") Scope scope) {
     // Call onRequest on return after tags are populated.
     tracer().updateSpanName(Java8BytecodeBridge.spanFromContext(context), req);
+    // set the span name on the upstream akka/netty span
+    tracer().updateSpanName(ServerSpan.fromContextOrNull(context), req);
 
     scope.close();
     // span finished in RequestCompleteCallback
@@ -48,9 +50,6 @@ public class PlayAdvice {
     } else {
       tracer().endExceptionally(context, throwable);
     }
-
-    // set the span name on the upstream akka/netty span
-    tracer().updateSpanName(BaseTracer.getCurrentServerSpan(), req);
   }
 
   // Unused method for muzzle

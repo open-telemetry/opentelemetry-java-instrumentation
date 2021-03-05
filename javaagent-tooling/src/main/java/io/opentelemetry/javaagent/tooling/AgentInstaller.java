@@ -12,10 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
+import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
 import io.opentelemetry.javaagent.spi.ComponentInstaller;
@@ -56,8 +56,8 @@ public class AgentInstaller {
   // We set this system property when running the agent with unit tests to allow verifying that we
   // don't ignore libraries that we actually attempt to instrument. It means either the list is
   // wrong or a type matcher is.
-  private static final String DISABLE_GLOBAL_LIBRARY_IGNORES_FOR_TEST =
-      "internal.testing.disable.global.library.ignores";
+  private static final String ADDITIONAL_LIBRARY_IGNORES_ENABLED =
+      "otel.javaagent.testing.additional-library-ignores.enabled";
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
   private static volatile Instrumentation INSTRUMENTATION;
@@ -125,7 +125,7 @@ public class AgentInstaller {
     ignoredAgentBuilder =
         ignoredAgentBuilder.or(
             globalIgnoresMatcher(
-                Config.get().getBooleanProperty(DISABLE_GLOBAL_LIBRARY_IGNORES_FOR_TEST, false),
+                Config.get().getBooleanProperty(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true),
                 ignoreMatcherProvider));
 
     ignoredAgentBuilder = ignoredAgentBuilder.or(matchesConfiguredExcludes());

@@ -94,8 +94,14 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     onConnectionAndRequest(span, connection, request);
 
     Context context = withServerSpan(parentContext, span);
+    context = customizeContext(context, request);
     attachServerContext(context, storage);
 
+    return context;
+  }
+
+  /** Override in subclass to customize context that is returned by {@code startSpan}. */
+  protected Context customizeContext(Context context, REQUEST request) {
     return context;
   }
 
@@ -149,7 +155,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   public Span getServerSpan(STORAGE storage) {
     Context attachedContext = getServerContext(storage);
-    return attachedContext == null ? null : getCurrentServerSpan(attachedContext);
+    return attachedContext == null ? null : ServerSpan.fromContextOrNull(attachedContext);
   }
 
   /**

@@ -18,11 +18,13 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
+      @Advice.This(typing = Assigner.Typing.DYNAMIC) Object servletOrFilter,
       @Advice.Argument(value = 0, readOnly = false) ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelContext") Context context,
@@ -38,7 +40,8 @@ public class Servlet3Advice {
     if (attachedContext != null) {
       // We are inside nested servlet/filter/app-server span, don't create new span
       if (Servlet3HttpServerTracer.needsRescoping(attachedContext)) {
-        attachedContext = tracer().runOnceUnderAppServer(attachedContext, httpServletRequest);
+        attachedContext =
+            tracer().updateContext(attachedContext, servletOrFilter, httpServletRequest);
         scope = attachedContext.makeCurrent();
         return;
       }
@@ -46,7 +49,8 @@ public class Servlet3Advice {
       // We already have attached context to request but this could have been done by app server
       // instrumentation, if needed update span with info from current request.
       Context currentContext = Java8BytecodeBridge.currentContext();
-      Context updatedContext = tracer().runOnceUnderAppServer(currentContext, httpServletRequest);
+      Context updatedContext =
+          tracer().updateContext(currentContext, servletOrFilter, httpServletRequest);
       if (updatedContext != currentContext) {
         // runOnceUnderAppServer updated context, need to re-scope
         scope = updatedContext.makeCurrent();
@@ -60,15 +64,16 @@ public class Servlet3Advice {
       // We already have a span but it was not created by servlet instrumentation.
       // In case it was created by app server integration we need to update it with info from
       // current request.
-      Context updatedContext = tracer().runOnceUnderAppServer(currentContext, httpServletRequest);
+      Context updatedContext =
+          tracer().updateContext(currentContext, servletOrFilter, httpServletRequest);
       if (currentContext != updatedContext) {
-        // runOnceUnderAppServer updated context, need to re-scope
+        // updateContext updated context, need to re-scope
         scope = updatedContext.makeCurrent();
       }
       return;
     }
 
-    context = tracer().startSpan(httpServletRequest);
+    context = tracer().startSpan(servletOrFilter, httpServletRequest);
     scope = context.makeCurrent();
   }
 

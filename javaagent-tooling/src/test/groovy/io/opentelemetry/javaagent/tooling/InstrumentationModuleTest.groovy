@@ -77,7 +77,7 @@ class InstrumentationModuleTest extends Specification {
     target.applyCalled == enabled
 
     cleanup:
-    Config.INSTANCE = Config.DEFAULT
+    Config.INSTANCE = null
 
     where:
     enabled << [true, false]
@@ -86,7 +86,7 @@ class InstrumentationModuleTest extends Specification {
   def "configure default sys prop as #value"() {
     setup:
     Config.INSTANCE = new ConfigBuilder().readProperties([
-      "otel.instrumentation.default-enabled": String.valueOf(value)
+      "otel.instrumentation.common.default-enabled": String.valueOf(value)
     ]).build()
     def target = new TestInstrumentationModule(["test"])
     target.instrument(new AgentBuilder.Default())
@@ -96,7 +96,7 @@ class InstrumentationModuleTest extends Specification {
     target.applyCalled == enabled
 
     cleanup:
-    Config.INSTANCE = Config.DEFAULT
+    Config.INSTANCE = null
 
     where:
     value   | enabled
@@ -108,7 +108,7 @@ class InstrumentationModuleTest extends Specification {
   def "configure sys prop enabled for #value when default is disabled"() {
     setup:
     Config.INSTANCE = new ConfigBuilder().readProperties([
-      "otel.instrumentation.default-enabled"        : "false",
+      "otel.instrumentation.common.default-enabled" : "false",
       ("otel.instrumentation." + value + ".enabled"): "true"
     ]).build()
 
@@ -120,7 +120,7 @@ class InstrumentationModuleTest extends Specification {
     target.applyCalled == enabled
 
     cleanup:
-    Config.INSTANCE = Config.DEFAULT
+    Config.INSTANCE = null
 
     where:
     value             | enabled | name          | altName

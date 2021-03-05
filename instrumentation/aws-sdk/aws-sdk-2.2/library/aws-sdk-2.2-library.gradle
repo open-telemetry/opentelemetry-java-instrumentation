@@ -11,3 +11,7 @@ dependencies {
   testImplementation deps.assertj
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
 }
+
+test {
+  systemProperty "otel.instrumentation.aws-sdk.experimental-span-attributes", true
+}

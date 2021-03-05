@@ -11,7 +11,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.RequestBuilderInjectAdapter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;

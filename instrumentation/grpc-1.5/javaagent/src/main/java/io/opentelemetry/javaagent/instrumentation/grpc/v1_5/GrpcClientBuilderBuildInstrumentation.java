@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.grpc.ClientInterceptor;
-import io.opentelemetry.instrumentation.grpc.v1_5.client.TracingClientInterceptor;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
 import java.util.Map;
@@ -46,16 +45,7 @@ public class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentatio
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
         @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {
-      boolean shouldRegister = true;
-      for (ClientInterceptor interceptor : interceptors) {
-        if (interceptor instanceof TracingClientInterceptor) {
-          shouldRegister = false;
-          break;
-        }
-      }
-      if (shouldRegister) {
-        interceptors.add(0, TracingClientInterceptor.newInterceptor());
-      }
+      interceptors.add(0, GrpcInterceptors.CLIENT_INTERCEPTOR);
     }
   }
 }
