@@ -248,7 +248,7 @@ public abstract class BaseTracer {
    *
    * @param endTimeNanos Explicit nanoseconds timestamp from the epoch.
    * @see #onException(Context, Throwable)
-   * @see #end(Context)
+   * @see #end(Context, long)
    */
   public void endExceptionally(Context context, Throwable throwable, long endTimeNanos) {
     onException(context, throwable);
