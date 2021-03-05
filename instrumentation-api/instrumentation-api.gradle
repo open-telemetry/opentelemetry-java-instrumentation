@@ -4,6 +4,8 @@ apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
+  api project(":instrumentation-api-caching")
+
   api deps.opentelemetryApi
   api deps.opentelemetryContext
   api deps.opentelemetrySemConv
@@ -16,4 +18,5 @@ dependencies {
   testImplementation project(':testing-common')
   testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
   testImplementation deps.assertj
+  testImplementation deps.awaitility
 }

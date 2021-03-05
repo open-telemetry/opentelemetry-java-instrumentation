@@ -17,7 +17,6 @@ public class ThreadLocalContext {
   private Context context;
   private Scope scope;
   private boolean started;
-  private boolean updated;
 
   private ThreadLocalContext(HttpServletRequest req) {
     this.req = req;
@@ -51,21 +50,6 @@ public class ThreadLocalContext {
   public boolean startSpan() {
     boolean b = started;
     started = true;
-    return !b;
-  }
-
-  /**
-   * Test whether span should be updated.
-   *
-   * @return true when span should be updated, false when span was already updated or span wasn't
-   *     started
-   */
-  public boolean updateSpan() {
-    if (!started) {
-      return false;
-    }
-    boolean b = updated;
-    updated = true;
     return !b;
   }
 

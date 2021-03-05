@@ -29,7 +29,7 @@ public class ExecutorInstrumentationUtils {
     Class<?> enclosingClass = taskClass.getEnclosingClass();
 
     // not much point in propagating root context
-    // plus it causes failures under otel.internal.failOnContextLeak=true
+    // plus it causes failures under otel.javaagent.testing.fail-on-context-leak=true
     return Context.current() != Context.root()
         // TODO Workaround for
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
