@@ -5,6 +5,7 @@ muzzle {
     group = "org.grails"
     module = "grails-web-url-mappings"
     versions = "[3.0,)"
+    skipVersions += ['3.1.15']
     assertInverse true
   }
 }
