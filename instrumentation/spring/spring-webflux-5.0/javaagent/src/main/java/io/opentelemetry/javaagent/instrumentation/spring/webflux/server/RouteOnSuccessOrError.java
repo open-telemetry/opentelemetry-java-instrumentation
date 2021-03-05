@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.spring.webflux.SpringWebfluxConfig;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
@@ -43,7 +43,7 @@ public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Thr
             span.setAttribute("spring-webflux.request.predicate", predicateString);
           }
 
-          Span serverSpan = BaseTracer.getCurrentServerSpan(context);
+          Span serverSpan = ServerSpan.fromContextOrNull(context);
           if (serverSpan != null) {
             serverSpan.updateName(ServletContextPath.prepend(context, parseRoute(predicateString)));
           }

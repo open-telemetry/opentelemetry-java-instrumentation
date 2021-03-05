@@ -36,19 +36,15 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
     /**
      * Temporarily using emq instead of localstack till the latter supports AWS trace propagation
      *
-    sqs = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
-      .withServices(LocalStackContainer.Service.SQS)
-    sqs.start()
-    sqsPort = sqs.getMappedPort(4566)
+     sqs = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
+     .withServices(LocalStackContainer.Service.SQS)
+     sqs.start()
+     sqsPort = sqs.getMappedPort(4566)
 
-    def app = new SpringApplication(SqsConfig)
-    app.addInitializers(new ApplicationContextInitializer<AbstractApplicationContext>() {
-      @Override
-      void initialize(AbstractApplicationContext applicationContext) {
-        applicationContext.getBeanFactory().registerSingleton("localStack", sqs)
-      }
-    })
-    server = app.run()**/
+     def app = new SpringApplication(SqsConfig)
+     app.addInitializers(new ApplicationContextInitializer<AbstractApplicationContext>() {@Override
+     void initialize(AbstractApplicationContext applicationContext) {applicationContext.getBeanFactory().registerSingleton("localStack", sqs)}})
+     server = app.run()**/
 
     sqsPort = PortUtils.randomOpenPort()
     sqs = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start()
@@ -105,7 +101,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "SendMessageRequest"
+            "aws.operation" "SendMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -124,7 +120,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -156,7 +152,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -177,7 +173,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "DeleteMessageRequest"
+            "aws.operation" "DeleteMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -198,7 +194,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -219,7 +215,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -240,7 +236,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -275,7 +271,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "SendMessageRequest"
+            "aws.operation" "SendMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -294,7 +290,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -326,7 +322,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -347,7 +343,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "DeleteMessageRequest"
+            "aws.operation" "DeleteMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -368,7 +364,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -389,7 +385,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -410,7 +406,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -449,7 +445,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "CreateQueueRequest"
+            "aws.operation" "CreateQueue"
             "aws.queue.name" "sqsCamelSeparateQueueTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -488,7 +484,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "SendMessageRequest"
+            "aws.operation" "SendMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelSeparateQueueTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -507,7 +503,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelSeparateQueueTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -533,7 +529,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" "http://localhost:$sqsPort"
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" "http://localhost:$sqsPort/queue/sqsCamelSeparateQueueTest"
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"

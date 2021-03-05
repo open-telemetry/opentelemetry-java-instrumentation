@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTr
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener;
-import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,7 +19,6 @@ public class JettyHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.Origin Method method,
       @Advice.This Object source,
       @Advice.Argument(value = 2, readOnly = false) HttpServletRequest request,
       @Advice.Local("otelContext") Context context,
@@ -32,7 +30,7 @@ public class JettyHandlerAdvice {
       return;
     }
 
-    context = tracer().startServerSpan(request, method);
+    context = tracer().startServerSpan(request);
     scope = context.makeCurrent();
   }
 

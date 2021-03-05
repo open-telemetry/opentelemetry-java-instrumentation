@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import java.lang.reflect.Method;
 
 public class MethodTracer extends BaseTracer {
   private static final MethodTracer TRACER = new MethodTracer();
@@ -17,5 +19,9 @@ public class MethodTracer extends BaseTracer {
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.external-annotations";
+  }
+
+  public Context startSpan(Method method) {
+    return startSpan(spanNameForMethod(method));
   }
 }

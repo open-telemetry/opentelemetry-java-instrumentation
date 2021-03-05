@@ -9,8 +9,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -41,7 +43,8 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onExit(@Advice.Argument(0) IRequestHandler handler) {
-      Span serverSpan = BaseTracer.getCurrentServerSpan();
+      Context context = Java8BytecodeBridge.currentContext();
+      Span serverSpan = ServerSpan.fromContextOrNull(context);
       if (serverSpan == null) {
         return;
       }
@@ -51,9 +54,9 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         // wicket filter mapping without wildcard, if wicket filter is mapped to /*
         // this will be an empty string
         String filterPath = RequestCycle.get().getRequest().getFilterPath();
-        serverSpan.updateName(
-            ServletContextPath.prepend(
-                Java8BytecodeBridge.currentContext(), filterPath + "/" + pageName));
+        serverSpan.updateName(ServletContextPath.prepend(context, filterPath + "/" + pageName));
+        // prevent servlet integration from doing further updates to server span name
+        ServletSpanNaming.setServletUpdatedServerSpanName(context);
       }
     }
   }

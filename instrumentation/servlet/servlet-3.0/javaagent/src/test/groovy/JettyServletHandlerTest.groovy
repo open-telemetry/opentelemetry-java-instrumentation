@@ -38,6 +38,11 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
   }
 
   @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    "HTTP GET"
+  }
+
+  @Override
   Server startServer(int port) {
     Server server = new Server(port)
     ServletHandler handler = new ServletHandler()

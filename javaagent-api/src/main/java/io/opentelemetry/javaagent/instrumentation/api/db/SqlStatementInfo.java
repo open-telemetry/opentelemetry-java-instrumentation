@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.api.db;
 
 import java.util.Objects;
+import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class SqlStatementInfo {
@@ -18,6 +19,10 @@ public final class SqlStatementInfo {
     this.fullStatement = fullStatement;
     this.operation = operation;
     this.table = table;
+  }
+
+  public SqlStatementInfo mapTable(Function<String, String> mapper) {
+    return new SqlStatementInfo(fullStatement, operation, mapper.apply(table));
   }
 
   @Nullable

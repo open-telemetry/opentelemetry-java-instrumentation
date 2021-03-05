@@ -21,7 +21,7 @@ class HttpClientTracerTest extends BaseTracerTest {
   }
 
   def cleanupSpec() {
-    Config.INSTANCE = Config.DEFAULT
+    Config.INSTANCE = null
   }
 
   @Shared

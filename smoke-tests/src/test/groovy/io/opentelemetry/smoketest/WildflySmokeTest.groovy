@@ -21,16 +21,6 @@ class WildflySmokeTest extends AppServerTest {
     "ghcr.io/open-telemetry/java-test-containers:wildfly-${serverVersion}-jdk$jdk-20210223.592806654"
   }
 
-  @Override
-  protected String getSpanName(String path) {
-    switch (path) {
-      case "/app/WEB-INF/web.xml":
-      case "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless":
-        return "DisallowedMethodsHandler.handleRequest"
-    }
-    return path
-  }
-
   @Unroll
   def "JSP smoke test on WildFly"() {
     String url = "http://localhost:${target.getMappedPort(8080)}/app/jsp"
