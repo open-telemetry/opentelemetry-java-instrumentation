@@ -17,6 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
@@ -37,7 +38,7 @@ public class SpringWebMvcTracer extends BaseTracer {
     return TRACER;
   }
 
-  public Context startHandlerSpan(Context parentContext, Object handler) {
+  public @Nullable Context startHandlerSpan(Context parentContext, Object handler) {
     String spanName = spanNameOnHandle(handler);
     if (spanName != null) {
       return startSpan(parentContext, spanName, INTERNAL);

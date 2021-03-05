@@ -94,10 +94,12 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
     endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND
   }
 
+  @Override
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
     endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
   }
 
+  @Override
   int getErrorPageSpansCount(ServerEndpoint endpoint) {
     2
   }

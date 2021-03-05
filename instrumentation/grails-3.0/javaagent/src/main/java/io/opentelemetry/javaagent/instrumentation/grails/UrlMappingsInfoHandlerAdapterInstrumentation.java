@@ -49,7 +49,8 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
       Context parentContext = Java8BytecodeBridge.currentContext();
       Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
       if (serverSpan != null && handler instanceof GrailsControllerUrlMappingInfo) {
-        tracer().nameServerSpan(serverSpan, (GrailsControllerUrlMappingInfo) handler);
+        tracer()
+            .nameServerSpan(parentContext, serverSpan, (GrailsControllerUrlMappingInfo) handler);
       }
     }
   }
