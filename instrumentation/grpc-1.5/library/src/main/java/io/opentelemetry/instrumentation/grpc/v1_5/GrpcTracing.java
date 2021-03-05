@@ -34,18 +34,18 @@ public final class GrpcTracing {
   }
 
   /**
-   * Returns a new {@link TracingClientInterceptor} for use with methods like {@link
+   * Returns a new {@link ClientInterceptor} for use with methods like {@link
    * io.grpc.ManagedChannelBuilder#intercept(ClientInterceptor...)}.
    */
-  public TracingClientInterceptor newClientInterceptor() {
+  public ClientInterceptor newClientInterceptor() {
     return new TracingClientInterceptor(clientTracer);
   }
 
   /**
-   * Returns a new {@link TracingServerInterceptor} for use with methods like {@link
+   * Returns a new {@link ServerInterceptor} for use with methods like {@link
    * io.grpc.ServerBuilder#intercept(ServerInterceptor)}.
    */
-  public TracingServerInterceptor newServerInterceptor() {
+  public ServerInterceptor newServerInterceptor() {
     return new TracingServerInterceptor(serverTracer, captureExperimentalSpanAttributes);
   }
 }
