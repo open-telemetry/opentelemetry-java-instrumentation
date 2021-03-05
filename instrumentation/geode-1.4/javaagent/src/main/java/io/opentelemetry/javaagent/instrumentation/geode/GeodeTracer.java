@@ -9,9 +9,9 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import org.apache.geode.cache.Region;
