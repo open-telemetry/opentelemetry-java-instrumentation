@@ -34,7 +34,7 @@ public final class GrpcTracing {
   }
 
   /**
-   * Returns a new {@link TracingClientInterceptor} for use with methods like {@link
+   * Returns a new {@link ClientInterceptor} for use with methods like {@link
    * io.grpc.ManagedChannelBuilder#intercept(ClientInterceptor...)}.
    */
   public ClientInterceptor newClientInterceptor() {
@@ -42,7 +42,7 @@ public final class GrpcTracing {
   }
 
   /**
-   * Returns a new {@link TracingServerInterceptor} for use with methods like {@link
+   * Returns a new {@link ServerInterceptor} for use with methods like {@link
    * io.grpc.ServerBuilder#intercept(ServerInterceptor)}.
    */
   public ServerInterceptor newServerInterceptor() {
