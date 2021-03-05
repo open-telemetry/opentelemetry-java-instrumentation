@@ -40,6 +40,6 @@ test.finalizedBy(tasks.register("testFieldInjectionDisabled", Test) {
   filter {
     includeTestsMatching 'context.FieldInjectionDisabledTest'
   }
-  jvmArgs '-Dotel.javaagent.runtime.context.field.injection=false'
+  jvmArgs '-Dotel.javaagent.experimental.field-injection.enabled=false'
   jvmArgs '-Dotel.instrumentation.context-test-instrumentation.enabled=true'
 })

@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import javax.faces.FacesException;
 import javax.faces.component.ActionSource2;
 import javax.faces.component.UIViewRoot;
@@ -37,7 +38,7 @@ public abstract class JsfTracer extends BaseTracer {
   }
 
   public void updateServerSpanName(Context context, FacesContext facesContext) {
-    Span serverSpan = getCurrentServerSpan();
+    Span serverSpan = ServerSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }

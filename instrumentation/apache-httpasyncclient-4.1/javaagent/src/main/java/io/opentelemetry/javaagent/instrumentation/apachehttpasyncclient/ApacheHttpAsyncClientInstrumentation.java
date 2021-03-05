@@ -110,10 +110,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
       HttpRequest request = delegate.generateRequest();
-      tracer()
-          .getPropagators()
-          .getTextMapPropagator()
-          .inject(context, request, tracer().getSetter());
+      tracer().inject(context, request);
       Span span = Span.fromContext(context);
       span.updateName(tracer().spanNameForRequest(request));
       tracer().onRequest(span, request);

@@ -109,7 +109,8 @@ abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest {
         assertCouchbaseCall(it, 0, "Cluster.openBucket")
       }
       trace(1, 1) {
-        assertCouchbaseCall(it, 0, 'SELECT mockrow', bucketCouchbase.name())
+        def dbName = bucketCouchbase.name()
+        assertCouchbaseCall(it, 0, "SELECT $dbName", dbName, null, 'SELECT mockrow')
       }
     }
 

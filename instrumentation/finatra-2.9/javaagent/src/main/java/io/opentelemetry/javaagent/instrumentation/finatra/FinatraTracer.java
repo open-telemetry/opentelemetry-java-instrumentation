@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra;
 
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 public class FinatraTracer extends BaseTracer {
@@ -16,6 +18,10 @@ public class FinatraTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.finatra";
+    return "io.opentelemetry.javaagent.finatra-2.9";
+  }
+
+  public Context startSpan(Context parentContext, Class<?> clazz) {
+    return super.startSpan(parentContext, spanNameForClass(clazz), SpanKind.INTERNAL);
   }
 }

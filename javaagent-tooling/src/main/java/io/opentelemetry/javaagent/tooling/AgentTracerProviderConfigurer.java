@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigurer {
   private static final Logger log = LoggerFactory.getLogger(AgentTracerProviderConfigurer.class);
 
-  static final String EXPORTER_JAR_CONFIG = "otel.exporter.jar";
+  static final String EXPORTER_JAR_CONFIG = "otel.javaagent.experimental.exporter.jar";
 
   @Override
   public void configure(SdkTracerProviderBuilder sdkTracerProviderBuilder) {

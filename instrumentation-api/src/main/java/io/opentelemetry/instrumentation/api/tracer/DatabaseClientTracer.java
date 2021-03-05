@@ -33,7 +33,7 @@ public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATE
   }
 
   public boolean shouldStartSpan(Context parentContext) {
-    return shouldStartSpan(CLIENT, parentContext);
+    return shouldStartSpan(parentContext, CLIENT);
   }
 
   public Context startSpan(Context parentContext, CONNECTION connection, STATEMENT statement) {
@@ -69,8 +69,21 @@ public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATE
    */
   public static String conventionSpanName(
       @Nullable String dbName, @Nullable String operation, @Nullable String table) {
+    return conventionSpanName(dbName, operation, table, DB_QUERY);
+  }
+
+  /**
+   * A helper method for constructing the span name formatting according to DB semantic conventions:
+   * {@code <db.operation> <db.name><table>}. If {@code dbName} and {@code operation} are not
+   * provided then {@code defaultValue} is returned.
+   */
+  public static String conventionSpanName(
+      @Nullable String dbName,
+      @Nullable String operation,
+      @Nullable String table,
+      String defaultValue) {
     if (operation == null) {
-      return dbName == null ? DB_QUERY : dbName;
+      return dbName == null ? defaultValue : dbName;
     }
 
     StringBuilder name = new StringBuilder(operation);

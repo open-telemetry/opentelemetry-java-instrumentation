@@ -42,5 +42,5 @@ test.finalizedBy(tasks.register("testPropagationDisabled", Test) {
   filter {
     includeTestsMatching 'KafkaClientPropagationDisabledTest'
   }
-  jvmArgs "-Dotel.instrumentation.kafka.client-propagation=false"
+  jvmArgs "-Dotel.instrumentation.kafka.client-propagation.enabled=false"
 })

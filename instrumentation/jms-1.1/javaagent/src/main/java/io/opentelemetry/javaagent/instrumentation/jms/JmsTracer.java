@@ -70,7 +70,7 @@ public class JmsTracer extends BaseTracer {
   }
 
   public Scope startProducerScope(Context context, Message message) {
-    GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(context, message, SETTER);
+    inject(context, message, SETTER);
     return context.makeCurrent();
   }
 
@@ -163,6 +163,6 @@ public class JmsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.jms";
+    return "io.opentelemetry.javaagent.jms-1.1";
   }
 }

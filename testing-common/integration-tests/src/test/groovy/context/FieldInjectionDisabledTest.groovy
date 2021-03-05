@@ -11,7 +11,7 @@ import java.lang.reflect.Field
 import library.DisabledKeyClass
 
 // this test is run using:
-//   -Dotel.javaagent.runtime.context.field.injection=false
+//   -Dotel.javaagent.experimental.field-injection.enabled=false
 //   -Dotel.instrumentation.context-test-instrumentation.enabled=true
 // (see integration-tests.gradle)
 class FieldInjectionDisabledTest extends AgentInstrumentationSpecification {

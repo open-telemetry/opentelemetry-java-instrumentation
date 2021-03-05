@@ -6,22 +6,22 @@
 package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.context.propagation.TextMapSetter
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 class HttpClientTracerTest extends BaseTracerTest {
 
   def setupSpec() {
     Config.INSTANCE = new ConfigBuilder().readProperties([
-      "otel.endpoint.peer.service.mapping": "1.2.3.4=catservice,dogs.com=dogsservice"
+      "otel.instrumentation.common.peer-service-mapping": "1.2.3.4=catservice,dogs.com=dogsservice"
     ]).build()
   }
 
   def cleanupSpec() {
-    Config.INSTANCE = Config.DEFAULT
+    Config.INSTANCE = null
   }
 
   @Shared

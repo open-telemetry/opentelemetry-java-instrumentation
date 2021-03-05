@@ -46,6 +46,6 @@ public abstract class LettuceAbstractDatabaseClientTracer<STATEMENT>
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.lettuce";
+    return "io.opentelemetry.javaagent.lettuce-4.0";
   }
 }

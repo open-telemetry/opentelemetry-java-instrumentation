@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -42,9 +41,7 @@ public class OpenTelemetryFilter implements Filter {
     final Context context;
     if (kind.equals(CLIENT)) {
       context = tracer.startClientSpan(interfaceName, methodName);
-      GlobalOpenTelemetry.getPropagators()
-          .getTextMapPropagator()
-          .inject(context, (RpcInvocation) invocation, DubboInjectAdapter.SETTER);
+      tracer.inject(context, (RpcInvocation) invocation, DubboInjectAdapter.SETTER);
     } else {
       context = tracer.startServerSpan(interfaceName, methodName, (RpcInvocation) invocation);
     }

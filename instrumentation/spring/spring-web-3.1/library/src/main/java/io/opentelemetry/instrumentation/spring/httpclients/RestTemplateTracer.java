@@ -60,6 +60,6 @@ class RestTemplateTracer extends HttpClientTracer<HttpRequest, HttpHeaders, Clie
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-web";
+    return "io.opentelemetry.javaagent.spring-web-3.1";
   }
 }

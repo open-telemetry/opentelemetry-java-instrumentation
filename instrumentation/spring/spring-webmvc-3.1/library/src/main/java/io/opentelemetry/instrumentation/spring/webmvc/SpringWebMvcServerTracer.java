@@ -74,6 +74,6 @@ class SpringWebMvcServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-webmvc";
+    return "io.opentelemetry.javaagent.spring-webmvc-3.1";
   }
 }

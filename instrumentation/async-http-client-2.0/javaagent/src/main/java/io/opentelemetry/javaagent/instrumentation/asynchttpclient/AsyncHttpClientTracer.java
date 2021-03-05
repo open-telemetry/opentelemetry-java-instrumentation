@@ -52,6 +52,6 @@ public class AsyncHttpClientTracer extends HttpClientTracer<Request, Request, Re
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.async-http-client";
+    return "io.opentelemetry.javaagent.async-http-client-2.0";
   }
 }

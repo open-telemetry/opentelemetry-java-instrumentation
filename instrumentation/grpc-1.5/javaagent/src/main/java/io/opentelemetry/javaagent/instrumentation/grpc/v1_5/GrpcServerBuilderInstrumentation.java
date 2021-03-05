@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.grpc.ServerBuilder;
-import io.opentelemetry.instrumentation.grpc.v1_5.server.TracingServerInterceptor;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -48,7 +47,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.This ServerBuilder<?> serverBuilder) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(ServerBuilder.class);
       if (callDepth == 0) {
-        serverBuilder.intercept(TracingServerInterceptor.newInterceptor());
+        serverBuilder.intercept(GrpcInterceptors.SERVER_INTERCEPTOR);
       }
     }
 

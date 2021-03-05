@@ -1,0 +1,15 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api(project(':testing-common')) {
+    exclude module: 'okhttp'
+  }
+
+  api group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
+
+  implementation deps.guava
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}

@@ -18,6 +18,7 @@
         <param name="error">500</param>
       </result>
       <result type="freemarker" name="greeting">/greeting.ftl</result>
+      <result name="greetingServlet">/greetingServlet</result>
     </global-results>
 
     <global-exception-mappings>
@@ -31,6 +32,7 @@
     <action name="exception" class="io.opentelemetry.struts.GreetingAction" method="exception"/>
     <action name="/path/{id}/param" class="io.opentelemetry.struts.GreetingAction"
       method="path_param"/>
+    <action name="dispatch" class="io.opentelemetry.struts.GreetingAction" method="dispatch_servlet"/>
   </package>
 
 

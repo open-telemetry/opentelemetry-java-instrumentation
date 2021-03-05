@@ -9,9 +9,11 @@ import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
 import io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class IncludeTest extends Specification {
 
+  @Unroll
   def "test configuration #value"() {
     setup:
     Config config
@@ -20,7 +22,7 @@ class IncludeTest extends Specification {
         "otel.instrumentation.external-annotations.include": value
       ]).build()
     } else {
-      config = Config.DEFAULT
+      config = Config.create([:])
     }
 
     expect:

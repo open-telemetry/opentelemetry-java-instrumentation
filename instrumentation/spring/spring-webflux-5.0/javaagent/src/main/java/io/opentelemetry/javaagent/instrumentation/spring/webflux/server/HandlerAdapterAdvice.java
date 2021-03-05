@@ -11,7 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.spring.webflux.SpringWebfluxConfig;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.method.HandlerMethod;
@@ -52,7 +52,7 @@ public class HandlerAdapterAdvice {
     }
 
     if (context != null) {
-      Span serverSpan = BaseTracer.getCurrentServerSpan(context);
+      Span serverSpan = ServerSpan.fromContextOrNull(context);
 
       PathPattern bestPattern =
           exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);

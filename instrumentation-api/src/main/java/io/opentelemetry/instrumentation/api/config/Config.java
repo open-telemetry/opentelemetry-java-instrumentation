@@ -21,11 +21,9 @@ import org.slf4j.LoggerFactory;
 public abstract class Config {
   private static final Logger log = LoggerFactory.getLogger(Config.class);
 
-  private static final Config DEFAULT = Config.create(Collections.emptyMap());
-
-  // INSTANCE can never be null - muzzle instantiates instrumenters when it generates
-  // getMuzzleReferenceMatcher() and the InstrumentationModule constructor uses Config
-  private static volatile Config INSTANCE = DEFAULT;
+  // lazy initialized, so that javaagent can set it, and library instrumentation can fall back and
+  // read system properties
+  private static volatile Config INSTANCE = null;
 
   /**
    * Sets the agent configuration singleton. This method is only supposed to be called once, from
@@ -33,7 +31,7 @@ public abstract class Config {
    * Config#get()} is used for the first time).
    */
   public static void internalInitializeConfig(Config config) {
-    if (INSTANCE != DEFAULT) {
+    if (INSTANCE != null) {
       log.warn("Config#INSTANCE was already set earlier");
       return;
     }
@@ -41,6 +39,12 @@ public abstract class Config {
   }
 
   public static Config get() {
+    if (INSTANCE == null) {
+      // this should only happen in library instrumentation
+      //
+      // no need to synchronize because worst case is creating INSTANCE more than once
+      INSTANCE = new ConfigBuilder().readEnvironmentVariables().readSystemProperties().build();
+    }
     return INSTANCE;
   }
 

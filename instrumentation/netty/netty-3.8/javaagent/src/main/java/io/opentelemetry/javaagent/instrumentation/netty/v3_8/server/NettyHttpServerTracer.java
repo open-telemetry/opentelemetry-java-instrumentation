@@ -81,7 +81,7 @@ public class NettyHttpServerTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.netty";
+    return "io.opentelemetry.javaagent.netty-3.8";
   }
 
   @Override

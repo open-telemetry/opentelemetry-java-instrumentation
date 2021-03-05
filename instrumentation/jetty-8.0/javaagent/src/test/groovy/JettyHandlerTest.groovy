@@ -122,6 +122,6 @@ class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait 
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    "HandlerWrapper.handle"
+    "HTTP GET"
   }
 }

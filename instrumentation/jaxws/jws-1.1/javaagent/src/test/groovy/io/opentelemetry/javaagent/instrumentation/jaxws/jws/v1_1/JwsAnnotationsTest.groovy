@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.test.WebServiceClass
+import io.opentelemetry.test.WebServiceDefinitionInterface
+import io.opentelemetry.test.WebServiceFromInterface
 import java.lang.reflect.Proxy
 
 class JwsAnnotationsTest extends AgentInstrumentationSpecification {
@@ -23,7 +26,7 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
           name "WebServiceClass.doSomethingPublic"
           attributes {
             attribute('code.function', 'doSomethingPublic')
-            attribute('code.namespace', 'io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceClass')
+            attribute('code.namespace', 'io.opentelemetry.test.WebServiceClass')
           }
         }
       }
@@ -43,7 +46,7 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
           name "WebServiceFromInterface.partOfPublicInterface"
           attributes {
             attribute('code.function', 'partOfPublicInterface')
-            attribute('code.namespace', 'io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface')
+            attribute('code.namespace', 'io.opentelemetry.test.WebServiceFromInterface')
           }
         }
       }
@@ -67,7 +70,7 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
           name "WebServiceFromInterface.partOfPublicInterface"
           attributes {
             attribute('code.function', 'partOfPublicInterface')
-            attribute('code.namespace', 'io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface')
+            attribute('code.namespace', 'io.opentelemetry.test.WebServiceFromInterface')
           }
         }
       }

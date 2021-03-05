@@ -31,7 +31,7 @@ import org.eclipse.jetty.server.handler.HandlerList
 
 class TestHttpServer implements AutoCloseable {
 
-  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
+  private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test")
 
   static TestHttpServer httpServer(@DelegatesTo(value = TestHttpServer, strategy = Closure.DELEGATE_FIRST) Closure spec) {
 

@@ -45,6 +45,6 @@ public class ChunkExecutionTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.spring-batch";
+    return "io.opentelemetry.javaagent.spring-batch-3.0";
   }
 }

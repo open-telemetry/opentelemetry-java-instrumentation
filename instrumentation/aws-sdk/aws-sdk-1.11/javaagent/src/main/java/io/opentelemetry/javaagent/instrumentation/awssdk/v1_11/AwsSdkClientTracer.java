@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
-import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -24,6 +23,16 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
           .getBooleanProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", false);
+
+  private static final ClassValue<String> OPERATION_NAME =
+      new ClassValue<String>() {
+        @Override
+        protected String computeValue(Class<?> type) {
+          String ret = type.getSimpleName();
+          ret = ret.substring(0, ret.length() - 7); // remove 'Request'
+          return ret;
+        }
+      };
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
@@ -58,13 +67,11 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     Span span = Span.fromContext(context);
 
     String awsServiceName = request.getServiceName();
-    AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
-    Class<?> awsOperation = originalRequest.getClass();
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       span.setAttribute("aws.agent", COMPONENT_NAME);
       span.setAttribute("aws.service", awsServiceName);
-      span.setAttribute("aws.operation", awsOperation.getSimpleName());
+      span.setAttribute("aws.operation", extractOperationName(request));
       span.setAttribute("aws.endpoint", request.getEndpoint().toString());
 
       if (requestMeta != null) {
@@ -135,7 +142,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.aws-sdk";
+    return "io.opentelemetry.javaagent.aws-sdk-1.11";
   }
 
   static final class NamesCache extends ClassValue<ConcurrentHashMap<String, String>> {
@@ -143,5 +150,9 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     protected ConcurrentHashMap<String, String> computeValue(Class<?> type) {
       return new ConcurrentHashMap<>();
     }
+  }
+
+  private static String extractOperationName(Request<?> request) {
+    return OPERATION_NAME.get(request.getOriginalRequest().getClass());
   }
 }

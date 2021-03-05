@@ -26,7 +26,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 
 class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
-  val tracer: Tracer = GlobalOpenTelemetry.getTracer("io.opentelemetry.auto")
+  val tracer: Tracer = GlobalOpenTelemetry.getTracer("test")
 
   fun tracedAcrossChannels() = runTest {
 

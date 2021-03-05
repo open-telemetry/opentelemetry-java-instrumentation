@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jetty;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
-import java.lang.reflect.Method;
 import javax.servlet.http.HttpServletRequest;
 
 public class JettyHttpServerTracer extends Servlet3HttpServerTracer {
@@ -18,18 +17,18 @@ public class JettyHttpServerTracer extends Servlet3HttpServerTracer {
     return TRACER;
   }
 
-  public Context startServerSpan(HttpServletRequest request, Method instrumentedMethod) {
-    Context context =
-        AppServerBridge.init(startSpan(request, request, request, instrumentedMethod), false);
+  public Context startServerSpan(HttpServletRequest request) {
+    return startSpan(request, "HTTP " + request.getMethod());
+  }
 
-    // context must be reattached, because it has new attributes compared to the one returned from
-    // startSpan().
-    attachServerContext(context, request);
-    return context;
+  @Override
+  protected Context customizeContext(Context context, HttpServletRequest request) {
+    context = super.customizeContext(context, request);
+    return AppServerBridge.init(context, false);
   }
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.jetty";
+    return "io.opentelemetry.javaagent.jetty-8.0";
   }
 }
