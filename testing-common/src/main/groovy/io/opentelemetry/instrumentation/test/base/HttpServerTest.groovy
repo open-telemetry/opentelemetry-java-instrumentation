@@ -43,6 +43,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
+  boolean hasExceptionOnServerSpan() {
+    !hasHandlerSpan()
+  }
+
   boolean hasRenderSpan(ServerEndpoint endpoint) {
     false
   }
@@ -355,9 +359,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       if (hasIncludeSpan()) {
         spanCount++
       }
-      if (hasErrorPageSpans(endpoint)) {
-        spanCount += getErrorPageSpansCount(endpoint)
-      }
+    }
+    if (hasErrorPageSpans(endpoint)) {
+      spanCount += getErrorPageSpansCount(endpoint)
     }
     assertTraces(size) {
       (0..size - 1).each {
@@ -384,15 +388,13 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
             if (hasRenderSpan(endpoint)) {
               renderSpan(it, spanIndex++, span(0), method, endpoint)
             }
-            if (hasResponseSpan(endpoint)) {
-              responseSpan(it, spanIndex, span(spanIndex - 1), span(0), method, endpoint)
-              spanIndex++
-            }
-            if (hasErrorPageSpans(endpoint)) {
-              errorPageSpans(it, spanIndex, span(0), method, endpoint)
-            }
-          } else if (hasResponseSpan(endpoint)) {
-            responseSpan(it, 1, span(0), span(0), method, endpoint)
+          }
+          if (hasResponseSpan(endpoint)) {
+            responseSpan(it, spanIndex, span(spanIndex - 1), span(0), method, endpoint)
+            spanIndex++
+          }
+          if (hasErrorPageSpans(endpoint)) {
+            errorPageSpans(it, spanIndex, span(0), method, endpoint)
           }
         }
       }
@@ -482,7 +484,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       } else {
         hasNoParent()
       }
-      if (endpoint == EXCEPTION && !hasHandlerSpan()) {
+      if (endpoint == EXCEPTION && hasExceptionOnServerSpan()) {
         event(0) {
           eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
           attributes {
