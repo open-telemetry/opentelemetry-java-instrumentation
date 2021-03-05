@@ -60,14 +60,14 @@ public class RequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
-      ContextStore<AmazonWebServiceRequest, RequestMeta.Builder> contextStore =
-          InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.Builder.class);
-      RequestMeta.Builder requestMetaBuilder = contextStore.get(request);
-      if (requestMetaBuilder == null) {
-        requestMetaBuilder = RequestMeta.builder();
-        contextStore.put(request, requestMetaBuilder);
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
+          InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
+      RequestMeta requestMeta = contextStore.get(request);
+      if (requestMeta == null) {
+        requestMeta = new RequestMeta();
+        contextStore.put(request, requestMeta);
       }
-      requestMetaBuilder.setBucketName(value);
+      requestMeta.setBucketName(value);
     }
   }
 
@@ -75,14 +75,14 @@ public class RequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
-      ContextStore<AmazonWebServiceRequest, RequestMeta.Builder> contextStore =
-          InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.Builder.class);
-      RequestMeta.Builder requestMetaBuilder = contextStore.get(request);
-      if (requestMetaBuilder == null) {
-        requestMetaBuilder = RequestMeta.builder();
-        contextStore.put(request, requestMetaBuilder);
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
+          InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
+      RequestMeta requestMeta = contextStore.get(request);
+      if (requestMeta == null) {
+        requestMeta = new RequestMeta();
+        contextStore.put(request, requestMeta);
       }
-      requestMetaBuilder.setQueueUrl(value);
+      requestMeta.setQueueUrl(value);
     }
   }
 
@@ -90,14 +90,14 @@ public class RequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
-      ContextStore<AmazonWebServiceRequest, RequestMeta.Builder> contextStore =
-          InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.Builder.class);
-      RequestMeta.Builder requestMetaBuilder = contextStore.get(request);
-      if (requestMetaBuilder == null) {
-        requestMetaBuilder = RequestMeta.builder();
-        contextStore.put(request, requestMetaBuilder);
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
+          InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
+      RequestMeta requestMeta = contextStore.get(request);
+      if (requestMeta == null) {
+        requestMeta = new RequestMeta();
+        contextStore.put(request, requestMeta);
       }
-      requestMetaBuilder.setQueueName(value);
+      requestMeta.setQueueName(value);
     }
   }
 
@@ -105,14 +105,14 @@ public class RequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
-      ContextStore<AmazonWebServiceRequest, RequestMeta.Builder> contextStore =
-          InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.Builder.class);
-      RequestMeta.Builder requestMetaBuilder = contextStore.get(request);
-      if (requestMetaBuilder == null) {
-        requestMetaBuilder = RequestMeta.builder();
-        contextStore.put(request, requestMetaBuilder);
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
+          InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
+      RequestMeta requestMeta = contextStore.get(request);
+      if (requestMeta == null) {
+        requestMeta = new RequestMeta();
+        contextStore.put(request, requestMeta);
       }
-      requestMetaBuilder.setStreamName(value);
+      requestMeta.setStreamName(value);
     }
   }
 
@@ -120,14 +120,14 @@ public class RequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) String value, @Advice.This AmazonWebServiceRequest request) {
-      ContextStore<AmazonWebServiceRequest, RequestMeta.Builder> contextStore =
-          InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.Builder.class);
-      RequestMeta.Builder requestMetaBuilder = contextStore.get(request);
-      if (requestMetaBuilder == null) {
-        requestMetaBuilder = RequestMeta.builder();
-        contextStore.put(request, requestMetaBuilder);
+      ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore =
+          InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class);
+      RequestMeta requestMeta = contextStore.get(request);
+      if (requestMeta == null) {
+        requestMeta = new RequestMeta();
+        contextStore.put(request, requestMeta);
       }
-      requestMetaBuilder.setTableName(value);
+      requestMeta.setTableName(value);
     }
   }
 }

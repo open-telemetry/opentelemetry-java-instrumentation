@@ -31,10 +31,6 @@ testSets {
       setFailOnNoMatchingTests(false)
     }
   }
-
-  // We test SQS separately since we have special logic for it and want to make sure the presence of
-  // SQS on the classpath doesn't conflict with tests for usage of the core SDK.
-  testSqs
 }
 
 configurations {
@@ -53,29 +49,31 @@ dependencies {
 
   library group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
 
-  compileOnly deps.autoValueAnnotations
-  annotationProcessor deps.autoValue
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
 
+  // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
+  testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '1.11.106'
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.106'
+  testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
 
-  testSqsImplementation group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
-  // needed for SQS - using emq directly as localstack references emq v0.15.7 ie WITHOUT AWS trace header propagation
-  testSqsImplementation group: 'org.elasticmq', name: 'elasticmq-rest-sqs_2.12', version: '1.0.0'
-
-  // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
+  // Make sure doesn't add HTTP headers
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
 
   // needed for kinesis:
   testImplementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-cbor', version: versions.jackson
 
+  // needed for SQS - using emq directly as localstack references emq v0.15.7 ie WITHOUT AWS trace header propagation
+  testLibrary group: 'org.elasticmq', name: 'elasticmq-rest-sqs_2.12', version: '1.0.0'
+
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.0')
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.0')
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.0')
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '1.11.0')
+  test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.0')
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.0')
 }
 
@@ -84,7 +82,7 @@ test {
 }
 
 if (!testLatestDeps) {
-  check.dependsOn test_before_1_11_106, testSqs
+  test.dependsOn test_before_1_11_106
 }
 
 tasks.withType(Test) {

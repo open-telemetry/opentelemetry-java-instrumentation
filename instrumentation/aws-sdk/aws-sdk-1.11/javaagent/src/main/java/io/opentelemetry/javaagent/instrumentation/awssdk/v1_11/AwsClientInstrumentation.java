@@ -54,8 +54,7 @@ public class AwsClientInstrumentation implements TypeInstrumentation {
       if (!hasAgentHandler) {
         handlers.add(
             new TracingRequestHandler(
-                InstrumentationContext.get(
-                    AmazonWebServiceRequest.class, RequestMeta.Builder.class)));
+                InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class)));
       }
     }
   }

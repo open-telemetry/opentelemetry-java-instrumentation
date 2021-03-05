@@ -38,6 +38,6 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
   public Map<String, String> contextStore() {
     return singletonMap(
         "com.amazonaws.AmazonWebServiceRequest",
-        "io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta$Builder");
+        "io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta");
   }
 }
