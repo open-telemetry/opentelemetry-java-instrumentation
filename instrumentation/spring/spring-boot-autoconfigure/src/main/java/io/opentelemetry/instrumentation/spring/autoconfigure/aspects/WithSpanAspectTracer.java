@@ -24,9 +24,7 @@ class WithSpanAspectTracer extends BaseTracer {
 
   Context startSpan(Context parentContext, WithSpan annotation, Method method) {
     Span span =
-        spanBuilder(spanName(annotation, method), annotation.kind())
-            .setParent(parentContext)
-            .startSpan();
+        spanBuilder(parentContext, spanName(annotation, method), annotation.kind()).startSpan();
     switch (annotation.kind()) {
       case SERVER:
         return withServerSpan(parentContext, span);

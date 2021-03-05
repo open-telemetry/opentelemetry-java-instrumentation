@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.common;
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -34,12 +36,11 @@ public class JaxWsTracer extends BaseTracer {
       serverSpan.updateName(spanName);
     }
 
-    return parentContext.with(
-        tracer
-            .spanBuilder(spanName)
-            .setParent(parentContext)
+    Span span =
+        spanBuilder(parentContext, spanName, INTERNAL)
             .setAttribute(SemanticAttributes.CODE_NAMESPACE, method.getDeclaringClass().getName())
             .setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName())
-            .startSpan());
+            .startSpan();
+    return parentContext.with(span);
   }
 }

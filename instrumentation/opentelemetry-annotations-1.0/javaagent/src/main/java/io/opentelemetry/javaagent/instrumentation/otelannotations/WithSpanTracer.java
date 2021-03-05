@@ -24,18 +24,18 @@ public class WithSpanTracer extends BaseTracer {
   private static final Logger log = LoggerFactory.getLogger(WithSpanTracer.class);
 
   public Context startSpan(
-      Context context, WithSpan applicationAnnotation, Method method, SpanKind kind) {
+      Context parentContext, WithSpan applicationAnnotation, Method method, SpanKind kind) {
     Span span =
-        spanBuilder(spanNameForMethodWithAnnotation(applicationAnnotation, method), kind)
-            .setParent(context)
+        spanBuilder(
+                parentContext, spanNameForMethodWithAnnotation(applicationAnnotation, method), kind)
             .startSpan();
     if (kind == SpanKind.SERVER) {
-      return withServerSpan(context, span);
+      return withServerSpan(parentContext, span);
     }
     if (kind == SpanKind.CLIENT) {
-      return withClientSpan(context, span);
+      return withClientSpan(parentContext, span);
     }
-    return context.with(span);
+    return parentContext.with(span);
   }
 
   /**

@@ -32,12 +32,7 @@ public class NettyHttpClientTracer
   }
 
   public Context startSpan(Context parentContext, ChannelHandlerContext ctx, HttpRequest request) {
-    Span span =
-        tracer
-            .spanBuilder(spanNameForRequest(request))
-            .setSpanKind(CLIENT)
-            .setParent(parentContext)
-            .startSpan();
+    Span span = spanBuilder(parentContext, spanNameForRequest(request), CLIENT).startSpan();
     onRequest(span, request);
     NetPeerUtils.INSTANCE.setNetPeer(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
 

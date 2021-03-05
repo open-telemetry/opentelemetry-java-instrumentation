@@ -63,7 +63,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
       functionContext = functionTracer().startSpan(context, SpanKind.SERVER, arg);
       functionScope = functionContext.makeCurrent();
       if (arg instanceof SQSEvent) {
-        messageContext = messageTracer().startSpan((SQSEvent) arg);
+        messageContext = messageTracer().startSpan(functionContext, (SQSEvent) arg);
         messageScope = messageContext.makeCurrent();
       }
     }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
@@ -46,7 +48,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     // We create span and immediately update its name
     // We do that in order to reuse logic inside updateSpanNames method, which is used externally as
     // well.
-    Span span = tracer.spanBuilder("jax-rs.request").setParent(parentContext).startSpan();
+    Span span = spanBuilder(parentContext, "jax-rs.request", INTERNAL).startSpan();
     updateSpanNames(
         parentContext, span, ServerSpan.fromContextOrNull(parentContext), target, method);
     return parentContext.with(span);
@@ -59,7 +61,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
       updateSpanName(span, pathBasedSpanName);
     } else {
       updateSpanName(serverSpan, pathBasedSpanName);
-      updateSpanName(span, tracer().spanNameForMethod(target, method));
+      updateSpanName(span, spanNameForMethod(target, method));
     }
   }
 

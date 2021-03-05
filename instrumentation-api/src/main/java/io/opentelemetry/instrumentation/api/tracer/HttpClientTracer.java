@@ -139,7 +139,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   private Span internalStartSpan(
       SpanKind kind, Context parentContext, REQUEST request, String name, long startTimeNanos) {
-    SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext);
+    SpanBuilder spanBuilder = spanBuilder(parentContext, name, kind);
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
     }

@@ -33,12 +33,7 @@ public class ApacheHttpAsyncClientTracer
   }
 
   public Context startSpan(Context parentContext) {
-    Span span =
-        tracer
-            .spanBuilder(DEFAULT_SPAN_NAME)
-            .setSpanKind(CLIENT)
-            .setParent(parentContext)
-            .startSpan();
+    Span span = spanBuilder(parentContext, DEFAULT_SPAN_NAME, CLIENT).startSpan();
     return withClientSpan(parentContext, span);
   }
 

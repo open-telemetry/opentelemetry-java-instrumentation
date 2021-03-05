@@ -49,8 +49,8 @@ public abstract class BaseTracer {
   private static final SupportabilityMetrics supportability =
       new SupportabilityMetrics(Config.get()).start();
 
-  protected final Tracer tracer;
-  protected final ContextPropagators propagators;
+  private final Tracer tracer;
+  private final ContextPropagators propagators;
 
   public BaseTracer() {
     this(GlobalOpenTelemetry.get());
@@ -153,12 +153,13 @@ public abstract class BaseTracer {
    * name {@code spanName} and kind {@code kind}.
    */
   public Context startSpan(Context parentContext, String spanName, SpanKind kind) {
-    Span span = spanBuilder(spanName, kind).setParent(parentContext).startSpan();
+    Span span = spanBuilder(parentContext, spanName, kind).startSpan();
     return parentContext.with(span);
   }
 
-  protected SpanBuilder spanBuilder(String spanName, SpanKind kind) {
-    return tracer.spanBuilder(spanName).setSpanKind(kind);
+  /** Returns a {@link SpanBuilder} to create and start a new {@link Span}. */
+  protected final SpanBuilder spanBuilder(Context parentContext, String spanName, SpanKind kind) {
+    return tracer.spanBuilder(spanName).setSpanKind(kind).setParent(parentContext);
   }
 
   /**
@@ -217,7 +218,7 @@ public abstract class BaseTracer {
     if (clazz.getPackage() != null) {
       String pkgName = clazz.getPackage().getName();
       if (!pkgName.isEmpty()) {
-        className = clazz.getName().replace(pkgName, "").substring(1);
+        className = className.substring(pkgName.length() + 1);
       }
     }
     return className;
