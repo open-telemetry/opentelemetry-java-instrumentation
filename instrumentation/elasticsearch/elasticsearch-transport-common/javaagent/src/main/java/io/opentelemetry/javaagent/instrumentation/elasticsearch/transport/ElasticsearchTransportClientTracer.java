@@ -11,8 +11,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import java.net.InetSocketAddress;
 
-public class ElasticsearchTransportClientTracer
-    extends DatabaseClientTracer<Void, Object, String> {
+public class ElasticsearchTransportClientTracer extends DatabaseClientTracer<Void, Object, String> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
