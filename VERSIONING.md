@@ -15,6 +15,12 @@ repository:
 * Changes to configuration properties that contain the word `experimental`
 * Changes to configuration properties under the namespace `otel.javaagent.testing`
 
+This means that:
+
+* Changes to configuration properties (other than those that contain the word `experimental`
+  or are under the namespace `otel.javaagent.testing`) will be considered breaking changes
+  (unless they only affect telemetry produced by instrumentation)
+
 ## Stable vs alpha
 
 See https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#stable-vs-alpha
