@@ -14,9 +14,7 @@ import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequ
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.index.IndexNotFoundException
-import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
-import org.elasticsearch.transport.Netty4Plugin
 import spock.lang.Shared
 
 class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
@@ -44,7 +42,7 @@ class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
       .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
       .put("discovery.type", "single-node")
       .build()
-    testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
+    testNode = NodeFactory.newNode(settings)
     testNode.start()
     runUnderTrace("setup") {
       // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
@@ -103,7 +101,7 @@ class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
           name "GetAction"
           kind CLIENT
           errored true
-          errorEvent IndexNotFoundException, "no such index"
+          errorEvent IndexNotFoundException, ~/no such index( \[invalid-index\])?/
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GetAction"
@@ -205,13 +203,13 @@ class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
           }
         }
         span(1) {
-          name "PutMappingAction"
+          name ~/(Auto)?PutMappingAction/
           kind CLIENT
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "PutMappingAction"
-            "elasticsearch.action" "PutMappingAction"
+            "${SemanticAttributes.DB_OPERATION.key}" ~/(Auto)?PutMappingAction/
+            "elasticsearch.action" ~/(Auto)?PutMappingAction/
             "elasticsearch.request" "PutMappingRequest"
           }
         }
