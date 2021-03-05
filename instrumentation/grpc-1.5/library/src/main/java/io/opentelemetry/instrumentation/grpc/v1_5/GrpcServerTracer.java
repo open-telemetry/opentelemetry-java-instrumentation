@@ -34,15 +34,14 @@ final class GrpcServerTracer extends RpcServerTracer<Metadata> {
     Span span = Span.fromContext(context);
     span.setStatus(GrpcHelper.statusFromGrpcStatus(status), status.getDescription());
     if (status.getCause() != null) {
-      addThrowable(span, status.getCause());
+      span.recordException(status.getCause());
     }
   }
 
   @Override
-  protected void onError(Span span, Throwable throwable) {
+  protected void onException(Context context, Throwable throwable) {
     Status grpcStatus = Status.fromThrowable(throwable);
-    super.onError(span, grpcStatus.getCause());
-    span.setStatus(GrpcHelper.statusFromGrpcStatus(grpcStatus), grpcStatus.getDescription());
+    setStatus(context, grpcStatus);
   }
 
   @Override

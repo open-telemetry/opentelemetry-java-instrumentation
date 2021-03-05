@@ -97,4 +97,10 @@ public class GrizzlyHttpServerTracer
   protected Integer peerPort(HttpRequestPacket httpRequest) {
     return httpRequest.getRemotePort();
   }
+
+  /** This method is overridden to allow other classes in this package to call it. */
+  @Override
+  public void onException(Context context, Throwable throwable) {
+    super.onException(context, throwable);
+  }
 }

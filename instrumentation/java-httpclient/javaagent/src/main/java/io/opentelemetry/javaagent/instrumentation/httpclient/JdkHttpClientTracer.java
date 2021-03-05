@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletionException;
 
 public class JdkHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse<?>> {
@@ -73,14 +72,6 @@ public class JdkHttpClientTracer
   @Override
   protected TextMapSetter<HttpRequest> getSetter() {
     return HttpHeadersInjectAdapter.SETTER;
-  }
-
-  @Override
-  protected Throwable unwrapThrowable(Throwable throwable) {
-    if (throwable instanceof CompletionException) {
-      return throwable.getCause();
-    }
-    return super.unwrapThrowable(throwable);
   }
 
   public HttpHeaders inject(HttpHeaders original) {

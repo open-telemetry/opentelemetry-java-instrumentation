@@ -32,6 +32,12 @@ public class RatpackTracer extends BaseTracer {
     return "io.opentelemetry.javaagent.ratpack-1.4";
   }
 
+  /** This method is overridden to allow other classes in this package to call it. */
+  @Override
+  public void onException(io.opentelemetry.context.Context context, Throwable throwable) {
+    super.onException(context, throwable);
+  }
+
   @Override
   protected Throwable unwrapThrowable(Throwable throwable) {
     if (throwable instanceof Error && throwable.getCause() != null) {

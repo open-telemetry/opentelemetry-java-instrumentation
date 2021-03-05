@@ -124,7 +124,7 @@ public abstract class ServletHttpServerTracer<RESPONSE>
 
   public void addUnwrappedThrowable(Context context, Throwable throwable) {
     if (AppServerBridge.shouldRecordException(context)) {
-      addThrowable(Span.fromContext(context), unwrapThrowable(throwable));
+      onException(context, throwable);
     }
   }
 

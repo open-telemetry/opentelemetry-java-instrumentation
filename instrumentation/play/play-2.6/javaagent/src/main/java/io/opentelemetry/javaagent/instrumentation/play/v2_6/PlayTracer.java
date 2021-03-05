@@ -72,11 +72,7 @@ public class PlayTracer extends BaseTracer {
 
   @Override
   protected Throwable unwrapThrowable(Throwable throwable) {
-    // This can be moved to instanceof check when using Java 8.
-    if (throwable.getClass().getName().equals("java.util.concurrent.CompletionException")
-        && throwable.getCause() != null) {
-      throwable = throwable.getCause();
-    }
+    throwable = super.unwrapThrowable(throwable);
     while ((throwable instanceof InvocationTargetException
             || throwable instanceof UndeclaredThrowableException)
         && throwable.getCause() != null) {

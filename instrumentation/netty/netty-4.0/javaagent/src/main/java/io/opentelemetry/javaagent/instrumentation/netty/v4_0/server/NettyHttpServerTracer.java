@@ -92,4 +92,10 @@ public class NettyHttpServerTracer
     }
     return null;
   }
+
+  /** This method is overridden to allow other classes in this module to call it. */
+  @Override
+  public void onException(Context context, Throwable throwable) {
+    super.onException(context, throwable);
+  }
 }
