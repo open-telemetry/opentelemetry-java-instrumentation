@@ -36,7 +36,9 @@ public final class RestTemplateInterceptor implements ClientHttpRequestIntercept
       ClientHttpResponse response = execution.execute(request, body);
       tracer.end(context, response);
       return response;
+    } catch (Throwable t) {
+      tracer.endExceptionally(context, t);
+      throw t;
     }
-    // TODO: endExceptionally?
   }
 }
