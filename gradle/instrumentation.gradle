@@ -109,6 +109,8 @@ shadowJar {
 evaluationDependsOn(":testing:agent-for-testing")
 
 tasks.withType(Test).configureEach {
+  inputs.file(shadowJar.archiveFile)
+
   jvmArgs "-Dotel.javaagent.debug=true"
   jvmArgs "-javaagent:${project(":testing:agent-for-testing").tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
