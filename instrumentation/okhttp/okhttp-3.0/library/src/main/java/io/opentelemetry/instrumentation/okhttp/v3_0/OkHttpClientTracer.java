@@ -3,21 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
+package io.opentelemetry.instrumentation.okhttp.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.RequestBuilderInjectAdapter.SETTER;
+import static io.opentelemetry.instrumentation.okhttp.v3_0.RequestBuilderInjectAdapter.SETTER;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
-  private static final OkHttpClientTracer TRACER = new OkHttpClientTracer();
+final class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
 
-  public static OkHttpClientTracer tracer() {
-    return TRACER;
+  OkHttpClientTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry);
   }
 
   @Override

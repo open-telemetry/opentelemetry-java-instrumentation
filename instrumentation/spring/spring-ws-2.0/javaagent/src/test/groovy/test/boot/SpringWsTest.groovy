@@ -88,7 +88,7 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
     and:
     assertTraces(1) {
       trace(0, 2) {
-        serverSpan(it, 0, getContextPath() + "/ws")
+        serverSpan(it, 0, getContextPath() + "/ws/*")
         handlerSpan(it, 1, methodName, span(0))
       }
     }
@@ -109,7 +109,7 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
     def expectedException = new Exception("hello exception")
     assertTraces(1) {
       trace(0, 2) {
-        serverSpan(it, 0, getContextPath() + "/ws", expectedException)
+        serverSpan(it, 0, getContextPath() + "/ws/*", expectedException)
         handlerSpan(it, 1, methodName, span(0), expectedException)
       }
     }

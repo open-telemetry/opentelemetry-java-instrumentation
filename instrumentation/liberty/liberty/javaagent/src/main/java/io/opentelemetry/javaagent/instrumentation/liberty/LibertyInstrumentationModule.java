@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty;
 
-import static java.util.Collections.singletonMap;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,9 +27,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  *   <li>On call to WebApp.isForbidden (called from WebApp.handleRequest) start span based on
  *       remembered request. We don't start span immediately at the start or handleRequest because
  *       HttpServletRequest isn't usable yet. {@link LibertyStartSpanAdvice}
- *   <li>On exit from WebAppDispatcherContext.setPathElements (called from WebApp.handleRequest)
- *       update span name. We don't do it before because before this method is called we can't use
- *       HttpServletRequest.getServletPath. {@link LibertyUpdateSpanAdvice}
  *   <li>On exit from WebApp.handleRequest close the span. {@link LibertyHandleRequestAdvice}
  * </ul>
  */
@@ -43,7 +39,7 @@ public class LibertyInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(new WebAppInstrumentation(), new WebAppDispatcherContextInstrumentation());
+    return singletonList(new WebAppInstrumentation());
   }
 
   public static class WebAppInstrumentation implements TypeInstrumentation {
@@ -71,27 +67,6 @@ public class LibertyInstrumentationModule extends InstrumentationModule {
           LibertyStartSpanAdvice.class.getName());
 
       return transformers;
-    }
-  }
-
-  public static class WebAppDispatcherContextInstrumentation implements TypeInstrumentation {
-
-    @Override
-    public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("com.ibm.ws.webcontainer.webapp.WebAppDispatcherContext");
-    }
-
-    @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      // https://github.com/OpenLiberty/open-liberty/blob/master/dev/com.ibm.ws.webcontainer/src/com/ibm/ws/webcontainer/webapp/WebAppDispatcherContext.java
-      // after call to setPathElements we can use HttpServletRequest getServletPath and
-      // getPathInfo
-      // called during WebApp.handleRequest
-      return singletonMap(
-          named("setPathElements")
-              .and(takesArgument(0, named(String.class.getName())))
-              .and(takesArgument(1, named(String.class.getName()))),
-          LibertyUpdateSpanAdvice.class.getName());
     }
   }
 }

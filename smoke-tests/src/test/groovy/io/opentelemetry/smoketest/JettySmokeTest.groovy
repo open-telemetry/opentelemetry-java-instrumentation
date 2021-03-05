@@ -18,18 +18,4 @@ class JettySmokeTest extends AppServerTest {
   protected String getTargetImage(String jdk, String serverVersion) {
     "ghcr.io/open-telemetry/java-test-containers:jetty-${serverVersion}-jdk$jdk-20210223.592806654"
   }
-
-  def getJettySpanName() {
-    "HandlerWrapper.handle"
-  }
-
-  @Override
-  protected String getSpanName(String path) {
-    switch (path) {
-      case "/app/WEB-INF/web.xml":
-      case "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless":
-        return getJettySpanName()
-    }
-    return path
-  }
 }
