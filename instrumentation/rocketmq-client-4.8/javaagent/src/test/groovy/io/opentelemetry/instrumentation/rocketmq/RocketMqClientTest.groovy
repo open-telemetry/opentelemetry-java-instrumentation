@@ -20,7 +20,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest implements AgentTest
   @Override
   void configureMQPushConsumer() {
     consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
-    consumer.setConsumeMessageBatchMaxSize(2);
+    consumer.setConsumeMessageBatchMaxSize(2)
   }
 
 }
