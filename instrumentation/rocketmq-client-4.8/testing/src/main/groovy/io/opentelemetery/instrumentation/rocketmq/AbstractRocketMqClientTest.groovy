@@ -14,8 +14,6 @@ import org.apache.rocketmq.client.producer.SendCallback
 import org.apache.rocketmq.client.producer.SendResult
 import org.apache.rocketmq.common.message.Message
 import org.apache.rocketmq.remoting.common.RemotingHelper
-import org.apache.rocketmq.test.listener.rmq.concurrent.RMQNormalListener
-import org.apache.rocketmq.test.listener.rmq.order.RMQOrderListener
 import spock.lang.Shared
 import spock.lang.Unroll
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
@@ -24,7 +22,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 @Unroll
-abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
+abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   @Shared
   DefaultMQPushConsumer consumer
@@ -33,41 +31,36 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
   DefaultMQProducer producer
 
   @Shared
-  String sharedTopic
-
-  @Shared
-  String brokerAddr
+  def sharedTopic = BaseConf.initTopic()
 
   @Shared
   Message msg
 
-  def setup() {
-    sharedTopic = BaseConf.initTopic()
-    brokerAddr = BaseConf.getBrokerAddr()
-    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
-  }
+  @Shared
+  def msgs = new ArrayList<Message>();
+
+  abstract void configureMQProducer()
+
+  abstract void configureMQPushConsumer()
 
   def "test rocketmq produce callback"() {
     setup:
-    producer = BaseConf.getProducer(BaseConf.nsAddr)
+    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
+    configureMQProducer()
     when:
-    runUnderTrace("parent") {
-      producer.send(msg, new SendCallback() {
-        @Override
-        void onSuccess(SendResult sendResult) {
-        }
+    producer.send(msg, new SendCallback() {
+      @Override
+      void onSuccess(SendResult sendResult) {
+      }
 
-        @Override
-        void onException(Throwable throwable) {
-        }
-      })
-
-    }
+      @Override
+      void onException(Throwable throwable) {
+      }
+    })
     then:
     assertTraces(1) {
-      trace(0, 2) {
-        basicSpan(it, 0, "parent")
-        span(1) {
+      trace(0, 1) {
+        span(0) {
           name sharedTopic + " send"
           kind PRODUCER
           attributes {
@@ -76,21 +69,22 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
             "messaging.rocketmq.tags" "TagA"
-            "messaging.rocketmq.broker_address" brokerAddr
+            "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
-
           }
         }
       }
       cleanup:
+      producer.shutdown()
       BaseConf.deleteTempDir()
     }
   }
 
-  def "test rocketmq produce and concurrently consume"() {
+  def "test rocketmq produce and consume"() {
     setup:
-    producer = BaseConf.getProducer(BaseConf.nsAddr)
-    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQNormalListener())
+    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
+    configureMQProducer()
+    configureMQPushConsumer()
     when:
     runUnderTrace("parent") {
       producer.send(msg)
@@ -108,7 +102,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
             "messaging.rocketmq.tags" "TagA"
-            "messaging.rocketmq.broker_address" brokerAddr
+            "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
           }
         }
@@ -123,32 +117,39 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
             "messaging.rocketmq.tags" "TagA"
-            "messaging.rocketmq.broker_address" brokerAddr
+            "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
-
           }
         }
       }
       cleanup:
+      Thread.sleep(1000)
       producer.shutdown()
       consumer.shutdown()
       BaseConf.deleteTempDir()
     }
   }
 
-
-  def "test rocketmq produce and orderly consume"() {
+  def "test rocketmq produce and batch consume"() {
     setup:
-    producer = BaseConf.getProducer(BaseConf.nsAddr)
-    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
+    Message msg1 = new Message(sharedTopic, "TagA", ("hello world a").getBytes());
+    Message msg2 = new Message(sharedTopic, "TagB", ("hello world b").getBytes());
+    msgs.add(msg1);
+    msgs.add(msg2);
+    configureMQProducer()
+    configureMQPushConsumer()
     when:
     runUnderTrace("parent") {
-      producer.send(msg)
+      producer.send(msgs)
     }
     then:
-    assertTraces(1) {
-      trace(0, 3) {
+    assertTraces(2) {
+      def itemStepSpan = null
+
+      trace(0, 2) {
+        itemStepSpan = span(1)
+
         basicSpan(it, 0, "parent")
         span(1) {
           name sharedTopic + " send"
@@ -158,10 +159,38 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
             "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
-            "messaging.rocketmq.tags" "TagA"
-            "messaging.rocketmq.broker_address" brokerAddr
+            "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
           }
+        }
+      }
+
+      trace(1, 3) {
+        span(0) {
+          name "multiple_sources receive"
+          kind CONSUMER
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "receive"
+          }
+        }
+        span(1) {
+          name sharedTopic + " process"
+          kind CONSUMER
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+            "messaging.rocketmq.tags" "TagA"
+            "messaging.rocketmq.broker_address" String
+            "messaging.rocketmq.queue_id" Long
+            "messaging.rocketmq.queue_offset" Long
+          }
+          childOf span(0)
+          hasLink itemStepSpan
         }
         span(2) {
           name sharedTopic + " process"
@@ -173,18 +202,20 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification{
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
             "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
-            "messaging.rocketmq.tags" "TagA"
-            "messaging.rocketmq.broker_address" brokerAddr
+            "messaging.rocketmq.tags" "TagB"
+            "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.queue_id" Long
             "messaging.rocketmq.queue_offset" Long
           }
+          childOf span(0)
+          hasLink itemStepSpan
         }
       }
       cleanup:
+      Thread.sleep(1000)
       producer.shutdown()
       consumer.shutdown()
       BaseConf.deleteTempDir()
     }
   }
 }
-

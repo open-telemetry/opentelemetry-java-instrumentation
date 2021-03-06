@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import org.apache.rocketmq.common.message.MessageExt;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class RocketMqConsumerTracer extends BaseTracer {
 
@@ -30,14 +31,13 @@ public class RocketMqConsumerTracer extends BaseTracer {
   }
 
   public Context startSpan(Context parentContext, List<MessageExt> msgs) {
-    MessageExt msg = msgs.get(0);
     if (msgs.size() == 1) {
-      SpanBuilder spanBuilder = startSpanBuilder(msg).setParent(extractParent(msg));
-      return withClientSpan(parentContext, spanBuilder.startSpan());
+      SpanBuilder spanBuilder = startSpanBuilder(msgs.get(0)).setParent(extractParent(msgs.get(0)));
+      return parentContext.with(spanBuilder.startSpan());
     } else {
       SpanBuilder spanBuilder =
           tracer
-              .spanBuilder(msg.getTopic() + " receive")
+              .spanBuilder("multiple_sources receive")
               .setSpanKind(CONSUMER)
               .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq")
               .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive");
@@ -49,7 +49,7 @@ public class RocketMqConsumerTracer extends BaseTracer {
     }
   }
 
-  public void createChildSpan(Context parentContext, MessageExt msg) {
+  private void createChildSpan(Context parentContext, MessageExt msg) {
     SpanBuilder childSpanBuilder =
         startSpanBuilder(msg)
             .setParent(parentContext)
@@ -57,7 +57,7 @@ public class RocketMqConsumerTracer extends BaseTracer {
     end(withClientSpan(parentContext, childSpanBuilder.startSpan()));
   }
 
-  public SpanBuilder startSpanBuilder(MessageExt msg) {
+  private SpanBuilder startSpanBuilder(MessageExt msg) {
     SpanBuilder spanBuilder =
         tracer
             .spanBuilder(spanNameOnConsume(msg))
@@ -82,7 +82,7 @@ public class RocketMqConsumerTracer extends BaseTracer {
     }
   }
 
-  void onConsume(SpanBuilder spanBuilder, MessageExt msg) {
+  private void onConsume(SpanBuilder spanBuilder, MessageExt msg) {
     if (RocketMqClientConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       spanBuilder.setAttribute("messaging.rocketmq.tags", msg.getTags());
       spanBuilder.setAttribute("messaging.rocketmq.queue_id", msg.getQueueId());
@@ -91,11 +91,12 @@ public class RocketMqConsumerTracer extends BaseTracer {
     }
   }
 
-  String spanNameOnConsume(MessageExt msg) {
+  private String spanNameOnConsume(MessageExt msg) {
     return msg.getTopic() + " process";
   }
 
-  String getBrokerHost(MessageExt msg) {
+  @Nullable
+  private String getBrokerHost(MessageExt msg) {
     if (msg.getStoreHost() != null) {
       return msg.getStoreHost().toString().replace("/", "");
     } else {

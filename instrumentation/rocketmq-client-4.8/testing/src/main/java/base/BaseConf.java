@@ -14,7 +14,6 @@ import org.apache.rocketmq.common.MQVersion;
 import org.apache.rocketmq.namesrv.NamesrvController;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.test.listener.AbstractListener;
-import org.apache.rocketmq.test.util.MQAdmin;
 import org.apache.rocketmq.test.util.MQRandomUtils;
 import org.apache.rocketmq.test.util.RandomUtil;
 
@@ -23,7 +22,6 @@ final class BaseConf {
   public static final String broker1Addr;
   protected static String broker1Name;
   protected static final String clusterName;
-  protected static int brokerNum;
   protected static final NamesrvController namesrvController;
   protected static final BrokerController brokerController1;
 
@@ -36,7 +34,6 @@ final class BaseConf {
     clusterName = brokerController1.getBrokerConfig().getBrokerClusterName();
     broker1Name = brokerController1.getBrokerConfig().getBrokerName();
     broker1Addr = "127.0.0.1:" + brokerController1.getNettyServerConfig().getListenPort();
-    brokerNum = 2;
   }
 
   private BaseConf() {}
@@ -47,25 +44,10 @@ final class BaseConf {
     return topic;
   }
 
-  public static String getBrokerAddr() {
-    return broker1Addr;
-  }
-
-  public static String initConsumerGroup() {
-    String group = MQRandomUtils.getRandomConsumerGroup();
-    return initConsumerGroup(group);
-  }
-
-  public static String initConsumerGroup(String group) {
-    MQAdmin.createSub(nsAddr, clusterName, group);
-    return group;
-  }
-
   public static DefaultMQPushConsumer getConsumer(
       String nsAddr, String topic, String subExpression, AbstractListener listener)
       throws MQClientException {
-    String consumerGroup = initConsumerGroup();
-    DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(consumerGroup);
+    DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("consumerGroup");
     consumer.setInstanceName(RandomUtil.getStringByUUID());
     consumer.setNamesrvAddr(nsAddr);
     consumer.subscribe(topic, subExpression);

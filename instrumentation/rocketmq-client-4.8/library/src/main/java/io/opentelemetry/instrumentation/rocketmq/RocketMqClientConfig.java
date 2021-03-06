@@ -11,13 +11,13 @@ public final class RocketMqClientConfig {
 
   public static boolean isPropagationEnabled() {
     return Config.get()
-        .getBooleanProperty("otel.instrumentation.rocketmq.client-propagation", true);
+        .getBooleanProperty("otel.instrumentation.rocketmq-client.propagation", true);
   }
 
   public static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
           .getBooleanProperty(
-              "otel.instrumentation.rocketmq.client.experimental-span-attributes", false);
+              "otel.instrumentation.rocketmq-client.experimental-span-attributes", false);
 
   private RocketMqClientConfig() {}
 }

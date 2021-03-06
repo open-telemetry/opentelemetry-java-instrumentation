@@ -28,17 +28,11 @@ public class RocketMqProducerTracer extends BaseTracer {
     return "io.opentelemetry.javaagent.rocketmq-client";
   }
 
-  public Context startProducerSpan(String addr, Message msg, Context parentContext) {
-    SpanBuilder spanBuilder = spanBuilder(spanNameOnProduce(msg), PRODUCER);
+  public Context startProducerSpan(Context parentContext,String addr, Message msg) {
+    SpanBuilder spanBuilder =
+        spanBuilder(spanNameOnProduce(msg), PRODUCER).setParent(parentContext);
     onProduce(spanBuilder, msg, addr);
-    return withClientSpan(parentContext, spanBuilder.startSpan());
-  }
-
-  public void onCallback(Context context, SendResult sendResult) {
-    if (RocketMqClientConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      Span span = Span.fromContext(context);
-      span.setAttribute("messaging.rocketmq.callback_result", sendResult.getSendStatus().name());
-    }
+    return parentContext.with(spanBuilder.startSpan());
   }
 
   private void onProduce(SpanBuilder spanBuilder, Message msg, String addr) {

@@ -24,11 +24,6 @@ import org.apache.rocketmq.client.impl.consumer.DefaultMQPushConsumerImpl;
 public class RocketMqConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.apache.rocketmq.client.consumer.DefaultMQPushConsumer");
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.rocketmq.client.consumer.DefaultMQPushConsumer");
   }

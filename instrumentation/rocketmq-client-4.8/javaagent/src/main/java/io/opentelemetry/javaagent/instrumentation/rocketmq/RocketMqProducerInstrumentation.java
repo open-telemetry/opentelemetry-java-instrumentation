@@ -24,11 +24,6 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer;
 public class RocketMqProducerInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.apache.rocketmq.client.producer.DefaultMQProducer");
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.rocketmq.client.producer.DefaultMQProducer");
   }
