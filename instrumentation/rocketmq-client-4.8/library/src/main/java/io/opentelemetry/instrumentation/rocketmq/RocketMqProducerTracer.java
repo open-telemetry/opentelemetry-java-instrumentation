@@ -29,8 +29,7 @@ public class RocketMqProducerTracer extends BaseTracer {
   }
 
   public Context startProducerSpan(Context parentContext, String addr, Message msg) {
-    SpanBuilder spanBuilder =
-        spanBuilder(parentContext, spanNameOnProduce(msg), PRODUCER);
+    SpanBuilder spanBuilder = spanBuilder(parentContext, spanNameOnProduce(msg), PRODUCER);
     onProduce(spanBuilder, msg, addr);
     return parentContext.with(spanBuilder.startSpan());
   }
