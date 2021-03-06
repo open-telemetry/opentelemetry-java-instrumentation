@@ -37,7 +37,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   Message msg
 
   @Shared
-  def msgs = new ArrayList<Message>();
+  def msgs = new ArrayList<Message>()
 
   abstract void configureMQProducer()
 
@@ -129,10 +129,10 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   def "test rocketmq produce and batch consume"() {
     setup:
-    Message msg1 = new Message(sharedTopic, "TagA", ("hello world a").getBytes());
-    Message msg2 = new Message(sharedTopic, "TagB", ("hello world b").getBytes());
-    msgs.add(msg1);
-    msgs.add(msg2);
+    Message msg1 = new Message(sharedTopic, "TagA", ("hello world a").getBytes())
+    Message msg2 = new Message(sharedTopic, "TagB", ("hello world b").getBytes())
+    msgs.add(msg1)
+    msgs.add(msg2)
     configureMQProducer()
     configureMQPushConsumer()
     when:
