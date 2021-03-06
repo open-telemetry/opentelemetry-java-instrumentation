@@ -32,13 +32,11 @@ public class RocketMqConsumerTracer extends BaseTracer {
 
   public Context startSpan(Context parentContext, List<MessageExt> msgs) {
     if (msgs.size() == 1) {
-      SpanBuilder spanBuilder = startSpanBuilder(msgs.get(0)).setParent(extractParent(msgs.get(0)));
+      SpanBuilder spanBuilder = startSpanBuilder(extractParent(msgs.get(0)), msgs.get(0));
       return parentContext.with(spanBuilder.startSpan());
     } else {
       SpanBuilder spanBuilder =
-          tracer
-              .spanBuilder("multiple_sources receive")
-              .setSpanKind(CONSUMER)
+          spanBuilder(parentContext, "multiple_sources receive", CONSUMER)
               .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq")
               .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive");
       Context rootContext = withClientSpan(parentContext, spanBuilder.startSpan());
@@ -51,17 +49,14 @@ public class RocketMqConsumerTracer extends BaseTracer {
 
   private void createChildSpan(Context parentContext, MessageExt msg) {
     SpanBuilder childSpanBuilder =
-        startSpanBuilder(msg)
-            .setParent(parentContext)
+        startSpanBuilder(parentContext, msg)
             .addLink(Span.fromContext(extractParent(msg)).getSpanContext());
     end(withClientSpan(parentContext, childSpanBuilder.startSpan()));
   }
 
-  private SpanBuilder startSpanBuilder(MessageExt msg) {
+  private SpanBuilder startSpanBuilder(Context parentContext, MessageExt msg) {
     SpanBuilder spanBuilder =
-        tracer
-            .spanBuilder(spanNameOnConsume(msg))
-            .setSpanKind(CONSUMER)
+        spanBuilder(parentContext, spanNameOnConsume(msg), CONSUMER)
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION, msg.getTopic())
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic")
