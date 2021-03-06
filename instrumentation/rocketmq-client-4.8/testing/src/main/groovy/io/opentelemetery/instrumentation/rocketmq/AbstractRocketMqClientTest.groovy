@@ -124,7 +124,6 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
         }
       }
       cleanup:
-      Thread.sleep(1000)
       producer.shutdown()
       consumer.shutdown()
       BaseConf.deleteTempDir()
@@ -212,7 +211,6 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
         }
       }
       cleanup:
-      Thread.sleep(1000)
       producer.shutdown()
       consumer.shutdown()
       BaseConf.deleteTempDir()
