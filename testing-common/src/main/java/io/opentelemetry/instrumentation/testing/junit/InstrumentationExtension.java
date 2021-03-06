@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -39,7 +40,12 @@ public abstract class InstrumentationExtension
 
   @Override
   public void afterAll(ExtensionContext extensionContext) {
-    testRunner.beforeTestClass();
+    testRunner.afterTestClass();
+  }
+
+  /** Return the {@link OpenTelemetry} instance used to produce telemetry data. */
+  public OpenTelemetry getOpenTelemetry() {
+    return testRunner.getOpenTelemetry();
   }
 
   /** Return a list of all captured spans. */

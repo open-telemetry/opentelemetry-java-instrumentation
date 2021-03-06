@@ -24,12 +24,11 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String, SqlS
   }
 
   public Context startSpan(String operation, Region<?, ?> connection, String query) {
+    Context parentContext = Context.current();
     SqlStatementInfo sanitizedStatement = sanitizeStatement(query);
 
     SpanBuilder span =
-        tracer
-            .spanBuilder(operation)
-            .setSpanKind(CLIENT)
+        spanBuilder(parentContext, operation, CLIENT)
             .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection))
             .setAttribute(SemanticAttributes.DB_OPERATION, operation);
 
@@ -37,7 +36,7 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String, SqlS
     setNetSemanticConvention(span, connection);
     onStatement(span, connection, query, sanitizedStatement);
 
-    return Context.current().with(span.startSpan());
+    return parentContext.with(span.startSpan());
   }
 
   @Override

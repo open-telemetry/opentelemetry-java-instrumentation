@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc;
 
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
@@ -22,8 +22,8 @@ public class WebMvcTracingFilter extends OncePerRequestFilter implements Ordered
   private static final String FILTER_METHOD = "doFilterInternal";
   private final SpringWebMvcServerTracer tracer;
 
-  public WebMvcTracingFilter(Tracer tracer) {
-    this.tracer = new SpringWebMvcServerTracer(tracer);
+  public WebMvcTracingFilter(OpenTelemetry openTelemetry) {
+    this.tracer = new SpringWebMvcServerTracer(openTelemetry);
   }
 
   @Override

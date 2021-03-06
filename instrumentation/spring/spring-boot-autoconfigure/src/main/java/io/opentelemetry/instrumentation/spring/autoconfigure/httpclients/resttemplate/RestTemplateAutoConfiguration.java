@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.resttemplate;
 
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientsProperties;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -30,8 +29,8 @@ import org.springframework.web.client.RestTemplate;
 public class RestTemplateAutoConfiguration {
 
   @Bean
-  @Autowired
-  public RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(Tracer tracer) {
-    return new RestTemplateBeanPostProcessor(tracer);
+  public RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
+      OpenTelemetry openTelemetry) {
+    return new RestTemplateBeanPostProcessor(openTelemetry);
   }
 }

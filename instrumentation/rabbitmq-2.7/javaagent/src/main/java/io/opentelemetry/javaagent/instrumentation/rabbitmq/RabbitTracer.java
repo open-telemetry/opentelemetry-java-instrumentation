@@ -40,23 +40,23 @@ public class RabbitTracer extends BaseTracer {
   }
 
   public Context startSpan(String method, Connection connection) {
+    Context parentContext = Context.current();
     SpanKind kind = method.equals("Channel.basicPublish") ? PRODUCER : CLIENT;
     SpanBuilder span =
-        spanBuilder(method, kind)
+        spanBuilder(parentContext, method, kind)
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue");
 
     NetPeerUtils.INSTANCE.setNetPeer(span, connection.getAddress(), connection.getPort());
 
-    return Context.current().with(span.startSpan());
+    return parentContext.with(span.startSpan());
   }
 
   public Context startGetSpan(
       String queue, long startTime, GetResponse response, Connection connection) {
+    Context parentContext = Context.current();
     SpanBuilder spanBuilder =
-        tracer
-            .spanBuilder(spanNameOnGet(queue))
-            .setSpanKind(CLIENT)
+        spanBuilder(parentContext, spanNameOnGet(queue), CLIENT)
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue")
             .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive")
@@ -76,7 +76,8 @@ public class RabbitTracer extends BaseTracer {
     NetPeerUtils.INSTANCE.setNetPeer(spanBuilder, connection.getAddress(), connection.getPort());
     onGet(spanBuilder, queue);
 
-    return Context.current().with(spanBuilder.startSpan());
+    // TODO: withClientSpan()?
+    return parentContext.with(spanBuilder.startSpan());
   }
 
   public Context startDeliverySpan(
@@ -86,10 +87,7 @@ public class RabbitTracer extends BaseTracer {
 
     long startTimeMillis = System.currentTimeMillis();
     Span span =
-        tracer
-            .spanBuilder(spanNameOnDeliver(queue))
-            .setSpanKind(CONSUMER)
-            .setParent(parentContext)
+        spanBuilder(parentContext, spanNameOnDeliver(queue), CONSUMER)
             .setStartTimestamp(startTimeMillis, TimeUnit.MILLISECONDS)
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue")

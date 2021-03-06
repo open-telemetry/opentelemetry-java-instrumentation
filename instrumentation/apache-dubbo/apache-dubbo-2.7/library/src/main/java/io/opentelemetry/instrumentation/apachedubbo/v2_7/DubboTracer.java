@@ -25,11 +25,9 @@ class DubboTracer extends RpcServerTracer<RpcInvocation> {
 
   public Context startServerSpan(
       String interfaceName, String methodName, RpcInvocation rpcInvocation) {
+    Context parentContext = extract(rpcInvocation, getGetter());
     SpanBuilder spanBuilder =
-        tracer
-            .spanBuilder(DubboHelper.getSpanName(interfaceName, methodName))
-            .setSpanKind(SERVER)
-            .setParent(extract(rpcInvocation, getGetter()))
+        spanBuilder(parentContext, DubboHelper.getSpanName(interfaceName, methodName), SERVER)
             .setAttribute(SemanticAttributes.RPC_SYSTEM, "dubbo");
     DubboHelper.prepareSpan(spanBuilder, interfaceName, methodName);
     NetPeerUtils.INSTANCE.setNetPeer(spanBuilder, RpcContext.getContext().getRemoteAddress());
@@ -37,14 +35,13 @@ class DubboTracer extends RpcServerTracer<RpcInvocation> {
   }
 
   public Context startClientSpan(String interfaceName, String methodName) {
+    Context parentContext = Context.current();
     SpanBuilder spanBuilder =
-        tracer
-            .spanBuilder(DubboHelper.getSpanName(interfaceName, methodName))
-            .setSpanKind(CLIENT)
+        spanBuilder(parentContext, DubboHelper.getSpanName(interfaceName, methodName), CLIENT)
             .setAttribute(SemanticAttributes.RPC_SYSTEM, "dubbo");
     DubboHelper.prepareSpan(spanBuilder, interfaceName, methodName);
     NetPeerUtils.INSTANCE.setNetPeer(spanBuilder, RpcContext.getContext().getRemoteAddress());
-    return withClientSpan(Context.current(), spanBuilder.startSpan());
+    return withClientSpan(parentContext, spanBuilder.startSpan());
   }
 
   public void end(Context context, Result result) {

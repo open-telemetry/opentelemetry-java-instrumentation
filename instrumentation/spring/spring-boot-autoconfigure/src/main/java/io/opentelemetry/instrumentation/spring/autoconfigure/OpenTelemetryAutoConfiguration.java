@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
@@ -30,17 +30,11 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @EnableConfigurationProperties(TracerProperties.class)
-public class TracerAutoConfiguration {
+public class OpenTelemetryAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public Tracer otelTracer(TracerProvider tracerProvider, TracerProperties tracerProperties) {
-    return tracerProvider.get(tracerProperties.getName());
-  }
-
-  @Bean
-  @ConditionalOnMissingBean
-  public TracerProvider tracerProvider(
+  public OpenTelemetry openTelemetry(
       TracerProperties tracerProperties, ObjectProvider<List<SpanExporter>> spanExportersProvider) {
     SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
 
@@ -53,7 +47,6 @@ public class TracerAutoConfiguration {
         tracerProviderBuilder
             .setSampler(Sampler.traceIdRatioBased(tracerProperties.getSamplerProbability()))
             .build();
-    OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
-    return tracerProvider;
+    return OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
   }
 }

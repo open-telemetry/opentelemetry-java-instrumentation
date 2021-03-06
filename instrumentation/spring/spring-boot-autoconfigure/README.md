@@ -7,7 +7,7 @@ Auto-configures OpenTelemetry instrumentation for [spring-web](../spring-web-3.1
 ### Add these dependencies to your project.
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.maven.org/search?q=g:io.opentelemetry).
- - Minimum version: `0.14.1`
+ - Minimum version: `0.17.0`
  - Note: You may need to include our bintray maven repository to your build file: `https://dl.bintray.com/open-telemetry/maven/`. As of August 2020 the latest opentelemetry-java-instrumentation artifacts are not published to maven-central. Please check the [releasing](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/master/RELEASING.md) doc for updates to this process.
 
 
@@ -171,23 +171,17 @@ Note - This annotation can only be applied to bean methods managed by the spring
 ##### Usage
 
 ```java
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.SpanKind;
 
 /**
  * Test WithSpan
- *
  */
 @Component
 public class TracedClass {
-
-    @Autowired
-    // Tracer bean is provided by spring-boot-autoconfigure
-    Tracer tracer;
 
     @WithSpan
     public void tracedMethod() {
@@ -200,7 +194,7 @@ public class TracedClass {
         currentSpan.setAttribute("isTestAttribute", true);
     }
 
-    @WithSpan(kind=SpanKind.CLIENT)
+    @WithSpan(kind = SpanKind.CLIENT)
     public void tracedClientSpan() {
     }
 }
@@ -359,11 +353,11 @@ Auto-configuration is natively supported by Springboot applications. To enable t
 ##### Usage
 
 ```java
-import io.opentelemetry.instrumentation.spring.autoconfigure.EnableOpenTelemetryTracing
+import io.opentelemetry.instrumentation.spring.autoconfigure.EnableOpenTelemetry;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableOpenTelemetryTracing
+@EnableOpenTelemetry
 public class OpenTelemetryConfig {}
 ```
 
@@ -408,8 +402,7 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 |Feature   				|Property   										|Default Value
 |---					|---												|---
-|Tracer			  	 	|opentelemetry.trace.tracer.name 					|io.opentelemetry.instrumentation.spring-boot-autoconfigure
-|				  	 	|opentelemetry.trace.tracer.samplerprobability 		|1.0
+|Tracer			 |opentelemetry.trace.tracer.samplerprobability 		|1.0
 
 
 ### Starter Guide

@@ -40,10 +40,7 @@ public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATE
     SANITIZEDSTATEMENT sanitizedStatement = sanitizeStatement(statement);
 
     SpanBuilder span =
-        tracer
-            .spanBuilder(spanName(connection, statement, sanitizedStatement))
-            .setParent(parentContext)
-            .setSpanKind(CLIENT)
+        spanBuilder(parentContext, spanName(connection, statement, sanitizedStatement), CLIENT)
             .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection));
 
     if (connection != null) {

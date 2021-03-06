@@ -53,8 +53,11 @@ public class TracingRequestHandler extends RequestHandler2 {
   @Override
   public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
     if (SqsReceiveMessageRequestAccess.isInstance(request)) {
-      SqsReceiveMessageRequestAccess.withAttributeNames(
-          request, SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
+      if (!SqsReceiveMessageRequestAccess.getAttributeNames(request)
+          .contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE)) {
+        SqsReceiveMessageRequestAccess.withAttributeNames(
+            request, SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
+      }
     }
     return request;
   }

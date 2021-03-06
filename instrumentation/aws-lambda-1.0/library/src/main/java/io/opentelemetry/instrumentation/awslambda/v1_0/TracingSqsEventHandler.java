@@ -45,7 +45,8 @@ public abstract class TracingSqsEventHandler extends TracingRequestHandler<SQSEv
 
   @Override
   public Void doHandleRequest(SQSEvent event, Context context) {
-    io.opentelemetry.context.Context otelContext = tracer.startSpan(event);
+    io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.current();
+    io.opentelemetry.context.Context otelContext = tracer.startSpan(parentContext, event);
     Throwable error = null;
     try (Scope ignored = otelContext.makeCurrent()) {
       handleEvent(event, context);

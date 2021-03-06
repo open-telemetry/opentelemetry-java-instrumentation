@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.struts2;
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ActionProxy;
 import io.opentelemetry.api.trace.Span;
@@ -31,7 +33,7 @@ public class Struts2Tracer extends BaseTracer {
     String method = actionInvocation.getProxy().getMethod();
     String spanName = spanNameForMethod(actionClass, method);
 
-    SpanBuilder strutsSpan = tracer.spanBuilder(spanName).setParent(parentContext);
+    SpanBuilder strutsSpan = spanBuilder(parentContext, spanName, INTERNAL);
 
     strutsSpan.setAttribute(SemanticAttributes.CODE_NAMESPACE, actionClass.getName());
     if (method != null) {

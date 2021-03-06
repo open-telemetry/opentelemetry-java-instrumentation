@@ -23,21 +23,24 @@ public class ChunkExecutionTracer extends BaseTracer {
   }
 
   public Context startSpan(ChunkContext chunkContext) {
-    String jobName = chunkContext.getStepContext().getJobName();
-    String stepName = chunkContext.getStepContext().getStepName();
-    SpanBuilder spanBuilder =
-        tracer.spanBuilder("BatchJob " + jobName + "." + stepName + ".Chunk").setSpanKind(INTERNAL);
+    Context parentContext = Context.current();
+    SpanBuilder spanBuilder = spanBuilder(parentContext, spanName(chunkContext), INTERNAL);
     if (shouldCreateRootSpanForChunk()) {
-      linkParentSpan(spanBuilder);
+      linkParentSpan(spanBuilder, parentContext);
     }
-    Span span = spanBuilder.startSpan();
-    return Context.current().with(span);
+    return parentContext.with(spanBuilder.startSpan());
   }
 
-  private void linkParentSpan(SpanBuilder spanBuilder) {
+  private String spanName(ChunkContext chunkContext) {
+    String jobName = chunkContext.getStepContext().getJobName();
+    String stepName = chunkContext.getStepContext().getStepName();
+    return "BatchJob " + jobName + "." + stepName + ".Chunk";
+  }
+
+  private void linkParentSpan(SpanBuilder spanBuilder, Context parentContext) {
     spanBuilder.setNoParent();
 
-    SpanContext parentSpanContext = Span.current().getSpanContext();
+    SpanContext parentSpanContext = Span.fromContext(parentContext).getSpanContext();
     if (parentSpanContext.isValid()) {
       spanBuilder.addLink(parentSpanContext);
     }

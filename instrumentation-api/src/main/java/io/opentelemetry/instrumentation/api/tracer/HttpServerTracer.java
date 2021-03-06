@@ -82,7 +82,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     // whether to call end() or not on the Span in the returned Context
 
     Context parentContext = extract(request, getGetter());
-    SpanBuilder builder = tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
+    SpanBuilder builder = spanBuilder(parentContext, spanName, SERVER);
 
     if (startTimestamp >= 0) {
       builder.setStartTimestamp(startTimestamp, TimeUnit.NANOSECONDS);

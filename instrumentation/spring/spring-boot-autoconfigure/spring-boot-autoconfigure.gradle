@@ -10,19 +10,20 @@ dependencies {
   annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: versions.springboot
   implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 
-  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
-  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
-  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: versions.springboot
   implementation project(':instrumentation:spring:spring-web-3.1:library')
   implementation project(':instrumentation:spring:spring-webmvc-3.1:library')
   implementation project(':instrumentation:spring:spring-webflux-5.0:library')
 
+  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
+  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
+  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: versions.springboot
+
   compileOnly deps.opentelemetryExtAnnotations
-  compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.30.2'
   compileOnly deps.opentelemetryLogging
   compileOnly deps.opentelemetryJaeger
   compileOnly deps.opentelemetryOtlp
   compileOnly deps.opentelemetryZipkin
+  compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.30.2'
 
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: versions.springboot
@@ -31,12 +32,15 @@ dependencies {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
 
+  testImplementation deps.assertj
+  testImplementation project(':testing-common')
   testImplementation deps.opentelemetrySdk
+  testImplementation deps.opentelemetrySdkTesting
   testImplementation deps.opentelemetryExtAnnotations
-  testImplementation group: 'io.grpc', name: 'grpc-api', version: '1.30.2'
-  testImplementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.30.2'
   testImplementation deps.opentelemetryLogging
   testImplementation deps.opentelemetryJaeger
   testImplementation deps.opentelemetryOtlp
   testImplementation deps.opentelemetryZipkin
+  testImplementation group: 'io.grpc', name: 'grpc-api', version: '1.30.2'
+  testImplementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.30.2'
 }

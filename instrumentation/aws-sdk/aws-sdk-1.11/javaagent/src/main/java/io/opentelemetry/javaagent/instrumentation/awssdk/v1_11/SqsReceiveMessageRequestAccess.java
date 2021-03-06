@@ -10,6 +10,8 @@ import static java.lang.invoke.MethodType.methodType;
 import com.amazonaws.AmazonWebServiceRequest;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.util.Collections;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -24,6 +26,7 @@ import javax.annotation.Nullable;
 final class SqsReceiveMessageRequestAccess {
 
   @Nullable private static final MethodHandle WITH_ATTRIBUTE_NAMES;
+  @Nullable private static final MethodHandle GET_ATTRIBUTE_NAMES;
 
   static {
     Class<?> receiveMessageRequestClass = null;
@@ -46,8 +49,19 @@ final class SqsReceiveMessageRequestAccess {
         // Ignore
       }
       WITH_ATTRIBUTE_NAMES = withAttributeNames;
+
+      MethodHandle getAttributeNames = null;
+      try {
+        getAttributeNames =
+            lookup.findVirtual(
+                receiveMessageRequestClass, "getAttributeNames", methodType(List.class));
+      } catch (NoSuchMethodException | IllegalAccessException e) {
+        // Ignore
+      }
+      GET_ATTRIBUTE_NAMES = getAttributeNames;
     } else {
       WITH_ATTRIBUTE_NAMES = null;
+      GET_ATTRIBUTE_NAMES = null;
     }
   }
 
@@ -66,6 +80,17 @@ final class SqsReceiveMessageRequestAccess {
       WITH_ATTRIBUTE_NAMES.invoke(request, name);
     } catch (Throwable throwable) {
       // Ignore
+    }
+  }
+
+  static List<String> getAttributeNames(AmazonWebServiceRequest request) {
+    if (GET_ATTRIBUTE_NAMES == null) {
+      return Collections.emptyList();
+    }
+    try {
+      return (List<String>) GET_ATTRIBUTE_NAMES.invoke(request);
+    } catch (Throwable t) {
+      return Collections.emptyList();
     }
   }
 

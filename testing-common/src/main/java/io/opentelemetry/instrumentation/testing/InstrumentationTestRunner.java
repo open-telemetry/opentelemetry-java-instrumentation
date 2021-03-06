@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
@@ -22,6 +23,8 @@ public interface InstrumentationTestRunner {
   void afterTestClass();
 
   void clearAllExportedData();
+
+  OpenTelemetry getOpenTelemetry();
 
   List<SpanData> getExportedSpans();
 
