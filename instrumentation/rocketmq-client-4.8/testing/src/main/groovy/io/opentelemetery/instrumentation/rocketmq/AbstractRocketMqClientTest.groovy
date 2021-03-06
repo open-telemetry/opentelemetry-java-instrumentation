@@ -43,6 +43,10 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   abstract void configureMQPushConsumer()
 
+  def cleanupSpec() {
+    BaseConf.deleteTempDir()
+  }
+
   def "test rocketmq produce callback"() {
     setup:
     msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
@@ -74,9 +78,6 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           }
         }
       }
-      cleanup:
-      producer.shutdown()
-      BaseConf.deleteTempDir()
     }
   }
 
@@ -123,10 +124,6 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           }
         }
       }
-      cleanup:
-      producer.shutdown()
-      consumer.shutdown()
-      BaseConf.deleteTempDir()
     }
   }
 
@@ -210,10 +207,6 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           hasLink itemStepSpan
         }
       }
-      cleanup:
-      producer.shutdown()
-      consumer.shutdown()
-      BaseConf.deleteTempDir()
     }
   }
 }
