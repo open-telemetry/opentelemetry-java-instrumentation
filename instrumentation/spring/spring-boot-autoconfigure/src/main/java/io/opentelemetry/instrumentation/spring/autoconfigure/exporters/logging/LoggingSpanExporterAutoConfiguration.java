@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
-import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Configuration;
 /** Configures {@link LoggingSpanExporter} bean for tracing. */
 @Configuration
 @EnableConfigurationProperties(LoggingSpanExporterProperties.class)
-@AutoConfigureBefore(TracerAutoConfiguration.class)
+@AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(
     prefix = "opentelemetry.trace.exporter.logging",
     name = "enabled",

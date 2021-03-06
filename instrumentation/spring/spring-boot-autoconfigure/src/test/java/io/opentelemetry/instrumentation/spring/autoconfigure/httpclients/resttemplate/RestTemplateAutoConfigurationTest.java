@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.restte
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ class RestTemplateAutoConfigurationTest {
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  TracerAutoConfiguration.class, RestTemplateAutoConfiguration.class));
+                  OpenTelemetryAutoConfiguration.class, RestTemplateAutoConfiguration.class));
 
   @AfterEach
   void tearDown() {

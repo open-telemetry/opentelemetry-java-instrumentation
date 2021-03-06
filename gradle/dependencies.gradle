@@ -30,6 +30,9 @@ ext {
     systemLambda      : "1.1.0",
     prometheus        : "0.9.0",
     assertj           : '3.19.0',
+    awaitility        : '4.0.3',
+    // Caffeine 2.x to support Java 8+. 3.x is 11+.
+    caffeine          : '2.9.0',
     testcontainers    : '1.15.2'
   ]
 
@@ -73,6 +76,7 @@ ext {
       dependencies.create(group: 'io.prometheus', name: 'simpleclient', version: "${versions.prometheus}"),
       dependencies.create(group: 'io.prometheus', name: 'simpleclient_httpserver', version: "${versions.prometheus}"),
     ],
+    caffeine                     : "com.github.ben-manes.caffeine:caffeine:${versions.caffeine}",
 
     // Testing
 
@@ -97,5 +101,6 @@ ext {
     coroutines                   : dependencies.create(group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: "${versions.coroutines}"),
     junitApi                     : "org.junit.jupiter:junit-jupiter-api:${versions.junit5}",
     assertj                      : "org.assertj:assertj-core:${versions.assertj}",
+    awaitility                   : "org.awaitility:awaitility:${versions.awaitility}"
   ]
 }

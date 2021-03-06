@@ -21,17 +21,18 @@ public class RmiClientTracer extends RpcClientTracer {
   }
 
   public Context startSpan(Method method) {
+    Context parentContext = Context.current();
     String serviceName = method.getDeclaringClass().getName();
     String methodName = method.getName();
 
     Span span =
-        spanBuilder(serviceName + "/" + methodName, CLIENT)
+        spanBuilder(parentContext, serviceName + "/" + methodName, CLIENT)
             .setAttribute(SemanticAttributes.RPC_SYSTEM, getRpcSystem())
             .setAttribute(SemanticAttributes.RPC_SERVICE, serviceName)
             .setAttribute(SemanticAttributes.RPC_METHOD, methodName)
             .startSpan();
 
-    return Context.current().with(span);
+    return parentContext.with(span);
   }
 
   @Override

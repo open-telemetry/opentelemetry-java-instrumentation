@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 import io.grpc.ManagedChannel;
 import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporterBuilder;
-import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>Initializes {@link JaegerGrpcSpanExporter} bean if bean is missing.
  */
 @Configuration
-@AutoConfigureBefore(TracerAutoConfiguration.class)
+@AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @EnableConfigurationProperties(JaegerSpanExporterProperties.class)
 @ConditionalOnProperty(
     prefix = "opentelemetry.trace.exporter.jaeger",
