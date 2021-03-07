@@ -34,11 +34,3 @@ dependencies {
   testImplementation deps.assertj
   testImplementation deps.awaitility
 }
-
-sourcesJar {
-  /*
-  We have two javacc config above. They both generate some overlapping files, e.g. ParseException.java.
-  As they both add generated files to sources, this results in duplicating files.
-   */
-  duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
