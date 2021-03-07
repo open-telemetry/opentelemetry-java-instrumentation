@@ -81,14 +81,6 @@ java -javaagent:path/to/opentelemetry-javaagent-all.jar \
      -jar myapp.jar
 ```
 
-Specify the external exporter JAR file using the `otel.exporter.jar` system property:
-```
-java -javaagent:path/to/opentelemetry-javaagent-all.jar \
-     -Dotel.exporter.jar=path/to/external-exporter.jar \
-     -jar myapp.jar
-```
-
-
 ## Configuring the Agent
 
 The agent is [highly configurable](docs/agent-config.md)!  Many aspects of the agent's behavior can be
