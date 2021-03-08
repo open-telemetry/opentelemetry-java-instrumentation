@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api;
+package io.opentelemetry.javaagent.instrumentation.api.internal;
 
 public final class InClassLoaderMatcher {
 
   private static final ThreadLocal<MutableBoolean> inClassLoaderMatcher =
       ThreadLocal.withInitial(MutableBoolean::new);
+
+  private InClassLoaderMatcher() {}
 
   /**
    * Returns whether the ClassLoaderMatcher is currently executing.

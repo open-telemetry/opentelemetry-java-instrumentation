@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.instrumentation.api.InClassLoaderMatcher;
+import io.opentelemetry.javaagent.instrumentation.api.internal.InClassLoaderMatcher;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -58,6 +58,8 @@ public class EclipseOsgiInstrumentationModule extends InstrumentationModule {
 
     public static class IsDynamicallyImportedAdvice {
 
+      // "skipOn" is used to skip execution of the instrumented method when a ClassLoaderMatcher is
+      // currently executing, since we will be returning false regardless in onExit below
       @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
       public static boolean onEnter() {
         return InClassLoaderMatcher.get();
