@@ -46,11 +46,13 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameSpan(@Advice.Argument(2) Object handler) {
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
-      if (serverSpan != null && handler instanceof GrailsControllerUrlMappingInfo) {
-        tracer()
-            .nameServerSpan(parentContext, serverSpan, (GrailsControllerUrlMappingInfo) handler);
+      if (handler instanceof GrailsControllerUrlMappingInfo) {
+        Context parentContext = Java8BytecodeBridge.currentContext();
+        Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
+        if (serverSpan != null) {
+          tracer()
+              .nameServerSpan(parentContext, serverSpan, (GrailsControllerUrlMappingInfo) handler);
+        }
       }
     }
   }
