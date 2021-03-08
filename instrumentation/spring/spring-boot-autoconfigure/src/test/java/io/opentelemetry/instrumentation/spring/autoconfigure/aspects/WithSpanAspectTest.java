@@ -213,12 +213,7 @@ public class WithSpanAspectTest {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
-      runUnderTrace(
-          "parent",
-          () -> {
-            withSpanTester.testAsyncCompletionStage(future);
-            return null;
-          });
+      withSpan("parent", () -> withSpanTester.testAsyncCompletionStage(future));
 
       try {
         instrumentation.waitForTraces(1, 20, TimeUnit.SECONDS);
@@ -238,8 +233,6 @@ public class WithSpanAspectTest {
                       span ->
                           span.hasName("WithSpanTester.testAsyncCompletionStage")
                               .hasKind(INTERNAL)
-                              // otel SDK assertions need some work before we can comfortably use
-                              // them in this project...
                               .hasParentSpanId(traces.get(0).get(0).getSpanId())));
     }
 
@@ -249,12 +242,7 @@ public class WithSpanAspectTest {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
-      runUnderTrace(
-          "parent",
-          () -> {
-            withSpanTester.testAsyncCompletionStage(future);
-            return null;
-          });
+      withSpan("parent", () -> withSpanTester.testAsyncCompletionStage(future));
 
       try {
         instrumentation.waitForTraces(1, 20, TimeUnit.SECONDS);
@@ -275,8 +263,6 @@ public class WithSpanAspectTest {
                           span.hasName("WithSpanTester.testAsyncCompletionStage")
                               .hasKind(INTERNAL)
                               .hasStatus(StatusData.error())
-                              // otel SDK assertions need some work before we can comfortably use
-                              // them in this project...
                               .hasParentSpanId(traces.get(0).get(0).getSpanId())));
     }
   }
@@ -291,12 +277,7 @@ public class WithSpanAspectTest {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
-      runUnderTrace(
-          "parent",
-          () -> {
-            withSpanTester.testAsyncCompletableFuture(future);
-            return null;
-          });
+      withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
       try {
         instrumentation.waitForTraces(1, 20, TimeUnit.SECONDS);
@@ -316,8 +297,6 @@ public class WithSpanAspectTest {
                       span ->
                           span.hasName("WithSpanTester.testAsyncCompletableFuture")
                               .hasKind(INTERNAL)
-                              // otel SDK assertions need some work before we can comfortably use
-                              // them in this project...
                               .hasParentSpanId(traces.get(0).get(0).getSpanId())));
     }
 
@@ -327,12 +306,7 @@ public class WithSpanAspectTest {
       CompletableFuture<String> future = new CompletableFuture<>();
 
       // when
-      runUnderTrace(
-          "parent",
-          () -> {
-            withSpanTester.testAsyncCompletableFuture(future);
-            return null;
-          });
+      withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
       try {
         instrumentation.waitForTraces(1, 20, TimeUnit.SECONDS);
@@ -353,8 +327,6 @@ public class WithSpanAspectTest {
                           span.hasName("WithSpanTester.testAsyncCompletableFuture")
                               .hasKind(INTERNAL)
                               .hasStatus(StatusData.error())
-                              // otel SDK assertions need some work before we can comfortably use
-                              // them in this project...
                               .hasParentSpanId(traces.get(0).get(0).getSpanId())));
     }
   }
