@@ -20,7 +20,9 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -260,7 +262,7 @@ public abstract class BaseTracer {
    * span's status to {@link StatusCode#ERROR}. The throwable is unwrapped ({@link
    * #unwrapThrowable(Throwable)}) before being added to the span.
    */
-  protected void onException(Context context, Throwable throwable) {
+  public void onException(Context context, Throwable throwable) {
     Span span = Span.fromContext(context);
     span.setStatus(StatusCode.ERROR);
     span.recordException(unwrapThrowable(throwable));
@@ -272,8 +274,11 @@ public abstract class BaseTracer {
    */
   protected Throwable unwrapThrowable(Throwable throwable) {
     if (throwable.getCause() != null
-        && (throwable instanceof ExecutionException || throwable instanceof CompletionException)) {
-      return throwable.getCause();
+        && (throwable instanceof ExecutionException
+            || throwable instanceof CompletionException
+            || throwable instanceof InvocationTargetException
+            || throwable instanceof UndeclaredThrowableException)) {
+      return unwrapThrowable(throwable.getCause());
     }
     return throwable;
   }

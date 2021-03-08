@@ -40,11 +40,11 @@ final class GrpcClientTracer extends RpcClientTracer {
   }
 
   @Override
-  protected void onException(Context context, Throwable throwable) {
+  public void onException(Context context, Throwable throwable) {
     Status grpcStatus = Status.fromThrowable(throwable);
     Span span = Span.fromContext(context);
     span.setStatus(GrpcHelper.statusFromGrpcStatus(grpcStatus), grpcStatus.getDescription());
-    span.recordException(grpcStatus.getCause());
+    span.recordException(unwrapThrowable(grpcStatus.getCause()));
   }
 
   @Override

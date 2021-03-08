@@ -13,7 +13,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import java.lang.reflect.InvocationTargetException;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.axis2.jaxws.core.MessageContext;
 
@@ -73,14 +72,6 @@ public class Axis2JaxWsTracer extends BaseTracer {
     } else {
       tracer().end(context);
     }
-  }
-
-  @Override
-  protected Throwable unwrapThrowable(Throwable throwable) {
-    if (throwable instanceof InvocationTargetException) {
-      throwable = throwable.getCause();
-    }
-    return super.unwrapThrowable(throwable);
   }
 
   @Override

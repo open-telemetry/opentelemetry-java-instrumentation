@@ -130,11 +130,10 @@ public abstract class ServletHttpServerTracer<RESPONSE>
 
   @Override
   protected Throwable unwrapThrowable(Throwable throwable) {
-    Throwable result = throwable;
-    if (throwable instanceof ServletException && throwable.getCause() != null) {
-      result = throwable.getCause();
+    if (throwable.getCause() != null && throwable instanceof ServletException) {
+      throwable = throwable.getCause();
     }
-    return super.unwrapThrowable(result);
+    return super.unwrapThrowable(throwable);
   }
 
   public void setPrincipal(Context context, HttpServletRequest request) {

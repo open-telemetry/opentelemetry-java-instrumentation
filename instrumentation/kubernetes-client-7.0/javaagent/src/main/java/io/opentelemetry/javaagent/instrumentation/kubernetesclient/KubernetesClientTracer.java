@@ -73,7 +73,7 @@ public class KubernetesClientTracer
   }
 
   @Override
-  protected void onException(Context context, Throwable throwable) {
+  public void onException(Context context, Throwable throwable) {
     super.onException(context, throwable);
     if (throwable instanceof ApiException) {
       int status = ((ApiException) throwable).getCode();

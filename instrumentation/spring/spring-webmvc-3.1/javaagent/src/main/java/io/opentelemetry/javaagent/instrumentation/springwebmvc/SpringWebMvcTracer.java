@@ -108,12 +108,6 @@ public class SpringWebMvcTracer extends BaseTracer {
     }
   }
 
-  /** This method is overridden to allow other classes in this package to call it. */
-  @Override
-  public void onException(Context context, Throwable throwable) {
-    super.onException(context, throwable);
-  }
-
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.spring-webmvc-3.1";
