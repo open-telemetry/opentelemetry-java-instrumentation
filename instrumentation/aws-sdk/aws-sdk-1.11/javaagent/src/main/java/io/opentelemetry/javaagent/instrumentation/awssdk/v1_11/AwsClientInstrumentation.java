@@ -10,9 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +50,7 @@ public class AwsClientInstrumentation implements TypeInstrumentation {
         }
       }
       if (!hasAgentHandler) {
-        handlers.add(
-            new TracingRequestHandler(
-                InstrumentationContext.get(AmazonWebServiceRequest.class, RequestMeta.class)));
+        handlers.add(new TracingRequestHandler());
       }
     }
   }

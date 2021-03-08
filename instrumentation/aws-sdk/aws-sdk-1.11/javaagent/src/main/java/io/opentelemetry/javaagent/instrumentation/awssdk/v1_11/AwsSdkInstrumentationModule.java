@@ -6,13 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonMap;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
-import java.util.Map;
 
 @AutoService(InstrumentationModule.class)
 public class AwsSdkInstrumentationModule extends InstrumentationModule {
@@ -30,14 +28,6 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
     return asList(
         new AwsClientInstrumentation(),
         new AwsHttpClientInstrumentation(),
-        new RequestExecutorInstrumentation(),
-        new RequestInstrumentation());
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap(
-        "com.amazonaws.AmazonWebServiceRequest",
-        "io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta");
+        new RequestExecutorInstrumentation());
   }
 }
