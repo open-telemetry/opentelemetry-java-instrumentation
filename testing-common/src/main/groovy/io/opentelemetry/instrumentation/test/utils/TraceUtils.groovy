@@ -16,10 +16,10 @@ import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.server.ServerTraceUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
 
+// TODO: convert all usages of this class to the Java TraceUtils one
 class TraceUtils {
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test")

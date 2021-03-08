@@ -8,7 +8,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace;
+import static io.opentelemetry.instrumentation.testing.util.TraceUtils.withClientSpan;
+import static io.opentelemetry.instrumentation.testing.util.TraceUtils.withServerSpan;
+import static io.opentelemetry.instrumentation.testing.util.TraceUtils.withSpan;
 import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -49,18 +51,12 @@ public class WithSpanAspectTest {
     }
 
     @WithSpan(kind = CLIENT)
-    public String testWithClientSpan(Runnable nestedCall) {
-      if (nestedCall != null) {
-        nestedCall.run();
-      }
+    public String testWithClientSpan() {
       return "Span with name testWithClientSpan and SpanKind.CLIENT was created";
     }
 
     @WithSpan(kind = SpanKind.SERVER)
-    public String testWithServerSpan(Runnable nestedCall) {
-      if (nestedCall != null) {
-        nestedCall.run();
-      }
+    public String testWithServerSpan() {
       return "Span with name testWithServerSpan and SpanKind.SERVER was created";
     }
   }
@@ -83,14 +79,9 @@ public class WithSpanAspectTest {
 
   @Test
   @DisplayName("when method is annotated with @WithSpan should wrap method execution in a Span")
-  void withSpan() throws Throwable {
+  void withSpanWithDefaults() throws Throwable {
     // when
-    runUnderTrace(
-        "parent",
-        () -> {
-          withSpanTester.testWithSpan();
-          return null;
-        });
+    withSpan("parent", () -> withSpanTester.testWithSpan());
 
     // then
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
@@ -112,12 +103,7 @@ public class WithSpanAspectTest {
       "when @WithSpan value is set should wrap method execution in a Span with custom name")
   void withSpanName() throws Throwable {
     // when
-    runUnderTrace(
-        "parent",
-        () -> {
-          withSpanTester.testWithSpanWithValue();
-          return null;
-        });
+    withSpan("parent", () -> withSpanTester.testWithSpanWithValue());
 
     // then
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
@@ -155,12 +141,7 @@ public class WithSpanAspectTest {
       "when method is annotated with @WithSpan(kind=CLIENT) should build span with the declared SpanKind")
   void withSpanKind() throws Throwable {
     // when
-    runUnderTrace(
-        "parent",
-        () -> {
-          withSpanTester.testWithClientSpan(null);
-          return null;
-        });
+    withSpan("parent", () -> withSpanTester.testWithClientSpan());
 
     // then
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
@@ -180,7 +161,7 @@ public class WithSpanAspectTest {
       "when method is annotated with @WithSpan(kind=CLIENT) and context already contains a CLIENT span should suppress span")
   void suppressClientSpan() throws Throwable {
     // when
-    withSpanTester.testWithClientSpan(() -> withSpanTester.testWithClientSpan(null));
+    withClientSpan("parent", () -> withSpanTester.testWithClientSpan());
 
     // then
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
@@ -188,8 +169,7 @@ public class WithSpanAspectTest {
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    parentSpan ->
-                        parentSpan.hasName("WithSpanTester.testWithClientSpan").hasKind(CLIENT)));
+                    parentSpan -> parentSpan.hasName("parent").hasKind(CLIENT)));
   }
 
   @Test
@@ -197,7 +177,7 @@ public class WithSpanAspectTest {
       "when method is annotated with @WithSpan(kind=SERVER) and context already contains a SERVER span should suppress span")
   void suppressServerSpan() throws Throwable {
     // when
-    withSpanTester.testWithServerSpan(() -> withSpanTester.testWithServerSpan(null));
+    withServerSpan("parent", () -> withSpanTester.testWithServerSpan());
 
     // then
     List<List<SpanData>> traces = instrumentation.waitForTraces(1);
@@ -205,7 +185,6 @@ public class WithSpanAspectTest {
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    parentSpan ->
-                        parentSpan.hasName("WithSpanTester.testWithServerSpan").hasKind(SERVER)));
+                    parentSpan -> parentSpan.hasName("parent").hasKind(SERVER)));
   }
 }

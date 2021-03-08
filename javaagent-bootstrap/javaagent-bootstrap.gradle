@@ -40,6 +40,6 @@ dependencies {
   implementation project(':instrumentation-api')
 
   testImplementation project(':testing-common')
-  testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
+  testImplementation deps.mockito
   testImplementation deps.assertj
 }
