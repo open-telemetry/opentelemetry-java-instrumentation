@@ -10,10 +10,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import java.net.InetSocketAddress;
-import org.elasticsearch.action.Action;
 
-public class ElasticsearchTransportClientTracer
-    extends DatabaseClientTracer<Void, Action<?, ?, ?>, String> {
+public class ElasticsearchTransportClientTracer extends DatabaseClientTracer<Void, Object, String> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
@@ -36,7 +34,7 @@ public class ElasticsearchTransportClientTracer
   }
 
   @Override
-  protected String sanitizeStatement(Action<?, ?, ?> action) {
+  protected String sanitizeStatement(Object action) {
     return action.getClass().getSimpleName();
   }
 
@@ -51,7 +49,7 @@ public class ElasticsearchTransportClientTracer
   }
 
   @Override
-  protected String dbOperation(Void connection, Action<?, ?, ?> action, String operation) {
+  protected String dbOperation(Void connection, Object action, String operation) {
     return operation;
   }
 

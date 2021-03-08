@@ -26,7 +26,7 @@ The [peer service name](https://github.com/open-telemetry/opentelemetry-specific
 
 | System property                      | Environment variable                 | Description                                                                      |
 |--------------------------------------|--------------------------------------|----------------------------------------------------------------------------------|
-| `otel.endpoint.peer.service.mapping` | `OTEL_ENDPOINT_PEER_SERVICE_MAPPING` | Used to specify a mapping from hostnames or IP addresses to peer services, as a comma-separated list of host=name pairs. The peer service is added as an attribute to a span whose host or IP match the mapping. For example, if set to 1.2.3.4=cats-service,dogs-abcdef123.serverlessapis.com=dogs-api, requests to `1.2.3.4` will have a `peer.service` attribute of `cats-service` and requests to `dogs-abcdef123.serverlessapis.com` will have an attribute of `dogs-api`. |
+| `otel.instrumentation.common.peer-service-mapping` | `OTEL_INSTRUMENTATION_COMMON_PEER_SERVICE_MAPPING` | Used to specify a mapping from hostnames or IP addresses to peer services, as a comma-separated list of host=name pairs. The peer service is added as an attribute to a span whose host or IP match the mapping. For example, if set to 1.2.3.4=cats-service,dogs-abcdef123.serverlessapis.com=dogs-api, requests to `1.2.3.4` will have a `peer.service` attribute of `cats-service` and requests to `dogs-abcdef123.serverlessapis.com` will have an attribute of `dogs-api`. |
 
 ## DB statement sanitization
 
@@ -42,7 +42,7 @@ The following property may be used to disable it:
 
 | System property                                       | Environment variable                                  | Description                                                         |
 |-------------------------------------------------------|-------------------------------------------------------|---------------------------------------------------------------------|
-| `otel.instrumentation.db-statement-sanitizer.enabled` | `OTEL_INSTRUMENTATION_DB_STATEMENT_SANITIZER_ENABLED` | Enables the DB statement sanitization. The default value is `true`. |
+| `otel.instrumentation.common.db-statement-sanitizer.enabled` | `OTEL_INSTRUMENTATION_COMMON_DB_STATEMENT_SANITIZER_ENABLED` | Enables the DB statement sanitization. The default value is `true`. |
 
 ## Customizing the OpenTelemetry SDK
 
