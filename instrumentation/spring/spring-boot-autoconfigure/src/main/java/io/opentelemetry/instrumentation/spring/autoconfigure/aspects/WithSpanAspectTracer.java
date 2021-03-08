@@ -10,13 +10,9 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.spring.autoconfigure.aspects.async.CompletableFutureMethodSpanStrategy;
-import io.opentelemetry.instrumentation.spring.autoconfigure.aspects.async.CompletionStageMethodSpanStrategy;
-import io.opentelemetry.instrumentation.spring.autoconfigure.aspects.async.MethodSpanStrategy;
-import io.opentelemetry.instrumentation.spring.autoconfigure.aspects.async.SynchronousMethodSpanStrategy;
+import io.opentelemetry.instrumentation.api.tracer.async.MethodSpanStrategies;
+import io.opentelemetry.instrumentation.api.tracer.async.MethodSpanStrategy;
 import java.lang.reflect.Method;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 class WithSpanAspectTracer extends BaseTracer {
   WithSpanAspectTracer(OpenTelemetry openTelemetry) {
@@ -29,12 +25,8 @@ class WithSpanAspectTracer extends BaseTracer {
   }
 
   public Object end(Context context, Object result) {
-    MethodSpanStrategy methodSpanStrategy = MethodSpanStrategy.fromContextOrNull(context);
-    if (methodSpanStrategy != null) {
-      return methodSpanStrategy.end(result, this, context);
-    }
-    end(context);
-    return result;
+    MethodSpanStrategy methodSpanStrategy = MethodSpanStrategy.fromContext(context);
+    return methodSpanStrategy.end(result, this, context);
   }
 
   Context startSpan(Context parentContext, WithSpan annotation, Method method) {
@@ -61,15 +53,7 @@ class WithSpanAspectTracer extends BaseTracer {
   }
 
   private Context withMethodSpanStrategy(Context parentContext, Method method) {
-    final Class<?> returnType = method.getReturnType();
-    final MethodSpanStrategy methodSpanStrategy;
-    if (returnType == CompletionStage.class) {
-      methodSpanStrategy = CompletionStageMethodSpanStrategy.INSTANCE;
-    } else if (returnType == CompletableFuture.class) {
-      methodSpanStrategy = CompletableFutureMethodSpanStrategy.INSTANCE;
-    } else {
-      methodSpanStrategy = SynchronousMethodSpanStrategy.INSTANCE;
-    }
+    final MethodSpanStrategy methodSpanStrategy = MethodSpanStrategies.resolveStrategy(method);
     return parentContext.with(methodSpanStrategy);
   }
 }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.aspects.async;
+package io.opentelemetry.instrumentation.api.tracer.async;
 
 import io.opentelemetry.context.ContextKey;
 
