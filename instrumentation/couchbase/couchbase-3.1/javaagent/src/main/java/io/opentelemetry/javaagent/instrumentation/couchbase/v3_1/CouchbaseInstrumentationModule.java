@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v3_0;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 
@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public CouchbaseInstrumentationModule() {
-    super("couchbase", "couchbase-3.0");
+    super("couchbase", "couchbase-3.1");
   }
 
   @Override

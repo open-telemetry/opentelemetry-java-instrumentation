@@ -18,7 +18,7 @@ import spock.lang.Shared
 
 // Couchbase instrumentation is owned upstream so we don't assert on the contents of the spans, only
 // that the instrumentation is properly registered by the agent, meaning some spans were generated.
-class CouchbaseClient30Test extends AgentInstrumentationSpecification {
+class CouchbaseClient31Test extends AgentInstrumentationSpecification {
   private static final Logger log = LoggerFactory.getLogger("couchbase-container")
 
   @Shared

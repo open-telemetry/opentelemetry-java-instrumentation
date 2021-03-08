@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v3_0;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -21,10 +20,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.couchbase.client.core.env.CoreEnvironment");
-  }
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
