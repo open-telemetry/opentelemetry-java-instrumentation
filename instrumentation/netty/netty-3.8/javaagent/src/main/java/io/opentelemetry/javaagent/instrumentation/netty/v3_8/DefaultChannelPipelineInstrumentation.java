@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
@@ -39,9 +38,8 @@ public class DefaultChannelPipelineInstrumentation implements TypeInstrumentatio
   public static class NotifyHandlerExceptionAdvice {
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.Argument(1) Throwable throwable) {
-      Span span = Java8BytecodeBridge.currentSpan();
-      if (span.getSpanContext().isValid() && throwable != null) {
-        tracer().addThrowable(span, throwable);
+      if (throwable != null) {
+        tracer().onException(Java8BytecodeBridge.currentContext(), throwable);
       }
     }
   }

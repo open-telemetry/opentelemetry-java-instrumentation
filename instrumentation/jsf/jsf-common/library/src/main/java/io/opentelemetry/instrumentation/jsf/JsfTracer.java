@@ -60,7 +60,6 @@ public abstract class JsfTracer extends BaseTracer {
     while (throwable.getCause() != null && throwable instanceof FacesException) {
       throwable = throwable.getCause();
     }
-
     return super.unwrapThrowable(throwable);
   }
 }
