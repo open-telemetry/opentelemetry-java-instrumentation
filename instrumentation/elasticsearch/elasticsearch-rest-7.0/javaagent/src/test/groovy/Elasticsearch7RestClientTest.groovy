@@ -49,8 +49,7 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
       .put("path.home", esWorkingDir.path)
       .put("cluster.name", clusterName)
       .build()
-    testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, Collections.emptyMap(), null, { "default node name" }), (java.util.Collection)[Netty4Plugin], true)
-//    testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
+    testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, Collections.emptyMap(), null, { "default node name" }), [Netty4Plugin], true)
     testNode.start()
     httpTransportAddress = testNode.injector().getInstance(HttpServerTransport).boundAddress().publishAddress()
 
