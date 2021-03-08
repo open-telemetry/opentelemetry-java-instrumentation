@@ -61,12 +61,15 @@ class WithSpanAspectTracer extends BaseTracer {
   }
 
   private Context withMethodSpanStrategy(Context parentContext, Method method) {
-    Class<?> returnType = method.getReturnType();
+    final Class<?> returnType = method.getReturnType();
+    final MethodSpanStrategy methodSpanStrategy;
     if (returnType == CompletionStage.class) {
-      parentContext.with(CompletionStageMethodSpanStrategy.INSTANCE);
+      methodSpanStrategy = CompletionStageMethodSpanStrategy.INSTANCE;
     } else if (returnType == CompletableFuture.class) {
-      parentContext.with(CompletableFutureMethodSpanStrategy.INSTANCE);
+      methodSpanStrategy = CompletableFutureMethodSpanStrategy.INSTANCE;
+    } else {
+      methodSpanStrategy = SynchronousMethodSpanStrategy.INSTANCE;
     }
-    return parentContext.with(SynchronousMethodSpanStrategy.INSTANCE);
+    return parentContext.with(methodSpanStrategy);
   }
 }
