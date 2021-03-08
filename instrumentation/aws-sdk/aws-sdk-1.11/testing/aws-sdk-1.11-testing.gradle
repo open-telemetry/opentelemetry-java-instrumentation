@@ -1,0 +1,24 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api project(':testing-common')
+
+  api group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
+
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-kinesis', version: '1.11.106'
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: '1.11.106'
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-sns', version: '1.11.106'
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
+
+  // needed for SQS - using emq directly as localstack references emq v0.15.7 ie WITHOUT AWS trace header propagation
+  implementation group: 'org.elasticmq', name: 'elasticmq-rest-sqs_2.12', version: '1.0.0'
+
+  implementation deps.guava
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}

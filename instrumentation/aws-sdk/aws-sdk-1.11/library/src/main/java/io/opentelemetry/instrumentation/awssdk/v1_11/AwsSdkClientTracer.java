@@ -3,32 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
+package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import com.amazonaws.handlers.HandlerContextKey;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, Response<?>> {
-
-  // Note: aws1.x sdk doesn't have any truly async clients so we can store scope in request context
-  // safely.
-  public static final HandlerContextKey<ContextScopePair> CONTEXT_SCOPE_PAIR_CONTEXT_KEY =
-      new HandlerContextKey<>(AwsSdkClientTracer.class.getName() + ".ContextScopePair");
-
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      Config.get()
-          .getBooleanProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", false);
+final class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, Response<?>> {
 
   private static final ClassValue<String> OPERATION_NAME =
       new ClassValue<String>() {
@@ -42,15 +32,14 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
-  private static final AwsSdkClientTracer TRACER = new AwsSdkClientTracer();
-
-  public static AwsSdkClientTracer tracer() {
-    return TRACER;
-  }
-
   private final NamesCache namesCache = new NamesCache();
 
-  public AwsSdkClientTracer() {}
+  private final boolean captureExperimentalSpanAttributes;
+
+  AwsSdkClientTracer(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
+    super(openTelemetry);
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
 
   @Override
   protected void inject(Context context, Request<?> request) {
@@ -73,7 +62,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
     String awsServiceName = request.getServiceName();
 
-    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+    if (captureExperimentalSpanAttributes) {
       span.setAttribute("aws.agent", COMPONENT_NAME);
       span.setAttribute("aws.service", awsServiceName);
       span.setAttribute("aws.operation", extractOperationName(request));
@@ -106,7 +95,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
 
   @Override
   public void onResponse(Span span, Response<?> response) {
-    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES
+    if (captureExperimentalSpanAttributes
         && response != null
         && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       AmazonWebServiceResponse<?> awsResp = (AmazonWebServiceResponse<?>) response.getAwsResponse();

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
+package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static java.lang.invoke.MethodType.methodType;
 
@@ -11,7 +11,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Reflective access to aws-sdk-java-sqs class Message.
