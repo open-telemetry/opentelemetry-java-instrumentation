@@ -226,7 +226,7 @@ public class WithSpanAspectTest {
 
   @Nested
   @DisplayName("with a method annotated with @WithSpan returns CompletionStage")
-  class withCompletionStage {
+  class WithCompletionStage {
 
     @Test
     @DisplayName("should end Span on complete")
@@ -304,7 +304,7 @@ public class WithSpanAspectTest {
 
   @Nested
   @DisplayName("with a method annotated with @WithSpan returns CompletableFuture")
-  class withCompletableFuture {
+  class WithCompletableFuture {
 
     @Test
     @DisplayName("should end Span on complete")
