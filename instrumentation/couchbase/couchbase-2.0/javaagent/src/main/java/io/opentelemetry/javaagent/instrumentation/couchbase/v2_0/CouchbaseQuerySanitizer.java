@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;

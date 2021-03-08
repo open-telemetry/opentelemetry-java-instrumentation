@@ -1,7 +1,21 @@
+plugins {
+  id 'org.xbib.gradle.plugin.jflex' version '1.5.0'
+}
+
 group = 'io.opentelemetry.instrumentation'
 
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
+
+def jflexTargetDir = file"${project.buildDir}/generated/jflex/sql"
+def jflexTask = tasks.create("sqlSanitizerJflex", org.xbib.gradle.plugin.JFlexTask) {
+  group = 'jflex'
+  description = 'Generate SqlSanitizer'
+  source = [file("${project.projectDir}/src/main/jflex/SqlSanitizer.flex")]
+  target = jflexTargetDir
+}
+tasks.compileJava.dependsOn(jflexTask)
+sourceSets.main.java.srcDirs += jflexTargetDir
 
 dependencies {
   api project(":instrumentation-api-caching")
