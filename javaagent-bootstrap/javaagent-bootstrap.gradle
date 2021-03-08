@@ -15,7 +15,7 @@ sourceSets {
 }
 jar {
   from(sourceSets.patch.output) {
-    include 'io/opentelemetry/instrumentation/internal/shaded/caffeine/cache/BoundedLocalCache$PerformCleanupTask.class'
+    include 'io/opentelemetry/instrumentation/api/internal/shaded/caffeine/cache/BoundedLocalCache$PerformCleanupTask.class'
   }
 }
 
