@@ -45,6 +45,6 @@ dependencies {
   testImplementation deps.guava
 
   testImplementation project(':instrumentation:aws-lambda-1.0:testing')
-  testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
+  testImplementation deps.mockito
   testImplementation deps.assertj
 }

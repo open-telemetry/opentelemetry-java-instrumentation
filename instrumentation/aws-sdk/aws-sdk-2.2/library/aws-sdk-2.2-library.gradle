@@ -9,7 +9,7 @@ dependencies {
   testImplementation project(':instrumentation:aws-sdk:aws-sdk-2.2:testing')
 
   testImplementation deps.assertj
-  testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
+  testImplementation deps.mockito
 }
 
 test {
