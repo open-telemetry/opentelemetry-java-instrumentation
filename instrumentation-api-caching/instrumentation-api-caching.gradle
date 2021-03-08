@@ -7,17 +7,24 @@ group = 'io.opentelemetry.instrumentation'
 apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
+configurations {
+  shadowInclude
+}
+
 dependencies {
-  implementation(deps.caffeine) {
+  compileOnly deps.caffeine
+  shadowInclude(deps.caffeine) {
     exclude group: 'com.google.errorprone', module: 'error_prone_annotations'
     exclude group: 'org.checkerframework', module: 'checker-qual'
   }
 }
 
 shadowJar {
+  configurations = [project.configurations.shadowInclude]
+
   archiveClassifier.set("")
 
-  relocate "com.github.benmanes.caffeine", "io.opentelemetry.instrumentation.internal.shaded.caffeine"
+  relocate "com.github.benmanes.caffeine", "io.opentelemetry.instrumentation.api.internal.shaded.caffeine"
 
   minimize()
 }
