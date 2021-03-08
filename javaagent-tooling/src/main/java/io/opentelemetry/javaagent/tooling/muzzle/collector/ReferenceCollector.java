@@ -77,13 +77,18 @@ public class ReferenceCollector {
     visitClassesAndCollectReferences(spiImplementations, false);
   }
 
-  private static final Pattern AWS_SDK_SERVICE_INTERCEPTOR_SPI =
+  private static final Pattern AWS_SDK_V2_SERVICE_INTERCEPTOR_SPI =
       Pattern.compile("software/amazon/awssdk/services/\\w+(/\\w+)?/execution.interceptors");
+
+  private static final Pattern AWS_SDK_V1_SERVICE_INTERCEPTOR_SPI =
+      Pattern.compile("com/amazonaws/services/\\w+(/\\w+)?/request.handler2s");
 
   private boolean isSpiFile(String resource) {
     return resource.startsWith("META-INF/services/")
         || resource.equals("software/amazon/awssdk/global/handlers/execution.interceptors")
-        || AWS_SDK_SERVICE_INTERCEPTOR_SPI.matcher(resource).matches();
+        || resource.equals("com/amazonaws/global/handlers/request.handler2s")
+        || AWS_SDK_V2_SERVICE_INTERCEPTOR_SPI.matcher(resource).matches()
+        || AWS_SDK_V1_SERVICE_INTERCEPTOR_SPI.matcher(resource).matches();
   }
 
   /**

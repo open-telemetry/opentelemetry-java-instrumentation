@@ -221,9 +221,12 @@ class ReferenceCollectorTest extends Specification {
     where:
     desc                                               | resource
     "Java SPI"                                         | "META-INF/services/test.resource.file"
-    "AWS SDK global interceptors file"                 | "software/amazon/awssdk/global/handlers/execution.interceptors"
-    "AWS SDK service interceptors file"                | "software/amazon/awssdk/services/testservice/execution.interceptors"
-    "AWS SDK service (second level) interceptors file" | "software/amazon/awssdk/services/testservice/testsubservice/execution.interceptors"
+    "AWS SDK v2 global interceptors file"                 | "software/amazon/awssdk/global/handlers/execution.interceptors"
+    "AWS SDK v2 service interceptors file"                | "software/amazon/awssdk/services/testservice/execution.interceptors"
+    "AWS SDK v2 service (second level) interceptors file" | "software/amazon/awssdk/services/testservice/testsubservice/execution.interceptors"
+    "AWS SDK v1 global interceptors file"                 | "com/amazonaws/global/handlers/request.handler2s"
+    "AWS SDK v1 service interceptors file"                | "com/amazonaws/services/testservice/request.handler2s"
+    "AWS SDK v1 service (second level) interceptors file" | "com/amazonaws/services/testservice/testsubservice/request.handler2s"
   }
 
   def "should ignore arbitrary resource file"() {
