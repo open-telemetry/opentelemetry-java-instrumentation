@@ -10,7 +10,13 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.spring.autoconfigure.aspects.async.CompletableFutureMethodSpanStrategy;
+import io.opentelemetry.instrumentation.spring.autoconfigure.aspects.async.CompletionStageMethodSpanStrategy;
+import io.opentelemetry.instrumentation.spring.autoconfigure.aspects.async.MethodSpanStrategy;
+import io.opentelemetry.instrumentation.spring.autoconfigure.aspects.async.SynchronousMethodSpanStrategy;
 import java.lang.reflect.Method;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 class WithSpanAspectTracer extends BaseTracer {
   WithSpanAspectTracer(OpenTelemetry openTelemetry) {
@@ -22,16 +28,27 @@ class WithSpanAspectTracer extends BaseTracer {
     return "io.opentelemetry.spring-boot-autoconfigure-aspect";
   }
 
+  public Object end(Context context, Object result) {
+    MethodSpanStrategy methodSpanStrategy = MethodSpanStrategy.fromContextOrNull(context);
+    if (methodSpanStrategy != null) {
+      return methodSpanStrategy.end(result, this, context);
+    }
+    end(context);
+    return result;
+  }
+
   Context startSpan(Context parentContext, WithSpan annotation, Method method) {
+    Context spanStrategyContext = withMethodSpanStrategy(parentContext, method);
     Span span =
         spanBuilder(parentContext, spanName(annotation, method), annotation.kind()).startSpan();
+
     switch (annotation.kind()) {
       case SERVER:
-        return withServerSpan(parentContext, span);
+        return withServerSpan(spanStrategyContext, span);
       case CLIENT:
-        return withClientSpan(parentContext, span);
+        return withClientSpan(spanStrategyContext, span);
       default:
-        return parentContext.with(span);
+        return spanStrategyContext.with(span);
     }
   }
 
@@ -41,5 +58,15 @@ class WithSpanAspectTracer extends BaseTracer {
       return spanNameForMethod(method);
     }
     return spanName;
+  }
+
+  private Context withMethodSpanStrategy(Context parentContext, Method method) {
+    Class<?> returnType = method.getReturnType();
+    if (returnType == CompletionStage.class) {
+      parentContext.with(CompletionStageMethodSpanStrategy.INSTANCE);
+    } else if (returnType == CompletableFuture.class) {
+      parentContext.with(CompletableFutureMethodSpanStrategy.INSTANCE);
+    }
+    return parentContext.with(SynchronousMethodSpanStrategy.INSTANCE);
   }
 }
