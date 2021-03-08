@@ -92,13 +92,15 @@ public final class TraceUtils {
     }
 
     Context startClientSpan(String name) {
-      Span span = spanBuilder(name, SpanKind.CLIENT).startSpan();
-      return withClientSpan(Context.current(), span);
+      Context parentContext = Context.current();
+      Span span = spanBuilder(parentContext, name, SpanKind.CLIENT).startSpan();
+      return withClientSpan(parentContext, span);
     }
 
     Context startServerSpan(String name) {
-      Span span = spanBuilder(name, SpanKind.SERVER).startSpan();
-      return withServerSpan(Context.current(), span);
+      Context parentContext = Context.current();
+      Span span = spanBuilder(parentContext, name, SpanKind.SERVER).startSpan();
+      return withServerSpan(parentContext, span);
     }
   }
 
