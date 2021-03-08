@@ -9,7 +9,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import java.lang.reflect.InvocationTargetException;
 import org.grails.web.mapping.mvc.GrailsControllerUrlMappingInfo;
 
 public class GrailsTracer extends BaseTracer {
@@ -32,14 +31,6 @@ public class GrailsTracer extends BaseTracer {
             : info.getControllerClass().getDefaultAction();
     serverSpan.updateName(
         ServletContextPath.prepend(context, "/" + info.getControllerName() + "/" + action));
-  }
-
-  @Override
-  protected Throwable unwrapThrowable(Throwable throwable) {
-    if (throwable instanceof InvocationTargetException) {
-      return throwable.getCause();
-    }
-    return super.unwrapThrowable(throwable);
   }
 
   @Override

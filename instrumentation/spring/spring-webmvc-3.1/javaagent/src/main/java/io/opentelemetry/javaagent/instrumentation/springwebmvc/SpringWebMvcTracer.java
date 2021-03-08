@@ -13,7 +13,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
@@ -117,18 +116,6 @@ public class SpringWebMvcTracer extends BaseTracer {
         span.setAttribute("spring-webmvc.view.type", spanNameForClass(view.getClass()));
       }
     }
-  }
-
-  @Override
-  protected Throwable unwrapThrowable(Throwable throwable) {
-    if (throwable instanceof InvocationTargetException) {
-      return throwable.getCause();
-    }
-    return super.unwrapThrowable(throwable);
-  }
-
-  public void addUnwrappedThrowable(Span span, Throwable throwable) {
-    addThrowable(span, unwrapThrowable(throwable));
   }
 
   @Override
