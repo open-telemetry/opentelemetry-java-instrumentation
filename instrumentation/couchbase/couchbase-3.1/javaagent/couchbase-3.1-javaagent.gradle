@@ -1,0 +1,20 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "com.couchbase.client"
+    module = "java-client"
+    versions = "[3.1,)"
+    assertInverse = true
+  }
+}
+
+dependencies {
+  implementation group: "com.couchbase.client", name: "tracing-opentelemetry", version: "0.3.3"
+
+  library group: "com.couchbase.client", name: "core-io", version: "2.1.0"
+
+  testLibrary group: "com.couchbase.client", name: "java-client", version: "3.1.0"
+
+  testImplementation group: "org.testcontainers", name: "couchbase", version: versions.testcontainers
+}
