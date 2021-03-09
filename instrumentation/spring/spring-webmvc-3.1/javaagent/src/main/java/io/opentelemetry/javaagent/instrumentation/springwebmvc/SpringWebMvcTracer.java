@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
@@ -36,8 +37,12 @@ public class SpringWebMvcTracer extends BaseTracer {
     return TRACER;
   }
 
-  public Context startHandlerSpan(Context parentContext, Object handler) {
-    return startSpan(parentContext, spanNameOnHandle(handler), INTERNAL);
+  public @Nullable Context startHandlerSpan(Context parentContext, Object handler) {
+    String spanName = spanNameOnHandle(handler);
+    if (spanName != null) {
+      return startSpan(parentContext, spanName, INTERNAL);
+    }
+    return null;
   }
 
   public Context startSpan(ModelAndView mv) {
@@ -78,6 +83,9 @@ public class SpringWebMvcTracer extends BaseTracer {
       // org.springframework.web.servlet.handler.SimpleServletHandlerAdapter
       clazz = handler.getClass();
       methodName = "service";
+    } else if (handler.getClass().getName().startsWith("org.grails.")) {
+      // skip creating handler span for grails, grails instrumentation will take care of it
+      return null;
     } else {
       // perhaps org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter
       clazz = handler.getClass();
