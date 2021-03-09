@@ -45,26 +45,25 @@ public interface MethodSpanStrategy extends ImplicitContextKeyed {
   }
 
   /**
-   * @return A {@link MethodSpanStrategy} for tracing synchronous methods where the return value
-   *     does not represent the completion of an asynchronous operation.
+   * Returns a {@link MethodSpanStrategy} for tracing synchronous methods where the return value
+   * does not represent the completion of an asynchronous operation.
    */
   static MethodSpanStrategy synchronous() {
     return SynchronousMethodSpanStrategy.INSTANCE;
   }
 
   /**
-   * @return a {@link MethodSpanStrategy} for tracing a method that returns a {@link
-   *     java.util.concurrent.CompletionStage} representing the completion of an asynchronous
-   *     operation.
+   * Returns a {@link MethodSpanStrategy} for tracing a method that returns a {@link
+   * java.util.concurrent.CompletionStage} representing the completion of an asynchronous operation.
    */
   static MethodSpanStrategy forCompletionStage() {
     return CompletionStageMethodSpanStrategy.INSTANCE;
   }
 
   /**
-   * @return a {@link MethodSpanStrategy} for tracing a method that returns a {@link
-   *     java.util.concurrent.CompletableFuture} representing the completion of an asynchronous
-   *     operation.
+   * Returns a {@link MethodSpanStrategy} for tracing a method that returns a {@link
+   * java.util.concurrent.CompletableFuture} representing the completion of an asynchronous
+   * operation.
    */
   static MethodSpanStrategy forCompletableFuture() {
     return CompletableFutureMethodSpanStrategy.INSTANCE;
