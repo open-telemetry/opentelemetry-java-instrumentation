@@ -12,13 +12,15 @@ import org.apache.rocketmq.client.hook.SendMessageHook;
 
 public final class RocketMqTracing {
   public static RocketMqTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry).setPropagationEnabled(
-        Config.get()
-            .getBooleanProperty("otel.instrumentation.rocketmq-client.propagation", true))
+    return newBuilder(openTelemetry)
+        .setPropagationEnabled(
+            Config.get()
+                .getBooleanProperty("otel.instrumentation.rocketmq-client.propagation", true))
         .setCaptureExperimentalSpanAttributes(
             Config.get()
                 .getBooleanProperty(
-                    "otel.instrumentation.rocketmq-client.experimental-span-attributes", true)).build();
+                    "otel.instrumentation.rocketmq-client.experimental-span-attributes", true))
+        .build();
   }
 
   public static RocketMqTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
@@ -37,8 +39,11 @@ public final class RocketMqTracing {
       boolean propagationEnabled) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.propagationEnabled = propagationEnabled;
-    rocketMqConsumerTracer = new RocketMqConsumerTracer(openTelemetry, captureExperimentalSpanAttributes, propagationEnabled);
-    rocketMqProducerTracer = new RocketMqProducerTracer(openTelemetry, captureExperimentalSpanAttributes);
+    rocketMqConsumerTracer =
+        new RocketMqConsumerTracer(
+            openTelemetry, captureExperimentalSpanAttributes, propagationEnabled);
+    rocketMqProducerTracer =
+        new RocketMqProducerTracer(openTelemetry, captureExperimentalSpanAttributes);
   }
 
   public ConsumeMessageHook newTracingConsumeMessageHook() {
@@ -48,5 +53,4 @@ public final class RocketMqTracing {
   public SendMessageHook newTracingSendMessageHook() {
     return new TracingSendMessageHookImpl(rocketMqProducerTracer, propagationEnabled);
   }
-
 }

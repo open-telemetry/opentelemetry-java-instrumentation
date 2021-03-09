@@ -23,7 +23,10 @@ final class RocketMqConsumerTracer extends BaseTracer {
   private boolean captureExperimentalSpanAttributes;
   private boolean propagationEnabled;
 
-  RocketMqConsumerTracer(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes, boolean propagationEnabled) {
+  RocketMqConsumerTracer(
+      OpenTelemetry openTelemetry,
+      boolean captureExperimentalSpanAttributes,
+      boolean propagationEnabled) {
     super(openTelemetry);
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.propagationEnabled = propagationEnabled;
