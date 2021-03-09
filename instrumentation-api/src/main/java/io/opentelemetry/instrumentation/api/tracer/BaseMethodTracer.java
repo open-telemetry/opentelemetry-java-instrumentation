@@ -17,10 +17,23 @@ import java.lang.reflect.Method;
  */
 public abstract class BaseMethodTracer extends BaseTracer {
 
-  public BaseMethodTracer() {}
+  private final MethodSpanStrategies methodSpanStrategies;
+
+  public BaseMethodTracer() {
+    this(MethodSpanStrategies.getInstance());
+  }
+
+  public BaseMethodTracer(MethodSpanStrategies methodSpanStrategies) {
+    this.methodSpanStrategies = methodSpanStrategies;
+  }
 
   public BaseMethodTracer(OpenTelemetry openTelemetry) {
+    this(openTelemetry, MethodSpanStrategies.getInstance());
+  }
+
+  public BaseMethodTracer(OpenTelemetry openTelemetry, MethodSpanStrategies methodSpanStrategies) {
     super(openTelemetry);
+    this.methodSpanStrategies = methodSpanStrategies;
   }
 
   /**
@@ -28,8 +41,9 @@ public abstract class BaseMethodTracer extends BaseTracer {
    * that strategy in the returned {@code Context}.
    */
   protected Context withMethodSpanStrategy(Context context, Method method) {
-    MethodSpanStrategy methodSpanStrategy = MethodSpanStrategies.resolveStrategy(method);
-    return methodSpanStrategy.storeInContext(context);
+    Class<?> returnType = method.getReturnType();
+    MethodSpanStrategy methodSpanStrategy = methodSpanStrategies.resolveStrategy(returnType);
+    return context.with(methodSpanStrategy);
   }
 
   /**
