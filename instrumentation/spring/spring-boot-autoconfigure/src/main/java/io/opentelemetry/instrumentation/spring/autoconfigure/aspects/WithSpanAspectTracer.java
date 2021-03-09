@@ -9,12 +9,10 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
-import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.async.MethodSpanStrategies;
-import io.opentelemetry.instrumentation.api.tracer.async.MethodSpanStrategy;
+import io.opentelemetry.instrumentation.api.tracer.BaseMethodTracer;
 import java.lang.reflect.Method;
 
-class WithSpanAspectTracer extends BaseTracer {
+class WithSpanAspectTracer extends BaseMethodTracer {
   WithSpanAspectTracer(OpenTelemetry openTelemetry) {
     super(openTelemetry);
   }
@@ -22,11 +20,6 @@ class WithSpanAspectTracer extends BaseTracer {
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.spring-boot-autoconfigure-aspect";
-  }
-
-  public Object end(Context context, Object result) {
-    MethodSpanStrategy methodSpanStrategy = MethodSpanStrategy.fromContext(context);
-    return methodSpanStrategy.end(this, context, result);
   }
 
   Context startSpan(Context parentContext, WithSpan annotation, Method method) {
@@ -50,10 +43,5 @@ class WithSpanAspectTracer extends BaseTracer {
       return spanNameForMethod(method);
     }
     return spanName;
-  }
-
-  private Context withMethodSpanStrategy(Context parentContext, Method method) {
-    final MethodSpanStrategy methodSpanStrategy = MethodSpanStrategies.resolveStrategy(method);
-    return parentContext.with(methodSpanStrategy);
   }
 }

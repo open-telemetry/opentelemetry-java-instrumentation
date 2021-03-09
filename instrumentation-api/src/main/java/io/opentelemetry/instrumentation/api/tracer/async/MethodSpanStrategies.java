@@ -11,6 +11,9 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * Registry of {@link MethodSpanStrategy} implementations for tracing the asynchronous operations represented by the return type of a traced method.
+ */
 public class MethodSpanStrategies {
   private static final ConcurrentMap<Class<?>, MethodSpanStrategy> strategies =
       new ConcurrentHashMap<>();
@@ -21,7 +24,10 @@ public class MethodSpanStrategies {
   }
 
   public static MethodSpanStrategy resolveStrategy(Method method) {
-    Class<?> returnType = method.getReturnType();
+    return resolveStrategy(method.getReturnType());
+  }
+
+  public static MethodSpanStrategy resolveStrategy(Class<?> returnType) {
     return strategies.getOrDefault(returnType, MethodSpanStrategy.synchronous());
   }
 
