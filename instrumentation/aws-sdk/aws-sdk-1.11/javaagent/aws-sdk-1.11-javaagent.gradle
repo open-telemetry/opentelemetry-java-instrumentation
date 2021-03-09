@@ -75,6 +75,9 @@ dependencies {
   testImplementation deps.testcontainers
   testImplementation "org.testcontainers:localstack:${versions.testcontainers}"
 
+  // needed by S3
+  testImplementation 'javax.xml.bind:jaxb-api:2.3.1'
+
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.0')
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.0')
   test_before_1_11_106Implementation(group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.0')

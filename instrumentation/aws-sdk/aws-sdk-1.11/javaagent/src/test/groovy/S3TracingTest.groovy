@@ -6,10 +6,16 @@
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 
-import com.amazonaws.services.sns.AmazonSNSAsyncClient
-import com.amazonaws.services.sns.model.CreateTopicResult
+import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.model.BucketNotificationConfiguration
+import com.amazonaws.services.s3.model.ObjectListing
+import com.amazonaws.services.s3.model.QueueConfiguration
+import com.amazonaws.services.s3.model.S3Event
+import com.amazonaws.services.s3.model.S3ObjectSummary
+import com.amazonaws.services.s3.model.SetBucketNotificationConfigurationRequest
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.model.GetQueueAttributesRequest
+import com.amazonaws.services.sqs.model.PurgeQueueRequest
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.slf4j.LoggerFactory
@@ -19,14 +25,14 @@ import org.testcontainers.utility.DockerImageName
 import spock.lang.Ignore
 import spock.lang.Shared
 
-class SnsTracingTest extends AgentInstrumentationSpecification {
+class S3TracingTest extends AgentInstrumentationSpecification {
 
   @Shared
   LocalStackContainer localstack
   @Shared
   AmazonSQSAsyncClient sqsClient
   @Shared
-  AmazonSNSAsyncClient snsClient
+  AmazonS3Client s3Client
 
   def setupSpec() {
 
@@ -39,11 +45,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
     sqsClient = AmazonSQSAsyncClient.asyncBuilder()
       .withEndpointConfiguration(localstack.getEndpointConfiguration(LocalStackContainer.Service.SQS))
       .withCredentials(localstack.getDefaultCredentialsProvider())
+      //.withRegion(Regions.US_EAST_1)
       .build()
 
-    snsClient = AmazonSNSAsyncClient.asyncBuilder()
+    s3Client = AmazonS3Client.builder()
       .withEndpointConfiguration(localstack.getEndpointConfiguration(LocalStackContainer.Service.SNS))
       .withCredentials(localstack.getDefaultCredentialsProvider())
+      //.withRegion(Regions.US_EAST_1)
       .build()
 
     localstack.followOutput(new Slf4jLogConsumer(LoggerFactory.getLogger("test")))
@@ -70,29 +78,51 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
     sqsClient.setQueueAttributes(queueUrl, Collections.singletonMap("Policy", policy(queueArn)))
   }
 
-  def createAndSubscribeTopic(String topicName, String queueArn) {
-    CreateTopicResult ctr = snsClient.createTopic(topicName)
-    snsClient.subscribe(ctr.getTopicArn(), "sqs", queueArn)
-    return ctr.getTopicArn()
+  def createBucket(String bucketName) {
+    s3Client.createBucket(bucketName)
   }
 
-  @Ignore("Requires https://github.com/localstack/localstack/issues/3669 to work with localstack")
-  def "simple SNS producer - SQS consumer services"() {
+  def deleteBucket(String bucketName) {
+    ObjectListing objectListing = s3Client.listObjects(bucketName)
+      Iterator<S3ObjectSummary> objIter = objectListing.getObjectSummaries().iterator()
+      while (objIter.hasNext()) {
+        s3Client.deleteObject(bucketName, objIter.next().getKey())
+      }
+    s3Client.deleteBucket(bucketName)
+  }
+
+  def enableS3Notifications(String bucketName, String sqsQueueArn) {
+    BucketNotificationConfiguration notificationConfiguration = new BucketNotificationConfiguration()
+    notificationConfiguration.addConfiguration("sqsQueueConfig",
+      new QueueConfiguration(sqsQueueArn, EnumSet.of(S3Event.ObjectCreatedByPut)))
+    s3Client.setBucketNotificationConfiguration(new SetBucketNotificationConfigurationRequest(
+      bucketName, notificationConfiguration))
+  }
+
+  @Ignore("Requires https://github.com/localstack/localstack/issues/3686 to work with localstack")
+  def "simple S3 upload as producer - SQS consumer services"() {
     setup:
-    String queueName = "snsToSqsTestQueue"
-    String topicName = "snsToSqsTestTopic"
+    String queueName = "s3ToSqsTestQueue"
+    String bucketName = "s3-sqs-test-bucket"
 
     String queueUrl = createQueue(queueName)
     String queueArn = getQueueArn(queueUrl)
     setQueuePolicy(queueUrl, queueArn)
-    String topicArn = createAndSubscribeTopic(topicName, queueArn)
+    createBucket(bucketName)
+    enableS3Notifications(bucketName, queueArn)
 
     when:
-    snsClient.publish(topicArn, "Hello There")
+    // test message, auto created by AWS
     sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20))
+    s3Client.putObject(bucketName, "testKey", "testData")
+    // traced message
+    sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20))
+    // cleanup
+    deleteBucket(bucketName)
+    sqsClient.purgeQueue(new PurgeQueueRequest(queueUrl))
 
     then:
-    assertTraces(7) {
+    assertTraces(13) {
       trace(0, 1) {
 
         span(0) {
@@ -102,7 +132,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "CreateQueueRequest"
+            "aws.operation" "CreateQueue"
             "aws.queue.name" queueName
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -124,7 +154,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "GetQueueAttributesRequest"
+            "aws.operation" "GetQueueAttributes"
             "aws.queue.url" queueUrl
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -146,7 +176,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "SetQueueAttributesRequest"
+            "aws.operation" "SetQueueAttributes"
             "aws.queue.url" queueUrl
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -162,16 +192,17 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
       trace(3, 1) {
 
         span(0) {
-          name "SNS.CreateTopic"
+          name "S3.CreateBucket"
           kind CLIENT
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "CreateTopicRequest"
-            "aws.service" "AmazonSNS"
+            "aws.operation" "CreateBucket"
+            "aws.service" "Amazon S3"
+            "aws.bucket.name" bucketName
             "http.flavor" "1.1"
-            "http.method" "POST"
+            "http.method" "PUT"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
@@ -183,14 +214,35 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
       trace(4, 1) {
 
         span(0) {
-          name "SNS.Subscribe"
+          name "S3.SetBucketNotificationConfiguration"
           kind CLIENT
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "SubscribeRequest"
-            "aws.service" "AmazonSNS"
+            "aws.operation" "SetBucketNotificationConfiguration"
+            "aws.service" "Amazon S3"
+            "http.flavor" "1.1"
+            "http.method" "PUT"
+            "http.status_code" 200
+            "http.url" String
+            "net.peer.name" String
+            "net.transport" "IP.TCP"
+            "net.peer.port" {it == null || Number}
+          }
+        }
+      }
+      trace(5, 1) {
+        span(0) {
+          name "SQS.ReceiveMessage"
+          kind CLIENT
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "ReceiveMessage"
+            "aws.queue.url" queueUrl
+            "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
@@ -201,18 +253,44 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           }
         }
       }
-      trace(5, 2) {
+      /**
+       * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
+       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
+       */
+      trace(6, 1) {
         span(0) {
-          name "SNS.Publish"
+          name "SQS.ReceiveMessage"
+          kind CONSUMER
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "ReceiveMessage"
+            "aws.queue.url" queueUrl
+            "aws.service" "AmazonSQS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" String
+            "http.user_agent" String
+            "net.peer.name" String
+            "net.transport" "IP.TCP"
+            "net.peer.port" {it == null || Number}
+          }
+        }
+      }
+      trace(7, 2) {
+        span(0) {
+          name "S3.PutObject"
           kind CLIENT
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "PublishRequest"
-            "aws.service" "AmazonSNS"
+            "aws.operation" "PutObject"
+            "aws.service" "Amazon S3"
             "http.flavor" "1.1"
-            "http.method" "POST"
+            "http.method" "PUT"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
@@ -227,7 +305,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
             "aws.queue.url" queueUrl
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
@@ -245,7 +323,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
        * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
        * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
        */
-      trace(6, 1) {
+      trace(8, 1) {
         span(0) {
           name "SQS.ReceiveMessage"
           kind CLIENT
@@ -253,7 +331,91 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ReceiveMessageRequest"
+            "aws.operation" "ReceiveMessage"
+            "aws.queue.url" queueUrl
+            "aws.service" "AmazonSQS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" String
+            "net.peer.name" String
+            "net.transport" "IP.TCP"
+            "net.peer.port" {it == null || Number}
+          }
+        }
+      }
+      trace(9, 1) {
+        span(0) {
+          name "S3.ListObjects"
+          kind CLIENT
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "ListObjects"
+            "aws.service" "Amazon S3"
+            "aws.bucket.name" bucketName
+            "http.flavor" "1.1"
+            "http.method" "GET"
+            "http.status_code" 200
+            "http.url" String
+            "net.peer.name" String
+            "net.transport" "IP.TCP"
+            "net.peer.port" {it == null || Number}
+          }
+        }
+      }
+      trace(10, 1) {
+        span(0) {
+          name "S3.DeleteObject"
+          kind CLIENT
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "DeleteObject"
+            "aws.service" "Amazon S3"
+            "aws.bucket.name" bucketName
+            "http.flavor" "1.1"
+            "http.method" "DELETE"
+            "http.status_code" 204
+            "http.url" String
+            "net.peer.name" String
+            "net.transport" "IP.TCP"
+            "net.peer.port" {it == null || Number}
+          }
+        }
+      }
+      trace(11, 1) {
+        span(0) {
+          name "S3.DeleteBucket"
+          kind CLIENT
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "DeleteBucket"
+            "aws.service" "Amazon S3"
+            "aws.bucket.name" bucketName
+            "http.flavor" "1.1"
+            "http.method" "DELETE"
+            "http.status_code" 204
+            "http.url" String
+            "net.peer.name" String
+            "net.transport" "IP.TCP"
+            "net.peer.port" {it == null || Number}
+          }
+        }
+      }
+      trace(12, 1) {
+        span(0) {
+          name "SQS.PurgeQueue"
+          kind CLIENT
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "PurgeQueue"
             "aws.queue.url" queueUrl
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
