@@ -28,8 +28,8 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   @Shared
   DefaultMQProducer producer
 
-//  @Shared
-//  DefaultMQPushConsumer consumer
+  @Shared
+  DefaultMQPushConsumer consumer
 
   @Shared
   def sharedTopic
@@ -84,7 +84,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   def "test rocketmq produce and consume"() {
     setup:
-    def consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
+    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
     configureMQPushConsumer(consumer)
     when:
     runUnderTrace("parent") {
@@ -124,6 +124,9 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           }
         }
       }
+      cleanup:{
+        consumer.shutdown()
+      }
     }
   }
 
@@ -133,7 +136,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     Message msg2 = new Message(sharedTopic, "TagB", ("hello world b").getBytes())
     msgs.add(msg1)
     msgs.add(msg2)
-    def consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
+    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
     consumer.setConsumeMessageBatchMaxSize(2)
     configureMQPushConsumer(consumer)
     when:
