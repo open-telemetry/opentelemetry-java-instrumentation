@@ -269,6 +269,25 @@ public class WithSpanAspectTest {
                               .hasStatus(StatusData.error())
                               .hasParentSpanId(traces.get(0).get(0).getSpanId())));
     }
+
+    @Test
+    @DisplayName("should end Span on incompatible return value")
+    void onIncompatibleReturnValue() throws Throwable {
+      // when
+      withSpan("parent", () -> withSpanTester.testAsyncCompletionStage(null));
+
+      // then
+      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      assertThat(traces)
+          .hasTracesSatisfyingExactly(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                      span ->
+                          span.hasName("WithSpanTester.testAsyncCompletionStage")
+                              .hasKind(INTERNAL)
+                              .hasParentSpanId(traces.get(0).get(0).getSpanId())));
+    }
   }
 
   @Nested
@@ -337,6 +356,69 @@ public class WithSpanAspectTest {
                           span.hasName("WithSpanTester.testAsyncCompletableFuture")
                               .hasKind(INTERNAL)
                               .hasStatus(StatusData.error())
+                              .hasParentSpanId(traces.get(0).get(0).getSpanId())));
+    }
+
+    @Test
+    @DisplayName("should end the Span when already complete")
+    void onCompletedFuture() throws Throwable {
+      CompletableFuture<String> future = CompletableFuture.completedFuture("Done");
+
+      // when
+      withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
+
+      // then
+      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      assertThat(traces)
+          .hasTracesSatisfyingExactly(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                      span ->
+                          span.hasName("WithSpanTester.testAsyncCompletableFuture")
+                              .hasKind(INTERNAL)
+                              .hasParentSpanId(traces.get(0).get(0).getSpanId())));
+    }
+
+    @Test
+    @DisplayName("should end the Span when already failed")
+    void onFailedFuture() throws Throwable {
+      CompletableFuture<String> future = new CompletableFuture<>();
+      future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));
+
+      // when
+      withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
+
+      // then
+      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      assertThat(traces)
+          .hasTracesSatisfyingExactly(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                      span ->
+                          span.hasName("WithSpanTester.testAsyncCompletableFuture")
+                              .hasKind(INTERNAL)
+                              .hasStatus(StatusData.error())
+                              .hasParentSpanId(traces.get(0).get(0).getSpanId())));
+    }
+
+    @Test
+    @DisplayName("should end Span on incompatible return value")
+    void onIncompatibleReturnValue() throws Throwable {
+      // when
+      withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(null));
+
+      // then
+      List<List<SpanData>> traces = instrumentation.waitForTraces(1);
+      assertThat(traces)
+          .hasTracesSatisfyingExactly(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                      span ->
+                          span.hasName("WithSpanTester.testAsyncCompletableFuture")
+                              .hasKind(INTERNAL)
                               .hasParentSpanId(traces.get(0).get(0).getSpanId())));
     }
   }

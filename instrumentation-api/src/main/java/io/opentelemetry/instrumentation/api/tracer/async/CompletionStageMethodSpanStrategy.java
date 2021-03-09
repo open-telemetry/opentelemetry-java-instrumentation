@@ -25,6 +25,7 @@ enum CompletionStageMethodSpanStrategy implements MethodSpanStrategy {
             }
           });
     }
+    tracer.end(context);
     return result;
   }
 }

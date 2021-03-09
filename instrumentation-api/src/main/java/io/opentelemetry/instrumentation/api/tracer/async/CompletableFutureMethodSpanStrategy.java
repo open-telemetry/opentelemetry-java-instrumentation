@@ -16,15 +16,36 @@ enum CompletableFutureMethodSpanStrategy implements MethodSpanStrategy {
   public Object end(BaseTracer tracer, Context context, Object result) {
     if (result instanceof CompletableFuture) {
       CompletableFuture<?> future = (CompletableFuture<?>) result;
-      return future.whenComplete(
-          (value, error) -> {
-            if (error != null) {
-              tracer.endExceptionally(context, error);
-            } else {
-              tracer.end(context);
-            }
-          });
+      if (future.isDone()) {
+        return endSynchronously(tracer, context, future);
+      } else {
+        return endOnCompletion(tracer, context, future);
+      }
     }
+    tracer.end(context);
     return result;
+  }
+
+  private CompletableFuture<?> endSynchronously(
+      BaseTracer tracer, Context context, CompletableFuture<?> future) {
+    try {
+      future.join();
+      tracer.end(context);
+    } catch (Exception exception) {
+      tracer.endExceptionally(context, exception);
+    }
+    return future;
+  }
+
+  private CompletableFuture<?> endOnCompletion(
+      BaseTracer tracer, Context context, CompletableFuture<?> future) {
+    return future.whenComplete(
+        (value, error) -> {
+          if (error != null) {
+            tracer.endExceptionally(context, error);
+          } else {
+            tracer.end(context);
+          }
+        });
   }
 }

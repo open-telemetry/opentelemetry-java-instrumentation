@@ -12,7 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Registry of {@link MethodSpanStrategy} implementations for tracing the asynchronous operations represented by the return type of a traced method.
+ * Registry of {@link MethodSpanStrategy} implementations for tracing the asynchronous operations
+ * represented by the return type of a traced method.
  */
 public class MethodSpanStrategies {
   private static final ConcurrentMap<Class<?>, MethodSpanStrategy> strategies =
