@@ -5,160 +5,74 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import java.util.Objects;
+import com.google.auto.value.AutoValue;
+import javax.annotation.Nullable;
 
-public class DbInfo {
+@AutoValue
+public abstract class DbInfo {
 
-  public static final DbInfo DEFAULT = new Builder().build();
+  public static final DbInfo DEFAULT = builder().build();
 
-  private final String system;
-  private final String subtype;
-  private final String shortUrl; // "type:[subtype:]//host:port"
-  private final String user;
-  private final String name;
-  private final String db;
-  private final String host;
-  private final Integer port;
-
-  public DbInfo(
-      String system,
-      String subtype,
-      String shortUrl,
-      String user,
-      String name,
-      String db,
-      String host,
-      Integer port) {
-    this.system = system;
-    this.subtype = subtype;
-    this.shortUrl = shortUrl;
-    this.user = user;
-    this.name = name;
-    this.db = db;
-    this.host = host;
-    this.port = port;
+  public static DbInfo.Builder builder() {
+    return new AutoValue_DbInfo.Builder();
   }
 
-  public String getSystem() {
-    return system;
-  }
+  @Nullable
+  public abstract String getSystem();
 
-  public String getSubtype() {
-    return subtype;
-  }
+  @Nullable
+  public abstract String getSubtype();
 
-  public String getShortUrl() {
-    return shortUrl;
-  }
+  // "type:[subtype:]//host:port"
+  @Nullable
+  public abstract String getShortUrl();
 
-  public String getUser() {
-    return user;
-  }
+  @Nullable
+  public abstract String getUser();
 
-  public String getName() {
-    return name;
-  }
+  @Nullable
+  public abstract String getName();
 
-  public String getDb() {
-    return db;
-  }
+  @Nullable
+  public abstract String getDb();
 
-  public String getHost() {
-    return host;
-  }
+  @Nullable
+  public abstract String getHost();
 
-  public Integer getPort() {
-    return port;
-  }
+  @Nullable
+  public abstract Integer getPort();
 
   public Builder toBuilder() {
-    return new Builder()
-        .system(system)
-        .subtype(subtype)
-        .shortUrl(shortUrl)
-        .user(user)
-        .name(name)
-        .db(db)
-        .host(host)
-        .port(port);
+    return builder()
+        .system(getSystem())
+        .subtype(getSubtype())
+        .shortUrl(getShortUrl())
+        .user(getUser())
+        .name(getName())
+        .db(getDb())
+        .host(getHost())
+        .port(getPort());
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
-    }
-    if (!(obj instanceof DbInfo)) {
-      return false;
-    }
-    DbInfo other = (DbInfo) obj;
-    return Objects.equals(system, other.system)
-        && Objects.equals(subtype, other.subtype)
-        && Objects.equals(shortUrl, other.shortUrl)
-        && Objects.equals(user, other.user)
-        && Objects.equals(name, other.name)
-        && Objects.equals(db, other.db)
-        && Objects.equals(host, other.host)
-        && Objects.equals(port, other.port);
-  }
+  @AutoValue.Builder
+  public abstract static class Builder {
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(system, subtype, shortUrl, user, name, db, host, port);
-  }
+    public abstract Builder system(String system);
 
-  public static class Builder {
-    private String system;
-    private String subtype;
-    private String shortUrl;
-    private String user;
-    private String name;
-    private String db;
-    private String host;
-    private Integer port;
+    public abstract Builder subtype(String subtype);
 
-    public Builder system(String system) {
-      this.system = system;
-      return this;
-    }
+    public abstract Builder shortUrl(String shortUrl);
 
-    public Builder subtype(String subtype) {
-      this.subtype = subtype;
-      return this;
-    }
+    public abstract Builder user(String user);
 
-    public Builder shortUrl(String shortUrl) {
-      this.shortUrl = shortUrl;
-      return this;
-    }
+    public abstract Builder name(String name);
 
-    public Builder user(String user) {
-      this.user = user;
-      return this;
-    }
+    public abstract Builder db(String db);
 
-    public Builder name(String name) {
-      this.name = name;
-      return this;
-    }
+    public abstract Builder host(String host);
 
-    public Builder db(String db) {
-      this.db = db;
-      return this;
-    }
+    public abstract Builder port(Integer port);
 
-    public Builder host(String host) {
-      this.host = host;
-      return this;
-    }
-
-    public Builder port(Integer port) {
-      this.port = port;
-      return this;
-    }
-
-    public DbInfo build() {
-      return new DbInfo(system, subtype, shortUrl, user, name, db, host, port);
-    }
+    public abstract DbInfo build();
   }
 }

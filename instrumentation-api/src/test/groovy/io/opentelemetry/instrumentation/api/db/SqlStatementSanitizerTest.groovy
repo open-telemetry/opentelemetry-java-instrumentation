@@ -92,46 +92,46 @@ class SqlStatementSanitizerTest extends Specification {
     where:
     sql                                                               | expected
     // Select
-    'SELECT x, y, z FROM schema.table'                                | new SqlStatementInfo(sql, 'SELECT', 'schema.table')
-    'WITH subquery as (select a from b) SELECT x, y, z FROM table'    | new SqlStatementInfo(sql, 'SELECT', null)
-    'SELECT x, y, (select a from b) as z FROM table'                  | new SqlStatementInfo(sql, 'SELECT', null)
-    'select delete, insert into, merge, update from table'            | new SqlStatementInfo(sql, 'SELECT', 'table')
-    'select col /* from table2 */ from table'                         | new SqlStatementInfo(sql, 'SELECT', 'table')
-    'select col from table join anotherTable'                         | new SqlStatementInfo(sql, 'SELECT', null)
-    'select col from (select * from anotherTable)'                    | new SqlStatementInfo(sql, 'SELECT', null)
-    'select col from (select * from anotherTable) alias'              | new SqlStatementInfo(sql, 'SELECT', null)
-    'select col from table1 union select col from table2'             | new SqlStatementInfo(sql, 'SELECT', null)
-    'select col from table where col in (select * from anotherTable)' | new SqlStatementInfo(sql, 'SELECT', null)
-    'select col from table1, table2'                                  | new SqlStatementInfo(sql, 'SELECT', null)
-    'select col from table1 t1, table2 t2'                            | new SqlStatementInfo(sql, 'SELECT', null)
-    'select col from table1 as t1, table2 as t2'                      | new SqlStatementInfo(sql, 'SELECT', null)
-    'select col from table where col in (1, 2, 3)'                    | new SqlStatementInfo('select col from table where col in (?, ?, ?)', 'SELECT', 'table')
-    'select col from table order by col, col2'                        | new SqlStatementInfo(sql, 'SELECT', 'table')
-    'select ąś∂ń© from źćļńĶ order by col, col2'                      | new SqlStatementInfo(sql, 'SELECT', 'źćļńĶ')
-    'select 12345678'                                                 | new SqlStatementInfo('select ?', 'SELECT', null)
-    '/* update comment */ select * from table1'                       | new SqlStatementInfo(sql, 'SELECT', 'table1')
-    'select /*((*/abc from table'                                     | new SqlStatementInfo(sql, 'SELECT', 'table')
-    'SeLeCT * FrOm TAblE'                                             | new SqlStatementInfo(sql, 'SELECT', 'TAblE')
+    'SELECT x, y, z FROM schema.table'                                | SqlStatementInfo.create(sql, 'SELECT', 'schema.table')
+    'WITH subquery as (select a from b) SELECT x, y, z FROM table'    | SqlStatementInfo.create(sql, 'SELECT', null)
+    'SELECT x, y, (select a from b) as z FROM table'                  | SqlStatementInfo.create(sql, 'SELECT', null)
+    'select delete, insert into, merge, update from table'            | SqlStatementInfo.create(sql, 'SELECT', 'table')
+    'select col /* from table2 */ from table'                         | SqlStatementInfo.create(sql, 'SELECT', 'table')
+    'select col from table join anotherTable'                         | SqlStatementInfo.create(sql, 'SELECT', null)
+    'select col from (select * from anotherTable)'                    | SqlStatementInfo.create(sql, 'SELECT', null)
+    'select col from (select * from anotherTable) alias'              | SqlStatementInfo.create(sql, 'SELECT', null)
+    'select col from table1 union select col from table2'             | SqlStatementInfo.create(sql, 'SELECT', null)
+    'select col from table where col in (select * from anotherTable)' | SqlStatementInfo.create(sql, 'SELECT', null)
+    'select col from table1, table2'                                  | SqlStatementInfo.create(sql, 'SELECT', null)
+    'select col from table1 t1, table2 t2'                            | SqlStatementInfo.create(sql, 'SELECT', null)
+    'select col from table1 as t1, table2 as t2'                      | SqlStatementInfo.create(sql, 'SELECT', null)
+    'select col from table where col in (1, 2, 3)'                    | SqlStatementInfo.create('select col from table where col in (?, ?, ?)', 'SELECT', 'table')
+    'select col from table order by col, col2'                        | SqlStatementInfo.create(sql, 'SELECT', 'table')
+    'select ąś∂ń© from źćļńĶ order by col, col2'                      | SqlStatementInfo.create(sql, 'SELECT', 'źćļńĶ')
+    'select 12345678'                                                 | SqlStatementInfo.create('select ?', 'SELECT', null)
+    '/* update comment */ select * from table1'                       | SqlStatementInfo.create(sql, 'SELECT', 'table1')
+    'select /*((*/abc from table'                                     | SqlStatementInfo.create(sql, 'SELECT', 'table')
+    'SeLeCT * FrOm TAblE'                                             | SqlStatementInfo.create(sql, 'SELECT', 'TAblE')
     // Insert
-    ' insert into table where lalala'                                 | new SqlStatementInfo(sql, 'INSERT', 'table')
-    'insert insert into table where lalala'                           | new SqlStatementInfo(sql, 'INSERT', 'table')
-    'insert into db.table where lalala'                               | new SqlStatementInfo(sql, 'INSERT', 'db.table')
-    'insert without i-n-t-o'                                          | new SqlStatementInfo(sql, 'INSERT', null)
+    ' insert into table where lalala'                                 | SqlStatementInfo.create(sql, 'INSERT', 'table')
+    'insert insert into table where lalala'                           | SqlStatementInfo.create(sql, 'INSERT', 'table')
+    'insert into db.table where lalala'                               | SqlStatementInfo.create(sql, 'INSERT', 'db.table')
+    'insert without i-n-t-o'                                          | SqlStatementInfo.create(sql, 'INSERT', null)
     // Delete
-    'delete from table where something something'                     | new SqlStatementInfo(sql, 'DELETE', 'table')
-    'delete from 12345678'                                            | new SqlStatementInfo('delete from ?', 'DELETE', null)
-    'delete   ((('                                                    | new SqlStatementInfo('delete (((', 'DELETE', null)
+    'delete from table where something something'                     | SqlStatementInfo.create(sql, 'DELETE', 'table')
+    'delete from 12345678'                                            | SqlStatementInfo.create('delete from ?', 'DELETE', null)
+    'delete   ((('                                                    | SqlStatementInfo.create('delete (((', 'DELETE', null)
     // Update
-    'update table set answer=42'                                      | new SqlStatementInfo('update table set answer=?', 'UPDATE', 'table')
-    'update /*table'                                                  | new SqlStatementInfo(sql, 'UPDATE', null)
+    'update table set answer=42'                                      | SqlStatementInfo.create('update table set answer=?', 'UPDATE', 'table')
+    'update /*table'                                                  | SqlStatementInfo.create(sql, 'UPDATE', null)
     // Merge
-    'merge into table'                                                | new SqlStatementInfo(sql, 'MERGE', 'table')
-    'merge table (into is optional in some dbs)'                      | new SqlStatementInfo(sql, 'MERGE', 'table')
-    'merge (into )))'                                                 | new SqlStatementInfo(sql, 'MERGE', null)
+    'merge into table'                                                | SqlStatementInfo.create(sql, 'MERGE', 'table')
+    'merge table (into is optional in some dbs)'                      | SqlStatementInfo.create(sql, 'MERGE', 'table')
+    'merge (into )))'                                                 | SqlStatementInfo.create(sql, 'MERGE', null)
     // Unknown operation
-    'and now for something completely different'                      | new SqlStatementInfo(sql, null, null)
-    ''                                                                | new SqlStatementInfo(sql, null, null)
-    null                                                              | new SqlStatementInfo(sql, null, null)
+    'and now for something completely different'                      | SqlStatementInfo.create(sql, null, null)
+    ''                                                                | SqlStatementInfo.create(sql, null, null)
+    null                                                              | SqlStatementInfo.create(sql, null, null)
   }
 
   def "very long SELECT statements don't cause problems"() {
@@ -144,7 +144,7 @@ class SqlStatementSanitizerTest extends Specification {
 
     expect:
     def sanitizedQuery = query.replace('=123', '=?').substring(0, AutoSqlSanitizer.LIMIT)
-    SqlStatementSanitizer.sanitize(query) == new SqlStatementInfo(sanitizedQuery, "SELECT", "table")
+    SqlStatementSanitizer.sanitize(query) == SqlStatementInfo.create(sanitizedQuery, "SELECT", "table")
   }
 
   def "lots and lots of ticks don't cause stack overflow or long runtimes"() {
