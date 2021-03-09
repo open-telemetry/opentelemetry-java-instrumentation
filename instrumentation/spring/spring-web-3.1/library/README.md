@@ -10,7 +10,7 @@ Replace `SPRING_VERSION` with the version of spring you're using.
 `Minimum version: 3.1`
 
 Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://mvnrepository.com/artifact/io.opentelemetry).
-`Minimum version: 0.8.0`
+`Minimum version: 0.17.0`
 
 For Maven add to your `pom.xml`:
 ```xml
@@ -60,8 +60,8 @@ interface. An example is shown below:
 
 ```java
 
-import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor;
+import io.opentelemetry.api.OpenTelemetry;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -73,10 +73,10 @@ import org.springframework.web.client.RestTemplate;
 public class RestTemplateConfig {
 
    @Bean
-   public RestTemplate restTemplate(Tracer tracer) {
+   public RestTemplate restTemplate(OpenTelemetry openTelemetry) {
 
       RestTemplate restTemplate = new RestTemplate();
-      RestTemplateInterceptor restTemplateInterceptor = new RestTemplateInterceptor(tracer);
+      RestTemplateInterceptor restTemplateInterceptor = new RestTemplateInterceptor(openTelemetry);
       restTemplate.getInterceptors().add(restTemplateInterceptor);
 
       return restTemplate;

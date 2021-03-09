@@ -10,7 +10,6 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -43,17 +42,6 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     super();
   }
 
-  /**
-   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
-   * use the GlobalOpenTelemetry Propagator instance.
-   *
-   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
-   */
-  @Deprecated
-  public HttpServerTracer(Tracer tracer) {
-    super(tracer);
-  }
-
   public HttpServerTracer(OpenTelemetry openTelemetry) {
     super(openTelemetry);
   }
@@ -82,7 +70,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
     // whether to call end() or not on the Span in the returned Context
 
     Context parentContext = extract(request, getGetter());
-    SpanBuilder builder = tracer.spanBuilder(spanName).setSpanKind(SERVER).setParent(parentContext);
+    SpanBuilder builder = spanBuilder(parentContext, spanName, SERVER);
 
     if (startTimestamp >= 0) {
       builder.setStartTimestamp(startTimestamp, TimeUnit.NANOSECONDS);
@@ -143,8 +131,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
    */
   public void endExceptionally(
       Context context, Throwable throwable, RESPONSE response, long timestamp) {
+    onException(context, throwable);
     Span span = Span.fromContext(context);
-    onError(span, unwrapThrowable(throwable));
     if (response == null) {
       setStatus(span, 500);
     } else {

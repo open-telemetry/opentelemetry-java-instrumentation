@@ -375,7 +375,7 @@
   <!-- skip jflex generated files -->
   <module name="SuppressionSingleFilter">
     <property name="checks" value=".*"/>
-    <property name="files" value="javaagent-api[/\\]build[/\\]generated[/\\]jflex"/>
+    <property name="files" value="instrumentation-api[/\\]build[/\\]generated[/\\]jflex"/>
   </module>
   <module name="SuppressionSingleFilter">
     <property name="checks" value="MethodName"/>

@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
@@ -15,6 +16,7 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
@@ -35,14 +37,19 @@ public class SpringWebMvcTracer extends BaseTracer {
     return TRACER;
   }
 
-  public Context startHandlerSpan(Context parentContext, Object handler) {
-    return startSpan(parentContext, spanNameOnHandle(handler), SpanKind.INTERNAL);
+  public @Nullable Context startHandlerSpan(Context parentContext, Object handler) {
+    String spanName = spanNameOnHandle(handler);
+    if (spanName != null) {
+      return startSpan(parentContext, spanName, INTERNAL);
+    }
+    return null;
   }
 
   public Context startSpan(ModelAndView mv) {
-    SpanBuilder span = tracer.spanBuilder(spanNameOnRender(mv));
+    Context parentContext = Context.current();
+    SpanBuilder span = spanBuilder(parentContext, spanNameOnRender(mv), INTERNAL);
     onRender(span, mv);
-    return Context.current().with(span.startSpan());
+    return parentContext.with(span.startSpan());
   }
 
   public void onRequest(Context context, Span span, HttpServletRequest request) {
@@ -76,6 +83,9 @@ public class SpringWebMvcTracer extends BaseTracer {
       // org.springframework.web.servlet.handler.SimpleServletHandlerAdapter
       clazz = handler.getClass();
       methodName = "service";
+    } else if (handler.getClass().getName().startsWith("org.grails.")) {
+      // skip creating handler span for grails, grails instrumentation will take care of it
+      return null;
     } else {
       // perhaps org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter
       clazz = handler.getClass();

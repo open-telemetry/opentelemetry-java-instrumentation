@@ -26,11 +26,13 @@ final class GrpcClientTracer extends RpcClientTracer {
   }
 
   public Context startSpan(String name) {
+    Context parentContext = Context.current();
     Span span =
-        spanBuilder(name, CLIENT)
+        spanBuilder(parentContext, name, CLIENT)
             .setAttribute(SemanticAttributes.RPC_SYSTEM, getRpcSystem())
             .startSpan();
-    return Context.current().with(span);
+    // TODO: withClientSpan()
+    return parentContext.with(span);
   }
 
   public void end(Context context, Status status) {
@@ -40,10 +42,11 @@ final class GrpcClientTracer extends RpcClientTracer {
   }
 
   @Override
-  protected void onError(Span span, Throwable throwable) {
+  public void onException(Context context, Throwable throwable) {
     Status grpcStatus = Status.fromThrowable(throwable);
-    super.onError(span, grpcStatus.getCause());
+    Span span = Span.fromContext(context);
     span.setStatus(GrpcHelper.statusFromGrpcStatus(grpcStatus), grpcStatus.getDescription());
+    span.recordException(unwrapThrowable(grpcStatus.getCause()));
   }
 
   @Override

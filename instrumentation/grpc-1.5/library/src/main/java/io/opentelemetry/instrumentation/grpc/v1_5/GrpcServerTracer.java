@@ -24,25 +24,25 @@ final class GrpcServerTracer extends RpcServerTracer<Metadata> {
   }
 
   public Context startSpan(String name, Metadata headers) {
-    SpanBuilder spanBuilder =
-        tracer.spanBuilder(name).setSpanKind(SERVER).setParent(extract(headers, getGetter()));
+    Context parentContext = extract(headers, getGetter());
+    SpanBuilder spanBuilder = spanBuilder(parentContext, name, SERVER);
     spanBuilder.setAttribute(SemanticAttributes.RPC_SYSTEM, "grpc");
-    return Context.current().with(spanBuilder.startSpan());
+    // TODO: withServerSpan()
+    return parentContext.with(spanBuilder.startSpan());
   }
 
   public void setStatus(Context context, Status status) {
     Span span = Span.fromContext(context);
     span.setStatus(GrpcHelper.statusFromGrpcStatus(status), status.getDescription());
     if (status.getCause() != null) {
-      addThrowable(span, status.getCause());
+      span.recordException(unwrapThrowable(status.getCause()));
     }
   }
 
   @Override
-  protected void onError(Span span, Throwable throwable) {
+  public void onException(Context context, Throwable throwable) {
     Status grpcStatus = Status.fromThrowable(throwable);
-    super.onError(span, grpcStatus.getCause());
-    span.setStatus(GrpcHelper.statusFromGrpcStatus(grpcStatus), grpcStatus.getDescription());
+    setStatus(context, grpcStatus);
   }
 
   @Override

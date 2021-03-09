@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
-import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpGrpcSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpGrpcSpanExporterProperties;
 import org.junit.jupiter.api.AfterEach;
@@ -25,7 +25,8 @@ class OtlpGrpcSpanExporterAutoConfigurationTest {
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  TracerAutoConfiguration.class, OtlpGrpcSpanExporterAutoConfiguration.class));
+                  OpenTelemetryAutoConfiguration.class,
+                  OtlpGrpcSpanExporterAutoConfiguration.class));
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize OtlpGrpcSpanExporter bean")

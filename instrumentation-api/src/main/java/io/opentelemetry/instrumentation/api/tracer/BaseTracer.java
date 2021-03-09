@@ -20,7 +20,10 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.UndeclaredThrowableException;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -49,23 +52,11 @@ public abstract class BaseTracer {
   private static final SupportabilityMetrics supportability =
       new SupportabilityMetrics(Config.get()).start();
 
-  protected final Tracer tracer;
-  protected final ContextPropagators propagators;
+  private final Tracer tracer;
+  private final ContextPropagators propagators;
 
   public BaseTracer() {
     this(GlobalOpenTelemetry.get());
-  }
-
-  /**
-   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
-   * use the GlobalOpenTelemetry Propagator instance.
-   *
-   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
-   */
-  @Deprecated
-  public BaseTracer(Tracer tracer) {
-    this.tracer = tracer;
-    this.propagators = GlobalOpenTelemetry.getPropagators();
   }
 
   public BaseTracer(OpenTelemetry openTelemetry) {
@@ -153,12 +144,13 @@ public abstract class BaseTracer {
    * name {@code spanName} and kind {@code kind}.
    */
   public Context startSpan(Context parentContext, String spanName, SpanKind kind) {
-    Span span = spanBuilder(spanName, kind).setParent(parentContext).startSpan();
+    Span span = spanBuilder(parentContext, spanName, kind).startSpan();
     return parentContext.with(span);
   }
 
-  protected SpanBuilder spanBuilder(String spanName, SpanKind kind) {
-    return tracer.spanBuilder(spanName).setSpanKind(kind);
+  /** Returns a {@link SpanBuilder} to create and start a new {@link Span}. */
+  protected final SpanBuilder spanBuilder(Context parentContext, String spanName, SpanKind kind) {
+    return tracer.spanBuilder(spanName).setSpanKind(kind).setParent(parentContext);
   }
 
   /**
@@ -217,7 +209,7 @@ public abstract class BaseTracer {
     if (clazz.getPackage() != null) {
       String pkgName = clazz.getPackage().getName();
       if (!pkgName.isEmpty()) {
-        className = clazz.getName().replace(pkgName, "").substring(1);
+        className = className.substring(pkgName.length() + 1);
       }
     }
     return className;
@@ -245,6 +237,9 @@ public abstract class BaseTracer {
   /**
    * Records the {@code throwable} in the span stored in the passed {@code context} and marks the
    * end of the span's execution.
+   *
+   * @see #onException(Context, Throwable)
+   * @see #end(Context)
    */
   public void endExceptionally(Context context, Throwable throwable) {
     endExceptionally(context, throwable, -1);
@@ -255,25 +250,38 @@ public abstract class BaseTracer {
    * end of the span's execution.
    *
    * @param endTimeNanos Explicit nanoseconds timestamp from the epoch.
+   * @see #onException(Context, Throwable)
+   * @see #end(Context, long)
    */
   public void endExceptionally(Context context, Throwable throwable, long endTimeNanos) {
-    Span span = Span.fromContext(context);
-    span.setStatus(StatusCode.ERROR);
-    onError(span, unwrapThrowable(throwable));
+    onException(context, throwable);
     end(context, endTimeNanos);
   }
 
-  protected void onError(Span span, Throwable throwable) {
-    addThrowable(span, throwable);
+  /**
+   * Records the {@code throwable} in the span stored in the passed {@code context} and sets the
+   * span's status to {@link StatusCode#ERROR}. The throwable is unwrapped ({@link
+   * #unwrapThrowable(Throwable)}) before being added to the span.
+   */
+  public void onException(Context context, Throwable throwable) {
+    Span span = Span.fromContext(context);
+    span.setStatus(StatusCode.ERROR);
+    span.recordException(unwrapThrowable(throwable));
   }
 
+  /**
+   * Extracts the actual cause by unwrapping passed {@code throwable} from known wrapper exceptions,
+   * e.g {@link ExecutionException}.
+   */
   protected Throwable unwrapThrowable(Throwable throwable) {
-    return throwable instanceof ExecutionException ? throwable.getCause() : throwable;
-  }
-
-  // TODO: call onError instead and make this private
-  public void addThrowable(Span span, Throwable throwable) {
-    span.recordException(throwable);
+    if (throwable.getCause() != null
+        && (throwable instanceof ExecutionException
+            || throwable instanceof CompletionException
+            || throwable instanceof InvocationTargetException
+            || throwable instanceof UndeclaredThrowableException)) {
+      return unwrapThrowable(throwable.getCause());
+    }
+    return throwable;
   }
 
   /**

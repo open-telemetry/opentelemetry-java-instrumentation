@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.context;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Iterator;
 import java.util.List;
 import org.slf4j.Logger;
@@ -22,9 +23,13 @@ public final class ContextPropagationDebug {
       ContextKey.named("thread-propagation-locations");
 
   private static final boolean THREAD_PROPAGATION_DEBUGGER =
-      Boolean.getBoolean("otel.javaagent.experimental.thread-propagation-debugger.enabled");
+      Config.get()
+          .getBooleanProperty(
+              "otel.javaagent.experimental.thread-propagation-debugger.enabled",
+              Config.get().isAgentDebugEnabled());
+
   private static final boolean FAIL_ON_CONTEXT_LEAK =
-      Boolean.getBoolean("otel.javaagent.testing.fail-on-context-leak");
+      Config.get().getBooleanProperty("otel.javaagent.testing.fail-on-context-leak", false);
 
   public static boolean isThreadPropagationDebuggerEnabled() {
     return THREAD_PROPAGATION_DEBUGGER;

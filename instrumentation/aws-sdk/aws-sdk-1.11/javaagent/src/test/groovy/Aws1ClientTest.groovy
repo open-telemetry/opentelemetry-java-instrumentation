@@ -258,6 +258,7 @@ class Aws1ClientTest extends AgentInstrumentationSpecification {
             "aws.endpoint" "https://s3.amazonaws.com"
             "aws.operation" "HeadBucket"
             "aws.agent" "java-aws-sdk"
+            "aws.bucket.name" "someBucket"
           }
         }
       }

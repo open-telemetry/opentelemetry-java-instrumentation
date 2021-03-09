@@ -11,7 +11,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
@@ -33,17 +32,6 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   protected HttpClientTracer() {
     super();
-  }
-
-  /**
-   * Prefer to pass in an OpenTelemetry instance, rather than just a Tracer, so you don't have to
-   * use the GlobalOpenTelemetry Propagator instance.
-   *
-   * @deprecated prefer to pass in an OpenTelemetry instance, instead.
-   */
-  @Deprecated
-  protected HttpClientTracer(Tracer tracer) {
-    super(tracer);
   }
 
   protected HttpClientTracer(OpenTelemetry openTelemetry) {
@@ -139,7 +127,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   private Span internalStartSpan(
       SpanKind kind, Context parentContext, REQUEST request, String name, long startTimeNanos) {
-    SpanBuilder spanBuilder = tracer.spanBuilder(name).setSpanKind(kind).setParent(parentContext);
+    SpanBuilder spanBuilder = spanBuilder(parentContext, name, kind);
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
     }

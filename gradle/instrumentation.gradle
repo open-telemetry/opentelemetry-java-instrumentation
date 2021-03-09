@@ -115,8 +115,6 @@ tasks.withType(Test).configureEach {
   jvmArgs "-javaagent:${project(":testing:agent-for-testing").tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dotel.javaagent.testing.additional-library-ignores.enabled=false"
-  // always run with the thread propagation debugger to help track down sporadic test failures
-  jvmArgs "-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=true"
   jvmArgs "-Dotel.javaagent.testing.fail-on-context-leak=true"
   // prevent sporadic gradle deadlocks, see SafeLogger for more details
   jvmArgs "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"

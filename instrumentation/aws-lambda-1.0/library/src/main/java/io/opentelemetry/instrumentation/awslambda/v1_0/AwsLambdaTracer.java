@@ -118,11 +118,10 @@ public class AwsLambdaTracer extends BaseTracer {
       Context awsContext, SpanKind kind, Object input, Map<String, String> headers) {
     io.opentelemetry.context.Context parentContext = ParentContextExtractor.extract(headers, this);
 
-    SpanBuilder spanBuilder = tracer.spanBuilder(spanName(awsContext, input));
+    SpanBuilder spanBuilder = spanBuilder(parentContext, spanName(awsContext, input), kind);
     setAttributes(spanBuilder, awsContext, input);
-    Span span = spanBuilder.setParent(parentContext).setSpanKind(kind).startSpan();
 
-    return withServerSpan(parentContext, span);
+    return withServerSpan(parentContext, spanBuilder.startSpan());
   }
 
   public void onOutput(io.opentelemetry.context.Context context, Object output) {

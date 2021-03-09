@@ -9,9 +9,9 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import org.apache.geode.cache.Region;
@@ -24,12 +24,11 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String, SqlS
   }
 
   public Context startSpan(String operation, Region<?, ?> connection, String query) {
+    Context parentContext = Context.current();
     SqlStatementInfo sanitizedStatement = sanitizeStatement(query);
 
     SpanBuilder span =
-        tracer
-            .spanBuilder(operation)
-            .setSpanKind(CLIENT)
+        spanBuilder(parentContext, operation, CLIENT)
             .setAttribute(SemanticAttributes.DB_SYSTEM, dbSystem(connection))
             .setAttribute(SemanticAttributes.DB_OPERATION, operation);
 
@@ -37,7 +36,7 @@ public class GeodeTracer extends DatabaseClientTracer<Region<?, ?>, String, SqlS
     setNetSemanticConvention(span, connection);
     onStatement(span, connection, query, sanitizedStatement);
 
-    return Context.current().with(span.startSpan());
+    return parentContext.with(span.startSpan());
   }
 
   @Override

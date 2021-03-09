@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.ApiResponse;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
@@ -72,12 +73,12 @@ public class KubernetesClientTracer
   }
 
   @Override
-  protected void onError(Span span, Throwable throwable) {
-    super.onError(span, throwable);
+  public void onException(Context context, Throwable throwable) {
+    super.onException(context, throwable);
     if (throwable instanceof ApiException) {
       int status = ((ApiException) throwable).getCode();
       if (status != 0) {
-        span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, status);
+        Span.fromContext(context).setAttribute(SemanticAttributes.HTTP_STATUS_CODE, status);
       }
     }
   }

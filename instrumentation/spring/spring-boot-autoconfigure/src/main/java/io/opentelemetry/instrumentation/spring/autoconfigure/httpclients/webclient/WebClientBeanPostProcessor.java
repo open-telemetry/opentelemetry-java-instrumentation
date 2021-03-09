@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
 import java.util.List;
 import java.util.function.Consumer;
@@ -19,12 +18,6 @@ import org.springframework.web.reactive.function.client.WebClient;
  * Cloud Sleuth</a>.
  */
 final class WebClientBeanPostProcessor implements BeanPostProcessor {
-
-  private final Tracer tracer;
-
-  WebClientBeanPostProcessor(Tracer tracer) {
-    this.tracer = tracer;
-  }
 
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.CONTEXT_SCOPE_PAIR_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkClientTracer.tracer;
-import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.RequestMeta.CONTEXT_SCOPE_PAIR_CONTEXT_KEY;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -15,17 +15,10 @@ import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.List;
 
 /** Tracing Request Handler. */
 public class TracingRequestHandler extends RequestHandler2 {
-
-  private final ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore;
-
-  public TracingRequestHandler(ContextStore<AmazonWebServiceRequest, RequestMeta> contextStore) {
-    this.contextStore = contextStore;
-  }
 
   @Override
   public void beforeRequest(Request<?> request) {
@@ -33,12 +26,11 @@ public class TracingRequestHandler extends RequestHandler2 {
     AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
     SpanKind kind = (isSqsProducer(originalRequest) ? SpanKind.PRODUCER : SpanKind.CLIENT);
 
-    RequestMeta requestMeta = contextStore.get(originalRequest);
     Context parentContext = Context.current();
     if (!tracer().shouldStartSpan(parentContext)) {
       return;
     }
-    Context context = tracer().startSpan(kind, parentContext, request, requestMeta);
+    Context context = tracer().startSpan(kind, parentContext, request);
     Scope scope = context.makeCurrent();
     request.addHandlerContext(CONTEXT_SCOPE_PAIR_CONTEXT_KEY, new ContextScopePair(context, scope));
   }
@@ -53,8 +45,11 @@ public class TracingRequestHandler extends RequestHandler2 {
   @Override
   public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
     if (SqsReceiveMessageRequestAccess.isInstance(request)) {
-      SqsReceiveMessageRequestAccess.withAttributeNames(
-          request, SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
+      if (!SqsReceiveMessageRequestAccess.getAttributeNames(request)
+          .contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE)) {
+        SqsReceiveMessageRequestAccess.withAttributeNames(
+            request, SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
+      }
     }
     return request;
   }
@@ -86,9 +81,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   private void createConsumerSpan(Object message, Request<?> request, Response<?> response) {
     Context parentContext =
         SqsParentContext.ofSystemAttributes(SqsMessageAccess.getAttributes(message));
-    AmazonWebServiceRequest originalRequest = request.getOriginalRequest();
-    RequestMeta requestMeta = contextStore.get(originalRequest);
-    Context context = tracer().startSpan(SpanKind.CONSUMER, parentContext, request, requestMeta);
+    Context context = tracer().startSpan(SpanKind.CONSUMER, parentContext, request);
     tracer().end(context, response);
   }
 

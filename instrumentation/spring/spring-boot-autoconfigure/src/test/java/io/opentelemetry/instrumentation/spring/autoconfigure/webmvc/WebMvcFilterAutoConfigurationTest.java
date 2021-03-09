@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.webmvc;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.TracerAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.webmvc.WebMvcTracingFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,7 +22,7 @@ class WebMvcFilterAutoConfigurationTest {
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  TracerAutoConfiguration.class, WebMvcFilterAutoConfiguration.class));
+                  OpenTelemetryAutoConfiguration.class, WebMvcFilterAutoConfiguration.class));
 
   @AfterEach
   void tearDown() {

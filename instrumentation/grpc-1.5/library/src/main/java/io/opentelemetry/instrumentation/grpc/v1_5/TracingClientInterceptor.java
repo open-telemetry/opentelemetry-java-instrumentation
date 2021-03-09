@@ -117,7 +117,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
       try (Scope ignored = context.makeCurrent()) {
         delegate().onMessage(message);
       } catch (Throwable e) {
-        tracer.addThrowable(span, e);
+        tracer.onException(context, e);
         throw e;
       }
     }

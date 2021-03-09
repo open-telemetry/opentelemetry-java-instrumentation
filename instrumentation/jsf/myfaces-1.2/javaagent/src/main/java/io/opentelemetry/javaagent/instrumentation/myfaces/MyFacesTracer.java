@@ -18,11 +18,9 @@ public class MyFacesTracer extends JsfTracer {
   @Override
   protected Throwable unwrapThrowable(Throwable throwable) {
     throwable = super.unwrapThrowable(throwable);
-
-    while (throwable instanceof ELException) {
+    while (throwable.getCause() != null && throwable instanceof ELException) {
       throwable = throwable.getCause();
     }
-
     return throwable;
   }
 
