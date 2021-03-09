@@ -9,7 +9,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.UndeclaredThrowableException;
 import play.api.mvc.Request;
 import play.api.routing.HandlerDef;
 import play.libs.typedmap.TypedKey;
@@ -68,20 +67,5 @@ public class PlayTracer extends BaseTracer {
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.play-2.6";
-  }
-
-  @Override
-  protected Throwable unwrapThrowable(Throwable throwable) {
-    // This can be moved to instanceof check when using Java 8.
-    if (throwable.getClass().getName().equals("java.util.concurrent.CompletionException")
-        && throwable.getCause() != null) {
-      throwable = throwable.getCause();
-    }
-    while ((throwable instanceof InvocationTargetException
-            || throwable instanceof UndeclaredThrowableException)
-        && throwable.getCause() != null) {
-      throwable = throwable.getCause();
-    }
-    return throwable;
   }
 }
