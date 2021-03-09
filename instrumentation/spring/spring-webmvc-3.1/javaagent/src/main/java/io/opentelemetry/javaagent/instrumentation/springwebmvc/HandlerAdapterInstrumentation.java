@@ -66,7 +66,9 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         tracer().onRequest(parentContext, serverSpan, request);
         // Now create a span for handler/controller execution.
         context = tracer().startHandlerSpan(parentContext, handler);
-        scope = context.makeCurrent();
+        if (context != null) {
+          scope = context.makeCurrent();
+        }
       }
     }
 
