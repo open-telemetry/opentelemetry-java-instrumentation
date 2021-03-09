@@ -27,7 +27,7 @@ class BaseMethodTracerTest extends Specification {
   def "resolves method strategy and stores in returned Context"() {
     given:
     def strategy = MethodSpanStrategy.forCompletableFuture()
-    def method = TestMethods.class.getMethod("completableFuture")
+    def method = TestMethods.getMethod("completableFuture")
 
     when:
     def context = tracer.withMethodSpanStrategy(Context.root(), method)
