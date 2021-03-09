@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import java.util.Map;
 
-public class TextMapInjectAdapter implements TextMapSetter<Map<String, String>> {
+final class TextMapInjectAdapter implements TextMapSetter<Map<String, String>> {
 
   public static final TextMapInjectAdapter SETTER = new TextMapInjectAdapter();
 

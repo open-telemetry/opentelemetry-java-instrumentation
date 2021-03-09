@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.rocketmq.TracingSendMessageHookImpl;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -39,7 +38,7 @@ public class RocketMqProducerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.FieldValue(value = "defaultMQProducerImpl", declaringType = DefaultMQProducer.class)
             DefaultMQProducerImpl defaultMqProducerImpl) {
-      defaultMqProducerImpl.registerSendMessageHook(new TracingSendMessageHookImpl());
+      defaultMqProducerImpl.registerSendMessageHook(RocketMqClientHooks.SEND_MESSAGE_HOOK);
     }
   }
 }

@@ -14,6 +14,7 @@ import org.apache.rocketmq.client.producer.SendCallback
 import org.apache.rocketmq.client.producer.SendResult
 import org.apache.rocketmq.common.message.Message
 import org.apache.rocketmq.remoting.common.RemotingHelper
+import org.apache.rocketmq.test.listener.rmq.order.RMQOrderListener
 import spock.lang.Shared
 import spock.lang.Unroll
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
@@ -25,13 +26,13 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   @Shared
-  DefaultMQPushConsumer consumer
-
-  @Shared
   DefaultMQProducer producer
 
   @Shared
-  def sharedTopic = BaseConf.initTopic()
+  DefaultMQPushConsumer consumer
+
+  @Shared
+  def sharedTopic
 
   @Shared
   Message msg
@@ -39,18 +40,22 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   @Shared
   def msgs = new ArrayList<Message>()
 
-  abstract void configureMQProducer()
+  abstract void configureMQProducer(DefaultMQProducer producer)
 
-  abstract void configureMQPushConsumer()
+  abstract void configureMQPushConsumer(DefaultMQPushConsumer consumer)
+
+  def setupSpec() {
+    sharedTopic = BaseConf.initTopic()
+    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
+    producer = BaseConf.getProducer(BaseConf.nsAddr)
+    configureMQProducer(producer)
+  }
 
   def cleanupSpec() {
     BaseConf.deleteTempDir()
   }
 
   def "test rocketmq produce callback"() {
-    setup:
-    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
-    configureMQProducer()
     when:
     producer.send(msg, new SendCallback() {
       @Override
@@ -83,9 +88,8 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   def "test rocketmq produce and consume"() {
     setup:
-    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
-    configureMQProducer()
-    configureMQPushConsumer()
+    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
+    configureMQPushConsumer(consumer)
     when:
     runUnderTrace("parent") {
       producer.send(msg)
@@ -133,8 +137,9 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     Message msg2 = new Message(sharedTopic, "TagB", ("hello world b").getBytes())
     msgs.add(msg1)
     msgs.add(msg2)
-    configureMQProducer()
-    configureMQPushConsumer()
+    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
+    consumer.setConsumeMessageBatchMaxSize(2)
+    consumer = configureMQPushConsumer(consumer)
     when:
     runUnderTrace("parent") {
       producer.send(msgs)

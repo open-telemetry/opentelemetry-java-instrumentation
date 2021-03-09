@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rocketmq;
 
-import static io.opentelemetry.instrumentation.rocketmq.RocketMqProducerTracer.tracer;
 import static io.opentelemetry.instrumentation.rocketmq.TextMapInjectAdapter.SETTER;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -13,7 +12,15 @@ import io.opentelemetry.context.Context;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
-public class TracingSendMessageHookImpl implements SendMessageHook {
+final class TracingSendMessageHookImpl implements SendMessageHook {
+
+  private final RocketMqProducerTracer tracer;
+  private boolean propagationEnabled;
+
+  TracingSendMessageHookImpl(RocketMqProducerTracer tracer, boolean propagationEnabled) {
+    this.tracer = tracer;
+    this.propagationEnabled = propagationEnabled;
+  }
 
   @Override
   public String hookName() {
@@ -26,9 +33,8 @@ public class TracingSendMessageHookImpl implements SendMessageHook {
       return;
     }
     Context traceContext =
-        tracer()
-            .startProducerSpan(Context.current(), context.getBrokerAddr(), context.getMessage());
-    if (RocketMqClientConfig.isPropagationEnabled()) {
+        tracer.startProducerSpan(Context.current(), context.getBrokerAddr(), context.getMessage());
+    if (propagationEnabled) {
       GlobalOpenTelemetry.getPropagators()
           .getTextMapPropagator()
           .inject(traceContext, context.getMessage().getProperties(), SETTER);
@@ -44,9 +50,9 @@ public class TracingSendMessageHookImpl implements SendMessageHook {
     }
     if (context.getMqTraceContext() instanceof ContextAndScope) {
       ContextAndScope contextAndScope = (ContextAndScope) context.getMqTraceContext();
-      tracer().afterProduce(contextAndScope.getContext(), context.getSendResult());
+      tracer.afterProduce(contextAndScope.getContext(), context.getSendResult());
       contextAndScope.closeScope();
-      tracer().end(contextAndScope.getContext());
+      tracer.end(contextAndScope.getContext());
     }
   }
 }

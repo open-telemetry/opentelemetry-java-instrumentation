@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.instrumentation.rocketmq.TextMapExtractAdapter.GETTER;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
@@ -17,12 +18,15 @@ import java.util.List;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class RocketMqConsumerTracer extends BaseTracer {
+final class RocketMqConsumerTracer extends BaseTracer {
 
-  private static final RocketMqConsumerTracer TRACER = new RocketMqConsumerTracer();
+  private boolean captureExperimentalSpanAttributes;
+  private boolean propagationEnabled;
 
-  public static RocketMqConsumerTracer tracer() {
-    return TRACER;
+  RocketMqConsumerTracer(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes, boolean propagationEnabled) {
+    super(openTelemetry);
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.propagationEnabled = propagationEnabled;
   }
 
   @Override
@@ -30,7 +34,7 @@ public class RocketMqConsumerTracer extends BaseTracer {
     return "io.opentelemetry.javaagent.rocketmq-client";
   }
 
-  public Context startSpan(Context parentContext, List<MessageExt> msgs) {
+  Context startSpan(Context parentContext, List<MessageExt> msgs) {
     if (msgs.size() == 1) {
       SpanBuilder spanBuilder = startSpanBuilder(extractParent(msgs.get(0)), msgs.get(0));
       return parentContext.with(spanBuilder.startSpan());
@@ -70,7 +74,7 @@ public class RocketMqConsumerTracer extends BaseTracer {
   }
 
   private Context extractParent(MessageExt msg) {
-    if (RocketMqClientConfig.isPropagationEnabled()) {
+    if (propagationEnabled) {
       return extract(msg.getProperties(), GETTER);
     } else {
       return Context.current();
@@ -78,7 +82,7 @@ public class RocketMqConsumerTracer extends BaseTracer {
   }
 
   private void onConsume(SpanBuilder spanBuilder, MessageExt msg) {
-    if (RocketMqClientConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+    if (captureExperimentalSpanAttributes) {
       spanBuilder.setAttribute("messaging.rocketmq.tags", msg.getTags());
       spanBuilder.setAttribute("messaging.rocketmq.queue_id", msg.getQueueId());
       spanBuilder.setAttribute("messaging.rocketmq.queue_offset", msg.getQueueOffset());

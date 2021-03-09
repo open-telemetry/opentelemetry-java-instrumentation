@@ -5,23 +5,20 @@
 
 package io.opentelemetry.instrumentation.rocketmq
 
-import base.BaseConf
 import io.opentelemetery.instrumentation.rocketmq.AbstractRocketMqClientTest
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
-import org.apache.rocketmq.test.listener.rmq.order.RMQOrderListener
+import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
+import org.apache.rocketmq.client.producer.DefaultMQProducer
 
 class RocketMqClientTest extends AbstractRocketMqClientTest implements LibraryTestTrait {
 
   @Override
-  void configureMQProducer() {
-    producer=BaseConf.getProducer(BaseConf.nsAddr)
-    producer.getDefaultMQProducerImpl().registerSendMessageHook(new TracingSendMessageHookImpl())
+  void configureMQProducer(DefaultMQProducer producer) {
+    producer.getDefaultMQProducerImpl().registerSendMessageHook(RocketMqTracing.create(getOpenTelemetry()).newTracingSendMessageHook())
   }
 
   @Override
-  void configureMQPushConsumer() {
-    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
-    consumer.setConsumeMessageBatchMaxSize(2)
-    consumer.getDefaultMQPushConsumerImpl().registerConsumeMessageHook(new TracingConsumeMessageHookImpl())
+  void configureMQPushConsumer(DefaultMQPushConsumer consumer) {
+    consumer.getDefaultMQPushConsumerImpl().registerConsumeMessageHook(RocketMqTracing.create(getOpenTelemetry()).newTracingConsumeMessageHook())
   }
 }

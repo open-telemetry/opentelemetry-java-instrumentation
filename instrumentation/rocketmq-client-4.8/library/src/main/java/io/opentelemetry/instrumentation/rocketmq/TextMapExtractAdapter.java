@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Map;
 
-public class TextMapExtractAdapter implements TextMapGetter<Map<String, String>> {
+final class TextMapExtractAdapter implements TextMapGetter<Map<String, String>> {
 
   public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
 

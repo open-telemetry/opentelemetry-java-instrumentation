@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
@@ -15,12 +16,13 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
 
-public class RocketMqProducerTracer extends BaseTracer {
+final class RocketMqProducerTracer extends BaseTracer {
 
-  private static final RocketMqProducerTracer TRACER = new RocketMqProducerTracer();
+  private boolean captureExperimentalSpanAttributes;
 
-  public static RocketMqProducerTracer tracer() {
-    return TRACER;
+  RocketMqProducerTracer(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
+    super(openTelemetry);
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
   @Override
@@ -28,7 +30,7 @@ public class RocketMqProducerTracer extends BaseTracer {
     return "io.opentelemetry.javaagent.rocketmq-client";
   }
 
-  public Context startProducerSpan(Context parentContext, String addr, Message msg) {
+  Context startProducerSpan(Context parentContext, String addr, Message msg) {
     SpanBuilder spanBuilder = spanBuilder(parentContext, spanNameOnProduce(msg), PRODUCER);
     onProduce(spanBuilder, msg, addr);
     return parentContext.with(spanBuilder.startSpan());
@@ -38,7 +40,7 @@ public class RocketMqProducerTracer extends BaseTracer {
     spanBuilder.setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq");
     spanBuilder.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "topic");
     spanBuilder.setAttribute(SemanticAttributes.MESSAGING_DESTINATION, msg.getTopic());
-    if (RocketMqClientConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+    if (captureExperimentalSpanAttributes) {
       spanBuilder.setAttribute("messaging.rocketmq.tags", msg.getTags());
       spanBuilder.setAttribute("messaging.rocketmq.broker_address", addr);
     }
@@ -47,7 +49,7 @@ public class RocketMqProducerTracer extends BaseTracer {
   public void afterProduce(Context context, SendResult sendResult) {
     Span span = Span.fromContext(context);
     span.setAttribute(SemanticAttributes.MESSAGING_MESSAGE_ID, sendResult.getMsgId());
-    if (RocketMqClientConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+    if (captureExperimentalSpanAttributes) {
       span.setAttribute("messaging.rocketmq.send_result", sendResult.getSendStatus().name());
     }
   }

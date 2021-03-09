@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.rocketmq.TracingConsumeMessageHookImpl;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -41,7 +40,8 @@ public class RocketMqConsumerInstrumentation implements TypeInstrumentation {
                 value = "defaultMQPushConsumerImpl",
                 declaringType = DefaultMQPushConsumer.class)
             DefaultMQPushConsumerImpl defaultMqPushConsumerImpl) {
-      defaultMqPushConsumerImpl.registerConsumeMessageHook(new TracingConsumeMessageHookImpl());
+      defaultMqPushConsumerImpl.registerConsumeMessageHook(
+          RocketMqClientHooks.CONSUME_MESSAGE_HOOK);
     }
   }
 }
