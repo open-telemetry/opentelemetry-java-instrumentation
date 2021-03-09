@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v7_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.tracer;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -34,6 +35,12 @@ import org.elasticsearch.client.ResponseListener;
 public class Elasticsearch7RestClientInstrumentationModule extends InstrumentationModule {
   public Elasticsearch7RestClientInstrumentationModule() {
     super("elasticsearch-rest", "elasticsearch-rest-7.0", "elasticsearch");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // class introduced in 7.0.0
+    return hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest");
   }
 
   @Override

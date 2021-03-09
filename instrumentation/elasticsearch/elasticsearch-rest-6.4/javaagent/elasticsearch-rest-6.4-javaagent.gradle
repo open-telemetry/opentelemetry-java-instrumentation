@@ -4,7 +4,7 @@ muzzle {
   pass {
     group = "org.elasticsearch.client"
     module = "elasticsearch-rest-client"
-    versions = "[6.4,)"
+    versions = "[6.4,7.0)"
     assertInverse = true
   }
 
