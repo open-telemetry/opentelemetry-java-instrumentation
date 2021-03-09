@@ -112,13 +112,11 @@ class S3TracingTest extends AgentInstrumentationSpecification {
     enableS3Notifications(bucketName, queueArn)
 
     when:
-    Thread.sleep(2000)
     // test message, auto created by AWS
-    sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl))
+    sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20))
     s3Client.putObject(bucketName, "testKey", "testData")
-    Thread.sleep(3000)
     // traced message
-    sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl))
+    sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20))
     // cleanup
     deleteBucket(bucketName)
     sqsClient.purgeQueue(new PurgeQueueRequest(queueUrl))
