@@ -10,7 +10,10 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
+/** Entrypoint for tracing RocketMq producers or consumers. */
 public final class RocketMqTracing {
+
+  /** Returns a new {@link RocketMqTracing} configured with the given {@link OpenTelemetry}. */
   public static RocketMqTracing create(OpenTelemetry openTelemetry) {
     return newBuilder(openTelemetry)
         .setPropagationEnabled(
@@ -23,6 +26,7 @@ public final class RocketMqTracing {
         .build();
   }
 
+  /** Returns a new {@link RocketMqTracingBuilder} configured with the given {@link OpenTelemetry}. */
   public static RocketMqTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
     return new RocketMqTracingBuilder(openTelemetry);
   }
@@ -46,10 +50,18 @@ public final class RocketMqTracing {
         new RocketMqProducerTracer(openTelemetry, captureExperimentalSpanAttributes);
   }
 
+  /**
+   * Returns a new {@link ConsumeMessageHook} for use with methods like {@link
+   * org.apache.rocketmq.client.impl.consumer.DefaultMQPullConsumerImpl#registerConsumeMessageHook(ConsumeMessageHook)}.
+   */
   public ConsumeMessageHook newTracingConsumeMessageHook() {
     return new TracingConsumeMessageHookImpl(rocketMqConsumerTracer);
   }
 
+  /**
+   * Returns a new {@link SendMessageHook} for use with methods like {@link
+   * org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl#registerSendMessageHook(SendMessageHook)}.
+   */
   public SendMessageHook newTracingSendMessageHook() {
     return new TracingSendMessageHookImpl(rocketMqProducerTracer, propagationEnabled);
   }
