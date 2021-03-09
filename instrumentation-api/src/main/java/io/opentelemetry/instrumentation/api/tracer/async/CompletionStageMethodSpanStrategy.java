@@ -13,7 +13,7 @@ enum CompletionStageMethodSpanStrategy implements MethodSpanStrategy {
   INSTANCE;
 
   @Override
-  public Object end(Object result, BaseTracer tracer, Context context) {
+  public Object end(BaseTracer tracer, Context context, Object result) {
     if (result instanceof CompletionStage) {
       CompletionStage<?> stage = (CompletionStage<?>) result;
       return stage.whenComplete(

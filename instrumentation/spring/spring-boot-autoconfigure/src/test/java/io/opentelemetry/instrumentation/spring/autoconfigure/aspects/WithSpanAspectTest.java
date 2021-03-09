@@ -23,8 +23,6 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -215,12 +213,15 @@ public class WithSpanAspectTest {
       // when
       withSpan("parent", () -> withSpanTester.testAsyncCompletionStage(future));
 
-      try {
-        instrumentation.waitForTraces(1, 20, TimeUnit.SECONDS);
-      } catch (TimeoutException exception) {
-        // do nothing, expected
-      }
+      // then
+      assertThat(instrumentation.waitForTraces(1))
+          .hasTracesSatisfyingExactly(
+              trace ->
+                  trace
+                      .hasSize(1)
+                      .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
+      // when
       future.complete("DONE");
 
       // then
@@ -244,12 +245,15 @@ public class WithSpanAspectTest {
       // when
       withSpan("parent", () -> withSpanTester.testAsyncCompletionStage(future));
 
-      try {
-        instrumentation.waitForTraces(1, 20, TimeUnit.SECONDS);
-      } catch (TimeoutException exception) {
-        // do nothing, expected
-      }
+      // then
+      assertThat(instrumentation.waitForTraces(1))
+          .hasTracesSatisfyingExactly(
+              trace ->
+                  trace
+                      .hasSize(1)
+                      .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
+      // when
       future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));
 
       // then
@@ -279,12 +283,15 @@ public class WithSpanAspectTest {
       // when
       withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
-      try {
-        instrumentation.waitForTraces(1, 20, TimeUnit.SECONDS);
-      } catch (TimeoutException exception) {
-        // do nothing, expected
-      }
+      // then
+      assertThat(instrumentation.waitForTraces(1))
+          .hasTracesSatisfyingExactly(
+              trace ->
+                  trace
+                      .hasSize(1)
+                      .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
+      // when
       future.complete("DONE");
 
       // then
@@ -308,12 +315,15 @@ public class WithSpanAspectTest {
       // when
       withSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
-      try {
-        instrumentation.waitForTraces(1, 20, TimeUnit.SECONDS);
-      } catch (TimeoutException exception) {
-        // do nothing, expected
-      }
+      // then
+      assertThat(instrumentation.waitForTraces(1))
+          .hasTracesSatisfyingExactly(
+              trace ->
+                  trace
+                      .hasSize(1)
+                      .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
+      // when
       future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));
 
       // then

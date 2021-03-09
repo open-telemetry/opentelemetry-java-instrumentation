@@ -12,7 +12,7 @@ enum SynchronousMethodSpanStrategy implements MethodSpanStrategy {
   INSTANCE;
 
   @Override
-  public Object end(Object result, BaseTracer tracer, Context context) {
+  public Object end(BaseTracer tracer, Context context, Object result) {
     tracer.end(context);
     return result;
   }

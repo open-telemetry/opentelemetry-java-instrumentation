@@ -26,7 +26,7 @@ class WithSpanAspectTracer extends BaseTracer {
 
   public Object end(Context context, Object result) {
     MethodSpanStrategy methodSpanStrategy = MethodSpanStrategy.fromContext(context);
-    return methodSpanStrategy.end(result, this, context);
+    return methodSpanStrategy.end(this, context, result);
   }
 
   Context startSpan(Context parentContext, WithSpan annotation, Method method) {
