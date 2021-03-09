@@ -30,6 +30,10 @@ public final class RocketMqTracingBuilder {
     return this;
   }
 
+  /**
+   * Sets whether the trace context should be written from producers / read from consumers for
+   * propagating through messaging.
+   */
   public RocketMqTracingBuilder setPropagationEnabled(boolean propagationEnabled) {
     this.propagationEnabled = propagationEnabled;
     return this;
