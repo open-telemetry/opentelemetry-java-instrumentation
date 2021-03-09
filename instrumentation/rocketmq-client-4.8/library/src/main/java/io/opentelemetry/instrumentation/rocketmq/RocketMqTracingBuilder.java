@@ -35,7 +35,9 @@ public final class RocketMqTracingBuilder {
     return this;
   }
 
-  /** Returns a new {@link RocketMqTracing} with the settings of this {@link RocketMqTracingBuilder}. */
+  /**
+   * Returns a new {@link RocketMqTracing} with the settings of this {@link RocketMqTracingBuilder}.
+   */
   public RocketMqTracing build() {
     return new RocketMqTracing(
         openTelemetry, captureExperimentalSpanAttributes, propagationEnabled);

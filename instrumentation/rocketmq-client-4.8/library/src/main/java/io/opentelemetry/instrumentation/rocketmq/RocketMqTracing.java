@@ -26,7 +26,9 @@ public final class RocketMqTracing {
         .build();
   }
 
-  /** Returns a new {@link RocketMqTracingBuilder} configured with the given {@link OpenTelemetry}. */
+  /**
+   * Returns a new {@link RocketMqTracingBuilder} configured with the given {@link OpenTelemetry}.
+   */
   public static RocketMqTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
     return new RocketMqTracingBuilder(openTelemetry);
   }
