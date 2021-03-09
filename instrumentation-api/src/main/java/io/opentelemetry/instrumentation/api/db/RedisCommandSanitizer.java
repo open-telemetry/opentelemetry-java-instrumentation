@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.db;
+package io.opentelemetry.instrumentation.api.db;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
 
-import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.CommandAndNumArgs;
-import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.Eval;
-import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.KeepAllArgs;
-import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.MultiKeyValue;
+import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.CommandAndNumArgs;
+import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.Eval;
+import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.KeepAllArgs;
+import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer.CommandSanitizer.MultiKeyValue;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;

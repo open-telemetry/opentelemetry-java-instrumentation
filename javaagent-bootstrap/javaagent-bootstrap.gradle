@@ -15,7 +15,7 @@ sourceSets {
 }
 jar {
   from(sourceSets.patch.output) {
-    include 'io/opentelemetry/instrumentation/internal/shaded/caffeine/cache/BoundedLocalCache$PerformCleanupTask.class'
+    include 'io/opentelemetry/instrumentation/api/internal/shaded/caffeine/cache/BoundedLocalCache$PerformCleanupTask.class'
   }
 }
 
@@ -40,6 +40,6 @@ dependencies {
   implementation project(':instrumentation-api')
 
   testImplementation project(':testing-common')
-  testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
+  testImplementation deps.mockito
   testImplementation deps.assertj
 }

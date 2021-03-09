@@ -10,8 +10,8 @@ import static io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer.c
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseClientTracer.tracer;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.rxjava.TracedOnSubscribe;
-import io.opentelemetry.javaagent.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.lang.reflect.Method;

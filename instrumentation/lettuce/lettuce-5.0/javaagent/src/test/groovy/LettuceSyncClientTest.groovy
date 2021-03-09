@@ -10,10 +10,10 @@ import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.sync.RedisCommands
+import io.netty.channel.AbstractChannel
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.CompletionException
 import redis.embedded.RedisServer
 import spock.lang.Shared
 
@@ -132,7 +132,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           name "CONNECT"
           kind CLIENT
           errored true
-          errorEvent CompletionException, String
+          errorEvent AbstractChannel.AnnotatedConnectException, String
           attributes {
             "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
             "$SemanticAttributes.NET_PEER_IP.key" PEER_IP

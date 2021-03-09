@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.db;
+package io.opentelemetry.instrumentation.api.db;
 
-import static io.opentelemetry.javaagent.instrumentation.api.db.StatementSanitizationConfig.isStatementSanitizationEnabled;
+import static io.opentelemetry.instrumentation.api.db.StatementSanitizationConfig.isStatementSanitizationEnabled;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import org.slf4j.Logger;

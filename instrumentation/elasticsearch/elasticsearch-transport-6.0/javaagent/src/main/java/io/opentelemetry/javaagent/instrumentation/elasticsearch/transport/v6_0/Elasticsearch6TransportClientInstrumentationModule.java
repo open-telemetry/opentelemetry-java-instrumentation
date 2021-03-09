@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -24,7 +25,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.elasticsearch.action.Action;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
@@ -57,7 +57,12 @@ public class Elasticsearch6TransportClientInstrumentationModule extends Instrume
       return singletonMap(
           isMethod()
               .and(named("execute"))
-              .and(takesArgument(0, named("org.elasticsearch.action.Action")))
+              .and(
+                  takesArgument(
+                      0,
+                      namedOneOf(
+                          "org.elasticsearch.action.Action",
+                          "org.elasticsearch.action.ActionType")))
               .and(takesArgument(1, named("org.elasticsearch.action.ActionRequest")))
               .and(takesArgument(2, named("org.elasticsearch.action.ActionListener"))),
           Elasticsearch6TransportClientInstrumentationModule.class.getName()
@@ -69,7 +74,7 @@ public class Elasticsearch6TransportClientInstrumentationModule extends Instrume
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) Action action,
+        @Advice.Argument(0) Object action,
         @Advice.Argument(1) ActionRequest actionRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,

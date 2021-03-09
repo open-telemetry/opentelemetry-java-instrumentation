@@ -10,8 +10,8 @@ import static java.util.Collections.singletonList;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
+import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.javaagent.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;

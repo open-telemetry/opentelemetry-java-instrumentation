@@ -25,6 +25,7 @@ dependencies {
   implementation deps.slf4j
   implementation deps.testLogging
   implementation deps.opentelemetryExtAnnotations
+  implementation project(':instrumentation-api')
 
   api group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.0'
   api group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: '4.9.0'
@@ -37,7 +38,6 @@ dependencies {
 
   testImplementation deps.assertj
 
-  testImplementation project(':instrumentation-api')
   testImplementation project(':javaagent-api')
   testImplementation project(':javaagent-tooling')
   testImplementation project(':instrumentation:external-annotations:javaagent')

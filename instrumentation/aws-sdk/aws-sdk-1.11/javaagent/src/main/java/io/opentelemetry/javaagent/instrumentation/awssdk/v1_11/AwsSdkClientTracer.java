@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
+import com.amazonaws.handlers.HandlerContextKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -19,6 +20,11 @@ import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, Response<?>> {
+
+  // Note: aws1.x sdk doesn't have any truly async clients so we can store scope in request context
+  // safely.
+  public static final HandlerContextKey<ContextScopePair> CONTEXT_SCOPE_PAIR_CONTEXT_KEY =
+      new HandlerContextKey<>(AwsSdkClientTracer.class.getName() + ".ContextScopePair");
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
@@ -61,8 +67,7 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
     return qualifiedOperation(awsServiceName, awsOperation);
   }
 
-  public Context startSpan(
-      SpanKind kind, Context parentContext, Request<?> request, RequestMeta requestMeta) {
+  public Context startSpan(SpanKind kind, Context parentContext, Request<?> request) {
     Context context = super.startSpan(kind, parentContext, request, request, -1);
     Span span = Span.fromContext(context);
 
@@ -74,12 +79,26 @@ public class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>,
       span.setAttribute("aws.operation", extractOperationName(request));
       span.setAttribute("aws.endpoint", request.getEndpoint().toString());
 
-      if (requestMeta != null) {
-        span.setAttribute("aws.bucket.name", requestMeta.getBucketName());
-        span.setAttribute("aws.queue.url", requestMeta.getQueueUrl());
-        span.setAttribute("aws.queue.name", requestMeta.getQueueName());
-        span.setAttribute("aws.stream.name", requestMeta.getStreamName());
-        span.setAttribute("aws.table.name", requestMeta.getTableName());
+      Object originalRequest = request.getOriginalRequest();
+      String bucketName = RequestAccess.getBucketName(originalRequest);
+      if (bucketName != null) {
+        span.setAttribute("aws.bucket.name", bucketName);
+      }
+      String queueUrl = RequestAccess.getQueueUrl(originalRequest);
+      if (queueUrl != null) {
+        span.setAttribute("aws.queue.url", queueUrl);
+      }
+      String queueName = RequestAccess.getQueueName(originalRequest);
+      if (queueName != null) {
+        span.setAttribute("aws.queue.name", queueName);
+      }
+      String streamName = RequestAccess.getStreamName(originalRequest);
+      if (streamName != null) {
+        span.setAttribute("aws.stream.name", streamName);
+      }
+      String tableName = RequestAccess.getTableName(originalRequest);
+      if (tableName != null) {
+        span.setAttribute("aws.table.name", tableName);
       }
     }
     return context;

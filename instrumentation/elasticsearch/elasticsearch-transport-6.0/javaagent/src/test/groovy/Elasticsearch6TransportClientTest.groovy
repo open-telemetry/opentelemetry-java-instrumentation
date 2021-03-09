@@ -16,9 +16,7 @@ import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.TransportAddress
 import org.elasticsearch.index.IndexNotFoundException
-import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
-import org.elasticsearch.transport.Netty4Plugin
 import org.elasticsearch.transport.RemoteTransportException
 import org.elasticsearch.transport.TransportService
 import org.elasticsearch.transport.client.PreBuiltTransportClient
@@ -49,7 +47,7 @@ class Elasticsearch6TransportClientTest extends AgentInstrumentationSpecificatio
       .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
       .put("discovery.type", "single-node")
       .build()
-    testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
+    testNode = NodeFactory.newNode(settings)
     testNode.start()
     tcpPublishAddress = testNode.injector().getInstance(TransportService).boundAddress().publishAddress()
 
@@ -221,12 +219,12 @@ class Elasticsearch6TransportClientTest extends AgentInstrumentationSpecificatio
       }
       trace(2, 1) {
         span(0) {
-          name "PutMappingAction"
+          name ~/(Auto)?PutMappingAction/
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
-            "${SemanticAttributes.DB_OPERATION.key}" "PutMappingAction"
-            "elasticsearch.action" "PutMappingAction"
+            "${SemanticAttributes.DB_OPERATION.key}" ~/(Auto)?PutMappingAction/
+            "elasticsearch.action" ~/(Auto)?PutMappingAction/
             "elasticsearch.request" "PutMappingRequest"
           }
         }

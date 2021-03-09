@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -110,11 +109,10 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
   public static class ErrorHandlerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(3) Exception exception) {
-      Span span = Java8BytecodeBridge.currentSpan();
-      if (span.getSpanContext().isValid() && exception != null) {
-        // We want to capture the stacktrace, but that doesn't mean it should be an error.
-        // We rely on a decorator to set the error state based on response code. (5xx -> error)
-        tracer().addThrowable(span, exception);
+      if (exception != null) {
+        // It is fine to set status=ERROR here, end(Context, Response) call will overwrite it if the
+        // exception turns out to be a valid result
+        tracer().onException(Java8BytecodeBridge.currentContext(), exception);
       }
     }
   }

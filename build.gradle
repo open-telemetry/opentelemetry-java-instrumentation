@@ -1,10 +1,10 @@
+import java.time.Duration
 import nebula.plugin.release.git.opinion.Strategies
 
 plugins {
   id 'idea'
 
-  id "de.marcphilipp.nexus-publish" version "0.4.0" apply false
-  id "io.codearte.nexus-staging" version "0.22.0"
+  id "io.github.gradle-nexus.publish-plugin" version "1.0.0"
   id "nebula.release" version "15.3.0"
 
   id 'org.gradle.test-retry' version '1.2.0' apply false
@@ -30,15 +30,25 @@ nebulaRelease {
   addReleaseBranchPattern(/v\d+\.\d+\.x/)
 }
 
-nexusStaging {
+nexusPublishing {
   packageGroup = "io.opentelemetry"
-  username = System.getenv('SONATYPE_USER')
-  password = System.getenv('SONATYPE_KEY')
 
-  // We have many artifacts so Maven Central takes a long time on its compliance checks. This sets
-  // the timeout for waiting for the repository to close to a comfortable 50 minutes.
-  numberOfRetries = 300
-  delayBetweenRetriesInMillis = 10000
+  repositories {
+    sonatype {
+      username = System.getenv('SONATYPE_USER')
+      password = System.getenv('SONATYPE_KEY')
+    }
+  }
+
+  connectTimeout = Duration.ofMinutes(5)
+  clientTimeout = Duration.ofMinutes(5)
+
+  transitionCheckOptions {
+    // We have many artifacts so Maven Central takes a long time on its compliance checks. This sets
+    // the timeout for waiting for the repository to close to a comfortable 50 minutes.
+    maxRetries.set(300)
+    delayBetween.set(Duration.ofSeconds(10))
+  }
 }
 
 // Enable after verifying Maven Central publishing once through manual closing

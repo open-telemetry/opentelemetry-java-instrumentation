@@ -15,11 +15,11 @@ import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.protocol.AsyncCommand
+import io.netty.channel.AbstractChannel
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CancellationException
-import java.util.concurrent.CompletionException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
@@ -155,7 +155,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           name "CONNECT"
           kind CLIENT
           errored true
-          errorEvent CompletionException, String
+          errorEvent AbstractChannel.AnnotatedConnectException, String
           attributes {
             "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
             "$SemanticAttributes.NET_PEER_IP.key" PEER_IP

@@ -35,7 +35,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.internal.shaded.caffeine.cache;
+package io.opentelemetry.instrumentation.api.internal.shaded.caffeine.cache;
 
 import java.lang.ref.WeakReference;
 
