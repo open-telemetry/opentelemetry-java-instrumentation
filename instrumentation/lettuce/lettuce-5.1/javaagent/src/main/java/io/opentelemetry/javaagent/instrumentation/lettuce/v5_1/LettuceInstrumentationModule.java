@@ -59,7 +59,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodEnter(@Advice.Return DefaultClientResources.Builder builder) {
-      builder.tracing(OpenTelemetryTracing.INSTANCE);
+      builder.tracing(TracingHolder.TRACING);
     }
   }
 }
