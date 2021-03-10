@@ -20,22 +20,20 @@ import java.util.concurrent.TimeUnit;
 /** Decorates an {@link HttpService} to trace inbound {@link HttpRequest}s. */
 final class OpenTelemetryService extends SimpleDecoratingHttpService {
 
-  private final ArmeriaServerTracer serverTracer;
+  private final ArmeriaServerInstrumenter instrumenter;
 
-  OpenTelemetryService(HttpService delegate, ArmeriaServerTracer serverTracer) {
+  OpenTelemetryService(HttpService delegate, ArmeriaServerInstrumenter instrumenter) {
     super(delegate);
-    this.serverTracer = serverTracer;
+    this.instrumenter = instrumenter;
   }
 
   @Override
   public HttpResponse serve(ServiceRequestContext ctx, HttpRequest req) throws Exception {
-    String spanName = ctx.config().route().patternString();
-
     // Always available in practice.
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Context context = serverTracer.startSpan(req, ctx, null, spanName, requestStartTimeNanos);
+    Context context = instrumenter.start(Context.current(), ctx);
 
     Span span = Span.fromContext(context);
     if (span.isRecording()) {
@@ -49,12 +47,7 @@ final class OpenTelemetryService extends SimpleDecoratingHttpService {
                   span.updateName(ctx.path());
                 }
                 long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
-                if (log.responseCause() != null) {
-                  serverTracer.endExceptionally(
-                      context, log.responseCause(), log, requestEndTimeNanos);
-                } else {
-                  serverTracer.end(context, log, requestEndTimeNanos);
-                }
+                instrumenter.end(context, ctx, log, log.responseCause());
               });
     }
 

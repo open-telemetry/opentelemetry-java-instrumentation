@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class ClientSpan {
+public final class ClientSpan {
   // Keeps track of the client span in a subtree corresponding to a client request.
   private static final ContextKey<Span> KEY =
       ContextKey.named("opentelemetry-traces-client-span-key");
@@ -25,7 +25,7 @@ final class ClientSpan {
     return context.get(KEY);
   }
 
-  static Context with(Context context, Span clientSpan) {
+  public static Context with(Context context, Span clientSpan) {
     return context.with(KEY, clientSpan);
   }
 

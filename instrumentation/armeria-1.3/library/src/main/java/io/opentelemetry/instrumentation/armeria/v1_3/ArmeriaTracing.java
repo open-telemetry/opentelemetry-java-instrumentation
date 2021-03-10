@@ -19,11 +19,11 @@ public final class ArmeriaTracing {
   }
 
   private final ArmeriaClientTracer clientTracer;
-  private final ArmeriaServerTracer serverTracer;
+  private final ArmeriaServerInstrumenter serverInstrumenter;
 
   private ArmeriaTracing(OpenTelemetry openTelemetry) {
     clientTracer = new ArmeriaClientTracer(openTelemetry);
-    serverTracer = new ArmeriaServerTracer(openTelemetry);
+    serverInstrumenter = new ArmeriaServerInstrumenter(openTelemetry);
   }
 
   /**
@@ -39,6 +39,6 @@ public final class ArmeriaTracing {
    * HttpService#decorate(Function)}.
    */
   public Function<? super HttpService, ? extends HttpService> newServiceDecorator() {
-    return service -> new OpenTelemetryService(service, serverTracer);
+    return service -> new OpenTelemetryService(service, serverInstrumenter);
   }
 }
