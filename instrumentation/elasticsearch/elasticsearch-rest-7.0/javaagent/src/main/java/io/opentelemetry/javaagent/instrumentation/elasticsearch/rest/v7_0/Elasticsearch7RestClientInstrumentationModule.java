@@ -133,6 +133,7 @@ public class Elasticsearch7RestClientInstrumentationModule extends Instrumentati
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);
       }
+      // span ended in RestResponseListener
     }
   }
 }
