@@ -26,11 +26,11 @@ public class SpringWebfluxHttpClientTracer
 
   private static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
 
-  public SpringWebfluxHttpClientTracer() {
+  private SpringWebfluxHttpClientTracer() {
     super(NetPeerAttributes.INSTANCE);
   }
 
-  private static SpringWebfluxHttpClientTracer tracer() {
+  public static SpringWebfluxHttpClientTracer tracer() {
     return TRACER;
   }
 
