@@ -2,8 +2,8 @@
 
 ## NOTE: subject to change!
 
-Note: The environment variables/system properties in this document are very likely to change over time. 
-Please check back here when trying out a new version! 
+Note: The environment variables/system properties in this document are very likely to change over time.
+Please check back here when trying out a new version!
 
 Please report any bugs or unexpected behavior you find.
 
