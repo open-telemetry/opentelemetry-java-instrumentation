@@ -126,6 +126,7 @@ header='Client Version'
 for label in "${test_order[@]}"; do
     header="$header,$label Latency,$label Throughput"
 done
+
 header="$header,Server CPU Burn,Server Max RSS,Server Start RSS,Server Load Increase RSS"
 echo $header > $test_csv_file
 
