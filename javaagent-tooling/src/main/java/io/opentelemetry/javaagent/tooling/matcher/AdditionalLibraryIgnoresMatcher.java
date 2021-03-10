@@ -107,6 +107,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
 
       if (name.startsWith("org.springframework.boot.")) {
         return !instrumentedSpringBootClasses(name)
+            && !name.startsWith("org.springframework.boot.context.web.")
             && !name.startsWith("org.springframework.boot.web.filter.")
             && !name.startsWith("org.springframework.boot.web.servlet.");
       }
@@ -338,6 +339,7 @@ public class AdditionalLibraryIgnoresMatcher<T extends TypeDescription>
     instrumented.add(
         "org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader");
     instrumented.add("org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$");
+    instrumented.add("org.springframework.boot.StartupInfoLogger$");
     INSTRUMENTED_SPRING_BOOT_CLASSES = Collections.unmodifiableSet(instrumented);
   }
 

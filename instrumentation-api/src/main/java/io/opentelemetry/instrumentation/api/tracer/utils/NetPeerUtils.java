@@ -76,7 +76,8 @@ public final class NetPeerUtils {
     setNetPeer(span::setAttribute, peerName, peerIp, port);
   }
 
-  public void setNetPeer(SpanAttributeSetter span, String peerName, String peerIp, int port) {
+  public void setNetPeer(
+      SpanAttributeSetter span, @Nullable String peerName, @Nullable String peerIp, int port) {
     if (peerName != null && !peerName.equals(peerIp)) {
       span.setAttribute(SemanticAttributes.NET_PEER_NAME, peerName);
     }
@@ -109,6 +110,6 @@ public final class NetPeerUtils {
    */
   @FunctionalInterface
   public interface SpanAttributeSetter {
-    <T> void setAttribute(AttributeKey<T> key, @Nullable T value);
+    <T> void setAttribute(AttributeKey<T> key, T value);
   }
 }

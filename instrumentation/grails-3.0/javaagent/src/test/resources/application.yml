@@ -1,0 +1,8 @@
+---
+grails:
+  profile: web
+  env: production
+spring:
+  groovy:
+    template:
+      check-template-location: false

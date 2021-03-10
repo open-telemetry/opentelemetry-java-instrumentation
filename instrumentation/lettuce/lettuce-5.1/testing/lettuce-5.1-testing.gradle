@@ -1,0 +1,15 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api project(':testing-common')
+
+  api group: 'io.lettuce', name: 'lettuce-core', version: '5.1.0.RELEASE'
+
+  api group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+
+  implementation deps.guava
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}

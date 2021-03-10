@@ -12,7 +12,7 @@ muzzle {
 dependencies {
   compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
 
-  implementation project(':instrumentation:lettuce:lettuce-common:javaagent')
+  implementation project(':instrumentation:lettuce:lettuce-common:library')
 
   testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   testImplementation group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'

@@ -43,7 +43,7 @@ WHITESPACE        = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return new SqlStatementInfo(null, null, null);
+      return SqlStatementInfo.create(null, null, null);
     }
   }
 
@@ -107,7 +107,7 @@ WHITESPACE        = [ \t\r\n]+
     }
 
     SqlStatementInfo getResult(String fullStatement) {
-      return new SqlStatementInfo(fullStatement, getClass().getSimpleName().toUpperCase(), mainTable);
+      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(), mainTable);
     }
   }
 
@@ -115,7 +115,7 @@ WHITESPACE        = [ \t\r\n]+
     static final Operation INSTANCE = new NoOp();
 
     SqlStatementInfo getResult(String fullStatement) {
-      return new SqlStatementInfo(fullStatement, null, null);
+      return SqlStatementInfo.create(fullStatement, null, null);
     }
   }
 

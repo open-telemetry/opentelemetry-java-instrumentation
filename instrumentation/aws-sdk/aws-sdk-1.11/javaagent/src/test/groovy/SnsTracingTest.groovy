@@ -89,10 +89,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
 
     when:
     snsClient.publish(topicArn, "Hello There")
-    Thread.sleep(3000)
-    ReceiveMessageRequest rmr = new ReceiveMessageRequest(queueUrl).withMessageAttributeNames("test")
-    sqsClient.receiveMessage(rmr)
-    Thread.sleep(1000)
+    sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20))
 
     then:
     assertTraces(7) {
