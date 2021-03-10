@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
+package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
