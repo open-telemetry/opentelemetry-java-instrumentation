@@ -200,6 +200,6 @@ class JdbcConnectionUrlParserTest extends Specification {
     "jdbc:derby:jar:/derbydb;user=derbyuser;password=pw"                                              | null     | "derby:jar:"                                                       | "derby"      | "jar"         | "derbyuser"   | null                                        | null  | "/derbydb"                         | null
     "jdbc:derby:jar:(~/path/to/db.jar)/other/derbydb;user=derbyuser;password=pw"                      | null     | "derby:jar:"                                                       | "derby"      | "jar"         | "derbyuser"   | null                                        | null  | "(~/path/to/db.jar)/other/derbydb" | null
 
-    expected = new DbInfo.Builder().system(system).subtype(subtype).user(user).name(name).db(db).host(host).port(port).shortUrl(shortUrl).build()
+    expected = DbInfo.builder().system(system).subtype(subtype).user(user).name(name).db(db).host(host).port(port).shortUrl(shortUrl).build()
   }
 }

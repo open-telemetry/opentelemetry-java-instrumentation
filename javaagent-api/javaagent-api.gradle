@@ -11,6 +11,8 @@ dependencies {
   compileOnly deps.opentelemetrySdk
   implementation deps.slf4j
   implementation project(':instrumentation-api')
+  compileOnly deps.autoValueAnnotations
+  annotationProcessor deps.autoValue
 
   testImplementation project(':testing-common')
   testImplementation deps.mockito

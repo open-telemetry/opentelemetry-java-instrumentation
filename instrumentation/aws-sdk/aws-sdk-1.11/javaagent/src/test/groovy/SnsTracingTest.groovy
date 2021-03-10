@@ -19,6 +19,7 @@ import org.testcontainers.utility.DockerImageName
 import spock.lang.Ignore
 import spock.lang.Shared
 
+@Ignore("Requires https://github.com/localstack/localstack/issues/3669 to work with localstack")
 class SnsTracingTest extends AgentInstrumentationSpecification {
 
   @Shared
@@ -76,7 +77,6 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
     return ctr.getTopicArn()
   }
 
-  @Ignore("Requires https://github.com/localstack/localstack/issues/3669 to work with localstack")
   def "simple SNS producer - SQS consumer services"() {
     setup:
     String queueName = "snsToSqsTestQueue"
@@ -89,10 +89,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
 
     when:
     snsClient.publish(topicArn, "Hello There")
-    Thread.sleep(3000)
-    ReceiveMessageRequest rmr = new ReceiveMessageRequest(queueUrl).withMessageAttributeNames("test")
-    sqsClient.receiveMessage(rmr)
-    Thread.sleep(1000)
+    sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20))
 
     then:
     assertTraces(7) {
