@@ -41,7 +41,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   abstract void configureMQPushConsumer(DefaultMQPushConsumer consumer)
 
-  def setup() {
+  def setupSpec() {
     msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
     producer = BaseConf.getProducer(BaseConf.nsAddr)
     configureMQProducer(producer)
