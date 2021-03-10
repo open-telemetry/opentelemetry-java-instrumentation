@@ -29,11 +29,11 @@ public final class BaseConf {
     System.setProperty(
         RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
     namesrvController = IntegrationTestBase.createAndStartNamesrv();
-    nsAddr = "127.0.0.1:" + namesrvController.getNettyServerConfig().getListenPort();
+    nsAddr = "localhost:" + namesrvController.getNettyServerConfig().getListenPort();
     brokerController1 = IntegrationTestBase.createAndStartBroker(nsAddr);
     clusterName = brokerController1.getBrokerConfig().getBrokerClusterName();
     broker1Name = brokerController1.getBrokerConfig().getBrokerName();
-    broker1Addr = "127.0.0.1:" + brokerController1.getNettyServerConfig().getListenPort();
+    broker1Addr = "localhost:" + brokerController1.getNettyServerConfig().getListenPort();
   }
 
   private BaseConf() {}
