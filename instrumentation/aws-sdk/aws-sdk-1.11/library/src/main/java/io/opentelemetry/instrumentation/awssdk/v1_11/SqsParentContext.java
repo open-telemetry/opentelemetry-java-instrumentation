@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
+package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
@@ -11,7 +11,7 @@ import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import java.util.Collections;
 import java.util.Map;
 
-class SqsParentContext {
+final class SqsParentContext {
 
   private static class MapGetter implements TextMapGetter<Map<String, String>> {
 
@@ -38,4 +38,6 @@ class SqsParentContext {
             Collections.singletonMap("X-Amzn-Trace-Id", traceHeader),
             MapGetter.INSTANCE);
   }
+
+  private SqsParentContext() {}
 }

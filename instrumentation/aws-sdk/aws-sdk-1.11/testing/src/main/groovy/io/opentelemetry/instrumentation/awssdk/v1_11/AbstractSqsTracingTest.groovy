@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.instrumentation.awssdk.v1_11
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
@@ -11,14 +13,17 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
+import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import spock.lang.Shared
 
-class SqsTracingTest extends AgentInstrumentationSpecification {
+abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
+
+  abstract AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client)
 
   @Shared
   def sqs
@@ -35,7 +40,7 @@ class SqsTracingTest extends AgentInstrumentationSpecification {
 
     def credentials = new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"))
     def endpointConfiguration = new AwsClientBuilder.EndpointConfiguration("http://localhost:"+sqsPort, "elasticmq")
-    client = AmazonSQSAsyncClient.asyncBuilder().withCredentials(credentials).withEndpointConfiguration(endpointConfiguration).build()
+    client = configureClient(AmazonSQSAsyncClient.asyncBuilder()).withCredentials(credentials).withEndpointConfiguration(endpointConfiguration).build()
   }
 
   def cleanupSpec() {
