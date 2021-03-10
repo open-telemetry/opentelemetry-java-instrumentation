@@ -44,7 +44,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   abstract void configureMQPushConsumer(DefaultMQPushConsumer consumer)
 
-  def setupSpec() {
+  def setup() {
     sharedTopic = BaseConf.initTopic()
     msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
     producer = BaseConf.getProducer(BaseConf.nsAddr)
@@ -78,6 +78,9 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.send_result" "SEND_OK"
           }
         }
+      }
+      cleanup:{
+        producer.shutdown()
       }
     }
   }
@@ -125,6 +128,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
         }
       }
       cleanup:{
+        producer.shutdown()
         consumer.shutdown()
       }
     }
