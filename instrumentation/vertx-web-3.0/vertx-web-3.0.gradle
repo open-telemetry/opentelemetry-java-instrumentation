@@ -24,3 +24,7 @@ dependencies {
   latestDepTestLibrary group: 'io.vertx', name: 'vertx-web', version: '3.+'
   latestDepTestLibrary group: 'io.vertx', name: 'vertx-web-client', version: '3.+'
 }
+
+test {
+  systemProperty "testLatestDeps", testLatestDeps
+}
