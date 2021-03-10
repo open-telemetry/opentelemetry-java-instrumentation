@@ -130,6 +130,8 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           }
         }
       }
+      cleanup:
+      consumer.shutdown()
     }
   }
 
