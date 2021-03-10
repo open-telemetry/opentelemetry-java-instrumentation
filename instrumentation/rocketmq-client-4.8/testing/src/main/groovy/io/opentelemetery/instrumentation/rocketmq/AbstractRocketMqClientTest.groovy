@@ -35,7 +35,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   DefaultMQPushConsumer batchConsumer
 
   @Shared
-  def sharedTopic = BaseConf.initTopic()
+  def sharedTopic
 
   @Shared
   Message msg
@@ -48,12 +48,14 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   abstract void configureMQPushConsumer(DefaultMQPushConsumer consumer)
 
   def setupSpec() {
-    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
     producer = BaseConf.getProducer(BaseConf.nsAddr)
     configureMQProducer(producer)
   }
 
   def "test rocketmq produce callback"() {
+    setup:
+    sharedTopic = BaseConf.initTopic()
+    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
     when:
     producer.send(msg, new SendCallback() {
       @Override
@@ -86,6 +88,8 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   def "test rocketmq produce and consume"() {
     setup:
+    sharedTopic = BaseConf.initTopic()
+    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
     consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
     configureMQPushConsumer(consumer)
     when:
@@ -131,6 +135,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
   def "test rocketmq produce and batch consume"() {
     setup:
+    sharedTopic = BaseConf.initTopic()
     Message msg1 = new Message(sharedTopic, "TagA", ("hello world a").getBytes())
     Message msg2 = new Message(sharedTopic, "TagB", ("hello world b").getBytes())
     msgs.add(msg1)
