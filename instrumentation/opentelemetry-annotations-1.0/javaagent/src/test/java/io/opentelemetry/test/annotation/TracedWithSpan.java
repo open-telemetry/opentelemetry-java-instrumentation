@@ -7,6 +7,8 @@ package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.extension.annotations.WithSpan;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 public class TracedWithSpan {
 
@@ -53,5 +55,15 @@ public class TracedWithSpan {
   @WithSpan(kind = SpanKind.CLIENT)
   public String innerClient() {
     return "hello!";
+  }
+
+  @WithSpan
+  public CompletionStage<String> completionStage(CompletableFuture<String> future) {
+    return future;
+  }
+
+  @WithSpan
+  public CompletableFuture<String> completableFuture(CompletableFuture<String> future) {
+    return future;
   }
 }

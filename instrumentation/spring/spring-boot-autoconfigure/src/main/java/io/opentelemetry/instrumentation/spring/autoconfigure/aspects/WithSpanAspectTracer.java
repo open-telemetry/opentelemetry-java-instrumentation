@@ -9,10 +9,10 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
-import io.opentelemetry.instrumentation.api.tracer.BaseMethodTracer;
+import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
 
-class WithSpanAspectTracer extends BaseMethodTracer {
+class WithSpanAspectTracer extends BaseTracer {
   WithSpanAspectTracer(OpenTelemetry openTelemetry) {
     super(openTelemetry);
   }
@@ -23,17 +23,15 @@ class WithSpanAspectTracer extends BaseMethodTracer {
   }
 
   Context startSpan(Context parentContext, WithSpan annotation, Method method) {
-    Context spanStrategyContext = withMethodSpanStrategy(parentContext, method);
     Span span =
         spanBuilder(parentContext, spanName(annotation, method), annotation.kind()).startSpan();
-
     switch (annotation.kind()) {
       case SERVER:
-        return withServerSpan(spanStrategyContext, span);
+        return withServerSpan(parentContext, span);
       case CLIENT:
-        return withClientSpan(spanStrategyContext, span);
+        return withClientSpan(parentContext, span);
       default:
-        return spanStrategyContext.with(span);
+        return parentContext.with(span);
     }
   }
 

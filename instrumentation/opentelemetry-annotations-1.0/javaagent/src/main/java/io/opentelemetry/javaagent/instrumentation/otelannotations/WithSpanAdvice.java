@@ -13,6 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 /**
  * Instrumentation for methods annotated with {@link WithSpan} annotation.
@@ -42,6 +43,7 @@ public class WithSpanAdvice {
   public static void stopSpan(
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
+      @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
       @Advice.Thrown Throwable throwable) {
     if (scope == null) {
       return;
@@ -51,7 +53,7 @@ public class WithSpanAdvice {
     if (throwable != null) {
       tracer().endExceptionally(context, throwable);
     } else {
-      tracer().end(context);
+      tracer().end(context, returnValue);
     }
   }
 }
