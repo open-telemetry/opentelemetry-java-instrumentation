@@ -1,4 +1,4 @@
-# Configuration options
+# Agent Configuration
 
 ## NOTE: subject to change!
 
