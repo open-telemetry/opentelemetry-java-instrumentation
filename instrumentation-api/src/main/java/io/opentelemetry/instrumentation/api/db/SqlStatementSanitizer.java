@@ -23,7 +23,7 @@ public final class SqlStatementSanitizer {
 
   public static SqlStatementInfo sanitize(String statement) {
     if (!isStatementSanitizationEnabled() || statement == null) {
-      return new SqlStatementInfo(statement, null, null);
+      return SqlStatementInfo.create(statement, null, null);
     }
     return sqlToStatementInfoCache.computeIfAbsent(
         statement,

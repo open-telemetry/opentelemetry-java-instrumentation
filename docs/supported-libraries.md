@@ -36,6 +36,7 @@ These are the supported libraries and frameworks:
 | [Elasticsearch REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html)                        | 5.0+                           |
 | [Finatra](https://github.com/twitter/finatra)                                                                                         | 2.9+                           |
 | [Geode Client](https://geode.apache.org/)                                                                                             | 1.4+                           |
+| [Grails](https://grails.org/)                                                                                                         | 3.0+                           |
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
 | [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default)     |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.5+                           |

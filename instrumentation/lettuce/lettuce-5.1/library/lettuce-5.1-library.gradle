@@ -1,0 +1,13 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+apply plugin: "net.ltgt.errorprone"
+
+dependencies {
+  library group: 'io.lettuce', name: 'lettuce-core', version: '5.1.0.RELEASE'
+
+  implementation project(':instrumentation:lettuce:lettuce-common:library')
+
+  latestDepTestLibrary group: 'io.lettuce', name: 'lettuce-core', version: '5.+'
+
+  testImplementation project(':instrumentation:lettuce:lettuce-5.1:testing')
+  testImplementation project(':instrumentation:reactor-3.1:library')
+}
