@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.khttp.KHttpHeadersInjec
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -16,6 +17,10 @@ import khttp.responses.Response;
 
 public class KHttpTracer extends HttpClientTracer<RequestWrapper, Map<String, String>, Response> {
   private static final KHttpTracer TRACER = new KHttpTracer();
+
+  private KHttpTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static KHttpTracer tracer() {
     return TRACER;

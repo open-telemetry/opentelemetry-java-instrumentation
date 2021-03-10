@@ -154,6 +154,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   public abstract Context getServerContext(STORAGE storage);
 
   protected void onConnection(Span span, CONNECTION connection) {
+    // TODO: use NetPeerAttributes here
     span.setAttribute(SemanticAttributes.NET_PEER_IP, peerHostIP(connection));
     Integer port = peerPort(connection);
     // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.

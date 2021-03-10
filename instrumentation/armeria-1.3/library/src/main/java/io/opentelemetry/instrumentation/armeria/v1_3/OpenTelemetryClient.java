@@ -14,17 +14,20 @@ import com.linecorp.armeria.common.logging.RequestLogProperty;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.util.concurrent.TimeUnit;
 
 /** Decorates an {@link HttpClient} to trace outbound {@link HttpResponse}s. */
 final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
 
   private final ArmeriaClientTracer clientTracer;
+  private final NetPeerAttributes netPeerAttributes;
 
-  OpenTelemetryClient(HttpClient delegate, ArmeriaClientTracer clientTracer) {
+  OpenTelemetryClient(
+      HttpClient delegate, ArmeriaClientTracer clientTracer, NetPeerAttributes netPeerAttributes) {
     super(delegate);
     this.clientTracer = clientTracer;
+    this.netPeerAttributes = netPeerAttributes;
   }
 
   @Override
@@ -41,7 +44,7 @@ final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
           .whenComplete()
           .thenAccept(
               log -> {
-                NetPeerUtils.INSTANCE.setNetPeer(span, ctx.remoteAddress());
+                netPeerAttributes.setNetPeer(span, ctx.remoteAddress());
 
                 long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
                 if (log.responseCause() != null) {

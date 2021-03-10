@@ -13,7 +13,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,12 +30,16 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   protected static final String USER_AGENT = "User-Agent";
 
-  protected HttpClientTracer() {
+  private final NetPeerAttributes netPeerAttributes;
+
+  protected HttpClientTracer(NetPeerAttributes netPeerAttributes) {
     super();
+    this.netPeerAttributes = netPeerAttributes;
   }
 
-  protected HttpClientTracer(OpenTelemetry openTelemetry) {
+  protected HttpClientTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
     super(openTelemetry);
+    this.netPeerAttributes = netPeerAttributes;
   }
 
   protected abstract String method(REQUEST request);
@@ -166,7 +170,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     try {
       URI url = url(request);
       if (url != null) {
-        NetPeerUtils.INSTANCE.setNetPeer(span, url.getHost(), null, url.getPort());
+        netPeerAttributes.setNetPeer(span, url.getHost(), null, url.getPort());
         span.setAttribute(SemanticAttributes.HTTP_URL, url.toString());
       }
     } catch (Exception e) {

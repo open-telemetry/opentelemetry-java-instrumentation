@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -13,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
@@ -24,7 +26,7 @@ final class AwsSdkHttpClientTracer
     extends HttpClientTracer<SdkHttpRequest, SdkHttpRequest.Builder, SdkHttpResponse> {
 
   AwsSdkHttpClientTracer(OpenTelemetry openTelemetry) {
-    super(openTelemetry);
+    super(openTelemetry, new NetPeerAttributes(emptyMap()));
   }
 
   public Context startSpan(Context parentContext, ExecutionAttributes attributes) {

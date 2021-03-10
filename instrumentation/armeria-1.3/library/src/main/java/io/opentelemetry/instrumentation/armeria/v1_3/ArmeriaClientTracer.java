@@ -13,6 +13,7 @@ import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -20,8 +21,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class ArmeriaClientTracer
     extends HttpClientTracer<ClientRequestContext, ClientRequestContext, RequestLog> {
 
-  ArmeriaClientTracer(OpenTelemetry openTelemetry) {
-    super(openTelemetry);
+  ArmeriaClientTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
+    super(openTelemetry, netPeerAttributes);
   }
 
   @Override

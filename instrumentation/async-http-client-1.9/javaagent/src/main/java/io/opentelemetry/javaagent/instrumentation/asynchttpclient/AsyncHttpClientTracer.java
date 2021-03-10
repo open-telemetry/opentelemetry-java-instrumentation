@@ -9,12 +9,17 @@ import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class AsyncHttpClientTracer extends HttpClientTracer<Request, Request, Response> {
 
   private static final AsyncHttpClientTracer TRACER = new AsyncHttpClientTracer();
+
+  private AsyncHttpClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static AsyncHttpClientTracer tracer() {
     return TRACER;

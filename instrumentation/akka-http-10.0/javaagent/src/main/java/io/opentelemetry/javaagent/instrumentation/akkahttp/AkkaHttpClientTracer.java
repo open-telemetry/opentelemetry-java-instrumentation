@@ -12,6 +12,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentationModule.AkkaHttpHeaders;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,6 +20,10 @@ import java.net.URISyntaxException;
 public class AkkaHttpClientTracer
     extends HttpClientTracer<HttpRequest, AkkaHttpHeaders, HttpResponse> {
   private static final AkkaHttpClientTracer TRACER = new AkkaHttpClientTracer();
+
+  private AkkaHttpClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static AkkaHttpClientTracer tracer() {
     return TRACER;

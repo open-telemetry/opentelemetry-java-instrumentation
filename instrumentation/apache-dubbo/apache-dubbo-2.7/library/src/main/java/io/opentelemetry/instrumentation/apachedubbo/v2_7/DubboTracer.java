@@ -13,7 +13,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcContext;
@@ -30,7 +30,7 @@ class DubboTracer extends RpcServerTracer<RpcInvocation> {
         spanBuilder(parentContext, DubboHelper.getSpanName(interfaceName, methodName), SERVER)
             .setAttribute(SemanticAttributes.RPC_SYSTEM, "dubbo");
     DubboHelper.prepareSpan(spanBuilder, interfaceName, methodName);
-    NetPeerUtils.INSTANCE.setNetPeer(spanBuilder, RpcContext.getContext().getRemoteAddress());
+    NetPeerAttributes.INSTANCE.setNetPeer(spanBuilder, RpcContext.getContext().getRemoteAddress());
     return withServerSpan(Context.current(), spanBuilder.startSpan());
   }
 
@@ -40,7 +40,7 @@ class DubboTracer extends RpcServerTracer<RpcInvocation> {
         spanBuilder(parentContext, DubboHelper.getSpanName(interfaceName, methodName), CLIENT)
             .setAttribute(SemanticAttributes.RPC_SYSTEM, "dubbo");
     DubboHelper.prepareSpan(spanBuilder, interfaceName, methodName);
-    NetPeerUtils.INSTANCE.setNetPeer(spanBuilder, RpcContext.getContext().getRemoteAddress());
+    NetPeerAttributes.INSTANCE.setNetPeer(spanBuilder, RpcContext.getContext().getRemoteAddress());
     return withClientSpan(parentContext, spanBuilder.startSpan());
   }
 

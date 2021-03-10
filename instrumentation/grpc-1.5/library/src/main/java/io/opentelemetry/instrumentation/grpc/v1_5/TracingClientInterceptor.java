@@ -22,7 +22,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
@@ -56,7 +56,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
     SocketAddress address = result.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
     if (address instanceof InetSocketAddress) {
       InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
-      NetPeerUtils.INSTANCE.setNetPeer(span, inetSocketAddress);
+      NetPeerAttributes.INSTANCE.setNetPeer(span, inetSocketAddress);
     }
 
     return new TracingClientCall<>(result, span, context);

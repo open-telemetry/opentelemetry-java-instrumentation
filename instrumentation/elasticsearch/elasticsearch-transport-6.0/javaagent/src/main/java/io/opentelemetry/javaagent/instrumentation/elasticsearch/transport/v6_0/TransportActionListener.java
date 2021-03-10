@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
@@ -77,7 +77,7 @@ public class TransportActionListener<T extends ActionResponse> implements Action
     Span span = Span.fromContext(context);
 
     if (response.remoteAddress() != null) {
-      NetPeerUtils.INSTANCE.setNetPeer(
+      NetPeerAttributes.INSTANCE.setNetPeer(
           span,
           response.remoteAddress().address().getHostName(),
           response.remoteAddress().getAddress());

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.httpclients;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.io.IOException;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -19,8 +20,10 @@ public final class RestTemplateInterceptor implements ClientHttpRequestIntercept
 
   private final RestTemplateTracer tracer;
 
+  // TODO: create a SpringWebTracing class that follows the new library instrumentation pattern
+  // pass correct NetPeerAttributes instance there
   public RestTemplateInterceptor(OpenTelemetry openTelemetry) {
-    this.tracer = new RestTemplateTracer(openTelemetry);
+    this.tracer = new RestTemplateTracer(openTelemetry, NetPeerAttributes.INSTANCE);
   }
 
   @Override

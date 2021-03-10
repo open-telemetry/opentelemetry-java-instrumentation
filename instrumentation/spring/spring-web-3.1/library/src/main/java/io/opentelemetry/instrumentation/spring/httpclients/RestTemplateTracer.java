@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.spring.httpclients.HttpHeadersInj
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.io.IOException;
 import java.net.URI;
 import org.springframework.http.HttpHeaders;
@@ -18,8 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 
 class RestTemplateTracer extends HttpClientTracer<HttpRequest, HttpHeaders, ClientHttpResponse> {
-  RestTemplateTracer(OpenTelemetry openTelemetry) {
-    super(openTelemetry);
+  RestTemplateTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
+    super(openTelemetry, netPeerAttributes);
   }
 
   @Override

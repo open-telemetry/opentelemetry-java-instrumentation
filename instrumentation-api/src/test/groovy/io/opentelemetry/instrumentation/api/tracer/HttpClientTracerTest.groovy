@@ -7,22 +7,11 @@ package io.opentelemetry.instrumentation.api.tracer
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.propagation.TextMapSetter
-import io.opentelemetry.instrumentation.api.config.Config
-import io.opentelemetry.instrumentation.api.config.ConfigBuilder
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
 class HttpClientTracerTest extends BaseTracerTest {
-
-  def setupSpec() {
-    Config.INSTANCE = new ConfigBuilder().readProperties([
-      "otel.instrumentation.common.peer-service-mapping": "1.2.3.4=catservice,dogs.com=dogsservice"
-    ]).build()
-  }
-
-  def cleanupSpec() {
-    Config.INSTANCE = null
-  }
 
   @Shared
   def testUrl = new URI("http://myhost:123/somepath")
@@ -162,7 +151,10 @@ class HttpClientTracerTest extends BaseTracerTest {
 
   @Override
   def newTracer() {
-    return new HttpClientTracer<Map, Map, Map>() {
+    def netPeerAttributes = new NetPeerAttributes([
+      "1.2.3.4": "catservice", "dogs.com": "dogsservice"
+    ])
+    return new HttpClientTracer<Map, Map, Map>(netPeerAttributes) {
 
       @Override
       protected String method(Map m) {

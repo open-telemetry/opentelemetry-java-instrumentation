@@ -10,14 +10,15 @@ import static io.opentelemetry.instrumentation.okhttp.v3_0.RequestBuilderInjectA
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
 final class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
 
-  OkHttpClientTracer(OpenTelemetry openTelemetry) {
-    super(openTelemetry);
+  OkHttpClientTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
+    super(openTelemetry, netPeerAttributes);
   }
 
   @Override

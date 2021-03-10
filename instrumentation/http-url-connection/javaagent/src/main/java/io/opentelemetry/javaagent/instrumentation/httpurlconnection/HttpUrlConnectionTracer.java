@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.Heade
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -18,6 +19,10 @@ public class HttpUrlConnectionTracer
     extends HttpClientTracer<HttpURLConnection, HttpURLConnection, HttpUrlResponse> {
 
   private static final HttpUrlConnectionTracer TRACER = new HttpUrlConnectionTracer();
+
+  private HttpUrlConnectionTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static HttpUrlConnectionTracer tracer() {
     return TRACER;
