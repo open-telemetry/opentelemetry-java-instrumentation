@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmq
 
 import io.opentelemetery.instrumentation.rocketmq.AbstractRocketMqClientTest
+import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
 import org.apache.rocketmq.client.producer.DefaultMQProducer
@@ -14,11 +15,21 @@ class RocketMqClientTest extends AbstractRocketMqClientTest implements LibraryTe
 
   @Override
   void configureMQProducer(DefaultMQProducer producer) {
-    producer.getDefaultMQProducerImpl().registerSendMessageHook(RocketMqTracing.create(getOpenTelemetry()).newTracingSendMessageHook())
+    producer.getDefaultMQProducerImpl().registerSendMessageHook(RocketMqTracing.newBuilder(openTelemetry)
+      .setCaptureExperimentalSpanAttributes(
+        Config.get()
+          .getBooleanProperty(
+            "otel.instrumentation.rocketmq-client.experimental-span-attributes", true))
+      .build().newTracingSendMessageHook())
   }
 
   @Override
   void configureMQPushConsumer(DefaultMQPushConsumer consumer) {
-    consumer.getDefaultMQPushConsumerImpl().registerConsumeMessageHook(RocketMqTracing.create(getOpenTelemetry()).newTracingConsumeMessageHook())
+    consumer.getDefaultMQPushConsumerImpl().registerConsumeMessageHook(RocketMqTracing.newBuilder(openTelemetry)
+      .setCaptureExperimentalSpanAttributes(
+        Config.get()
+          .getBooleanProperty(
+            "otel.instrumentation.rocketmq-client.experimental-span-attributes", true))
+      .build().newTracingConsumeMessageHook())
   }
 }

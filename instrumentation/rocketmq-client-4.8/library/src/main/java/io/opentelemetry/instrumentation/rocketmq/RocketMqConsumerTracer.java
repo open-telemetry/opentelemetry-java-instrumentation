@@ -46,7 +46,7 @@ final class RocketMqConsumerTracer extends BaseTracer {
           spanBuilder(parentContext, "multiple_sources receive", CONSUMER)
               .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rocketmq")
               .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "receive");
-      Context rootContext = withClientSpan(parentContext, spanBuilder.startSpan());
+      Context rootContext = parentContext.with(spanBuilder.startSpan());
       for (MessageExt message : msgs) {
         createChildSpan(rootContext, message);
       }
@@ -58,7 +58,7 @@ final class RocketMqConsumerTracer extends BaseTracer {
     SpanBuilder childSpanBuilder =
         startSpanBuilder(parentContext, msg)
             .addLink(Span.fromContext(extractParent(msg)).getSpanContext());
-    end(withClientSpan(parentContext, childSpanBuilder.startSpan()));
+    end(parentContext.with(childSpanBuilder.startSpan()));
   }
 
   private SpanBuilder startSpanBuilder(Context parentContext, MessageExt msg) {

@@ -17,7 +17,7 @@ import org.apache.rocketmq.test.listener.AbstractListener;
 import org.apache.rocketmq.test.util.MQRandomUtils;
 import org.apache.rocketmq.test.util.RandomUtil;
 
-final class BaseConf {
+public final class BaseConf {
   public static final String nsAddr;
   public static final String broker1Addr;
   protected static String broker1Name;

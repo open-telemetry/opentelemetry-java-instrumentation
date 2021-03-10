@@ -13,7 +13,7 @@ public final class RocketMqTracingBuilder {
   private final OpenTelemetry openTelemetry;
 
   private boolean captureExperimentalSpanAttributes;
-  private boolean propagationEnabled;
+  private boolean propagationEnabled = true;
 
   RocketMqTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.rocketmq;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-public final class ContextAndScope {
+final class ContextAndScope {
   private final Context context;
   private final Scope scope;
 

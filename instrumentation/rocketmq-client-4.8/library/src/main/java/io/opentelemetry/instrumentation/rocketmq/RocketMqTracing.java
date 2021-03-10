@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.rocketmq;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.Config;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
@@ -15,15 +14,7 @@ public final class RocketMqTracing {
 
   /** Returns a new {@link RocketMqTracing} configured with the given {@link OpenTelemetry}. */
   public static RocketMqTracing create(OpenTelemetry openTelemetry) {
-    return newBuilder(openTelemetry)
-        .setPropagationEnabled(
-            Config.get()
-                .getBooleanProperty("otel.instrumentation.rocketmq-client.propagation", true))
-        .setCaptureExperimentalSpanAttributes(
-            Config.get()
-                .getBooleanProperty(
-                    "otel.instrumentation.rocketmq-client.experimental-span-attributes", true))
-        .build();
+    return newBuilder(openTelemetry).build();
   }
 
   /**
