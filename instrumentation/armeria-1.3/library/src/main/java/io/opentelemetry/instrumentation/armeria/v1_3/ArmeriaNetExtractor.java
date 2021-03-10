@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.HttpRequest;
@@ -14,8 +19,7 @@ final class ArmeriaNetExtractor extends NetExtractor<RequestContext, RequestLog>
   static final ArmeriaNetExtractor INSTANCE = new ArmeriaNetExtractor();
 
   @Override
-  protected String transport(
-      RequestContext requestContext) {
+  protected String transport(RequestContext requestContext) {
     return SemanticAttributes.NetTransportValues.IP_TCP.getValue();
   }
 
@@ -34,8 +38,7 @@ final class ArmeriaNetExtractor extends NetExtractor<RequestContext, RequestLog>
   }
 
   @Override
-  protected String peerIp(RequestContext requestContext,
-      RequestLog requestLog) {
+  protected String peerIp(RequestContext requestContext, RequestLog requestLog) {
     SocketAddress address = requestContext.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return ((InetSocketAddress) address).getAddress().getHostAddress();
@@ -46,7 +49,8 @@ final class ArmeriaNetExtractor extends NetExtractor<RequestContext, RequestLog>
   private HttpRequest request(RequestContext ctx) {
     HttpRequest request = ctx.request();
     if (request == null) {
-      throw new IllegalStateException("Context always has a request in decorators, this exception indicates a programming bug.");
+      throw new IllegalStateException(
+          "Context always has a request in decorators, this exception indicates a programming bug.");
     }
     return request;
   }

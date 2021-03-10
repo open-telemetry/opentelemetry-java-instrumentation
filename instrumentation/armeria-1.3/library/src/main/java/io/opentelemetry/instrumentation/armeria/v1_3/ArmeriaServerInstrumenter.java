@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.logging.RequestLog;
@@ -21,8 +26,7 @@ final class ArmeriaServerInstrumenter extends Instrumenter<ServiceRequestContext
   }
 
   @Override
-  protected SpanKind spanKind(
-      ServiceRequestContext serviceRequestContext) {
+  protected SpanKind spanKind(ServiceRequestContext serviceRequestContext) {
     return SpanKind.SERVER;
   }
 }

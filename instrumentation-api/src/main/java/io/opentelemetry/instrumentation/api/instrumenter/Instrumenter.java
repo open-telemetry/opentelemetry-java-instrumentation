@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -19,24 +24,28 @@ public abstract class Instrumenter<REQUEST, RESPONSE> {
   private final Tracer tracer;
   private final List<Extractor<? super REQUEST, ? super RESPONSE>> extractors;
 
-  protected Instrumenter(Tracer tracer, Iterable<? extends Extractor<? super REQUEST, ? super RESPONSE>> extractors) {
+  protected Instrumenter(
+      Tracer tracer, Iterable<? extends Extractor<? super REQUEST, ? super RESPONSE>> extractors) {
     this.tracer = tracer;
-    this.extractors = StreamSupport.stream(extractors.spliterator(), false).collect(Collectors.toList());
+    this.extractors =
+        StreamSupport.stream(extractors.spliterator(), false).collect(Collectors.toList());
   }
 
   public Context start(Context parentContext, REQUEST request) {
     SpanKind kind = spanKind(request);
-    SpanBuilder spanBuilder = tracer.spanBuilder(spanName(request))
-        .setSpanKind(kind);
+    SpanBuilder spanBuilder = tracer.spanBuilder(spanName(request)).setSpanKind(kind);
 
     AttributesBuilder attributesBuilder = Attributes.builder();
     for (Extractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
       extractor.onStart(attributesBuilder, request);
     }
 
-    attributesBuilder.build().forEach((key, value) -> {
-      spanBuilder.setAttribute((AttributeKey) key, value);
-    });
+    attributesBuilder
+        .build()
+        .forEach(
+            (key, value) -> {
+              spanBuilder.setAttribute((AttributeKey) key, value);
+            });
 
     Span span = spanBuilder.startSpan();
     Context context = parentContext.with(span);
@@ -58,9 +67,12 @@ public abstract class Instrumenter<REQUEST, RESPONSE> {
       extractor.onEnd(attributesBuilder, request, response);
     }
 
-    attributesBuilder.build().forEach((key, value) -> {
-      span.setAttribute((AttributeKey) key, value);
-    });
+    attributesBuilder
+        .build()
+        .forEach(
+            (key, value) -> {
+              span.setAttribute((AttributeKey) key, value);
+            });
 
     if (error != null) {
       span.recordException(error);

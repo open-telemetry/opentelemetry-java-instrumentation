@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -18,12 +23,24 @@ public abstract class HttpExtractor<REQUEST, RESPONSE> extends Extractor<REQUEST
 
   @Override
   final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
-    set(attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, requestContentLength(request, response));
-    set(attributes, SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED, requestContentLengthUncompressed(request, response));
+    set(
+        attributes,
+        SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
+        requestContentLength(request, response));
+    set(
+        attributes,
+        SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED,
+        requestContentLengthUncompressed(request, response));
     set(attributes, SemanticAttributes.HTTP_STATUS_CODE, statusCode(request, response));
     set(attributes, SemanticAttributes.HTTP_FLAVOR, flavor(request, response));
-    set(attributes, SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, responseContentLength(request, response));
-    set(attributes, SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED, responseContentLengthUncompressed(request, response));
+    set(
+        attributes,
+        SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+        responseContentLength(request, response));
+    set(
+        attributes,
+        SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
+        responseContentLengthUncompressed(request, response));
     set(attributes, SemanticAttributes.HTTP_SERVER_NAME, serverName(request, response));
     set(attributes, SemanticAttributes.HTTP_ROUTE, route(request, response));
     set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request, response));
@@ -48,7 +65,6 @@ public abstract class HttpExtractor<REQUEST, RESPONSE> extends Extractor<REQUEST
 
   @Nullable
   protected abstract String userAgent(REQUEST request);
-
 
   // Attributes which are not always available when the request is ready.
 

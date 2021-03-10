@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.HttpHeaderNames;
@@ -15,8 +20,7 @@ final class ArmeriaHttpExtractor extends HttpExtractor<RequestContext, RequestLo
   static final ArmeriaHttpExtractor INSTANCE = new ArmeriaHttpExtractor();
 
   @Override
-  protected String method(
-      RequestContext ctx) {
+  protected String method(RequestContext ctx) {
     return ctx.method().name();
   }
 
@@ -46,8 +50,7 @@ final class ArmeriaHttpExtractor extends HttpExtractor<RequestContext, RequestLo
   }
 
   @Override
-  protected Long requestContentLength(
-      RequestContext ctx, RequestLog requestLog) {
+  protected Long requestContentLength(RequestContext ctx, RequestLog requestLog) {
     return requestLog.requestLength();
   }
 
@@ -58,14 +61,12 @@ final class ArmeriaHttpExtractor extends HttpExtractor<RequestContext, RequestLo
   }
 
   @Override
-  protected Long statusCode(RequestContext ctx,
-      RequestLog requestLog) {
+  protected Long statusCode(RequestContext ctx, RequestLog requestLog) {
     return (long) requestLog.responseHeaders().status().code();
   }
 
   @Override
-  protected String flavor(RequestContext ctx,
-      RequestLog requestLog) {
+  protected String flavor(RequestContext ctx, RequestLog requestLog) {
     SessionProtocol protocol = ctx.sessionProtocol();
     if (protocol.isMultiplex()) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
@@ -75,8 +76,7 @@ final class ArmeriaHttpExtractor extends HttpExtractor<RequestContext, RequestLo
   }
 
   @Override
-  protected Long responseContentLength(
-      RequestContext ctx, RequestLog requestLog) {
+  protected Long responseContentLength(RequestContext ctx, RequestLog requestLog) {
     return requestLog.responseLength();
   }
 
@@ -87,8 +87,7 @@ final class ArmeriaHttpExtractor extends HttpExtractor<RequestContext, RequestLo
   }
 
   @Override
-  protected @Nullable String serverName(RequestContext ctx,
-      RequestLog requestLog) {
+  protected @Nullable String serverName(RequestContext ctx, RequestLog requestLog) {
     if (ctx instanceof ServiceRequestContext) {
       return ((ServiceRequestContext) ctx).config().virtualHost().hostnamePattern();
     }
@@ -96,8 +95,7 @@ final class ArmeriaHttpExtractor extends HttpExtractor<RequestContext, RequestLo
   }
 
   @Override
-  protected @Nullable String route(RequestContext ctx,
-      RequestLog requestLog) {
+  protected @Nullable String route(RequestContext ctx, RequestLog requestLog) {
     if (ctx instanceof ServiceRequestContext) {
       return ((ServiceRequestContext) ctx).config().route().patternString();
     }
@@ -105,15 +103,15 @@ final class ArmeriaHttpExtractor extends HttpExtractor<RequestContext, RequestLo
   }
 
   @Override
-  protected @Nullable String clientIp(RequestContext ctx,
-      RequestLog requestLog) {
+  protected @Nullable String clientIp(RequestContext ctx, RequestLog requestLog) {
     return null;
   }
-  
+
   private HttpRequest request(RequestContext ctx) {
     HttpRequest request = ctx.request();
     if (request == null) {
-      throw new IllegalStateException("Context always has a request in decorators, this exception indicates a programming bug.");
+      throw new IllegalStateException(
+          "Context always has a request in decorators, this exception indicates a programming bug.");
     }
     return request;
   }
