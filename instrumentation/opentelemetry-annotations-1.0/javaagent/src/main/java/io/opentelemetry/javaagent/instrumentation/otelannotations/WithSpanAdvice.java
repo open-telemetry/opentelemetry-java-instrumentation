@@ -41,6 +41,7 @@ public class WithSpanAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
+      @Advice.Origin Method method,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
       @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
@@ -53,7 +54,7 @@ public class WithSpanAdvice {
     if (throwable != null) {
       tracer().endExceptionally(context, throwable);
     } else {
-      tracer().end(context, returnValue);
+      tracer().end(context, method, returnValue);
     }
   }
 }

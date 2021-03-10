@@ -12,7 +12,12 @@ enum SynchronousMethodSpanStrategy implements MethodSpanStrategy {
   INSTANCE;
 
   @Override
-  public Object end(BaseTracer tracer, Context context, Object result) {
+  public boolean supports(Class<?> returnType) {
+    return true;
+  }
+
+  @Override
+  public Object end(BaseTracer tracer, Context context, Class<?> returnType, Object result) {
     tracer.end(context);
     return result;
   }

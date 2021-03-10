@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.otelannotations.async;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.ImplicitContextKeyed;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 
 /**
@@ -16,9 +14,8 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
  * can compose or register for notification of completion at which point the span representing the
  * invocation of the method will be ended.
  */
-public interface MethodSpanStrategy extends ImplicitContextKeyed {
-  ContextKey<MethodSpanStrategy> CONTEXT_KEY =
-      ContextKey.named("opentelemetry-spring-autoconfigure-aspects-method-span-strategy");
+public interface MethodSpanStrategy {
+  boolean supports(Class<?> returnType);
 
   /**
    * Denotes the end of the invocation of the traced method with a successful result which will end
@@ -32,17 +29,7 @@ public interface MethodSpanStrategy extends ImplicitContextKeyed {
    * @return Either {@code result} or a value composing over {@code result} for notification of
    *     completion.
    */
-  Object end(BaseTracer tracer, Context context, Object result);
-
-  @Override
-  default Context storeInContext(Context context) {
-    return context.with(CONTEXT_KEY, this);
-  }
-
-  static MethodSpanStrategy fromContext(Context context) {
-    MethodSpanStrategy methodSpanStrategy = context.get(CONTEXT_KEY);
-    return methodSpanStrategy != null ? methodSpanStrategy : synchronous();
-  }
+  Object end(BaseTracer tracer, Context context, Class<?> returnType, Object result);
 
   /**
    * Returns a {@link MethodSpanStrategy} for tracing synchronous methods where the return value
@@ -50,22 +37,5 @@ public interface MethodSpanStrategy extends ImplicitContextKeyed {
    */
   static MethodSpanStrategy synchronous() {
     return SynchronousMethodSpanStrategy.INSTANCE;
-  }
-
-  /**
-   * Returns a {@link MethodSpanStrategy} for tracing a method that returns a {@link
-   * java.util.concurrent.CompletionStage} representing the completion of an asynchronous operation.
-   */
-  static MethodSpanStrategy forCompletionStage() {
-    return CompletionStageMethodSpanStrategy.INSTANCE;
-  }
-
-  /**
-   * Returns a {@link MethodSpanStrategy} for tracing a method that returns a {@link
-   * java.util.concurrent.CompletableFuture} representing the completion of an asynchronous
-   * operation.
-   */
-  static MethodSpanStrategy forCompletableFuture() {
-    return CompletableFutureMethodSpanStrategy.INSTANCE;
   }
 }

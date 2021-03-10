@@ -5,40 +5,38 @@
 
 package io.opentelemetry.javaagent.instrumentation.otelannotations.async;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Registry of {@link MethodSpanStrategy} implementations for tracing the asynchronous operations
  * represented by the return type of a traced method.
  */
 public class MethodSpanStrategies {
-  private static final MethodSpanStrategies instance;
-
-  static {
-    Map<Class<?>, MethodSpanStrategy> strategies = new HashMap<>();
-    strategies.put(CompletionStage.class, MethodSpanStrategy.forCompletionStage());
-    strategies.put(CompletableFuture.class, MethodSpanStrategy.forCompletableFuture());
-    instance = new MethodSpanStrategies(strategies);
-  }
+  private static final MethodSpanStrategies instance = new MethodSpanStrategies();
 
   public static MethodSpanStrategies getInstance() {
     return instance;
   }
 
-  private final Map<Class<?>, MethodSpanStrategy> strategies;
+  private final List<MethodSpanStrategy> strategies = new CopyOnWriteArrayList<>();
 
-  private MethodSpanStrategies(Map<Class<?>, MethodSpanStrategy> strategies) {
-    this.strategies = strategies;
+  private MethodSpanStrategies() {
+    strategies.add(Jdk8MethodStrategy.INSTANCE);
   }
 
-  public void registerStrategy(Class<?> returnType, MethodSpanStrategy strategy) {
-    strategies.put(returnType, strategy);
+  public void registerStrategy(MethodSpanStrategy strategy) {
+    Objects.requireNonNull(strategy);
+    strategies.add(strategy);
   }
 
   public MethodSpanStrategy resolveStrategy(Class<?> returnType) {
-    return strategies.getOrDefault(returnType, MethodSpanStrategy.synchronous());
+    for (MethodSpanStrategy strategy : strategies) {
+      if (strategy.supports(returnType)) {
+        return strategy;
+      }
+    }
+    return MethodSpanStrategy.synchronous();
   }
 }

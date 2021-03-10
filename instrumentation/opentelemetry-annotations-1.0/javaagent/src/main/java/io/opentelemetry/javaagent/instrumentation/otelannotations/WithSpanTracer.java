@@ -11,7 +11,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.async.MethodSpanStrategies;
-import io.opentelemetry.javaagent.instrumentation.otelannotations.async.MethodSpanStrategy;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,29 +28,17 @@ public class WithSpanTracer extends BaseTracer {
 
   public Context startSpan(
       Context parentContext, WithSpan applicationAnnotation, Method method, SpanKind kind) {
-
-    Context spanStrategyContext = withMethodSpanStrategy(parentContext, method);
     Span span =
         spanBuilder(
                 parentContext, spanNameForMethodWithAnnotation(applicationAnnotation, method), kind)
             .startSpan();
     if (kind == SpanKind.SERVER) {
-      return withServerSpan(spanStrategyContext, span);
+      return withServerSpan(parentContext, span);
     }
     if (kind == SpanKind.CLIENT) {
-      return withClientSpan(spanStrategyContext, span);
+      return withClientSpan(parentContext, span);
     }
-    return spanStrategyContext.with(span);
-  }
-
-  /**
-   * Resolves the {@link MethodSpanStrategy} for tracing the specified {@code method} and stores
-   * that strategy in the returned {@code Context}.
-   */
-  protected Context withMethodSpanStrategy(Context context, Method method) {
-    Class<?> returnType = method.getReturnType();
-    MethodSpanStrategy methodSpanStrategy = methodSpanStrategies.resolveStrategy(returnType);
-    return context.with(methodSpanStrategy);
+    return parentContext.with(span);
   }
 
   /**
@@ -95,8 +82,9 @@ public class WithSpanTracer extends BaseTracer {
    * @return Either {@code result} or a value composing over {@code result} for notification of
    *     completion.
    */
-  public Object end(Context context, Object result) {
-    return MethodSpanStrategy.fromContext(context).end(this, context, result);
+  public Object end(Context context, Method method, Object result) {
+    Class<?> returnType = method.getReturnType();
+    return methodSpanStrategies.resolveStrategy(returnType).end(this, context, returnType, result);
   }
 
   @Override
