@@ -122,7 +122,7 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
     }
     if (endpoint == NOT_FOUND) {
       trace.span(index + 2) {
-        name endpoint == REDIRECT ? ~/\.sendRedirect$/ : ~/\.sendError$/
+        name ~/\.sendError$/
         kind INTERNAL
         errored false
         attributes {
