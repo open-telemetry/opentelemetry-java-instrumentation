@@ -10,10 +10,11 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import io.opentelemetry.instrumentation.api.undertow.UndertowRequestContext;
 import io.opentelemetry.javaagent.instrumentation.api.undertow.KeyHolder;
+import io.undertow.server.DefaultResponseListener;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.AttachmentKey;
-import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -31,7 +32,7 @@ public class UndertowHttpServerTracer
     return "io.opentelemetry.javaagent.undertow";
   }
 
-  public Context startServerSpan(HttpServerExchange exchange, Method instrumentedMethod) {
+  public Context startServerSpan(HttpServerExchange exchange) {
     return startSpan(
         exchange, exchange, exchange, "HTTP " + exchange.getRequestMethod().toString());
   }
@@ -39,7 +40,43 @@ public class UndertowHttpServerTracer
   @Override
   protected Context customizeContext(Context context, HttpServerExchange exchange) {
     context = ServletSpanNaming.init(context);
+    // span is ended when counter reaches 0, we start from 2 which accounts for the
+    // handler that started the span and exchange completion listener
+    context = UndertowRequestContext.init(context, 2);
     return AppServerBridge.init(context);
+  }
+
+  public void handlerStarted(Context context) {
+    // request was dispatched to a new thread, handler on the original thread
+    // may exit before this one so we need to wait for this handler to complete
+    // before ending span
+    UndertowRequestContext.enter(context);
+  }
+
+  public void handlerCompleted(Context context, Throwable throwable, HttpServerExchange exchange) {
+    // end the span when this is the last handler to complete and exchange has
+    // been completed
+    if (UndertowRequestContext.exit(context)) {
+      endSpan(context, throwable, exchange);
+    }
+  }
+
+  public void exchangeCompleted(Context context, HttpServerExchange exchange) {
+    // after exchange is completed we can read response status
+    // if all handlers have completed we can end the span, if there are running
+    // handlers we'll end the span when last handler exits
+    if (UndertowRequestContext.exit(context)) {
+      Throwable throwable = exchange.getAttachment(DefaultResponseListener.EXCEPTION);
+      endSpan(context, throwable, exchange);
+    }
+  }
+
+  private void endSpan(Context context, Throwable throwable, HttpServerExchange exchange) {
+    if (throwable != null) {
+      tracer().endExceptionally(context, throwable, exchange);
+    } else {
+      tracer().end(context, exchange);
+    }
   }
 
   @SuppressWarnings("unchecked")

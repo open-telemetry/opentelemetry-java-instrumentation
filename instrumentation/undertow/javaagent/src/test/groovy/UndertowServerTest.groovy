@@ -8,13 +8,19 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.undertow.Handlers
 import io.undertow.Undertow
 import io.undertow.util.Headers
 import io.undertow.util.StatusCodes
+import okhttp3.HttpUrl
+import okhttp3.Response
+import spock.lang.Unroll
 
 //TODO make test which mixes handlers and servlets
 class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTrait {
@@ -52,6 +58,27 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             throw new Exception(EXCEPTION.body)
           }
         }
+        .addExactPath("sendResponse") { exchange ->
+          Span.current().addEvent("before-event")
+          runUnderTrace("sendResponse") {
+            exchange.setStatusCode(StatusCodes.OK)
+            exchange.getResponseSender().send("sendResponse")
+          }
+          // event is added only when server span has not been ended
+          // we need to make sure that sending response does not end server span
+          Span.current().addEvent("after-event")
+        }
+        .addExactPath("sendResponseWithException") { exchange ->
+          Span.current().addEvent("before-event")
+          runUnderTrace("sendResponseWithException") {
+            exchange.setStatusCode(StatusCodes.OK)
+            exchange.getResponseSender().send("sendResponseWithException")
+          }
+          // event is added only when server span has not been ended
+          // we need to make sure that sending response does not end server span
+          Span.current().addEvent("after-event")
+          throw new Exception("exception after sending response")
+        }
       ).build()
     server.start()
     return server
@@ -65,5 +92,66 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "HTTP GET"
+  }
+
+  @Unroll
+  def "test send response"() {
+    setup:
+    def url = HttpUrl.get(address.resolve("sendResponse")).newBuilder().build()
+    def request = request(url, "GET", null).build()
+    Response response = client.newCall(request).execute()
+
+    expect:
+    response.code() == 200
+    response.body().string().trim() == "sendResponse"
+
+    and:
+    assertTraces(1) {
+      trace(0, 2) {
+        it.span(0) {
+          hasNoParent()
+          name "HTTP GET"
+
+          event(0) {
+            eventName "before-event"
+          }
+          event(1) {
+            eventName "after-event"
+          }
+        }
+        basicSpan(it, 1, "sendResponse", span(0))
+      }
+    }
+  }
+
+  @Unroll
+  def "test send response with exception"() {
+    setup:
+    def url = HttpUrl.get(address.resolve("sendResponseWithException")).newBuilder().build()
+    def request = request(url, "GET", null).build()
+    Response response = client.newCall(request).execute()
+
+    expect:
+    response.code() == 200
+    response.body().string().trim() == "sendResponseWithException"
+
+    and:
+    assertTraces(1) {
+      trace(0, 2) {
+        it.span(0) {
+          hasNoParent()
+          name "HTTP GET"
+
+          event(0) {
+            eventName "before-event"
+          }
+          event(1) {
+            eventName "after-event"
+          }
+          errorEvent(Exception, "exception after sending response", 2)
+        }
+        basicSpan(it, 1, "sendResponseWithException", span(0))
+      }
+    }
   }
 }
