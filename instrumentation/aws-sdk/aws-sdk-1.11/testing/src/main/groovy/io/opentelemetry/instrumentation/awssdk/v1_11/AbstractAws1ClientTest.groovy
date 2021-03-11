@@ -87,7 +87,6 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
     response != null
 
     client.requestHandler2s != null
-    client.requestHandler2s.size() == handlerCount
     client.requestHandler2s.get(0).getClass().getSimpleName() == "TracingRequestHandler"
 
     assertTraces(1) {
@@ -120,19 +119,19 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
     server.lastRequest.headers.get("traceparent") == null
 
     where:
-    service      | operation           | method | path                  | handlerCount                                   | clientBuilder                                                             | call                                                                            | additionalAttributes              | body
-    "S3"         | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1                                              | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true)         | { c  -> c.createBucket("testbucket") }                                          | ["aws.bucket.name": "testbucket"] | ""
-    "S3"         | "GetObject"         | "GET"  | "/someBucket/someKey" | 1                                              | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true)         | { c -> c.getObject("someBucket", "someKey") }                                   | ["aws.bucket.name": "someBucket"] | ""
-    "DynamoDBv2" | "CreateTable"       | "POST" | "/"                   | 1                                              | AmazonDynamoDBClientBuilder.standard()                                    | { c -> c.createTable(new CreateTableRequest("sometable", null)) }               | ["aws.table.name": "sometable"]   | ""
-    "Kinesis"    | "DeleteStream"      | "POST" | "/"                   | 1                                              | AmazonKinesisClientBuilder.standard()                                     | { c -> c.deleteStream(new DeleteStreamRequest().withStreamName("somestream")) } | ["aws.stream.name": "somestream"] | ""
-    "EC2"        | "AllocateAddress"   | "POST" | "/"                   | 4                                              | AmazonEC2ClientBuilder.standard()                                         | { c -> c.allocateAddress() }                                                    | [:]                               | """
+    service      | operation           | method | path                  | clientBuilder                                                             | call                                                                            | additionalAttributes              | body
+    "S3"         | "CreateBucket"      | "PUT"  | "/testbucket/"        | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true)         | { c  -> c.createBucket("testbucket") }                                          | ["aws.bucket.name": "testbucket"] | ""
+    "S3"         | "GetObject"         | "GET"  | "/someBucket/someKey" | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true)         | { c -> c.getObject("someBucket", "someKey") }                                   | ["aws.bucket.name": "someBucket"] | ""
+    "DynamoDBv2" | "CreateTable"       | "POST" | "/"                   | AmazonDynamoDBClientBuilder.standard()                                    | { c -> c.createTable(new CreateTableRequest("sometable", null)) }               | ["aws.table.name": "sometable"]   | ""
+    "Kinesis"    | "DeleteStream"      | "POST" | "/"                   | AmazonKinesisClientBuilder.standard()                                     | { c -> c.deleteStream(new DeleteStreamRequest().withStreamName("somestream")) } | ["aws.stream.name": "somestream"] | ""
+    "EC2"        | "AllocateAddress"   | "POST" | "/"                   | AmazonEC2ClientBuilder.standard()                                         | { c -> c.allocateAddress() }                                                    | [:]                               | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
            <publicIp>192.0.2.1</publicIp>
            <domain>standard</domain>
         </AllocateAddressResponse>
       """
-    "RDS"        | "DeleteOptionGroup" | "POST" | "/"                   | (Boolean.getBoolean("testLatestDeps") ? 6 : 5) | AmazonRDSClientBuilder.standard()                                         | { c -> c.deleteOptionGroup(new DeleteOptionGroupRequest()) }                    | [:]                               | """
+    "RDS"        | "DeleteOptionGroup" | "POST" | "/"                   | AmazonRDSClientBuilder.standard()                                         | { c -> c.deleteOptionGroup(new DeleteOptionGroupRequest()) }                    | [:]                               | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata>
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
