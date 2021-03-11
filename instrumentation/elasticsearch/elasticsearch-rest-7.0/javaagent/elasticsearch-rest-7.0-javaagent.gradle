@@ -4,7 +4,7 @@ muzzle {
   pass {
     group = "org.elasticsearch.client"
     module = "elasticsearch-rest-client"
-    versions = "[6.4,7.0)"
+    versions = "[7.0,)"
     assertInverse = true
   }
 
@@ -16,7 +16,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.4.0'
+  library group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '7.0.0'
 
   implementation project(':instrumentation:elasticsearch:elasticsearch-rest-common:javaagent')
 
@@ -29,11 +29,6 @@ dependencies {
   testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
 
-  testLibrary group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.4.0'
-  testLibrary group: 'org.elasticsearch', name: 'elasticsearch', version: '6.4.0'
-  testLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.4.0'
-
-  latestDepTestLibrary group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.+'
-  latestDepTestLibrary group: 'org.elasticsearch', name: 'elasticsearch', version: '6.+'
-  latestDepTestLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.+'
+  testLibrary group: 'org.elasticsearch', name: 'elasticsearch', version: '7.0.0'
+  testLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '7.0.0'
 }

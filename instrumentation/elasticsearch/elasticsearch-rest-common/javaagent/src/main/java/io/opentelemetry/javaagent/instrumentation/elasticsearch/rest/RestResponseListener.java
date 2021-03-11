@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.tracer;
 
