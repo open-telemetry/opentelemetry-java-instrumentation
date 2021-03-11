@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import software.amazon.awssdk.core.SdkPojo;
 import software.amazon.awssdk.http.ContentStreamProvider;
+import software.amazon.awssdk.http.SdkHttpFullRequest;
+import software.amazon.awssdk.protocols.core.ProtocolMarshaller;
 import software.amazon.awssdk.utils.IoUtils;
 import software.amazon.awssdk.utils.StringUtils;
 
@@ -41,8 +43,12 @@ class Serializer {
 
   @Nullable
   private String serialize(SdkPojo sdkPojo) {
-    Optional<ContentStreamProvider> optional =
-        AwsJsonProtocolFactoryAccess.createMarshaller().marshall(sdkPojo).contentStreamProvider();
+    ProtocolMarshaller<SdkHttpFullRequest> marshaller =
+        AwsJsonProtocolFactoryAccess.createMarshaller();
+    if (marshaller == null) {
+      return null;
+    }
+    Optional<ContentStreamProvider> optional = marshaller.marshall(sdkPojo).contentStreamProvider();
     return optional
         .map(
             csp -> {

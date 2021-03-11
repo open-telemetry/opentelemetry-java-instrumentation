@@ -9,6 +9,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URI;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import software.amazon.awssdk.core.client.config.SdkClientConfiguration;
 import software.amazon.awssdk.core.client.config.SdkClientOption;
 import software.amazon.awssdk.http.SdkHttpFullRequest;
@@ -17,8 +18,6 @@ import software.amazon.awssdk.protocols.core.OperationInfo;
 import software.amazon.awssdk.protocols.core.ProtocolMarshaller;
 
 final class AwsJsonProtocolFactoryAccess {
-
-  private static final ProtocolMarshaller<SdkHttpFullRequest> NOOP = unused -> null;
 
   private static final OperationInfo OPERATION_INFO =
       OperationInfo.builder().hasPayloadMembers(true).httpMethod(SdkHttpMethod.POST).build();
@@ -62,15 +61,16 @@ final class AwsJsonProtocolFactoryAccess {
   }
 
   @SuppressWarnings("unchecked")
+  @Nullable
   static ProtocolMarshaller<SdkHttpFullRequest> createMarshaller() {
     if (INVOKE_CREATE_PROTOCOL_MARSHALLER == null) {
-      return NOOP;
+      return null;
     }
 
     try {
       return (ProtocolMarshaller<SdkHttpFullRequest>) INVOKE_CREATE_PROTOCOL_MARSHALLER.invoke();
     } catch (Throwable t) {
-      return NOOP;
+      return null;
     }
   }
 
