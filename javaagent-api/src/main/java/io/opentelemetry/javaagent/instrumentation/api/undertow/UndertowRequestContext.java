@@ -3,16 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.undertow;
+package io.opentelemetry.javaagent.instrumentation.api.undertow;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Helper container for keeping track of request processing state in undertow. */
-public class UndertowRequestContext {
+public final class UndertowRequestContext {
   private static final ContextKey<AtomicInteger> CONTEXT_KEY =
       ContextKey.named("opentelemetry-undertow-context-key");
+
+  private UndertowRequestContext() {}
 
   /**
    * Attach to context.
