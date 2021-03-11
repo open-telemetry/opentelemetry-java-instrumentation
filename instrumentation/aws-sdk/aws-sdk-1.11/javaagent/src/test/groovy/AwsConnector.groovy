@@ -48,7 +48,7 @@ class AwsConnector {
       .build()
 
     awsConnector.s3Client = AmazonS3Client.builder()
-      .withEndpointConfiguration(awsConnector.localstack.getEndpointConfiguration(LocalStackContainer.Service.SNS))
+      .withEndpointConfiguration(awsConnector.localstack.getEndpointConfiguration(LocalStackContainer.Service.S3))
       .withCredentials(awsConnector.localstack.getDefaultCredentialsProvider())
       .build()
 
