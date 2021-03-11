@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.caching;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -19,6 +20,11 @@ final class CaffeineCache<K, V> implements Cache<K, V> {
   @Override
   public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
     return delegate.get(key, mappingFunction);
+  }
+
+  @Override
+  public Map<K, V> asMap() {
+    return delegate.asMap();
   }
 
   // Visible for testing

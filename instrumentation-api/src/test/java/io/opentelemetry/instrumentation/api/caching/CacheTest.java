@@ -17,7 +17,7 @@ class CacheTest {
   class StrongKeys {
     @Test
     void unbounded() {
-      Cache<String, String> cache = Cache.newBuilder().build();
+      Cache<String, String> cache = Cache.<String, String>newBuilder().build();
 
       CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
       assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
@@ -33,7 +33,7 @@ class CacheTest {
 
     @Test
     void bounded() {
-      Cache<String, String> cache = Cache.newBuilder().setMaximumSize(1).build();
+      Cache<String, String> cache = Cache.<String, String>newBuilder().setMaximumSize(1).build();
 
       CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
       assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
@@ -53,7 +53,7 @@ class CacheTest {
   class WeakKeys {
     @Test
     void unbounded() {
-      Cache<String, String> cache = Cache.newBuilder().setWeakKeys().build();
+      Cache<String, String> cache = Cache.<String, String>newBuilder().setWeakKeys().build();
 
       CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
       String cat = new String("cat");
@@ -91,7 +91,7 @@ class CacheTest {
 
     @Test
     void bounded() throws Exception {
-      Cache<String, String> cache = Cache.newBuilder().setWeakKeys().setMaximumSize(1).build();
+      Cache<String, String> cache = Cache.<String, String>newBuilder().setWeakKeys().setMaximumSize(1).build();
 
       CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
 
