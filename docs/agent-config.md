@@ -1,24 +1,39 @@
-# Configuration parameters
+# Agent Configuration
 
 ## NOTE: subject to change!
 
-Note: These parameter names are very likely to change over time, so please check
-back here when trying out a new version! Please report any bugs or unexpected
-behavior you find.
+Note: The environment variables/system properties in this document are very likely to change over time.
+Please check back here when trying out a new version!
+
+Please report any bugs or unexpected behavior you find.
 
 ## Contents
 
 * [SDK Autoconfiguration](#sdk-autoconfiguration)
 * [Peer service name](#peer-service-name)
 * [DB statement sanitization](#db-statement-sanitization)
-* [Customizing the OpenTelemetry SDK](#customizing-the-opentelemetry-sdk)
 * [Suppressing specific auto-instrumentation](#suppressing-specific-auto-instrumentation)
 
 ## SDK Autoconfiguration
 
 The SDK's autoconfiguration module is used for basic configuration of the agent. Read the
-[docs](https://github.com/open-telemetry/opentelemetry-java/tree/v1.0.0/sdk-extensions/autoconfigure#customizing-the-opentelemetry-sdk)
+[docs](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure)
 to find settings such as configuring export or sampling.
+
+Here are some quick links into those docs for the configuration options for specific portions of the SDK & agent:
+
+* [Exporters](#exporters)
+  + [OTLP exporter (both span and metric exporters)](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#otlp-exporter-both-span-and-metric-exporters)
+  + [Jaeger exporter](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#jaeger-exporter)
+  + [Zipkin exporter](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#zipkin-exporter)
+  + [Prometheus exporter](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#prometheus-exporter)
+  + [Logging exporter](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#logging-exporter)
+* [Trace context propagation](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#propagator)
+* [OpenTelemetry Resource](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#opentelemetry-resource)
+* [Batch span processor](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#batch-span-processor)
+* [Sampler](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#sampler)
+* [Span limits](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#span-limits)
+* [Using SPI to further configure the SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/README.md#customizing-the-opentelemetry-sdk)
 
 ## Peer service name
 
@@ -43,16 +58,6 @@ The following property may be used to disable it:
 | System property                                       | Environment variable                                  | Description                                                         |
 |-------------------------------------------------------|-------------------------------------------------------|---------------------------------------------------------------------|
 | `otel.instrumentation.common.db-statement-sanitizer.enabled` | `OTEL_INSTRUMENTATION_COMMON_DB_STATEMENT_SANITIZER_ENABLED` | Enables the DB statement sanitization. The default value is `true`. |
-
-## Customizing the OpenTelemetry SDK
-
-*Customizing the SDK is highly advanced behavior and is still in the prototyping phase. It may change drastically or be removed completely. Use
-with caution*
-
-The OpenTelemetry SDK exposes SPI [hooks](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/spi)
-for customizing its behavior, such as the `Resource` attached to spans or the `Sampler`.
-
-Because the automatic instrumentation runs in a different classpath than the instrumented application, it is not possible for customization in the application to take advantage of this customization. In order to provide such customization, you can provide the path to a JAR file, including an SPI implementation using the system property `otel.initializer.jar`. Note that this JAR needs to shade the OpenTelemetry API in the same way as the agent does. The simplest way to do this is to use the same shading configuration as the agent from [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/cfade733b899a2f02cfec7033c6a1efd7c54fd8b/java-agent/java-agent.gradle#L39). In addition, you must specify the `io.opentelemetry.javaagent.shaded.io.opentelemetry.api.trace.spi.TraceProvider` to the name of the class that implements the SPI.
 
 ## Suppressing specific auto-instrumentation
 
