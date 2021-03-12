@@ -147,16 +147,12 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
     assertTraces(0) {}
   }
 
-  def "should capture span for CompletionStage"() {
+  def "should capture span for already completed CompletionStage"() {
     setup:
-    def future = new CompletableFuture<String>()
+    def future = CompletableFuture.completedFuture("Done")
     new TracedWithSpan().completionStage(future)
 
     expect:
-    Thread.sleep(500) // sleep a bit just to make sure no span is captured
-    assertTraces(0) {}
-
-    future.complete("Done")
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -171,7 +167,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def "should capture span for CompletionStage on completed exceptionally"() {
+  def "should capture span for eventually completed CompletionStage"() {
     setup:
     def future = new CompletableFuture<String>()
     new TracedWithSpan().completionStage(future)
@@ -180,7 +176,29 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
     assertTraces(0) {}
 
+    future.complete("Done")
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.completionStage"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          errored false
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for already exceptionally completed CompletionStage"() {
+    setup:
+    def future = new CompletableFuture<String>()
     future.completeExceptionally(new IllegalArgumentException("Boom"))
+    new TracedWithSpan().completionStage(future)
+
+    expect:
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -196,16 +214,57 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def "should capture span for CompletableFuture"() {
+  def "should capture span for eventually exceptionally completed CompletionStage"() {
     setup:
     def future = new CompletableFuture<String>()
-    new TracedWithSpan().completableFuture(future)
+    new TracedWithSpan().completionStage(future)
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
     assertTraces(0) {}
 
-    future.complete("Done")
+    future.completeExceptionally(new IllegalArgumentException("Boom"))
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.completionStage"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          errored true
+          errorEvent(IllegalArgumentException, "Boom")
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for null CompletionStage"() {
+    setup:
+    new TracedWithSpan().completionStage(null)
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.completionStage"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          errored false
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for already completed CompletableFuture"() {
+    setup:
+    def future = CompletableFuture.completedFuture("Done")
+    new TracedWithSpan().completableFuture(future)
+
+    expect:
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -220,7 +279,54 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def "should capture span for CompletableFuture on completed exceptionally"() {
+  def "should capture span for eventually completed CompletableFuture"() {
+    setup:
+    def future = new CompletableFuture<String>()
+    new TracedWithSpan().completableFuture(future)
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    future.complete("Done")
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.completableFuture"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          errored false
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for already exceptionally completed CompletableFuture"() {
+    setup:
+    def future = new CompletableFuture<String>()
+    future.completeExceptionally(new IllegalArgumentException("Boom"))
+    new TracedWithSpan().completableFuture(future)
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.completableFuture"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          errored true
+          errorEvent(IllegalArgumentException, "Boom")
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for eventually exceptionally completed CompletableFuture"() {
     setup:
     def future = new CompletableFuture<String>()
     new TracedWithSpan().completableFuture(future)
@@ -230,6 +336,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
     assertTraces(0) {}
 
     future.completeExceptionally(new IllegalArgumentException("Boom"))
+
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -238,6 +345,25 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           hasNoParent()
           errored true
           errorEvent(IllegalArgumentException, "Boom")
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for null CompletableFuture"() {
+    setup:
+    new TracedWithSpan().completableFuture(null)
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.completableFuture"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          errored false
           attributes {
           }
         }

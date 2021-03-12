@@ -22,8 +22,8 @@ enum Jdk8MethodStrategy implements MethodSpanStrategy {
   public Object end(BaseTracer tracer, Context context, Class<?> returnType, Object result) {
     if (result instanceof CompletableFuture) {
       CompletableFuture<?> future = (CompletableFuture<?>) result;
-      if (future.isDone()) {
-        return endSynchronously(future, tracer, context);
+      if (endSynchronously(future, tracer, context)) {
+        return future;
       }
       return endWhenComplete(future, tracer, context);
     } else if (result instanceof CompletionStage) {
@@ -34,17 +34,36 @@ enum Jdk8MethodStrategy implements MethodSpanStrategy {
     return result;
   }
 
-  private CompletableFuture<?> endSynchronously(
+  /**
+   * Checks to see if the {@link CompletableFuture} has already been completed and if so
+   * synchronously ends the span to avoid additional allocations and overhead registering for
+   * notification of completion.
+   */
+  private boolean endSynchronously(
       CompletableFuture<?> future, BaseTracer tracer, Context context) {
-    try {
-      future.join();
+
+    if (future.isDone()) {
+      if (future.isCompletedExceptionally()) {
+        // If the future completed exceptionally then join to catch the exception
+        // so that it can be recorded to the span
+        try {
+          future.join();
+        } catch (Exception exception) {
+          tracer.endExceptionally(context, exception);
+          return true;
+        }
+      }
       tracer.end(context);
-    } catch (Exception exception) {
-      tracer.endExceptionally(context, exception);
+      return true;
+    } else {
+      return false;
     }
-    return future;
   }
 
+  /**
+   * Registers for notification of the completion of the {@link CompletionStage} at which time the
+   * span will be ended.
+   */
   private CompletionStage<?> endWhenComplete(
       CompletionStage<?> stage, BaseTracer tracer, Context context) {
     return stage.whenComplete(
