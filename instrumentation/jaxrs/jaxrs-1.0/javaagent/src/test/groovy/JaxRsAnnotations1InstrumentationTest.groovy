@@ -14,6 +14,7 @@ import javax.ws.rs.OPTIONS
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import spock.lang.Unroll
 
 class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecification {
 
@@ -38,6 +39,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
     }
   }
 
+  @Unroll
   def "span named '#paramName' from annotations on class when is not root span"() {
     setup:
     runUnderServerTrace("test") {

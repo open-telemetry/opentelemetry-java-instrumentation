@@ -7,38 +7,19 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import software.amazon.awssdk.core.SdkPojo;
-import software.amazon.awssdk.core.client.config.SdkClientConfiguration;
-import software.amazon.awssdk.core.client.config.SdkClientOption;
 import software.amazon.awssdk.http.ContentStreamProvider;
 import software.amazon.awssdk.http.SdkHttpFullRequest;
-import software.amazon.awssdk.http.SdkHttpMethod;
-import software.amazon.awssdk.protocols.core.OperationInfo;
 import software.amazon.awssdk.protocols.core.ProtocolMarshaller;
-import software.amazon.awssdk.protocols.json.AwsJsonProtocolFactory;
 import software.amazon.awssdk.utils.IoUtils;
 import software.amazon.awssdk.utils.StringUtils;
 
 class Serializer {
-
-  private final AwsJsonProtocolFactory awsJsonProtocolFactory;
-
-  Serializer() {
-    awsJsonProtocolFactory =
-        AwsJsonProtocolFactory.builder()
-            .clientConfiguration(
-                SdkClientConfiguration.builder()
-                    // AwsJsonProtocolFactory requires any URI to be present
-                    .option(SdkClientOption.ENDPOINT, URI.create("http://empty"))
-                    .build())
-            .build();
-  }
 
   @Nullable
   String serialize(Object target) {
@@ -62,8 +43,12 @@ class Serializer {
 
   @Nullable
   private String serialize(SdkPojo sdkPojo) {
-    Optional<ContentStreamProvider> optional =
-        createMarshaller().marshall(sdkPojo).contentStreamProvider();
+    ProtocolMarshaller<SdkHttpFullRequest> marshaller =
+        AwsJsonProtocolFactoryAccess.createMarshaller();
+    if (marshaller == null) {
+      return null;
+    }
+    Optional<ContentStreamProvider> optional = marshaller.marshall(sdkPojo).contentStreamProvider();
     return optional
         .map(
             csp -> {
@@ -79,11 +64,5 @@ class Serializer {
   private String serialize(Collection<Object> collection) {
     String serialized = collection.stream().map(this::serialize).collect(Collectors.joining(","));
     return (StringUtils.isEmpty(serialized) ? null : "[" + serialized + "]");
-  }
-
-  private ProtocolMarshaller<SdkHttpFullRequest> createMarshaller() {
-    // apparently AWS SDK serializers can't be reused (throwing NPEs on second use)
-    return awsJsonProtocolFactory.createProtocolMarshaller(
-        OperationInfo.builder().hasPayloadMembers(true).httpMethod(SdkHttpMethod.POST).build());
   }
 }

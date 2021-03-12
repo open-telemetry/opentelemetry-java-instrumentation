@@ -1,0 +1,34 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.elasticsearch.client"
+    module = "elasticsearch-rest-client"
+    versions = "[7.0,)"
+    assertInverse = true
+  }
+
+  fail {
+    group = "org.elasticsearch.client"
+    module = "rest"
+    versions = "(,)"
+  }
+}
+
+dependencies {
+  library group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '7.0.0'
+
+  implementation project(':instrumentation:elasticsearch:elasticsearch-rest-common:javaagent')
+
+  testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
+  testInstrumentation project(':instrumentation:apache-httpasyncclient-4.1:javaagent')
+  //TODO: review the following claim, we are not using embedded ES anymore
+  // Netty is used, but it adds complexity to the tests since we're using embedded ES.
+  //testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
+
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+
+  testLibrary group: 'org.elasticsearch', name: 'elasticsearch', version: '7.0.0'
+  testLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '7.0.0'
+}

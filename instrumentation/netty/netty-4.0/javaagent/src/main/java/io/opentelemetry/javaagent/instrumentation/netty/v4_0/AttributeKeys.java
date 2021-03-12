@@ -7,15 +7,18 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class AttributeKeys {
-  private static final WeakMap<ClassLoader, ConcurrentMap<String, AttributeKey<?>>> map =
-      WeakMap.Implementation.DEFAULT.get();
-  private static final WeakMap.ValueSupplier<ClassLoader, ConcurrentMap<String, AttributeKey<?>>>
-      mapSupplier = ignore -> new ConcurrentHashMap<>();
+
+  private static final ClassValue<ConcurrentMap<String, AttributeKey<?>>> mapSupplier =
+      new ClassValue<ConcurrentMap<String, AttributeKey<?>>>() {
+        @Override
+        protected ConcurrentMap<String, AttributeKey<?>> computeValue(Class<?> type) {
+          return new ConcurrentHashMap<>();
+        }
+      };
 
   public static final AttributeKey<Context> CONNECT_CONTEXT =
       attributeKey(AttributeKeys.class.getName() + ".connect-context");
@@ -41,15 +44,9 @@ public class AttributeKeys {
    *
    * <p>Keep this API public for vendor instrumentations
    */
+  @SuppressWarnings("unchecked")
   public static <T> AttributeKey<T> attributeKey(String key) {
-    ConcurrentMap<String, AttributeKey<?>> classLoaderMap =
-        map.computeIfAbsent(AttributeKey.class.getClassLoader(), mapSupplier);
-    if (classLoaderMap.containsKey(key)) {
-      return (AttributeKey<T>) classLoaderMap.get(key);
-    }
-
-    AttributeKey<T> value = new AttributeKey<>(key);
-    classLoaderMap.put(key, value);
-    return value;
+    ConcurrentMap<String, AttributeKey<?>> classLoaderMap = mapSupplier.get(AttributeKey.class);
+    return (AttributeKey<T>) classLoaderMap.computeIfAbsent(key, AttributeKey::new);
   }
 }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
 import io.opentelemetry.javaagent.bootstrap.WeakCache;
+import io.opentelemetry.javaagent.instrumentation.api.internal.InClassLoaderMatcher;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -45,10 +46,15 @@ public final class ClassLoaderMatcher {
     }
 
     private boolean hasResources(ClassLoader cl) {
-      for (String resource : resources) {
-        if (cl.getResource(resource) == null) {
-          return false;
+      boolean priorValue = InClassLoaderMatcher.getAndSet(true);
+      try {
+        for (String resource : resources) {
+          if (cl.getResource(resource) == null) {
+            return false;
+          }
         }
+      } finally {
+        InClassLoaderMatcher.set(priorValue);
       }
       return true;
     }

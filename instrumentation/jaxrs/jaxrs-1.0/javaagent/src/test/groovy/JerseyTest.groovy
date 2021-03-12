@@ -10,6 +10,7 @@ import io.dropwizard.testing.junit.ResourceTestRule
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.junit.ClassRule
 import spock.lang.Shared
+import spock.lang.Unroll
 
 class JerseyTest extends AgentInstrumentationSpecification {
 
@@ -21,6 +22,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
     .addResource(new Resource.Test3())
     .build()
 
+  @Unroll
   def "test #resource"() {
     when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.

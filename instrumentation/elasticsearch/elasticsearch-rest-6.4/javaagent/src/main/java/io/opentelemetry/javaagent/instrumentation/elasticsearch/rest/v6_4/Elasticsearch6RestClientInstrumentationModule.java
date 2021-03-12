@@ -7,16 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestClientTracer.tracer;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.RestResponseListener;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -32,6 +35,12 @@ import org.elasticsearch.client.ResponseListener;
 public class Elasticsearch6RestClientInstrumentationModule extends InstrumentationModule {
   public Elasticsearch6RestClientInstrumentationModule() {
     super("elasticsearch-rest", "elasticsearch-rest-6.0", "elasticsearch");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // class introduced in 7.0.0
+    return not(hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest"));
   }
 
   @Override
@@ -84,6 +93,7 @@ public class Elasticsearch6RestClientInstrumentationModule extends Instrumentati
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);
       }
+      // span ended in RestResponseListener
     }
   }
 }
