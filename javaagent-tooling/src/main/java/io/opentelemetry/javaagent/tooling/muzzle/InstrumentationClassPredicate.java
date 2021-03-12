@@ -22,7 +22,7 @@ public final class InstrumentationClassPredicate {
    * <p>This set of classes is defined by a package naming convention: all javaagent and library
    * instrumentation classes are treated as "helper" classes and are subjected to the reference
    * collection process. All others (including {@code instrumentation-api} and {@code javaagent-api}
-   * modules are not scanned for referenced (but references to them are collected).
+   * modules are not scanned for references (but references to them are collected).
    */
   public static boolean isInstrumentationClass(String className) {
     return isJavaagentInstrumentationClass(className) || isLibraryInstrumentationClass(className);
