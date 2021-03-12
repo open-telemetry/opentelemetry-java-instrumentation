@@ -40,9 +40,6 @@ if (project.hasProperty("minJavaVersionForTests")) {
 }
 
 java {
-  sourceCompatibility = JavaVersion.toVersion(project.ext.release)
-  targetCompatibility = JavaVersion.toVersion(project.ext.release)
-
   toolchain {
     languageVersion = JavaLanguageVersion.of(Math.max(project.ext.release.majorVersion.toInteger(), DEFAULT_JAVA_VERSION))
   }
@@ -54,13 +51,16 @@ java {
 }
 
 tasks.withType(JavaCompile) {
-  options.release = project.ext.release.majorVersion.toInteger()
+  options.release.set(project.ext.release.majorVersion.toInteger())
 }
+//Groovy and Scala compilers don't actually understand --release option
 tasks.withType(GroovyCompile) {
-  options.release = project.ext.release.majorVersion.toInteger()
+  sourceCompatibility = JavaVersion.toVersion(project.ext.release)
+  targetCompatibility = JavaVersion.toVersion(project.ext.release)
 }
 tasks.withType(ScalaCompile) {
-  options.release = project.ext.release.majorVersion.toInteger()
+  sourceCompatibility = JavaVersion.toVersion(project.ext.release)
+  targetCompatibility = JavaVersion.toVersion(project.ext.release)
 }
 
 apply plugin: "eclipse"
