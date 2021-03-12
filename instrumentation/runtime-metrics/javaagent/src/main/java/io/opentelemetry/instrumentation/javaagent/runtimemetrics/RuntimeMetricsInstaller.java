@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.instrumentation.javaagent.instrumentation.runtimemetrics;
+package io.opentelemetry.instrumentation.javaagent.runtimemetrics;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
