@@ -94,7 +94,6 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
     return "HTTP GET"
   }
 
-  @Unroll
   def "test send response"() {
     setup:
     def url = HttpUrl.get(address.resolve("sendResponse")).newBuilder().build()
