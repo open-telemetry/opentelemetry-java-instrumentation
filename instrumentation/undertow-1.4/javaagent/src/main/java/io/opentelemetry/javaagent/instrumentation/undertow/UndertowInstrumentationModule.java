@@ -21,7 +21,6 @@ import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import io.undertow.server.HttpServerExchange;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -33,7 +32,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class UndertowInstrumentationModule extends InstrumentationModule {
 
   public UndertowInstrumentationModule() {
-    super("undertow", "undertow-2.0");
+    super("undertow", "undertow-1.4");
   }
 
   @Override
@@ -65,18 +64,21 @@ public class UndertowInstrumentationModule extends InstrumentationModule {
     public static class UndertowHandlerAdvice {
       @Advice.OnMethodEnter(suppress = Throwable.class)
       public static void onEnter(
-          @Advice.Origin Method method,
           @Advice.Argument(value = 0, readOnly = false) HttpServerExchange exchange,
+          @Advice.Local("otelContext") Context context,
           @Advice.Local("otelScope") Scope scope) {
         Context attachedContext = tracer().getServerContext(exchange);
         if (attachedContext != null) {
           if (!Java8BytecodeBridge.currentContext().equals(attachedContext)) {
+            // request processing is dispatched to another thread
             scope = attachedContext.makeCurrent();
+            context = attachedContext;
+            tracer().handlerStarted(attachedContext);
           }
           return;
         }
 
-        Context context = tracer().startServerSpan(exchange, method);
+        context = tracer().startServerSpan(exchange);
         scope = context.makeCurrent();
 
         exchange.addExchangeCompleteListener(new EndSpanListener(context));
@@ -84,14 +86,16 @@ public class UndertowInstrumentationModule extends InstrumentationModule {
 
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
       public static void onExit(
-          @Advice.Argument(value = 0, readOnly = false) HttpServerExchange exchange,
+          @Advice.Argument(0) HttpServerExchange exchange,
+          @Advice.Thrown Throwable throwable,
+          @Advice.Local("otelContext") Context context,
           @Advice.Local("otelScope") Scope scope) {
         if (scope == null) {
           return;
         }
-
         scope.close();
-        // span is closed by EndSpanListener
+
+        tracer().handlerCompleted(context, throwable, exchange);
       }
     }
   }
