@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.api.undertow.KeyHolder;
-import io.opentelemetry.javaagent.instrumentation.api.undertow.UndertowRequestContext;
+import io.opentelemetry.javaagent.instrumentation.api.undertow.UndertowActiveHandlers;
 import io.undertow.server.DefaultResponseListener;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.AttachmentKey;
@@ -42,7 +42,7 @@ public class UndertowHttpServerTracer
     context = ServletSpanNaming.init(context);
     // span is ended when counter reaches 0, we start from 2 which accounts for the
     // handler that started the span and exchange completion listener
-    context = UndertowRequestContext.init(context, 2);
+    context = UndertowActiveHandlers.init(context, 2);
     return AppServerBridge.init(context);
   }
 
@@ -50,13 +50,13 @@ public class UndertowHttpServerTracer
     // request was dispatched to a new thread, handler on the original thread
     // may exit before this one so we need to wait for this handler to complete
     // before ending span
-    UndertowRequestContext.enter(context);
+    UndertowActiveHandlers.increment(context);
   }
 
   public void handlerCompleted(Context context, Throwable throwable, HttpServerExchange exchange) {
     // end the span when this is the last handler to complete and exchange has
     // been completed
-    if (UndertowRequestContext.exit(context)) {
+    if (UndertowActiveHandlers.decrementAndGet(context) == 0) {
       endSpan(context, throwable, exchange);
     }
   }
@@ -65,7 +65,7 @@ public class UndertowHttpServerTracer
     // after exchange is completed we can read response status
     // if all handlers have completed we can end the span, if there are running
     // handlers we'll end the span when last handler exits
-    if (UndertowRequestContext.exit(context)) {
+    if (UndertowActiveHandlers.decrementAndGet(context) == 0) {
       Throwable throwable = exchange.getAttachment(DefaultResponseListener.EXCEPTION);
       endSpan(context, throwable, exchange);
     }

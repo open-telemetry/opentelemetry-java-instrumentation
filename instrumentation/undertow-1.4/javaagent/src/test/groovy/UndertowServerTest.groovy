@@ -12,15 +12,16 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.undertow.Handlers
 import io.undertow.Undertow
 import io.undertow.util.Headers
 import io.undertow.util.StatusCodes
 import okhttp3.HttpUrl
 import okhttp3.Response
-import spock.lang.Unroll
 
 //TODO make test which mixes handlers and servlets
 class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTrait {
@@ -96,7 +97,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
 
   def "test send response"() {
     setup:
-    def url = HttpUrl.get(address.resolve("sendResponse")).newBuilder().build()
+    def uri = address.resolve("sendResponse")
+    def url = HttpUrl.get(uri).newBuilder().build()
     def request = request(url, "GET", null).build()
     Response response = client.newCall(request).execute()
 
@@ -110,12 +112,24 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
         it.span(0) {
           hasNoParent()
           name "HTTP GET"
+          kind SpanKind.SERVER
 
           event(0) {
             eventName "before-event"
           }
           event(1) {
             eventName "after-event"
+          }
+
+          attributes {
+            "${SemanticAttributes.NET_PEER_PORT.key}" { it instanceof Long }
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
+            "${SemanticAttributes.HTTP_URL.key}" uri.toString()
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
           }
         }
         basicSpan(it, 1, "sendResponse", span(0))
@@ -125,7 +139,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
 
   def "test send response with exception"() {
     setup:
-    def url = HttpUrl.get(address.resolve("sendResponseWithException")).newBuilder().build()
+    def uri = address.resolve("sendResponseWithException")
+    def url = HttpUrl.get(uri).newBuilder().build()
     def request = request(url, "GET", null).build()
     Response response = client.newCall(request).execute()
 
@@ -139,6 +154,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
         it.span(0) {
           hasNoParent()
           name "HTTP GET"
+          kind SpanKind.SERVER
 
           event(0) {
             eventName "before-event"
@@ -147,6 +163,17 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             eventName "after-event"
           }
           errorEvent(Exception, "exception after sending response", 2)
+
+          attributes {
+            "${SemanticAttributes.NET_PEER_PORT.key}" { it instanceof Long }
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.HTTP_CLIENT_IP.key}" TEST_CLIENT_IP
+            "${SemanticAttributes.HTTP_URL.key}" uri.toString()
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+          }
         }
         basicSpan(it, 1, "sendResponseWithException", span(0))
       }

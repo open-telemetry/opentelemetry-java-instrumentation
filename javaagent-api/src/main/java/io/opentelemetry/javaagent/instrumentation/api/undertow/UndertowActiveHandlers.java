@@ -10,11 +10,11 @@ import io.opentelemetry.context.ContextKey;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Helper container for keeping track of request processing state in undertow. */
-public final class UndertowRequestContext {
+public final class UndertowActiveHandlers {
   private static final ContextKey<AtomicInteger> CONTEXT_KEY =
-      ContextKey.named("opentelemetry-undertow-context-key");
+      ContextKey.named("opentelemetry-undertow-active-handlers");
 
-  private UndertowRequestContext() {}
+  private UndertowActiveHandlers() {}
 
   /**
    * Attach to context.
@@ -32,7 +32,7 @@ public final class UndertowRequestContext {
    *
    * @param context server context
    */
-  public static void enter(Context context) {
+  public static void increment(Context context) {
     context.get(CONTEXT_KEY).incrementAndGet();
   }
 
@@ -40,9 +40,9 @@ public final class UndertowRequestContext {
    * Decrement counter.
    *
    * @param context server context
-   * @return true when counter has reached zero, false otherwise
+   * @return value of counter after decrementing it
    */
-  public static boolean exit(Context context) {
-    return context.get(CONTEXT_KEY).decrementAndGet() == 0;
+  public static int decrementAndGet(Context context) {
+    return context.get(CONTEXT_KEY).decrementAndGet();
   }
 }
