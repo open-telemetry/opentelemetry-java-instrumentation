@@ -1,6 +1,5 @@
 ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
-  packageInAgentBundle = false
   skipPublish = true
 }
 
