@@ -1,5 +1,7 @@
-ext.skipPublish = true
-
+ext {
+  packageInAgentBundle = false
+  skipPublish = true
+}
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 muzzle {
