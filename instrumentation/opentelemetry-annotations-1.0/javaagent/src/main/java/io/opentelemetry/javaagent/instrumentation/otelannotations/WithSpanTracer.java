@@ -75,7 +75,7 @@ public class WithSpanTracer extends BaseTracer {
   /**
    * Denotes the end of the invocation of the traced method with a successful result which will end
    * the span stored in the passed {@code context}. If the method returned a value representing an
-   * asynchronous operation then the span will remain open until the asynchronous operation has
+   * asynchronous operation then the span will not be finished until the asynchronous operation has
    * completed.
    *
    * @param result Return value from the traced method.
