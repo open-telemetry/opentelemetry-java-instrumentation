@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.spi.exporter;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -21,7 +21,7 @@ public interface SpanExporterFactory {
    * @param config The configuration
    * @return An implementation of a {@link SpanExporter}
    */
-  SpanExporter fromConfig(Config config);
+  SpanExporter fromConfig(Properties config);
 
   /**
    * Returns names of span exporters supported by this factory.

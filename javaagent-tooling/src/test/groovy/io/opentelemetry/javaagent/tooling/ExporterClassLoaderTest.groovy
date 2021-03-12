@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling
 
 import groovy.transform.CompileStatic
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory
 import io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory
 import io.opentelemetry.sdk.metrics.export.MetricExporter
@@ -96,7 +95,7 @@ class ExporterClassLoaderTest extends Specification {
   static class MetricExporterFactoryParent implements MetricExporterFactory {
 
     @Override
-    MetricExporter fromConfig(Config config) {
+    MetricExporter fromConfig(Properties config) {
       return null
     }
 
@@ -109,7 +108,7 @@ class ExporterClassLoaderTest extends Specification {
   static class MetricExporterFactoryChild implements MetricExporterFactory {
 
     @Override
-    MetricExporter fromConfig(Config config) {
+    MetricExporter fromConfig(Properties config) {
       return null
     }
 
@@ -122,7 +121,7 @@ class ExporterClassLoaderTest extends Specification {
   static class SpanExporterFactoryParent implements SpanExporterFactory {
 
     @Override
-    SpanExporter fromConfig(Config config) {
+    SpanExporter fromConfig(Properties config) {
       return null
     }
 
@@ -135,7 +134,7 @@ class ExporterClassLoaderTest extends Specification {
   static class SpanExporterFactoryChild implements SpanExporterFactory {
 
     @Override
-    SpanExporter fromConfig(Config config) {
+    SpanExporter fromConfig(Properties config) {
       return null
     }
 

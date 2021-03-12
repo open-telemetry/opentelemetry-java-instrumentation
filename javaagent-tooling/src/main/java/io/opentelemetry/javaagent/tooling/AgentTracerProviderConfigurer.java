@@ -117,7 +117,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
 
   private static void installSpanExporter(
       SpanExporterFactory spanExporterFactory, Config config, SdkTracerProviderBuilder builder) {
-    SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
+    SpanExporter spanExporter = spanExporterFactory.fromConfig(config.asJavaProperties());
     SpanProcessor spanProcessor = BatchSpanProcessor.builder(spanExporter).build();
     builder.addSpanProcessor(spanProcessor);
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
@@ -125,7 +125,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
 
   private static void installMetricExporter(
       MetricExporterFactory metricExporterFactory, Config config) {
-    MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
+    MetricExporter metricExporter = metricExporterFactory.fromConfig(config.asJavaProperties());
     IntervalMetricReader.builder()
         .setMetricExporter(metricExporter)
         .setMetricProducers(Collections.singleton((SdkMeterProvider) GlobalMetricsProvider.get()))
