@@ -100,7 +100,11 @@ jobs:
     strategy:
       matrix:
         os: [ windows-latest, ubuntu-latest]
+      fail-fast: false
     steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
+
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
