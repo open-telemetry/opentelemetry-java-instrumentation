@@ -31,8 +31,8 @@ dependencies {
   testInstrumentation project(':instrumentation:tomcat-7.0:javaagent')
   testInstrumentation project(':instrumentation:spring:spring-webmvc-3.1:javaagent')
 
-  testImplementation "org.springframework.boot:spring-boot-autoconfigure:$springBootVersion"
-  testImplementation "org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion"
+  testLibrary "org.springframework.boot:spring-boot-autoconfigure:$springBootVersion"
+  testLibrary "org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion"
 
   testImplementation(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'

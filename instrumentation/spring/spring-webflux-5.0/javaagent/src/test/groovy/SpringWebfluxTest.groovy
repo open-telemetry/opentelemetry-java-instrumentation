@@ -6,7 +6,6 @@
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 
-import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -26,8 +25,6 @@ import server.TestController
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentInstrumentationSpecification {
-  static Config previousConfig
-
   @TestConfiguration
   static class ForceNettyAutoConfiguration {
     @Bean
