@@ -46,7 +46,6 @@ abstract class SmokeTest extends Specification {
   @Shared
   protected GenericContainer target
 
-  protected abstract String getTargetImage(String jdk, String serverVersion)
 
   /**
    * Subclasses can override this method to customise target application's environment
@@ -54,7 +53,6 @@ abstract class SmokeTest extends Specification {
   protected Map<String, String> getExtraEnv() {
     return Collections.emptyMap()
   }
-
   /**
    * Subclasses can override this method to customise target application's environment
    */
@@ -65,13 +63,13 @@ abstract class SmokeTest extends Specification {
     backend.setup()
   }
 
-  def startTarget(int jdk, String serverVersion = null) {
-    startTarget(String.valueOf(jdk), serverVersion)
+  def startTarget(int jdk) {
+    startTarget(String.valueOf(jdk), null, false)
   }
 
-  def startTarget(String jdk, String serverVersion = null) {
+  def startTarget(String jdk, String serverVersion, boolean windows) {
     def output = new ToStringConsumer()
-    target = new GenericContainer<>(getTargetImage(jdk, serverVersion))
+    target = new GenericContainer<>(getTargetImage(jdk, serverVersion, windows))
       .withExposedPorts(8080)
       .withNetwork(backend.network)
       .withLogConsumer(output)
@@ -92,6 +90,12 @@ abstract class SmokeTest extends Specification {
 
     target.start()
     output
+  }
+
+  protected abstract String getTargetImage(String jdk)
+
+  protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
+    return getTargetImage(jdk)
   }
 
   protected WaitStrategy getWaitStrategy() {

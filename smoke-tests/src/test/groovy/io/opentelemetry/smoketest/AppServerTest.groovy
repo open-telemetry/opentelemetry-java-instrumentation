@@ -26,8 +26,25 @@ abstract class AppServerTest extends SmokeTest {
     def appServer = AppServerTestRunner.currentAppServer(this.getClass())
     serverVersion = appServer.version()
     jdk = appServer.jdk()
-    startTarget(jdk, serverVersion)
+
+    boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
+    startTarget(jdk, serverVersion, isWindows)
   }
+
+  @Override
+  protected String getTargetImage(String jdk) {
+    throw new UnsupportedOperationException("App servers tests should use getAppServerImage")
+  }
+
+  @Override
+  protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
+    String platformSuffix = windows ? "-windows" : ""
+    String extraTag = windows ? "XXX" : "20210223.592806654"
+    String fullSuffix = "-${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
+    return getTargetImagePrefix() + fullSuffix
+  }
+
+  protected abstract String getTargetImagePrefix()
 
   def cleanupSpec() {
     stopTarget()

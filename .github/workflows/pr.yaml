@@ -96,7 +96,10 @@ jobs:
           if-no-files-found: ignore
 
   smoke-test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v2
         with:

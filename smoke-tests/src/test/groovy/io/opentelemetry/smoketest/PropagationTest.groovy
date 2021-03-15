@@ -13,7 +13,7 @@ import okhttp3.Request
 abstract class PropagationTest extends SmokeTest {
 
   @Override
-  protected String getTargetImage(String jdk, String serverVersion) {
+  protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
   }
 
@@ -77,7 +77,7 @@ class JaegerPropagationTest extends PropagationTest {
 
 class OtTracePropagationTest extends SmokeTest {
   @Override
-  protected String getTargetImage(String jdk, String serverVersion) {
+  protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
   }
 

@@ -15,8 +15,8 @@ import org.testcontainers.containers.wait.strategy.WaitStrategy
 @AppServer(version = "20.0.0.12", jdk = "11-openj9")
 class LibertySmokeTest extends AppServerTest {
 
-  protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:liberty-${serverVersion}-jdk$jdk-20210223.592806654"
+  protected String getTargetImagePrefix() {
+    "ghcr.io/open-telemetry/java-test-containers:liberty"
   }
 
   @Override

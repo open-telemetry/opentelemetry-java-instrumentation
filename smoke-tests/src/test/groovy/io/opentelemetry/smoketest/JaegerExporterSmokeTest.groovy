@@ -14,7 +14,7 @@ import okhttp3.Request
 
 class JaegerExporterSmokeTest extends SmokeTest {
 
-  protected String getTargetImage(String jdk, String serverVersion) {
+  protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
   }
 

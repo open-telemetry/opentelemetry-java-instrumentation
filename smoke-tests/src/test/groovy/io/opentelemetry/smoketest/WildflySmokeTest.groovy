@@ -17,8 +17,8 @@ import spock.lang.Unroll
 @AppServer(version = "21.0.0.Final", jdk = "11-openj9")
 class WildflySmokeTest extends AppServerTest {
 
-  protected String getTargetImage(String jdk, String serverVersion) {
-    "ghcr.io/open-telemetry/java-test-containers:wildfly-${serverVersion}-jdk$jdk-20210223.592806654"
+  protected String getTargetImagePrefix() {
+    "ghcr.io/open-telemetry/java-test-containers:wildfly"
   }
 
   @Unroll
