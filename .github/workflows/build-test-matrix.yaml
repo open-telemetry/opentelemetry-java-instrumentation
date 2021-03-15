@@ -59,6 +59,7 @@ jobs:
           job-id: matrix-smoke
 
       - name: Login to GitHub Package Registry
+        #TODO replace with docker-login action when https://github.com/docker/login-action/issues/47
         run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
       - name: Build Docker Image
