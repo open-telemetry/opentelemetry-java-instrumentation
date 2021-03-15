@@ -27,7 +27,7 @@ abstract class AppServerTest extends SmokeTest {
     serverVersion = appServer.version()
     jdk = appServer.jdk()
 
-    boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
+    boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
     startTarget(jdk, serverVersion, isWindows)
   }
 
