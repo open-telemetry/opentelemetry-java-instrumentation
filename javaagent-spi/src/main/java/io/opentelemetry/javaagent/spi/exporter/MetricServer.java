@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.spi.exporter;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.sdk.metrics.export.MetricProducer;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -26,7 +26,7 @@ public interface MetricServer {
    * @param producer The metric producer
    * @param config The configuration
    */
-  void start(MetricProducer producer, Config config);
+  void start(MetricProducer producer, Properties config);
 
   /**
    * Returns names of metric servers supported by this factory.
