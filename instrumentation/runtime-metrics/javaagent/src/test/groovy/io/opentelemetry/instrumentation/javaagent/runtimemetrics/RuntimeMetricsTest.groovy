@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.instrumentation.javaagent.instrumentation.runtimemetrics
+package io.opentelemetry.instrumentation.javaagent.runtimemetrics
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import spock.util.concurrent.PollingConditions

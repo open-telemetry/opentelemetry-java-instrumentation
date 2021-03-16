@@ -28,12 +28,7 @@ dependencies {
   implementation deps.opentelemetrySdk
   implementation deps.opentelemetrySdkAutoconfigure
   implementation deps.opentelemetrySdkMetrics
-  implementation(deps.opentelemetryKotlin) {
-    // opentelemetry-extension-kotlin classes are injected into user classpath
-    // where kotlin core libraries are already present
-    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-common'
-    exclude group: 'org.jetbrains.kotlinx', module: 'kotlinx-coroutines-core'
-  }
+  implementation(deps.opentelemetryKotlin)
   implementation deps.opentelemetryExtAws
   implementation deps.opentelemetryTraceProps
   implementation(deps.opentelemetryResources) {

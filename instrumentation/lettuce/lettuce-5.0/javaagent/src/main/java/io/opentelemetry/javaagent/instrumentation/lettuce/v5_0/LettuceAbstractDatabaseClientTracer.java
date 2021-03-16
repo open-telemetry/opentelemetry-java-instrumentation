@@ -8,12 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import io.lettuce.core.RedisURI;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 
 public abstract class LettuceAbstractDatabaseClientTracer<STATEMENT>
     extends DatabaseClientTracer<RedisURI, STATEMENT, String> {
+  protected LettuceAbstractDatabaseClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
+
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.javaagent.lettuce-5.0";

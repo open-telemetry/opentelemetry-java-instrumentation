@@ -16,9 +16,6 @@ class BaseTracerTest extends Specification {
   @Shared
   def tracer = newTracer()
 
-  @Shared
-  def resolvedAddress = new InetSocketAddress("github.com", 999)
-
   def span = Mock(Span)
 
   @Shared

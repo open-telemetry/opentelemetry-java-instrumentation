@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.CommandWithArgs;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
@@ -19,6 +20,10 @@ import redis.clients.jedis.commands.ProtocolCommand;
 
 public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandWithArgs, String> {
   private static final JedisClientTracer TRACER = new JedisClientTracer();
+
+  private JedisClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static JedisClientTracer tracer() {
     return TRACER;

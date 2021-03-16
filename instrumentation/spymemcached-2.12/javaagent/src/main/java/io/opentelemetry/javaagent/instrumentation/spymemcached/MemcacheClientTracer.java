@@ -6,12 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.InetSocketAddress;
 import net.spy.memcached.MemcachedConnection;
 
 public class MemcacheClientTracer
     extends DatabaseClientTracer<MemcachedConnection, String, String> {
   private static final MemcacheClientTracer TRACER = new MemcacheClientTracer();
+
+  private MemcacheClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static MemcacheClientTracer tracer() {
     return TRACER;

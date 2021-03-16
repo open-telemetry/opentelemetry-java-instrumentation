@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.InetSocketAddress;
 
 public class ElasticsearchTransportClientTracer extends DatabaseClientTracer<Void, Object, String> {
@@ -20,6 +21,10 @@ public class ElasticsearchTransportClientTracer extends DatabaseClientTracer<Voi
 
   private static final ElasticsearchTransportClientTracer TRACER =
       new ElasticsearchTransportClientTracer();
+
+  private ElasticsearchTransportClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static ElasticsearchTransportClientTracer tracer() {
     return TRACER;

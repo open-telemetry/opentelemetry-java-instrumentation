@@ -31,7 +31,6 @@ class TracingRequestWrapperTestBase extends LibraryInstrumentationSpecification 
 
   def setLambda(handler, Closure<TracingRequestWrapperBase> wrapperConstructor) {
     environmentVariables.set(WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY, handler)
-    TracingRequestWrapper.WRAPPED_LAMBDA = WrappedLambda.fromConfiguration()
-    wrapper = wrapperConstructor.call(testRunner().openTelemetrySdk)
+    wrapper = wrapperConstructor.call(testRunner().openTelemetrySdk, WrappedLambda.fromConfiguration())
   }
 }

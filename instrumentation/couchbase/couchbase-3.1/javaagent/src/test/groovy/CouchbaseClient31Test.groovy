@@ -62,7 +62,7 @@ class CouchbaseClient31Test extends AgentInstrumentationSpecification {
           name(~/.*get/)
         }
         span(1) {
-          name("dispatch_to_server")
+          name(~/.*dispatch_to_server/)
         }
       }
     }

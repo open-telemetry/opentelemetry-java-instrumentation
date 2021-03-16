@@ -5,7 +5,6 @@ ext {
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
-
 dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-common:javaagent')

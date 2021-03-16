@@ -3,18 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer.utils
+package io.opentelemetry.instrumentation.api.tracer.net
 
-import io.opentelemetry.instrumentation.api.config.Config
-import io.opentelemetry.instrumentation.api.config.ConfigBuilder
-import io.opentelemetry.instrumentation.api.tracer.BaseTracerTest
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import spock.lang.Shared
+import spock.lang.Specification
 
-class NetPeerUtilsTest extends BaseTracerTest {
+class NetPeerAttributesTest extends Specification {
+
+  @Shared
+  def resolvedAddress = new InetSocketAddress("github.com", 999)
+
+  def span = Mock(Span)
 
   def "test setAttributes"() {
     setup:
-    def utils = new NetPeerUtils(Config.get())
+    def utils = new NetPeerAttributes([:])
 
     when:
     utils.setNetPeer(span, connection)
@@ -39,10 +44,9 @@ class NetPeerUtilsTest extends BaseTracerTest {
 
   def "test setAttributes with mapped peer"() {
     setup:
-    def config = new ConfigBuilder().readProperties([
-      "otel.instrumentation.common.peer-service-mapping": "1.2.3.4=catservice,dogs.com=dogsservice"
-    ]).build()
-    def utils = new NetPeerUtils(config)
+    def utils = new NetPeerAttributes([
+      "1.2.3.4": "catservice", "dogs.com": "dogsservice"
+    ])
 
     when:
     utils.setNetPeer(span, connection)

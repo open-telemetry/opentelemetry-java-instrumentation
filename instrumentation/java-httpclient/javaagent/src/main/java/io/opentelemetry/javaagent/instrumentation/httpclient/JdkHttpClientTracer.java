@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.http.HttpClient.Version;
@@ -23,6 +24,10 @@ import java.util.Map;
 public class JdkHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse<?>> {
   private static final JdkHttpClientTracer TRACER = new JdkHttpClientTracer();
+
+  private JdkHttpClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static JdkHttpClientTracer tracer() {
     return TRACER;
