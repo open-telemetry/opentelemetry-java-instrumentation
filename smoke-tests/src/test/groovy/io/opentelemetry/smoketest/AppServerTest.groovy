@@ -36,7 +36,7 @@ abstract class AppServerTest extends SmokeTest {
 
   @Override
   protected String getTargetImage(String jdk) {
-    throw new UnsupportedOperationException("App servers tests should use getAppServerImage")
+    throw new UnsupportedOperationException("App servers tests should use getTargetImagePrefix")
   }
 
   @Override
