@@ -22,7 +22,7 @@ public class VertxClientTracer
     return TRACER;
   }
 
-  public VertxClientTracer(){
+  public VertxClientTracer() {
     super(NetPeerAttributes.INSTANCE);
   }
 
