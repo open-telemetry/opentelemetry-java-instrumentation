@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.client;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import java.net.URI;
@@ -19,6 +20,10 @@ public class VertxClientTracer
 
   public static VertxClientTracer tracer() {
     return TRACER;
+  }
+
+  public VertxClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
   }
 
   @Override
