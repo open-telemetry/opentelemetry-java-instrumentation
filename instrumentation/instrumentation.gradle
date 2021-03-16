@@ -24,7 +24,7 @@ subprojects {
       // Make it so all instrumentation subproject tests can be run with a single command.
       instr_project.tasks.test.dependsOn(subProj.tasks.test)
 
-      if (subProj.findProperty('packageInAgentBundle')) {
+      if (subProj.name == 'javaagent') {
         instr_project.dependencies {
           implementation(project(subProj.getPath()))
         }
