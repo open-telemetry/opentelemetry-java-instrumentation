@@ -11,7 +11,6 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import okhttp3.Request
 import spock.lang.IgnoreIf
 
-@IgnoreIf({ os.windows })
 abstract class PropagationTest extends SmokeTest {
 
   @Override
@@ -46,9 +45,11 @@ abstract class PropagationTest extends SmokeTest {
 
 }
 
+@IgnoreIf({ os.windows })
 class DefaultPropagationTest extends PropagationTest {
 }
 
+@IgnoreIf({ os.windows })
 class W3CPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -56,6 +57,7 @@ class W3CPropagationTest extends PropagationTest {
   }
 }
 
+@IgnoreIf({ os.windows })
 class B3PropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -63,6 +65,7 @@ class B3PropagationTest extends PropagationTest {
   }
 }
 
+@IgnoreIf({ os.windows })
 class B3MultiPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -70,6 +73,7 @@ class B3MultiPropagationTest extends PropagationTest {
   }
 }
 
+@IgnoreIf({ os.windows })
 class JaegerPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -116,6 +120,7 @@ class OtTracePropagationTest extends SmokeTest {
   }
 }
 
+@IgnoreIf({ os.windows })
 class XRayPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
