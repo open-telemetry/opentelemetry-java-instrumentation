@@ -42,22 +42,22 @@ enum Jdk8MethodStrategy implements MethodSpanStrategy {
   private boolean endSynchronously(
       CompletableFuture<?> future, BaseTracer tracer, Context context) {
 
-    if (future.isDone()) {
-      if (future.isCompletedExceptionally()) {
-        // If the future completed exceptionally then join to catch the exception
-        // so that it can be recorded to the span
-        try {
-          future.join();
-        } catch (Exception exception) {
-          tracer.endExceptionally(context, exception);
-          return true;
-        }
-      }
-      tracer.end(context);
-      return true;
-    } else {
+    if (!future.isDone()) {
       return false;
     }
+
+    if (future.isCompletedExceptionally()) {
+      // If the future completed exceptionally then join to catch the exception
+      // so that it can be recorded to the span
+      try {
+        future.join();
+      } catch (Exception exception) {
+        tracer.endExceptionally(context, exception);
+        return true;
+      }
+    }
+    tracer.end(context);
+    return true;
   }
 
   /**
