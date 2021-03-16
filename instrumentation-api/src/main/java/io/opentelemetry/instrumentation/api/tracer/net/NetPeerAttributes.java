@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -24,6 +25,10 @@ public final class NetPeerAttributes {
           Config.get().getMapProperty("otel.instrumentation.common.peer-service-mapping"));
 
   private final Map<String, String> peerServiceMapping;
+
+  public NetPeerAttributes() {
+    this(Collections.emptyMap());
+  }
 
   public NetPeerAttributes(Map<String, String> peerServiceMapping) {
     this.peerServiceMapping = peerServiceMapping;

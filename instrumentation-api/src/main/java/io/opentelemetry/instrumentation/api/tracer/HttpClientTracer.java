@@ -30,7 +30,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
 
   protected static final String USER_AGENT = "User-Agent";
 
-  private final NetPeerAttributes netPeerAttributes;
+  protected final NetPeerAttributes netPeerAttributes;
 
   protected HttpClientTracer(NetPeerAttributes netPeerAttributes) {
     super();

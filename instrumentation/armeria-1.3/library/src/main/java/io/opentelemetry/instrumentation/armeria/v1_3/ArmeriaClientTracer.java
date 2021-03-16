@@ -21,8 +21,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class ArmeriaClientTracer
     extends HttpClientTracer<ClientRequestContext, ClientRequestContext, RequestLog> {
 
-  ArmeriaClientTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
-    super(openTelemetry, netPeerAttributes);
+  ArmeriaClientTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry, new NetPeerAttributes());
   }
 
   @Override
@@ -77,6 +77,10 @@ final class ArmeriaClientTracer
   @Override
   protected String getInstrumentationName() {
     return "io.opentelemetry.armeria-1.3";
+  }
+
+  NetPeerAttributes getNetPeerAttributes() {
+    return netPeerAttributes;
   }
 
   private static class ArmeriaSetter implements TextMapSetter<ClientRequestContext> {

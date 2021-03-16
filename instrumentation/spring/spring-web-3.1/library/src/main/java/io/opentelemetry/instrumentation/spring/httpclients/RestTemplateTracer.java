@@ -19,8 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 
 class RestTemplateTracer extends HttpClientTracer<HttpRequest, HttpHeaders, ClientHttpResponse> {
-  RestTemplateTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
-    super(openTelemetry, netPeerAttributes);
+  RestTemplateTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry, new NetPeerAttributes());
   }
 
   @Override

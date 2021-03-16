@@ -17,8 +17,8 @@ import okhttp3.Response;
 
 final class OkHttpClientTracer extends HttpClientTracer<Request, Request.Builder, Response> {
 
-  OkHttpClientTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
-    super(openTelemetry, netPeerAttributes);
+  OkHttpClientTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry, new NetPeerAttributes());
   }
 
   @Override

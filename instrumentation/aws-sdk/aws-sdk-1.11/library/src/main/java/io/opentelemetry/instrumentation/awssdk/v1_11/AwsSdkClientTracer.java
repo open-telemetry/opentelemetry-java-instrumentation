@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static java.util.Collections.emptyMap;
-
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -40,7 +38,7 @@ final class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, 
   private final boolean captureExperimentalSpanAttributes;
 
   AwsSdkClientTracer(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
-    super(openTelemetry, new NetPeerAttributes(emptyMap()));
+    super(openTelemetry, new NetPeerAttributes());
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
