@@ -98,9 +98,9 @@ final class ArmeriaServerTracer
   @Override
   protected void attachServerContext(Context context, Void ctx) {}
 
-  private static class ArmeriaGetter implements TextMapGetter<HttpRequest> {
+  static class ArmeriaGetter implements TextMapGetter<HttpRequest> {
 
-    private static final ArmeriaGetter INSTANCE = new ArmeriaGetter();
+    static final ArmeriaGetter INSTANCE = new ArmeriaGetter();
 
     @Override
     public Iterable<String> keys(HttpRequest httpRequest) {

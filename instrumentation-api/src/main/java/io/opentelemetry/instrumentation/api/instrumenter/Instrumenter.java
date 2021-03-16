@@ -22,10 +22,10 @@ import java.util.stream.StreamSupport;
 public abstract class Instrumenter<REQUEST, RESPONSE> {
 
   private final Tracer tracer;
-  private final List<Extractor<? super REQUEST, ? super RESPONSE>> extractors;
+  private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors;
 
   protected Instrumenter(
-      Tracer tracer, Iterable<? extends Extractor<? super REQUEST, ? super RESPONSE>> extractors) {
+      Tracer tracer, Iterable<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors) {
     this.tracer = tracer;
     this.extractors =
         StreamSupport.stream(extractors.spliterator(), false).collect(Collectors.toList());
@@ -36,7 +36,7 @@ public abstract class Instrumenter<REQUEST, RESPONSE> {
     SpanBuilder spanBuilder = tracer.spanBuilder(spanName(request)).setSpanKind(kind);
 
     AttributesBuilder attributesBuilder = Attributes.builder();
-    for (Extractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
+    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
       extractor.onStart(attributesBuilder, request);
     }
 
@@ -63,7 +63,7 @@ public abstract class Instrumenter<REQUEST, RESPONSE> {
     Span span = Span.fromContext(context);
 
     AttributesBuilder attributesBuilder = Attributes.builder();
-    for (Extractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
+    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
       extractor.onEnd(attributesBuilder, request, response);
     }
 

@@ -9,7 +9,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public abstract class NetExtractor<REQUEST, RESPONSE> extends Extractor<REQUEST, RESPONSE> {
+public abstract class NetAttributesExtractor<REQUEST, RESPONSE> extends
+    AttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
   final void onStart(AttributesBuilder attributes, REQUEST request) {

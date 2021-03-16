@@ -11,13 +11,14 @@ import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
-import io.opentelemetry.instrumentation.api.instrumenter.HttpExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.HttpAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class ArmeriaHttpExtractor extends HttpExtractor<RequestContext, RequestLog> {
+final class ArmeriaHttpAttributesExtractor extends
+    HttpAttributesExtractor<RequestContext, RequestLog> {
 
-  static final ArmeriaHttpExtractor INSTANCE = new ArmeriaHttpExtractor();
+  static final ArmeriaHttpAttributesExtractor INSTANCE = new ArmeriaHttpAttributesExtractor();
 
   @Override
   protected String method(RequestContext ctx) {
