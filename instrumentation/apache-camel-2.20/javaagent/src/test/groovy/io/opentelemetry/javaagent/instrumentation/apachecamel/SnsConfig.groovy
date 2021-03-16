@@ -55,20 +55,6 @@ class SnsConfig {
       }
     }
   }
-/**
-  @Bean
-  RouteBuilder separateQueueProducerRoute() {
-    return new RouteBuilder() {
-
-      @Override
-      void configure() throws Exception {
-        from("direct:separate-input")
-          .log(LoggingLevel.INFO, "test", "SENDING body: \${body}")
-          .log(LoggingLevel.INFO, "test", "SENDING headers: \${headers}")
-          .to("aws-sqs://sqsCamelSeparateQueueTest?amazonSQSClient=#sqsClient")
-      }
-    }
-  }**/
 
   @Bean
   AmazonSQSClient sqsClient(LocalStackContainer localstack) {

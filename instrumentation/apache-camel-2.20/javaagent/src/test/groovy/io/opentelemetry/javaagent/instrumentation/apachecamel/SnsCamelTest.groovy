@@ -68,7 +68,7 @@ class SnsCamelTest extends AgentInstrumentationSpecification {
     return ctr.getTopicArn()
   }
 
-  def "AWS SDK SNS producer - SQS consumer"() {
+  def "AWS SDK SNS producer - camel SQS consumer"() {
     setup:
     String topicName = "snsCamelTest"
     String queueName = "snsCamelTest"
