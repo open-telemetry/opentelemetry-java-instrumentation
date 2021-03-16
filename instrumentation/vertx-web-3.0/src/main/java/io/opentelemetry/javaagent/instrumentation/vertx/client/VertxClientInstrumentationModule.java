@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx;
+package io.opentelemetry.javaagent.instrumentation.vertx.client;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
@@ -29,6 +28,6 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("io.vertx.core.http.HttpClientRequest", Context.class.getName());
+    return singletonMap("io.vertx.core.http.HttpClientRequest", Contexts.class.getName());
   }
 }
