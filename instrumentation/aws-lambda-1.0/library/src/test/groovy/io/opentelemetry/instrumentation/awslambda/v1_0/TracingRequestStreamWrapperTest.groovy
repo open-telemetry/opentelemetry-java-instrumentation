@@ -45,8 +45,7 @@ class TracingRequestStreamWrapperTest extends LibraryInstrumentationSpecificatio
 
   def setup() {
     environmentVariables.set(WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY, "io.opentelemetry.instrumentation.awslambda.v1_0.TracingRequestStreamWrapperTest\$TestRequestHandler::handleRequest")
-    TracingRequestStreamWrapper.WRAPPED_LAMBDA = WrappedLambda.fromConfiguration()
-    wrapper = new TracingRequestStreamWrapper(testRunner().openTelemetrySdk)
+    wrapper = new TracingRequestStreamWrapper(testRunner().openTelemetrySdk, WrappedLambda.fromConfiguration())
   }
 
   def cleanup() {
