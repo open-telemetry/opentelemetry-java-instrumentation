@@ -103,7 +103,9 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   public static class HandleExceptionAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void handleException(
-        @Advice.This HttpClientRequest request, @Advice.Argument(0) Throwable t) {
+        @Advice.This HttpClientRequest request,
+        @Advice.Argument(0) Throwable t,
+        @Advice.Local("otelScope") Scope scope) {
       Contexts contexts =
           InstrumentationContext.get(HttpClientRequest.class, Contexts.class).get(request);
 
@@ -112,6 +114,16 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
       }
 
       tracer().endExceptionally(contexts.context, t);
+
+      // Scoping all potential callbacks etc to the parent context
+      scope = contexts.parentContext.makeCurrent();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void handleResponseExit(@Advice.Local("otelScope") Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 
