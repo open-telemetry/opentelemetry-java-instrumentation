@@ -11,7 +11,9 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 import okhttp3.Request
+import spock.lang.IgnoreIf
 
+@IgnoreIf({ os.windows })
 class JaegerExporterSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {

@@ -9,7 +9,9 @@ import static java.util.stream.Collectors.toSet
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import okhttp3.Request
+import spock.lang.IgnoreIf
 
+@IgnoreIf({ os.windows })
 abstract class PropagationTest extends SmokeTest {
 
   @Override
@@ -75,6 +77,7 @@ class JaegerPropagationTest extends PropagationTest {
   }
 }
 
+@IgnoreIf({ os.windows })
 class OtTracePropagationTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk) {

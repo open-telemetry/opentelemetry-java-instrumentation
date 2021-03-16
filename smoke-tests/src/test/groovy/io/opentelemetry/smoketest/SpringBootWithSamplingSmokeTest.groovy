@@ -7,7 +7,9 @@ package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import okhttp3.Request
+import spock.lang.IgnoreIf
 
+@IgnoreIf({ os.windows })
 class SpringBootWithSamplingSmokeTest extends SmokeTest {
 
   static final double SAMPLER_PROBABILITY = 0.2

@@ -12,8 +12,10 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc
 import java.util.jar.Attributes
 import java.util.jar.JarFile
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
+@IgnoreIf({ os.windows })
 class GrpcSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {

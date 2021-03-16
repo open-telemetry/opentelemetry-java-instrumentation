@@ -60,7 +60,7 @@ abstract class SmokeTest extends Specification {
   }
 
   def setupSpec() {
-    backend.setup()
+    backend.setup(System.getProperty("os.name").toLowerCase().contains("windows"))
   }
 
   def startTarget(int jdk) {
@@ -237,7 +237,7 @@ abstract class SmokeTest extends Specification {
       return INSTANCE
     }
 
-    def setup() {
+    def setup(boolean isWindows) {
       // we start backend & collector once for all tests
       if (started) {
         return
@@ -245,7 +245,9 @@ abstract class SmokeTest extends Specification {
       started = true
       Runtime.addShutdownHook { stop() }
 
-      backend = new GenericContainer<>("ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20201128.1734635")
+      def extraTag = '-20210316.659079568'
+      String backendSuffix = (isWindows ? "-windows" : '') + extraTag
+      backend = new GenericContainer<>("ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend$backendSuffix")
         .withExposedPorts(8080)
         .waitingFor(Wait.forHttp("/health").forPort(8080))
         .withNetwork(network)
@@ -254,7 +256,13 @@ abstract class SmokeTest extends Specification {
         .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("smoke.tests.backend")))
       backend.start()
 
-      collector = new GenericContainer<>("otel/opentelemetry-collector-dev:latest")
+      String collectorImage
+      if (isWindows) {
+        collectorImage = "ghcr.io/open-telemetry/java-test-containers:collector-windows-$extraTag"
+      } else {
+        collectorImage = "otel/opentelemetry-collector-dev:latest"
+      }
+      collector = new GenericContainer<>(collectorImage)
         .dependsOn(backend)
         .withNetwork(network)
         .withNetworkAliases("collector")

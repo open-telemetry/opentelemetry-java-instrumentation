@@ -11,8 +11,10 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 import okhttp3.Request
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
+@IgnoreIf({ os.windows })
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {

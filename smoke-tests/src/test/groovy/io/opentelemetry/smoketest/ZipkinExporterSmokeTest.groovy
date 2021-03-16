@@ -7,7 +7,9 @@ package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import okhttp3.Request
+import spock.lang.IgnoreIf
 
+@IgnoreIf({ os.windows })
 class ZipkinExporterSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
