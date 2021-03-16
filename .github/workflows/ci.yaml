@@ -54,6 +54,9 @@ jobs:
   smoke-test-windows:
     runs-on: windows-latest
     steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
+
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
