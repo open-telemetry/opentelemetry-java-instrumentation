@@ -12,6 +12,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -26,6 +27,10 @@ public class RedissonClientTracer
   private static final String UNKNOWN_COMMAND = "Redis Command";
 
   private static final RedissonClientTracer TRACER = new RedissonClientTracer();
+
+  private RedissonClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static RedissonClientTracer tracer() {
     return TRACER;

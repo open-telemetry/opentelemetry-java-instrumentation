@@ -22,7 +22,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +47,7 @@ public class RabbitTracer extends BaseTracer {
             .setAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
             .setAttribute(SemanticAttributes.MESSAGING_DESTINATION_KIND, "queue");
 
-    NetPeerUtils.INSTANCE.setNetPeer(span, connection.getAddress(), connection.getPort());
+    NetPeerAttributes.INSTANCE.setNetPeer(span, connection.getAddress(), connection.getPort());
 
     return parentContext.with(span.startSpan());
   }
@@ -73,7 +73,8 @@ public class RabbitTracer extends BaseTracer {
           SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
           (long) response.getBody().length);
     }
-    NetPeerUtils.INSTANCE.setNetPeer(spanBuilder, connection.getAddress(), connection.getPort());
+    NetPeerAttributes.INSTANCE.setNetPeer(
+        spanBuilder, connection.getAddress(), connection.getPort());
     onGet(spanBuilder, queue);
 
     // TODO: withClientSpan()?

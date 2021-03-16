@@ -6,12 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 
 public class CouchbaseClientTracer extends DatabaseClientTracer<Void, Method, Void> {
   private static final CouchbaseClientTracer TRACER = new CouchbaseClientTracer();
+
+  private CouchbaseClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static CouchbaseClientTracer tracer() {
     return TRACER;

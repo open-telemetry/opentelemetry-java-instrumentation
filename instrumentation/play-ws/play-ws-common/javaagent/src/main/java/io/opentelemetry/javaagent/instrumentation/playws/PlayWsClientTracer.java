@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.playws.HeadersInjectAda
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import play.shaded.ahc.io.netty.handler.codec.http.HttpHeaders;
@@ -17,6 +18,10 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 
 public class PlayWsClientTracer extends HttpClientTracer<Request, HttpHeaders, Response> {
   private static final PlayWsClientTracer TRACER = new PlayWsClientTracer();
+
+  private PlayWsClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static PlayWsClientTracer tracer() {
     return TRACER;
