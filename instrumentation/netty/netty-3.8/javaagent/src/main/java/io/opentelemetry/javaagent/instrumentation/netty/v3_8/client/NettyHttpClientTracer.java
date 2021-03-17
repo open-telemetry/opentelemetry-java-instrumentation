@@ -9,7 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
@@ -36,12 +36,12 @@ public class NettyHttpClientTracer
   }
 
   public Context startSpan(Context parentContext, ChannelHandlerContext ctx, HttpRequest request) {
-    Span span = spanBuilder(parentContext, spanNameForRequest(request), CLIENT).startSpan();
-    onRequest(span, request);
+    SpanBuilder spanBuilder = spanBuilder(parentContext, spanNameForRequest(request), CLIENT);
+    onRequest(spanBuilder, request);
     NetPeerAttributes.INSTANCE.setNetPeer(
-        span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+        spanBuilder, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
 
-    Context context = withClientSpan(parentContext, span);
+    Context context = withClientSpan(parentContext, spanBuilder.startSpan());
     inject(context, request.headers(), SETTER);
     return context;
   }
