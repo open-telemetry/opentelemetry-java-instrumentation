@@ -80,8 +80,10 @@ public class AgentInstaller {
 
   public static void installBytebuddyAgent(Instrumentation inst) {
     logVersionInfo();
-    if (Config.get().getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
+    Config config = Config.get();
+    if (config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
       Iterable<ComponentInstaller> componentInstallers = loadComponentProviders();
+      installComponentsBeforeByteBuddy(componentInstallers, config);
       installBytebuddyAgent(inst, componentInstallers);
     } else {
       log.debug("Tracing is disabled, not installing instrumentations.");
@@ -97,8 +99,6 @@ public class AgentInstaller {
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
       Instrumentation inst, Iterable<ComponentInstaller> componentInstallers) {
-
-    installComponentsBeforeByteBuddy(componentInstallers);
 
     INSTRUMENTATION = inst;
 
@@ -122,10 +122,11 @@ public class AgentInstaller {
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), GlobalClassloaderIgnoresMatcher.skipClassLoader(ignoreMatcherProvider));
 
+    Config config = Config.get();
     ignoredAgentBuilder =
         ignoredAgentBuilder.or(
             globalIgnoresMatcher(
-                Config.get().getBooleanProperty(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true),
+                config.getBooleanProperty(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true),
                 ignoreMatcherProvider));
 
     ignoredAgentBuilder = ignoredAgentBuilder.or(matchesConfiguredExcludes());
@@ -156,20 +157,20 @@ public class AgentInstaller {
     agentBuilder = customizeByteBuddyAgent(agentBuilder);
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
-    installComponentsAfterByteBuddy(componentInstallers);
+    installComponentsAfterByteBuddy(componentInstallers, config);
     return resettableClassFileTransformer;
   }
 
   private static void installComponentsBeforeByteBuddy(
-      Iterable<ComponentInstaller> componentInstallers) {
+      Iterable<ComponentInstaller> componentInstallers, Config config) {
     Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader());
     for (ComponentInstaller componentInstaller : componentInstallers) {
-      componentInstaller.beforeByteBuddyAgent();
+      componentInstaller.beforeByteBuddyAgent(config);
     }
   }
 
   private static void installComponentsAfterByteBuddy(
-      Iterable<ComponentInstaller> componentInstallers) {
+      Iterable<ComponentInstaller> componentInstallers, Config config) {
     /*
      * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
      *
@@ -194,10 +195,10 @@ public class AgentInstaller {
       log.debug("Custom logger detected. Delaying Agent Tracer initialization.");
       registerClassLoadCallback(
           "java.util.logging.LogManager",
-          new InstallComponentAfterByteBuddyCallback(componentInstallers));
+          new InstallComponentAfterByteBuddyCallback(config, componentInstallers));
     } else {
       for (ComponentInstaller componentInstaller : componentInstallers) {
-        componentInstaller.afterByteBuddyAgent();
+        componentInstaller.afterByteBuddyAgent(config);
       }
     }
   }
@@ -392,10 +393,12 @@ public class AgentInstaller {
   protected static class InstallComponentAfterByteBuddyCallback extends ClassLoadCallBack {
 
     private final Iterable<ComponentInstaller> componentInstallers;
+    private final Config config;
 
     protected InstallComponentAfterByteBuddyCallback(
-        Iterable<ComponentInstaller> componentInstallers) {
+        Config config, Iterable<ComponentInstaller> componentInstallers) {
       this.componentInstallers = componentInstallers;
+      this.config = config;
     }
 
     @Override
@@ -406,7 +409,7 @@ public class AgentInstaller {
     @Override
     public void execute() {
       for (ComponentInstaller componentInstaller : componentInstallers) {
-        componentInstaller.afterByteBuddyAgent();
+        componentInstaller.afterByteBuddyAgent(config);
       }
     }
   }
