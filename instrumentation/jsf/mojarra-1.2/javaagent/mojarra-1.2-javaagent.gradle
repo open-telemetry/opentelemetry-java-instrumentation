@@ -2,13 +2,12 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
-  //TODO cannot check due to https://issues.sonatype.org/browse/MVNCENTRAL-6622
-//  pass {
-//    group = "org.glassfish"
-//    module = "jakarta.faces"
-//    versions = "[2.3.9,3)"
-//    extraDependency "javax.el:el-api:2.2"
-//  }
+  pass {
+    group = "org.glassfish"
+    module = "jakarta.faces"
+    versions = "[2.3.9,3)"
+    extraDependency "javax.el:el-api:2.2"
+  }
   pass {
     group = "org.glassfish"
     module = "javax.faces"
@@ -61,6 +60,11 @@ testSets {
 }
 
 test.dependsOn mojarra12Test, mojarra2Test
+
+repositories {
+  //TODO we need it here due to https://issues.sonatype.org/browse/MVNCENTRAL-6622
+  jcenter()
+}
 
 dependencies {
   compileOnly group: 'javax.faces', name: 'jsf-api', version: '1.2'

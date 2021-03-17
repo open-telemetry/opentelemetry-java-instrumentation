@@ -8,6 +8,7 @@ import java.security.SecureClassLoader
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Predicate
 import java.util.regex.Pattern
+import javax.inject.Inject
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
 import org.eclipse.aether.DefaultRepositorySystemSession
 import org.eclipse.aether.RepositorySystem
@@ -38,19 +39,7 @@ class MuzzlePlugin implements Plugin<Project> {
    * Select a random set of versions to test
    */
   private static final int RANGE_COUNT_LIMIT = 10
-  /**
-   * Remote repositories used to query version ranges and fetch dependencies
-   */
-  private static final List<RemoteRepository> MUZZLE_REPOS
   private static final AtomicReference<ClassLoader> TOOLING_LOADER = new AtomicReference<>()
-  public static final RemoteRepository JCENTER = new RemoteRepository.Builder("jcenter", "default", "https://jcenter.bintray.com/").build()
-
-  static {
-    RemoteRepository central = new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build()
-    RemoteRepository typesafe = new RemoteRepository.Builder("typesafe", "default", "https://repo.typesafe.com/typesafe/releases").build()
-    RemoteRepository jitpack = new RemoteRepository.Builder("jitpack", "default", "https://jitpack.io").build()
-    MUZZLE_REPOS = Arrays.asList(central, typesafe, jitpack)
-  }
 
   @Override
   void apply(Project project) {
@@ -121,12 +110,12 @@ class MuzzlePlugin implements Plugin<Project> {
         if (muzzleDirective.coreJdk) {
           runAfter = addMuzzleTask(muzzleDirective, null, project, runAfter)
         } else {
-          muzzleDirectiveToArtifacts(muzzleDirective, system, session).collect() { Artifact singleVersion ->
+          muzzleDirectiveToArtifacts(project, muzzleDirective, system, session).collect() { Artifact singleVersion ->
             runAfter = addMuzzleTask(muzzleDirective, singleVersion, project, runAfter)
           }
           if (muzzleDirective.assertInverse) {
-            inverseOf(muzzleDirective, system, session).collect() { MuzzleDirective inverseDirective ->
-              muzzleDirectiveToArtifacts(inverseDirective, system, session).collect() { Artifact singleVersion ->
+            inverseOf(project, muzzleDirective, system, session).collect() { MuzzleDirective inverseDirective ->
+              muzzleDirectiveToArtifacts(project, inverseDirective, system, session).collect() { Artifact singleVersion ->
                 runAfter = addMuzzleTask(inverseDirective, singleVersion, project, runAfter)
               }
             }
@@ -208,10 +197,13 @@ class MuzzlePlugin implements Plugin<Project> {
   /**
    * Convert a muzzle directive to a list of artifacts
    */
-  private static Set<Artifact> muzzleDirectiveToArtifacts(MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
+  private static Set<Artifact> muzzleDirectiveToArtifacts(Project instrumentationProject, MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
     Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
 
-    VersionRangeResult rangeResult = queryVersionRange(directiveArtifact, system, session)
+    VersionRangeRequest rangeRequest = new VersionRangeRequest()
+    rangeRequest.setRepositories(getProjectRepositories(instrumentationProject))
+    rangeRequest.setArtifact(directiveArtifact)
+    VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
 
     Set<Artifact> allVersionArtifacts = filterVersions(rangeResult, muzzleDirective.skipVersions).collect { version ->
       new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", version)
@@ -224,34 +216,31 @@ class MuzzlePlugin implements Plugin<Project> {
     return allVersionArtifacts
   }
 
-  protected static VersionRangeResult queryVersionRange(DefaultArtifact directiveArtifact, RepositorySystem system, RepositorySystemSession session) {
-    VersionRangeRequest rangeRequest = new VersionRangeRequest()
-    rangeRequest.setRepositories(MUZZLE_REPOS)
-    rangeRequest.setArtifact(directiveArtifact)
-    VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
-
-    if (rangeResult.versions.isEmpty()) {
-      //Try JCenter as well. We don't use it by default, because it is flaky recently and is
-      //about to be shut down.
-      rangeRequest = new VersionRangeRequest()
-      rangeRequest.setRepositories([JCENTER])
-      rangeRequest.setArtifact(directiveArtifact)
-      rangeResult = system.resolveVersionRange(session, rangeRequest)
+  private static List<RemoteRepository> getProjectRepositories(Project project) {
+    project.repositories.collect {
+      new RemoteRepository.Builder(it.name, "default", it.url.toString()).build()
     }
-    return rangeResult
   }
 
   /**
    * Create a list of muzzle directives which assert the opposite of the given MuzzleDirective.
    */
-  private static Set<MuzzleDirective> inverseOf(MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
+  private static Set<MuzzleDirective> inverseOf(Project instrumentationProject, MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
     Set<MuzzleDirective> inverseDirectives = new HashSet<>()
 
     Artifact allVersionsArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", "[,)")
     Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
 
-    VersionRangeResult allRangeResult = queryVersionRange(allVersionsArtifact, system, session)
-    VersionRangeResult rangeResult = queryVersionRange(directiveArtifact, system, session)
+    List<RemoteRepository> repos = getProjectRepositories(instrumentationProject)
+    VersionRangeRequest allRangeRequest = new VersionRangeRequest()
+    allRangeRequest.setRepositories(repos)
+    allRangeRequest.setArtifact(allVersionsArtifact)
+    VersionRangeResult allRangeResult = system.resolveVersionRange(session, allRangeRequest)
+
+    VersionRangeRequest rangeRequest = new VersionRangeRequest()
+    rangeRequest.setRepositories(repos)
+    rangeRequest.setArtifact(directiveArtifact)
+    VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
 
     allRangeResult.getVersions().removeAll(rangeResult.getVersions())
 
@@ -322,6 +311,7 @@ class MuzzlePlugin implements Plugin<Project> {
         versionString.contains("-ea") ||
         versionString.contains("-atlassian-") ||
         versionString.contains("public_draft") ||
+        versionString.contains("snapshot") ||
         versionString.matches(GIT_SHA_PATTERN)
 
       return !draftVersion
@@ -415,6 +405,7 @@ class MuzzlePlugin implements Plugin<Project> {
    */
   private static RepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession()
+//    session.versionFilter = new SnapshotVersionFilter()
 
     def tempDir = File.createTempDir()
     tempDir.deleteOnExit()
@@ -492,7 +483,7 @@ class MuzzleExtension {
   final List<MuzzleDirective> directives = new ArrayList<>()
   private final ObjectFactory objectFactory
 
-  @javax.inject.Inject
+  @Inject
   MuzzleExtension(final ObjectFactory objectFactory) {
     this.objectFactory = objectFactory
   }
