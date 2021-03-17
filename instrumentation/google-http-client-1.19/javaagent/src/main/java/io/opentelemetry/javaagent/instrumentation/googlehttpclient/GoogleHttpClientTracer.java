@@ -13,12 +13,17 @@ import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class GoogleHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
   private static final GoogleHttpClientTracer TRACER = new GoogleHttpClientTracer();
+
+  private GoogleHttpClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static GoogleHttpClientTracer tracer() {
     return TRACER;

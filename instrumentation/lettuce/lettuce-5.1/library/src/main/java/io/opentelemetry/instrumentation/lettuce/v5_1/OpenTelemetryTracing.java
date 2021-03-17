@@ -18,8 +18,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils.SpanAttributeSetter;
+import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
@@ -269,9 +269,9 @@ final class OpenTelemetryTracing implements Tracing {
     }
   }
 
-  private static void fillEndpoint(SpanAttributeSetter span, OpenTelemetryEndpoint endpoint) {
+  private static void fillEndpoint(AttributeSetter span, OpenTelemetryEndpoint endpoint) {
     span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
-    NetPeerUtils.INSTANCE.setNetPeer(span, endpoint.name, endpoint.ip, endpoint.port);
+    NetPeerAttributes.INSTANCE.setNetPeer(span, endpoint.name, endpoint.ip, endpoint.port);
 
     StringBuilder redisUrl =
         new StringBuilder("redis://").append(endpoint.name != null ? endpoint.name : endpoint.ip);

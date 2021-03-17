@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.Inject
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
@@ -16,6 +17,10 @@ import javax.ws.rs.client.ClientResponseContext;
 public class JaxRsClientTracer
     extends HttpClientTracer<ClientRequestContext, ClientRequestContext, ClientResponseContext> {
   private static final JaxRsClientTracer TRACER = new JaxRsClientTracer();
+
+  private JaxRsClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static JaxRsClientTracer tracer() {
     return TRACER;

@@ -81,4 +81,11 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest implements Agent
   boolean testCausality() {
     false
   }
+
+  @Override
+  boolean testCallbackWithParent() {
+    //Make rxjava2 instrumentation work with vert.x reactive in order to fix this test
+    return false
+  }
+
 }

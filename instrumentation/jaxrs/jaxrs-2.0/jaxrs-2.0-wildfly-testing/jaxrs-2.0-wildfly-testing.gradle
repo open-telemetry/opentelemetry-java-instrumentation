@@ -1,4 +1,6 @@
-ext.skipPublish = true
+ext {
+  skipPublish = true
+}
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 configurations {
@@ -6,7 +8,7 @@ configurations {
 }
 
 dependencies {
-  api "javax:javaee-api:7.0"
+  testImplementation "javax:javaee-api:7.0"
 
   def arquillianVersion = '1.4.0.Final'
   testImplementation "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}"

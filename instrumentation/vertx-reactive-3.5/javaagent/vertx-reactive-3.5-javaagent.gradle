@@ -18,6 +18,7 @@ dependencies {
   testInstrumentation project(':instrumentation:jdbc:javaagent')
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
   testInstrumentation project(':instrumentation:vertx-web-3.0')
+  //TODO we should include rjxava2 instrumentation here as well
 
   testLibrary group: 'io.vertx', name: 'vertx-web-client', version: vertxVersion
   testLibrary group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
@@ -30,4 +31,8 @@ dependencies {
   latestDepTestLibrary group: 'io.vertx', name: 'vertx-jdbc-client', version: '3.+'
   latestDepTestLibrary group: 'io.vertx', name: 'vertx-circuit-breaker', version: '3.+'
   latestDepTestLibrary group: 'io.vertx', name: 'vertx-rx-java2', version: '3.+'
+}
+
+test {
+  systemProperty "testLatestDeps", testLatestDeps
 }

@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.H
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -23,6 +24,10 @@ public class ApacheHttpClientTracer
     extends HttpClientTracer<HttpUriRequest, HttpUriRequest, HttpResponse> {
 
   private static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
+
+  private ApacheHttpClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static ApacheHttpClientTracer tracer() {
     return TRACER;

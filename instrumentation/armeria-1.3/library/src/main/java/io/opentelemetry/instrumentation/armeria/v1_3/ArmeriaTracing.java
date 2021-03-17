@@ -21,7 +21,7 @@ public final class ArmeriaTracing {
   private final ArmeriaClientTracer clientTracer;
   private final ArmeriaServerInstrumenter serverInstrumenter;
 
-  private ArmeriaTracing(OpenTelemetry openTelemetry) {
+  ArmeriaTracing(OpenTelemetry openTelemetry) {
     clientTracer = new ArmeriaClientTracer(openTelemetry);
     serverInstrumenter = new ArmeriaServerInstrumenter(openTelemetry);
   }

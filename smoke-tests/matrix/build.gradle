@@ -3,7 +3,7 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 
 plugins {
   id "war"
-  id "com.bmuschko.docker-remote-api" version "6.6.1"
+  id "com.bmuschko.docker-remote-api" version "6.7.0"
 }
 
 compileJava {
@@ -11,28 +11,37 @@ compileJava {
 }
 
 repositories {
-  jcenter()
+  mavenCentral()
 }
+
 dependencies {
   implementation("javax.servlet:javax.servlet-api:3.0.1")
 }
 
-def buildMatrixTask = tasks.create("buildMatrix") {
+def buildLinuxTestImagesTask = tasks.create("buildLinuxTestImages") {
   group = "build"
-  description = "Builds all Docker images for the test matrix"
+  description = "Builds all Linux Docker images for the test matrix"
+
 }
 
-Set<String> matrix = []
+def buildWindowsTestImagesTask = tasks.create("buildWindowsTestImages") {
+  group = "build"
+  description = "Builds all Windows Docker images for the test matrix"
+}
+
+ext {
+  matrix = []
+}
+
 tasks.create("pushMatrix", DockerPushImage) {
   group = "publishing"
   description = "Push all Docker images for the test matrix"
-  dependsOn(buildMatrixTask)
-  images.set(matrix)
+  images.set(project.ext.matrix)
 }
 
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
-def targets = [
+def linuxTargets = [
   "jetty": [
     [version: ["9.4.35"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15"]],
     [version: ["10.0.0"], vm: ["hotspot", "openj9"], jdk: ["11", "15"]],
@@ -61,14 +70,46 @@ def targets = [
   ]
 ]
 
-def configureImage(server, dockerfile, version, vm, jdk, Map<String, String> extraArgs) {
-  def dockerWorkingDir = new File(project.buildDir, "docker")
+def windowsTargets = [
+  "tomcat" : [
+    [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"], args: [majorVersion: "7"]],
+    [version: ["8.5.60"], vm: ["hotspot", "openj9"], jdk: ["8", "11"], args: [majorVersion: "8"]],
+    [version: ["9.0.40"], vm: ["hotspot", "openj9"], jdk: ["8", "11"], args: [majorVersion: "9"]]
+  ],
+  "tomee" : [
+    [version: ["7.0.0"], vm: ["hotspot", "openj9"], jdk: ["8"]],
+    [version: ["8.0.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
+  ],
+  "jetty" : [
+    [version: ["9.4.35"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15"], args: [sourceVersion: "9.4.35.v20201120"]],
+    [version: ["10.0.0"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]]
+  ],
+  "payara": [
+    [version: ["5.2020.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
+  ],
+  "wildfly" : [
+    [version: ["13.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8"]],
+    [version: ["17.0.1.Final", "21.0.0.Final"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
+  ],
+  "liberty" : [
+    [version: ["20.0.0.12"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15"], args: [release: "2020-11-11_0736"]]
+  ]
+]
 
-  def prepareTask = tasks.register("${server}ImagePrepare-$version-jdk$jdk-$vm", Copy) {
+createDockerTasks(buildLinuxTestImagesTask, linuxTargets, false)
+createDockerTasks(buildWindowsTestImagesTask, windowsTargets, true)
+
+def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, Map<String, String> extraArgs, isWindows = false) {
+  def dockerWorkingDir = new File(project.buildDir, "docker")
+  def dockerFileName = isWindows ? "${dockerfile}.windows.dockerfile" : "${dockerfile}.dockerfile"
+  def platformSuffix = isWindows ? "-windows" : ""
+
+  def prepareTask = tasks.register("${server}ImagePrepare-$version-jdk$jdk-$vm$platformSuffix", Copy) {
     def warTask = project.tasks.war
     it.dependsOn(warTask)
     it.into(dockerWorkingDir)
-    it.from("src")
+    it.from("src/$dockerFileName")
+    it.from("src/main/docker/$server")
     it.from(warTask.archiveFile) {
       rename { _ -> "app.war" }
     }
@@ -76,36 +117,41 @@ def configureImage(server, dockerfile, version, vm, jdk, Map<String, String> ext
 
   def extraTag = findProperty("extraTag") ?: new Date().format("yyyyMMdd.HHmmSS")
   def vmSuffix = vm == "hotspot" ? "" : "-$vm"
-  def image = "ghcr.io/open-telemetry/java-test-containers:$server-$version-jdk$jdk$vmSuffix-$extraTag"
+  def image = "ghcr.io/open-telemetry/java-test-containers:$server-$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
-  def buildTask = tasks.register("${server}Image-$version-jdk$jdk$vmSuffix", DockerBuildImage) {
+  def buildTask = tasks.register("${server}Image-$version-jdk$jdk$vmSuffix$platformSuffix", DockerBuildImage) {
     it.dependsOn(prepareTask)
     group = "build"
-    description = "Builds Docker image with $server $version on JDK $jdk"
+    description = "Builds Docker image with $server $version on JDK $jdk-$vm${isWindows ? ' on Windows' : ''}"
 
     it.inputDir.set(dockerWorkingDir)
     it.images.add(image)
-    it.dockerFile.set(new File(dockerWorkingDir, dockerfile))
+    it.dockerFile.set(new File(dockerWorkingDir, dockerFileName))
     it.buildArgs.set(extraArgs + [jdk: jdk, vm: vm, version: version])
+    it.doLast {
+      project.ext.matrix.add(image)
+    }
   }
 
-  project.tasks.buildMatrix.dependsOn(buildTask)
+  parentTask.dependsOn(buildTask)
   return image
 }
 
-targets.each { server, matrices ->
-  matrices.forEach { entry ->
-    def dockerfile = (entry["dockerfile"]?.toString() ?: server) + ".dockerfile"
-    def extraArgs = (entry["args"] ?: [:]) as Map<String, String>
+def createDockerTasks(Task parentTask, targets, isWindows) {
+  Set<String> resultImages = []
+  targets.each { server, matrices ->
+    matrices.forEach { entry ->
+      def dockerfile = entry["dockerfile"]?.toString() ?: server
+      def extraArgs = (entry["args"] ?: [:]) as Map<String, String>
 
-    entry.version.forEach { version ->
-      entry.vm.forEach { vm ->
-        entry.jdk.forEach { jdk ->
-          matrix.add(configureImage(server, dockerfile, version, vm, jdk, extraArgs))
+      entry.version.forEach { version ->
+        entry.vm.forEach { vm ->
+          entry.jdk.forEach { jdk ->
+            resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, extraArgs, isWindows))
+          }
         }
       }
     }
   }
+  return resultImages
 }
-
-assemble.dependsOn(buildMatrixTask)

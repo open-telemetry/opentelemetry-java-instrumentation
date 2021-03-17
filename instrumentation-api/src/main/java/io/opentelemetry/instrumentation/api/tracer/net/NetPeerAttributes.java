@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer.utils;
+package io.opentelemetry.instrumentation.api.tracer.net;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.tracer.AttributeSetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -16,17 +16,22 @@ import java.util.Collections;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class NetPeerUtils {
+public final class NetPeerAttributes {
 
-  public static final NetPeerUtils INSTANCE = new NetPeerUtils(Config.get());
+  // TODO: this should only be used by the javaagent; move to javaagent-api after removing all
+  // library usages
+  public static final NetPeerAttributes INSTANCE =
+      new NetPeerAttributes(
+          Config.get().getMapProperty("otel.instrumentation.common.peer-service-mapping"));
 
   private final Map<String, String> peerServiceMapping;
 
-  // visible for testing
-  NetPeerUtils(Config config) {
-    this.peerServiceMapping =
-        Collections.unmodifiableMap(
-            config.getMapProperty("otel.instrumentation.common.peer-service-mapping"));
+  public NetPeerAttributes() {
+    this(Collections.emptyMap());
+  }
+
+  public NetPeerAttributes(Map<String, String> peerServiceMapping) {
+    this.peerServiceMapping = peerServiceMapping;
   }
 
   public void setNetPeer(Span span, @Nullable InetSocketAddress remoteConnection) {
@@ -37,7 +42,7 @@ public final class NetPeerUtils {
     setNetPeer(span::setAttribute, remoteConnection);
   }
 
-  public void setNetPeer(SpanAttributeSetter span, @Nullable InetSocketAddress remoteConnection) {
+  public void setNetPeer(AttributeSetter span, @Nullable InetSocketAddress remoteConnection) {
     if (remoteConnection != null) {
       InetAddress remoteAddress = remoteConnection.getAddress();
       if (remoteAddress != null) {
@@ -58,16 +63,6 @@ public final class NetPeerUtils {
         span::setAttribute, remoteAddress.getHostName(), remoteAddress.getHostAddress(), port);
   }
 
-  public void setNetPeer(Span span, String nameOrIp, int port) {
-    try {
-      InetSocketAddress address = new InetSocketAddress(nameOrIp, port);
-      setNetPeer(span, address);
-    } catch (IllegalArgumentException iae) {
-      // can't create address, try setting directly
-      setNetPeer(span::setAttribute, nameOrIp, null, port);
-    }
-  }
-
   public void setNetPeer(Span span, String peerName, String peerIp) {
     setNetPeer(span::setAttribute, peerName, peerIp, -1);
   }
@@ -77,7 +72,7 @@ public final class NetPeerUtils {
   }
 
   public void setNetPeer(
-      SpanAttributeSetter span, @Nullable String peerName, @Nullable String peerIp, int port) {
+      AttributeSetter span, @Nullable String peerName, @Nullable String peerIp, int port) {
     if (peerName != null && !peerName.equals(peerIp)) {
       span.setAttribute(SemanticAttributes.NET_PEER_NAME, peerName);
     }
@@ -103,13 +98,5 @@ public final class NetPeerUtils {
     }
 
     return peerServiceMapping.get(endpoint);
-  }
-
-  /**
-   * This helper interface allows setting attributes on both {@link Span} and {@link SpanBuilder}.
-   */
-  @FunctionalInterface
-  public interface SpanAttributeSetter {
-    <T> void setAttribute(AttributeKey<T> key, T value);
   }
 }
