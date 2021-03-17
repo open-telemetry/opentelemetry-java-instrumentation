@@ -13,8 +13,8 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class ArmeriaNetAttributesExtractor extends
-    InetSocketAddressNetAttributesExtractor<RequestContext, RequestLog> {
+final class ArmeriaNetAttributesExtractor
+    extends InetSocketAddressNetAttributesExtractor<RequestContext, RequestLog> {
 
   static final ArmeriaNetAttributesExtractor INSTANCE = new ArmeriaNetAttributesExtractor();
 
@@ -25,8 +25,7 @@ final class ArmeriaNetAttributesExtractor extends
 
   @Override
   @Nullable
-  protected InetSocketAddress getAddress(
-      RequestContext requestContext) {
+  protected InetSocketAddress getAddress(RequestContext requestContext) {
     SocketAddress address = requestContext.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

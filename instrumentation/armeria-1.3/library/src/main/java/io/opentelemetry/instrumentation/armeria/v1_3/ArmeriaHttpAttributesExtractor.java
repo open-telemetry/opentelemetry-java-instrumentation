@@ -15,8 +15,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.HttpAttributesExtractor
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class ArmeriaHttpAttributesExtractor extends
-    HttpAttributesExtractor<RequestContext, RequestLog> {
+final class ArmeriaHttpAttributesExtractor
+    extends HttpAttributesExtractor<RequestContext, RequestLog> {
 
   static final ArmeriaHttpAttributesExtractor INSTANCE = new ArmeriaHttpAttributesExtractor();
 

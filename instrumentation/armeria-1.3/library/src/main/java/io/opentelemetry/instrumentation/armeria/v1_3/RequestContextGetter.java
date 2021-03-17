@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.server.ServiceRequestContext;

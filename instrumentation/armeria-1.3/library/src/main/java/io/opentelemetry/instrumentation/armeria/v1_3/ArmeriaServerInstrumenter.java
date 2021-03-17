@@ -11,13 +11,16 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.ServerInstrumenter;
 import java.util.Arrays;
 
-final class ArmeriaServerInstrumenter extends
-    ServerInstrumenter<ServiceRequestContext, RequestLog> {
+final class ArmeriaServerInstrumenter
+    extends ServerInstrumenter<ServiceRequestContext, RequestLog> {
 
   ArmeriaServerInstrumenter(OpenTelemetry openTelemetry) {
     super(
-        openTelemetry,"io.opentelemetry.armeria-1.3", RequestContextGetter.INSTANCE,
-        Arrays.asList(ArmeriaHttpAttributesExtractor.INSTANCE, ArmeriaNetAttributesExtractor.INSTANCE));
+        openTelemetry,
+        "io.opentelemetry.armeria-1.3",
+        RequestContextGetter.INSTANCE,
+        Arrays.asList(
+            ArmeriaHttpAttributesExtractor.INSTANCE, ArmeriaNetAttributesExtractor.INSTANCE));
   }
 
   @Override

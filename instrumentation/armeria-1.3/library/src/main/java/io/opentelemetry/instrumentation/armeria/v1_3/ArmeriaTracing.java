@@ -18,11 +18,11 @@ public final class ArmeriaTracing {
     return new ArmeriaTracing(openTelemetry);
   }
 
-  private final ArmeriaClientTracer clientTracer;
+  private final ArmeriaClientInstrumenter clientInstrumenter;
   private final ArmeriaServerInstrumenter serverInstrumenter;
 
   ArmeriaTracing(OpenTelemetry openTelemetry) {
-    clientTracer = new ArmeriaClientTracer(openTelemetry);
+    clientInstrumenter = new ArmeriaClientInstrumenter(openTelemetry);
     serverInstrumenter = new ArmeriaServerInstrumenter(openTelemetry);
   }
 
@@ -31,7 +31,7 @@ public final class ArmeriaTracing {
    * com.linecorp.armeria.client.ClientBuilder#decorator(Function)}.
    */
   public Function<? super HttpClient, ? extends HttpClient> newClientDecorator() {
-    return client -> new OpenTelemetryClient(client, clientTracer);
+    return client -> new OpenTelemetryClient(client, clientInstrumenter);
   }
 
   /**
