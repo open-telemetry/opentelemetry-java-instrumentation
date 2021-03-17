@@ -121,7 +121,7 @@ jobs:
           job-id: smokeTests
 
       - name: Test
-        run: ./gradlew :smoke-tests:test
+        run: ./gradlew :smoke-tests:test -i -s
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
