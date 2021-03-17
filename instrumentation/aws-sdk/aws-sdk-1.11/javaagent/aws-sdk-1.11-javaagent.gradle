@@ -65,7 +65,6 @@ dependencies {
   testLibrary group: 'com.amazonaws', name: 'aws-java-sdk-sns', version: '1.11.106'
 
   testImplementation project(':instrumentation:aws-sdk:aws-sdk-1.11:testing')
-  testImplementation deps.assertj
 
   testSqsImplementation group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
 
