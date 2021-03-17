@@ -405,7 +405,6 @@ class MuzzlePlugin implements Plugin<Project> {
    */
   private static RepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession()
-//    session.versionFilter = new SnapshotVersionFilter()
 
     def tempDir = File.createTempDir()
     tempDir.deleteOnExit()

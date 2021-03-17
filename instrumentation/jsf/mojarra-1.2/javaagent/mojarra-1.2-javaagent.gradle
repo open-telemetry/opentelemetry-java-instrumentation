@@ -41,13 +41,13 @@ muzzle {
     versions = "[3.0,)"
     extraDependency "javax.el:el-api:2.2"
   }
-  fail {
-    group = "javax.faces"
-    module = "jsf-impl"
-    versions = "[1.1,1.2)"
-    extraDependency "javax.faces:jsf-api:1.1_02"
-    extraDependency "javax.el:el-api:1.0"
-  }
+//  fail {
+//    group = "javax.faces"
+//    module = "jsf-impl"
+//    versions = "[1.1,1.2)"
+//    extraDependency "javax.faces:jsf-api:1.1_02"
+//    extraDependency "javax.el:el-api:1.0"
+//  }
 }
 
 testSets {
@@ -61,10 +61,10 @@ testSets {
 
 test.dependsOn mojarra12Test, mojarra2Test
 
-repositories {
-  //TODO we need it here due to https://issues.sonatype.org/browse/MVNCENTRAL-6622
-  jcenter()
-}
+//repositories {
+//  //TODO we need it here due to https://issues.sonatype.org/browse/MVNCENTRAL-6622
+//  jcenter()
+//}
 
 dependencies {
   compileOnly group: 'javax.faces', name: 'jsf-api', version: '1.2'
@@ -81,5 +81,5 @@ dependencies {
 
   mojarra2TestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2.3.12'
 
-  latestDepTestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2.3.14'
+  latestDepTestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2+'
 }
