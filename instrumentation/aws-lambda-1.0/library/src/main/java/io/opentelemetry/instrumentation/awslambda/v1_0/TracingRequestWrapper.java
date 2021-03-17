@@ -17,7 +17,7 @@ public class TracingRequestWrapper extends TracingRequestWrapperBase<Object, Obj
   }
 
   // Visible for testing
-  TracingRequestWrapper(OpenTelemetrySdk openTelemetrySdk) {
-    super(openTelemetrySdk);
+  TracingRequestWrapper(OpenTelemetrySdk openTelemetrySdk, WrappedLambda wrappedLambda) {
+    super(openTelemetrySdk, wrappedLambda);
   }
 }

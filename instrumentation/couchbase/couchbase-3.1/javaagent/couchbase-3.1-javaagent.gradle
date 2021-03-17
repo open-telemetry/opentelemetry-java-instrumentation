@@ -12,7 +12,9 @@ muzzle {
 }
 
 dependencies {
-  implementation group: "com.couchbase.client", name: "tracing-opentelemetry", version: "0.3.3"
+  implementation(group: "com.couchbase.client", name: "tracing-opentelemetry", version: "0.3.3") {
+    exclude(group: "com.couchbase.client", module: "core-io")
+  }
 
   library group: "com.couchbase.client", name: "core-io", version: "2.1.0"
 

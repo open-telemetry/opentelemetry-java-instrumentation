@@ -18,9 +18,7 @@ import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.TransportAddress
 import org.elasticsearch.http.HttpServerTransport
-import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
-import org.elasticsearch.transport.Netty4Plugin
 import spock.lang.Shared
 
 class Elasticsearch6RestClientTest extends AgentInstrumentationSpecification {
@@ -46,7 +44,7 @@ class Elasticsearch6RestClientTest extends AgentInstrumentationSpecification {
       .put("path.home", esWorkingDir.path)
       .put("cluster.name", clusterName)
       .build()
-    testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
+    testNode = NodeFactory.newNode(settings)
     testNode.start()
     httpTransportAddress = testNode.injector().getInstance(HttpServerTransport).boundAddress().publishAddress()
 

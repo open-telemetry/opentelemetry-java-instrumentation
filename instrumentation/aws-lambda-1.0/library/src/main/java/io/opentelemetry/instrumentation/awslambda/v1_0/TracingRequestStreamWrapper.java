@@ -21,29 +21,28 @@ import java.io.OutputStream;
  */
 public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
 
-  // visible for testing
-  static WrappedLambda WRAPPED_LAMBDA = WrappedLambda.fromConfiguration();
+  private final WrappedLambda wrappedLambda;
 
   public TracingRequestStreamWrapper() {
-    this(OpenTelemetrySdkAutoConfiguration.initialize());
+    this(OpenTelemetrySdkAutoConfiguration.initialize(), WrappedLambda.fromConfiguration());
   }
 
   // Visible for testing
-  TracingRequestStreamWrapper(OpenTelemetrySdk openTelemetrySdk) {
+  TracingRequestStreamWrapper(OpenTelemetrySdk openTelemetrySdk, WrappedLambda wrappedLambda) {
     super(openTelemetrySdk, WrapperConfiguration.flushTimeout());
+    this.wrappedLambda = wrappedLambda;
   }
 
   @Override
   protected void doHandleRequest(InputStream inputStream, OutputStream output, Context context)
       throws IOException {
 
-    if (!(WRAPPED_LAMBDA.getTargetObject() instanceof RequestStreamHandler)) {
+    if (!(wrappedLambda.getTargetObject() instanceof RequestStreamHandler)) {
       throw new RuntimeException(
-          WRAPPED_LAMBDA.getTargetClass().getName()
-              + " is not an instance of RequestStreamHandler");
+          wrappedLambda.getTargetClass().getName() + " is not an instance of RequestStreamHandler");
     }
 
-    ((RequestStreamHandler) WRAPPED_LAMBDA.getTargetObject())
+    ((RequestStreamHandler) wrappedLambda.getTargetObject())
         .handleRequest(inputStream, output, context);
   }
 }

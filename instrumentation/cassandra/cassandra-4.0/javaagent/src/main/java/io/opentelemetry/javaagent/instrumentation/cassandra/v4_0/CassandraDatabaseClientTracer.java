@@ -19,7 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
@@ -30,6 +30,10 @@ public class CassandraDatabaseClientTracer
     extends DatabaseClientTracer<CqlSession, String, SqlStatementInfo> {
 
   private static final CassandraDatabaseClientTracer TRACER = new CassandraDatabaseClientTracer();
+
+  private CassandraDatabaseClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static CassandraDatabaseClientTracer tracer() {
     return TRACER;
@@ -111,7 +115,7 @@ public class CassandraDatabaseClientTracer
     if (coordinator != null) {
       SocketAddress socketAddress = coordinator.getEndPoint().resolve();
       if (socketAddress instanceof InetSocketAddress) {
-        NetPeerUtils.INSTANCE.setNetPeer(span, ((InetSocketAddress) socketAddress));
+        NetPeerAttributes.INSTANCE.setNetPeer(span, ((InetSocketAddress) socketAddress));
       }
       if (coordinator.getDatacenter() != null) {
         span.setAttribute(

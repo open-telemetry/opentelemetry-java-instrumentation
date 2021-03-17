@@ -6,7 +6,6 @@ apply plugin: 'muzzle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 ext {
-  packageInAgentBundle = true
   mavenGroupId = 'io.opentelemetry.javaagent.instrumentation'
   // Shadow is only for testing, not publishing.
   noShadowPublish = true
@@ -130,9 +129,13 @@ tasks.withType(Test).configureEach {
     if (file("$buildDir/resources/main").equals(it) || file("$buildDir/classes/java/main").equals(it)) {
       return false
     }
-    // If agent depends on library instrumentation, it will be packaged into the testing jar so we
-    // need to make sure to exclude from the test classpath.
-    if (it.absolutePath.startsWith(file("${projectDir.parent}/library/build/libs").absolutePath)) {
+    // If agent depends on some shared instrumentation module that is not a testing module, it will
+    // be packaged into the testing jar so we need to make sure to exclude from the test classpath.
+    String libPath = it.absolutePath
+    String instrumentationPath = file("${rootDir}/instrumentation/").absolutePath
+    if (libPath.startsWith(instrumentationPath) &&
+      libPath.endsWith(".jar") &&
+      !libPath.substring(instrumentationPath.size()).contains("testing")) {
       return false
     }
     return true

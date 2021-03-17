@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -24,6 +25,10 @@ public class SpringWebfluxHttpClientTracer
     extends HttpClientTracer<ClientRequest, ClientRequest.Builder, ClientResponse> {
 
   private static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
+
+  private SpringWebfluxHttpClientTracer() {
+    super(new NetPeerAttributes());
+  }
 
   public static SpringWebfluxHttpClientTracer tracer() {
     return TRACER;

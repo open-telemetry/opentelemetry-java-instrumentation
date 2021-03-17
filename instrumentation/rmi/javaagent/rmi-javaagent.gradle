@@ -25,6 +25,8 @@ test.dependsOn "rmic"
 // We also can't seem to use the toolchain without the "--release" option. So disable everything.
 
 java {
+  sourceCompatibility = JavaVersion.toVersion(project.ext.release)
+  targetCompatibility = JavaVersion.toVersion(project.ext.release)
   toolchain {
     languageVersion = null
   }

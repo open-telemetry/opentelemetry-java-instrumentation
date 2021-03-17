@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.httpclient.Header;
@@ -17,6 +18,10 @@ import org.apache.commons.httpclient.URIException;
 
 public class CommonsHttpClientTracer extends HttpClientTracer<HttpMethod, HttpMethod, HttpMethod> {
   private static final CommonsHttpClientTracer TRACER = new CommonsHttpClientTracer();
+
+  private CommonsHttpClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static CommonsHttpClientTracer tracer() {
     return TRACER;

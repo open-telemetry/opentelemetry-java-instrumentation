@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0.Restea
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import javax.ws.rs.core.Response;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
@@ -16,6 +17,10 @@ import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 public class ResteasyClientTracer
     extends HttpClientTracer<ClientInvocation, ClientInvocation, Response> {
   private static final ResteasyClientTracer TRACER = new ResteasyClientTracer();
+
+  private ResteasyClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static ResteasyClientTracer tracer() {
     return TRACER;

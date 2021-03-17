@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
@@ -28,6 +29,10 @@ public class KubernetesClientTracer
               "otel.instrumentation.kubernetes-client.experimental-span-attributes", false);
 
   private static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
+
+  private KubernetesClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static KubernetesClientTracer tracer() {
     return TRACER;

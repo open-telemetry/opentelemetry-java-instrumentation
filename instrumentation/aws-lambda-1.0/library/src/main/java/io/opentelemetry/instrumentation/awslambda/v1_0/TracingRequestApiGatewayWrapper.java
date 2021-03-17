@@ -21,7 +21,7 @@ public class TracingRequestApiGatewayWrapper
   }
 
   // Visible for testing
-  TracingRequestApiGatewayWrapper(OpenTelemetrySdk openTelemetrySdk) {
-    super(openTelemetrySdk);
+  TracingRequestApiGatewayWrapper(OpenTelemetrySdk openTelemetrySdk, WrappedLambda wrappedLambda) {
+    super(openTelemetrySdk, wrappedLambda);
   }
 }

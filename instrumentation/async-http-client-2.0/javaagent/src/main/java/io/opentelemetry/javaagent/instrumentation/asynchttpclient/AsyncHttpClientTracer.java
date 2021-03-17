@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.asynchttpclient.Request;
@@ -15,6 +16,10 @@ import org.asynchttpclient.Response;
 public class AsyncHttpClientTracer extends HttpClientTracer<Request, Request, Response> {
 
   private static final AsyncHttpClientTracer TRACER = new AsyncHttpClientTracer();
+
+  private AsyncHttpClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static AsyncHttpClientTracer tracer() {
     return TRACER;
