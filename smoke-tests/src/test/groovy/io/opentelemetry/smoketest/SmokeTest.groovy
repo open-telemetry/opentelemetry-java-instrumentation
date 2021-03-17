@@ -258,7 +258,7 @@ abstract class SmokeTest extends Specification {
 
       String collectorImage
       if (isWindows) {
-        collectorImage = "ghcr.io/open-telemetry/java-test-containers:collector-windows-$extraTag"
+        collectorImage = "ghcr.io/open-telemetry/java-test-containers:collector-windows$extraTag"
       } else {
         collectorImage = "otel/opentelemetry-collector-dev:latest"
       }
