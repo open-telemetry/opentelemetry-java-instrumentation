@@ -2,12 +2,13 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 muzzle {
-  pass {
-    group = "org.glassfish"
-    module = "jakarta.faces"
-    versions = "[2.3.9,3)"
-    extraDependency "javax.el:el-api:2.2"
-  }
+  //TODO cannot check due to https://issues.sonatype.org/browse/MVNCENTRAL-6622
+//  pass {
+//    group = "org.glassfish"
+//    module = "jakarta.faces"
+//    versions = "[2.3.9,3)"
+//    extraDependency "javax.el:el-api:2.2"
+//  }
   pass {
     group = "org.glassfish"
     module = "javax.faces"
