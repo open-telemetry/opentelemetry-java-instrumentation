@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter.splitArgs;
 
+import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.RedisCommand;
 import io.lettuce.core.tracing.TraceContext;
@@ -198,7 +199,7 @@ final class OpenTelemetryTracing implements Tracing {
       return this;
     }
 
-    // Added in 6.0
+    // Added and called in 6.0+
     // @Override
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
       start();
@@ -215,26 +216,28 @@ final class OpenTelemetryTracing implements Tracing {
 
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
-        completeableCommand.onComplete((o, throwable) -> {
-          if (throwable != null) {
-            span.recordException(throwable);
-          }
+        completeableCommand.onComplete(
+            (o, throwable) -> {
+              if (throwable != null) {
+                span.recordException(throwable);
+              }
 
-          String error = command.getOutput().getError();
-          if (error != null) {
-            span.setStatus(StatusCode.ERROR, error);
-          }
+              CommandOutput<?, ?, ?> output = command.getOutput();
+              if (output != null) {
+                String error = output.getError();
+                if (error != null) {
+                  span.setStatus(StatusCode.ERROR, error);
+                }
+              }
 
-          finish(span);
-        });
-      } else {
-        throw new IllegalArgumentException("Command " + command
-            + " must implement CompleteableCommand to attach Span completion to command completion");
+              finish(span);
+            });
       }
 
       return this;
     }
 
+    // Not called by Lettuce in 6.0+ (though we call it ourselves above).
     @Override
     public synchronized Tracer.Span start() {
       span = spanBuilder.startSpan();
@@ -304,11 +307,13 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     private void finish(Span span) {
-      if (name != null && args != null) {
-        String statement = RedisCommandSanitizer.sanitize(name, splitArgs(args));
-        span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
+      if (span != null) {
+        if (name != null) {
+          String statement = RedisCommandSanitizer.sanitize(name, splitArgs(args));
+          span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
+        }
+        span.end();
       }
-      span.end();
     }
   }
 
