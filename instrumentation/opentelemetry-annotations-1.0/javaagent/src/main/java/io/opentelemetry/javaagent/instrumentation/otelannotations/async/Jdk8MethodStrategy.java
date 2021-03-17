@@ -20,15 +20,17 @@ enum Jdk8MethodStrategy implements MethodSpanStrategy {
 
   @Override
   public Object end(BaseTracer tracer, Context context, Class<?> returnType, Object result) {
-    if (result instanceof CompletableFuture) {
-      CompletableFuture<?> future = (CompletableFuture<?>) result;
-      if (endSynchronously(future, tracer, context)) {
-        return future;
+    if (supports(returnType)) {
+      if (result instanceof CompletableFuture) {
+        CompletableFuture<?> future = (CompletableFuture<?>) result;
+        if (endSynchronously(future, tracer, context)) {
+          return future;
+        }
+        return endWhenComplete(future, tracer, context);
+      } else if (result instanceof CompletionStage) {
+        CompletionStage<?> stage = (CompletionStage<?>) result;
+        return endWhenComplete(stage, tracer, context);
       }
-      return endWhenComplete(future, tracer, context);
-    } else if (result instanceof CompletionStage) {
-      CompletionStage<?> stage = (CompletionStage<?>) result;
-      return endWhenComplete(stage, tracer, context);
     }
     tracer.end(context);
     return result;
