@@ -145,7 +145,7 @@ jobs:
         with:
           java-version: 11
       - name: Run  muzzle
-        run: ./gradlew ${{ matrix.module }}:muzzle --no-daemon --no-build-cache
+        run: ./gradlew ${{ matrix.module }}:muzzle --no-daemon --no-build-cache -i
 
   accept-pr:
     needs: [ build, test, smoke-test, muzzle ]
