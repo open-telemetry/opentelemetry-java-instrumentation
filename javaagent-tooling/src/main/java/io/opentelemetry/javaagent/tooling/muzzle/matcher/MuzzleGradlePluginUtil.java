@@ -46,6 +46,7 @@ public final class MuzzleGradlePluginUtil {
       ClassLoader agentClassLoader, ClassLoader userClassLoader, boolean assertPass)
       throws Exception {
     // muzzle validate all instrumenters
+    int validatedModulesCount = 0;
     for (InstrumentationModule instrumentationModule :
         ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
       Method getMuzzleReferenceMatcher = null;
@@ -87,6 +88,8 @@ public final class MuzzleGradlePluginUtil {
           getMuzzleReferenceMatcher.setAccessible(false);
         }
       }
+
+      validatedModulesCount++;
     }
     // run helper injector on all instrumenters
     if (assertPass) {
@@ -107,6 +110,11 @@ public final class MuzzleGradlePluginUtil {
           throw e;
         }
       }
+    }
+    if(validatedModulesCount == 0){
+      String errorMessage = "Did not found any InstrumentationModule to validate!";
+      System.err.println(errorMessage);
+      throw new RuntimeException(errorMessage);
     }
   }
 
