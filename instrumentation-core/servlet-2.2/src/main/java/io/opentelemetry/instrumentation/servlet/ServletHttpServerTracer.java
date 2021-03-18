@@ -32,8 +32,8 @@ public abstract class ServletHttpServerTracer<RESPONSE>
 
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
     // we do this e.g. so that servlet containers can use these values in their access logs
-    request.setAttribute("traceId", spanContext.getTraceId());
-    request.setAttribute("spanId", spanContext.getSpanId());
+    request.setAttribute("trace_id", spanContext.getTraceId());
+    request.setAttribute("span_id", spanContext.getSpanId());
 
     return context;
   }
