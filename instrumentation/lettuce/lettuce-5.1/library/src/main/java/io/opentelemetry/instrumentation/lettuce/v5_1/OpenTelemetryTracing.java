@@ -307,13 +307,11 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     private void finish(Span span) {
-      if (span != null) {
-        if (name != null) {
-          String statement = RedisCommandSanitizer.sanitize(name, splitArgs(args));
-          span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
-        }
-        span.end();
+      if (name != null) {
+        String statement = RedisCommandSanitizer.sanitize(name, splitArgs(args));
+        span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
       }
+      span.end();
     }
   }
 
