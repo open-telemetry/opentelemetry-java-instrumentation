@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.lettuce.v5_1
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static java.nio.charset.StandardCharsets.UTF_8
 
-import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisConnectionException
+import io.lettuce.core.RedisException
 import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.sync.RedisCommands
@@ -23,8 +23,6 @@ import spock.lang.Shared
 abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecification {
   public static final String HOST = "127.0.0.1"
   public static final int DB_INDEX = 0
-  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
-  public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   abstract RedisClient createClient(String uri)
 
@@ -76,6 +74,7 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
 
   def setup() {
     redisClient = createClient(embeddedDbUri)
+    redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 
     redisServer.start()
     connection = redisClient.connect()
@@ -96,7 +95,7 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
   def "connect"() {
     setup:
     RedisClient testConnectionClient = createClient(embeddedDbUri)
-    testConnectionClient.setOptions(CLIENT_OPTIONS)
+    testConnectionClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 
     when:
     StatefulConnection connection = testConnectionClient.connect()
@@ -112,7 +111,7 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
   def "connect exception"() {
     setup:
     RedisClient testConnectionClient = createClient(dbUriNonExistent)
-    testConnectionClient.setOptions(CLIENT_OPTIONS)
+    testConnectionClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 
     when:
     testConnectionClient.connect()
@@ -157,7 +156,7 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
   def "set command localhost"() {
     setup:
     RedisClient testConnectionClient = createClient(embeddedDbLocalhostUri)
-    testConnectionClient.setOptions(CLIENT_OPTIONS)
+    testConnectionClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
     StatefulConnection connection = testConnectionClient.connect()
     String res = connection.sync().set("TESTSETKEY", "TESTSETVAL")
 
@@ -451,8 +450,33 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
     syncCommands.debugSegfault()
 
     expect:
-    // lettuce tracing does not trace debug
-    assertTraces(0) {}
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "DEBUG"
+          // Disconnect not an actual error even though an exception is recorded.
+          errored false
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" port
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key}" "DEBUG SEGFAULT"
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
+          }
+          if (Boolean.getBoolean("testLatestDeps")) {
+            // Seems to only be recorded with Lettuce 6+
+            errorEvent(RedisException, "Connection disconnected", 2)
+          }
+        }
+      }
+    }
   }
 
   def "shutdown command (returns void) produces no span"() {
@@ -460,7 +484,38 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
     syncCommands.shutdown(false)
 
     expect:
-    // lettuce tracing does not trace shutdown
-    assertTraces(0) {}
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "SHUTDOWN"
+          if (Boolean.getBoolean("testLatestDeps")) {
+            // Seems to only be treated as an error with Lettuce 6+
+            errored true
+          }
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" port
+            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
+            "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_STATEMENT.key}" "SHUTDOWN NOSAVE"
+            if (!Boolean.getBoolean("testLatestDeps")) {
+              // Lettuce adds this tag before 6.0
+              // TODO(anuraaga): Filter this out?
+              "error" "Connection disconnected"
+            }
+          }
+          event(0) {
+            eventName "redis.encode.start"
+          }
+          event(1) {
+            eventName "redis.encode.end"
+          }
+          if (Boolean.getBoolean("testLatestDeps")) {
+            errorEvent(RedisException, "Connection disconnected", 2)
+          }
+        }
+      }
+    }
   }
 }

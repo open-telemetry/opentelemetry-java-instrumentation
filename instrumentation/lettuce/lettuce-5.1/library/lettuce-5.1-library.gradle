@@ -6,8 +6,10 @@ dependencies {
 
   implementation project(':instrumentation:lettuce:lettuce-common:library')
 
-  latestDepTestLibrary group: 'io.lettuce', name: 'lettuce-core', version: '5.+'
-
   testImplementation project(':instrumentation:lettuce:lettuce-5.1:testing')
   testImplementation project(':instrumentation:reactor-3.1:library')
+}
+
+test {
+  systemProperty "testLatestDeps", testLatestDeps
 }
