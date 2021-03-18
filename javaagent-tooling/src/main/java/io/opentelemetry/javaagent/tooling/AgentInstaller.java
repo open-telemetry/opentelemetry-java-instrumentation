@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.javaagent.tooling.matcher.GlobalIgnoresMatcher.globalIgnoresMatcher;
@@ -179,8 +180,11 @@ public class AgentInstaller {
   private static void installComponentsAfterByteBuddy(
       Iterable<ComponentInstaller> componentInstallers, Config config) {
     // java.util.logging.LogManager maintains a final static LogManager, which is created during
-    // class initialization. Some ComponentInstaller implementations may use jre bootstrap classes
+    // class initialization. Some ComponentInstaller implementations may use JRE bootstrap classes
     // which touch this class (e.g. JFR classes or some MBeans).
+    // It is worth noting that starting from Java 9 (JEP 264) Java platform classes no longer use
+    // JUL directly, but instead they use a new System.Logger interface, so the LogManager issue
+    // applies mainly to Java 8.
     // This means applications which require a custom LogManager may not have a chance to set the
     // global LogManager if one of those ComponentInstallers runs first: it will incorrectly
     // set the global LogManager to the default JVM one in cases where the instrumented application
@@ -188,12 +192,15 @@ public class AgentInstaller {
     // classpath.
     // Our solution is to delay the initialization of ComponentInstallers when we detect a custom
     // log manager being used.
-    // Once we see the LogManager class loading, it's safe to run ComponentInstaller#after() because
-    // the application is already setting the global LogManager and ComponentInstaller won't be able
-    // to touch it due to classloader locking.
+    // Once we see the LogManager class loading, it's safe to run
+    // ComponentInstaller#afterByteBuddyAgent() because the application is already setting the
+    // global LogManager and ComponentInstaller won't be able to touch it due to classloader
+    // locking.
     boolean shouldForceSynchronousComponentInstallerCalls =
         Config.get().getBooleanProperty(FORCE_SYNCHRONOUS_COMPONENT_INSTALLER_CONFIG, false);
-    if (!shouldForceSynchronousComponentInstallerCalls && isAppUsingCustomLogManager()) {
+    if (!shouldForceSynchronousComponentInstallerCalls
+        && isJavaBefore9()
+        && isAppUsingCustomLogManager()) {
       log.debug(
           "Custom JUL LogManager detected: delaying ComponentInstaller#afterByteBuddyAgent() calls");
       registerClassLoadCallback(
