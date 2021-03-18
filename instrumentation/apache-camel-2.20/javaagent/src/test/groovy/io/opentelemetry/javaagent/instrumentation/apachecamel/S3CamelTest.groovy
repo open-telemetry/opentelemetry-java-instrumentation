@@ -9,7 +9,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
-import com.amazonaws.services.sqs.model.ReceiveMessageResult
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.camel.CamelContext
 import org.apache.camel.ProducerTemplate
@@ -17,6 +16,7 @@ import org.springframework.boot.SpringApplication
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap
 import spock.lang.Ignore
 import spock.lang.Shared
+
 @Ignore("Does not work with localstack - X-Ray features needed")
 class S3CamelTest extends AgentInstrumentationSpecification {
 
@@ -47,8 +47,7 @@ class S3CamelTest extends AgentInstrumentationSpecification {
     awsConnector.enableS3ToSqsNotifications(bucketName, queueArn)
 
     // consume test message from AWS
-    ReceiveMessageResult rmr = awsConnector.receiveMessage(queueUrl)
-    println("MESSAGES: "+rmr)
+    awsConnector.receiveMessage(queueUrl)
 
     // wait for setup traces
     waitAndClearSetupTraces(queueUrl, queueName, bucketName)
