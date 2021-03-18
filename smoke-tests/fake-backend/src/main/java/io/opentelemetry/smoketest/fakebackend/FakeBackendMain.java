@@ -102,7 +102,7 @@ public class FakeBackendMain {
             .service(
                 "/get-metrics",
                 (ctx, req) -> {
-                  var requests = traceCollector.getRequests();
+                  var requests = metricsCollector.getRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(
