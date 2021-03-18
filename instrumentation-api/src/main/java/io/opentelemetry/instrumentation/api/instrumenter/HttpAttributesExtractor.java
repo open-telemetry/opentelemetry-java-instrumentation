@@ -9,8 +9,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public abstract class HttpAttributesExtractor<REQUEST, RESPONSE> extends
-    AttributesExtractor<REQUEST, RESPONSE> {
+public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
+    extends AttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
   final void onStart(AttributesBuilder attributes, REQUEST request) {
@@ -18,6 +18,7 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE> extends
     set(attributes, SemanticAttributes.HTTP_URL, url(request));
     set(attributes, SemanticAttributes.HTTP_TARGET, target(request));
     set(attributes, SemanticAttributes.HTTP_HOST, host(request));
+    set(attributes, SemanticAttributes.HTTP_ROUTE, route(request));
     set(attributes, SemanticAttributes.HTTP_SCHEME, scheme(request));
     set(attributes, SemanticAttributes.HTTP_USER_AGENT, userAgent(request));
   }
@@ -43,7 +44,6 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE> extends
         SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
         responseContentLengthUncompressed(request, response));
     set(attributes, SemanticAttributes.HTTP_SERVER_NAME, serverName(request, response));
-    set(attributes, SemanticAttributes.HTTP_ROUTE, route(request, response));
     set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request, response));
   }
 
@@ -60,6 +60,9 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE> extends
 
   @Nullable
   protected abstract String host(REQUEST request);
+
+  @Nullable
+  protected abstract String route(REQUEST request);
 
   @Nullable
   protected abstract String scheme(REQUEST request);
@@ -89,9 +92,6 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE> extends
 
   @Nullable
   protected abstract String serverName(REQUEST request, RESPONSE response);
-
-  @Nullable
-  protected abstract String route(REQUEST request, RESPONSE response);
 
   @Nullable
   protected abstract String clientIp(REQUEST request, RESPONSE response);

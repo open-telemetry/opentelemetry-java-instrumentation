@@ -10,9 +10,8 @@ import io.netty.util.AsciiString;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.stream.Collectors;
 
-final class RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
-
-  static final RequestContextGetter INSTANCE = new RequestContextGetter();
+enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
+  INSTANCE;
 
   @Override
   public Iterable<String> keys(ServiceRequestContext carrier) {

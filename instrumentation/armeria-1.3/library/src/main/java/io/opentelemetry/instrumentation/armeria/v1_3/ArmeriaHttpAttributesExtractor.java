@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.HttpHeaderNames;
 import com.linecorp.armeria.common.HttpRequest;
+import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
@@ -63,7 +64,11 @@ final class ArmeriaHttpAttributesExtractor
 
   @Override
   protected Long statusCode(RequestContext ctx, RequestLog requestLog) {
-    return (long) requestLog.responseHeaders().status().code();
+    HttpStatus status = requestLog.responseHeaders().status();
+    if (status != HttpStatus.UNKNOWN) {
+      return (long) status.code();
+    }
+    return null;
   }
 
   @Override
@@ -96,7 +101,7 @@ final class ArmeriaHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String route(RequestContext ctx, RequestLog requestLog) {
+  protected @Nullable String route(RequestContext ctx) {
     if (ctx instanceof ServiceRequestContext) {
       return ((ServiceRequestContext) ctx).config().route().patternString();
     }

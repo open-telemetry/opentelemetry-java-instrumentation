@@ -22,18 +22,26 @@ import java.util.stream.StreamSupport;
 public abstract class Instrumenter<REQUEST, RESPONSE> {
 
   private final Tracer tracer;
+  private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
+  private final StatusExtractor<? super REQUEST, ? super RESPONSE> statusExtractor;
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors;
 
   protected Instrumenter(
-      Tracer tracer, Iterable<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors) {
+      Tracer tracer,
+      SpanNameExtractor<? super REQUEST> spanNameExtractor,
+      StatusExtractor<? super REQUEST, ? super RESPONSE> statusExtractor,
+      Iterable<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors) {
     this.tracer = tracer;
+    this.spanNameExtractor = spanNameExtractor;
+    this.statusExtractor = statusExtractor;
     this.extractors =
         StreamSupport.stream(extractors.spliterator(), false).collect(Collectors.toList());
   }
 
   public Context start(Context parentContext, REQUEST request) {
     SpanKind kind = spanKind(request);
-    SpanBuilder spanBuilder = tracer.spanBuilder(spanName(request)).setSpanKind(kind);
+    SpanBuilder spanBuilder =
+        tracer.spanBuilder(spanName(request)).setSpanKind(kind).setParent(parentContext);
 
     AttributesBuilder attributesBuilder = Attributes.builder();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
@@ -77,6 +85,8 @@ public abstract class Instrumenter<REQUEST, RESPONSE> {
     if (error != null) {
       span.recordException(error);
     }
+
+    span.setStatus(statusExtractor.extract(request, response, error));
 
     span.end();
   }

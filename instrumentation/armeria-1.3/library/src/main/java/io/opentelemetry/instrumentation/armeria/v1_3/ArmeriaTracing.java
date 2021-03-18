@@ -15,15 +15,20 @@ public final class ArmeriaTracing {
 
   /** Returns a new {@link ArmeriaTracing} configured with the given {@link OpenTelemetry}. */
   public static ArmeriaTracing create(OpenTelemetry openTelemetry) {
-    return new ArmeriaTracing(openTelemetry);
+    return newBuilder(openTelemetry).build();
+  }
+
+  public static ArmeriaTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+    return new ArmeriaTracingBuilder(openTelemetry);
   }
 
   private final ArmeriaClientInstrumenter clientInstrumenter;
   private final ArmeriaServerInstrumenter serverInstrumenter;
 
-  ArmeriaTracing(OpenTelemetry openTelemetry) {
-    clientInstrumenter = new ArmeriaClientInstrumenter(openTelemetry);
-    serverInstrumenter = new ArmeriaServerInstrumenter(openTelemetry);
+  public ArmeriaTracing(
+      ArmeriaClientInstrumenter clientInstrumenter, ArmeriaServerInstrumenter serverInstrumenter) {
+    this.clientInstrumenter = clientInstrumenter;
+    this.serverInstrumenter = serverInstrumenter;
   }
 
   /**

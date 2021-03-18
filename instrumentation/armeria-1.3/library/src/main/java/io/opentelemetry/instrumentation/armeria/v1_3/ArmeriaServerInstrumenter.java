@@ -5,22 +5,33 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
+import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ServerInstrumenter;
-import java.util.Arrays;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.StatusExtractor;
+import java.util.List;
 
 final class ArmeriaServerInstrumenter
     extends ServerInstrumenter<ServiceRequestContext, RequestLog> {
 
-  ArmeriaServerInstrumenter(OpenTelemetry openTelemetry) {
+  ArmeriaServerInstrumenter(
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      SpanNameExtractor<? super RequestContext> spanNameExtractor,
+      StatusExtractor<? super RequestContext, ? super RequestLog> statusExtractor,
+      List<? extends AttributesExtractor<? super ServiceRequestContext, ? super RequestLog>>
+          attributesExtractors) {
     super(
         openTelemetry,
-        "io.opentelemetry.armeria-1.3",
+        instrumentationName,
+        spanNameExtractor,
+        statusExtractor,
         RequestContextGetter.INSTANCE,
-        Arrays.asList(
-            ArmeriaHttpAttributesExtractor.INSTANCE, ArmeriaNetAttributesExtractor.INSTANCE));
+        attributesExtractors);
   }
 
   @Override

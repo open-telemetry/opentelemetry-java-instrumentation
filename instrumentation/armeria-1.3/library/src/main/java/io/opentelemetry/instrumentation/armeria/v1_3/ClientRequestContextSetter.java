@@ -8,9 +8,8 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.client.ClientRequestContext;
 import io.opentelemetry.context.propagation.TextMapSetter;
 
-final class ClientRequestContextSetter implements TextMapSetter<ClientRequestContext> {
-
-  static final ClientRequestContextSetter INSTANCE = new ClientRequestContextSetter();
+enum ClientRequestContextSetter implements TextMapSetter<ClientRequestContext> {
+  INSTANCE;
 
   @Override
   public void set(ClientRequestContext carrier, String key, String value) {

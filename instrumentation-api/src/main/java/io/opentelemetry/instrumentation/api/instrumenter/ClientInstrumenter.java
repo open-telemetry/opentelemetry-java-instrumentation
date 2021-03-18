@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -6,15 +11,25 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapSetter;
 
-public abstract class ClientInstrumenter<REQUEST, CARRIER, RESPONSE> extends Instrumenter<REQUEST, RESPONSE> {
+public abstract class ClientInstrumenter<REQUEST, CARRIER, RESPONSE>
+    extends Instrumenter<REQUEST, RESPONSE> {
 
   private final ContextPropagators propagators;
   private final TextMapSetter<CARRIER> setter;
 
-  protected ClientInstrumenter(OpenTelemetry openTelemetry, String instrumentationName,
+  protected ClientInstrumenter(
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      SpanNameExtractor<? super REQUEST> spanNameExtractor,
+      StatusExtractor<? super REQUEST, ? super RESPONSE> statusExtractor,
       TextMapSetter<CARRIER> setter,
-      Iterable<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors) {
-    super(openTelemetry.getTracer(instrumentationName), attributesExtractors);
+      Iterable<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
+          attributesExtractors) {
+    super(
+        openTelemetry.getTracer(instrumentationName),
+        spanNameExtractor,
+        statusExtractor,
+        attributesExtractors);
     propagators = openTelemetry.getPropagators();
     this.setter = setter;
   }
@@ -26,7 +41,7 @@ public abstract class ClientInstrumenter<REQUEST, CARRIER, RESPONSE> extends Ins
   }
 
   @Override
-  protected final SpanKind spanKind(REQUEST request) {
+  protected SpanKind spanKind(REQUEST request) {
     return SpanKind.CLIENT;
   }
 }
