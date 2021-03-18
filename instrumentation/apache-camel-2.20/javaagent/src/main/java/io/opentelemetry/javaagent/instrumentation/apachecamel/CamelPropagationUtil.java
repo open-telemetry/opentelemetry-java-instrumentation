@@ -18,14 +18,14 @@ final class CamelPropagationUtil {
 
   private CamelPropagationUtil() {}
 
-  private static boolean isAwsPropagated(Endpoint endpoint) {
-    return endpoint.getClass().getName().endsWith("SqsEndpoint");
-  }
-
   static Context extractParent(final Map<String, Object> exchangeHeaders, Endpoint endpoint) {
     return (isAwsPropagated(endpoint)
         ? extractAwsPropagationParent(exchangeHeaders)
         : extractHttpPropagationParent(exchangeHeaders));
+  }
+
+  private static boolean isAwsPropagated(Endpoint endpoint) {
+    return endpoint.getClass().getName().endsWith("SqsEndpoint");
   }
 
   private static Context extractAwsPropagationParent(final Map<String, Object> exchangeHeaders) {

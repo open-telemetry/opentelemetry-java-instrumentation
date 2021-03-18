@@ -95,6 +95,7 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
   @Override
   public SpanKind getInitiatorSpanKind() {
     switch (component) {
+      case "aws-sns":
       case "aws-sqs":
         return SpanKind.INTERNAL;
       default:
@@ -105,6 +106,7 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
   @Override
   public SpanKind getReceiverSpanKind() {
     switch (component) {
+      case "aws-sns":
       case "aws-sqs":
         return SpanKind.INTERNAL;
       default:

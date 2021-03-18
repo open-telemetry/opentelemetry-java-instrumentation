@@ -45,8 +45,11 @@ public class TracingRequestHandler extends RequestHandler2 {
   public void beforeRequest(Request<?> request) {
     tracingHandler.beforeRequest(request);
     Context context = AwsSdkTracing.getOpenTelemetryContext(request);
-    Scope scope = context.makeCurrent();
-    request.addHandlerContext(SCOPE, scope);
+    // it is possible that context is not  set by lib's handler
+    if (context != null) {
+      Scope scope = context.makeCurrent();
+      request.addHandlerContext(SCOPE, scope);
+    }
   }
 
   @Override

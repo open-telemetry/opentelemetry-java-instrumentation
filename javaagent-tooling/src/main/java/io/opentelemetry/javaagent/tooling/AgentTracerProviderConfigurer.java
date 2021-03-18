@@ -25,7 +25,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.ServiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,16 +62,16 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
   }
 
   private static void maybeConfigureExporterJar(SdkTracerProviderBuilder sdkTracerProviderBuilder) {
-    String exporterJar = Config.get().getProperty(EXPORTER_JAR_CONFIG);
+    Config config = Config.get();
+    String exporterJar = config.getProperty(EXPORTER_JAR_CONFIG);
     if (exporterJar == null) {
       return;
     }
-    Properties config = Config.get().asJavaProperties();
     installExportersFromJar(exporterJar, config, sdkTracerProviderBuilder);
   }
 
   private static synchronized void installExportersFromJar(
-      String exporterJar, Properties config, SdkTracerProviderBuilder builder) {
+      String exporterJar, Config config, SdkTracerProviderBuilder builder) {
     URL url;
     try {
       url = new File(exporterJar).toURI().toURL();
@@ -117,18 +116,16 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
   }
 
   private static void installSpanExporter(
-      SpanExporterFactory spanExporterFactory,
-      Properties config,
-      SdkTracerProviderBuilder builder) {
-    SpanExporter spanExporter = spanExporterFactory.fromConfig(config);
+      SpanExporterFactory spanExporterFactory, Config config, SdkTracerProviderBuilder builder) {
+    SpanExporter spanExporter = spanExporterFactory.fromConfig(config.asJavaProperties());
     SpanProcessor spanProcessor = BatchSpanProcessor.builder(spanExporter).build();
     builder.addSpanProcessor(spanProcessor);
     log.info("Installed span exporter: " + spanExporter.getClass().getName());
   }
 
   private static void installMetricExporter(
-      MetricExporterFactory metricExporterFactory, Properties config) {
-    MetricExporter metricExporter = metricExporterFactory.fromConfig(config);
+      MetricExporterFactory metricExporterFactory, Config config) {
+    MetricExporter metricExporter = metricExporterFactory.fromConfig(config.asJavaProperties());
     IntervalMetricReader.builder()
         .setMetricExporter(metricExporter)
         .setMetricProducers(Collections.singleton((SdkMeterProvider) GlobalMetricsProvider.get()))
