@@ -2,13 +2,17 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 
 muzzle {
   pass {
-    group = 'khttp'
+    group = 'com.github.jkcclemens'
     module = 'khttp'
     versions = "(,)"
     assertInverse = true
   }
 }
 
+repositories {
+  maven { url 'https://jitpack.io' }
+}
+
 dependencies {
-  library group: 'khttp', name: 'khttp', version: '0.1.0'
+  library 'com.github.jkcclemens:khttp:0.1.0'
 }

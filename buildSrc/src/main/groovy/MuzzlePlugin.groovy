@@ -8,6 +8,7 @@ import java.security.SecureClassLoader
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Predicate
 import java.util.regex.Pattern
+import javax.inject.Inject
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
 import org.eclipse.aether.DefaultRepositorySystemSession
 import org.eclipse.aether.RepositorySystem
@@ -30,7 +31,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.model.ObjectFactory
-
 /**
  * muzzle task plugin which runs muzzle validation against a range of dependencies.
  */
@@ -39,24 +39,7 @@ class MuzzlePlugin implements Plugin<Project> {
    * Select a random set of versions to test
    */
   private static final int RANGE_COUNT_LIMIT = 10
-  /**
-   * Remote repositories used to query version ranges and fetch dependencies
-   */
-  private static final List<RemoteRepository> MUZZLE_REPOS
   private static final AtomicReference<ClassLoader> TOOLING_LOADER = new AtomicReference<>()
-
-  static {
-    RemoteRepository central = new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build()
-    RemoteRepository sonatype = new RemoteRepository.Builder("sonatype", "default", "https://oss.sonatype.org/content/repositories/releases/").build()
-    RemoteRepository jcenter = new RemoteRepository.Builder("jcenter", "default", "https://jcenter.bintray.com/").build()
-    RemoteRepository spring = new RemoteRepository.Builder("spring", "default", "https://repo.spring.io/libs-release/").build()
-    RemoteRepository jboss = new RemoteRepository.Builder("jboss", "default", "https://repository.jboss.org/nexus/content/repositories/releases/").build()
-    RemoteRepository typesafe = new RemoteRepository.Builder("typesafe", "default", "https://repo.typesafe.com/typesafe/releases").build()
-    RemoteRepository akka = new RemoteRepository.Builder("akka", "default", "https://dl.bintray.com/akka/maven/").build()
-    RemoteRepository atlassian = new RemoteRepository.Builder("atlassian", "default", "https://maven.atlassian.com/content/repositories/atlassian-public/").build()
-//    MUZZLE_REPOS = Arrays.asList(central, sonatype, jcenter, spring, jboss, typesafe, akka, atlassian)
-    MUZZLE_REPOS = Arrays.asList(central, jcenter, typesafe)
-  }
 
   @Override
   void apply(Project project) {
@@ -127,12 +110,12 @@ class MuzzlePlugin implements Plugin<Project> {
         if (muzzleDirective.coreJdk) {
           runAfter = addMuzzleTask(muzzleDirective, null, project, runAfter)
         } else {
-          muzzleDirectiveToArtifacts(muzzleDirective, system, session).collect() { Artifact singleVersion ->
+          muzzleDirectiveToArtifacts(project, muzzleDirective, system, session).collect() { Artifact singleVersion ->
             runAfter = addMuzzleTask(muzzleDirective, singleVersion, project, runAfter)
           }
           if (muzzleDirective.assertInverse) {
-            inverseOf(muzzleDirective, system, session).collect() { MuzzleDirective inverseDirective ->
-              muzzleDirectiveToArtifacts(inverseDirective, system, session).collect() { Artifact singleVersion ->
+            inverseOf(project, muzzleDirective, system, session).collect() { MuzzleDirective inverseDirective ->
+              muzzleDirectiveToArtifacts(project, inverseDirective, system, session).collect() { Artifact singleVersion ->
                 runAfter = addMuzzleTask(inverseDirective, singleVersion, project, runAfter)
               }
             }
@@ -214,11 +197,11 @@ class MuzzlePlugin implements Plugin<Project> {
   /**
    * Convert a muzzle directive to a list of artifacts
    */
-  private static Set<Artifact> muzzleDirectiveToArtifacts(MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
+  private static Set<Artifact> muzzleDirectiveToArtifacts(Project instrumentationProject, MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
     Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
 
     VersionRangeRequest rangeRequest = new VersionRangeRequest()
-    rangeRequest.setRepositories(MUZZLE_REPOS)
+    rangeRequest.setRepositories(getProjectRepositories(instrumentationProject))
     rangeRequest.setArtifact(directiveArtifact)
     VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
 
@@ -233,22 +216,29 @@ class MuzzlePlugin implements Plugin<Project> {
     return allVersionArtifacts
   }
 
+  private static List<RemoteRepository> getProjectRepositories(Project project) {
+    project.repositories.collect {
+      new RemoteRepository.Builder(it.name, "default", it.url.toString()).build()
+    }
+  }
+
   /**
    * Create a list of muzzle directives which assert the opposite of the given MuzzleDirective.
    */
-  private static Set<MuzzleDirective> inverseOf(MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
+  private static Set<MuzzleDirective> inverseOf(Project instrumentationProject, MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
     Set<MuzzleDirective> inverseDirectives = new HashSet<>()
 
     Artifact allVersionsArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", "[,)")
     Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
 
+    List<RemoteRepository> repos = getProjectRepositories(instrumentationProject)
     VersionRangeRequest allRangeRequest = new VersionRangeRequest()
-    allRangeRequest.setRepositories(MUZZLE_REPOS)
+    allRangeRequest.setRepositories(repos)
     allRangeRequest.setArtifact(allVersionsArtifact)
     VersionRangeResult allRangeResult = system.resolveVersionRange(session, allRangeRequest)
 
     VersionRangeRequest rangeRequest = new VersionRangeRequest()
-    rangeRequest.setRepositories(MUZZLE_REPOS)
+    rangeRequest.setRepositories(repos)
     rangeRequest.setArtifact(directiveArtifact)
     VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
 
@@ -321,6 +311,7 @@ class MuzzlePlugin implements Plugin<Project> {
         versionString.contains("-ea") ||
         versionString.contains("-atlassian-") ||
         versionString.contains("public_draft") ||
+        versionString.contains("snapshot") ||
         versionString.matches(GIT_SHA_PATTERN)
 
       return !draftVersion
@@ -495,7 +486,7 @@ class MuzzleExtension {
   final List<MuzzleDirective> directives = new ArrayList<>()
   private final ObjectFactory objectFactory
 
-  @javax.inject.Inject
+  @Inject
   MuzzleExtension(final ObjectFactory objectFactory) {
     this.objectFactory = objectFactory
   }

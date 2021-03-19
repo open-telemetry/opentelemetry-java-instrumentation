@@ -20,7 +20,6 @@ play {
 repositories {
   mavenLocal()
   mavenCentral()
-  jcenter()
   maven {
     name "lightbend-maven-releases"
     url "https://repo.lightbend.com/lightbend/maven-release"
