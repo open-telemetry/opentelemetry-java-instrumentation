@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-class FakeCollectorService extends TraceServiceGrpc.TraceServiceImplBase {
+class FakeTraceCollectorService extends TraceServiceGrpc.TraceServiceImplBase {
 
   private final BlockingQueue<ExportTraceServiceRequest> exportRequests =
       new LinkedBlockingDeque<>();
