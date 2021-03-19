@@ -32,15 +32,18 @@ class SpringBootSmokeTest extends SmokeTest {
     def response = CLIENT.newCall(request).execute()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
-    then:
+    then: "spans are exported"
     response.body().string() == "Hi!"
     countSpansByName(traces, '/greeting') == 1
     countSpansByName(traces, 'WebController.greeting') == 1
     countSpansByName(traces, 'WebController.withSpan') == 1
 
+    then: "correct agent version is captured in the resource"
     [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
       .map { it.stringValue }
       .collect(toSet())
+
+    then: "OS is captured in the resource"
     findResourceAttribute(traces, "os.type")
       .map { it.stringValue }
       .findAny()
@@ -55,6 +58,12 @@ class SpringBootSmokeTest extends SmokeTest {
       .map({ bytesToHex(it.getTraceId().toByteArray()) })
       .collect(toSet())
     loggedTraceIds == spanTraceIds
+
+    then: "JVM metrics are exported"
+    def metrics = new MetricsInspector(waitForMetrics())
+    metrics.hasMetricsNamed("runtime.jvm.gc.collection")
+    metrics.hasMetricsNamed("runtime.jvm.memory.area")
+    metrics.hasMetricsNamed("runtime.jvm.memory.pool")
 
     cleanup:
     stopTarget()
