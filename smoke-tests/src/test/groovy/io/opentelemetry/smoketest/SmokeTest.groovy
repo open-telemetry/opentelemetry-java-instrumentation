@@ -156,37 +156,6 @@ abstract class SmokeTest extends Specification {
       .isPresent()
   }
 
-  // TODO(anuraaga): Delete after https://github.com/open-telemetry/opentelemetry-java/pull/2750
-  static String bytesToHex(byte[] bytes) {
-    char[] dest = new char[bytes.length * 2]
-    bytesToBase16(bytes, dest)
-    return new String(dest)
-  }
-
-  private static void bytesToBase16(byte[] bytes, char[] dest) {
-    for (int i = 0; i < bytes.length; i++) {
-      byteToBase16(bytes[i], dest, i * 2)
-    }
-  }
-
-  private static void byteToBase16(byte value, char[] dest, int destOffset) {
-    int b = value & 0xFF
-    dest[destOffset] = ENCODING[b]
-    dest[destOffset + 1] = ENCODING[b | 0x100]
-  }
-
-  private static final String ALPHABET = "0123456789abcdef"
-  private static final char[] ENCODING = buildEncodingArray()
-
-  private static char[] buildEncodingArray() {
-    char[] encoding = new char[512]
-    for (int i = 0; i < 256; ++i) {
-      encoding[i] = ALPHABET.charAt(i >>> 4)
-      encoding[i | 0x100] = ALPHABET.charAt(i & 0xF)
-    }
-    return encoding
-  }
-
   static class Backend {
     private static final INSTANCE = new Backend()
 
