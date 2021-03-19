@@ -4,7 +4,9 @@ muzzle {
   pass {
     group = "io.reactivex.rxjava2"
     module = "rxjava"
-    versions = "[2.0.0,)"
+    versions = "[2.0.6,)"
+    extraDependency "io.reactivex.rxjava2:rxjava:2.0.6"
+    assertInverse true
   }
 }
 
