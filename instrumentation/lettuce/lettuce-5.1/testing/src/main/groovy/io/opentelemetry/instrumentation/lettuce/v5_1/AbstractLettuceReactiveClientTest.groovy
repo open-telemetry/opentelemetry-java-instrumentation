@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.lettuce.v5_1
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.reactive.RedisReactiveCommands
@@ -24,8 +23,6 @@ import spock.util.concurrent.AsyncConditions
 abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecification {
   public static final String HOST = "127.0.0.1"
   public static final int DB_INDEX = 0
-  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
-  public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   abstract RedisClient createClient(String uri)
 
@@ -60,7 +57,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
 
     println "Using redis: $redisServer.args"
     redisServer.start()
-    redisClient.setOptions(CLIENT_OPTIONS)
+    redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 
     connection = redisClient.connect()
     reactiveCommands = connection.reactive()

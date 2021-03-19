@@ -43,7 +43,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
       prefix("success") {
         handleDistributedRequest()
         String msg = "Hello."
-        response.status(200).send(msg)
+        response.status(200).id(request.getHeader("test-request-id")).send(msg)
       }
       prefix("client-error") {
         handleDistributedRequest()
@@ -439,7 +439,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
       count.times { idx ->
         trace(idx, 3) {
           def rootSpan = it.span(0)
-          //Traces can be in arbitrary order, let us find out the request id if the current one
+          //Traces can be in arbitrary order, let us find out the request id of the current one
           def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
 
           basicSpan(it, 0, "Parent span " + requestId, null, null) {
@@ -452,7 +452,61 @@ abstract class HttpClientTest extends InstrumentationSpecification {
         }
       }
     }
+  }
 
+  /**
+   * Almost similar to the "high concurrency test" test above, but all requests use the same single
+   * connection.
+   */
+  def "high concurrency test on single connection"() {
+    setup:
+    def singleConnection = createSingleConnection(server.address.host, server.address.port)
+    assumeTrue(singleConnection != null)
+    int count = 50
+    def method = 'GET'
+    def path = "/success"
+    def url = server.address.resolve(path)
+
+    def latch = new CountDownLatch(1)
+    def pool = Executors.newFixedThreadPool(4)
+
+    when:
+    count.times { index ->
+      def job = {
+        latch.await()
+        runUnderTrace("Parent span " + index) {
+          Span.current().setAttribute("test.request.id", index)
+          singleConnection.doRequest(path, [(SingleConnection.REQUEST_ID_HEADER): index.toString()])
+        }
+      }
+      pool.submit(job)
+    }
+    latch.countDown()
+
+    then:
+    assertTraces(count) {
+      count.times { idx ->
+        trace(idx, 3) {
+          def rootSpan = it.span(0)
+          //Traces can be in arbitrary order, let us find out the request id of the current one
+          def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
+
+          basicSpan(it, 0, "Parent span " + requestId, null, null) {
+            it."test.request.id" requestId
+          }
+          clientSpan(it, 1, span(0), method, url)
+          serverSpan(it, 2, span(1)) {
+            it."test.request.id" requestId
+          }
+        }
+      }
+    }
+  }
+
+  //This method should create either a single connection to the target uri or a http client
+  //which is guaranteed to use the same connection for all requests
+  SingleConnection createSingleConnection(String host, int port) {
+    return null
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)

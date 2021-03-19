@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import redis.RedisCommand;
@@ -14,6 +15,10 @@ public class RediscalaClientTracer
     extends DatabaseClientTracer<RedisCommand<?, ?>, RedisCommand<?, ?>, String> {
 
   private static final RediscalaClientTracer TRACER = new RediscalaClientTracer();
+
+  private RediscalaClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static RediscalaClientTracer tracer() {
     return TRACER;

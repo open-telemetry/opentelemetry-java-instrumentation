@@ -7,6 +7,7 @@ package client
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpClientOptions
@@ -53,5 +54,13 @@ class VertxHttpClientTest extends HttpClientTest implements AgentTestTrait {
   boolean testRemoteConnection() {
     // FIXME: figure out how to configure timeouts.
     false
+  }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    //This test fails on Vert.x 3.0 and only works starting from 3.1
+    //Most probably due to https://github.com/eclipse-vertx/vert.x/pull/1126
+    boolean shouldRun = Boolean.getBoolean("testLatestDeps")
+    return shouldRun ? new VertxSingleConnection(host, port) : null
   }
 }

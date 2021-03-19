@@ -1,7 +1,3 @@
-ext {
-  minJavaVersionForTests = JavaVersion.VERSION_1_8
-}
-
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 muzzle {
@@ -37,12 +33,9 @@ dependencies {
   testImplementation group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
   testImplementation 'javax.xml.bind:jaxb-api:2.3.1'
   testImplementation group: 'org.elasticmq', name: 'elasticmq-rest-sqs_2.12', version: '1.0.0'
-  /**
-   *    Temporarily using emq instead of localstack till the latter supports AWS trace propagation
-   *
-   *    testImplementation deps.testcontainers
-   *    testImplementation "org.testcontainers:localstack:${versions.testcontainers}
-   **/
+
+  testImplementation deps.testcontainers
+  testImplementation "org.testcontainers:localstack:${versions.testcontainers}"
 
   latestDepTestLibrary group: 'org.apache.camel', name: 'camel-core', version: '2.+'
   latestDepTestLibrary group: 'org.apache.camel', name: 'camel-spring-boot-starter', version: '2.+'

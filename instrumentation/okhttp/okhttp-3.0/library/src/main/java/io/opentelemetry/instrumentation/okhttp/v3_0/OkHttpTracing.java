@@ -18,7 +18,7 @@ public final class OkHttpTracing {
 
   private final OkHttpClientTracer tracer;
 
-  private OkHttpTracing(OpenTelemetry openTelemetry) {
+  OkHttpTracing(OpenTelemetry openTelemetry) {
     this.tracer = new OkHttpClientTracer(openTelemetry);
   }
 

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.lettuce.v5_1
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
-import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -18,8 +17,6 @@ import spock.lang.Shared
 abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecification {
   public static final String HOST = "127.0.0.1"
   public static final int DB_INDEX = 0
-  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
-  public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   abstract RedisClient createClient(String uri)
 
@@ -55,7 +52,7 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
 
   def setup() {
     redisClient = createClient(embeddedDbUri)
-    redisClient.setOptions(CLIENT_OPTIONS)
+    redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
     redisServer.start()
   }
 

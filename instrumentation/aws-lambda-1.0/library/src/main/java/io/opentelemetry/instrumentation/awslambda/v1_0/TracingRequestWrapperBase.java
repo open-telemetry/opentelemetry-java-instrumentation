@@ -17,17 +17,17 @@ import java.lang.reflect.Method;
  */
 abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, O> {
 
+  private final WrappedLambda wrappedLambda;
+
   protected TracingRequestWrapperBase() {
-    this(OpenTelemetrySdkAutoConfiguration.initialize());
+    this(OpenTelemetrySdkAutoConfiguration.initialize(), WrappedLambda.fromConfiguration());
   }
 
   // Visible for testing
-  TracingRequestWrapperBase(OpenTelemetrySdk openTelemetrySdk) {
+  TracingRequestWrapperBase(OpenTelemetrySdk openTelemetrySdk, WrappedLambda wrappedLambda) {
     super(openTelemetrySdk, WrapperConfiguration.flushTimeout());
+    this.wrappedLambda = wrappedLambda;
   }
-
-  // visible for testing
-  static WrappedLambda WRAPPED_LAMBDA = WrappedLambda.fromConfiguration();
 
   private Object[] createParametersArray(Method targetMethod, I input, Context context) {
     Class<?>[] parameterTypes = targetMethod.getParameterTypes();
@@ -51,12 +51,12 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
 
   @Override
   protected O doHandleRequest(I input, Context context) {
-    Method targetMethod = WRAPPED_LAMBDA.getRequestTargetMethod();
+    Method targetMethod = wrappedLambda.getRequestTargetMethod();
     Object[] parameters = createParametersArray(targetMethod, input, context);
 
     O result;
     try {
-      result = (O) targetMethod.invoke(WRAPPED_LAMBDA.getTargetObject(), parameters);
+      result = (O) targetMethod.invoke(wrappedLambda.getTargetObject(), parameters);
     } catch (IllegalAccessException e) {
       throw new RuntimeException("Method is inaccessible", e);
     } catch (InvocationTargetException e) {

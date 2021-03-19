@@ -8,10 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.ApiResponse;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
@@ -28,6 +30,10 @@ public class KubernetesClientTracer
               "otel.instrumentation.kubernetes-client.experimental-span-attributes", false);
 
   private static final KubernetesClientTracer TRACER = new KubernetesClientTracer();
+
+  private KubernetesClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static KubernetesClientTracer tracer() {
     return TRACER;
@@ -84,11 +90,12 @@ public class KubernetesClientTracer
   }
 
   @Override
-  protected void onRequest(Span span, Request request) {
-    super.onRequest(span, request);
+  protected void onRequest(SpanBuilder spanBuilder, Request request) {
+    super.onRequest(spanBuilder, request);
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       KubernetesRequestDigest digest = KubernetesRequestDigest.parse(request);
-      span.setAttribute("kubernetes-client.namespace", digest.getResourceMeta().getNamespace())
+      spanBuilder
+          .setAttribute("kubernetes-client.namespace", digest.getResourceMeta().getNamespace())
           .setAttribute("kubernetes-client.name", digest.getResourceMeta().getName());
     }
   }

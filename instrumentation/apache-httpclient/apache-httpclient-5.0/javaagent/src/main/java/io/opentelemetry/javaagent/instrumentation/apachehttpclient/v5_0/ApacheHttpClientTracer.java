@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.hc.core5.http.ClassicHttpRequest;
@@ -23,6 +24,10 @@ public class ApacheHttpClientTracer
     extends HttpClientTracer<ClassicHttpRequest, ClassicHttpRequest, HttpResponse> {
 
   private static final ApacheHttpClientTracer TRACER = new ApacheHttpClientTracer();
+
+  private ApacheHttpClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static ApacheHttpClientTracer tracer() {
     return TRACER;

@@ -9,11 +9,11 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyResponseInjectAdapter.SETTER;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 
-import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.utils.NetPeerUtils;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -27,16 +27,21 @@ public class NettyHttpClientTracer
     extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
   private static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
 
+  private NettyHttpClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
+
   public static NettyHttpClientTracer tracer() {
     return TRACER;
   }
 
   public Context startSpan(Context parentContext, ChannelHandlerContext ctx, HttpRequest request) {
-    Span span = spanBuilder(parentContext, spanNameForRequest(request), CLIENT).startSpan();
-    onRequest(span, request);
-    NetPeerUtils.INSTANCE.setNetPeer(span, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
+    SpanBuilder spanBuilder = spanBuilder(parentContext, spanNameForRequest(request), CLIENT);
+    onRequest(spanBuilder, request);
+    NetPeerAttributes.INSTANCE.setNetPeer(
+        spanBuilder, (InetSocketAddress) ctx.getChannel().getRemoteAddress());
 
-    Context context = withClientSpan(parentContext, span);
+    Context context = withClientSpan(parentContext, spanBuilder.startSpan());
     inject(context, request.headers(), SETTER);
     return context;
   }

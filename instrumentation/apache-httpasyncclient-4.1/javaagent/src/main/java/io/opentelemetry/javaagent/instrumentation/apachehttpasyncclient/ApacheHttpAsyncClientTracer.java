@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.http.Header;
@@ -27,6 +28,10 @@ public class ApacheHttpAsyncClientTracer
     extends HttpClientTracer<HttpRequest, HttpRequest, HttpResponse> {
 
   private static final ApacheHttpAsyncClientTracer TRACER = new ApacheHttpAsyncClientTracer();
+
+  private ApacheHttpAsyncClientTracer() {
+    super(NetPeerAttributes.INSTANCE);
+  }
 
   public static ApacheHttpAsyncClientTracer tracer() {
     return TRACER;

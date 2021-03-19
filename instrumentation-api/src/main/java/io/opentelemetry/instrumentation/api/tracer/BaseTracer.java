@@ -55,6 +55,13 @@ public abstract class BaseTracer {
   private final Tracer tracer;
   private final ContextPropagators propagators;
 
+  /**
+   * Instead of using this always pass an OpenTelemetry instance; javaagent tracers should
+   * explicitly pass {@code GlobalOpenTelemetry.get()} to the constructor.
+   *
+   * @deprecated always pass an OpenTelemetry instance.
+   */
+  @Deprecated
   public BaseTracer() {
     this(GlobalOpenTelemetry.get());
   }

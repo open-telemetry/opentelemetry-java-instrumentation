@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.servlet;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
@@ -27,7 +28,14 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
 
   public Context startSpan(HttpServletRequest request, String spanName) {
-    return startSpan(request, request, request, spanName);
+    Context context = startSpan(request, request, request, spanName);
+
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    // we do this e.g. so that servlet containers can use these values in their access logs
+    request.setAttribute("trace_id", spanContext.getTraceId());
+    request.setAttribute("span_id", spanContext.getSpanId());
+
+    return context;
   }
 
   @Override
@@ -106,15 +114,6 @@ public abstract class ServletHttpServerTracer<RESPONSE>
   @Override
   protected String method(HttpServletRequest request) {
     return request.getMethod();
-  }
-
-  @Override
-  public void onRequest(Span span, HttpServletRequest request) {
-    // we do this e.g. so that servlet containers can use these values in their access logs
-    request.setAttribute("traceId", span.getSpanContext().getTraceId());
-    request.setAttribute("spanId", span.getSpanContext().getSpanId());
-
-    super.onRequest(span, request);
   }
 
   @Override

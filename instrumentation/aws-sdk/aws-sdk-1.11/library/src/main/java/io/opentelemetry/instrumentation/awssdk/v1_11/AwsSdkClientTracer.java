@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,7 +38,7 @@ final class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, 
   private final boolean captureExperimentalSpanAttributes;
 
   AwsSdkClientTracer(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
-    super(openTelemetry);
+    super(openTelemetry, new NetPeerAttributes());
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 

@@ -23,15 +23,19 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
   static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
 
   @Override
-  public void beforeByteBuddyAgent() {
-    installAgentTracer();
+  public void beforeByteBuddyAgent(Config config) {
+    installAgentTracer(config);
   }
 
-  /** Register agent tracer if no agent tracer is already registered. */
+  /**
+   * Register agent tracer if no agent tracer is already registered.
+   *
+   * @param config Configuration instance
+   */
   @SuppressWarnings("unused")
-  public static synchronized void installAgentTracer() {
-    if (Config.get().getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
-      copySystemProperties();
+  public static synchronized void installAgentTracer(Config config) {
+    if (config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
+      copySystemProperties(config);
 
       OpenTelemetrySdk sdk = OpenTelemetrySdkAutoConfiguration.initialize();
       OpenTelemetrySdkAccess.internalSetForceFlush(
@@ -44,8 +48,8 @@ public class OpenTelemetryInstaller implements ComponentInstaller {
   // OpenTelemetrySdkAutoConfiguration currently only supports configuration from environment. We
   // massage any properties we have that aren't in the environment to system properties.
   // TODO(anuraaga): Make this less hacky
-  private static void copySystemProperties() {
-    Properties allProperties = Config.get().asJavaProperties();
+  private static void copySystemProperties(Config config) {
+    Properties allProperties = config.asJavaProperties();
     Properties environmentProperties =
         new ConfigBuilder()
             .readEnvironmentVariables()
