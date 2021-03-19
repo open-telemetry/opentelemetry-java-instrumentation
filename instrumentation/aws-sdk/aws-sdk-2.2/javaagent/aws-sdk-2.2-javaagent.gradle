@@ -7,7 +7,7 @@ muzzle {
     versions = "[2.2.0,)"
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
-    additionalDependencies = ["software.amazon.awssdk:protocol-core"]
+    extraDependency "software.amazon.awssdk:protocol-core"
   }
 }
 
