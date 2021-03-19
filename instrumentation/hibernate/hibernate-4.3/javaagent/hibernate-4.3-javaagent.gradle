@@ -28,7 +28,7 @@ test.dependsOn version5Test, version6Test
 dependencies {
   compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
 
-  implementation project(':instrumentation:hibernate:hibernate-common:javaagent')
+  implementation project(':instrumentation:hibernate:hibernate-common:library')
 
   testInstrumentation project(':instrumentation:jdbc:javaagent')
   // Added to ensure cross compatibility:

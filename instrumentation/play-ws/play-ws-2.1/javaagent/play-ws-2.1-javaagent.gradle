@@ -30,7 +30,7 @@ def scalaVersion = '2.12'
 dependencies {
   library group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.1.0'
 
-  implementation project(':instrumentation:play-ws:play-ws-common:javaagent')
+  implementation project(':instrumentation:play-ws:play-ws-common:library')
 
   testImplementation project(':instrumentation:play-ws:play-ws-testing')
 
