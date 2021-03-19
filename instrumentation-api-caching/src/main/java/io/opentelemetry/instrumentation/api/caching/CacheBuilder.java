@@ -35,11 +35,11 @@ public final class CacheBuilder {
   }
 
   /** Returns a new {@link Cache} with the settings of this {@link CacheBuilder}. */
-  public <K2, V2> Cache<K2, V2> build() {
+  public <K, V> Cache<K, V> build() {
     @SuppressWarnings("unchecked")
-    com.github.benmanes.caffeine.cache.Cache<K2, V2> delegate =
-        (com.github.benmanes.caffeine.cache.Cache<K2, V2>) caffeine.build();
-    return (Cache<K2, V2>) new CaffeineCache<>(delegate);
+    com.github.benmanes.caffeine.cache.Cache<K, V> delegate =
+        (com.github.benmanes.caffeine.cache.Cache<K, V>) caffeine.build();
+    return new CaffeineCache<>(delegate);
   }
 
   CacheBuilder() {}
