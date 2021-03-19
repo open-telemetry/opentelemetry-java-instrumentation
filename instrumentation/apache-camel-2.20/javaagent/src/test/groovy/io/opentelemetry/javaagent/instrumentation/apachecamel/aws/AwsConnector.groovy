@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachecamel
+package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.BucketNotificationConfiguration
@@ -12,7 +12,6 @@ import com.amazonaws.services.s3.model.QueueConfiguration
 import com.amazonaws.services.s3.model.S3Event
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import com.amazonaws.services.s3.model.SetBucketNotificationConfigurationRequest
-import com.amazonaws.services.s3.model.TopicConfiguration
 import com.amazonaws.services.sns.AmazonSNSAsyncClient
 import com.amazonaws.services.sns.model.CreateTopicResult
 import com.amazonaws.services.sns.model.SetTopicAttributesRequest
@@ -23,7 +22,6 @@ import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 
 class AwsConnector {
 
-
   private AmazonSQSAsyncClient sqsClient
   private AmazonS3Client s3Client
   private AmazonSNSAsyncClient snsClient
@@ -33,14 +31,24 @@ class AwsConnector {
 
     awsConnector.sqsClient = AmazonSQSAsyncClient.asyncBuilder()
       .build()
-
     awsConnector.s3Client = AmazonS3Client.builder()
       .build()
-
     awsConnector.snsClient = AmazonSNSAsyncClient.asyncBuilder()
       .build()
 
     return awsConnector
+  }
+
+  AmazonSQSAsyncClient getSqsClient() {
+    return sqsClient
+  }
+
+  AmazonS3Client getS3Client() {
+    return s3Client
+  }
+
+  AmazonSNSAsyncClient getSnsClient() {
+    return snsClient
   }
 
   def createQueue(String queueName) {
@@ -110,15 +118,6 @@ class AwsConnector {
       bucketName, notificationConfiguration))
   }
 
-  def enableS3ToSnsNotifications(String bucketName, String snsTopicArn) {
-    println "Enable notification for bucket ${bucketName} to topic ${snsTopicArn}"
-    BucketNotificationConfiguration notificationConfiguration = new BucketNotificationConfiguration()
-    notificationConfiguration.addConfiguration("snsTopicConfig",
-      new TopicConfiguration(snsTopicArn, EnumSet.of(S3Event.ObjectCreatedByPut)))
-    s3Client.setBucketNotificationConfiguration(new SetBucketNotificationConfigurationRequest(
-      bucketName, notificationConfiguration))
-  }
-
   def createTopicAndSubscribeQueue(String topicName, String queueArn) {
     println "Create topic ${topicName} and subscribe to queue ${queueArn}"
     CreateTopicResult ctr = snsClient.createTopic(topicName)
@@ -134,11 +133,6 @@ class AwsConnector {
   def purgeQueue(String queueUrl) {
     println "Purge queue ${queueUrl}"
     sqsClient.purgeQueue(new PurgeQueueRequest(queueUrl))
-  }
-
-  def putSampleData(String bucketName) {
-    println "Put sample data to bucket ${bucketName}"
-    s3Client.putObject(bucketName, "otelTestKey", "otelTestData")
   }
 
   def publishSampleNotification(String topicArn) {

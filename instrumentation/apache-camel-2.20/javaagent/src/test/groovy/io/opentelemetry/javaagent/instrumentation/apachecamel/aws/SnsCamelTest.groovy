@@ -3,105 +3,254 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachecamel
+package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import org.apache.camel.CamelContext
-import org.apache.camel.ProducerTemplate
-import org.springframework.boot.SpringApplication
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap
 import spock.lang.Ignore
 import spock.lang.Shared
 
 @Ignore("Does not work with localstack - X-Ray features needed")
-class S3CamelTest extends AgentInstrumentationSpecification {
+class SnsCamelTest extends AgentInstrumentationSpecification {
 
   @Shared
-  AwsConnector awsConnector
+  AwsConnector awsConnector = AwsConnector.liveAws()
 
-  def setupSpec() {
-    awsConnector = AwsConnector.liveAws()
-  }
-
-  def startCamelApp(String bucketName, String queueName) {
-    def app = new SpringApplication(S3Config)
-    app.setDefaultProperties(ImmutableMap.of("bucketName", bucketName, "queueName", queueName))
-    return app.run()
-  }
-
-  def "camel S3 producer - camel SQS consumer"() {
+  def "AWS SDK SNS producer - camel SQS consumer"() {
     setup:
-    String bucketName = "bucket-test-s3-sqs-camel"
-    String queueName = "s3SqsCamelTest"
+    String topicName = "snsCamelTest"
+    String queueName = "snsCamelTest"
+    def camelApp = new CamelSpringApp(awsConnector, SnsConfig, ImmutableMap.of("topicName", topicName, "queueName", queueName))
 
     // setup infra
     String queueUrl = awsConnector.createQueue(queueName)
-    awsConnector.createBucket(bucketName)
-
-    String queueArn = awsConnector.getQueueArn(queueUrl)
+    String queueArn = awsConnector.getQueueArn(queueName)
     awsConnector.setQueuePublishingPolicy(queueUrl, queueArn)
-    awsConnector.enableS3ToSqsNotifications(bucketName, queueArn)
+    String topicArn = awsConnector.createTopicAndSubscribeQueue(topicName, queueArn)
 
     // consume test message from AWS
     awsConnector.receiveMessage(queueUrl)
 
     // wait for setup traces
-    waitAndClearSetupTraces(queueUrl, queueName, bucketName)
+    waitAndClearSetupTraces(queueUrl, queueName)
 
     when:
-    def applicationContext = startCamelApp(bucketName, queueName)
-    def camelContext = applicationContext.getBean(CamelContext)
-    ProducerTemplate template = camelContext.createProducerTemplate()
-    template.sendBody("direct:input", "{\"type\": \"hello\"}")
+    camelApp.start()
+    awsConnector.publishSampleNotification(topicArn)
 
     then:
-    assertTraces(6) {
-      trace(0, 1) {
+    assertTraces(4) {
+      trace(0, 3) {
         span(0) {
-          name "SQS.ListQueues"
+          name "SNS.Publish"
           kind CLIENT
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ListQueues"
+            "aws.operation" "Publish"
+            "aws.service" "AmazonSNS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" String
+            "net.peer.name" String
+            "net.peer.port" {it == null || Number}
+            "net.transport" "IP.TCP"
+          }
+        }
+        span(1) {
+          name "SQS.ReceiveMessage"
+          kind CONSUMER
+          childOf span(0)
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "ReceiveMessage"
+            "aws.queue.url" queueUrl
+            "aws.service" "AmazonSQS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" String
+            "http.user_agent" String
+            "net.peer.name" String
+            "net.peer.port" {it == null || Number}
+            "net.transport" "IP.TCP"
+          }
+        }
+        span(2) {
+          name "snsCamelTest"
+          kind INTERNAL
+          childOf span(0)
+          attributes {
+            "apache-camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient"
+            "messaging.destination" queueName
+            "messaging.message_id" String
+          }
+        }
+      }
+      // http client span
+      trace(1, 1) {
+        span(0) {
+          name "SQS.ReceiveMessage"
+          kind CLIENT
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "ReceiveMessage"
+            "aws.queue.url" queueUrl
             "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
             "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.peer.port" { it == null || Number }
+            "net.peer.port" {it == null || Number}
             "net.transport" "IP.TCP"
           }
         }
       }
-      trace(1, 1) {
+      trace(2, 1) {
         span(0) {
-          name "S3.ListObjects"
+          name "SQS.DeleteMessage"
           kind CLIENT
           hasNoParent()
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "ListObjects"
-            "aws.service" "Amazon S3"
-            "aws.bucket.name" bucketName
+            "aws.operation" "DeleteMessage"
+            "aws.queue.url" queueUrl
+            "aws.service" "AmazonSQS"
             "http.flavor" "1.1"
-            "http.method" "GET"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" String
+            "net.peer.name" String
+            "net.peer.port" {it == null || Number}
+            "net.transport" "IP.TCP"
+          }
+        }
+      }
+      // camel polling
+      trace(3, 1) {
+        span(0) {
+          name "SQS.ReceiveMessage"
+          kind CLIENT
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "ReceiveMessage"
+            "aws.queue.url" queueUrl
+            "aws.service" "AmazonSQS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" String
+            "net.peer.name" String
+            "net.peer.port" {it == null || Number}
+            "net.transport" "IP.TCP"
+          }
+        }
+      }
+    }
+    cleanup:
+    awsConnector.purgeQueue(queueUrl)
+    camelApp.stop()
+  }
+
+  def waitAndClearSetupTraces(queueUrl, queueName) {
+    assertTraces(6) {
+      trace(0, 1) {
+        AwsSpan.sqs(it, 0, "SQS.CreateQueue", queueUrl, queueName)
+      }
+      trace(1, 1) {
+        AwsSpan.sqs(it, 0, "SQS.GetQueueAttributes", queueUrl)
+      }
+      trace(2, 1) {
+        AwsSpan.sqs(it, 0, "SQS.SetQueueAttributes", queueUrl)
+      }
+      trace(3, 1) {
+        span(0) {
+          name "SNS.CreateTopic"
+          kind CLIENT
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "CreateTopic"
+            "aws.service" "AmazonSNS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
             "net.transport" "IP.TCP"
-            "net.peer.port" { it == null || Number }
+            "net.peer.port" {it == null || Number}
           }
         }
       }
-      trace(2, 5) {
+      trace(4, 1) {
+        span(0) {
+          name "SNS.Subscribe"
+          kind CLIENT
+          hasNoParent()
+          attributes {
+            "aws.agent" "java-aws-sdk"
+            "aws.endpoint" String
+            "aws.operation" "Subscribe"
+            "aws.service" "AmazonSNS"
+            "http.flavor" "1.1"
+            "http.method" "POST"
+            "http.status_code" 200
+            "http.url" String
+            "net.peer.name" String
+            "net.transport" "IP.TCP"
+            "net.peer.port" {it == null || Number}
+          }
+        }
+      }
+      // test message
+      trace(5, 1) {
+        AwsSpan.sqs(it, 0, "SQS.ReceiveMessage", queueUrl)
+      }
+    }
+    clearExportedData()
+  }
+
+
+  def "camel SNS producer - camel SQS consumer"() {
+    setup:
+    String topicName = "snsCamelTest"
+    String queueName = "snsCamelTest"
+    def camelApp = new CamelSpringApp(awsConnector, SnsConfig, ImmutableMap.of("topicName", topicName, "queueName", queueName))
+
+    // setup infra
+    String queueUrl = awsConnector.createQueue(queueName)
+    String queueArn = awsConnector.getQueueArn(queueUrl)
+    awsConnector.setQueuePublishingPolicy(queueUrl, queueArn)
+    awsConnector.createTopicAndSubscribeQueue(topicName, queueArn)
+
+    // consume test message from AWS
+    awsConnector.receiveMessage(queueUrl)
+
+    // wait for setup traces
+    waitAndClearSetupTraces(queueUrl, queueName)
+
+    when:
+    camelApp.start()
+    camelApp.producerTemplate().sendBody("direct:input", "{\"type\": \"hello\"}")
+
+    then:
+    assertTraces(4) {
+      trace(0, 5) {
+
         span(0) {
           name "input"
           kind INTERNAL
@@ -111,29 +260,29 @@ class S3CamelTest extends AgentInstrumentationSpecification {
           }
         }
         span(1) {
-          name "aws-s3"
+          name topicName
           kind INTERNAL
           childOf span(0)
           attributes {
-            "apache-camel.uri" "aws-s3://${bucketName}?amazonS3Client=%23s3Client"
+            "apache-camel.uri" "aws-sns://${topicName}?amazonSNSClient=%23snsClient"
+            "messaging.destination" topicName
           }
         }
         span(2) {
-          name "S3.PutObject"
+          name "SNS.Publish"
           kind CLIENT
           childOf span(1)
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.operation" "PutObject"
-            "aws.service" "Amazon S3"
-            "aws.bucket.name" bucketName
+            "aws.operation" "Publish"
+            "aws.service" "AmazonSNS"
             "http.flavor" "1.1"
-            "http.method" "PUT"
+            "http.method" "POST"
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.peer.port" { it == null || Number }
+            "net.peer.port" {it == null || Number}
             "net.transport" "IP.TCP"
           }
         }
@@ -153,23 +302,22 @@ class S3CamelTest extends AgentInstrumentationSpecification {
             "http.url" String
             "http.user_agent" String
             "net.peer.name" String
-            "net.peer.port" { it == null || Number }
+            "net.peer.port" {it == null || Number}
             "net.transport" "IP.TCP"
           }
         }
         span(4) {
-          name queueName
+          name "snsCamelTest"
           kind INTERNAL
           childOf span(2)
           attributes {
-            "apache-camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient&delay=1000"
+            "apache-camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient"
             "messaging.destination" queueName
             "messaging.message_id" String
           }
         }
       }
-      // HTTP "client" receiver span, one per each SQS request
-      trace(3, 1) {
+      trace(1, 1) {
         span(0) {
           name "SQS.ReceiveMessage"
           kind CLIENT
@@ -185,35 +333,12 @@ class S3CamelTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.peer.port" { it == null || Number }
+            "net.peer.port" {it == null || Number}
             "net.transport" "IP.TCP"
           }
         }
       }
-      // camel polling
-      trace(4, 1) {
-        span(0) {
-          name "SQS.ReceiveMessage"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
-            "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
-            "http.flavor" "1.1"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "net.peer.port" { it == null || Number }
-            "net.transport" "IP.TCP"
-          }
-        }
-      }
-      // camel cleaning received msg
-      trace(5, 1) {
+      trace(2, 1) {
         span(0) {
           name "SQS.DeleteMessage"
           kind CLIENT
@@ -229,127 +354,14 @@ class S3CamelTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.peer.port" { it == null || Number }
+            "net.peer.port" {it == null || Number}
             "net.transport" "IP.TCP"
           }
         }
       }
-    }
-
-    cleanup:
-    awsConnector.deleteBucket(bucketName)
-    awsConnector.purgeQueue(queueUrl)
-  }
-
-  def waitAndClearSetupTraces(queueUrl, queueName, bucketName) {
-    assertTraces(7) {
-      trace(0, 1) {
-        span(0) {
-          name "SQS.CreateQueue"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.operation" "CreateQueue"
-            "aws.queue.name" queueName
-            "aws.service" "AmazonSQS"
-            "http.flavor" "1.1"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "net.peer.port" { it == null || Number }
-            "net.transport" "IP.TCP"
-          }
-        }
-      }
-      trace(1, 1) {
-        span(0) {
-          name "S3.CreateBucket"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.operation" "CreateBucket"
-            "aws.service" "Amazon S3"
-            "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
-            "http.method" "PUT"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" { it == null || Number }
-          }
-        }
-      }
-      trace(2, 1) {
-        span(0) {
-          name "SQS.GetQueueAttributes"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.operation" "GetQueueAttributes"
-            "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
-            "http.flavor" "1.1"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" { it == null || Number }
-          }
-        }
-      }
+      // camel polling
       trace(3, 1) {
         span(0) {
-          name "SQS.SetQueueAttributes"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.operation" "SetQueueAttributes"
-            "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
-            "http.flavor" "1.1"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" { it == null || Number }
-          }
-        }
-      }
-      trace(4, 1) {
-        span(0) {
-          name "S3.SetBucketNotificationConfiguration"
-          kind CLIENT
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.operation" "SetBucketNotificationConfiguration"
-            "aws.service" "Amazon S3"
-            "aws.bucket.name" bucketName
-            "http.flavor" "1.1"
-            "http.method" "PUT"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" { it == null || Number }
-          }
-        }
-      }
-      trace(5, 1) {
-        span(0) {
           name "SQS.ReceiveMessage"
           kind CLIENT
           hasNoParent()
@@ -364,35 +376,15 @@ class S3CamelTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
+            "net.peer.port" {it == null || Number}
             "net.transport" "IP.TCP"
-            "net.peer.port" { it == null || Number }
-          }
-        }
-      }
-      // http receive span
-      trace(6, 1) {
-        span(0) {
-          name "SQS.ReceiveMessage"
-          kind CONSUMER
-          hasNoParent()
-          attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.operation" "ReceiveMessage"
-            "aws.queue.url" queueUrl
-            "aws.service" "AmazonSQS"
-            "http.flavor" "1.1"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "http.user_agent" String
-            "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" { it == null || Number }
           }
         }
       }
     }
-    clearExportedData()
+    cleanup:
+    awsConnector.purgeQueue(queueUrl)
+    camelApp.stop()
   }
 }
+
