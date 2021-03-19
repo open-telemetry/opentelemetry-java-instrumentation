@@ -45,11 +45,9 @@ public final class MuzzleGradlePluginUtil {
   public static void assertInstrumentationMuzzled(
       ClassLoader agentClassLoader, ClassLoader userClassLoader, boolean assertPass)
       throws Exception {
-    System.err.println("assertInstrumentationMuzzled called!");
     // muzzle validate all instrumenters
     for (InstrumentationModule instrumentationModule :
         ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
-      System.err.println("Checking " + instrumentationModule);
       Method getMuzzleReferenceMatcher = null;
       try {
         getMuzzleReferenceMatcher =
