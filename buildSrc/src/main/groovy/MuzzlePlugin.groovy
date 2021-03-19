@@ -355,6 +355,10 @@ class MuzzlePlugin implements Plugin<Project> {
       config.dependencies.add(dep)
     }
     for (String additionalDependency : muzzleDirective.additionalDependencies) {
+      if (additionalDependency.count(":") < 2) {
+        // Dependency definition without version, use the artifact's version.
+        additionalDependency += ":${versionArtifact.version}"
+      }
       config.dependencies.add(instrumentationProject.dependencies.create(additionalDependency) {
         transitive = true
       })
