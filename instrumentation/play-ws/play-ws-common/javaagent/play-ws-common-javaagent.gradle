@@ -1,4 +1,4 @@
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
+apply from: "$rootDir/gradle/instrumentation.gradle"
 
 def scalaVersion = '2.12'
 

@@ -18,12 +18,9 @@ if (project.ext.find("skipPublish") != true) {
 apply from: "$rootDir/gradle/instrumentation-common.gradle"
 
 if (projectDir.name == 'javaagent') {
-  archivesBaseName = projectDir.parentFile.name
+  apply plugin: 'muzzle'
 
-  //This is a special project that has only ComponentInstaller but not InstrumentationModule
-  if (archivesBaseName != 'runtime-metrics') {
-    apply plugin: 'muzzle'
-  }
+  archivesBaseName = projectDir.parentFile.name
 }
 
 configurations {
