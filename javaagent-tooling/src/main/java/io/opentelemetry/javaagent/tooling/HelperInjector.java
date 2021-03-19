@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
 
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
-import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -48,7 +47,8 @@ public class HelperInjector implements Transformer {
         }
       };
 
-  private static final WeakMap<Class<?>, Boolean> injectedClasses = newWeakMap();
+  private static final Cache<Class<?>, Boolean> injectedClasses =
+      Cache.newBuilder().setWeakKeys().build();
 
   private final String requestingName;
 
@@ -56,7 +56,8 @@ public class HelperInjector implements Transformer {
   private final Set<String> helperResourceNames;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
 
-  private final WeakMap<ClassLoader, Boolean> injectedClassLoaders = newWeakMap();
+  private final Cache<ClassLoader, Boolean> injectedClassLoaders =
+      Cache.newBuilder().setWeakKeys().build();
 
   private final List<WeakReference<Object>> helperModules = new CopyOnWriteArrayList<>();
 
@@ -125,7 +126,7 @@ public class HelperInjector implements Transformer {
         classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
       }
 
-      if (!injectedClassLoaders.containsKey(classLoader)) {
+      if (Boolean.FALSE == injectedClassLoaders.get(classLoader)) {
         try {
           log.debug("Injecting classes onto classloader {} -> {}", classLoader, helperClassNames);
 
@@ -158,7 +159,7 @@ public class HelperInjector implements Transformer {
           throw new RuntimeException(e);
         }
 
-        injectedClassLoaders.put(classLoader, true);
+        injectedClassLoaders.put(classLoader, Boolean.TRUE);
       }
 
       ensureModuleCanReadHelperModules(module);
@@ -242,6 +243,6 @@ public class HelperInjector implements Transformer {
   }
 
   public static boolean isInjectedClass(Class<?> c) {
-    return injectedClasses.containsKey(c);
+    return Boolean.TRUE == injectedClasses.get(c);
   }
 }

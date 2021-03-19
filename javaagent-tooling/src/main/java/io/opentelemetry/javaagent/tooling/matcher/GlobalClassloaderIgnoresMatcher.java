@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling.matcher;
 
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.PatchLogger;
-import io.opentelemetry.javaagent.bootstrap.WeakCache;
 import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
-import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.Logger;
@@ -23,7 +22,8 @@ public class GlobalClassloaderIgnoresMatcher
       "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
   private static final String EXPORTER_CLASSLOADER_NAME =
       "io.opentelemetry.javaagent.tooling.ExporterClassLoader";
-  private static final WeakCache<ClassLoader, Boolean> skipCache = AgentTooling.newWeakCache();
+  private static final Cache<ClassLoader, Boolean> skipCache =
+      Cache.newBuilder().setWeakKeys().build();
 
   public static ElementMatcher.Junction.AbstractBase<ClassLoader> skipClassLoader(
       IgnoreMatcherProvider ignoreMatcherProvider) {
@@ -55,7 +55,7 @@ public class GlobalClassloaderIgnoresMatcher
     if (canSkipClassLoaderByName(cl)) {
       return true;
     }
-    Boolean v = skipCache.getIfPresent(cl);
+    Boolean v = skipCache.get(cl);
     if (v != null) {
       return v;
     }

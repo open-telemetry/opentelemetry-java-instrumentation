@@ -19,7 +19,7 @@ public final class SqlStatementSanitizer {
   private static final Logger log = LoggerFactory.getLogger(SqlStatementSanitizer.class);
 
   private static final Cache<String, SqlStatementInfo> sqlToStatementInfoCache =
-      Cache.<String, SqlStatementInfo>newBuilder().setMaximumSize(1000).build();
+      Cache.newBuilder().setMaximumSize(1000).build();
 
   public static SqlStatementInfo sanitize(String statement) {
     if (!isStatementSanitizationEnabled() || statement == null) {

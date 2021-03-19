@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.benchmark;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -22,11 +27,11 @@ import org.openjdk.jmh.annotations.Warmup;
 @State(Scope.Thread)
 public class WeakMapBenchmark {
 
-  private static final WeakConcurrentMap<String, String> weakConcurrentMap = new WeakConcurrentMap<>(true, true);
+  private static final WeakConcurrentMap<String, String> weakConcurrentMap =
+      new WeakConcurrentMap<>(true, true);
 
-  private static final Cache<String, String> caffeineCache = Caffeine.newBuilder()
-      .weakKeys()
-      .build();
+  private static final Cache<String, String> caffeineCache =
+      Caffeine.newBuilder().weakKeys().build();
   private static final Map<String, String> caffeineMap = caffeineCache.asMap();
 
   private String key;

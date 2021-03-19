@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.caching;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -23,8 +22,18 @@ final class CaffeineCache<K, V> implements Cache<K, V> {
   }
 
   @Override
-  public Map<K, V> asMap() {
-    return delegate.asMap();
+  public V get(K key) {
+    return delegate.getIfPresent(key);
+  }
+
+  @Override
+  public void put(K key, V value) {
+    delegate.put(key, value);
+  }
+
+  @Override
+  public void remove(K key) {
+    delegate.invalidate(key);
   }
 
   // Visible for testing

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.Map;
 
 /**
  * JDBC instrumentation shares a global map of connection info.
@@ -16,6 +15,8 @@ import java.util.Map;
  * <p>Should be injected into the bootstrap classpath.
  */
 public class JdbcMaps {
-  public static final Map<Connection, DbInfo> connectionInfo = Cache.<Connection, DbInfo>newBuilder().setWeakKeys().build().asMap();
-  public static final Map<PreparedStatement, String> preparedStatements = Cache.<PreparedStatement, String>newBuilder().setWeakKeys().build().asMap();
+  public static final Cache<Connection, DbInfo> connectionInfo =
+      Cache.newBuilder().setWeakKeys().build();
+  public static final Cache<PreparedStatement, String> preparedStatements =
+      Cache.newBuilder().setWeakKeys().build();
 }

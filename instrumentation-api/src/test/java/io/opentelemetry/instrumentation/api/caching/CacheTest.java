@@ -17,7 +17,10 @@ class CacheTest {
   class StrongKeys {
     @Test
     void unbounded() {
-      Cache<String, String> cache = Cache.<String, String>newBuilder().build();
+      Cache<String, String> cache = Cache.newBuilder().build();
+
+      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
+      cache.remove("bear");
 
       CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
       assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
@@ -26,14 +29,20 @@ class CacheTest {
       assertThat(cache.computeIfAbsent("cat", unused -> "bark")).isEqualTo("meow");
       assertThat(caffeineCache.keySet()).hasSize(1);
 
-      assertThat(cache.computeIfAbsent("dog", unused -> "bark")).isEqualTo("bark");
+      cache.put("dog", "bark");
+      assertThat(cache.get("dog")).isEqualTo("bark");
+      assertThat(cache.get("cat")).isEqualTo("meow");
+      assertThat(cache.get("bear")).isNull();
       assertThat(caffeineCache.keySet()).hasSize(2);
       assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
     }
 
     @Test
     void bounded() {
-      Cache<String, String> cache = Cache.<String, String>newBuilder().setMaximumSize(1).build();
+      Cache<String, String> cache = Cache.newBuilder().setMaximumSize(1).build();
+
+      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
+      cache.remove("bear");
 
       CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
       assertThat(cache.computeIfAbsent("cat", unused -> "meow")).isEqualTo("meow");
@@ -42,7 +51,8 @@ class CacheTest {
       assertThat(cache.computeIfAbsent("cat", unused -> "bark")).isEqualTo("meow");
       assertThat(caffeineCache.keySet()).hasSize(1);
 
-      assertThat(cache.computeIfAbsent("dog", unused -> "bark")).isEqualTo("bark");
+      cache.put("dog", "bark");
+      assertThat(cache.get("dog")).isEqualTo("bark");
       caffeineCache.cleanup();
       assertThat(caffeineCache.keySet()).hasSize(1);
       assertThat(cache.computeIfAbsent("cat", unused -> "purr")).isEqualTo("purr");
@@ -53,7 +63,10 @@ class CacheTest {
   class WeakKeys {
     @Test
     void unbounded() {
-      Cache<String, String> cache = Cache.<String, String>newBuilder().setWeakKeys().build();
+      Cache<String, String> cache = Cache.newBuilder().setWeakKeys().build();
+
+      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
+      cache.remove("bear");
 
       CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
       String cat = new String("cat");
@@ -64,7 +77,11 @@ class CacheTest {
       assertThat(cache.computeIfAbsent(cat, unused -> "bark")).isEqualTo("meow");
       assertThat(caffeineCache.keySet()).hasSize(1);
 
-      assertThat(cache.computeIfAbsent(dog, unused -> "bark")).isEqualTo("bark");
+      cache.put(dog, "bark");
+      assertThat(cache.get(dog)).isEqualTo("bark");
+      assertThat(cache.get(cat)).isEqualTo("meow");
+      assertThat(cache.get(new String("dog"))).isNull();
+      ;
       assertThat(caffeineCache.keySet()).hasSize(2);
       assertThat(cache.computeIfAbsent(cat, unused -> "meow")).isEqualTo("meow");
 
@@ -91,19 +108,26 @@ class CacheTest {
 
     @Test
     void bounded() throws Exception {
-      Cache<String, String> cache = Cache.<String, String>newBuilder().setWeakKeys().setMaximumSize(1).build();
+      Cache<String, String> cache = Cache.newBuilder().setWeakKeys().setMaximumSize(1).build();
+
+      assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
+      cache.remove("bear");
 
       CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
 
       String cat = new String("cat");
       String dog = new String("dog");
       assertThat(cache.computeIfAbsent(cat, unused -> "meow")).isEqualTo("meow");
+      assertThat(cache.get(cat)).isEqualTo("meow");
+      assertThat(cache.get(new String("cat"))).isNull();
       assertThat(caffeineCache.keySet()).hasSize(1);
 
       assertThat(cache.computeIfAbsent(cat, unused -> "bark")).isEqualTo("meow");
       assertThat(caffeineCache.keySet()).hasSize(1);
 
-      assertThat(cache.computeIfAbsent(dog, unused -> "bark")).isEqualTo("bark");
+      cache.put(dog, "bark");
+      assertThat(cache.get(dog)).isEqualTo("bark");
+      assertThat(cache.get(new String("dog"))).isNull();
       caffeineCache.cleanup();
       assertThat(caffeineCache.keySet()).hasSize(1);
       dog = null;

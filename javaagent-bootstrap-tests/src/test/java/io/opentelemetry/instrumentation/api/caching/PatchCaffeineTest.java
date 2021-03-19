@@ -17,7 +17,7 @@ class PatchCaffeineTest {
   void cleanupNotForkJoinTask() {
     AtomicReference<AssertionError> errorRef = new AtomicReference<>();
     Cache<String, String> cache =
-        Cache.<String, String>newBuilder()
+        Cache.newBuilder()
             .setExecutor(
                 task -> {
                   try {
