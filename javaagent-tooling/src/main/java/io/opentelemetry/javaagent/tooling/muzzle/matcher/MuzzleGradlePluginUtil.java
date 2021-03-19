@@ -111,7 +111,7 @@ public final class MuzzleGradlePluginUtil {
         }
       }
     }
-    if(validatedModulesCount == 0){
+    if (validatedModulesCount == 0) {
       String errorMessage = "Did not found any InstrumentationModule to validate!";
       System.err.println(errorMessage);
       throw new RuntimeException(errorMessage);
