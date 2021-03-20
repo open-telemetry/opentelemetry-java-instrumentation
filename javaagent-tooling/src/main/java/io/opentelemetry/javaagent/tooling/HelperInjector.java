@@ -126,41 +126,42 @@ public class HelperInjector implements Transformer {
         classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
       }
 
-      if (Boolean.FALSE == injectedClassLoaders.get(classLoader)) {
-        try {
-          log.debug("Injecting classes onto classloader {} -> {}", classLoader, helperClassNames);
+      injectedClassLoaders.computeIfAbsent(
+          classLoader,
+          cl -> {
+            try {
+              log.debug("Injecting classes onto classloader {} -> {}", cl, helperClassNames);
 
-          Map<String, byte[]> classnameToBytes = getHelperMap();
-          Map<String, Class<?>> classes;
-          if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER) {
-            classes = injectBootstrapClassLoader(classnameToBytes);
-          } else {
-            classes = injectClassLoader(classLoader, classnameToBytes);
-          }
+              Map<String, byte[]> classnameToBytes = getHelperMap();
+              Map<String, Class<?>> classes;
+              if (cl == BOOTSTRAP_CLASSLOADER_PLACEHOLDER) {
+                classes = injectBootstrapClassLoader(classnameToBytes);
+              } else {
+                classes = injectClassLoader(cl, classnameToBytes);
+              }
 
-          classes.values().forEach(c -> injectedClasses.put(c, Boolean.TRUE));
+              classes.values().forEach(c -> injectedClasses.put(c, Boolean.TRUE));
 
-          // All agent helper classes are in the unnamed module
-          // And there's exactly one unnamed module per classloader
-          // Use the module of the first class for convenience
-          if (JavaModule.isSupported()) {
-            JavaModule javaModule = JavaModule.ofType(classes.values().iterator().next());
-            helperModules.add(new WeakReference<>(javaModule.unwrap()));
-          }
-        } catch (Exception e) {
-          if (log.isErrorEnabled()) {
-            log.error(
-                "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
-                typeDescription,
-                requestingName,
-                classLoader,
-                e);
-          }
-          throw new RuntimeException(e);
-        }
-
-        injectedClassLoaders.put(classLoader, Boolean.TRUE);
-      }
+              // All agent helper classes are in the unnamed module
+              // And there's exactly one unnamed module per classloader
+              // Use the module of the first class for convenience
+              if (JavaModule.isSupported()) {
+                JavaModule javaModule = JavaModule.ofType(classes.values().iterator().next());
+                helperModules.add(new WeakReference<>(javaModule.unwrap()));
+              }
+            } catch (Exception e) {
+              if (log.isErrorEnabled()) {
+                log.error(
+                    "Error preparing helpers while processing {} for {}. Failed to inject helper classes into instance {}",
+                    typeDescription,
+                    requestingName,
+                    cl,
+                    e);
+              }
+              throw new RuntimeException(e);
+            }
+            return true;
+          });
 
       ensureModuleCanReadHelperModules(module);
     }
@@ -243,6 +244,6 @@ public class HelperInjector implements Transformer {
   }
 
   public static boolean isInjectedClass(Class<?> c) {
-    return Boolean.TRUE == injectedClasses.get(c);
+    return Boolean.TRUE.equals(injectedClasses.get(c));
   }
 }
