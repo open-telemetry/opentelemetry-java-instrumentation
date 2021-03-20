@@ -13,7 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 
 public class JakartaServletHttpServerTracerTest {
-  private static final JakartaServletHttpServerTracer tracer = JakartaServletHttpServerTracer.tracer();
+  private static final JakartaServletHttpServerTracer tracer =
+      JakartaServletHttpServerTracer.tracer();
 
   @Test
   void testGetSpanName_emptySpanName() {
