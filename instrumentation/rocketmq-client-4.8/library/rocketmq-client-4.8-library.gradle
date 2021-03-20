@@ -6,5 +6,5 @@ dependencies {
 }
 
 tasks.withType(Test) {
-  jvmArgs "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED"
+  jvmArgs += ["--add-exports", "java.base/jdk.internal.ref=ALL-UNNAMED"]
 }
