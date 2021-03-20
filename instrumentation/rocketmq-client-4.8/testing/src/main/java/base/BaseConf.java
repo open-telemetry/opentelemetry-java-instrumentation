@@ -64,9 +64,8 @@ public final class BaseConf {
     return producer;
   }
 
-  public static void brokerShutdown() {
+  public static void deleteTempDir() {
     namesrvController.shutdown();
-    brokerController.shutdown();
     IntegrationTestBase.deleteTempDir();
   }
 }
