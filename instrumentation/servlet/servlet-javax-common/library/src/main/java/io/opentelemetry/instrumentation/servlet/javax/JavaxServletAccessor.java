@@ -10,8 +10,7 @@ import java.security.Principal;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-public abstract class JavaxServletAccessor<R>
-    implements ServletAccessor<HttpServletRequest, R> {
+public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpServletRequest, R> {
   @Override
   public String getRequestContextPath(HttpServletRequest request) {
     return request.getContextPath();
