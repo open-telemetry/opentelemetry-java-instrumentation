@@ -17,5 +17,6 @@ dependencies {
 }
 
 tasks.withType(Test) {
+  jvmArgs "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED"
   jvmArgs "-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true"
 }
