@@ -5,7 +5,7 @@ muzzle {
     group = "org.mongodb"
     module = "mongodb-driver-async"
     versions = "[3.3,)"
-    extraDependency 'org.mongodb:mongo-java-driver:3.3.0'
+    extraDependency 'org.mongodb:mongo-java-driver'
     assertInverse = true
   }
 }
