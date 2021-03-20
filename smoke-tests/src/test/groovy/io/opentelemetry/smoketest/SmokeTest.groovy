@@ -7,17 +7,14 @@ package io.opentelemetry.smoketest
 
 import static java.util.stream.Collectors.toSet
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.protobuf.util.JsonFormat
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
+import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.common.v1.AnyValue
 import io.opentelemetry.proto.trace.v1.Span
-import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import java.util.stream.Stream
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
@@ -33,12 +30,13 @@ import spock.lang.Specification
 abstract class SmokeTest extends Specification {
   private static final Pattern TRACE_ID_PATTERN = Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*")
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-
   protected static final OkHttpClient CLIENT = OkHttpUtils.client()
 
   @Shared
   private Backend backend = Backend.getInstance()
+
+  @Shared
+  private TelemetryRetriever telemetryRetriever
 
   @Shared
   protected String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
@@ -63,6 +61,7 @@ abstract class SmokeTest extends Specification {
 
   def setupSpec() {
     backend.setup()
+    telemetryRetriever = new TelemetryRetriever(backend.getMappedPort(8080))
   }
 
   def startTarget(int jdk, String serverVersion = null) {
@@ -79,7 +78,8 @@ abstract class SmokeTest extends Specification {
       .withCopyFileToContainer(MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent-all.jar")
       .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent-all.jar -Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.muzzleMatcher=true")
       .withEnv("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1")
-      .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
+      .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10ms")
+      .withEnv("OTEL_IMR_EXPORT_INTERVAL", "1000")
       .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://collector:55680")
       .withImagePullPolicy(PullPolicy.alwaysPull())
       .withEnv(extraEnv)
@@ -99,11 +99,7 @@ abstract class SmokeTest extends Specification {
   }
 
   def cleanup() {
-    CLIENT.newCall(new Request.Builder()
-      .url("http://localhost:${backend.getMappedPort(8080)}/clear-requests")
-      .build())
-      .execute()
-      .close()
+    telemetryRetriever.clearTelemetry()
   }
 
   def stopTarget() {
@@ -135,40 +131,11 @@ abstract class SmokeTest extends Specification {
   }
 
   protected Collection<ExportTraceServiceRequest> waitForTraces() {
-    def content = waitForContent()
-
-    return OBJECT_MAPPER.readTree(content).collect {
-      def builder = ExportTraceServiceRequest.newBuilder()
-      // TODO(anuraaga): Register parser into object mapper to avoid de -> re -> deserialize.
-      JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder)
-      return builder.build()
-    }
+    return telemetryRetriever.waitForTraces()
   }
 
-  private String waitForContent() {
-    long previousSize = 0
-    long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30)
-    String content = "[]"
-    while (System.currentTimeMillis() < deadline) {
-      def body = content = CLIENT.newCall(new Request.Builder()
-        .url("http://localhost:${backend.getMappedPort(8080)}/get-requests")
-        .build())
-        .execute()
-        .body()
-      try {
-        content = body.string()
-      } finally {
-        body.close()
-      }
-      if (content.length() > 2 && content.length() == previousSize) {
-        break
-      }
-      previousSize = content.length()
-      println "Curent content size $previousSize"
-      TimeUnit.MILLISECONDS.sleep(500)
-    }
-
-    return content
+  protected Collection<ExportMetricsServiceRequest> waitForMetrics() {
+    return telemetryRetriever.waitForMetrics()
   }
 
   protected static Set<String> getLoggedTraceIds(ToStringConsumer output) {
@@ -187,37 +154,6 @@ abstract class SmokeTest extends Specification {
       .filter({ it.contains("opentelemetry-javaagent - version: " + version) })
       .findFirst()
       .isPresent()
-  }
-
-  // TODO(anuraaga): Delete after https://github.com/open-telemetry/opentelemetry-java/pull/2750
-  static String bytesToHex(byte[] bytes) {
-    char[] dest = new char[bytes.length * 2]
-    bytesToBase16(bytes, dest)
-    return new String(dest)
-  }
-
-  private static void bytesToBase16(byte[] bytes, char[] dest) {
-    for (int i = 0; i < bytes.length; i++) {
-      byteToBase16(bytes[i], dest, i * 2)
-    }
-  }
-
-  private static void byteToBase16(byte value, char[] dest, int destOffset) {
-    int b = value & 0xFF
-    dest[destOffset] = ENCODING[b]
-    dest[destOffset + 1] = ENCODING[b | 0x100]
-  }
-
-  private static final String ALPHABET = "0123456789abcdef"
-  private static final char[] ENCODING = buildEncodingArray()
-
-  private static char[] buildEncodingArray() {
-    char[] encoding = new char[512]
-    for (int i = 0; i < 256; ++i) {
-      encoding[i] = ALPHABET.charAt(i >>> 4)
-      encoding[i | 0x100] = ALPHABET.charAt(i & 0xF)
-    }
-    return encoding
   }
 
   static class Backend {
@@ -241,7 +177,7 @@ abstract class SmokeTest extends Specification {
       started = true
       Runtime.addShutdownHook { stop() }
 
-      backend = new GenericContainer<>("ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20201128.1734635")
+      backend = new GenericContainer<>("ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20210319.060589")
         .withExposedPorts(8080)
         .waitingFor(Wait.forHttp("/health").forPort(8080))
         .withNetwork(network)
