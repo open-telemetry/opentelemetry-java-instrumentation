@@ -1,0 +1,14 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+// need to override archivesBaseName set in instrumentation-library.gradle
+archivesBaseName = "servlet-jakarta"
+
+dependencies {
+  api(project(':instrumentation:servlet:servlet-common:library'))
+
+  compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '5.0.0'
+
+  testImplementation group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '5.0.0'
+  testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.6.0'
+  testImplementation deps.assertj
+}

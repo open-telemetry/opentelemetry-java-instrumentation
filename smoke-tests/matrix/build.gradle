@@ -45,6 +45,7 @@ def linuxTargets = [
   "jetty": [
     [version: ["9.4.35"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15"]],
     [version: ["10.0.0"], vm: ["hotspot", "openj9"], jdk: ["11", "15"]],
+    [version: ["11.0.1"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], war: "servlet-jakarta"]
   ],
   "tomcat": [
     [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"]],
@@ -99,13 +100,14 @@ def windowsTargets = [
 createDockerTasks(buildLinuxTestImagesTask, linuxTargets, false)
 createDockerTasks(buildWindowsTestImagesTask, windowsTargets, true)
 
-def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, Map<String, String> extraArgs, isWindows = false) {
-  def dockerWorkingDir = new File(project.buildDir, "docker")
+def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warProject, Map<String, String> extraArgs, isWindows = false) {
+  // Using separate build directory for different war files allows using the same app.war filename
+  def dockerWorkingDir = new File(project.buildDir, warProject != null ? "docker-$warProject" : "docker")
   def dockerFileName = isWindows ? "${dockerfile}.windows.dockerfile" : "${dockerfile}.dockerfile"
   def platformSuffix = isWindows ? "-windows" : ""
 
   def prepareTask = tasks.register("${server}ImagePrepare-$version-jdk$jdk-$vm$platformSuffix", Copy) {
-    def warTask = project.tasks.war
+    def warTask = warProject != null ? project(":$warProject").tasks["war"] : project.tasks.war
     it.dependsOn(warTask)
     it.into(dockerWorkingDir)
     it.from("src/$dockerFileName")
@@ -143,11 +145,12 @@ def createDockerTasks(Task parentTask, targets, isWindows) {
     matrices.forEach { entry ->
       def dockerfile = entry["dockerfile"]?.toString() ?: server
       def extraArgs = (entry["args"] ?: [:]) as Map<String, String>
+      def warProject = entry["war"]
 
       entry.version.forEach { version ->
         entry.vm.forEach { vm ->
           entry.jdk.forEach { jdk ->
-            resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, extraArgs, isWindows))
+            resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows))
           }
         }
       }

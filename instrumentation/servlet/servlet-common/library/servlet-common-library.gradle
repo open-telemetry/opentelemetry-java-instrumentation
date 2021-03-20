@@ -1,0 +1,8 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+// need to override archivesBaseName set in instrumentation-library.gradle
+archivesBaseName = "servlet-common"
+
+dependencies {
+  implementation deps.slf4j
+}

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
