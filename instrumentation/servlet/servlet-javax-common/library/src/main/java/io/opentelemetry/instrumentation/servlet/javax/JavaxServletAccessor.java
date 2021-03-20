@@ -10,8 +10,8 @@ import java.security.Principal;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-public abstract class JavaxServletAccessor<RESPONSE>
-    implements ServletAccessor<HttpServletRequest, RESPONSE> {
+public abstract class JavaxServletAccessor<R>
+    implements ServletAccessor<HttpServletRequest, R> {
   @Override
   public String getRequestContextPath(HttpServletRequest request) {
     return request.getContextPath();
@@ -33,7 +33,7 @@ public abstract class JavaxServletAccessor<RESPONSE>
   }
 
   @Override
-  public String getRequestURI(HttpServletRequest request) {
+  public String getRequestUri(HttpServletRequest request) {
     return request.getRequestURI();
   }
 

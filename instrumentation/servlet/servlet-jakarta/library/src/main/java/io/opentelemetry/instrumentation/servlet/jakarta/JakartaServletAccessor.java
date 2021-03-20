@@ -38,7 +38,7 @@ public class JakartaServletAccessor
   }
 
   @Override
-  public String getRequestURI(HttpServletRequest request) {
+  public String getRequestUri(HttpServletRequest request) {
     return request.getRequestURI();
   }
 

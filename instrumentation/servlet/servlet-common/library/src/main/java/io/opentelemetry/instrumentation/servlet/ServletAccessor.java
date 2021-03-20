@@ -7,40 +7,40 @@ package io.opentelemetry.instrumentation.servlet;
 
 import java.security.Principal;
 
-public interface ServletAccessor<REQUEST, RESPONSE> {
-  String getRequestContextPath(REQUEST request);
+public interface ServletAccessor<RequestT, ResponseT> {
+  String getRequestContextPath(RequestT request);
 
-  String getRequestScheme(REQUEST request);
+  String getRequestScheme(RequestT request);
 
-  String getRequestServerName(REQUEST request);
+  String getRequestServerName(RequestT request);
 
-  int getRequestServerPort(REQUEST request);
+  int getRequestServerPort(RequestT request);
 
-  String getRequestURI(REQUEST request);
+  String getRequestUri(RequestT request);
 
-  String getRequestQueryString(REQUEST request);
+  String getRequestQueryString(RequestT request);
 
-  Object getRequestAttribute(REQUEST request, String name);
+  Object getRequestAttribute(RequestT request, String name);
 
-  void setRequestAttribute(REQUEST request, String name, Object value);
+  void setRequestAttribute(RequestT request, String name, Object value);
 
-  String getRequestProtocol(REQUEST request);
+  String getRequestProtocol(RequestT request);
 
-  String getRequestMethod(REQUEST request);
+  String getRequestMethod(RequestT request);
 
-  String getRequestRemoteAddr(REQUEST request);
+  String getRequestRemoteAddr(RequestT request);
 
-  String getRequestHeader(REQUEST request, String name);
+  String getRequestHeader(RequestT request, String name);
 
-  String getRequestServletPath(REQUEST request);
+  String getRequestServletPath(RequestT request);
 
-  Principal getRequestUserPrincipal(REQUEST request);
+  Principal getRequestUserPrincipal(RequestT request);
 
-  Integer getRequestRemotePort(REQUEST request);
+  Integer getRequestRemotePort(RequestT request);
 
-  int getResponseStatus(RESPONSE response);
+  int getResponseStatus(ResponseT response);
 
-  boolean isResponseCommitted(RESPONSE response);
+  boolean isResponseCommitted(ResponseT response);
 
   boolean isServletException(Throwable throwable);
 }

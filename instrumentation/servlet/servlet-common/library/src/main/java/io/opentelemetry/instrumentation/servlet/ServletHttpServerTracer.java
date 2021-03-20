@@ -87,7 +87,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
               null,
               accessor.getRequestServerName(httpServletRequest),
               accessor.getRequestServerPort(httpServletRequest),
-              accessor.getRequestURI(httpServletRequest),
+              accessor.getRequestUri(httpServletRequest),
               accessor.getRequestQueryString(httpServletRequest),
               null)
           .toString();
