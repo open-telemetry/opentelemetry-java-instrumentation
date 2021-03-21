@@ -25,11 +25,13 @@ public interface MethodSpanStrategy {
    *
    * @param tracer {@link BaseTracer} tracer to be used to end the span stored in the {@code
    *     context}.
-   * @param result Return value of the traced method.
-   * @return Either {@code result} or a value composing over {@code result} for notification of
-   *     completion.
+   * @param returnValue Return value from the traced method. Must be an instance of a {@code
+   *     returnType} for which {@link #supports(Class)} returned true (in particular it must not be
+   *     {@code null}).
+   * @return Either {@code returnValue} or a value composing over {@code returnValue} for
+   *     notification of completion.
    */
-  Object end(BaseTracer tracer, Context context, Class<?> returnType, Object result);
+  Object end(BaseTracer tracer, Context context, Object returnValue);
 
   /**
    * Returns a {@link MethodSpanStrategy} for tracing synchronous methods where the return value

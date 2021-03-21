@@ -54,7 +54,7 @@ public class WithSpanAdvice {
     if (throwable != null) {
       tracer().endExceptionally(context, throwable);
     } else {
-      tracer().end(context, method, returnValue);
+      tracer().end(context, method.getReturnType(), returnValue);
     }
   }
 }

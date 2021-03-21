@@ -17,8 +17,8 @@ enum SynchronousMethodSpanStrategy implements MethodSpanStrategy {
   }
 
   @Override
-  public Object end(BaseTracer tracer, Context context, Class<?> returnType, Object result) {
+  public Object end(BaseTracer tracer, Context context, Object returnValue) {
     tracer.end(context);
-    return result;
+    return returnValue;
   }
 }

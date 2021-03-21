@@ -78,13 +78,18 @@ public class WithSpanTracer extends BaseTracer {
    * asynchronous operation then the span will not be finished until the asynchronous operation has
    * completed.
    *
-   * @param result Return value from the traced method.
-   * @return Either {@code result} or a value composing over {@code result} for notification of
-   *     completion.
+   * @param returnType Return type of the traced method.
+   * @param returnValue Return value from the traced method.
+   * @return Either {@code returnValue} or a value composing over {@code returnValue} for
+   *     notification of completion.
+   * @throws ClassCastException if returnValue is not an instance of returnType
    */
-  public Object end(Context context, Method method, Object result) {
-    Class<?> returnType = method.getReturnType();
-    return methodSpanStrategies.resolveStrategy(returnType).end(this, context, returnType, result);
+  public Object end(Context context, Class<?> returnType, Object returnValue) {
+    if (!returnType.isInstance(returnValue)) {
+      end(context);
+      return returnValue;
+    }
+    return methodSpanStrategies.resolveStrategy(returnType).end(this, context, returnValue);
   }
 
   @Override
