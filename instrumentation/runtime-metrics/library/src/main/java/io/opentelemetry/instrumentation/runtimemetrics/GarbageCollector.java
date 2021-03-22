@@ -26,6 +26,7 @@ import java.util.List;
  *
  * <pre>
  *   runtime.jvm.gc.collection{gc="PS1"} 6.7
+ *   runtime.jvm.gc.collection.count{gc="PS1"} 1
  * </pre>
  */
 public final class GarbageCollector {
@@ -48,6 +49,18 @@ public final class GarbageCollector {
               for (int i = 0; i < garbageCollectors.size(); i++) {
                 resultLongObserver.observe(
                     garbageCollectors.get(i).getCollectionTime(), labelSets.get(i));
+              }
+            })
+        .build();
+    meter
+        .longSumObserverBuilder("runtime.jvm.gc.collection.count")
+        .setDescription("The number of collections that have occurred for a given JVM garbage collector.")
+        .setUnit("collections")
+        .setUpdater(
+            resultLongObserver -> {
+              for (int i = 0; i < garbageCollectors.size(); i++) {
+                resultLongObserver.observe(
+                    garbageCollectors.get(i).getCollectionCount(), labelSets.get(i));
               }
             })
         .build();
