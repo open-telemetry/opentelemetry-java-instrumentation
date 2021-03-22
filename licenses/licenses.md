@@ -1,7 +1,7 @@
 
 #javaagent
 ##Dependency License Report
-_2021-03-22 12:38:37 JST_
+_2021-03-22 18:06:07 JST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18` 
@@ -58,7 +58,7 @@ _2021-03-22 12:38:37 JST_
 **12** **Group:** `com.google.code.gson` **Name:** `gson` **Version:** `2.8.6` 
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**13** **Group:** `com.google.errorprone` **Name:** `error_prone_annotations` **Version:** `2.5.1` 
+**13** **Group:** `com.google.errorprone` **Name:** `error_prone_annotations` **Version:** `2.4.0` 
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 **14** **Group:** `com.google.guava` **Name:** `failureaccess` **Version:** `1.0.1` 
@@ -467,54 +467,42 @@ _2021-03-22 12:38:37 JST_
 > - **POM License**: GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception - [https://openjdk.java.net/legal/gplv2+ce.html](https://openjdk.java.net/legal/gplv2+ce.html)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
-**101** **Group:** `org.checkerframework` **Name:** `checker-qual` **Version:** `3.10.0` 
-> - **Manifest License**: MIT License (Not Packaged)
-> - **POM Project URL**: [https://checkerframework.org](https://checkerframework.org)
-> - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-> - **Embedded license files**: [checker-qual-3.10.0.jar/META-INF/LICENSE.txt](checker-qual-3.10.0.jar/META-INF/LICENSE.txt)
-
-**102** **Group:** `org.checkerframework` **Name:** `checker-qual` **Version:** `3.10.0` 
-> - **Manifest License**: MIT License (Not Packaged)
-> - **POM Project URL**: [https://checkerframework.org](https://checkerframework.org)
-> - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-> - **Embedded license files**: [checker-qual-3.10.0.jar/META-INF/LICENSE.txt](checker-qual-3.10.0.jar/META-INF/LICENSE.txt)
-
-**103** **Group:** `org.codehaus.mojo` **Name:** `animal-sniffer-annotations` **Version:** `1.19` 
+**101** **Group:** `org.codehaus.mojo` **Name:** `animal-sniffer-annotations` **Version:** `1.19` 
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
-**104** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `1.7.30` 
+**102** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `1.7.30` 
 > - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
-**105** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `1.7.30` 
+**103** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `1.7.30` 
 > - **POM Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 
 ## The 3-Clause BSD License
 
-**106** **Group:** `com.google.protobuf` **Name:** `protobuf-java` **Version:** `3.14.0` 
+**104** **Group:** `com.google.protobuf` **Name:** `protobuf-java` **Version:** `3.14.0` 
 > - **Manifest Project URL**: [https://developers.google.com/protocol-buffers/](https://developers.google.com/protocol-buffers/)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**107** **Group:** `com.google.protobuf` **Name:** `protobuf-java` **Version:** `3.14.0` 
+**105** **Group:** `com.google.protobuf` **Name:** `protobuf-java` **Version:** `3.14.0` 
 > - **Manifest Project URL**: [https://developers.google.com/protocol-buffers/](https://developers.google.com/protocol-buffers/)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**108** **Group:** `com.google.protobuf` **Name:** `protobuf-java-util` **Version:** `3.14.0` 
+**106** **Group:** `com.google.protobuf` **Name:** `protobuf-java-util` **Version:** `3.14.0` 
 > - **Manifest Project URL**: [https://developers.google.com/protocol-buffers/](https://developers.google.com/protocol-buffers/)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**109** **Group:** `com.google.protobuf` **Name:** `protobuf-java-util` **Version:** `3.14.0` 
+**107** **Group:** `com.google.protobuf` **Name:** `protobuf-java-util` **Version:** `3.14.0` 
 > - **Manifest Project URL**: [https://developers.google.com/protocol-buffers/](https://developers.google.com/protocol-buffers/)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 ## Unknown
 
-**110** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-bom` **Version:** `1.4.21` 
+**108** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-bom` **Version:** `1.4.21` 
 
 

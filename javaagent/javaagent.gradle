@@ -118,7 +118,9 @@ dependencies {
   shadowInclude project(path: ':javaagent-bootstrap')
 
   // We only have compileOnly dependencies on these to make sure they don't leak into POMs.
-  licenseReportDependencies deps.caffeine
+  licenseReportDependencies(deps.caffeine) {
+    transitive = false
+  }
   licenseReportDependencies deps.weaklockfree
   // TODO ideally this would be :instrumentation instead of :javaagent-tooling
   //  in case there are dependencies (accidentally) pulled in by instrumentation modules
