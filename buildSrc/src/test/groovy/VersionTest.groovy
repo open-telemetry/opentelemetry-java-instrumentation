@@ -15,5 +15,6 @@ class VersionTest extends Specification {
     def predicate = new MuzzlePlugin.AcceptableVersions(new VersionRangeResult(new VersionRangeRequest()), [])
     expect:
     !predicate.test(new GenericVersion("10.1.0-rc2+19-8e20bb26"))
+    !predicate.test(new GenericVersion("2.4.5.BUILD-SNAPSHOT"))
   }
 }

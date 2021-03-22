@@ -5,7 +5,9 @@ muzzle {
     group = "org.grails"
     module = "grails-web-url-mappings"
     versions = "[3.0,)"
-    skipVersions += ['3.1.15']
+    // TODO (trask) 3.3.6 is not in maven central metadata, not sure where it's coming from
+    //  https://repo1.maven.org/maven2/org/grails/grails-web-url-mappings/maven-metadata.xml
+    skipVersions += ['3.1.15', '3.3.6']
     assertInverse = true
   }
 }
@@ -24,7 +26,7 @@ def grailsVersion = '3.0.6'
 def springBootVersion = '1.2.5.RELEASE'
 
 dependencies {
-  library ("org.grails:grails-plugin-url-mappings:$grailsVersion")
+  library("org.grails:grails-plugin-url-mappings:$grailsVersion")
 
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-common:javaagent')
@@ -38,7 +40,7 @@ dependencies {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
 
-  latestDepTestLibrary ("org.grails:grails-plugin-url-mappings:4.0.+")
+  latestDepTestLibrary("org.grails:grails-plugin-url-mappings:4.0.+")
   latestDepTestLibrary "org.springframework.boot:spring-boot-autoconfigure:2.1.17.RELEASE"
   latestDepTestLibrary "org.springframework.boot:spring-boot-starter-tomcat:2.1.17.RELEASE"
 }

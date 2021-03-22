@@ -18,5 +18,6 @@
   <logger name="org.apache.camel" level="debug" />
   <logger name="test" level="trace"/>
   <logger name="org.testcontainers" level="debug" />
+  <logger name="com.amazonaws" level="WARN" />
 
 </configuration>

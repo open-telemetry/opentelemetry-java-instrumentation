@@ -7,9 +7,8 @@ package io.opentelemetry.smoketest
 
 import static java.util.stream.Collectors.toSet
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.protobuf.util.JsonFormat
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
+import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.common.v1.AnyValue
 import io.opentelemetry.proto.trace.v1.Span
@@ -19,6 +18,7 @@ import java.util.regex.Pattern
 import java.util.stream.Stream
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.ToStringConsumer
 import spock.lang.Shared
@@ -27,11 +27,12 @@ import spock.lang.Specification
 abstract class SmokeTest extends Specification {
   private static final Pattern TRACE_ID_PATTERN = Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*")
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-
   protected static final OkHttpClient CLIENT = OkHttpUtils.client()
 
   protected static final TestContainerManager containerManager = createContainerManager()
+
+  @Shared
+  private TelemetryRetriever telemetryRetriever
 
   @Shared
   protected String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
@@ -50,6 +51,7 @@ abstract class SmokeTest extends Specification {
 
   def setupSpec() {
     containerManager.startEnvironment()
+    telemetryRetriever = new TelemetryRetriever(backend.getMappedPort(8080))
   }
 
   def startTarget(int jdk) {
@@ -72,11 +74,7 @@ abstract class SmokeTest extends Specification {
   }
 
   def cleanup() {
-    CLIENT.newCall(new Request.Builder()
-      .url("http://localhost:${containerManager.getBackendMappedPort()}/clear-requests")
-      .build())
-      .execute()
-      .close()
+    telemetryRetriever.clearTelemetry()
   }
 
   def stopTarget() {
@@ -108,40 +106,11 @@ abstract class SmokeTest extends Specification {
   }
 
   protected Collection<ExportTraceServiceRequest> waitForTraces() {
-    def content = waitForContent()
-
-    return OBJECT_MAPPER.readTree(content).collect {
-      def builder = ExportTraceServiceRequest.newBuilder()
-      // TODO(anuraaga): Register parser into object mapper to avoid de -> re -> deserialize.
-      JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder)
-      return builder.build()
-    }
+    return telemetryRetriever.waitForTraces()
   }
 
-  private String waitForContent() {
-    long previousSize = 0
-    long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30)
-    String content = "[]"
-    while (System.currentTimeMillis() < deadline) {
-      def body = content = CLIENT.newCall(new Request.Builder()
-        .url("http://localhost:${containerManager.getBackendMappedPort()}/get-requests")
-        .build())
-        .execute()
-        .body()
-      try {
-        content = body.string()
-      } finally {
-        body.close()
-      }
-      if (content.length() > 2 && content.length() == previousSize) {
-        break
-      }
-      previousSize = content.length()
-      println "Curent content size $previousSize"
-      TimeUnit.MILLISECONDS.sleep(500)
-    }
-
-    return content
+  protected Collection<ExportMetricsServiceRequest> waitForMetrics() {
+    return telemetryRetriever.waitForMetrics()
   }
 
   protected static Set<String> getLoggedTraceIds(ToStringConsumer output) {

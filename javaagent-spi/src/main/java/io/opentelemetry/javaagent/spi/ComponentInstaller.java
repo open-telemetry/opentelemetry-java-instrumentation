@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.spi;
 
+import io.opentelemetry.instrumentation.api.config.Config;
+
 /**
  * {@link ComponentInstaller} can be used to install any implementation providers that are used by
  * instrumentations. For instance Java agent uses this to install OpenTelemetry SDK. The
@@ -25,8 +27,8 @@ public interface ComponentInstaller {
    * and InstrumentationContext falls back to the less performant Map implementation for those
    * classes.
    */
-  default void beforeByteBuddyAgent() {}
+  default void beforeByteBuddyAgent(Config config) {}
 
   /** Runs after instrumentations are added to ByteBuddy. */
-  default void afterByteBuddyAgent() {}
+  default void afterByteBuddyAgent(Config config) {}
 }

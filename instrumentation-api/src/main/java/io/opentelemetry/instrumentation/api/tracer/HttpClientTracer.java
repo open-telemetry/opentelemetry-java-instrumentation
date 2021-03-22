@@ -135,24 +135,36 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     if (startTimeNanos > 0) {
       spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
     }
+    onRequest(spanBuilder, request);
     Span span = spanBuilder.startSpan();
-    onRequest(span, request);
     return span;
   }
 
-  protected void onRequest(Span span, REQUEST request) {
-    assert span != null;
-    if (request != null) {
-      span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
-      span.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
-      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
+  protected void onRequest(SpanBuilder spanBuilder, REQUEST request) {
+    onRequest(spanBuilder::setAttribute, request);
+  }
 
-      setFlavor(span, request);
-      setUrl(span, request);
+  /**
+   * This method should only be used when the request is not yet available when {@link #startSpan}
+   * is called. Otherwise {@link #onRequest(SpanBuilder, Object)} should be used.
+   */
+  protected void onRequest(Span span, REQUEST request) {
+    onRequest(span::setAttribute, request);
+  }
+
+  private void onRequest(AttributeSetter setter, REQUEST request) {
+    assert setter != null;
+    if (request != null) {
+      setter.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
+      setter.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
+      setter.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
+
+      setFlavor(setter, request);
+      setUrl(setter, request);
     }
   }
 
-  private void setFlavor(Span span, REQUEST request) {
+  private void setFlavor(AttributeSetter setter, REQUEST request) {
     String flavor = flavor(request);
     if (flavor == null) {
       return;
@@ -163,15 +175,15 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       flavor = flavor.substring(httpProtocolPrefix.length());
     }
 
-    span.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
+    setter.setAttribute(SemanticAttributes.HTTP_FLAVOR, flavor);
   }
 
-  private void setUrl(Span span, REQUEST request) {
+  private void setUrl(AttributeSetter setter, REQUEST request) {
     try {
       URI url = url(request);
       if (url != null) {
-        netPeerAttributes.setNetPeer(span, url.getHost(), null, url.getPort());
-        span.setAttribute(SemanticAttributes.HTTP_URL, url.toString());
+        netPeerAttributes.setNetPeer(setter, url.getHost(), null, url.getPort());
+        setter.setAttribute(SemanticAttributes.HTTP_URL, url.toString());
       }
     } catch (Exception e) {
       log.debug("Error tagging url", e);

@@ -8,6 +8,7 @@ package io.opentelemetry.smoketest
 import static java.util.stream.Collectors.toSet
 
 import io.grpc.ManagedChannelBuilder
+import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc
 import java.util.jar.Attributes
@@ -49,7 +50,7 @@ class GrpcSmokeTest extends SmokeTest {
     then: "correct traceIds are logged via MDC instrumentation"
     def loggedTraceIds = getLoggedTraceIds(output)
     def spanTraceIds = getSpanStream(traces)
-      .map({ bytesToHex(it.getTraceId().toByteArray()) })
+      .map({ TraceId.fromBytes(it.getTraceId().toByteArray()) })
       .collect(toSet())
     loggedTraceIds == spanTraceIds
 

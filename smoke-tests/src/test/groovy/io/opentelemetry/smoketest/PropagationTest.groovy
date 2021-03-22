@@ -7,6 +7,7 @@ package io.opentelemetry.smoketest
 
 import static java.util.stream.Collectors.toSet
 
+import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import okhttp3.Request
 import spock.lang.IgnoreIf
@@ -28,7 +29,7 @@ abstract class PropagationTest extends SmokeTest {
     def response = CLIENT.newCall(request).execute()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
     def traceIds = getSpanStream(traces)
-      .map({ bytesToHex(it.getTraceId().toByteArray()) })
+      .map({ TraceId.fromBytes(it.getTraceId().toByteArray()) })
       .collect(toSet())
 
     then:
@@ -100,7 +101,7 @@ class OtTracePropagationTest extends SmokeTest {
     def response = CLIENT.newCall(request).execute()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
     def traceIds = getSpanStream(traces)
-      .map({ bytesToHex(it.getTraceId().toByteArray()).substring(16) })
+      .map({ TraceId.fromBytes(it.getTraceId().toByteArray()).substring(16) })
       .collect(toSet())
 
     then:

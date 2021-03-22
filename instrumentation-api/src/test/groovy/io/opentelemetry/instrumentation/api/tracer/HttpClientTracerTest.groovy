@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
-import io.opentelemetry.api.trace.Span
+
 import io.opentelemetry.context.propagation.TextMapSetter
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -130,23 +130,6 @@ class HttpClientTracerTest extends BaseTracerTest {
     600    | [status: 600]
     null   | [status: null]
     null   | null
-  }
-
-  def "test assert null span"() {
-    setup:
-    def tracer = newTracer()
-
-    when:
-    tracer.onRequest((Span) null, null)
-
-    then:
-    thrown(AssertionError)
-
-    when:
-    tracer.onResponse((Span) null, null)
-
-    then:
-    thrown(AssertionError)
   }
 
   @Override

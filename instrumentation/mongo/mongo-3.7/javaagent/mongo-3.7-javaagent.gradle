@@ -14,7 +14,7 @@ muzzle {
     // the legacy API instrumented in mongo-3.1 continues to be shipped in 4.x, but doesn't conflict here
     // because they are triggered by different types: MongoClientSettings(new) vs MongoClientOptions(legacy)
     versions = "[3.7,)"
-    extraDependency "org.mongodb:bson:3.7.0"
+    extraDependency "org.mongodb:bson"
     assertInverse = true
   }
 }

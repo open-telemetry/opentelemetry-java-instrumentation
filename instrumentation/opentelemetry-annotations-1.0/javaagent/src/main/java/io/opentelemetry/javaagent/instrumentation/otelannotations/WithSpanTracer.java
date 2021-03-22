@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.javaagent.instrumentation.otelannotations.async.MethodSpanStrategies;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,8 @@ public class WithSpanTracer extends BaseTracer {
   }
 
   private static final Logger log = LoggerFactory.getLogger(WithSpanTracer.class);
+
+  private final MethodSpanStrategies methodSpanStrategies = MethodSpanStrategies.getInstance();
 
   public Context startSpan(
       Context parentContext, WithSpan applicationAnnotation, Method method, SpanKind kind) {
@@ -67,6 +70,26 @@ public class WithSpanTracer extends BaseTracer {
       log.debug("unexpected span kind: {}", applicationSpanKind.name());
       return SpanKind.INTERNAL;
     }
+  }
+
+  /**
+   * Denotes the end of the invocation of the traced method with a successful result which will end
+   * the span stored in the passed {@code context}. If the method returned a value representing an
+   * asynchronous operation then the span will not be finished until the asynchronous operation has
+   * completed.
+   *
+   * @param returnType Return type of the traced method.
+   * @param returnValue Return value from the traced method.
+   * @return Either {@code returnValue} or a value composing over {@code returnValue} for
+   *     notification of completion.
+   * @throws ClassCastException if returnValue is not an instance of returnType
+   */
+  public Object end(Context context, Class<?> returnType, Object returnValue) {
+    if (!returnType.isInstance(returnValue)) {
+      end(context);
+      return returnValue;
+    }
+    return methodSpanStrategies.resolveStrategy(returnType).end(this, context, returnValue);
   }
 
   @Override

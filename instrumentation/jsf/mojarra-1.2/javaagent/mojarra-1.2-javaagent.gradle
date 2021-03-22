@@ -41,13 +41,6 @@ muzzle {
     versions = "[3.0,)"
     extraDependency "javax.el:el-api:2.2"
   }
-  fail {
-    group = "javax.faces"
-    module = "jsf-impl"
-    versions = "[1.1,1.2)"
-    extraDependency "javax.faces:jsf-api:1.1_02"
-    extraDependency "javax.el:el-api:1.0"
-  }
 }
 
 testSets {
