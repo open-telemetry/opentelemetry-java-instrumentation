@@ -5,25 +5,43 @@
 
 package io.opentelemetery.instrumentation.rocketmq
 
-import base.BaseConf
-import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
-import org.apache.rocketmq.client.producer.DefaultMQProducer
-import org.apache.rocketmq.client.producer.SendCallback
-import org.apache.rocketmq.client.producer.SendResult
-import org.apache.rocketmq.common.message.Message
-import org.apache.rocketmq.remoting.common.RemotingHelper
-import org.apache.rocketmq.test.listener.rmq.order.RMQOrderListener
-import spock.lang.Shared
-import spock.lang.Unroll
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
+import org.apache.rocketmq.client.exception.MQClientException
+import org.apache.rocketmq.client.producer.DefaultMQProducer
+import org.apache.rocketmq.client.producer.SendCallback
+import org.apache.rocketmq.client.producer.SendResult
+import org.apache.rocketmq.common.message.Message
+import org.apache.rocketmq.remoting.common.RemotingHelper
+import org.apache.rocketmq.test.listener.AbstractListener
+import org.apache.rocketmq.test.listener.rmq.order.RMQOrderListener
+import org.apache.rocketmq.test.util.MQRandomUtils
+import org.apache.rocketmq.test.util.RandomUtil
+import org.slf4j.LoggerFactory
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.Network
+import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.containers.wait.strategy.Wait
+import spock.lang.Shared
+import spock.lang.Unroll
+
 @Unroll
 abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
+
+  @Shared
+  Network network
+
+  @Shared
+  GenericContainer nameserver
+
+  @Shared
+  GenericContainer broker
 
   @Shared
   DefaultMQProducer producer
@@ -32,7 +50,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   DefaultMQPushConsumer consumer
 
   @Shared
-  def sharedTopic
+  def topic
 
   @Shared
   Message msg
@@ -45,22 +63,46 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   abstract void configureMQPushConsumer(DefaultMQPushConsumer consumer)
 
   def setupSpec() {
-    sharedTopic = BaseConf.initTopic()
-    msg = new Message(sharedTopic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
-    Message msg1 = new Message(sharedTopic, "TagA", ("hello world a").getBytes())
-    Message msg2 = new Message(sharedTopic, "TagB", ("hello world b").getBytes())
+    network = Network.newNetwork()
+    nameserver = new GenericContainer("apacherocketmq/rocketmq:4.6.0")
+      .withNetwork(network)
+      .withNetworkAliases("nameserver")
+      .withExposedPorts(9876)
+      .withCommand("./mqnamesrv")
+      .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("rocketmq-nameserver")))
+      .waitingFor(Wait.forLogMessage('^The Name Server boot success.*', 1))
+    nameserver.start()
+
+    broker = new GenericContainer("apacherocketmq/rocketmq:4.6.0")
+      .withExposedPorts(10911, 10912, 10909)
+      .withNetwork(network)
+      .withNetworkAliases("broker")
+      .withEnv("NAMESRV_ADDR", "nameserver:9876")
+      .withCommand("./mqbroker autoCreateTopicEnable=true")
+      .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("rocketmq-broker")))
+      .waitingFor(Wait.forLogMessage('^The broker.* boot success.*', 1))
+    broker.start()
+
+    def nameserverAddress = "${nameserver.getHost()}:${nameserver.getMappedPort(9876)}"
+    topic = MQRandomUtils.getRandomTopic()
+
+    msg = new Message(topic, "TagA", ("Hello RocketMQ").getBytes(RemotingHelper.DEFAULT_CHARSET))
+    Message msg1 = new Message(topic, "TagA", ("hello world a").getBytes())
+    Message msg2 = new Message(topic, "TagB", ("hello world b").getBytes())
     msgs.add(msg1)
     msgs.add(msg2)
-    producer = BaseConf.getProducer(BaseConf.nsAddr)
+    producer = getProducer(nameserverAddress)
     configureMQProducer(producer)
-    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
+    consumer = getConsumer(nameserverAddress, topic, "*", new RMQOrderListener())
     configureMQPushConsumer(consumer)
   }
 
   def cleanupSpec() {
     producer.shutdown()
     consumer.shutdown()
-    BaseConf.deleteTempDir()
+    broker.stop()
+    nameserver.stop()
+    network.close()
   }
 
   def "test rocketmq produce callback"() {
@@ -78,11 +120,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name sharedTopic + " send"
+          name topic + " send"
           kind PRODUCER
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" topic
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
             "messaging.rocketmq.tags" "TagA"
@@ -104,11 +146,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
       trace(0, 3) {
         basicSpan(it, 0, "parent")
         span(1) {
-          name sharedTopic + " send"
+          name topic + " send"
           kind PRODUCER
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" topic
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
             "messaging.rocketmq.tags" "TagA"
@@ -117,11 +159,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           }
         }
         span(2) {
-          name sharedTopic + " process"
+          name topic + " process"
           kind CONSUMER
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" topic
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
@@ -152,11 +194,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
         basicSpan(it, 0, "parent")
         span(1) {
-          name sharedTopic + " send"
+          name topic + " send"
           kind PRODUCER
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" topic
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
             "messaging.rocketmq.broker_address" String
@@ -175,11 +217,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           }
         }
         span(1) {
-          name sharedTopic + " process"
+          name topic + " process"
           kind CONSUMER
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" topic
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
@@ -193,11 +235,11 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           hasLink itemStepSpan
         }
         span(2) {
-          name sharedTopic + " process"
+          name topic + " process"
           kind CONSUMER
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
-            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" topic
             "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
             "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
             "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
@@ -212,5 +254,25 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
         }
       }
     }
+  }
+
+  static DefaultMQPushConsumer getConsumer(
+    String nsAddr, String topic, String subExpression, AbstractListener listener)
+    throws MQClientException {
+    DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("consumerGroup");
+    consumer.setInstanceName(RandomUtil.getStringByUUID());
+    consumer.setNamesrvAddr(nsAddr);
+    consumer.subscribe(topic, subExpression);
+    consumer.setMessageListener(listener);
+    consumer.start();
+    return consumer;
+  }
+
+  static DefaultMQProducer getProducer(String ns) throws MQClientException {
+    DefaultMQProducer producer = new DefaultMQProducer(RandomUtil.getStringByUUID());
+    producer.setInstanceName(UUID.randomUUID().toString());
+    producer.setNamesrvAddr(ns);
+    producer.start();
+    return producer;
   }
 }
