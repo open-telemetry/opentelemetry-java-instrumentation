@@ -3,7 +3,5 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 def scalaVersion = '2.12'
 
 dependencies {
-  compileOnly project(':javaagent-api')
-  compileOnly project(':javaagent-tooling')
   compileOnly group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.0.2'
 }

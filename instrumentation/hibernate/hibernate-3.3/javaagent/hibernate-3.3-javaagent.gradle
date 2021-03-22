@@ -19,7 +19,7 @@ muzzle {
 dependencies {
   library group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.GA'
 
-  implementation project(':instrumentation:hibernate:hibernate-common:library')
+  implementation project(':instrumentation:hibernate:hibernate-common:javaagent')
 
   testInstrumentation project(':instrumentation:jdbc:javaagent')
   // Added to ensure cross compatibility:
