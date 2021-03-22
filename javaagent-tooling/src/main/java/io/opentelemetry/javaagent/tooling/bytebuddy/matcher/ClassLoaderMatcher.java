@@ -65,13 +65,7 @@ public final class ClassLoaderMatcher {
         // Can't match the bootstrap classloader.
         return false;
       }
-      Boolean cached;
-      if ((cached = cache.get(cl)) != null) {
-        return cached;
-      }
-      boolean value = hasResources(cl);
-      cache.put(cl, value);
-      return value;
+      return cache.computeIfAbsent(cl, this::hasResources);
     }
   }
 }
