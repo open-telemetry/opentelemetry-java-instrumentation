@@ -68,21 +68,20 @@ class CacheTest {
       assertThat(cache.computeIfAbsent("bear", unused -> "roar")).isEqualTo("roar");
       cache.remove("bear");
 
-      CaffeineCache<?, ?> caffeineCache = ((CaffeineCache<?, ?>) cache);
+      WeakLockFreeCache<?, ?> weakLockFreeCache = ((WeakLockFreeCache<?, ?>) cache);
       String cat = new String("cat");
       String dog = new String("dog");
       assertThat(cache.computeIfAbsent(cat, unused -> "meow")).isEqualTo("meow");
-      assertThat(caffeineCache.keySet()).hasSize(1);
+      assertThat(weakLockFreeCache.size()).isEqualTo(1);
 
       assertThat(cache.computeIfAbsent(cat, unused -> "bark")).isEqualTo("meow");
-      assertThat(caffeineCache.keySet()).hasSize(1);
+      assertThat(weakLockFreeCache.size()).isEqualTo(1);
 
       cache.put(dog, "bark");
       assertThat(cache.get(dog)).isEqualTo("bark");
       assertThat(cache.get(cat)).isEqualTo("meow");
       assertThat(cache.get(new String("dog"))).isNull();
-      ;
-      assertThat(caffeineCache.keySet()).hasSize(2);
+      assertThat(weakLockFreeCache.size()).isEqualTo(2);
       assertThat(cache.computeIfAbsent(cat, unused -> "meow")).isEqualTo("meow");
 
       cat = null;
@@ -91,8 +90,7 @@ class CacheTest {
       await()
           .untilAsserted(
               () -> {
-                caffeineCache.cleanup();
-                assertThat(caffeineCache.keySet()).hasSize(1);
+                assertThat(weakLockFreeCache.size()).isEqualTo(1);
               });
       assertThat(cache.computeIfAbsent(dog, unused -> "bark")).isEqualTo("bark");
       dog = null;
@@ -101,8 +99,7 @@ class CacheTest {
       await()
           .untilAsserted(
               () -> {
-                caffeineCache.cleanup();
-                assertThat(caffeineCache.keySet()).isEmpty();
+                assertThat(weakLockFreeCache.size()).isEqualTo(0);
               });
     }
 

@@ -19,6 +19,7 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.infra.Blackhole;
 
 @Fork(3)
 @Warmup(iterations = 10, time = 1)
@@ -43,49 +44,49 @@ public class WeakMapBenchmark {
 
   @Benchmark
   @Threads(1)
-  public void weakConcurrentMap_oneThread() {
-    weakConcurrentMap.put(key, "foo");
-    weakConcurrentMap.get(key);
-    weakConcurrentMap.remove(key);
+  public void weakConcurrentMap_oneThread(Blackhole blackhole) {
+    blackhole.consume(weakConcurrentMap.put(key, "foo"));
+    blackhole.consume(weakConcurrentMap.get(key));
+    blackhole.consume(weakConcurrentMap.remove(key));
   }
 
   @Benchmark
   @Threads(1)
-  public void caffeineMap_oneThread() {
-    caffeineMap.put(key, "foo");
-    caffeineMap.get(key);
-    caffeineMap.remove(key);
+  public void caffeineMap_oneThread(Blackhole blackhole) {
+    blackhole.consume(caffeineMap.put(key, "foo"));
+    blackhole.consume(caffeineMap.get(key));
+    blackhole.consume(caffeineMap.remove(key));
   }
 
   @Benchmark
   @Threads(5)
-  public void weakConcurrentMap_fiveThreads() {
-    weakConcurrentMap.put(key, "foo");
-    weakConcurrentMap.get(key);
-    weakConcurrentMap.remove(key);
+  public void weakConcurrentMap_fiveThreads(Blackhole blackhole) {
+    blackhole.consume(weakConcurrentMap.put(key, "foo"));
+    blackhole.consume(weakConcurrentMap.get(key));
+    blackhole.consume(weakConcurrentMap.remove(key));
   }
 
   @Benchmark
   @Threads(5)
-  public void caffeineMap_fiveThreads() {
-    caffeineMap.put(key, "foo");
-    caffeineMap.get(key);
-    caffeineMap.remove(key);
+  public void caffeineMap_fiveThreads(Blackhole blackhole) {
+    blackhole.consume(caffeineMap.put(key, "foo"));
+    blackhole.consume(caffeineMap.get(key));
+    blackhole.consume(caffeineMap.remove(key));
   }
 
   @Benchmark
   @Threads(10)
-  public void weakConcurrentMap_tenThreads() {
-    weakConcurrentMap.put(key, "foo");
-    weakConcurrentMap.get(key);
-    weakConcurrentMap.remove(key);
+  public void weakConcurrentMap_tenThreads(Blackhole blackhole) {
+    blackhole.consume(weakConcurrentMap.put(key, "foo"));
+    blackhole.consume(weakConcurrentMap.get(key));
+    blackhole.consume(weakConcurrentMap.remove(key));
   }
 
   @Benchmark
   @Threads(10)
-  public void caffeineMap_tenThreads() {
-    caffeineMap.put(key, "foo");
-    caffeineMap.get(key);
-    caffeineMap.remove(key);
+  public void caffeineMap_tenThreads(Blackhole blackhole) {
+    blackhole.consume(caffeineMap.put(key, "foo"));
+    blackhole.consume(caffeineMap.get(key));
+    blackhole.consume(caffeineMap.remove(key));
   }
 }
