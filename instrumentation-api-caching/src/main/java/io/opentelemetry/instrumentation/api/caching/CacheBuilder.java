@@ -50,6 +50,9 @@ public final class CacheBuilder {
     if (maximumSize != UNSET) {
       caffeine.maximumSize(maximumSize);
     }
+    if (executor != null) {
+      caffeine.executor(executor);
+    }
     @SuppressWarnings("unchecked")
     com.github.benmanes.caffeine.cache.Cache<K, V> delegate =
         (com.github.benmanes.caffeine.cache.Cache<K, V>) caffeine.build();
