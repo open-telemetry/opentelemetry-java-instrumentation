@@ -31,6 +31,9 @@ public class WeakMapBenchmark {
   private static final WeakConcurrentMap<String, String> weakConcurrentMap =
       new WeakConcurrentMap<>(true, true);
 
+  private static final WeakConcurrentMap<String, String> weakConcurrentMapInline =
+      new WeakConcurrentMap.WithInlinedExpunction<>();
+
   private static final Cache<String, String> caffeineCache =
       Caffeine.newBuilder().weakKeys().build();
   private static final Map<String, String> caffeineMap = caffeineCache.asMap();
@@ -44,7 +47,23 @@ public class WeakMapBenchmark {
 
   @Benchmark
   @Threads(1)
-  public void weakConcurrentMap_oneThread(Blackhole blackhole) {
+  public void threads01_weakConcurrentMap(Blackhole blackhole) {
+    blackhole.consume(weakConcurrentMap.put(key, "foo"));
+    blackhole.consume(weakConcurrentMap.get(key));
+    blackhole.consume(weakConcurrentMap.remove(key));
+  }
+
+  @Benchmark
+  @Threads(5)
+  public void threads05_weakConcurrentMap(Blackhole blackhole) {
+    blackhole.consume(weakConcurrentMap.put(key, "foo"));
+    blackhole.consume(weakConcurrentMap.get(key));
+    blackhole.consume(weakConcurrentMap.remove(key));
+  }
+
+  @Benchmark
+  @Threads(10)
+  public void threads10_weakConcurrentMap(Blackhole blackhole) {
     blackhole.consume(weakConcurrentMap.put(key, "foo"));
     blackhole.consume(weakConcurrentMap.get(key));
     blackhole.consume(weakConcurrentMap.remove(key));
@@ -52,7 +71,31 @@ public class WeakMapBenchmark {
 
   @Benchmark
   @Threads(1)
-  public void caffeineMap_oneThread(Blackhole blackhole) {
+  public void threads01_weakConcurrentMap_inline(Blackhole blackhole) {
+    blackhole.consume(weakConcurrentMapInline.put(key, "foo"));
+    blackhole.consume(weakConcurrentMapInline.get(key));
+    blackhole.consume(weakConcurrentMapInline.remove(key));
+  }
+
+  @Benchmark
+  @Threads(5)
+  public void threads05_weakConcurrentMap_inline(Blackhole blackhole) {
+    blackhole.consume(weakConcurrentMapInline.put(key, "foo"));
+    blackhole.consume(weakConcurrentMapInline.get(key));
+    blackhole.consume(weakConcurrentMapInline.remove(key));
+  }
+
+  @Benchmark
+  @Threads(10)
+  public void threads10_weakConcurrentMap_inline(Blackhole blackhole) {
+    blackhole.consume(weakConcurrentMapInline.put(key, "foo"));
+    blackhole.consume(weakConcurrentMapInline.get(key));
+    blackhole.consume(weakConcurrentMapInline.remove(key));
+  }
+
+  @Benchmark
+  @Threads(1)
+  public void threads01_caffeine(Blackhole blackhole) {
     blackhole.consume(caffeineMap.put(key, "foo"));
     blackhole.consume(caffeineMap.get(key));
     blackhole.consume(caffeineMap.remove(key));
@@ -60,15 +103,7 @@ public class WeakMapBenchmark {
 
   @Benchmark
   @Threads(5)
-  public void weakConcurrentMap_fiveThreads(Blackhole blackhole) {
-    blackhole.consume(weakConcurrentMap.put(key, "foo"));
-    blackhole.consume(weakConcurrentMap.get(key));
-    blackhole.consume(weakConcurrentMap.remove(key));
-  }
-
-  @Benchmark
-  @Threads(5)
-  public void caffeineMap_fiveThreads(Blackhole blackhole) {
+  public void threads05_caffeine(Blackhole blackhole) {
     blackhole.consume(caffeineMap.put(key, "foo"));
     blackhole.consume(caffeineMap.get(key));
     blackhole.consume(caffeineMap.remove(key));
@@ -76,15 +111,7 @@ public class WeakMapBenchmark {
 
   @Benchmark
   @Threads(10)
-  public void weakConcurrentMap_tenThreads(Blackhole blackhole) {
-    blackhole.consume(weakConcurrentMap.put(key, "foo"));
-    blackhole.consume(weakConcurrentMap.get(key));
-    blackhole.consume(weakConcurrentMap.remove(key));
-  }
-
-  @Benchmark
-  @Threads(10)
-  public void caffeineMap_tenThreads(Blackhole blackhole) {
+  public void threads10_caffeine(Blackhole blackhole) {
     blackhole.consume(caffeineMap.put(key, "foo"));
     blackhole.consume(caffeineMap.get(key));
     blackhole.consume(caffeineMap.remove(key));
