@@ -22,7 +22,11 @@ final class WeakLockFreeCache<K, V> implements Cache<K, V> {
     if (value != null) {
       return value;
     }
-    // Best we can do, we don't expect high contention with this implementation.
+    // Best we can do, we don't expect high contention with this implementation. Note, this
+    // prevents executing mappingFunction twice but it does not prevent executing mappingFunction
+    // if there is a concurrent put operation as would be the case for ConcurrentHashMap. However,
+    // we would never expect an order guarantee in this case anyways so it still has the same
+    // safety.
     synchronized (delegate) {
       value = get(key);
       if (value != null) {
