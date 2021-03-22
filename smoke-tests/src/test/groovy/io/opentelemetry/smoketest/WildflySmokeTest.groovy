@@ -23,7 +23,7 @@ class WildflySmokeTest extends AppServerTest {
 
   @Unroll
   def "JSP smoke test on WildFly"() {
-    String url = "http://localhost:${target.getMappedPort(8080)}/app/jsp"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/app/jsp"
     def request = new Request.Builder().url(url).get().build()
 
     when:

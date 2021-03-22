@@ -12,6 +12,7 @@ apply from: "$rootDir/gradle/java.gradle"
 
 description = 'smoke-tests'
 
+def dockerJavaVersion = "3.2.5"
 dependencies {
   api deps.spock
   api project(':testing-common')
@@ -26,6 +27,10 @@ dependencies {
   implementation 'io.grpc:grpc-netty-shaded'
   implementation 'io.grpc:grpc-protobuf'
   implementation 'io.grpc:grpc-stub'
+
+  testImplementation("com.github.docker-java:docker-java-core:$dockerJavaVersion")
+  testImplementation("com.github.docker-java:docker-java-transport-httpclient5:$dockerJavaVersion")
+
 }
 
 test {

@@ -19,7 +19,7 @@ class PlaySmokeTest extends SmokeTest {
   def "play smoke test on JDK #jdk"(int jdk) {
     setup:
     startTarget(jdk)
-    String url = "http://localhost:${target.getMappedPort(8080)}/welcome?id=1"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/welcome?id=1"
     def request = new Request.Builder().url(url).get().build()
 
     when:

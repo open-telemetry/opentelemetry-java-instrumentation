@@ -21,7 +21,7 @@ abstract class PropagationTest extends SmokeTest {
   def "Should propagate test"() {
     setup:
     startTarget(11)
-    String url = "http://localhost:${target.getMappedPort(8080)}/front"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/front"
     def request = new Request.Builder().url(url).get().build()
 
     when:
@@ -93,7 +93,7 @@ class OtTracePropagationTest extends SmokeTest {
   def "Should propagate test"() {
     setup:
     startTarget(11)
-    String url = "http://localhost:${target.getMappedPort(8080)}/front"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/front"
     def request = new Request.Builder().url(url).get().build()
 
     when:

@@ -27,7 +27,7 @@ class GrpcSmokeTest extends SmokeTest {
     setup:
     def output = startTarget(jdk)
 
-    def channel = ManagedChannelBuilder.forAddress("localhost", target.getMappedPort(8080))
+    def channel = ManagedChannelBuilder.forAddress("localhost", containerManager.getTargetMappedPort(8080))
       .usePlaintext()
       .build()
     def stub = TraceServiceGrpc.newBlockingStub(channel)

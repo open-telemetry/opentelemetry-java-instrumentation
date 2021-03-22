@@ -74,7 +74,7 @@ abstract class AppServerTest extends SmokeTest {
   def "#appServer smoke test on JDK #jdk"(String appServer, String jdk, boolean isWindows) {
     assumeTrue(testSmoke())
 
-    String url = "http://localhost:${target.getMappedPort(8080)}/app/greeting"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/app/greeting"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
@@ -121,7 +121,7 @@ abstract class AppServerTest extends SmokeTest {
 
   @Unroll
   def "#appServer test static file found on JDK #jdk"(String appServer, String jdk, boolean isWindows) {
-    String url = "http://localhost:${target.getMappedPort(8080)}/app/hello.txt"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/app/hello.txt"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
@@ -161,7 +161,7 @@ abstract class AppServerTest extends SmokeTest {
 
   @Unroll
   def "#appServer test static file not found on JDK #jdk"(String appServer, String jdk, boolean isWindows) {
-    String url = "http://localhost:${target.getMappedPort(8080)}/app/file-that-does-not-exist"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/app/file-that-does-not-exist"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
@@ -202,7 +202,7 @@ abstract class AppServerTest extends SmokeTest {
   def "#appServer test request for WEB-INF/web.xml on JDK #jdk"(String appServer, String jdk, boolean isWindows) {
     assumeTrue(testRequestWebInfWebXml())
 
-    String url = "http://localhost:${target.getMappedPort(8080)}/app/WEB-INF/web.xml"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/app/WEB-INF/web.xml"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
@@ -246,7 +246,7 @@ abstract class AppServerTest extends SmokeTest {
   def "#appServer test request with error JDK #jdk"(String appServer, String jdk, boolean isWindows) {
     assumeTrue(testException())
 
-    String url = "http://localhost:${target.getMappedPort(8080)}/app/exception"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/app/exception"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
@@ -288,7 +288,7 @@ abstract class AppServerTest extends SmokeTest {
 
   @Unroll
   def "#appServer test request outside deployed application JDK #jdk"(String appServer, String jdk, boolean isWindows) {
-    String url = "http://localhost:${target.getMappedPort(8080)}/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
@@ -332,7 +332,7 @@ abstract class AppServerTest extends SmokeTest {
   def "#appServer async smoke test on JDK #jdk"(String appServer, String jdk, boolean isWindows) {
     assumeTrue(testAsyncSmoke())
 
-    String url = "http://localhost:${target.getMappedPort(8080)}/app/asyncgreeting"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/app/asyncgreeting"
     def request = new Request.Builder().url(url).get().build()
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 

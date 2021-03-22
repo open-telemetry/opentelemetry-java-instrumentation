@@ -31,7 +31,7 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
   def "spring boot with probability sampling enabled on JDK #jdk"(int jdk) {
     setup:
     startTarget(jdk)
-    String url = "http://localhost:${target.getMappedPort(8080)}/greeting"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/greeting"
     def request = new Request.Builder().url(url).get().build()
 
     when:
