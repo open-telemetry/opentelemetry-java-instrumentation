@@ -6,14 +6,27 @@
 package io.opentelemetry.instrumentation.api.caching;
 
 import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 final class WeakLockFreeCache<K, V> implements Cache<K, V> {
 
+  private static final AtomicLong ID = new AtomicLong();
+
   private final WeakConcurrentMap<K, V> delegate;
 
   WeakLockFreeCache() {
-    this.delegate = new WeakConcurrentMap<>(true, true);
+    // Don't automatically create cleaner thread to oveerride classloader.
+    this.delegate = new WeakConcurrentMap<>(false, true);
+
+    Thread thread = new Thread(delegate);
+    // This class is in the bootstrap classloader and cleanup never requires user code so force the
+    // context classloader to bootstrap.
+    thread.setContextClassLoader(ClassLoader.getSystemClassLoader());
+    thread.setName("weak-ref-cleaner-" + ID.getAndIncrement());
+    thread.setPriority(Thread.MIN_PRIORITY);
+    thread.setDaemon(true);
+    thread.start();
   }
 
   @Override
@@ -23,7 +36,7 @@ final class WeakLockFreeCache<K, V> implements Cache<K, V> {
       return value;
     }
     value = mappingFunction.apply(key);
-    V previous = delegate.putIfAbsent(key, mappingFunction.apply(key));
+    V previous = delegate.putIfAbsent(key, value);
     if (previous != null) {
       return previous;
     }
