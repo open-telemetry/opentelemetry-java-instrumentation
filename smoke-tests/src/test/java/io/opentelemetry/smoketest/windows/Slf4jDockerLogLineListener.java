@@ -19,11 +19,12 @@ public class Slf4jDockerLogLineListener implements ContainerLogHandler.Listener 
     String normalizedText = text.replaceAll("((\\r?\\n)|(\\r))$", "");
 
     switch (type) {
-      case STDOUT:
-        this.logger.info("STDOUT: {}", normalizedText);
-        break;
       case STDERR:
         this.logger.error("STDERR: {}", normalizedText);
+        break;
+      case STDOUT:
+      default:
+        this.logger.info("STDOUT: {}", normalizedText);
         break;
     }
   }
