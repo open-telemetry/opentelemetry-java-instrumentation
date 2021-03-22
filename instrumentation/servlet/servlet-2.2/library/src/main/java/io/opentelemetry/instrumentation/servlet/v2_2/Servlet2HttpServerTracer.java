@@ -9,16 +9,14 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
-import io.opentelemetry.instrumentation.servlet.javax.JavaxServletAccessor;
 import io.opentelemetry.instrumentation.servlet.javax.JavaxServletHttpServerTracer;
 import javax.servlet.http.HttpServletRequest;
 
 public class Servlet2HttpServerTracer extends JavaxServletHttpServerTracer<ResponseWithStatus> {
-  private static final Servlet2HttpServerTracer TRACER =
-      new Servlet2HttpServerTracer(Servlet2Accessor.INSTANCE);
+  private static final Servlet2HttpServerTracer TRACER = new Servlet2HttpServerTracer();
 
-  public Servlet2HttpServerTracer(JavaxServletAccessor<ResponseWithStatus> accessor) {
-    super(accessor);
+  public Servlet2HttpServerTracer() {
+    super(Servlet2Accessor.INSTANCE);
   }
 
   public static Servlet2HttpServerTracer tracer() {

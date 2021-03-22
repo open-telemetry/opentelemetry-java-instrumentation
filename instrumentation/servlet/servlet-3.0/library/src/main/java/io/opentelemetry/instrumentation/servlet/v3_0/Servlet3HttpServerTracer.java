@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 public class Servlet3HttpServerTracer extends JavaxServletHttpServerTracer<HttpServletResponse> {
   private static final Servlet3HttpServerTracer TRACER = new Servlet3HttpServerTracer();
 
-  public Servlet3HttpServerTracer() {
+  protected Servlet3HttpServerTracer() {
     super(Servlet3Accessor.INSTANCE);
   }
 

@@ -29,7 +29,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
-          .getBooleanProperty("otel.instrumentation.grpc.experimental-span-attributes", false);
+          .getBooleanProperty("otel.instrumentation.servlet.experimental-span-attributes", false);
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 

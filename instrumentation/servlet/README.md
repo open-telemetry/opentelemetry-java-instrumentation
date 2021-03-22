@@ -19,7 +19,7 @@ They are divided into the following sub-modules:
   - `servlet-javax-common` contains instrumentations/abstract tracer common for Servlet API versions `[2.2, 5)`
   - `servlet-2.2` contains instrumentations/tracer for Servlet API versions `[2.2, 3)` 
   - `servlet-3.0` contains instrumentations/tracer for Servlet API versions `[3.0, 5)`
-  - `servlet-jakarta` contains instrumentations/tracer for Servlet API versions `[5,)`
+  - `servlet-5.0` contains instrumentations/tracer for Servlet API versions `[5,)`
 
 ## Implementation details
 
@@ -58,7 +58,7 @@ This is the main target for `Servlet3Instrumentation` and `Servlet2Instrumentati
 
 `public void javax.servlet.http.HttpServlet#service(ServletRequest, ServletResponse)`.
 
-These instrumentations are located in separate submodules `servlet-3.0`, `servlet-2.2` and `servlet-jakarta`,
+These instrumentations are located in separate submodules `servlet-3.0`, `servlet-2.2` and `servlet-5.0`,
 because they and corresponding tests depend on different versions of the servlet specification.
 
 At last, request processing may reach the specific framework that your application uses.

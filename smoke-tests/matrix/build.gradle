@@ -2,20 +2,7 @@ import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 
 plugins {
-  id "war"
   id "com.bmuschko.docker-remote-api" version "6.7.0"
-}
-
-compileJava {
-  options.release.set(8)
-}
-
-repositories {
-  mavenCentral()
-}
-
-dependencies {
-  implementation("javax.servlet:javax.servlet-api:3.0.1")
 }
 
 def buildLinuxTestImagesTask = tasks.create("buildLinuxTestImages") {
@@ -45,7 +32,7 @@ def linuxTargets = [
   "jetty": [
     [version: ["9.4.35"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15"]],
     [version: ["10.0.0"], vm: ["hotspot", "openj9"], jdk: ["11", "15"]],
-    [version: ["11.0.1"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], war: "servlet-jakarta"]
+    [version: ["11.0.1"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], war: "servlet-5.0"]
   ],
   "tomcat": [
     [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"]],
@@ -102,7 +89,7 @@ createDockerTasks(buildWindowsTestImagesTask, windowsTargets, true)
 
 def configureImage(Task parentTask, server, dockerfile, version, vm, jdk, warProject, Map<String, String> extraArgs, isWindows = false) {
   // Using separate build directory for different war files allows using the same app.war filename
-  def dockerWorkingDir = new File(project.buildDir, warProject != null ? "docker-$warProject" : "docker")
+  def dockerWorkingDir = new File(project.buildDir, "docker-$warProject")
   def dockerFileName = isWindows ? "${dockerfile}.windows.dockerfile" : "${dockerfile}.dockerfile"
   def platformSuffix = isWindows ? "-windows" : ""
 
@@ -145,7 +132,7 @@ def createDockerTasks(Task parentTask, targets, isWindows) {
     matrices.forEach { entry ->
       def dockerfile = entry["dockerfile"]?.toString() ?: server
       def extraArgs = (entry["args"] ?: [:]) as Map<String, String>
-      def warProject = entry["war"]
+      def warProject = entry["war"] ?: "servlet-3.0"
 
       entry.version.forEach { version ->
         entry.vm.forEach { vm ->

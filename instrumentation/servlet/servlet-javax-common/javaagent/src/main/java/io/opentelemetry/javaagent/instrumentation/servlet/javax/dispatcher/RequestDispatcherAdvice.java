@@ -10,12 +10,10 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.javax.dispatche
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.servlet.dispatcher.RequestDispatcherAdviceHelper;
-import io.opentelemetry.javaagent.instrumentation.servlet.javax.JavaxCommonServletAccessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.dispatcher.RequestDispatcherAdviceHelper;
 import java.lang.reflect.Method;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 
 public class RequestDispatcherAdvice {
@@ -31,7 +29,7 @@ public class RequestDispatcherAdvice {
 
     Context parent =
         RequestDispatcherAdviceHelper.getStartParentContext(
-            JavaxCommonServletAccessor.INSTANCE, (HttpServletRequest) request);
+            request.getAttribute(CONTEXT_ATTRIBUTE));
 
     if (parent == null) {
       return;
@@ -41,8 +39,7 @@ public class RequestDispatcherAdvice {
       context = tracer().startSpan(method);
 
       // save the original servlet span before overwriting the request attribute, so that it can
-      // be
-      // restored on method exit
+      // be restored on method exit
       originalContext = request.getAttribute(CONTEXT_ATTRIBUTE);
 
       // this tells the dispatched servlet to use the current span as the parent for its work
@@ -59,13 +56,19 @@ public class RequestDispatcherAdvice {
       @Advice.Local("otelScope") Scope scope,
       @Advice.Thrown Throwable throwable) {
 
-    RequestDispatcherAdviceHelper.stop(
-        tracer(),
-        JavaxCommonServletAccessor.INSTANCE,
-        originalContext,
-        (HttpServletRequest) request,
-        context,
-        scope,
-        throwable);
+    scope.close();
+
+    // restore the original servlet span
+    // since spanWithScope is non-null here, originalContext must have been set with the
+    // prior
+    // servlet span (as opposed to remaining unset)
+    // TODO review this logic. Seems like manual context management
+    request.setAttribute(CONTEXT_ATTRIBUTE, originalContext);
+
+    if (throwable != null) {
+      tracer().endExceptionally(context, throwable);
+    } else {
+      tracer().end(context);
+    }
   }
 }
