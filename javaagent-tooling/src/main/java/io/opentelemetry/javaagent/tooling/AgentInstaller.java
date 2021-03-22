@@ -246,7 +246,10 @@ public class AgentInstaller {
     return SafeServiceLoader.load(
             InstrumentationModule.class, AgentInstaller.class.getClassLoader())
         .stream()
-        .sorted(Comparator.comparingInt(InstrumentationModule::getOrder))
+        .sorted(
+            Comparator.comparingInt(InstrumentationModule::getOrder)
+                // Run instrumentation which injects helpers later since it initializes a weak map.
+                .thenComparing(module -> module.helperResourceNames().length))
         .collect(Collectors.toList());
   }
 
