@@ -22,12 +22,19 @@ final class WeakLockFreeCache<K, V> implements Cache<K, V> {
     if (value != null) {
       return value;
     }
-    value = mappingFunction.apply(key);
-    V previous = delegate.putIfAbsent(key, value);
-    if (previous != null) {
-      return previous;
+    // Best we can do, we don't expect high contention with this implementation.
+    synchronized (delegate) {
+      value = get(key);
+      if (value != null) {
+        return value;
+      }
+      value = mappingFunction.apply(key);
+      V previous = delegate.putIfAbsent(key, value);
+      if (previous != null) {
+        return previous;
+      }
+      return value;
     }
-    return value;
   }
 
   @Override
