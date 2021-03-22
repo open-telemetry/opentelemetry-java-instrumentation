@@ -10,9 +10,13 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.async.MethodSpanStrategies;
 import java.lang.reflect.Method;
 
 class WithSpanAspectTracer extends BaseTracer {
+
+  private final MethodSpanStrategies methodSpanStrategies = MethodSpanStrategies.getInstance();
+
   WithSpanAspectTracer(OpenTelemetry openTelemetry) {
     super(openTelemetry);
   }
@@ -41,5 +45,24 @@ class WithSpanAspectTracer extends BaseTracer {
       return spanNameForMethod(method);
     }
     return spanName;
+  }
+
+  /**
+   * Denotes the end of the invocation of the traced method with a successful result which will end
+   * the span stored in the passed {@code context}. If the method returned a value representing an
+   * asynchronous operation then the span will not be finished until the asynchronous operation has
+   * completed.
+   *
+   * @param returnType Return type of the traced method.
+   * @param returnValue Return value from the traced method.
+   * @return Either {@code returnValue} or a value composing over {@code returnValue} for
+   *     notification of completion.
+   */
+  public Object end(Context context, Class<?> returnType, Object returnValue) {
+    if (!returnType.isInstance(returnValue)) {
+      end(context);
+      return returnValue;
+    }
+    return methodSpanStrategies.resolveStrategy(returnType).end(this, context, returnValue);
   }
 }

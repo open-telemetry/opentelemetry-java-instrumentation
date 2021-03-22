@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.javaagent.instrumentation.otelannotations.async.MethodSpanStrategies;
+import io.opentelemetry.instrumentation.api.tracer.async.MethodSpanStrategies;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

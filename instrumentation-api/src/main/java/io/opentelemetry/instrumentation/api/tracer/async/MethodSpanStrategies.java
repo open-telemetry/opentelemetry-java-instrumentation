@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.otelannotations.async;
+package io.opentelemetry.instrumentation.api.tracer.async;
 
 import java.util.List;
 import java.util.Objects;
