@@ -54,7 +54,8 @@ public final class GarbageCollector {
         .build();
     meter
         .longSumObserverBuilder("runtime.jvm.gc.collection.count")
-        .setDescription("The number of collections that have occurred for a given JVM garbage collector.")
+        .setDescription(
+            "The number of collections that have occurred for a given JVM garbage collector.")
         .setUnit("collections")
         .setUpdater(
             resultLongObserver -> {
