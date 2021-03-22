@@ -32,7 +32,7 @@ test {
   inputs.files(tasks.findByPath(':javaagent:shadowJar').outputs.files)
   maxParallelForks = 2
 
-  timeout.set(Duration.ofMinutes(30))
+  timeout.set(Duration.ofMinutes(60))
 
   //We enable/disable smoke tests based on the java version requests
   //In addition to that we disable them by default on local machines
