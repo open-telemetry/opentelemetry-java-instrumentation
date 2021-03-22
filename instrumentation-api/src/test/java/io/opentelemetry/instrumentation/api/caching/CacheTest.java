@@ -87,20 +87,12 @@ class CacheTest {
       cat = null;
       System.gc();
       // Wait for GC to be reflected.
-      await()
-          .untilAsserted(
-              () -> {
-                assertThat(weakLockFreeCache.size()).isEqualTo(1);
-              });
+      await().untilAsserted(() -> assertThat(weakLockFreeCache.size()).isEqualTo(1));
       assertThat(cache.computeIfAbsent(dog, unused -> "bark")).isEqualTo("bark");
       dog = null;
       System.gc();
       // Wait for GC to be reflected.
-      await()
-          .untilAsserted(
-              () -> {
-                assertThat(weakLockFreeCache.size()).isEqualTo(0);
-              });
+      await().untilAsserted(() -> assertThat(weakLockFreeCache.size()).isEqualTo(0));
     }
 
     @Test
