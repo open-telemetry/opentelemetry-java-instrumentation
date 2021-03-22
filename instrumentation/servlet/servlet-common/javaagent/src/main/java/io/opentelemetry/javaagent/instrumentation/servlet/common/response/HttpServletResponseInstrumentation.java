@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.async;
+package io.opentelemetry.javaagent.instrumentation.servlet.common.response;
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -18,27 +17,27 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AsyncContextInstrumentation implements TypeInstrumentation {
+public class HttpServletResponseInstrumentation implements TypeInstrumentation {
   private final String basePackageName;
   private final String adviceClassName;
 
-  public AsyncContextInstrumentation(String basePackageName, String adviceClassName) {
+  public HttpServletResponseInstrumentation(String basePackageName, String adviceClassName) {
     this.basePackageName = basePackageName;
     this.adviceClassName = adviceClassName;
   }
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed(basePackageName + ".AsyncContext");
+    return hasClassesNamed(basePackageName + ".http.HttpServletResponse");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named(basePackageName + ".AsyncContext"));
+    return implementsInterface(named(basePackageName + ".http.HttpServletResponse"));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(isMethod().and(isPublic()).and(named("dispatch")), adviceClassName);
+    return singletonMap(namedOneOf("sendError", "sendRedirect"), adviceClassName);
   }
 }

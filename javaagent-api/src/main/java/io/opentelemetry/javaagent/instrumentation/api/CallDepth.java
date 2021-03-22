@@ -28,7 +28,7 @@ public final class CallDepth {
     return depth;
   }
 
-  void reset() {
+  public void reset() {
     depth = 0;
   }
 }

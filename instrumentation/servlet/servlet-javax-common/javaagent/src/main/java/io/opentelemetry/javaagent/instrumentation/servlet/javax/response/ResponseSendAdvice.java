@@ -12,7 +12,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.response.HttpServletResponseAdviceHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseAdviceHelper;
 import java.lang.reflect.Method;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
@@ -40,7 +40,6 @@ public class ResponseSendAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
       @Advice.Local("otelCallDepth") CallDepth callDepth) {
-    HttpServletResponseAdviceHelper.stopSpan(
-        tracer(), HttpServletResponse.class, throwable, context, scope, callDepth);
+    HttpServletResponseAdviceHelper.stopSpan(tracer(), throwable, context, scope, callDepth);
   }
 }

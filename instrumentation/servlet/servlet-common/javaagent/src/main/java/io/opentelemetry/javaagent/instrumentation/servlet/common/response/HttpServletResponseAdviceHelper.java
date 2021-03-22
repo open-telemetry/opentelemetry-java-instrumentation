@@ -3,24 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.response;
+package io.opentelemetry.javaagent.instrumentation.servlet.common.response;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 
 public class HttpServletResponseAdviceHelper {
   public static void stopSpan(
-      BaseTracer tracer,
-      Class<?> responseClass,
-      Throwable throwable,
-      Context context,
-      Scope scope,
-      CallDepth callDepth) {
+      BaseTracer tracer, Throwable throwable, Context context, Scope scope, CallDepth callDepth) {
     if (callDepth.decrementAndGet() == 0 && context != null) {
-      CallDepthThreadLocalMap.reset(responseClass);
+      callDepth.reset();
 
       scope.close();
 

@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.javax.dispatche
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.dispatcher.RequestDispatcherAdviceHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.dispatcher.RequestDispatcherAdviceHelper;
 import java.lang.reflect.Method;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletRequest;
