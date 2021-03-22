@@ -18,7 +18,7 @@ public class RequestDispatcherTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.servlet-5.0";
+    return "io.opentelemetry.javaagent.servlet-javax";
   }
 
   public Context startSpan(Method method) {
