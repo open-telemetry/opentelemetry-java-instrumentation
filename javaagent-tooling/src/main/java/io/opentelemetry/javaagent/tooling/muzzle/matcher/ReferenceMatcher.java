@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
-import static io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate.isInstrumentationClass;
 import static java.util.Collections.emptyList;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import io.opentelemetry.javaagent.bootstrap.WeakCache;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Factory;
@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -35,17 +36,19 @@ public final class ReferenceMatcher {
   private final WeakCache<ClassLoader, Boolean> mismatchCache = AgentTooling.newWeakCache();
   private final Map<String, Reference> references;
   private final Set<String> helperClassNames;
+  private final InstrumentationClassPredicate instrumentationClassPredicate;
 
-  public ReferenceMatcher(Reference... references) {
-    this(emptyList(), references);
-  }
-
-  public ReferenceMatcher(List<String> helperClassNames, Reference[] references) {
+  public ReferenceMatcher(
+      List<String> helperClassNames,
+      Reference[] references,
+      Predicate<String> libraryInstrumentationPredicate) {
     this.references = new HashMap<>(references.length);
     for (Reference reference : references) {
       this.references.put(reference.getClassName(), reference);
     }
     this.helperClassNames = new HashSet<>(helperClassNames);
+    this.instrumentationClassPredicate =
+        new InstrumentationClassPredicate(libraryInstrumentationPredicate);
   }
 
   Collection<Reference> getReferences() {
@@ -106,7 +109,7 @@ public final class ReferenceMatcher {
         AgentTooling.poolStrategy()
             .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
     try {
-      if (isInstrumentationClass(reference.getClassName())) {
+      if (instrumentationClassPredicate.isInstrumentationClass(reference.getClassName())) {
         // make sure helper class is registered
         if (!helperClassNames.contains(reference.getClassName())) {
           return Collections.singletonList(

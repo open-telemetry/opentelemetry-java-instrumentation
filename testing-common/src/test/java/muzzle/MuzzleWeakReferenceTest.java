@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Collections;
 
 public class MuzzleWeakReferenceTest {
   /*
@@ -22,10 +23,11 @@ public class MuzzleWeakReferenceTest {
   public static boolean classLoaderRefIsGarbageCollected() throws InterruptedException {
     ClassLoader loader = new URLClassLoader(new URL[0], null);
     WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
-    ReferenceCollector collector = new ReferenceCollector();
+    ReferenceCollector collector = new ReferenceCollector(className -> false);
     collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.class.getName());
     Reference[] refs = collector.getReferences().values().toArray(new Reference[0]);
-    ReferenceMatcher refMatcher = new ReferenceMatcher(refs);
+    ReferenceMatcher refMatcher =
+        new ReferenceMatcher(Collections.emptyList(), refs, className -> false);
     refMatcher.getMismatchedReferenceSources(loader);
     loader = null;
     GcUtils.awaitGc(clRef);

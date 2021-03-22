@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
@@ -21,11 +22,8 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  protected String[] additionalHelperClassNames() {
-    return new String[] {
-      "com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestSpan",
-      "com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer"
-    };
+  public Predicate<String> additionalLibraryInstrumentationPackage() {
+    return className -> className.startsWith("com.couchbase.client.tracing.opentelemetry");
   }
 
   @Override

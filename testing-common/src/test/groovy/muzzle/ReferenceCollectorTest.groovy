@@ -13,6 +13,7 @@ import static muzzle.TestClasses.HelperAdvice
 import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice
 
+import external.instrumentation.ExternalHelper
 import io.opentelemetry.instrumentation.OtherTestHelperClasses
 import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
@@ -23,7 +24,7 @@ import spock.lang.Unroll
 class ReferenceCollectorTest extends Specification {
   def "method body creates references"() {
     setup:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(MethodBodyAdvice.name)
     def references = collector.getReferences()
 
@@ -69,7 +70,7 @@ class ReferenceCollectorTest extends Specification {
 
   def "protected ref test"() {
     setup:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(MethodBodyAdvice.B2.name)
     def references = collector.getReferences()
 
@@ -81,7 +82,7 @@ class ReferenceCollectorTest extends Specification {
 
   def "ldc creates references"() {
     setup:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(LdcAdvice.name)
     def references = collector.getReferences()
 
@@ -91,7 +92,7 @@ class ReferenceCollectorTest extends Specification {
 
   def "instanceof creates references"() {
     setup:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(TestClasses.InstanceofAdvice.name)
     def references = collector.getReferences()
 
@@ -101,7 +102,7 @@ class ReferenceCollectorTest extends Specification {
 
   def "invokedynamic creates references"() {
     setup:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(TestClasses.InvokeDynamicAdvice.name)
     def references = collector.getReferences()
 
@@ -112,7 +113,7 @@ class ReferenceCollectorTest extends Specification {
 
   def "should create references for helper classes"() {
     when:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(HelperAdvice.name)
     def references = collector.getReferences()
 
@@ -146,7 +147,7 @@ class ReferenceCollectorTest extends Specification {
 
   def "should find all helper classes"() {
     when:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(HelperAdvice.name)
     def helperClasses = collector.getSortedHelperClasses()
 
@@ -163,7 +164,7 @@ class ReferenceCollectorTest extends Specification {
 
   def "should correctly find helper classes from multiple advice classes"() {
     when:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(TestClasses.HelperAdvice.name)
     collector.collectReferencesFromAdvice(TestClasses.HelperOtherAdvice.name)
     def helperClasses = collector.getSortedHelperClasses()
@@ -193,10 +194,25 @@ class ReferenceCollectorTest extends Specification {
     ])
   }
 
+  def "should correctly find external instrumentation classes"() {
+    when:
+    def collector = new ReferenceCollector({ it.startsWith("external.instrumentation") })
+    collector.collectReferencesFromAdvice(TestClasses.ExternalInstrumentationAdvice.name)
+
+    then: "should collect references"
+    def references = collector.getReferences()
+    references['external.instrumentation.ExternalHelper'] != null
+    references['external.NotInstrumentation'] != null
+
+    then: "should collect helper classes"
+    def helperClasses = collector.getSortedHelperClasses()
+    helperClasses == [ExternalHelper.name]
+  }
+
   @Unroll
   def "should collect helper classes from resource file #desc"() {
     when:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromResource(resource)
 
     then: "SPI classes are collected as references"
@@ -219,8 +235,8 @@ class ReferenceCollectorTest extends Specification {
     ]
 
     where:
-    desc                                               | resource
-    "Java SPI"                                         | "META-INF/services/test.resource.file"
+    desc                                                  | resource
+    "Java SPI"                                            | "META-INF/services/test.resource.file"
     "AWS SDK v2 global interceptors file"                 | "software/amazon/awssdk/global/handlers/execution.interceptors"
     "AWS SDK v2 service interceptors file"                | "software/amazon/awssdk/services/testservice/execution.interceptors"
     "AWS SDK v2 service (second level) interceptors file" | "software/amazon/awssdk/services/testservice/testsubservice/execution.interceptors"
@@ -231,7 +247,7 @@ class ReferenceCollectorTest extends Specification {
 
   def "should ignore arbitrary resource file"() {
     when:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromResource("application.properties")
 
     then:

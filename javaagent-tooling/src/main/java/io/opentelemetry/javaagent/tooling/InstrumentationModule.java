@@ -28,6 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
@@ -249,6 +250,18 @@ public abstract class InstrumentationModule {
 
   private String mainInstrumentationName() {
     return instrumentationNames.iterator().next();
+  }
+
+  /**
+   * Instrumentation modules can override this method to specify additional packages (or classes)
+   * that should be treated as "library instrumentation" packages. Classes from those packages will
+   * be treated by muzzle as instrumentation helper classes: they will be scanned for references and
+   * automatically injected into the application classloader if they're used in any type
+   * instrumentation. The class name predicate returned by this method is added to the default ones
+   * defined in {@link InstrumentationClassPredicate}.
+   */
+  public Predicate<String> additionalLibraryInstrumentationPackage() {
+    return className -> false;
   }
 
   /**

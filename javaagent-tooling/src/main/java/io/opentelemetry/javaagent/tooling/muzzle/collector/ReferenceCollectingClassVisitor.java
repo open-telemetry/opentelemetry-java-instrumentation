@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
-import static io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate.isInstrumentationClass;
-
 import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag;
@@ -108,7 +107,9 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     return type;
   }
 
+  private final InstrumentationClassPredicate instrumentationClassPredicate;
   private final boolean isAdviceClass;
+
   private final Map<String, Reference> references = new LinkedHashMap<>();
   private final Set<String> helperClasses = new HashSet<>();
   // helper super classes which are themselves also helpers
@@ -117,8 +118,10 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
   private String refSourceClassName;
   private Type refSourceType;
 
-  ReferenceCollectingClassVisitor(boolean isAdviceClass) {
+  ReferenceCollectingClassVisitor(
+      InstrumentationClassPredicate instrumentationClassPredicate, boolean isAdviceClass) {
     super(Opcodes.ASM7);
+    this.instrumentationClassPredicate = instrumentationClassPredicate;
     this.isAdviceClass = isAdviceClass;
   }
 
@@ -136,7 +139,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
 
   private void addExtendsReference(Reference ref) {
     addReference(ref);
-    if (isInstrumentationClass(ref.getClassName())) {
+    if (instrumentationClassPredicate.isInstrumentationClass(ref.getClassName())) {
       helperSuperClasses.add(ref.getClassName());
     }
   }
@@ -150,7 +153,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
         references.put(ref.getClassName(), reference.merge(ref));
       }
     }
-    if (isInstrumentationClass(ref.getClassName())) {
+    if (instrumentationClassPredicate.isInstrumentationClass(ref.getClassName())) {
       helperClasses.add(ref.getClassName());
     }
   }

@@ -28,8 +28,11 @@ import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher
 import net.bytebuddy.jar.asm.Type
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
+@Unroll
 class ReferenceMatcherTest extends Specification {
+  static final TEST_EXTERNAL_INSTRUMENTATION_PACKAGE = "com.external.otel.instrumentation"
 
   @Shared
   ClassLoader safeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(MethodBodyAdvice.A,
@@ -46,10 +49,9 @@ class ReferenceMatcherTest extends Specification {
 
   def "match safe classpaths"() {
     setup:
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(MethodBodyAdvice.name)
-    Reference[] refs = collector.getReferences().values().toArray(new Reference[0])
-    def refMatcher = new ReferenceMatcher(refs)
+    def refMatcher = createMatcher(collector.getReferences().values())
 
     expect:
     getMismatchClassSet(refMatcher.getMismatchedReferenceSources(safeClasspath)).empty
@@ -84,12 +86,11 @@ class ReferenceMatcherTest extends Specification {
         MethodBodyAdvice.SomeImplementation)] as URL[],
       (ClassLoader) null)
 
-    def collector = new ReferenceCollector()
+    def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(MethodBodyAdvice.name)
-    Reference[] refs = collector.getReferences().values().toArray(new Reference[0])
 
-    def refMatcher1 = new ReferenceMatcher(refs)
-    def refMatcher2 = new ReferenceMatcher(refs)
+    def refMatcher1 = createMatcher(collector.getReferences().values())
+    def refMatcher2 = createMatcher(collector.getReferences().values())
     assert getMismatchClassSet(refMatcher1.getMismatchedReferenceSources(cl)).empty
     int countAfterFirstMatch = cl.count
     // the second matcher should be able to used cached type descriptions from the first
@@ -106,7 +107,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher(ref).getMismatchedReferenceSources(this.class.classLoader)
+    def mismatches = createMatcher([ref]).getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == expectedMismatches as Set
@@ -125,7 +126,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher(reference)
+    def mismatches = createMatcher([reference])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -149,7 +150,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher(reference)
+    def mismatches = createMatcher([reference])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -172,14 +173,14 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([reference.className], [reference] as Reference[])
+    def mismatches = createMatcher([reference], [reference.className])
       .getMismatchedReferenceSources(emptyClassLoader)
 
     then:
     mismatches.empty
   }
 
-  def "should not check abstract helper classes"() {
+  def "should not check abstract #desc helper classes"() {
     given:
     def reference = new Reference.Builder("io.opentelemetry.instrumentation.Helper")
       .withSuperName(TestHelperClasses.HelperSuperClass.name)
@@ -188,61 +189,81 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([reference.className], [reference] as Reference[])
+    def mismatches = createMatcher([reference], [reference.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     mismatches.empty
+
+    where:
+    desc       | className
+    "internal" | "com.external.otel.instrumentation.Helper"
+    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
   }
 
-  def "should not check helper classes with no supertypes"() {
+  def "should not check #desc helper classes with no supertypes"() {
     given:
-    def reference = new Reference.Builder("io.opentelemetry.instrumentation.Helper")
+    def reference = new Reference.Builder(className)
       .withSuperName(Object.name)
       .withMethod(new Source[0], [] as Reference.Flag[], "someMethod", Type.VOID_TYPE)
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([reference.className], [reference] as Reference[])
+    def mismatches = createMatcher([reference], [reference.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     mismatches.empty
+
+    where:
+    desc       | className
+    "internal" | "com.external.otel.instrumentation.Helper"
+    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
   }
 
-  def "should fail helper classes that does not implement all abstract methods"() {
+  def "should fail #desc helper classes that does not implement all abstract methods"() {
     given:
-    def reference = new Reference.Builder("io.opentelemetry.instrumentation.Helper")
+    def reference = new Reference.Builder(className)
       .withSuperName(TestHelperClasses.HelperSuperClass.name)
       .withMethod(new Source[0], [] as Reference.Flag[], "someMethod", Type.VOID_TYPE)
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([reference.className], [reference] as Reference[])
+    def mismatches = createMatcher([reference], [reference.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == [MissingMethod] as Set
+
+    where:
+    desc       | className
+    "internal" | "com.external.otel.instrumentation.Helper"
+    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
   }
 
-  def "should fail helper classes that does not implement all abstract methods - even if empty abstract class reference exists"() {
+  def "should fail #desc helper classes that do not implement all abstract methods - even if empty abstract class reference exists"() {
     given:
     def emptySuperClassRef = new Reference.Builder(TestHelperClasses.HelperSuperClass.name)
       .build()
-    def reference = new Reference.Builder("io.opentelemetry.instrumentation.Helper")
+    def reference = new Reference.Builder(className)
       .withSuperName(TestHelperClasses.HelperSuperClass.name)
       .withMethod(new Source[0], [] as Reference.Flag[], "someMethod", Type.VOID_TYPE)
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([reference.className, emptySuperClassRef.className], [reference, emptySuperClassRef] as Reference[])
+    def mismatches = createMatcher([reference, emptySuperClassRef], [reference.className, emptySuperClassRef.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == [MissingMethod] as Set
+
+    where:
+    desc       | className
+    "internal" | "com.external.otel.instrumentation.Helper"
+    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
   }
 
-  def "should check whether interface methods are implemented in the super class"() {
+  def "should check #desc helper class whether interface methods are implemented in the super class"() {
     given:
     def baseHelper = new Reference.Builder("io.opentelemetry.instrumentation.BaseHelper")
       .withSuperName(Object.name)
@@ -250,18 +271,28 @@ class ReferenceMatcherTest extends Specification {
       .withMethod(new Source[0], [] as Reference.Flag[], "foo", Type.VOID_TYPE)
       .build()
     // abstract HelperInterface#foo() is implemented by BaseHelper
-    def helper = new Reference.Builder("io.opentelemetry.instrumentation.Helper")
+    def helper = new Reference.Builder(className)
       .withSuperName(baseHelper.className)
       .withInterface(TestHelperClasses.AnotherHelperInterface.name)
       .withMethod(new Source[0], [] as Reference.Flag[], "bar", Type.VOID_TYPE)
       .build()
 
     when:
-    def mismatches = new ReferenceMatcher([helper.className, baseHelper.className], [helper, baseHelper] as Reference[])
+    def mismatches = createMatcher([helper, baseHelper], [helper.className, baseHelper.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     mismatches.empty
+
+    where:
+    desc       | className
+    "internal" | "com.external.otel.instrumentation.Helper"
+    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
+  }
+
+  private static ReferenceMatcher createMatcher(Collection<Reference> references = [],
+                                                List<String> helperClasses = []) {
+    new ReferenceMatcher(helperClasses, references as Reference[], { it.startsWith(TEST_EXTERNAL_INSTRUMENTATION_PACKAGE) })
   }
 
   private static Set<Class> getMismatchClassSet(List<Mismatch> mismatches) {
