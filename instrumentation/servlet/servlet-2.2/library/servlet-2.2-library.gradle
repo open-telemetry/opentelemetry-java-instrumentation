@@ -1,0 +1,9 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  implementation deps.slf4j
+
+  api(project(':instrumentation:servlet:servlet-javax-common:library'))
+
+  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
+}

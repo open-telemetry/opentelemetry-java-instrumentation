@@ -1,27 +1,8 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
-muzzle {
-  pass {
-    group = "javax.servlet"
-    module = "servlet-api"
-    versions = "(0,)"
-  }
-  pass {
-    group = "javax.servlet"
-    module = 'javax.servlet-api'
-    versions = "[3.0,)"
-    assertInverse = true
-  }
-}
+// This module is only used as a dependency for other javaagent modules and does not contain any
+// non-abstract implementations of InstrumentationModule
 
 dependencies {
-  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
-
-  testImplementation(project(':testing-common')) {
-    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
-  }
-
-  // We don't check testLatestDeps for this module since we have coverage in others like servlet-3.0
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.0.0.v20091005'
+  api(project(':instrumentation:servlet:servlet-common:library'))
 }

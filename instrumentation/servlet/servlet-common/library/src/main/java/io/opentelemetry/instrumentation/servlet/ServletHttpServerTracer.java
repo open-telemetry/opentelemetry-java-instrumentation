@@ -1,0 +1,227 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.servlet;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
+import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
+import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.Principal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
+    extends HttpServerTracer<REQUEST, RESPONSE, REQUEST, REQUEST> {
+
+  private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
+
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.servlet.experimental-span-attributes", false);
+
+  private final ServletAccessor<REQUEST, RESPONSE> accessor;
+
+  public ServletHttpServerTracer(ServletAccessor<REQUEST, RESPONSE> accessor) {
+    this.accessor = accessor;
+  }
+
+  public Context startSpan(REQUEST request, String spanName) {
+    Context context = startSpan(request, request, request, spanName);
+
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    // we do this e.g. so that servlet containers can use these values in their access logs
+    accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
+    accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
+
+    return addServletContextPath(context, request);
+  }
+
+  @Override
+  protected Context customizeContext(Context context, REQUEST request) {
+    // add context for tracking whether servlet instrumentation has updated
+    // server span
+    context = ServletSpanNaming.init(context);
+    // add context for current request's context path
+    return addServletContextPath(context, request);
+  }
+
+  private Context addServletContextPath(Context context, REQUEST request) {
+    String contextPath = accessor.getRequestContextPath(request);
+    if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/")) {
+      return context.with(ServletContextPath.CONTEXT_KEY, contextPath);
+    }
+    return context;
+  }
+
+  @Override
+  public void endExceptionally(
+      Context context, Throwable throwable, RESPONSE response, long timestamp) {
+    if (accessor.isResponseCommitted(response)) {
+      super.endExceptionally(context, throwable, response, timestamp);
+    } else {
+      // passing null response to super, in order to capture as 500 / INTERNAL, due to servlet spec
+      // https://javaee.github.io/servlet-spec/downloads/servlet-4.0/servlet-4_0_FINAL.pdf:
+      // "If a servlet generates an error that is not handled by the error page mechanism as
+      // described above, the container must ensure to send a response with status 500."
+      super.endExceptionally(context, throwable, null, timestamp);
+    }
+  }
+
+  @Override
+  protected String url(REQUEST httpServletRequest) {
+    try {
+      return new URI(
+              accessor.getRequestScheme(httpServletRequest),
+              null,
+              accessor.getRequestServerName(httpServletRequest),
+              accessor.getRequestServerPort(httpServletRequest),
+              accessor.getRequestUri(httpServletRequest),
+              accessor.getRequestQueryString(httpServletRequest),
+              null)
+          .toString();
+    } catch (URISyntaxException e) {
+      log.debug("Failed to construct request URI", e);
+      return null;
+    }
+  }
+
+  @Override
+  public Context getServerContext(REQUEST request) {
+    Object context = accessor.getRequestAttribute(request, CONTEXT_ATTRIBUTE);
+    return context instanceof Context ? (Context) context : null;
+  }
+
+  @Override
+  protected void attachServerContext(Context context, REQUEST request) {
+    accessor.setRequestAttribute(request, CONTEXT_ATTRIBUTE, context);
+  }
+
+  @Override
+  protected Integer peerPort(REQUEST connection) {
+    return accessor.getRequestRemotePort(connection);
+  }
+
+  @Override
+  protected String peerHostIP(REQUEST connection) {
+    return accessor.getRequestRemoteAddr(connection);
+  }
+
+  @Override
+  protected String method(REQUEST request) {
+    return accessor.getRequestMethod(request);
+  }
+
+  @Override
+  protected int responseStatus(RESPONSE response) {
+    return accessor.getResponseStatus(response);
+  }
+
+  @Override
+  protected abstract TextMapGetter<REQUEST> getGetter();
+
+  public void addUnwrappedThrowable(Context context, Throwable throwable) {
+    if (AppServerBridge.shouldRecordException(context)) {
+      onException(context, throwable);
+    }
+  }
+
+  @Override
+  protected Throwable unwrapThrowable(Throwable throwable) {
+    if (accessor.isServletException(throwable) && throwable.getCause() != null) {
+      throwable = throwable.getCause();
+    }
+    return super.unwrapThrowable(throwable);
+  }
+
+  public void setPrincipal(Context context, REQUEST request) {
+    Principal principal = accessor.getRequestUserPrincipal(request);
+    if (principal != null) {
+      Span.fromContext(context).setAttribute(SemanticAttributes.ENDUSER_ID, principal.getName());
+    }
+  }
+
+  @Override
+  protected String flavor(REQUEST connection, REQUEST request) {
+    return accessor.getRequestProtocol(connection);
+  }
+
+  @Override
+  protected String requestHeader(REQUEST httpServletRequest, String name) {
+    return accessor.getRequestHeader(httpServletRequest, name);
+  }
+
+  public String getSpanName(REQUEST request) {
+    String servletPath = accessor.getRequestServletPath(request);
+    if (servletPath.isEmpty()) {
+      return "HTTP " + accessor.getRequestMethod(request);
+    }
+    String contextPath = accessor.getRequestContextPath(request);
+    if (contextPath == null || contextPath.isEmpty() || contextPath.equals("/")) {
+      return servletPath;
+    }
+    return contextPath + servletPath;
+  }
+
+  /**
+   * When server spans are managed by app server instrumentation we need to add context path of
+   * current request to context if it isn't already added. Servlet instrumentation adds it when it
+   * starts server span.
+   */
+  public Context updateContext(Context context, REQUEST request) {
+    String contextPath = context.get(ServletContextPath.CONTEXT_KEY);
+    if (contextPath == null) {
+      context = addServletContextPath(context, request);
+    }
+
+    return context;
+  }
+
+  public void updateSpanName(REQUEST request) {
+    updateSpanName(getServerSpan(request), request);
+  }
+
+  private void updateSpanName(Span span, REQUEST request) {
+    span.updateName(getSpanName(request));
+  }
+
+  public void onTimeout(Context context, long timeout) {
+    Span span = Span.fromContext(context);
+    span.setStatus(StatusCode.ERROR);
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      span.setAttribute("servlet.timeout", timeout);
+    }
+    span.end();
+  }
+
+  /*
+  Given request already has a context associated with it.
+  As there should not be nested spans of kind SERVER, we should NOT create a new span here.
+
+  But it may happen that there is no span in current Context or it is from a different trace.
+  E.g. in case of async servlet request processing we create span for incoming request in one thread,
+  but actual request continues processing happens in another thread.
+  Depending on servlet container implementation, this processing may again arrive into this method.
+  E.g. Jetty handles async requests in a way that calls HttpServlet.service method twice.
+
+  In this case we have to put the span from the request into current context before continuing.
+  */
+  public boolean needsRescoping(Context attachedContext) {
+    return !sameTrace(Span.fromContext(Context.current()), Span.fromContext(attachedContext));
+  }
+
+  private static boolean sameTrace(Span oneSpan, Span otherSpan) {
+    return oneSpan.getSpanContext().getTraceId().equals(otherSpan.getSpanContext().getTraceId());
+  }
+}
