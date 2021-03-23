@@ -114,7 +114,7 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
 
   abstract void assertButtonClick()
 
-  def "test"() {
+  def "test vaadin"() {
     setup:
     def driver = getWebDriver()
     waitForStart(driver)
