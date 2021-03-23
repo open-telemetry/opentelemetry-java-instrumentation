@@ -18,6 +18,22 @@ import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.util.List;
 
+// TODO(anuraaga): Need to define what are actually useful knobs, perhaps even providing a
+// base-class
+// for instrumentation library builders.
+/**
+ * An instrumenter of the start and end of a request/response lifecycle. Almost all instrumentation
+ * of libraries falls into modeling start and end, generating observability signals from these such
+ * as a tracing {@link Span}, or metrics such as the duration taken, active requests, etc. When
+ * instrumenting a library, there will generally be three steps.
+ *
+ * <ul>
+ *   <li>Create an {@link Instrumenter} using {@link InstrumenterBuilder}. Use the builder to
+ *       configure any library-specific customizations, and also expose useful knobs to your user.
+ *   <li>Call {@link Instrumenter#start(Context, Object)} at the beginning of a request.
+ *   <li>Call {@link Instrumenter#end(Context, Object, Object, Throwable)} at the end of a request.
+ * </ul>
+ */
 public class Instrumenter<REQUEST, RESPONSE> {
 
   public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> newBuilder(

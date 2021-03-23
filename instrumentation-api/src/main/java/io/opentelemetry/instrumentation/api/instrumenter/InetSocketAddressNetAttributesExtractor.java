@@ -9,6 +9,13 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Extractor of <a
+ * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes">Network
+ * attributes</a> from a {@link InetSocketAddress}. Most network libraries will provide access to a
+ * {@link InetSocketAddress} so this is a convenient alternative to {@link NetAttributesExtractor}.
+ * There is no meaning to implement both in the same instrumentation.
+ */
 public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
     extends NetAttributesExtractor<REQUEST, RESPONSE> {
 

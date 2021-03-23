@@ -9,6 +9,15 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * Extractor of <a
+ * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md">HTTP
+ * attributes</a>. Instrumentation of HTTP server or client frameworks should extend this class,
+ * defining {@link REQUEST} and {@link RESPONSE} with the actual request / response types of the
+ * instrumented library. If an attribute is not available in this library, it is appropriate to
+ * return {@code null} from the protected attribute methods, but implement as many as possible for
+ * best compliance with the OpenTelemetry specification.
+ */
 public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
 

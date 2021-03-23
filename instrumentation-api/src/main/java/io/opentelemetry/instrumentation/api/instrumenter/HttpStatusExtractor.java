@@ -18,14 +18,10 @@ final class HttpStatusExtractor<REQUEST, RESPONSE> implements StatusExtractor<RE
 
   @Override
   public StatusCode extract(REQUEST request, RESPONSE response, Throwable error) {
-    StatusCode code = StatusExtractor.getDefault().extract(request, response, error);
-    if (code != StatusCode.UNSET) {
-      return code;
-    }
     Long statusCode = attributesExtractor.statusCode(request, response);
     if (statusCode != null) {
       return HttpStatusConverter.statusFromHttpStatus((int) (long) statusCode);
     }
-    return StatusCode.UNSET;
+    return StatusExtractor.getDefault().extract(request, response, error);
   }
 }

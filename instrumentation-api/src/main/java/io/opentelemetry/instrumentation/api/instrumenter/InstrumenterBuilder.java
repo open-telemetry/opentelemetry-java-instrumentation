@@ -12,7 +12,6 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class InstrumenterBuilder<REQUEST, RESPONSE> {
@@ -49,9 +48,9 @@ public class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
-      Collection<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
+      Iterable<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
           attributesExtractors) {
-    this.attributesExtractors.addAll(attributesExtractors);
+    attributesExtractors.forEach(this.attributesExtractors::add);
     return this;
   }
 
