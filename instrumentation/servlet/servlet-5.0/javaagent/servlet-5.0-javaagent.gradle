@@ -5,6 +5,7 @@ muzzle {
     group = "jakarta.servlet"
     module = 'jakarta.servlet-api'
     versions = "[5.0.0,)"
+    assertInverse = true
   }
 }
 

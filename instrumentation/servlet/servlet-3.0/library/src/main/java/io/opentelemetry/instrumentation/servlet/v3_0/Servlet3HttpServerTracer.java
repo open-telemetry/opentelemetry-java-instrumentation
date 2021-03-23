@@ -31,7 +31,7 @@ public class Servlet3HttpServerTracer extends JavaxServletHttpServerTracer<HttpS
   }
 
   public Context startSpan(Object servletOrFilter, HttpServletRequest request) {
-    Context context = startSpan(request, getSpanName(servletOrFilter, request, false));
+    Context context = startSpan(request, getSpanName(servletOrFilter, request));
     // server span name shouldn't be update when server span was created from a call to Servlet
     // if server span was created from a call to Filter then name may be updated from updateContext.
     if (servletOrFilter instanceof Servlet) {
@@ -40,10 +40,9 @@ public class Servlet3HttpServerTracer extends JavaxServletHttpServerTracer<HttpS
     return context;
   }
 
-  private String getSpanName(
-      Object servletOrFilter, HttpServletRequest request, boolean allowNull) {
-    String spanName = getSpanName(servletOrFilter, request);
-    if (spanName == null && !allowNull) {
+  private String getSpanName(Object servletOrFilter, HttpServletRequest request) {
+    String spanName = getSpanNameFromPath(servletOrFilter, request);
+    if (spanName == null) {
       String contextPath = request.getContextPath();
       if (contextPath == null || contextPath.isEmpty() || contextPath.equals("/")) {
         return "HTTP " + request.getMethod();
@@ -53,7 +52,7 @@ public class Servlet3HttpServerTracer extends JavaxServletHttpServerTracer<HttpS
     return spanName;
   }
 
-  private static String getSpanName(Object servletOrFilter, HttpServletRequest request) {
+  private static String getSpanNameFromPath(Object servletOrFilter, HttpServletRequest request) {
     // we are only interested in Servlets
     if (!(servletOrFilter instanceof Servlet)) {
       return null;
@@ -119,7 +118,7 @@ public class Servlet3HttpServerTracer extends JavaxServletHttpServerTracer<HttpS
       Context context, Object servletOrFilter, HttpServletRequest request) {
     Span span = ServerSpan.fromContextOrNull(context);
     if (span != null && ServletSpanNaming.shouldUpdateServerSpanName(context)) {
-      String spanName = getSpanName(servletOrFilter, request, true);
+      String spanName = getSpanNameFromPath(servletOrFilter, request);
       if (spanName != null) {
         span.updateName(spanName);
         ServletSpanNaming.setServletUpdatedServerSpanName(context);
