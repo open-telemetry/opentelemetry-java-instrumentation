@@ -75,7 +75,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             .exec()
             .getId();
 
-    String backendSuffix = "-windows-20210316.659079568";
+    //    String backendSuffix = "-windows-20210316.659079568";
+    String backendSuffix = "-20210319.2122678";
 
     backend =
         startContainer(
@@ -145,7 +146,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     return extractMappedPort(target, originalPort);
   }
 
-  //TODO add support for extraResources
+  // TODO add support for extraResources
   @Override
   public Consumer<OutputFrame> startTarget(
       String targetImageName,

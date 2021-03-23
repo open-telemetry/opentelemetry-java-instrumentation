@@ -133,9 +133,9 @@ abstract class SmokeTest extends Specification {
 
     if (isWindows && "1" != System.getenv("USE_LINUX_CONTAINERS")) {
       return new WindowsTestContainerManager()
-    } else {
-      return new LinuxTestContainerManager()
     }
+
+    return new LinuxTestContainerManager()
   }
 
 }
