@@ -44,6 +44,9 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   GenericContainer broker
 
   @Shared
+  GenericContainer proxy
+
+  @Shared
   DefaultMQProducer producer
 
   @Shared
@@ -78,7 +81,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
       .withNetwork(network)
       .withNetworkAliases("broker")
       .withEnv("NAMESRV_ADDR", "nameserver:9876")
-      .withCommand("./mqbroker autoCreateTopicEnable=true")
+      .withCommand("./mqbroker --brokerIP1=localhost --autoCreateTopicEnable=true")
       .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("rocketmq-broker")))
       .waitingFor(Wait.forLogMessage('^The broker.* boot success.*', 1))
     broker.start()
@@ -259,20 +262,20 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   static DefaultMQPushConsumer getConsumer(
     String nsAddr, String topic, String subExpression, AbstractListener listener)
     throws MQClientException {
-    DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("consumerGroup");
-    consumer.setInstanceName(RandomUtil.getStringByUUID());
-    consumer.setNamesrvAddr(nsAddr);
-    consumer.subscribe(topic, subExpression);
-    consumer.setMessageListener(listener);
-    consumer.start();
-    return consumer;
+    DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("consumerGroup")
+    consumer.setInstanceName(RandomUtil.getStringByUUID())
+    consumer.setNamesrvAddr(nsAddr)
+    consumer.subscribe(topic, subExpression)
+    consumer.setMessageListener(listener)
+    consumer.start()
+    return consumer
   }
 
   static DefaultMQProducer getProducer(String ns) throws MQClientException {
-    DefaultMQProducer producer = new DefaultMQProducer(RandomUtil.getStringByUUID());
-    producer.setInstanceName(UUID.randomUUID().toString());
-    producer.setNamesrvAddr(ns);
-    producer.start();
-    return producer;
+    DefaultMQProducer producer = new DefaultMQProducer(RandomUtil.getStringByUUID())
+    producer.setInstanceName(UUID.randomUUID().toString())
+    producer.setNamesrvAddr(ns)
+    producer.start()
+    return producer
   }
 }

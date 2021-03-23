@@ -18,4 +18,5 @@ dependencies {
 
 tasks.withType(Test) {
   jvmArgs "-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true"
+  jvmArgs "-Drocketmq.client.logUseSlf4j=true"
 }

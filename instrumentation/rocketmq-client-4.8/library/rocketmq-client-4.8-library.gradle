@@ -4,3 +4,7 @@ dependencies {
   library group: 'org.apache.rocketmq', name: 'rocketmq-client', version: '4.8.0'
   testImplementation project(':instrumentation:rocketmq-client-4.8:testing')
 }
+
+tasks.withType(Test) {
+  jvmArgs "-Drocketmq.client.logUseSlf4j=true"
+}
