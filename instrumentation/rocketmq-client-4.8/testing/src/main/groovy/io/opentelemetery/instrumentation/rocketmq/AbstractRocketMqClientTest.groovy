@@ -58,8 +58,8 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   }
 
   def cleanupSpec() {
-    producer.shutdown()
-    consumer.shutdown()
+    producer?.shutdown()
+    consumer?.shutdown()
     BaseConf.deleteTempDir()
   }
 
