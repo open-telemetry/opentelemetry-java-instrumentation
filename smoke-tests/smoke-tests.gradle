@@ -38,6 +38,25 @@ test {
   //In addition to that we disable them by default on local machines
   enabled = enabled && (System.getenv("CI") != null || findProperty('runSmokeTests'))
 
+  def suites = [
+    "glassfishAndJetty": ["**/GlassFishSmokeTest.*", "**/JettySmokeTest.*"],
+    "libertyAndTomcat": ["**/LibertySmokeTest.*", "**/LibertyServletOnlySmokeTest.*", "**/TomcatSmokeTest.*"],
+    "tomeeAndWildfly": ["**/TomeeSmokeTest.*", "**/WildflySmokeTest.*"]
+  ]
+
+  def suite = findProperty('smokeTestSuite')
+  if (suite != null) {
+    if ('other' == suite) {
+      suites.values().each {
+        exclude it
+      }
+    } else if (suites.containsKey(suite)) {
+      include suites.get(suite)
+    } else {
+      throw new GradleException('Unknown smoke test suite: ' + suite)
+    }
+  }
+
   doFirst {
     jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':javaagent').tasks.shadowJar.archivePath}"
   }
