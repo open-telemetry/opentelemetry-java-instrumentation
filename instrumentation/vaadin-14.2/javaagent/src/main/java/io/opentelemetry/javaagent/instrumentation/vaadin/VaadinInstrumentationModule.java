@@ -1,0 +1,330 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.vaadin;
+
+import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinTracer.tracer;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+
+import com.google.auto.service.AutoService;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.router.Location;
+import com.vaadin.flow.router.NavigationTrigger;
+import com.vaadin.flow.server.RequestHandler;
+import com.vaadin.flow.server.VaadinService;
+import com.vaadin.flow.server.communication.rpc.RpcInvocationHandler;
+import elemental.json.JsonObject;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+@AutoService(InstrumentationModule.class)
+public class VaadinInstrumentationModule extends InstrumentationModule {
+
+  public VaadinInstrumentationModule() {
+    super("vaadin", "vaadin-14.2");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // class added in vaadin 14.2
+    return hasClassesNamed("com.vaadin.flow.server.frontend.installer.NodeInstaller");
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(
+        new VaadinServiceInstrumentation(),
+        new RequestHandlerInstrumentation(),
+        new UiInstrumentation(),
+        new RouterInstrumentation(),
+        new JavaScriptBootstrapUiInstrumentation(),
+        new RpcInvocationHandlerInstrumentation(),
+        new ClientCallableRpcInstrumentation());
+  }
+
+  // add span around vaadin request processing code
+  public static class VaadinServiceInstrumentation implements TypeInstrumentation {
+
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return named("com.vaadin.flow.server.VaadinService");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          named("handleRequest")
+              .and(takesArgument(0, named("com.vaadin.flow.server.VaadinRequest")))
+              .and(takesArgument(1, named("com.vaadin.flow.server.VaadinResponse"))),
+          HandleRequestAdvice.class.getName());
+    }
+
+    public static class HandleRequestAdvice {
+      @Advice.OnMethodEnter(suppress = Throwable.class)
+      public static void onEnter(
+          @Advice.This VaadinService vaadinService,
+          @Advice.Origin Method method,
+          @Advice.Local("otelContext") Context context,
+          @Advice.Local("otelScope") Scope scope) {
+        context = tracer().startVaadinServiceSpan(vaadinService, method);
+        scope = context.makeCurrent();
+      }
+
+      @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+      public static void onExit(
+          @Advice.Thrown Throwable throwable,
+          @Advice.Local("otelContext") Context context,
+          @Advice.Local("otelScope") Scope scope) {
+        if (scope == null) {
+          return;
+        }
+        scope.close();
+
+        tracer().endVaadinServiceSpan(context, throwable);
+      }
+    }
+  }
+
+  // add spans around vaadin request handlers
+  public static class RequestHandlerInstrumentation implements TypeInstrumentation {
+
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
+      return hasClassesNamed("com.vaadin.flow.server.RequestHandler");
+    }
+
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return implementsInterface(named("com.vaadin.flow.server.RequestHandler"));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          named("handleRequest")
+              .and(takesArgument(0, named("com.vaadin.flow.server.VaadinSession")))
+              .and(takesArgument(1, named("com.vaadin.flow.server.VaadinRequest")))
+              .and(takesArgument(2, named("com.vaadin.flow.server.VaadinResponse"))),
+          RequestHandlerAdvice.class.getName());
+    }
+
+    public static class RequestHandlerAdvice {
+      @Advice.OnMethodEnter(suppress = Throwable.class)
+      public static void onEnter(
+          @Advice.This RequestHandler requestHandler,
+          @Advice.Origin Method method,
+          @Advice.Local("otelContext") Context context,
+          @Advice.Local("otelScope") Scope scope) {
+
+        context = tracer().startRequestHandlerSpan(requestHandler, method);
+        scope = context.makeCurrent();
+      }
+
+      @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+      public static void onExit(
+          @Advice.Thrown Throwable throwable,
+          @Advice.Return boolean handled,
+          @Advice.Local("otelContext") Context context,
+          @Advice.Local("otelScope") Scope scope) {
+        if (scope == null) {
+          return;
+        }
+        scope.close();
+
+        tracer().endRequestHandlerSpan(context, throwable, handled);
+      }
+    }
+  }
+
+  // update server span name to route of current view
+  public static class UiInstrumentation implements TypeInstrumentation {
+
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return named("com.vaadin.flow.component.UI");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      // setCurrent is called by some request handler when they have accepted the request
+      // we can get the path of currently active route from ui
+      return singletonMap(
+          named("setCurrent").and(takesArgument(0, named("com.vaadin.flow.component.UI"))),
+          SetUiAdvice.class.getName());
+    }
+
+    public static class SetUiAdvice {
+      @Advice.OnMethodEnter(suppress = Throwable.class)
+      public static void onEnter(@Advice.Argument(0) UI ui) {
+        tracer().updateServerSpanName(ui);
+      }
+    }
+  }
+
+  // set server span name on initial page load
+  public static class RouterInstrumentation implements TypeInstrumentation {
+
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return named("com.vaadin.flow.router.Router");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          named("navigate")
+              .and(takesArguments(4))
+              .and(takesArgument(1, named("com.vaadin.flow.router.Location")))
+              .and(takesArgument(2, named("com.vaadin.flow.router.NavigationTrigger"))),
+          NavigateAdvice.class.getName());
+    }
+
+    public static class NavigateAdvice {
+      @Advice.OnMethodEnter(suppress = Throwable.class)
+      public static void onEnter(
+          @Advice.Argument(1) Location location,
+          @Advice.Argument(2) NavigationTrigger navigationTrigger) {
+        if (navigationTrigger == NavigationTrigger.PAGE_LOAD) {
+          tracer().updateServerSpanName(location);
+        }
+      }
+    }
+  }
+
+  // set server span name on initial page load, vaadin 15+
+  public static class JavaScriptBootstrapUiInstrumentation implements TypeInstrumentation {
+
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return named("com.vaadin.flow.component.internal.JavaScriptBootstrapUI");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(named("connectClient"), ConnectViewAdvice.class.getName());
+    }
+
+    public static class ConnectViewAdvice {
+      @Advice.OnMethodExit(suppress = Throwable.class)
+      public static void onExit(@Advice.This UI ui) {
+        tracer().updateServerSpanName(ui);
+      }
+    }
+  }
+
+  // add span around rpc calls from javascript
+  public static class RpcInvocationHandlerInstrumentation implements TypeInstrumentation {
+
+    @Override
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
+      return hasClassesNamed("com.vaadin.flow.server.communication.rpc.RpcInvocationHandler");
+    }
+
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return implementsInterface(
+          named("com.vaadin.flow.server.communication.rpc.RpcInvocationHandler"));
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          named("handle")
+              .and(takesArgument(0, named("com.vaadin.flow.component.UI")))
+              .and(takesArgument(1, named("elemental.json.JsonObject"))),
+          RpcInvocationHandlerAdvice.class.getName());
+    }
+
+    public static class RpcInvocationHandlerAdvice {
+      @Advice.OnMethodEnter(suppress = Throwable.class)
+      public static void onEnter(
+          @Advice.This RpcInvocationHandler rpcInvocationHandler,
+          @Advice.Origin Method method,
+          @Advice.Argument(1) JsonObject jsonObject,
+          @Advice.Local("otelContext") Context context,
+          @Advice.Local("otelScope") Scope scope) {
+
+        context = tracer().startRpcInvocationHandlerSpan(rpcInvocationHandler, method, jsonObject);
+        scope = context.makeCurrent();
+      }
+
+      @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+      public static void onExit(
+          @Advice.Thrown Throwable throwable,
+          @Advice.Local("otelContext") Context context,
+          @Advice.Local("otelScope") Scope scope) {
+        if (scope == null) {
+          return;
+        }
+        scope.close();
+
+        tracer().endSpan(context, throwable);
+      }
+    }
+  }
+
+  // add spans around calls to methods with @ClientCallable annotation
+  public static class ClientCallableRpcInstrumentation implements TypeInstrumentation {
+
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return named(
+          "com.vaadin.flow.server.communication.rpc.PublishedServerEventHandlerRpcHandler");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          named("invokeMethod")
+              .and(takesArgument(0, named("com.vaadin.flow.component.Component")))
+              .and(takesArgument(1, named(Class.class.getName())))
+              .and(takesArgument(2, named(String.class.getName())))
+              .and(takesArgument(3, named("elemental.json.JsonArray")))
+              .and(takesArgument(4, named(int.class.getName()))),
+          InvokeAdvice.class.getName());
+    }
+
+    public static class InvokeAdvice {
+      @Advice.OnMethodEnter(suppress = Throwable.class)
+      public static void onEnter(
+          @Advice.Argument(1) Class<?> componentClass,
+          @Advice.Argument(2) String methodName,
+          @Advice.Local("otelContext") Context context,
+          @Advice.Local("otelScope") Scope scope) {
+
+        context = tracer().startClientCallableSpan(componentClass, methodName);
+        scope = context.makeCurrent();
+      }
+
+      @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+      public static void onExit(
+          @Advice.Thrown Throwable throwable,
+          @Advice.Local("otelContext") Context context,
+          @Advice.Local("otelScope") Scope scope) {
+        if (scope == null) {
+          return;
+        }
+        scope.close();
+
+        tracer().endSpan(context, throwable);
+      }
+    }
+  }
+}
