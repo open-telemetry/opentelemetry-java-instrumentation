@@ -5,32 +5,34 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import java.util.List;
 
-public abstract class ServerInstrumenter<REQUEST, RESPONSE>
-    extends Instrumenter<REQUEST, RESPONSE> {
+final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, RESPONSE> {
 
   private final ContextPropagators propagators;
   private final TextMapGetter<REQUEST> getter;
 
-  protected ServerInstrumenter(
-      OpenTelemetry openTelemetry,
-      String instrumentationName,
+  ServerInstrumenter(
+      Tracer tracer,
       SpanNameExtractor<? super REQUEST> spanNameExtractor,
+      SpanKindExtractor<? super REQUEST> spanKindExtractor,
       StatusExtractor<? super REQUEST, ? super RESPONSE> statusExtractor,
-      TextMapGetter<REQUEST> getter,
-      Iterable<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
-          attributesExtractors) {
+      List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors,
+      ErrorCauseExtractor errorCauseExtractor,
+      ContextPropagators propagators,
+      TextMapGetter<REQUEST> getter) {
     super(
-        openTelemetry.getTracer(instrumentationName),
+        tracer,
         spanNameExtractor,
+        spanKindExtractor,
         statusExtractor,
-        attributesExtractors);
-    propagators = openTelemetry.getPropagators();
+        attributesExtractors,
+        errorCauseExtractor);
+    this.propagators = propagators;
     this.getter = getter;
   }
 
@@ -38,10 +40,5 @@ public abstract class ServerInstrumenter<REQUEST, RESPONSE>
   public Context start(Context parentContext, REQUEST request) {
     Context extracted = propagators.getTextMapPropagator().extract(parentContext, request, getter);
     return super.start(extracted, request);
-  }
-
-  @Override
-  protected SpanKind spanKind(REQUEST request) {
-    return SpanKind.SERVER;
   }
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
+import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.common.logging.RequestLogProperty;
 import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
@@ -15,14 +16,16 @@ import com.linecorp.armeria.server.SimpleDecoratingHttpService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.TimeUnit;
 
 /** Decorates an {@link HttpService} to trace inbound {@link HttpRequest}s. */
 final class OpenTelemetryService extends SimpleDecoratingHttpService {
 
-  private final ArmeriaServerInstrumenter instrumenter;
+  private final Instrumenter<ServiceRequestContext, RequestLog> instrumenter;
 
-  OpenTelemetryService(HttpService delegate, ArmeriaServerInstrumenter instrumenter) {
+  OpenTelemetryService(
+      HttpService delegate, Instrumenter<ServiceRequestContext, RequestLog> instrumenter) {
     super(delegate);
     this.instrumenter = instrumenter;
   }

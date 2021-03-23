@@ -19,8 +19,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class ArmeriaHttpAttributesExtractor
     extends HttpAttributesExtractor<RequestContext, RequestLog> {
 
-  static final ArmeriaHttpAttributesExtractor INSTANCE = new ArmeriaHttpAttributesExtractor();
-
   @Override
   protected String method(RequestContext ctx) {
     return ctx.method().name();

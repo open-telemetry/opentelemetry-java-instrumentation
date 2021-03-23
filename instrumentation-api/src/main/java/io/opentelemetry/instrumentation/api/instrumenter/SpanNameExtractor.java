@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+@FunctionalInterface
 public interface SpanNameExtractor<REQUEST> {
 
   static <REQUEST> SpanNameExtractor<REQUEST> http(

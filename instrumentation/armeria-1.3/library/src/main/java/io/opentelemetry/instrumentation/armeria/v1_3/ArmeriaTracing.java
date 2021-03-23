@@ -5,9 +5,13 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
+import com.linecorp.armeria.client.ClientRequestContext;
 import com.linecorp.armeria.client.HttpClient;
+import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.HttpService;
+import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.Function;
 
 /** Entrypoint for tracing Armeria services or clients. */
@@ -22,11 +26,12 @@ public final class ArmeriaTracing {
     return new ArmeriaTracingBuilder(openTelemetry);
   }
 
-  private final ArmeriaClientInstrumenter clientInstrumenter;
-  private final ArmeriaServerInstrumenter serverInstrumenter;
+  private final Instrumenter<ClientRequestContext, RequestLog> clientInstrumenter;
+  private final Instrumenter<ServiceRequestContext, RequestLog> serverInstrumenter;
 
-  public ArmeriaTracing(
-      ArmeriaClientInstrumenter clientInstrumenter, ArmeriaServerInstrumenter serverInstrumenter) {
+  ArmeriaTracing(
+      Instrumenter<ClientRequestContext, RequestLog> clientInstrumenter,
+      Instrumenter<ServiceRequestContext, RequestLog> serverInstrumenter) {
     this.clientInstrumenter = clientInstrumenter;
     this.serverInstrumenter = serverInstrumenter;
   }

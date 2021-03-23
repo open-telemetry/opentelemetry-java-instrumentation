@@ -10,18 +10,21 @@ import com.linecorp.armeria.client.HttpClient;
 import com.linecorp.armeria.client.SimpleDecoratingHttpClient;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
+import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.common.logging.RequestLogProperty;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.TimeUnit;
 
 /** Decorates an {@link HttpClient} to trace outbound {@link HttpResponse}s. */
 final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
 
-  private final ArmeriaClientInstrumenter instrumenter;
+  private final Instrumenter<ClientRequestContext, RequestLog> instrumenter;
 
-  OpenTelemetryClient(HttpClient delegate, ArmeriaClientInstrumenter instrumenter) {
+  OpenTelemetryClient(
+      HttpClient delegate, Instrumenter<ClientRequestContext, RequestLog> instrumenter) {
     super(delegate);
     this.instrumenter = instrumenter;
   }
@@ -32,7 +35,7 @@ final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Context context = instrumenter.start(Context.current(), ctx, ctx);
+    Context context = instrumenter.start(Context.current(), ctx);
 
     Span span = Span.fromContext(context);
     if (span.isRecording()) {

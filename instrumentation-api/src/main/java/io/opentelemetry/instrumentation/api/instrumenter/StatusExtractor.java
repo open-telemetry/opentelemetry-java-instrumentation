@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.trace.StatusCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+@FunctionalInterface
 public interface StatusExtractor<REQUEST, RESPONSE> {
 
   @SuppressWarnings("unchecked")
