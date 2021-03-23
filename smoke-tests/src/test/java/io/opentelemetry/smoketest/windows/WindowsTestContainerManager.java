@@ -78,9 +78,15 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     //    String backendSuffix = "-windows-20210316.659079568";
     String backendSuffix = "-20210319.2122678";
 
+    String backendImageName =
+        "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend" + backendSuffix;
+    if (!imageExists(backendImageName)) {
+      pullImage(backendImageName);
+    }
+
     backend =
         startContainer(
-            "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend" + backendSuffix,
+            backendImageName,
             command -> {
               command
                   .withAliases(BACKEND_ALIAS)
@@ -97,9 +103,13 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             new HttpWaiter(BACKEND_PORT, "/health", Duration.ofSeconds(60)),
             true);
 
+    String collectorImageName = "ghcr.io/open-telemetry/java-test-containers:collector" + backendSuffix;
+    if (!imageExists(collectorImageName)) {
+      pullImage(collectorImageName);
+    }
     collector =
         startContainer(
-            "ghcr.io/open-telemetry/java-test-containers:collector" + backendSuffix,
+            collectorImageName,
             command -> {
               command
                   .withAliases(COLLECTOR_ALIAS)
