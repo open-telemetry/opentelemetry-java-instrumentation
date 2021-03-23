@@ -145,11 +145,13 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     return extractMappedPort(target, originalPort);
   }
 
+  //TODO add support for extraResources
   @Override
   public Consumer<OutputFrame> startTarget(
       String targetImageName,
       String agentPath,
       Map<String, String> extraEnv,
+      Map<String, String> extraResources,
       TargetWaitStrategy waitStrategy) {
     stopTarget();
 

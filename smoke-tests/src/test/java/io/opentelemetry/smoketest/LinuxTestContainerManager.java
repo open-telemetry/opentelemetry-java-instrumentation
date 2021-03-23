@@ -31,8 +31,8 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
   public void startEnvironment() {
     backend =
         new GenericContainer<>(
-                DockerImageName.parse(
-                    "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20210319.2122678"))
+            DockerImageName.parse(
+                "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20210319.2122678"))
             .withExposedPorts(BACKEND_PORT)
             .waitingFor(Wait.forHttp("/health").forPort(BACKEND_PORT))
             .withNetwork(network)
@@ -82,6 +82,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
       String targetImageName,
       String agentPath,
       Map<String, String> extraEnv,
+      Map<String, String> extraResources,
       TargetWaitStrategy waitStrategy) {
 
     Consumer<OutputFrame> output = new ToStringConsumer();
@@ -96,6 +97,9 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
                 MountableFile.forHostPath(agentPath), "/" + TARGET_AGENT_FILENAME)
             .withEnv(getAgentEnvironment())
             .withEnv(extraEnv);
+
+    extraResources.forEach((file, path) -> target.withCopyFileToContainer(MountableFile.forClasspathResource(file), path));
+
     if (waitStrategy != null) {
       if (waitStrategy instanceof TargetWaitStrategy.Log) {
         target =

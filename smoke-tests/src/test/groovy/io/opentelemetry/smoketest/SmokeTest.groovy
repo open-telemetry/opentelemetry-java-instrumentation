@@ -16,7 +16,6 @@ import io.opentelemetry.smoketest.windows.WindowsTestContainerManager
 import java.util.regex.Pattern
 import java.util.stream.Stream
 import okhttp3.OkHttpClient
-import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.ToStringConsumer
 import spock.lang.Shared
 import spock.lang.Specification
@@ -41,9 +40,10 @@ abstract class SmokeTest extends Specification {
     return Collections.emptyMap()
   }
   /**
-   * Subclasses can override this method to customise target application's environment
+   * Subclasses can override this method to provide additional files to copy to target container
    */
-  protected void customizeContainer(GenericContainer container) {
+  protected Map<String, String> getExtraResources() {
+    return [:]
   }
 
   def setupSpec() {
@@ -57,7 +57,7 @@ abstract class SmokeTest extends Specification {
 
   def startTarget(String jdk, String serverVersion, boolean windows) {
     def targetImage = getTargetImage(jdk, serverVersion, windows)
-    return containerManager.startTarget(targetImage, agentPath, extraEnv, getWaitStrategy())
+    return containerManager.startTarget(targetImage, agentPath, extraEnv, extraResources, getWaitStrategy())
   }
 
   protected abstract String getTargetImage(String jdk)

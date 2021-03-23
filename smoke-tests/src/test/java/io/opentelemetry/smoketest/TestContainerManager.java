@@ -22,6 +22,7 @@ public interface TestContainerManager {
       String targetImageName,
       String agentPath,
       Map<String, String> extraEnv,
+      Map<String, String> extraResources,
       TargetWaitStrategy waitStrategy);
 
   void stopTarget();
