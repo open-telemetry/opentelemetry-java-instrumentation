@@ -62,7 +62,8 @@ class SpringBootSmokeTest extends SmokeTest {
 
     then: "JVM metrics are exported"
     def metrics = new MetricsInspector(waitForMetrics())
-    metrics.hasMetricsNamed("runtime.jvm.gc.collection")
+    metrics.hasMetricsNamed("runtime.jvm.gc.time")
+    metrics.hasMetricsNamed("runtime.jvm.gc.count")
     metrics.hasMetricsNamed("runtime.jvm.memory.area")
     metrics.hasMetricsNamed("runtime.jvm.memory.pool")
 

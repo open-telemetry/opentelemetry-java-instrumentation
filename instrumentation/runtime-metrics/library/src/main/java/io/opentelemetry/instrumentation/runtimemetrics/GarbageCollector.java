@@ -25,7 +25,8 @@ import java.util.List;
  * <p>Example metrics being exported:
  *
  * <pre>
- *   runtime.jvm.gc.collection{gc="PS1"} 6.7
+ *   runtime.jvm.gc.time{gc="PS1"} 6.7
+ *   runtime.jvm.gc.count{gc="PS1"} 1
  * </pre>
  */
 public final class GarbageCollector {
@@ -40,7 +41,7 @@ public final class GarbageCollector {
       labelSets.add(Labels.of(GC_LABEL_KEY, gc.getName()));
     }
     meter
-        .longSumObserverBuilder("runtime.jvm.gc.collection")
+        .longSumObserverBuilder("runtime.jvm.gc.time")
         .setDescription("Time spent in a given JVM garbage collector in milliseconds.")
         .setUnit("ms")
         .setUpdater(
@@ -48,6 +49,19 @@ public final class GarbageCollector {
               for (int i = 0; i < garbageCollectors.size(); i++) {
                 resultLongObserver.observe(
                     garbageCollectors.get(i).getCollectionTime(), labelSets.get(i));
+              }
+            })
+        .build();
+    meter
+        .longSumObserverBuilder("runtime.jvm.gc.count")
+        .setDescription(
+            "The number of collections that have occurred for a given JVM garbage collector.")
+        .setUnit("collections")
+        .setUpdater(
+            resultLongObserver -> {
+              for (int i = 0; i < garbageCollectors.size(); i++) {
+                resultLongObserver.observe(
+                    garbageCollectors.get(i).getCollectionCount(), labelSets.get(i));
               }
             })
         .build();
