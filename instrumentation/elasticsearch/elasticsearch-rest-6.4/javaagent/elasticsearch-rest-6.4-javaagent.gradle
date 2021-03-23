@@ -18,7 +18,7 @@ muzzle {
 dependencies {
   library group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.4.0'
 
-  implementation project(':instrumentation:elasticsearch:elasticsearch-rest-common:javaagent')
+  implementation project(':instrumentation:elasticsearch:elasticsearch-rest-common:library')
 
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
   testInstrumentation project(':instrumentation:apache-httpasyncclient-4.1:javaagent')

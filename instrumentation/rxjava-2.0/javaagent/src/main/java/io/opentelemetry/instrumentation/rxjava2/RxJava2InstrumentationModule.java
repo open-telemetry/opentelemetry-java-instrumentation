@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.rxjava2;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+@AutoService(InstrumentationModule.class)
 public class RxJava2InstrumentationModule extends InstrumentationModule {
 
   public RxJava2InstrumentationModule() {

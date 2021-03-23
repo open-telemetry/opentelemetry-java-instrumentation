@@ -5,7 +5,9 @@ muzzle {
     group = 'io.vertx'
     module = 'vertx-web'
     versions = "[3.0.0,4.0.0)"
-    assertInverse = true
+    //TODO we should split this module into client and server
+    //They have different version applicability
+//    assertInverse = true
   }
 }
 
