@@ -1,12 +1,5 @@
-buildscript {
-  repositories {
-    mavenLocal()
-    mavenCentral()
-    jcenter()
-  }
-  dependencies {
-    classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
-  }
+plugins {
+  id "com.github.johnrengelman.shadow"
 }
 
 apply from: "$rootDir/gradle/java.gradle"

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.lettuce.v5_1
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
-import io.lettuce.core.ClientOptions
 import io.lettuce.core.ConnectionFuture
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisFuture
@@ -32,8 +31,6 @@ import spock.util.concurrent.AsyncConditions
 abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecification {
   public static final String HOST = "127.0.0.1"
   public static final int DB_INDEX = 0
-  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
-  public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   abstract RedisClient createClient(String uri)
 
@@ -86,7 +83,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
 
     println "Using redis: $redisServer.args"
     redisServer.start()
-    redisClient.setOptions(CLIENT_OPTIONS)
+    redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 
     connection = redisClient.connect()
     asyncCommands = connection.async()
@@ -106,11 +103,11 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
   def "connect using get on ConnectionFuture"() {
     setup:
     RedisClient testConnectionClient = RedisClient.create(embeddedDbUri)
-    testConnectionClient.setOptions(CLIENT_OPTIONS)
+    testConnectionClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 
     when:
     ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
-      new RedisURI(HOST, port, 3, TimeUnit.SECONDS))
+      RedisURI.create("redis://${HOST}:${port}?timeout=3s"))
     StatefulConnection connection = connectionFuture.get()
 
     then:
@@ -125,11 +122,11 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
   def "connect exception inside the connection future"() {
     setup:
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent)
-    testConnectionClient.setOptions(CLIENT_OPTIONS)
+    testConnectionClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 
     when:
     ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
-      new RedisURI(HOST, incorrectPort, 3, TimeUnit.SECONDS))
+      RedisURI.create("redis://${HOST}:${incorrectPort}?timeout=3s"))
     StatefulConnection connection = connectionFuture.get()
 
     then:

@@ -3,6 +3,10 @@ ext {
 }
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
+repositories {
+  maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+}
+
 configurations {
   testServer
 }

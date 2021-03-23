@@ -10,7 +10,6 @@ version = '0.0.1-SNAPSHOT'
 
 repositories {
   mavenCentral()
-  jcenter()
   // this is only needed for the working against unreleased otel-java snapshots
   maven {
     url "https://oss.sonatype.org/content/repositories/snapshots"

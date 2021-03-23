@@ -280,8 +280,8 @@ class TestAccessLogValve extends ValveBase implements AccessLog {
 
   void log(Request request, Response response, long time) {
     synchronized (loggedIds) {
-      loggedIds.add(new Tuple2(request.getAttribute("traceId"),
-        request.getAttribute("spanId")))
+      loggedIds.add(new Tuple2(request.getAttribute("trace_id"),
+        request.getAttribute("span_id")))
       loggedIds.notifyAll()
     }
   }

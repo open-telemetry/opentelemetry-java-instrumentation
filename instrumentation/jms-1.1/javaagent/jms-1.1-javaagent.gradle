@@ -28,6 +28,10 @@ testSets {
 jms2Test.forkEvery 1
 test.dependsOn jms2Test
 
+repositories {
+  maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
+}
+
 dependencies {
   compileOnly group: 'javax.jms', name: 'jms-api', version: '1.1-rev-1'
 
