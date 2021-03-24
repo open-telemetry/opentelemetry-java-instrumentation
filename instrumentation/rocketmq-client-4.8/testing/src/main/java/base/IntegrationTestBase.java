@@ -125,8 +125,8 @@ public class IntegrationTestBase {
           brokerController.getBrokerAddr());
       brokerController.start();
     } catch (Throwable t) {
-      logger.error("Broker start failed, will exit", t);
-      System.exit(1);
+      logger.error("Broker start failed", t);
+      throw new IllegalStateException("Broker start failed", t);
     }
     BROKER_CONTROLLERS.add(brokerController);
     return brokerController;
