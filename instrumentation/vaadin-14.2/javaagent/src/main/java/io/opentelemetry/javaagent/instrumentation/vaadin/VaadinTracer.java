@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.lang.reflect.Method;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class VaadinTracer extends BaseTracer {
   private static final ContextKey<VaadinServiceContext> SERVICE_CONTEXT_KEY =
@@ -66,7 +67,7 @@ public class VaadinTracer extends BaseTracer {
     }
   }
 
-  public Context startRequestHandlerSpan(RequestHandler requestHandler, Method method) {
+  public @Nullable Context startRequestHandlerSpan(RequestHandler requestHandler, Method method) {
     Context current = Context.current();
     // ignore nested request handlers
     if (current.get(REQUEST_HANDLER_CONTEXT_KEY) != null) {
@@ -141,7 +142,7 @@ public class VaadinTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.vaadin";
+    return "io.opentelemetry.javaagent.vaadin-14.2";
   }
 
   private static class VaadinServiceContext {

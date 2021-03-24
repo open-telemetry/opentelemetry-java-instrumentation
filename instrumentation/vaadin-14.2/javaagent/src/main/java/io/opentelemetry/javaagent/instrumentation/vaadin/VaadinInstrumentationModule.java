@@ -92,9 +92,6 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
           @Advice.Thrown Throwable throwable,
           @Advice.Local("otelContext") Context context,
           @Advice.Local("otelScope") Scope scope) {
-        if (scope == null) {
-          return;
-        }
         scope.close();
 
         tracer().endVaadinServiceSpan(context, throwable);
@@ -134,7 +131,9 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
           @Advice.Local("otelScope") Scope scope) {
 
         context = tracer().startRequestHandlerSpan(requestHandler, method);
-        scope = context.makeCurrent();
+        if (context != null) {
+          scope = context.makeCurrent();
+        }
       }
 
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

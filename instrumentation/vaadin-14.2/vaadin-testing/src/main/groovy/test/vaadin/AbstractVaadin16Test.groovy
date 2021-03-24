@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import com.vaadin.flow.server.Version
 
-class Vaadin16Test extends AbstractVaadinTest {
+abstract class AbstractVaadin16Test extends AbstractVaadinTest {
   static final boolean VAADIN_17 = Version.majorVersion >= 4
   static final boolean VAADIN_19 = Version.majorVersion >= 6
 
