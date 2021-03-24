@@ -41,8 +41,8 @@ jib {
   to.image = "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-$extraTag"
 }
 
-# windows containers are built manually since jib does not support windows containers yet
 
+//windows containers are built manually since jib does not support windows containers yet
 def backendDockerBuildDir = new File(project.buildDir, "docker-backend")
 
 task windowsBackendImagePrepare(type: Copy) {
