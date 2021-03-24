@@ -46,7 +46,7 @@ class SqsCamelTest extends AgentInstrumentationSpecification {
      void initialize(AbstractApplicationContext applicationContext) {applicationContext.getBeanFactory().registerSingleton("localStack", sqs)}})
      server = app.run()**/
 
-    sqsPort = PortUtils.randomOpenPort()
+    sqsPort = PortUtils.findOpenPort()
     sqs = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start()
     println getClass().name + " SQS server started at: localhost:$sqsPort/"
 

@@ -31,7 +31,7 @@ abstract class AbstractCouchbaseTest extends AgentInstrumentationSpecification {
   static final PASSWORD = "password"
 
   @Shared
-  private int port = PortUtils.randomOpenPort()
+  private int port = PortUtils.findOpenPort()
 
   @Shared
   private String testBucketName = this.getClass().simpleName

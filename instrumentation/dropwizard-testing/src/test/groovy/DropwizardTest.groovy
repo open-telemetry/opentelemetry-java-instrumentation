@@ -38,7 +38,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
     def testSupport = new DropwizardTestSupport(testApp(),
       null,
       ConfigOverride.config("server.applicationConnectors[0].port", "$port"),
-      ConfigOverride.config("server.adminConnectors[0].port", PortUtils.randomOpenPort().toString()))
+      ConfigOverride.config("server.adminConnectors[0].port", PortUtils.findOpenPort().toString()))
     testSupport.before()
     return testSupport
   }
