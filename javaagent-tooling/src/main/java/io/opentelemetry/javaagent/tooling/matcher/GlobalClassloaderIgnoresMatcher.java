@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling.matcher;
 
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.PatchLogger;
-import io.opentelemetry.javaagent.bootstrap.WeakCache;
 import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
-import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.Logger;
@@ -23,7 +22,8 @@ public class GlobalClassloaderIgnoresMatcher
       "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
   private static final String EXPORTER_CLASSLOADER_NAME =
       "io.opentelemetry.javaagent.tooling.ExporterClassLoader";
-  private static final WeakCache<ClassLoader, Boolean> skipCache = AgentTooling.newWeakCache();
+  private static final Cache<ClassLoader, Boolean> skipCache =
+      Cache.newBuilder().setWeakKeys().build();
 
   public static ElementMatcher.Junction.AbstractBase<ClassLoader> skipClassLoader(
       IgnoreMatcherProvider ignoreMatcherProvider) {
@@ -55,21 +55,24 @@ public class GlobalClassloaderIgnoresMatcher
     if (canSkipClassLoaderByName(cl)) {
       return true;
     }
-    Boolean v = skipCache.getIfPresent(cl);
-    if (v != null) {
-      return v;
-    }
-    // when ClassloadingInstrumentation is active, checking delegatesToBootstrap() below is not
-    // required, because ClassloadingInstrumentation forces all class loaders to load all of the
-    // classes in Constants.BOOTSTRAP_PACKAGE_PREFIXES directly from the bootstrap class loader
-    //
-    // however, at this time we don't want to introduce the concept of a required instrumentation,
-    // and we don't want to introduce the concept of the tooling code depending on whether or not
-    // a particular instrumentation is active (mainly because this particular use case doesn't
-    // seem to justify introducing either of these new concepts)
-    v = !delegatesToBootstrap(cl);
-    skipCache.put(cl, v);
-    return v;
+    return skipCache.computeIfAbsent(
+        cl,
+        c -> {
+          // when ClassloadingInstrumentation is active, checking delegatesToBootstrap() below is
+          // not
+          // required, because ClassloadingInstrumentation forces all class loaders to load all of
+          // the
+          // classes in Constants.BOOTSTRAP_PACKAGE_PREFIXES directly from the bootstrap class
+          // loader
+          //
+          // however, at this time we don't want to introduce the concept of a required
+          // instrumentation,
+          // and we don't want to introduce the concept of the tooling code depending on whether or
+          // not
+          // a particular instrumentation is active (mainly because this particular use case doesn't
+          // seem to justify introducing either of these new concepts)
+          return !delegatesToBootstrap(cl);
+        });
   }
 
   private static boolean canSkipClassLoaderByName(ClassLoader loader) {

@@ -11,11 +11,15 @@ import java.util.concurrent.Executor;
 /** A builder of {@link Cache}. */
 public final class CacheBuilder {
 
-  private final Caffeine<?, ?> caffeine = Caffeine.newBuilder();
+  private static final long UNSET = -1;
+
+  private boolean weakKeys;
+  private long maximumSize = UNSET;
+  private Executor executor = null;
 
   /** Sets the maximum size of the cache. */
   public CacheBuilder setMaximumSize(long maximumSize) {
-    caffeine.maximumSize(maximumSize);
+    this.maximumSize = maximumSize;
     return this;
   }
 
@@ -24,22 +28,35 @@ public final class CacheBuilder {
    * {@link Object#equals(Object)}.
    */
   public CacheBuilder setWeakKeys() {
-    caffeine.weakKeys();
+    this.weakKeys = true;
     return this;
   }
 
   // Visible for testing
   CacheBuilder setExecutor(Executor executor) {
-    caffeine.executor(executor);
+    this.executor = executor;
     return this;
   }
 
   /** Returns a new {@link Cache} with the settings of this {@link CacheBuilder}. */
   public <K, V> Cache<K, V> build() {
+    if (weakKeys && maximumSize == UNSET) {
+      return new WeakLockFreeCache<>();
+    }
+    Caffeine<?, ?> caffeine = Caffeine.newBuilder();
+    if (weakKeys) {
+      caffeine.weakKeys();
+    }
+    if (maximumSize != UNSET) {
+      caffeine.maximumSize(maximumSize);
+    }
+    if (executor != null) {
+      caffeine.executor(executor);
+    }
     @SuppressWarnings("unchecked")
     com.github.benmanes.caffeine.cache.Cache<K, V> delegate =
         (com.github.benmanes.caffeine.cache.Cache<K, V>) caffeine.build();
-    return new CaffeineCache<K, V>(delegate);
+    return new CaffeineCache<>(delegate);
   }
 
   CacheBuilder() {}

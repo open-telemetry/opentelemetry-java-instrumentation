@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
-
-import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,12 +17,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class HelperResources {
 
-  private static final WeakMap<ClassLoader, Map<String, URL>> RESOURCES = newWeakMap();
+  private static final Cache<ClassLoader, Map<String, URL>> RESOURCES =
+      Cache.newBuilder().setWeakKeys().build();
 
   /** Registers the {@code payload} to be available to instrumentation at {@code path}. */
   public static void register(ClassLoader classLoader, String path, URL url) {
-    RESOURCES.putIfAbsent(classLoader, new ConcurrentHashMap<String, URL>());
-    RESOURCES.get(classLoader).put(path, url);
+    RESOURCES.computeIfAbsent(classLoader, unused -> new ConcurrentHashMap<>()).put(path, url);
   }
 
   /**

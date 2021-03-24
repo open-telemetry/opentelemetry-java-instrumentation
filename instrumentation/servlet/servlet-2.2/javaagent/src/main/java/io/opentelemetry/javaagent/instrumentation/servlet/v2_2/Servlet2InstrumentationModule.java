@@ -10,6 +10,7 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Arrays;
@@ -32,7 +33,10 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Arrays.asList(
-        new HttpServletResponseInstrumentation(), new ServletAndFilterInstrumentation());
+        new HttpServletResponseInstrumentation(),
+        new ServletAndFilterInstrumentation(
+            "javax.servlet",
+            Servlet2InstrumentationModule.class.getPackage().getName() + ".Servlet2Advice"));
   }
 
   @Override

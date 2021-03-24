@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.javaagent.instrumentation.api.WeakMap.Provider.newWeakMap;
-
-import io.opentelemetry.javaagent.instrumentation.api.WeakMap;
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
@@ -17,6 +15,8 @@ import java.sql.PreparedStatement;
  * <p>Should be injected into the bootstrap classpath.
  */
 public class JdbcMaps {
-  public static final WeakMap<Connection, DbInfo> connectionInfo = newWeakMap();
-  public static final WeakMap<PreparedStatement, String> preparedStatements = newWeakMap();
+  public static final Cache<Connection, DbInfo> connectionInfo =
+      Cache.newBuilder().setWeakKeys().build();
+  public static final Cache<PreparedStatement, String> preparedStatements =
+      Cache.newBuilder().setWeakKeys().build();
 }

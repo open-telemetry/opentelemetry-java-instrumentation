@@ -34,7 +34,8 @@ ext {
     mockito           : '3.6.0',
     // Caffeine 2.x to support Java 8+. 3.x is 11+.
     caffeine          : '2.9.0',
-    testcontainers    : '1.15.2'
+    testcontainers    : '1.15.2',
+    weaklockfree      : '0.18'
   ]
 
   deps = [
@@ -78,6 +79,7 @@ ext {
       dependencies.create(group: 'io.prometheus', name: 'simpleclient_httpserver', version: "${versions.prometheus}"),
     ],
     caffeine                     : "com.github.ben-manes.caffeine:caffeine:${versions.caffeine}",
+    weaklockfree                 : "com.blogspot.mydailyjava:weak-lock-free:${versions.weaklockfree}",
 
     // Testing
 

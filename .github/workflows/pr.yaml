@@ -100,6 +100,7 @@ jobs:
     strategy:
       matrix:
         os: [ windows-latest, ubuntu-latest]
+        suite: ["glassfishAndJetty", "libertyAndTomcat", "tomeeAndWildfly", "other"]
       fail-fast: false
     steps:
       - name: Support longpaths
@@ -121,7 +122,7 @@ jobs:
           job-id: smokeTests
 
       - name: Test
-        run: ./gradlew :smoke-tests:test -i -s
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }} -i -s
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
@@ -152,7 +153,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: Run  muzzle
+      - name: Run muzzle
         run: ./gradlew ${{ matrix.module }}:muzzle --no-daemon
 
   accept-pr:

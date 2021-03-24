@@ -50,24 +50,18 @@ class MuzzlePlugin implements Plugin<Project> {
     // compileMuzzle compiles all projects required to run muzzle validation.
     // Not adding group and description to keep this task from showing in `gradle tasks`.
     def compileMuzzle = project.task('compileMuzzle')
+    compileMuzzle.dependsOn(bootstrapProject.tasks.classes, toolingProject.tasks.classes, project.tasks.classes)
+
     def muzzle = project.task('muzzle') {
       group = 'Muzzle'
       description = "Run instrumentation muzzle on compile time dependencies"
-      doLast {
-        if (!project.muzzle.directives.any { it.assertPass }) {
-          project.getLogger().info('No muzzle pass directives configured. Asserting pass against instrumentation compile-time dependencies')
-          ClassLoader userCL = createCompileDepsClassLoader(project)
-          ClassLoader instrumentationCL = createInstrumentationClassloader(project)
-          Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
-            .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
-          assertionMethod.invoke(null, instrumentationCL, userCL, true)
-        }
-        println "Muzzle executing for $project"
-      }
+      dependsOn(compileMuzzle)
     }
-    def printReferences = project.task('printMuzzleReferences') {
+
+    project.task('printMuzzleReferences') {
       group = 'Muzzle'
       description = "Print references created by instrumentation muzzle"
+      dependsOn(compileMuzzle)
       doLast {
         ClassLoader instrumentationCL = createInstrumentationClassloader(project)
         Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
@@ -75,16 +69,6 @@ class MuzzlePlugin implements Plugin<Project> {
         assertionMethod.invoke(null, instrumentationCL)
       }
     }
-    project.tasks.compileMuzzle.dependsOn(bootstrapProject.tasks.compileJava)
-    project.tasks.compileMuzzle.dependsOn(toolingProject.tasks.compileJava)
-    project.afterEvaluate {
-      project.tasks.compileMuzzle.dependsOn(project.tasks.compileJava)
-      if (project.tasks.getNames().contains('compileScala')) {
-        project.tasks.compileMuzzle.dependsOn(project.tasks.compileScala)
-      }
-    }
-    project.tasks.muzzle.dependsOn(project.tasks.compileMuzzle)
-    project.tasks.printMuzzleReferences.dependsOn(project.tasks.compileMuzzle)
 
     def hasRelevantTask = project.gradle.startParameter.taskNames.any { taskName ->
       // removing leading ':' if present
@@ -102,7 +86,7 @@ class MuzzlePlugin implements Plugin<Project> {
 
     project.afterEvaluate {
       // use runAfter to set up task finalizers in version order
-      Task runAfter = project.tasks.muzzle
+      Task runAfter = muzzle
 
       for (MuzzleDirective muzzleDirective : project.muzzle.directives) {
         project.getLogger().info("configured $muzzleDirective")

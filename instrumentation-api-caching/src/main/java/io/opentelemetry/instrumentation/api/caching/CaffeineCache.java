@@ -21,6 +21,21 @@ final class CaffeineCache<K, V> implements Cache<K, V> {
     return delegate.get(key, mappingFunction);
   }
 
+  @Override
+  public V get(K key) {
+    return delegate.getIfPresent(key);
+  }
+
+  @Override
+  public void put(K key, V value) {
+    delegate.put(key, value);
+  }
+
+  @Override
+  public void remove(K key) {
+    delegate.invalidate(key);
+  }
+
   // Visible for testing
   Set<K> keySet() {
     return delegate.asMap().keySet();
