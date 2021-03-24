@@ -2,7 +2,6 @@
 import io.opentelemetry.instrumentation.gradle.bytebuddy.ByteBuddyPluginConfigurator
 
 apply plugin: 'net.bytebuddy.byte-buddy'
-apply plugin: 'muzzle'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 ext {
@@ -19,6 +18,8 @@ if (project.ext.find("skipPublish") != true) {
 apply from: "$rootDir/gradle/instrumentation-common.gradle"
 
 if (projectDir.name == 'javaagent') {
+  apply plugin: 'muzzle'
+
   archivesBaseName = projectDir.parentFile.name
 }
 

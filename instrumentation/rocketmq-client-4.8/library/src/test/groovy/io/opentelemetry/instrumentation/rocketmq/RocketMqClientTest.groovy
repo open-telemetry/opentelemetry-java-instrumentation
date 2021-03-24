@@ -10,9 +10,7 @@ import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
 import org.apache.rocketmq.client.producer.DefaultMQProducer
-import spock.lang.Ignore
 
-@Ignore("https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2586")
 class RocketMqClientTest extends AbstractRocketMqClientTest implements LibraryTestTrait {
 
   @Override

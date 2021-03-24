@@ -46,7 +46,7 @@ dependencies {
 
   implementation deps.opentelemetryZipkin
 
-  implementation deps.bytebuddy
+  api deps.bytebuddy
   implementation deps.bytebuddyagent
   annotationProcessor deps.autoservice
   implementation deps.autoservice

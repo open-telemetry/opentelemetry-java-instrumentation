@@ -9,9 +9,7 @@ import io.opentelemetery.instrumentation.rocketmq.AbstractRocketMqClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
 import org.apache.rocketmq.client.producer.DefaultMQProducer
-import spock.lang.Ignore
 
-@Ignore("https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2586")
 class RocketMqClientTest extends AbstractRocketMqClientTest implements AgentTestTrait {
 
   @Override

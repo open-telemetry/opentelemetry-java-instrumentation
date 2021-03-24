@@ -10,5 +10,5 @@ muzzle {
 
 dependencies {
   library group: 'javax.jws', name: 'javax.jws-api', version: '1.1'
-  implementation project(":instrumentation:jaxws:jaxws-common:javaagent")
+  implementation project(":instrumentation:jaxws:jaxws-common:library")
 }

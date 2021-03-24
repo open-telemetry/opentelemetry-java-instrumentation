@@ -97,6 +97,10 @@ jobs:
 
   smoke-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        suite: ["glassfishAndJetty", "libertyAndTomcat", "tomeeAndWildfly", "other"]
+      fail-fast: false
     steps:
       - uses: actions/checkout@v2
         with:
@@ -113,7 +117,7 @@ jobs:
           job-id: smokeTests
 
       - name: Test
-        run: ./gradlew :smoke-tests:test
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }}
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
@@ -144,7 +148,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: Run  muzzle
+      - name: Run muzzle
         run: ./gradlew ${{ matrix.module }}:muzzle --no-daemon
 
   accept-pr:

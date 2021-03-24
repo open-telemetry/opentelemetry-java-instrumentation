@@ -11,6 +11,6 @@
  * has its own {@code JettyHandlerInstrumentation} and {@code JettyHandlerAdvice}. But this is the
  * only difference between two instrumentations, thus {@link
  * io.opentelemetry.javaagent.instrumentation.jetty.JettyHttpServerTracer} is a very thin subclass
- * of {@link io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer}.
+ * of {@link io.opentelemetry.instrumentation.servlet.v3_0.Servlet3HttpServerTracer}.
  */
 package io.opentelemetry.javaagent.instrumentation.jetty;

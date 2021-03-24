@@ -20,7 +20,7 @@ muzzle {
 dependencies {
   library group: 'org.elasticsearch.client', name: 'transport', version: '6.0.0'
 
-  implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common:javaagent')
+  implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common:library')
 
   // Ensure no cross interference
   testInstrumentation project(':instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent')
