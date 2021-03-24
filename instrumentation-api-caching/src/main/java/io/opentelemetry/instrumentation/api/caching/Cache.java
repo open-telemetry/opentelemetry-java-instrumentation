@@ -20,4 +20,16 @@ public interface Cache<K, V> {
    * computes the value using {@code mappingFunction}, stores the result, and returns it.
    */
   V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction);
+
+  /**
+   * Returns the cached value associated with the provided {@code key} if present, or {@code null}
+   * otherwise.
+   */
+  V get(K key);
+
+  /** Puts the {@code value} into the cache for the {@code key}. */
+  void put(K key, V value);
+
+  /** Removes a value for {@code key} if present. */
+  void remove(K key);
 }

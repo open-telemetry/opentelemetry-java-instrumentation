@@ -28,8 +28,6 @@ public final class Constants {
     "com.google.auto",
     "com.google.common",
     "com.google.thirdparty.publicsuffix",
-    // WeakConcurrentMap
-    "com.blogspot.mydailyjava.weaklockfree",
     // bytebuddy
     "net.bytebuddy",
     "org.yaml.snakeyaml",

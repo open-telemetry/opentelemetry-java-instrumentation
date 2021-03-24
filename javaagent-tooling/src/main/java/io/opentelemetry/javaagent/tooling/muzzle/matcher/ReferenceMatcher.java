@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPred
 import static java.util.Collections.emptyList;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
-import io.opentelemetry.javaagent.bootstrap.WeakCache;
+import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
@@ -32,7 +32,8 @@ import net.bytebuddy.pool.TypePool;
 /** Matches a set of references against a classloader. */
 public final class ReferenceMatcher {
 
-  private final WeakCache<ClassLoader, Boolean> mismatchCache = AgentTooling.newWeakCache();
+  private final Cache<ClassLoader, Boolean> mismatchCache =
+      Cache.newBuilder().setWeakKeys().build();
   private final Map<String, Reference> references;
   private final Set<String> helperClassNames;
 
@@ -62,8 +63,7 @@ public final class ReferenceMatcher {
     if (userClassLoader == BOOTSTRAP_LOADER) {
       userClassLoader = Utils.getBootstrapProxy();
     }
-    final ClassLoader cl = userClassLoader;
-    return mismatchCache.getIfPresentOrCompute(userClassLoader, () -> doesMatch(cl));
+    return mismatchCache.computeIfAbsent(userClassLoader, this::doesMatch);
   }
 
   private boolean doesMatch(ClassLoader loader) {
