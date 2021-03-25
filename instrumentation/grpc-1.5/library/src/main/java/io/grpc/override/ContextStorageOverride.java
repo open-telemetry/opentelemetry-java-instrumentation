@@ -9,13 +9,18 @@ import io.grpc.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.Deque;
+import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-// This exact package / class name indicates to gRPC to use this override.
-public class ContextStorageOverride extends Context.Storage {
+/**
+ * {@link Context.Storage} override which uses OpenTelemetry context as the backing store. Both gRPC
+ * and OpenTelemetry contexts refer to each other to ensure that both OTel context propagation
+ * mechanisms and gRPC context propagation mechanisms can be used interchangably.
+ */
+public final class ContextStorageOverride extends Context.Storage {
 
   private static final Logger logger = Logger.getLogger(ContextStorageOverride.class.getName());
 
@@ -32,7 +37,7 @@ public class ContextStorageOverride extends Context.Storage {
   // difference
   // since those operations are rare, but in highly reactive applications where the overhead of
   // ThreadLocal was already a problem, this makes it worse.
-  private static final ThreadLocal<WeakHashMap<Context, Queue<Scope>>> contextScopes =
+  private static final ThreadLocal<WeakHashMap<Context, Deque<Scope>>> contextScopes =
       ThreadLocal.withInitial(WeakHashMap::new);
 
   @Override
@@ -41,6 +46,10 @@ public class ContextStorageOverride extends Context.Storage {
     Context current = otelContext.get(GRPC_CONTEXT);
 
     if (current == toAttach) {
+      contextScopes
+          .get()
+          .computeIfAbsent(toAttach, unused -> new ArrayDeque<>())
+          .addLast(Scope.noop());
       return;
     }
 
@@ -60,7 +69,7 @@ public class ContextStorageOverride extends Context.Storage {
     }
 
     Scope scope = newOtelContext.makeCurrent();
-    contextScopes.get().computeIfAbsent(toAttach, unused -> new ArrayDeque<>()).add(scope);
+    contextScopes.get().computeIfAbsent(toAttach, unused -> new ArrayDeque<>()).addLast(scope);
   }
 
   @Override
@@ -76,7 +85,9 @@ public class ContextStorageOverride extends Context.Storage {
           "Context was not attached when detaching",
           new Throwable().fillInStackTrace());
     }
-    Scope scope = contextScopes.get().get(toDetach).poll();
+    Map<Context, Deque<Scope>> contextStacks = contextScopes.get();
+    Deque<Scope> stack = contextStacks.get(toDetach);
+    Scope scope = stack.pollLast();
     if (scope == null) {
       logger.log(
           Level.SEVERE,
@@ -84,6 +95,9 @@ public class ContextStorageOverride extends Context.Storage {
           new Throwable().fillInStackTrace());
     } else {
       scope.close();
+    }
+    if (stack.isEmpty()) {
+      contextStacks.remove(toDetach);
     }
   }
 

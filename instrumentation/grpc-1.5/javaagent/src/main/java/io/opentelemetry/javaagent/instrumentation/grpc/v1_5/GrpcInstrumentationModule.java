@@ -18,14 +18,16 @@ public class GrpcInstrumentationModule extends InstrumentationModule {
     super("grpc", "grpc-1.5");
   }
 
-  /*@Override
+  @Override
   protected String[] additionalHelperClassNames() {
     return new String[] {"io.grpc.override.ContextStorageOverride"};
-  }*/
+  }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new GrpcClientBuilderBuildInstrumentation(), new GrpcContextInstrumentation(), new GrpcServerBuilderInstrumentation());
+        new GrpcClientBuilderBuildInstrumentation(),
+        new GrpcContextInstrumentation(),
+        new GrpcServerBuilderInstrumentation());
   }
 }

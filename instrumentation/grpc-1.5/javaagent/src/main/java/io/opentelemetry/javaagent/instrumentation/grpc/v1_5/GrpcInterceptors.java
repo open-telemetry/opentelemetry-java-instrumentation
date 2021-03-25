@@ -11,7 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.grpc.v1_5.GrpcTracing;
 
-// Holds singleton references to tracers.
+// Holds singleton references.
 public final class GrpcInterceptors {
   private static final GrpcTracing TRACING =
       GrpcTracing.newBuilder(GlobalOpenTelemetry.get())
