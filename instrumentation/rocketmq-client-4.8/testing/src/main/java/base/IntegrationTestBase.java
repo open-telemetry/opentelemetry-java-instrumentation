@@ -71,7 +71,7 @@ public class IntegrationTestBase {
     namesrvConfig.setConfigStorePath(namesrvPath.toString());
 
     // find 3 consecutive open ports and use the last one of them
-    // rocketmq will also bind to give port - 2
+    // rocketmq will also bind to given port - 2
     nameServerNettyServerConfig.setListenPort(PortUtils.findOpenPorts(3) + 2);
     NamesrvController namesrvController =
         new NamesrvController(namesrvConfig, nameServerNettyServerConfig);
