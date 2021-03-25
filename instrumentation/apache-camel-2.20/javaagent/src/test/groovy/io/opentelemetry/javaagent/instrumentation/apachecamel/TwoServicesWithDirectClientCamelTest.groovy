@@ -39,8 +39,8 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
   }
 
   def setupSpecUnderRetry() {
-    portOne = PortUtils.randomOpenPort()
-    portTwo = PortUtils.randomOpenPort()
+    portOne = PortUtils.findOpenPort()
+    portTwo = PortUtils.findOpenPort()
     def app = new SpringApplication(TwoServicesConfig)
     app.setDefaultProperties(["service.one.port": portOne, "service.two.port": portTwo])
     server = app.run()

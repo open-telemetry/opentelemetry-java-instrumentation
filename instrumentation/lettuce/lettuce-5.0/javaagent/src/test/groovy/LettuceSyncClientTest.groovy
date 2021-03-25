@@ -52,8 +52,8 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
   RedisCommands<String, ?> syncCommands
 
   def setupSpec() {
-    port = PortUtils.randomOpenPort()
-    incorrectPort = PortUtils.randomOpenPort()
+    port = PortUtils.findOpenPort()
+    incorrectPort = PortUtils.findOpenPort()
     dbAddr = PEER_NAME + ":" + port + "/" + DB_INDEX
     dbAddrNonExistent = PEER_NAME + ":" + incorrectPort + "/" + DB_INDEX
     dbUriNonExistent = "redis://" + dbAddrNonExistent

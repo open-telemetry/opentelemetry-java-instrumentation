@@ -39,7 +39,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
   RedisCommands<String, ?> syncCommands
 
   def setupSpec() {
-    int port = PortUtils.randomOpenPort()
+    int port = PortUtils.findOpenPort()
     String dbAddr = PEER_HOST + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
 

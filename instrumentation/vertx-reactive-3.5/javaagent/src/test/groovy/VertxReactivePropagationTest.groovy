@@ -28,7 +28,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
   Vertx server
 
   def setupSpec() {
-    port = PortUtils.randomOpenPort()
+    port = PortUtils.findOpenPort()
     server = VertxReactiveWebServer.start(port)
   }
 
