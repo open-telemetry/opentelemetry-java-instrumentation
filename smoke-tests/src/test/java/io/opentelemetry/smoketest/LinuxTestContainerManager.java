@@ -21,6 +21,8 @@ import org.testcontainers.utility.MountableFile;
 
 public class LinuxTestContainerManager extends AbstractTestContainerManager {
   private static final Logger logger = LoggerFactory.getLogger(LinuxTestContainerManager.class);
+  private static final Logger collectorLogger = LoggerFactory.getLogger("Collector");
+  private static final Logger backendLogger = LoggerFactory.getLogger("Backend");
 
   private final Network network = Network.newNetwork();
   private GenericContainer<?> backend = null;
@@ -37,7 +39,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
             .waitingFor(Wait.forHttp("/health").forPort(BACKEND_PORT))
             .withNetwork(network)
             .withNetworkAliases(BACKEND_ALIAS)
-            .withLogConsumer(new Slf4jLogConsumer(logger));
+            .withLogConsumer(new Slf4jLogConsumer(backendLogger));
     backend.start();
 
     collector =
@@ -45,7 +47,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
             .dependsOn(backend)
             .withNetwork(network)
             .withNetworkAliases(COLLECTOR_ALIAS)
-            .withLogConsumer(new Slf4jLogConsumer(logger))
+            .withLogConsumer(new Slf4jLogConsumer(collectorLogger))
             .withCopyFileToContainer(
                 MountableFile.forClasspathResource(COLLECTOR_CONFIG_RESOURCE), "/etc/otel.yaml")
             .withCommand("--config /etc/otel.yaml");

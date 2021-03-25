@@ -51,6 +51,8 @@ import org.testcontainers.containers.output.OutputFrame;
 
 public class WindowsTestContainerManager extends AbstractTestContainerManager {
   private static final Logger logger = LoggerFactory.getLogger(WindowsTestContainerManager.class);
+  private static final Logger collectorLogger = LoggerFactory.getLogger("Collector");
+  private static final Logger backendLogger = LoggerFactory.getLogger("Backend");
 
   private static final String NPIPE_URI = "npipe:////./pipe/docker_engine";
   private static final String COLLECTOR_CONFIG_FILE_PATH = "/collector-config.yml";
@@ -86,21 +88,20 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     backend =
         startContainer(
             backendImageName,
-            command -> {
-              command
-                  .withAliases(BACKEND_ALIAS)
-                  .withExposedPorts(ExposedPort.tcp(BACKEND_PORT))
-                  .withHostConfig(
-                      HostConfig.newHostConfig()
-                          .withAutoRemove(true)
-                          .withNetworkMode(natNetworkId)
-                          .withPortBindings(
-                              new PortBinding(
-                                  new Ports.Binding(null, null), ExposedPort.tcp(BACKEND_PORT))));
-            },
+            command -> command
+                .withAliases(BACKEND_ALIAS)
+                .withExposedPorts(ExposedPort.tcp(BACKEND_PORT))
+                .withHostConfig(
+                    HostConfig.newHostConfig()
+                        .withAutoRemove(true)
+                        .withNetworkMode(natNetworkId)
+                        .withPortBindings(
+                            new PortBinding(
+                                new Ports.Binding(null, null), ExposedPort.tcp(BACKEND_PORT)))),
             containerId -> {},
             new HttpWaiter(BACKEND_PORT, "/health", Duration.ofSeconds(60)),
-            true);
+            true,
+            backendLogger);
 
     String collectorImageName =
         "ghcr.io/open-telemetry/java-test-containers:collector" + backendSuffix;
@@ -110,13 +111,11 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     collector =
         startContainer(
             collectorImageName,
-            command -> {
-              command
-                  .withAliases(COLLECTOR_ALIAS)
-                  .withHostConfig(
-                      HostConfig.newHostConfig().withAutoRemove(true).withNetworkMode(natNetworkId))
-                  .withCmd("--config", COLLECTOR_CONFIG_FILE_PATH);
-            },
+            command -> command
+                .withAliases(COLLECTOR_ALIAS)
+                .withHostConfig(
+                    HostConfig.newHostConfig().withAutoRemove(true).withNetworkMode(natNetworkId))
+                .withCmd("--config", COLLECTOR_CONFIG_FILE_PATH),
             containerId -> {
               try (InputStream configFileStream =
                   this.getClass().getResourceAsStream(COLLECTOR_CONFIG_RESOURCE)) {
@@ -127,7 +126,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
               }
             },
             new NoOpWaiter(),
-            false);
+            false,
+            collectorLogger);
   }
 
   @Override
@@ -198,7 +198,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
               }
             },
             createTargetWaiter(waitStrategy),
-            true);
+            true,
+            logger);
     return null;
   }
 
@@ -250,7 +251,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     }
   }
 
-  private ContainerLogHandler consumeLogs(String containerId, Waiter waiter) {
+  private ContainerLogHandler consumeLogs(String containerId, Waiter waiter, Logger logger) {
     ContainerLogFrameConsumer consumer = new ContainerLogFrameConsumer();
     waiter.configureLogger(consumer);
 
@@ -286,7 +287,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       Consumer<CreateContainerCmd> createAction,
       Consumer<String> prepareAction,
       Waiter waiter,
-      boolean inspect) {
+      boolean inspect,
+      Logger logger) {
 
     if (waiter == null) {
       waiter = new NoOpWaiter();
@@ -300,7 +302,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     prepareAction.accept(containerId);
 
     client.startContainerCmd(containerId).exec();
-    ContainerLogHandler logHandler = consumeLogs(containerId, waiter);
+    ContainerLogHandler logHandler = consumeLogs(containerId, waiter, logger);
 
     InspectContainerResponse inspectResponse =
         inspect ? client.inspectContainerCmd(containerId).exec() : null;

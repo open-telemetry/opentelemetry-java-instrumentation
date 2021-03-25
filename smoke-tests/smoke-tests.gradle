@@ -35,7 +35,9 @@ dependencies {
 
 test {
   inputs.files(tasks.findByPath(':javaagent:shadowJar').outputs.files)
-  maxParallelForks = 2
+  maxParallelForks = 1
+
+  testLogging.showStandardStreams = true
 
   timeout.set(Duration.ofMinutes(60))
 
