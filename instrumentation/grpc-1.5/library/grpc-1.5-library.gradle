@@ -11,3 +11,7 @@ dependencies {
 
   testImplementation project(':instrumentation:grpc-1.5:testing')
 }
+
+test {
+  jvmArgs "-Dio.opentelemetry.context.enableStrictContext=true"
+}

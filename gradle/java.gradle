@@ -108,6 +108,7 @@ dependencies {
   testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine'
   testRuntimeOnly group: 'org.junit.vintage', name: 'junit-vintage-engine'
 
+  testImplementation deps.assertj
   testImplementation deps.spock
   testImplementation deps.groovy
   testImplementation deps.testLogging
