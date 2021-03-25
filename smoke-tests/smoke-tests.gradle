@@ -62,7 +62,10 @@ test {
     }
   }
 
+  def shadowTask = project(":javaagent").tasks.named("shadowJar").get()
+  inputs.files(layout.files(shadowTask))
+
   doFirst {
-    jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${project(':javaagent').tasks.shadowJar.archivePath}"
+    jvmArgs "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get()}"
   }
 }
