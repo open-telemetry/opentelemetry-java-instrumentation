@@ -88,16 +88,17 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     backend =
         startContainer(
             backendImageName,
-            command -> command
-                .withAliases(BACKEND_ALIAS)
-                .withExposedPorts(ExposedPort.tcp(BACKEND_PORT))
-                .withHostConfig(
-                    HostConfig.newHostConfig()
-                        .withAutoRemove(true)
-                        .withNetworkMode(natNetworkId)
-                        .withPortBindings(
-                            new PortBinding(
-                                new Ports.Binding(null, null), ExposedPort.tcp(BACKEND_PORT)))),
+            command ->
+                command
+                    .withAliases(BACKEND_ALIAS)
+                    .withExposedPorts(ExposedPort.tcp(BACKEND_PORT))
+                    .withHostConfig(
+                        HostConfig.newHostConfig()
+                            .withAutoRemove(true)
+                            .withNetworkMode(natNetworkId)
+                            .withPortBindings(
+                                new PortBinding(
+                                    new Ports.Binding(null, null), ExposedPort.tcp(BACKEND_PORT)))),
             containerId -> {},
             new HttpWaiter(BACKEND_PORT, "/health", Duration.ofSeconds(60)),
             true,
@@ -111,11 +112,14 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     collector =
         startContainer(
             collectorImageName,
-            command -> command
-                .withAliases(COLLECTOR_ALIAS)
-                .withHostConfig(
-                    HostConfig.newHostConfig().withAutoRemove(true).withNetworkMode(natNetworkId))
-                .withCmd("--config", COLLECTOR_CONFIG_FILE_PATH),
+            command ->
+                command
+                    .withAliases(COLLECTOR_ALIAS)
+                    .withHostConfig(
+                        HostConfig.newHostConfig()
+                            .withAutoRemove(true)
+                            .withNetworkMode(natNetworkId))
+                    .withCmd("--config", COLLECTOR_CONFIG_FILE_PATH),
             containerId -> {
               try (InputStream configFileStream =
                   this.getClass().getResourceAsStream(COLLECTOR_CONFIG_RESOURCE)) {

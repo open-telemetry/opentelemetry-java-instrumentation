@@ -35,7 +35,7 @@ dependencies {
 
 test {
   inputs.files(tasks.findByPath(':javaagent:shadowJar').outputs.files)
-  maxParallelForks = 1
+  maxParallelForks = 2
 
   testLogging.showStandardStreams = true
 
