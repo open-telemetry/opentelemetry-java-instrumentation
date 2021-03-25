@@ -122,7 +122,7 @@ jobs:
           job-id: smokeTests
 
       - name: Test
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }} -i -s
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }}
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
