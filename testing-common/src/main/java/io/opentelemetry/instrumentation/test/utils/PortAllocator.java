@@ -55,7 +55,7 @@ class PortAllocator {
     return getPorts(1);
   }
 
-  /** Find consecutive range of open ports. */
+  /** Find consecutive range of open ports, returning the first one in the range. */
   synchronized int getPorts(int count) {
     // as we bind to first port in each chunk the max amount of
     // consecutive ports that we can find is CHUNK_SIZE - 1
