@@ -40,7 +40,7 @@ trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
   }
 
   def setupSpecUnderRetry() {
-    port = PortUtils.randomOpenPort()
+    port = PortUtils.findOpenPort()
     address = buildAddress()
     server = startServer(port)
     println getClass().name + " http server started at: http://localhost:$port" + getContextPath()

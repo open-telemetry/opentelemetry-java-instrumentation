@@ -35,7 +35,7 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
   RedisClient redisClient
 
   def setupSpec() {
-    port = PortUtils.randomOpenPort()
+    port = PortUtils.findOpenPort()
     dbAddr = HOST + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
     password = "password"

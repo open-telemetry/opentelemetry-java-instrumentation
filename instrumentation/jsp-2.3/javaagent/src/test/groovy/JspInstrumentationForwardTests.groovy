@@ -41,7 +41,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
     baseDir = Files.createTempDirectory("jsp").toFile()
     baseDir.deleteOnExit()
 
-    port = PortUtils.randomOpenPort()
+    port = PortUtils.findOpenPort()
 
     tomcatServer = new Tomcat()
     tomcatServer.setBaseDir(baseDir.getAbsolutePath())

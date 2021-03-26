@@ -58,7 +58,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
         responseObserver.onCompleted()
       }
     }
-    def port = PortUtils.randomOpenPort()
+    def port = PortUtils.findOpenPort()
     Server server = configureServer(ServerBuilder.forPort(port).addService(greeter)).build().start()
     ManagedChannelBuilder channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
 
@@ -141,7 +141,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
         responseObserver.onError(error)
       }
     }
-    def port = PortUtils.randomOpenPort()
+    def port = PortUtils.findOpenPort()
     Server server = configureServer(ServerBuilder.forPort(port).addService(greeter)).build().start()
     ManagedChannelBuilder channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
 
@@ -227,7 +227,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
         throw error
       }
     }
-    def port = PortUtils.randomOpenPort()
+    def port = PortUtils.findOpenPort()
     Server server = configureServer(ServerBuilder.forPort(port).addService(greeter)).build().start()
     ManagedChannelBuilder channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
 
@@ -325,7 +325,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
         responseObserver.onCompleted()
       }
     }
-    def port = PortUtils.randomOpenPort()
+    def port = PortUtils.findOpenPort()
     Server server
     server = configureServer(ServerBuilder.forPort(port)
       .addService(greeter)
@@ -466,7 +466,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
         responseObserver.onNext(Helloworld.Response.getDefaultInstance())
       }
     }
-    def port = PortUtils.randomOpenPort()
+    def port = PortUtils.findOpenPort()
     Server server
     server = configureServer(ServerBuilder.forPort(port)
       .addService(greeter))
