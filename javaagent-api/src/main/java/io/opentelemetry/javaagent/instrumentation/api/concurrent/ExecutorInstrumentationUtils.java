@@ -93,28 +93,6 @@ public class ExecutorInstrumentationUtils {
       return false;
     }
 
-    // Long running task which decorates other tasks. We should probably be using ExecutionContext
-    // for propagation in Scala but in the meantime this is not needed along with other concurrent
-    // instrumentation and causes context leaks.
-    if (taskClass.getName().equals("akka.util.SerializedSuspendableExecutionContext")) {
-      return false;
-    }
-
-    // Wrapper of tasks for dispatch - the wrapped task should have context already and this doesn't
-    // need it. It's not obvious why this simple wrapper (not long running task) could leak context.
-    // One hypothesis is Scala can rewrite any code to introduce suspend / resume, including the
-    // standard Runnable.run. If so, then this check should be generalized to exclude all Scala
-    // classes because it is never safe to make context active in a code that has a chance to
-    // suspend.
-    if (taskClass.getName().equals("akka.dispatch.TaskInvocation")) {
-      return false;
-    }
-
-    // See above.
-    if (taskClass.getName().equals("scala.concurrent.impl.Future$PromiseCompletingRunnable")) {
-      return false;
-    }
-
     if (enclosingClass != null && NOT_INSTRUMENTED_RUNNABLE_ENCLOSING_CLASS.get(enclosingClass)) {
       return false;
     }
