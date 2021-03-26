@@ -147,8 +147,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
               .flatMap(typeInstrumentation -> typeInstrumentation.transformers().values().stream())
               .collect(Collectors.toSet());
 
-      ReferenceCollector collector =
-          new ReferenceCollector(instrumentationModule.additionalLibraryInstrumentationPackage());
+      ReferenceCollector collector = new ReferenceCollector(instrumentationModule::isHelperClass);
       for (String adviceClass : adviceClassNames) {
         collector.collectReferencesFromAdvice(adviceClass);
       }
