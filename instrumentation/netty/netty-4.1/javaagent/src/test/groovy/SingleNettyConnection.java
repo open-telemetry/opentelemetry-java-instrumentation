@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -41,16 +46,18 @@ public class SingleNettyConnection implements SingleConnection {
     this.port = port;
     EventLoopGroup group = new NioEventLoopGroup();
     Bootstrap bootstrap = new Bootstrap();
-    bootstrap.group(group)
+    bootstrap
+        .group(group)
         .channel(NioSocketChannel.class)
         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
-        .handler(new ChannelInitializer<SocketChannel>() {
-          @Override
-          protected void initChannel(SocketChannel socketChannel) {
-            ChannelPipeline pipeline = socketChannel.pipeline();
-            pipeline.addLast(new HttpClientCodec());
-          }
-        });
+        .handler(
+            new ChannelInitializer<SocketChannel>() {
+              @Override
+              protected void initChannel(SocketChannel socketChannel) {
+                ChannelPipeline pipeline = socketChannel.pipeline();
+                pipeline.addLast(new HttpClientCodec());
+              }
+            });
 
     ChannelFuture channelFuture = bootstrap.connect(host, port);
     channelFuture.awaitUninterruptibly();
@@ -75,8 +82,9 @@ public class SingleNettyConnection implements SingleConnection {
       throw new ExecutionException(e);
     }
 
-    HttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, url,
-        Unpooled.EMPTY_BUFFER);
+    HttpRequest request =
+        new DefaultFullHttpRequest(
+            HttpVersion.HTTP_1_1, HttpMethod.GET, url, Unpooled.EMPTY_BUFFER);
     request.headers().set(HttpHeaderNames.HOST, host);
     headers.forEach((k, v) -> request.headers().set(k, v));
 
