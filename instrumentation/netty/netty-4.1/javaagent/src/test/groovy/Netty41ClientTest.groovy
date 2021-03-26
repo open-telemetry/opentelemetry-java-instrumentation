@@ -27,6 +27,7 @@ import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
@@ -373,5 +374,10 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
       // This replicates how reactor 0.8.x add the HttpClientCodec
       ch.pipeline().addLast("added_in_initializer", new HttpClientCodec())
     }
+  }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    return new SingleNettyConnection(host, port)
   }
 }
