@@ -8,4 +8,6 @@ muzzle {
 
 tasks.withType(Test) {
   jvmArgs "-Dotel.instrumentation.executors.include=ExecutorInstrumentationTest\$CustomThreadPoolExecutor"
+  // NB(anuraaga): Unlike other similar exclusions this one does not seem to fail 100% of the time.
+  jvmArgs "-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false"
 }

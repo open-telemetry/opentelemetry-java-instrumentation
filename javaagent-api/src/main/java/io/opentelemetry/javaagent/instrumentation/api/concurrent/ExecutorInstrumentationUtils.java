@@ -28,22 +28,46 @@ public class ExecutorInstrumentationUtils {
     Class<?> taskClass = task.getClass();
     Class<?> enclosingClass = taskClass.getEnclosingClass();
 
-    // not much point in propagating root context
-    // plus it causes failures under otel.javaagent.testing.fail-on-context-leak=true
-    return Context.current() != Context.root()
-        // TODO Workaround for
-        // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
-        && !taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")
-        // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to
-        // process a new request which should not have context from them current request.
-        && (enclosingClass == null
-            || !enclosingClass.getName().equals("org.eclipse.jetty.io.nio.SelectChannelEndPoint"))
-        // Don't instrument the executor's own runnables. These runnables may never return until
-        // netty shuts down.
-        && (enclosingClass == null
-            || !enclosingClass
-                .getName()
-                .equals("io.netty.util.concurrent.SingleThreadEventExecutor"));
+    if (Context.current() == Context.root()) {
+      // not much point in propagating root context
+      // plus it causes failures under otel.javaagent.testing.fail-on-context-leak=true
+      return false;
+    }
+
+    // TODO Workaround for
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
+    if (taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")) {
+      return false;
+    }
+
+    if (enclosingClass != null) {
+      // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to
+      // process a new request which should not have context from them current request.
+      if (enclosingClass.getName().equals("org.eclipse.jetty.io.nio.SelectChannelEndPoint")) {
+        return false;
+      }
+
+      // Don't instrument the executor's own runnables. These runnables may never return until
+      // netty shuts down.
+      if (enclosingClass.getName().equals("io.netty.util.concurrent.SingleThreadEventExecutor")) {
+        return false;
+      }
+
+      // OkHttp task runner is a lazily-initialized shared pool of continuosly running threads
+      // similar to an event loop. The submitted tasks themselves should already be instrumented to
+      // allow async propagation.
+      if (enclosingClass.getName().equals("okhttp3.internal.concurrent.TaskRunner")) {
+        return false;
+      }
+
+      // OkHttp connection pool lazily initializes a long running task to detect expired connections
+      // and should not itself be instrumented.
+      if (enclosingClass.getName().equals("com.squareup.okhttp.ConnectionPool")) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**

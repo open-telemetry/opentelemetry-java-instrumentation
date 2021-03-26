@@ -47,7 +47,7 @@ public class RunnableInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter Scope scope) {
+    public static void exit(@Advice.This Runnable thiz, @Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();
       }

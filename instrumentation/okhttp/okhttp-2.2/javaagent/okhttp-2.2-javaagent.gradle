@@ -18,5 +18,3 @@ dependencies {
 
   latestDepTestLibrary group: 'com.squareup.okhttp', name: 'okhttp', version: '[2.6,3)'
 }
-
-
