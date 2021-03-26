@@ -33,7 +33,7 @@ class RestCamelTest extends AgentInstrumentationSpecification implements RetryOn
   }
 
   def setupSpecUnderRetry() {
-    port = PortUtils.randomOpenPort()
+    port = PortUtils.findOpenPort()
     def app = new SpringApplication(RestConfig)
     app.setDefaultProperties(["restServer.port": port])
     server = app.run()

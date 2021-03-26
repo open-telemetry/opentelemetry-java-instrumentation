@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.test.utils;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
@@ -14,18 +13,16 @@ public class PortUtils {
 
   public static int UNUSABLE_PORT = 61;
 
-  /** Open up a random, reusable port. */
-  public static int randomOpenPort() {
-    ServerSocket socket;
-    try {
-      socket = new ServerSocket(0);
-      socket.setReuseAddress(true);
-      socket.close();
-      return socket.getLocalPort();
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-      return -1;
-    }
+  private static final PortAllocator portAllocator = new PortAllocator();
+
+  /** Find consecutive open ports, returning the first one in the range. */
+  public static int findOpenPorts(int count) {
+    return portAllocator.getPorts(count);
+  }
+
+  /** Find open port. */
+  public static int findOpenPort() {
+    return portAllocator.getPort();
   }
 
   private static boolean isPortOpen(int port) {

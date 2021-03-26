@@ -34,7 +34,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
 
   def setupSpec() {
 
-    sqsPort = PortUtils.randomOpenPort()
+    sqsPort = PortUtils.findOpenPort()
     sqs = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start()
     println getClass().name + " SQS server started at: localhost:$sqsPort/"
 
