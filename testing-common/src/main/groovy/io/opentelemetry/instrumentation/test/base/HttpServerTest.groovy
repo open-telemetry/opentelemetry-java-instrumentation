@@ -195,8 +195,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
     expect:
     responses.each { response ->
-      assert response.code() == SUCCESS.status
-      assert response.body().string() == SUCCESS.body
+      response.withCloseable {
+        assert response.code() == SUCCESS.status
+        assert response.body().string() == SUCCESS.body
+      }
     }
 
     and:
@@ -218,8 +220,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     def response = client.newCall(request).execute()
 
     expect:
-    response.code() == SUCCESS.status
-    response.body().string() == SUCCESS.body
+    response.withCloseable {
+      assert response.code() == SUCCESS.status
+      assert response.body().string() == SUCCESS.body
+      true
+    }
 
     and:
     assertTheTraces(1, traceId, parentId, "GET", SUCCESS, null, response)
@@ -235,8 +240,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     Response response = client.newCall(request).execute()
 
     expect:
-    response.code() == endpoint.status
-    response.body().string() == endpoint.body
+    response.withCloseable {
+      assert response.code() == endpoint.status
+      assert response.body().string() == endpoint.body
+      true
+    }
 
     and:
     assertTheTraces(1, null, null, method, endpoint, null, response)
@@ -254,9 +262,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     def response = client.newCall(request).execute()
 
     expect:
-    response.code() == REDIRECT.status
-    response.header("location") == REDIRECT.body ||
-      response.header("location") == "${address.resolve(REDIRECT.body)}"
+    response.withCloseable {
+      assert response.code() == REDIRECT.status
+      assert response.header("location") == REDIRECT.body ||
+        response.header("location") == "${address.resolve(REDIRECT.body)}"
+      true
+    }
 
     and:
     assertTheTraces(1, null, null, method, REDIRECT, null, response)
@@ -273,9 +284,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     def response = client.newCall(request).execute()
 
     expect:
-    response.code() == ERROR.status
-    if (testErrorBody()) {
-      response.body().string() == ERROR.body
+    response.withCloseable {
+      assert response.code() == ERROR.status
+      if (testErrorBody()) {
+        assert response.body().string() == ERROR.body
+      }
+      true
     }
 
     and:
@@ -293,7 +307,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     def response = client.newCall(request).execute()
 
     expect:
-    response.code() == EXCEPTION.status
+    response.withCloseable {
+      assert response.code() == EXCEPTION.status
+      true
+    }
 
     and:
     assertTheTraces(1, null, null, method, EXCEPTION, EXCEPTION.body, response)
@@ -310,7 +327,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     def response = client.newCall(request).execute()
 
     expect:
-    response.code() == NOT_FOUND.status
+    response.withCloseable {
+      assert response.code() == NOT_FOUND.status
+      true
+    }
 
     and:
     assertTheTraces(1, null, null, method, NOT_FOUND, null, response)
@@ -327,8 +347,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     def response = client.newCall(request).execute()
 
     expect:
-    response.code() == PATH_PARAM.status
-    response.body().string() == PATH_PARAM.body
+    response.withCloseable {
+      assert response.code() == PATH_PARAM.status
+      assert response.body().string() == PATH_PARAM.body
+      true
+    }
 
     and:
     assertTheTraces(1, null, null, method, PATH_PARAM, null, response)
