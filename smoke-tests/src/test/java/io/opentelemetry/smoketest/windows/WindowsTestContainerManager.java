@@ -348,9 +348,6 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     if (strategy instanceof TargetWaitStrategy.Log) {
       TargetWaitStrategy.Log details = (TargetWaitStrategy.Log) strategy;
       return new LogWaiter(Pattern.compile(details.regex), details.timeout);
-    } else if (strategy instanceof TargetWaitStrategy.Http) {
-      TargetWaitStrategy.Http details = (TargetWaitStrategy.Http) strategy;
-      return new HttpWaiter(TARGET_PORT, details.path, details.timeout);
     } else {
       return new PortWaiter(TARGET_PORT, Duration.ofSeconds(60));
     }

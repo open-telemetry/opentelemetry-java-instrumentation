@@ -22,13 +22,4 @@ public abstract class TargetWaitStrategy {
       this.regex = regex;
     }
   }
-
-  public static class Http extends TargetWaitStrategy {
-    public final String path;
-
-    public Http(Duration timeout, String path) {
-      super(timeout);
-      this.path = path;
-    }
-  }
 }
