@@ -80,6 +80,13 @@ public class ExecutorInstrumentationUtils {
       return false;
     }
 
+    // ForkJoinPool threads are initialized lazily and continue to handle tasks similar to an event
+    // loop. They should not have context propagated to the base of the thread, tasks themselves
+    // will have it through other means.
+    if (taskClass.getName().equals("java.util.concurrent.ForkJoinWorkerThread")) {
+      return false;
+    }
+
     // TODO Workaround for
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
     if (taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")) {

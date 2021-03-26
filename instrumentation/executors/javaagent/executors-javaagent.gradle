@@ -8,11 +8,4 @@ muzzle {
 
 tasks.withType(Test) {
   jvmArgs "-Dotel.instrumentation.executors.include=ExecutorInstrumentationTest\$CustomThreadPoolExecutor"
-  // NB(anuraaga): Unlike other similar exclusions this one does not seem to fail 100% of the time.
-  //
-  // java.lang.AssertionError: Thread [ForkJoinPool-11-worker-31] opened a scope of {opentelemetry-trace-span-key=RecordEventsReadableSpan{traceId=8fb08b7500b1b5f8fc1d5122d5f5636e, spanId=c641c53bbda41d28, parentSpanContext=ImmutableSpanContext{traceId=00000000000000000000000000000000, spanId=0000000000000000, traceFlags=00, traceState=ArrayBasedTraceState{entries=[]}, remote=false, valid=false}, name=parent, kind=INTERNAL, attributes=AttributesMap{data={thread.id=18, thread.name=Test worker}, capacity=128, totalAddedValues=2}, status=ImmutableStatusData{statusCode=UNSET, description=}, totalRecordedEvents=0, totalRecordedLinks=0, startEpochNanos=1616733793823002335, endEpochNanos=1616733793969157769}, otel-context=io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage$AgentContextWrapper@6c95888d, thread-propagation-locations=[[Ljava.lang.StackTraceElement;@6017e1d3]} here:
-  //	at io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils.startTaskScope(AdviceUtils.java:28)
-  //	at JavaAsyncChild.exec(JavaAsyncChild.java:34)
-  //	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:290)
-  jvmArgs "-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false"
 }
