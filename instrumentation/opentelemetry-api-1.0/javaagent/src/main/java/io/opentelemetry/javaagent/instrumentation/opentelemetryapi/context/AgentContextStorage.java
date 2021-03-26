@@ -149,7 +149,6 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
   public void close() throws Exception {
     io.opentelemetry.context.ContextStorage agentStorage =
         io.opentelemetry.context.ContextStorage.get();
-    System.out.println(agentStorage.getClass());
     if (agentStorage instanceof AutoCloseable) {
       ((AutoCloseable) agentStorage).close();
     }
