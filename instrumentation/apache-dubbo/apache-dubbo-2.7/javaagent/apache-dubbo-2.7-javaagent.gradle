@@ -4,7 +4,7 @@ muzzle {
   pass {
     group = "org.apache.dubbo"
     module = "dubbo"
-    versions = "[2.7.0,)"
+    versions = "[2.7.0,3.0.0)"
   }
 }
 
@@ -16,4 +16,6 @@ dependencies {
   testImplementation project(':instrumentation:apache-dubbo:apache-dubbo-2.7:testing')
 
   testLibrary group: 'org.apache.dubbo', name: 'dubbo-config-api', version: '2.7.0'
+  latestDepTestLibrary group: 'org.apache.dubbo', name: 'dubbo', version: '2+'
+  latestDepTestLibrary group: 'org.apache.dubbo', name: 'dubbo-config-api', version: '2+'
 }
