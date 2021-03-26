@@ -7,17 +7,19 @@ package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import okhttp3.Request
+import spock.lang.IgnoreIf
 
+@IgnoreIf({ os.windows })
 class PlaySmokeTest extends SmokeTest {
 
-  protected String getTargetImage(String jdk, String serverVersion) {
+  protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-play-jdk$jdk-20201128.1734635"
   }
 
   def "play smoke test on JDK #jdk"(int jdk) {
     setup:
     startTarget(jdk)
-    String url = "http://localhost:${target.getMappedPort(8080)}/welcome?id=1"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/welcome?id=1"
     def request = new Request.Builder().url(url).get().build()
 
     when:
