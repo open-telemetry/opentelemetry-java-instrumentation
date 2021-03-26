@@ -34,10 +34,10 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     if (msg instanceof FullHttpResponse) {
       tracer().end(context, (HttpResponse) msg);
     } else if (msg instanceof HttpResponse) {
-      // Headers before body has been sent, store them to use when finishing the span.
+      // Headers before body have been received, store them to use when finishing the span.
       ctx.channel().attr(HTTP_RESPONSE).set((HttpResponse) msg);
     } else if (msg instanceof LastHttpContent) {
-      // Not a FullHttpResponse so this is content that has been sent after headers. Finish the
+      // Not a FullHttpResponse so this is content that has been received after headers. Finish the
       // span using what we stored in attrs.
       tracer().end(context, ctx.channel().attr(HTTP_RESPONSE).get());
     }
