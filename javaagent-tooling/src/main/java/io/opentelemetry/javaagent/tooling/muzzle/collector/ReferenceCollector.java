@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate.isInstrumentationClass;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
 
@@ -16,6 +15,7 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
 import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import net.bytebuddy.jar.asm.ClassReader;
 
@@ -46,6 +47,12 @@ public class ReferenceCollector {
   private final Map<String, Reference> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
   private final Set<String> visitedClasses = new HashSet<>();
+  private final InstrumentationClassPredicate instrumentationClassPredicate;
+
+  public ReferenceCollector(Predicate<String> libraryInstrumentationPredicate) {
+    this.instrumentationClassPredicate =
+        new InstrumentationClassPredicate(libraryInstrumentationPredicate);
+  }
 
   /**
    * If passed {@code resource} path points to an SPI file (either Java {@link
@@ -116,7 +123,8 @@ public class ReferenceCollector {
 
       try (InputStream in = getClassFileStream(visitedClassName)) {
         // only start from method bodies for the advice class (skips class/method references)
-        ReferenceCollectingClassVisitor cv = new ReferenceCollectingClassVisitor(isAdviceClass);
+        ReferenceCollectingClassVisitor cv =
+            new ReferenceCollectingClassVisitor(instrumentationClassPredicate, isAdviceClass);
         ClassReader reader = new ClassReader(in);
         reader.accept(cv, ClassReader.SKIP_FRAMES);
 
@@ -125,7 +133,8 @@ public class ReferenceCollector {
           Reference reference = entry.getValue();
 
           // Don't generate references created outside of the instrumentation package.
-          if (!visitedClasses.contains(refClassName) && isInstrumentationClass(refClassName)) {
+          if (!visitedClasses.contains(refClassName)
+              && instrumentationClassPredicate.isInstrumentationClass(refClassName)) {
             instrumentationQueue.add(refClassName);
           }
           addReference(refClassName, reference);

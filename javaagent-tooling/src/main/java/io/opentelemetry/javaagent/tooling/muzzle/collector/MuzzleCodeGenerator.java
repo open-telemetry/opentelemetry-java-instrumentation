@@ -73,7 +73,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     private final boolean frames;
 
     private String instrumentationClassName;
-    private InstrumentationModule instrumenter;
+    private InstrumentationModule instrumentationModule;
 
     public GenerateMuzzleReferenceMatcherMethodAndField(ClassVisitor classVisitor, boolean frames) {
       super(Opcodes.ASM7, classVisitor);
@@ -90,7 +90,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
         String[] interfaces) {
       this.instrumentationClassName = name;
       try {
-        instrumenter =
+        instrumentationModule =
             (InstrumentationModule)
                 MuzzleCodeGenerator.class
                     .getClassLoader()
@@ -143,15 +143,15 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
     private ReferenceCollector collectReferences() {
       Set<String> adviceClassNames =
-          instrumenter.typeInstrumentations().stream()
+          instrumentationModule.typeInstrumentations().stream()
               .flatMap(typeInstrumentation -> typeInstrumentation.transformers().values().stream())
               .collect(Collectors.toSet());
 
-      ReferenceCollector collector = new ReferenceCollector();
+      ReferenceCollector collector = new ReferenceCollector(instrumentationModule::isHelperClass);
       for (String adviceClass : adviceClassNames) {
         collector.collectReferencesFromAdvice(adviceClass);
       }
-      for (String resource : instrumenter.helperResourceNames()) {
+      for (String resource : instrumentationModule.helperResourceNames()) {
         collector.collectReferencesFromResource(resource);
       }
       return collector;
@@ -204,8 +204,9 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
        *   if (null == this.muzzleReferenceMatcher) {
        *     this.muzzleReferenceMatcher = new ReferenceMatcher(this.getAllHelperClassNames(),
        *                                                        new Reference[]{
-       *                                                                       //reference builders
-       *                                                                       });
+       *                                                          // reference builders
+       *                                                        },
+       *                                                        this.additionalLibraryInstrumentationPackage());
        *   }
        *   return this.muzzleReferenceMatcher;
        * }
@@ -467,11 +468,19 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
           mv.visitInsn(Opcodes.AASTORE);
         }
 
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            instrumentationClassName,
+            "additionalLibraryInstrumentationPackage",
+            "()Ljava/util/function/Predicate;",
+            false);
+
         mv.visitMethodInsn(
             Opcodes.INVOKESPECIAL,
             "io/opentelemetry/javaagent/tooling/muzzle/matcher/ReferenceMatcher",
             "<init>",
-            "(Ljava/util/List;[Lio/opentelemetry/javaagent/tooling/muzzle/Reference;)V",
+            "(Ljava/util/List;[Lio/opentelemetry/javaagent/tooling/muzzle/Reference;Ljava/util/function/Predicate;)V",
             false);
         mv.visitFieldInsn(
             Opcodes.PUTFIELD,

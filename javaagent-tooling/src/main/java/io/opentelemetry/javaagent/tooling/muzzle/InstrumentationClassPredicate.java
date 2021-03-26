@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import java.util.function.Predicate;
+
 public final class InstrumentationClassPredicate {
   // javaagent instrumentation packages
   private static final String JAVAAGENT_INSTRUMENTATION_PACKAGE =
@@ -16,6 +18,13 @@ public final class InstrumentationClassPredicate {
   private static final String LIBRARY_INSTRUMENTATION_PACKAGE = "io.opentelemetry.instrumentation.";
   private static final String INSTRUMENTATION_API_PACKAGE = "io.opentelemetry.instrumentation.api.";
 
+  private final Predicate<String> additionalLibraryInstrumentationPredicate;
+
+  public InstrumentationClassPredicate(
+      Predicate<String> additionalLibraryInstrumentationPredicate) {
+    this.additionalLibraryInstrumentationPredicate = additionalLibraryInstrumentationPredicate;
+  }
+
   /**
    * Defines which classes are treated by muzzle as "internal", "helper" instrumentation classes.
    *
@@ -23,9 +32,14 @@ public final class InstrumentationClassPredicate {
    * instrumentation classes are treated as "helper" classes and are subjected to the reference
    * collection process. All others (including {@code instrumentation-api} and {@code javaagent-api}
    * modules are not scanned for references (but references to them are collected).
+   *
+   * <p>Aside from "standard" instrumentation helper class packages, instrumentation modules can
+   * pass an additional predicate to include instrumentation helper classes from 3rd party packages.
    */
-  public static boolean isInstrumentationClass(String className) {
-    return isJavaagentInstrumentationClass(className) || isLibraryInstrumentationClass(className);
+  public boolean isInstrumentationClass(String className) {
+    return isJavaagentInstrumentationClass(className)
+        || isLibraryInstrumentationClass(className)
+        || additionalLibraryInstrumentationPredicate.test(className);
   }
 
   private static boolean isJavaagentInstrumentationClass(String className) {
@@ -37,6 +51,4 @@ public final class InstrumentationClassPredicate {
     return className.startsWith(LIBRARY_INSTRUMENTATION_PACKAGE)
         && !className.startsWith(INSTRUMENTATION_API_PACKAGE);
   }
-
-  private InstrumentationClassPredicate() {}
 }

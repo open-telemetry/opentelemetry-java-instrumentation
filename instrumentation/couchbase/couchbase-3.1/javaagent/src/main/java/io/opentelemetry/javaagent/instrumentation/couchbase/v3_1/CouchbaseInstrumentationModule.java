@@ -21,11 +21,8 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  protected String[] additionalHelperClassNames() {
-    return new String[] {
-      "com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestSpan",
-      "com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer"
-    };
+  public boolean isHelperClass(String className) {
+    return className.startsWith("com.couchbase.client.tracing.opentelemetry");
   }
 
   @Override
