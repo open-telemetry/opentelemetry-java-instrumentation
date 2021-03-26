@@ -87,6 +87,13 @@ public class ExecutorInstrumentationUtils {
       return false;
     }
 
+    // ThreadPoolExecutor worker threads may be initialized lazily and manage interruption of other
+    // threads. The actual tasks being run on those threads will propagate context but we should not
+    // propagate onto this management thread.
+    if (taskClass.getName().equals("java.util.concurrent.ThreadPoolExecutor$Worker")) {
+      return false;
+    }
+
     // TODO Workaround for
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
     if (taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")) {
