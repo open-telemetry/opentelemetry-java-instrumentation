@@ -65,7 +65,7 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
         }
       }
     }
-    def port = PortUtils.randomOpenPort()
+    def port = PortUtils.findOpenPort()
     Server server = configureServer(ServerBuilder.forPort(port).addService(greeter)).build().start()
     ManagedChannelBuilder channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
 

@@ -52,6 +52,8 @@ public final class CacheBuilder {
     }
     if (executor != null) {
       caffeine.executor(executor);
+    } else {
+      caffeine.executor(Runnable::run);
     }
     @SuppressWarnings("unchecked")
     com.github.benmanes.caffeine.cache.Cache<K, V> delegate =

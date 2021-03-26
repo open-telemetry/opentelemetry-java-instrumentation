@@ -18,7 +18,7 @@ import rmi.app.Server
 import rmi.app.ServerLegacy
 
 class RmiTest extends AgentInstrumentationSpecification {
-  def registryPort = PortUtils.randomOpenPort()
+  def registryPort = PortUtils.findOpenPort()
   def serverRegistry = LocateRegistry.createRegistry(registryPort)
   def clientRegistry = LocateRegistry.getRegistry("localhost", registryPort)
 

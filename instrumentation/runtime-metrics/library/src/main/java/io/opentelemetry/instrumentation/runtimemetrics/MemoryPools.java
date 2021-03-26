@@ -30,7 +30,7 @@ import java.util.List;
  *
  * <pre>
  *   runtime.jvm.memory.area{type="used",area="heap"} 2000000
- *   runtime.jvm.memory.area{type="committed",area="nonheap"} 200000
+ *   runtime.jvm.memory.area{type="committed",area="non_heap"} 200000
  *   runtime.jvm.memory.area{type="used",pool="PS Eden Space"} 2000
  * </pre>
  */
