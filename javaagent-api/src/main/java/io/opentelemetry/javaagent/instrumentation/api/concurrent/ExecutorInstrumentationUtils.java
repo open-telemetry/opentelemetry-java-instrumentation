@@ -46,6 +46,7 @@ public class ExecutorInstrumentationUtils {
           if (enclosingClass.getName().equals("com.squareup.okhttp.ConnectionPool")) {
             return true;
           }
+
           return false;
         }
       };
@@ -73,6 +74,23 @@ public class ExecutorInstrumentationUtils {
     // TODO Workaround for
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
     if (taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")) {
+      return false;
+    }
+
+    // Long running task which decorates other tasks. We should probably be using ExecutionContext
+    // for propagation in Scala but in the meantime this is not needed along with other concurrent
+    // instrumentation and causes context leaks.
+    if (taskClass.getName().equals("akka.util.SerializedSuspendableExecutionContext")) {
+      return false;
+    }
+
+    // Wrapper of tasks for dispatch - the wrapped task should have context already and this doesn't
+    // need it. It's not obvious why this simple wrapper (not long running task) could leak context.
+    // One hypothesis is Scala can rewrite any code to introduce suspend / resume, including the
+    // standard Runnable.run. If so, then this check should be generalized to exclude all Scala
+    // classes because it is never safe to make context active in a code that has a chance to
+    // suspend.
+    if (taskClass.getName().equals("akka.dispatch.TaskInvocation")) {
       return false;
     }
 
