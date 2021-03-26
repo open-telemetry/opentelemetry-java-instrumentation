@@ -7,7 +7,9 @@ package test.vaadin
 
 import com.vaadin.flow.server.Version
 import com.vaadin.flow.spring.annotation.EnableVaadin
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import java.util.concurrent.TimeUnit
 import okhttp3.HttpUrl
@@ -91,8 +93,12 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
     // and running webpack. Wait until all of this is done before starting test.
     driver.manage().timeouts().implicitlyWait(3, TimeUnit.MINUTES)
     driver.get(address.resolve("main").toString())
+    // wait for page to load
     driver.findElementById("main.label")
+    // clear traces so test would start from clean state
     clearExportedData()
+
+    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS)
   }
 
   def getWebDriver() {
@@ -114,24 +120,36 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
 
   abstract void assertButtonClick()
 
+  static serverSpan(TraceAssert trace, int index, String spanName) {
+    trace.span(index) {
+      hasNoParent()
+
+      name spanName
+      kind SpanKind.SERVER
+    }
+  }
+
   def "test vaadin"() {
     setup:
     def driver = getWebDriver()
     waitForStart(driver)
 
-    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS)
+    // fetch the test page
     driver.get(address.resolve("main").toString())
 
     expect:
+    // wait for page to load
     "Main view" == driver.findElementById("main.label").getText()
     assertFirstRequest()
 
     clearExportedData()
 
     when:
+    // click a button to trigger calling java code in MainView
     driver.findElementById("main.button").click()
 
     then:
+    // wait for page to load
     "Other view" == driver.findElementById("other.label").getText()
     assertButtonClick()
 

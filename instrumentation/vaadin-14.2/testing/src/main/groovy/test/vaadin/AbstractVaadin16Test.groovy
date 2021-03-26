@@ -35,7 +35,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
     assertTraces(VAADIN_17 ? 9 : 8) {
       def handlers = getRequestHandlers("IndexHtmlRequestHandler")
       trace(0, 3 + handlers.size()) {
-        basicSpan(it, 0, "IndexHtmlRequestHandler.handleRequest", null)
+        serverSpan(it, 0, "IndexHtmlRequestHandler.handleRequest")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
         basicSpan(it, 2, "SpringVaadinServletService.handleRequest", span(1))
         int spanIndex = 3
@@ -43,20 +43,22 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
           basicSpan(it, spanIndex++, handler + ".handleRequest", span(2))
         }
       }
+      // /xyz/VAADIN/build/vaadin-bundle-*.cache.js
       trace(1, 2) {
-        basicSpan(it, 0, getContextPath() + "/*", null)
+        serverSpan(it, 0, getContextPath() + "/*")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
       if (VAADIN_17) {
+        // /xyz/VAADIN/build/vaadin-devmodeGizmo-*.cache.js
         trace(2, 2) {
-          basicSpan(it, 0, getContextPath() + "/*", null)
+          serverSpan(it, 0, getContextPath() + "/*")
           basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
         }
       }
       int traceIndex = VAADIN_17 ? 3 : 2
       handlers = getRequestHandlers("JavaScriptBootstrapHandler")
       trace(traceIndex, 3 + handlers.size()) {
-        basicSpan(it, 0, getContextPath(), null)
+        serverSpan(it, 0, getContextPath())
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
         basicSpan(it, 2, "SpringVaadinServletService.handleRequest", span(1))
         int spanIndex = 3
@@ -64,25 +66,29 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
           basicSpan(it, spanIndex++, handler + ".handleRequest", span(2))
         }
       }
+      // /xyz/VAADIN/build/vaadin-?-*.cache.js
       trace(traceIndex + 1, 2) {
-        basicSpan(it, 0, getContextPath() + "/*", null)
+        serverSpan(it, 0, getContextPath() + "/*")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
+      // /xyz/VAADIN/build/vaadin-?-*.cache.js
       trace(traceIndex + 2, 2) {
-        basicSpan(it, 0, getContextPath() + "/*", null)
+        serverSpan(it, 0, getContextPath() + "/*")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
+      // /xyz/VAADIN/build/vaadin-?-*.cache.js
       trace(traceIndex + 3, 2) {
-        basicSpan(it, 0, getContextPath() + "/*", null)
+        serverSpan(it, 0, getContextPath() + "/*")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
+      // /xyz/VAADIN/build/vaadin-?-*.cache.js
       trace(traceIndex + 4, 2) {
-        basicSpan(it, 0, getContextPath() + "/*", null)
+        serverSpan(it, 0, getContextPath() + "/*")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
       handlers = getRequestHandlers("UidlRequestHandler")
       trace(traceIndex + 5, 3 + handlers.size() + 2) {
-        basicSpan(it, 0, getContextPath() + "/main", null)
+        serverSpan(it, 0, getContextPath() + "/main")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
         basicSpan(it, 2, "SpringVaadinServletService.handleRequest", span(1))
 
@@ -102,7 +108,7 @@ abstract class AbstractVaadin16Test extends AbstractVaadinTest {
     assertTraces(1) {
       def handlers = getRequestHandlers("UidlRequestHandler")
       trace(0, 3 + handlers.size() + 1) {
-        basicSpan(it, 0, getContextPath() + "/main", null)
+        serverSpan(it, 0, getContextPath() + "/main")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
         basicSpan(it, 2, "SpringVaadinServletService.handleRequest", span(1))
 

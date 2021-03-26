@@ -269,9 +269,6 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
           @Advice.Thrown Throwable throwable,
           @Advice.Local("otelContext") Context context,
           @Advice.Local("otelScope") Scope scope) {
-        if (scope == null) {
-          return;
-        }
         scope.close();
 
         tracer().endSpan(context, throwable);
@@ -317,9 +314,6 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
           @Advice.Thrown Throwable throwable,
           @Advice.Local("otelContext") Context context,
           @Advice.Local("otelScope") Scope scope) {
-        if (scope == null) {
-          return;
-        }
         scope.close();
 
         tracer().endSpan(context, throwable);

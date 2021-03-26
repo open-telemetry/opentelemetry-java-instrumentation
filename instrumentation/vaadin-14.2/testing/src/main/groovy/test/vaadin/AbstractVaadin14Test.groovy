@@ -32,7 +32,7 @@ abstract class AbstractVaadin14Test extends AbstractVaadinTest {
     assertTraces(VAADIN_14_4 ? 5 : 4) {
       def handlers = getRequestHandlers("BootstrapHandler")
       trace(0, 3 + handlers.size()) {
-        basicSpan(it, 0, getContextPath() + "/main", null)
+        serverSpan(it, 0, getContextPath() + "/main")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
         basicSpan(it, 2, "SpringVaadinServletService.handleRequest", span(1))
 
@@ -41,21 +41,22 @@ abstract class AbstractVaadin14Test extends AbstractVaadinTest {
           basicSpan(it, spanIndex++, handler + ".handleRequest", span(2))
         }
       }
+      // following traces are for javascript files used on page
       trace(1, 2) {
-        basicSpan(it, 0, getContextPath() + "/*", null)
+        serverSpan(it, 0, getContextPath() + "/*")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
       trace(2, 2) {
-        basicSpan(it, 0, getContextPath() + "/*", null)
+        serverSpan(it, 0, getContextPath() + "/*")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
       trace(3, 2) {
-        basicSpan(it, 0, getContextPath() + "/*", null)
+        serverSpan(it, 0, getContextPath() + "/*")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
       if (VAADIN_14_4) {
         trace(4, 2) {
-          basicSpan(it, 0, getContextPath() + "/*", null)
+          serverSpan(it, 0, getContextPath() + "/*")
           basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
         }
       }
@@ -67,7 +68,7 @@ abstract class AbstractVaadin14Test extends AbstractVaadinTest {
     assertTraces(1) {
       def handlers = getRequestHandlers("UidlRequestHandler")
       trace(0, 3 + handlers.size() + 1) {
-        basicSpan(it, 0, getContextPath() + "/main", null)
+        serverSpan(it, 0, getContextPath() + "/main")
         basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
         basicSpan(it, 2, "SpringVaadinServletService.handleRequest", span(1))
 
