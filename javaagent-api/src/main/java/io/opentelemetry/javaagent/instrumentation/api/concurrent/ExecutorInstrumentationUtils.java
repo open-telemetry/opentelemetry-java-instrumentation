@@ -47,15 +47,6 @@ public class ExecutorInstrumentationUtils {
             return true;
           }
 
-          // The Grizzly HTTP handler seems to be run within the context of a request which can be
-          // suspended causing a different request to be executed. Assuming our tests are complete,
-          // it does not seem to be required to propagate context into this task.
-          //
-          // https://github.com/eclipse-ee4j/grizzly/blob/a2ce7775658e11fbccbb9acd32e2daf2b0799f45/modules/http-server/src/main/java/org/glassfish/grizzly/http/server/HttpHandler.java#L178
-          if (enclosingClass.getName().equals("org.glassfish.grizzly.http.server.HttpHandler")) {
-            return true;
-          }
-
           return false;
         }
       };
