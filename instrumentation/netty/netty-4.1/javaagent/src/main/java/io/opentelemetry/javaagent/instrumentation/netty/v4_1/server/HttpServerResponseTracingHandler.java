@@ -21,7 +21,7 @@ import io.opentelemetry.context.Scope;
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
 
   private static final AttributeKey<HttpResponse> HTTP_RESPONSE =
-      AttributeKey.valueOf(HttpServerResponseTracingHandler.class, "HTTP_RESPONSE");
+      AttributeKey.valueOf(HttpServerResponseTracingHandler.class, "http-response");
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) {
