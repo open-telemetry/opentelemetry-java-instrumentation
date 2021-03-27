@@ -34,7 +34,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
     final ChannelPromise writePromise;
 
     if (msg instanceof LastHttpContent) {
-      if (prm == ctx.voidPromise()) {
+      if (prm.isVoid()) {
         // Some frameworks don't actually listen for response completion and optimize for
         // allocations by using a singleton, unnotifiable promise. Hopefully these frameworks don't
         // have observability features or they'd be way off...
