@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
 
   private static final AttributeKey<HttpResponse> HTTP_RESPONSE =
-      AttributeKey.valueOf(HttpClientResponseTracingHandler.class, "HTTP_RESPONSE");
+      AttributeKey.valueOf(HttpClientResponseTracingHandler.class, "http-response");
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) {
