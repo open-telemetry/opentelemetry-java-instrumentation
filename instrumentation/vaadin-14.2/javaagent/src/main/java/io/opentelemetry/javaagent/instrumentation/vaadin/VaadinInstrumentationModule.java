@@ -73,7 +73,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
           named("handleRequest")
               .and(takesArgument(0, named("com.vaadin.flow.server.VaadinRequest")))
               .and(takesArgument(1, named("com.vaadin.flow.server.VaadinResponse"))),
-          HandleRequestAdvice.class.getName());
+          VaadinServiceInstrumentation.class.getName() + "$HandleRequestAdvice");
     }
 
     public static class HandleRequestAdvice {
@@ -119,7 +119,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
               .and(takesArgument(0, named("com.vaadin.flow.server.VaadinSession")))
               .and(takesArgument(1, named("com.vaadin.flow.server.VaadinRequest")))
               .and(takesArgument(2, named("com.vaadin.flow.server.VaadinResponse"))),
-          RequestHandlerAdvice.class.getName());
+          RequestHandlerInstrumentation.class.getName() + "$RequestHandlerAdvice");
     }
 
     public static class RequestHandlerAdvice {
@@ -166,7 +166,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
       // we can get the path of currently active route from ui
       return singletonMap(
           named("setCurrent").and(takesArgument(0, named("com.vaadin.flow.component.UI"))),
-          SetUiAdvice.class.getName());
+          UiInstrumentation.class.getName() + "$SetUiAdvice");
     }
 
     public static class SetUiAdvice {
@@ -192,7 +192,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
               .and(takesArguments(4))
               .and(takesArgument(1, named("com.vaadin.flow.router.Location")))
               .and(takesArgument(2, named("com.vaadin.flow.router.NavigationTrigger"))),
-          NavigateAdvice.class.getName());
+          RouterInstrumentation.class.getName() + "$NavigateAdvice");
     }
 
     public static class NavigateAdvice {
@@ -217,7 +217,9 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
 
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(named("connectClient"), ConnectViewAdvice.class.getName());
+      return singletonMap(
+          named("connectClient"),
+          JavaScriptBootstrapUiInstrumentation.class.getName() + "$ConnectViewAdvice");
     }
 
     public static class ConnectViewAdvice {
@@ -248,7 +250,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
           named("handle")
               .and(takesArgument(0, named("com.vaadin.flow.component.UI")))
               .and(takesArgument(1, named("elemental.json.JsonObject"))),
-          RpcInvocationHandlerAdvice.class.getName());
+          RpcInvocationHandlerInstrumentation.class.getName() + "$RpcInvocationHandlerAdvice");
     }
 
     public static class RpcInvocationHandlerAdvice {
@@ -294,7 +296,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
               .and(takesArgument(2, named(String.class.getName())))
               .and(takesArgument(3, named("elemental.json.JsonArray")))
               .and(takesArgument(4, named(int.class.getName()))),
-          InvokeAdvice.class.getName());
+          ClientCallableRpcInstrumentation.class.getName() + "$InvokeAdvice");
     }
 
     public static class InvokeAdvice {
