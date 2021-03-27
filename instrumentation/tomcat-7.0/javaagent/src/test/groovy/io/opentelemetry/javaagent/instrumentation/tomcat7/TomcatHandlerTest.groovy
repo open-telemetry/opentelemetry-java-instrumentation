@@ -57,6 +57,11 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   }
 
   @Override
+  boolean testErrorBody() {
+    false
+  }
+
+  @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
     switch (endpoint) {
       case REDIRECT:
