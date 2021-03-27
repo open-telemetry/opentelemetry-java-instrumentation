@@ -13,11 +13,13 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc
 import java.util.jar.Attributes
 import java.util.jar.JarFile
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
+@IgnoreIf({ os.windows })
 class GrpcSmokeTest extends SmokeTest {
 
-  protected String getTargetImage(String jdk, String serverVersion) {
+  protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-grpc-jdk$jdk-20210225.598590600"
   }
 
@@ -26,7 +28,7 @@ class GrpcSmokeTest extends SmokeTest {
     setup:
     def output = startTarget(jdk)
 
-    def channel = ManagedChannelBuilder.forAddress("localhost", target.getMappedPort(8080))
+    def channel = ManagedChannelBuilder.forAddress("localhost", containerManager.getTargetMappedPort(8080))
       .usePlaintext()
       .build()
     def stub = TraceServiceGrpc.newBlockingStub(channel)

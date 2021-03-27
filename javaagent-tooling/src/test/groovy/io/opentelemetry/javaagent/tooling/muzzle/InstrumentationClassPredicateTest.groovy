@@ -11,19 +11,26 @@ import spock.lang.Unroll
 class InstrumentationClassPredicateTest extends Specification {
   @Unroll
   def "should collect references for #desc"() {
+    setup:
+    def predicate = new InstrumentationClassPredicate({ it.startsWith("com.example.instrumentation.library") })
+
     expect:
-    InstrumentationClassPredicate.isInstrumentationClass(className)
+    predicate.isInstrumentationClass(className)
 
     where:
-    desc                              | className
-    "javaagent instrumentation class" | "io.opentelemetry.javaagent.instrumentation.some_instrumentation.Advice"
-    "library instrumentation class"   | "io.opentelemetry.instrumentation.LibraryClass"
+    desc                                       | className
+    "javaagent instrumentation class"          | "io.opentelemetry.javaagent.instrumentation.some_instrumentation.Advice"
+    "library instrumentation class"            | "io.opentelemetry.instrumentation.LibraryClass"
+    "additional library instrumentation class" | "com.example.instrumentation.library.ThirdPartyExternalInstrumentation"
   }
 
   @Unroll
   def "should not collect references for #desc"() {
+    setup:
+    def predicate = new InstrumentationClassPredicate({ false })
+
     expect:
-    !InstrumentationClassPredicate.isInstrumentationClass(className)
+    !predicate.isInstrumentationClass(className)
 
     where:
     desc                        | className

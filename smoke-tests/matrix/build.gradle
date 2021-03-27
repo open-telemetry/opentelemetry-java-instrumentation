@@ -40,8 +40,8 @@ def linuxTargets = [
   ],
   "tomee": [
     [version: ["7.0.0"], vm: ["hotspot"], jdk: ["8"]],
-    [version: ["8.0.6"], vm: ["hotspot"], jdk: ["8", "11"]],
     [version: ["7.0.0"], vm: ["openj9"], jdk: ["8"], dockerfile: "tomee-custom"],
+    [version: ["8.0.6"], vm: ["hotspot"], jdk: ["8", "11"]],
     [version: ["8.0.6"], vm: ["openj9"], jdk: ["8", "11"], dockerfile: "tomee-custom"]
   ],
   "payara": [
@@ -59,6 +59,10 @@ def linuxTargets = [
 ]
 
 def windowsTargets = [
+  "jetty" : [
+    [version: ["9.4.35"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15"], args: [sourceVersion: "9.4.35.v20201120"]],
+    [version: ["10.0.0"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]]
+  ],
   "tomcat" : [
     [version: ["7.0.107"], vm: ["hotspot", "openj9"], jdk: ["8"], args: [majorVersion: "7"]],
     [version: ["8.5.60"], vm: ["hotspot", "openj9"], jdk: ["8", "11"], args: [majorVersion: "8"]],
@@ -67,10 +71,6 @@ def windowsTargets = [
   "tomee" : [
     [version: ["7.0.0"], vm: ["hotspot", "openj9"], jdk: ["8"]],
     [version: ["8.0.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
-  ],
-  "jetty" : [
-    [version: ["9.4.35"], vm: ["hotspot", "openj9"], jdk: ["8", "11", "15"], args: [sourceVersion: "9.4.35.v20201120"]],
-    [version: ["10.0.0"], vm: ["hotspot", "openj9"], jdk: ["11", "15"], dockerfile: "jetty-split", args: [sourceVersion: "10.0.0.beta3"]]
   ],
   "payara": [
     [version: ["5.2020.6"], vm: ["hotspot", "openj9"], jdk: ["8", "11"]]
