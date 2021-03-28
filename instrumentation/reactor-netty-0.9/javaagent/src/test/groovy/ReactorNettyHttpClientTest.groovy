@@ -53,9 +53,9 @@ class ReactorNettyHttpClientTest extends HttpClientTest implements AgentTestTrai
   SingleConnection createSingleConnection(String host, int port) {
     String url
     try {
-      url = new URL("http", host, port, "").toString();
+      url = new URL("http", host, port, "").toString()
     } catch (MalformedURLException e) {
-      throw new ExecutionException(e);
+      throw new ExecutionException(e)
     }
 
     def httpClient = HttpClient
