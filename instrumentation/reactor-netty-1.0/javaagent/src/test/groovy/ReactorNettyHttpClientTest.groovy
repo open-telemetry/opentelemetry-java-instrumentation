@@ -5,6 +5,9 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeoutException
 import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientResponse
 
@@ -29,7 +32,7 @@ class ReactorNettyHttpClientTest extends HttpClientTest implements AgentTestTrai
   String userAgent() {
     return "ReactorNetty"
   }
-  
+
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null) {
     HttpClientResponse resp = HttpClient.create()
@@ -44,5 +47,27 @@ class ReactorNettyHttpClientTest extends HttpClientTest implements AgentTestTrai
       callback.call()
     }
     return resp.status().code()
+  }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    def httpClient = HttpClient
+      .newConnection()
+      .host(host)
+      .port(port)
+
+    return new SingleConnection() {
+
+      @Override
+      int doRequest(String path, Map<String, String> headers) throws ExecutionException, InterruptedException, TimeoutException {
+        return httpClient
+          .headers({ h -> headers.each { k, v -> h.add(k, v) } })
+          .get()
+          .uri(path)
+          .response()
+          .block()
+          .status().code()
+      }
+    }
   }
 }
