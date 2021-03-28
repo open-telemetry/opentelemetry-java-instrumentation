@@ -51,6 +51,7 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
       Context parentContext = Context.current();
       if (!tracer().shouldStartSpan(parentContext)) {
+        next.exchange(request).subscribe(subscriber);
         return;
       }
 
