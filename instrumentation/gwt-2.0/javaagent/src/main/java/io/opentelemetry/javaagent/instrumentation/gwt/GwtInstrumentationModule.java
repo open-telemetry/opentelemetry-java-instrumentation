@@ -58,20 +58,21 @@ public class GwtInstrumentationModule extends InstrumentationModule {
       transformers.put(
           named("invokeAndEncodeResponse")
               .and(takesArguments(5))
-              .and(takesArgument(0, named(Object.class.getName())))
-              .and(takesArgument(1, named(Method.class.getName())))
+              .and(takesArgument(0, Object.class))
+              .and(takesArgument(1, Method.class))
+              .and(takesArgument(2, Object[].class))
               .and(takesArgument(3, named("com.google.gwt.user.server.rpc.SerializationPolicy")))
-              .and(takesArgument(4, named(int.class.getName()))),
+              .and(takesArgument(4, int.class)),
           RpcInstrumentation.class.getName() + "$RpcInvokeAdvice");
 
       // encodeResponseForFailure is called by invokeAndEncodeResponse in case of failure
       transformers.put(
           named("encodeResponseForFailure")
               .and(takesArguments(4))
-              .and(takesArgument(0, named(Method.class.getName())))
-              .and(takesArgument(1, named(Throwable.class.getName())))
+              .and(takesArgument(0, Method.class))
+              .and(takesArgument(1, Throwable.class))
               .and(takesArgument(2, named("com.google.gwt.user.server.rpc.SerializationPolicy")))
-              .and(takesArgument(3, named(int.class.getName()))),
+              .and(takesArgument(3, int.class)),
           RpcInstrumentation.class.getName() + "$RpcFailureAdvice");
 
       return transformers;

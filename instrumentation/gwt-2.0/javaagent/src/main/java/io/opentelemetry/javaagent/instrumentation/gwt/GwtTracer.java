@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
 
 public class GwtTracer extends BaseTracer {
-  private static final ContextKey<Object> PRC_CONTEXT_KEY =
+  private static final ContextKey<Object> RPC_CONTEXT_KEY =
       ContextKey.named("opentelemetry-gwt-rpc-context-key");
 
   private static final GwtTracer TRACER = new GwtTracer();
@@ -28,7 +28,7 @@ public class GwtTracer extends BaseTracer {
   public Context startRpcSpan(Object target, Method method) {
     String spanName = spanNameForMethod(target.getClass(), method);
     Context context = super.startSpan(spanName);
-    return context.with(PRC_CONTEXT_KEY, Boolean.TRUE);
+    return context.with(RPC_CONTEXT_KEY, Boolean.TRUE);
   }
 
   public void endSpan(Context context, Throwable throwable) {
@@ -41,7 +41,7 @@ public class GwtTracer extends BaseTracer {
 
   public void rpcFailure(Throwable throwable) {
     Context context = Context.current();
-    if (context.get(PRC_CONTEXT_KEY) == null) {
+    if (context.get(RPC_CONTEXT_KEY) == null) {
       // not inside rpc invocation
       return;
     }
