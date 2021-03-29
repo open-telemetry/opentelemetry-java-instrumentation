@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.BucketNotificationConfiguration
 import com.amazonaws.services.s3.model.ObjectListing
@@ -19,12 +22,30 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.model.GetQueueAttributesRequest
 import com.amazonaws.services.sqs.model.PurgeQueueRequest
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
+import com.amazonaws.services.sqs.model.SendMessageRequest
+import io.opentelemetry.instrumentation.test.utils.PortUtils
+import org.elasticmq.rest.sqs.SQSRestServer
+import org.elasticmq.rest.sqs.SQSRestServerBuilder
 
 class AwsConnector {
+
+  private SQSRestServer sqsRestServer
 
   private AmazonSQSAsyncClient sqsClient
   private AmazonS3Client s3Client
   private AmazonSNSAsyncClient snsClient
+
+  static elasticMq() {
+    AwsConnector awsConnector = new AwsConnector()
+    def sqsPort = PortUtils.findOpenPort()
+    awsConnector.sqsRestServer = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start()
+
+    def credentials = new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"))
+    def endpointConfiguration = new AwsClientBuilder.EndpointConfiguration("http://localhost:"+sqsPort, "elasticmq")
+    awsConnector.sqsClient = AmazonSQSAsyncClient.asyncBuilder().withCredentials(credentials).withEndpointConfiguration(endpointConfiguration).build()
+
+    return awsConnector
+  }
 
   static liveAws() {
     AwsConnector awsConnector = new AwsConnector()
@@ -137,5 +158,16 @@ class AwsConnector {
 
   def publishSampleNotification(String topicArn) {
     snsClient.publish(topicArn, "Hello There")
+  }
+
+  def sendSampleMessage(String queueUrl) {
+    SendMessageRequest send = new SendMessageRequest(queueUrl, "{\"type\": \"hello\"}")
+    sqsClient.sendMessage(send)
+  }
+
+  def disconnect() {
+    if (sqsRestServer != null) {
+      sqsRestServer.stopAndWait()
+    }
   }
 }

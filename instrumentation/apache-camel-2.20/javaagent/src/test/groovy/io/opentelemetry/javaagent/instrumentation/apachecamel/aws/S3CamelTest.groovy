@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap
@@ -25,17 +24,7 @@ class S3CamelTest extends AgentInstrumentationSpecification {
     String queueName = "s3SqsCamelTest"
     def camelApp = new CamelSpringApp(awsConnector, S3Config, ImmutableMap.of("bucketName", bucketName, "queueName", queueName))
 
-    // setup infra
-    String queueUrl = awsConnector.createQueue(queueName)
-    awsConnector.createBucket(bucketName)
-    String queueArn = awsConnector.getQueueArn(queueUrl)
-    awsConnector.setQueuePublishingPolicy(queueUrl, queueArn)
-    awsConnector.enableS3ToSqsNotifications(bucketName, queueArn)
-
-    // consume test message from AWS
-    awsConnector.receiveMessage(queueUrl)
-
-    // wait for setup traces
+    def queueUrl = setupTestInfrastructure(queueName, bucketName)
     waitAndClearSetupTraces(queueUrl, queueName, bucketName)
 
     when:
@@ -51,34 +40,11 @@ class S3CamelTest extends AgentInstrumentationSpecification {
         AwsSpan.s3(it, 0, "S3.ListObjects", bucketName)
       }
       trace(2, 5) {
-        span(0) {
-          name "input"
-          kind INTERNAL
-          hasNoParent()
-          attributes {
-            "apache-camel.uri" "direct://input"
-          }
-        }
-        span(1) {
-          name "aws-s3"
-          kind INTERNAL
-          childOf span(0)
-          attributes {
-            "apache-camel.uri" "aws-s3://${bucketName}?amazonS3Client=%23s3Client"
-          }
-        }
+        CamelSpan.direct(it, 0, "input")
+        CamelSpan.s3(it, 1, span(0))
         AwsSpan.s3(it, 2, "S3.PutObject", bucketName, "PUT", span(1))
         AwsSpan.sqs(it, 3, "SQS.ReceiveMessage", queueUrl, null, CONSUMER, span(2))
-        span(4) {
-          name queueName
-          kind INTERNAL
-          childOf span(2)
-          attributes {
-            "apache-camel.uri" "aws-sqs://${queueName}?amazonSQSClient=%23sqsClient&delay=1000"
-            "messaging.destination" queueName
-            "messaging.message_id" String
-          }
-        }
+        CamelSpan.sqsConsume(it, 4, queueName, span(2))
       }
       // HTTP "client" receiver span, one per each SQS request
       trace(3, 1) {
@@ -99,6 +65,20 @@ class S3CamelTest extends AgentInstrumentationSpecification {
     awsConnector.deleteBucket(bucketName)
     awsConnector.purgeQueue(queueUrl)
     camelApp.stop()
+  }
+
+  def setupTestInfrastructure(queueName, bucketName) {
+    // setup infra
+    String queueUrl = awsConnector.createQueue(queueName)
+    awsConnector.createBucket(bucketName)
+    String queueArn = awsConnector.getQueueArn(queueUrl)
+    awsConnector.setQueuePublishingPolicy(queueUrl, queueArn)
+    awsConnector.enableS3ToSqsNotifications(bucketName, queueArn)
+
+    // consume test message from AWS
+    awsConnector.receiveMessage(queueUrl)
+
+    return queueUrl
   }
 
   def waitAndClearSetupTraces(queueUrl, queueName, bucketName) {

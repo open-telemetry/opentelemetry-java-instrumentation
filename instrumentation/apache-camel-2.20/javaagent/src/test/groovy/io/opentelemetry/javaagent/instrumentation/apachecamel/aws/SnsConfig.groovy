@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
-
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
 import org.springframework.beans.factory.annotation.Value
@@ -18,7 +17,7 @@ import org.springframework.context.annotation.Bean
 class SnsConfig {
 
   @Bean
-  RouteBuilder sqsCamelOnlyConsumerRoute(@Value("\${queueName}") String queueName) {
+  RouteBuilder sqsConsumerRoute(@Value("\${queueName}") String queueName) {
     return new RouteBuilder() {
 
       @Override

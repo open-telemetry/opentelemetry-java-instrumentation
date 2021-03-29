@@ -64,4 +64,30 @@ class AwsSpan {
       }
     }
   }
+
+  static sns(TraceAssert traceAssert, int index, spanName, parentSpan=null) {
+    return traceAssert.span(index) {
+      name spanName
+      kind CLIENT
+      if (index == 0) {
+        hasNoParent()
+      } else {
+        childOf parentSpan
+      }
+      attributes {
+        "aws.agent" "java-aws-sdk"
+        "aws.endpoint" String
+        "aws.operation" spanName.substring(4)
+        "aws.service" "AmazonSNS"
+        "http.flavor" "1.1"
+        "http.method" "POST"
+        "http.status_code" 200
+        "http.url" String
+        "net.peer.name" String
+        "net.peer.port" {it == null || Number}
+        "net.transport" "IP.TCP"
+      }
+    }
+  }
+
 }
