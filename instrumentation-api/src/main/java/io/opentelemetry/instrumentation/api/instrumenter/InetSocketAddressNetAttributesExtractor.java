@@ -29,11 +29,6 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
     if (address == null) {
       return null;
     }
-    InetAddress remoteAddress = address.getAddress();
-    if (remoteAddress != null) {
-      return remoteAddress.getHostName();
-    }
-    // Failed DNS lookup, the host string is the name.
     return address.getHostString();
   }
 

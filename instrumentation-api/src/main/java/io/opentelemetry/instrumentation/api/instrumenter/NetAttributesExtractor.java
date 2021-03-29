@@ -19,12 +19,12 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
-  final void onStart(AttributesBuilder attributes, REQUEST request) {
+  protected final void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.NET_TRANSPORT, transport(request));
   }
 
   @Override
-  final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
+  protected final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp(request, response));
 
     // TODO(anuraaga): Clients don't have peer information available during the request usually.

@@ -22,7 +22,7 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
-  final void onStart(AttributesBuilder attributes, REQUEST request) {
+  protected final void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.HTTP_METHOD, method(request));
     set(attributes, SemanticAttributes.HTTP_URL, url(request));
     set(attributes, SemanticAttributes.HTTP_TARGET, target(request));
@@ -33,7 +33,7 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
+  protected final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
     set(
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,

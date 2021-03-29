@@ -20,9 +20,17 @@ import io.opentelemetry.api.common.AttributesBuilder;
  * @see NetAttributesExtractor
  */
 public abstract class AttributesExtractor<REQUEST, RESPONSE> {
-  abstract void onStart(AttributesBuilder attributes, REQUEST request);
+  /**
+   * Extracts attributes from the {@link REQUEST} into the {@link AttributesBuilder} at the
+   * beginning of a request.
+   */
+  protected abstract void onStart(AttributesBuilder attributes, REQUEST request);
 
-  abstract void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response);
+  /**
+   * Extracts attributes from the {@link REQUEST} and {@link RESPONSE} into the {@link
+   * AttributesBuilder} at the end of a request.
+   */
+  protected abstract void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response);
 
   /**
    * Sets the {@code value} with the given {@code key} to the {@link AttributesBuilder} if {@code
