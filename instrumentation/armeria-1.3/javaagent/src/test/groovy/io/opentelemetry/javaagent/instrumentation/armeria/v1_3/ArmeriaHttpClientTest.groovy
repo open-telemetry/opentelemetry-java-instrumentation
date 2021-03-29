@@ -15,9 +15,4 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest implements Age
   WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder
   }
-
-  boolean testWithClientParent() {
-    // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
-    false
-  }
 }
