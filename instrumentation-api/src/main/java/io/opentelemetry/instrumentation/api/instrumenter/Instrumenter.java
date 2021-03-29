@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO(anuraaga): Need to define what are actually useful knobs, perhaps even providing a
 // base-class
@@ -65,6 +66,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.errorCauseExtractor = errorCauseExtractor;
   }
 
+  /**
+   * Starts a new operation to be instrumented. The {@code parentContext} is the parent of the
+   * resulting instrumented operation and should usually be {@code Context.current()}. The {@code
+   * request} is the request object of this operation. The returned {@link Context} should be
+   * propagated along with the operation and passed to {@link #end(Context, Object, Object,
+   * Throwable)} when it is finished.
+   */
   public Context start(Context parentContext, REQUEST request) {
     SpanKind spanKind = spanKindExtractor.extract(request);
     SpanBuilder spanBuilder =
@@ -91,7 +99,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
   }
 
-  public void end(Context context, REQUEST request, RESPONSE response, Throwable error) {
+  /**
+   * Ends an instrumented operation. The {@link Context} must be what was returned from {@link
+   * #start(Context, Object)}. {@code request} is the request object of the operation, {@code
+   * response} is the response object of the operation, and {@code error} is an exception that was
+   * thrown by the operation, or {@code null} if none was thrown.
+   */
+  public void end(Context context, REQUEST request, RESPONSE response, @Nullable Throwable error) {
     Span span = Span.fromContext(context);
 
     AttributesBuilder attributes = Attributes.builder();

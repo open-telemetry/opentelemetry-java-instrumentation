@@ -12,8 +12,14 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+/**
+ * A builder of {@link Instrumenter}. Instrumentation libraries should generally expose their own
+ * builder with controls that are appropriate for that library and delegate to this to create the
+ * {@link Instrumenter}.
+ */
 public class InstrumenterBuilder<REQUEST, RESPONSE> {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
@@ -35,18 +41,24 @@ public class InstrumenterBuilder<REQUEST, RESPONSE> {
     this.spanNameExtractor = spanNameExtractor;
   }
 
+  /**
+   * Sets the {@link StatusExtractor} to use to determine the {@link
+   * io.opentelemetry.api.trace.StatusCode} for a response.
+   */
   public InstrumenterBuilder<REQUEST, RESPONSE> setSpanStatusExtractor(
       StatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor) {
     this.statusExtractor = spanStatusExtractor;
     return this;
   }
 
+  /** Adds a {@link AttributesExtractor} to extract attributes from requests and responses. */
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractor(
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
     this.attributesExtractors.add(attributesExtractor);
     return this;
   }
 
+  /** Adds {@link AttributesExtractor}s to extract attributes from requests and responses. */
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
       Iterable<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
           attributesExtractors) {
@@ -54,24 +66,46 @@ public class InstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
+  /** Adds {@link AttributesExtractor}s to extract attributes from requests and responses. */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
+      AttributesExtractor<? super REQUEST, ? super RESPONSE>... attributesExtractors) {
+    return addAttributesExtractors(Arrays.asList(attributesExtractors));
+  }
+
+  /**
+   * Sets the {@link ErrorCauseExtractor} to extract the root cause from an exception handling the
+   * request.
+   */
   public InstrumenterBuilder<REQUEST, RESPONSE> setErrorCauseExtractor(
       ErrorCauseExtractor errorCauseExtractor) {
     this.errorCauseExtractor = errorCauseExtractor;
     return this;
   }
 
+  /**
+   * Returns a new client {@link Instrumenter} which will create client spans and inject context
+   * into requests.
+   */
   public Instrumenter<REQUEST, RESPONSE> newClientInstrumenter(TextMapSetter<REQUEST> setter) {
     return newInstrumenter(
         InstrumenterConstructor.propagatingToDownstream(openTelemetry.getPropagators(), setter),
         SpanKindExtractor.alwaysClient());
   }
 
+  /**
+   * Returns a new server {@link Instrumenter} which will create server spans and extract context
+   * from requests.
+   */
   public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(TextMapGetter<REQUEST> getter) {
     return newInstrumenter(
         InstrumenterConstructor.propagatingFromUpstream(openTelemetry.getPropagators(), getter),
         SpanKindExtractor.alwaysServer());
   }
 
+  /**
+   * Returns a new {@link Instrumenter} which will create internal spans and do no context
+   * propagation.
+   */
   public Instrumenter<REQUEST, RESPONSE> newInstrumenter() {
     return newInstrumenter(InstrumenterConstructor.internal(), SpanKindExtractor.alwaysInternal());
   }

@@ -25,9 +25,8 @@ public abstract class AttributesExtractor<REQUEST, RESPONSE> {
   abstract void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response);
 
   /**
-   * Sets the {@code value} with the given {@code key} to the {@link AttributesBuilder} if
-   *
-   * @code value} is not {@code null}.
+   * Sets the {@code value} with the given {@code key} to the {@link AttributesBuilder} if {@code
+   * value} is not {@code null}.
    */
   protected static <T> void set(AttributesBuilder attributes, AttributeKey<T> key, T value) {
     if (value != null) {

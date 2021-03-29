@@ -30,24 +30,12 @@ public final class ArmeriaTracingBuilder {
       additionalExtractors = new ArrayList<>();
 
   private Function<
-          SpanNameExtractor<RequestContext>, ? extends SpanNameExtractor<? super RequestContext>>
-      spanNameExtractorTransformer = Function.identity();
-  private Function<
           StatusExtractor<RequestContext, RequestLog>,
           ? extends StatusExtractor<? super RequestContext, ? super RequestLog>>
       statusExtractorTransformer = Function.identity();
 
   ArmeriaTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-  }
-
-  public ArmeriaTracingBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<RequestContext>,
-              ? extends SpanNameExtractor<? super RequestContext>>
-          spanNameExtractor) {
-    this.spanNameExtractorTransformer = spanNameExtractor;
-    return this;
   }
 
   public ArmeriaTracingBuilder setStatusExtractor(
@@ -61,7 +49,7 @@ public final class ArmeriaTracingBuilder {
 
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items.
+   * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
   public ArmeriaTracingBuilder addAttributeExtractor(
       AttributesExtractor<? super RequestContext, ? super RequestLog> attributesExtractor) {
@@ -74,7 +62,7 @@ public final class ArmeriaTracingBuilder {
     ArmeriaNetAttributesExtractor netAttributesExtractor = new ArmeriaNetAttributesExtractor();
 
     SpanNameExtractor<? super RequestContext> spanNameExtractor =
-        spanNameExtractorTransformer.apply(SpanNameExtractor.http(httpAttributesExtractor));
+        SpanNameExtractor.http(httpAttributesExtractor);
     StatusExtractor<? super RequestContext, ? super RequestLog> statusExtractor =
         statusExtractorTransformer.apply(StatusExtractor.http(httpAttributesExtractor));
 
