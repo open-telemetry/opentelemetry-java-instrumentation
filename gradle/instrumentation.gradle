@@ -108,38 +108,41 @@ shadowJar {
 
 evaluationDependsOn(":testing:agent-for-testing")
 
-tasks.withType(Test).configureEach {
-  inputs.file(shadowJar.archiveFile)
+// need to run this after evaluate because testSets plugin adds new test tasks
+afterEvaluate {
+  tasks.withType(Test).configureEach {
+    inputs.file(shadowJar.archiveFile)
 
-  jvmArgs "-Dotel.javaagent.debug=true"
-  jvmArgs "-javaagent:${project(":testing:agent-for-testing").tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
-  jvmArgs "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
-  jvmArgs "-Dotel.javaagent.testing.additional-library-ignores.enabled=false"
-  jvmArgs "-Dotel.javaagent.testing.fail-on-context-leak=true"
-  // prevent sporadic gradle deadlocks, see SafeLogger for more details
-  jvmArgs "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
+    jvmArgs "-Dotel.javaagent.debug=true"
+    jvmArgs "-javaagent:${project(":testing:agent-for-testing").tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
+    jvmArgs "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
+    jvmArgs "-Dotel.javaagent.testing.additional-library-ignores.enabled=false"
+    jvmArgs "-Dotel.javaagent.testing.fail-on-context-leak=true"
+    // prevent sporadic gradle deadlocks, see SafeLogger for more details
+    jvmArgs "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
 
-  dependsOn shadowJar
-  dependsOn ":testing:agent-for-testing:shadowJar"
+    dependsOn shadowJar
+    dependsOn ":testing:agent-for-testing:shadowJar"
 
-  // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
-  // configurations will include transitive dependencies as well, which tests do often need.
-  classpath = classpath.filter {
-    // The sources are packaged into the testing jar so we need to make sure to exclude from the test
-    // classpath, which automatically inherits them, to ensure our shaded versions are used.
-    if (file("$buildDir/resources/main").equals(it) || file("$buildDir/classes/java/main").equals(it)) {
-      return false
+    // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
+    // configurations will include transitive dependencies as well, which tests do often need.
+    classpath = classpath.filter {
+      // The sources are packaged into the testing jar so we need to make sure to exclude from the test
+      // classpath, which automatically inherits them, to ensure our shaded versions are used.
+      if (file("$buildDir/resources/main").equals(it) || file("$buildDir/classes/java/main").equals(it)) {
+        return false
+      }
+      // If agent depends on some shared instrumentation module that is not a testing module, it will
+      // be packaged into the testing jar so we need to make sure to exclude from the test classpath.
+      String libPath = it.absolutePath
+      String instrumentationPath = file("${rootDir}/instrumentation/").absolutePath
+      if (libPath.startsWith(instrumentationPath) &&
+        libPath.endsWith(".jar") &&
+        !libPath.substring(instrumentationPath.size()).contains("testing")) {
+        return false
+      }
+      return true
     }
-    // If agent depends on some shared instrumentation module that is not a testing module, it will
-    // be packaged into the testing jar so we need to make sure to exclude from the test classpath.
-    String libPath = it.absolutePath
-    String instrumentationPath = file("${rootDir}/instrumentation/").absolutePath
-    if (libPath.startsWith(instrumentationPath) &&
-      libPath.endsWith(".jar") &&
-      !libPath.substring(instrumentationPath.size()).contains("testing")) {
-      return false
-    }
-    return true
   }
 }
 
