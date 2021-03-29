@@ -29,6 +29,9 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
     if (address == null) {
       return null;
     }
+    if (address.getAddress() != null) {
+      return address.getAddress().getHostName();
+    }
     return address.getHostString();
   }
 
