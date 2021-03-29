@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.otelannotations.async;
+package io.opentelemetry.instrumentation.api.tracer.async;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-enum Jdk8MethodStrategy implements MethodSpanStrategy {
+enum Jdk8AsyncEndStrategy implements AsyncSpanEndStrategy {
   INSTANCE;
 
   @Override

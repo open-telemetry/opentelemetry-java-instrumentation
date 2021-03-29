@@ -47,8 +47,7 @@ public class WithSpanAspect {
     Context context = tracer.startSpan(parentContext, withSpan, method);
     try (Scope ignored = context.makeCurrent()) {
       Object result = pjp.proceed();
-      tracer.end(context);
-      return result;
+      return tracer.end(context, method.getReturnType(), result);
     } catch (Throwable t) {
       tracer.endExceptionally(context, t);
       throw t;
