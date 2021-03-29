@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpRequestDecoder;
@@ -100,7 +101,13 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
 
       String name = handlerName;
       if (name == null) {
-        name = pipeline.context(handler).name();
+        ChannelHandlerContext context = pipeline.context(handler);
+        if (context == null) {
+          // probably a ChannelInitializer that was used and removed
+          // see the comment above in @Advice.OnMethodEnter
+          return;
+        }
+        name = context.name();
       }
 
       try {
