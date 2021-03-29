@@ -41,6 +41,7 @@ These are the supported libraries and frameworks:
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
 | [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default)     |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.5+                           |
+| [GWT](http://www.gwtproject.org/)                                                                                                     | 2.0+                           |
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
 | [http4k <sup>&dagger;</sup>](https://www.http4k.org/guide/modules/opentelemetry/)                                                     | 3.270.0+                       |
