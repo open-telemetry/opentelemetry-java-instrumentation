@@ -1,5 +1,5 @@
 <module rename-to="greeting">
-	<inherits name="com.google.gwt.user.User" />
+  <inherits name="com.google.gwt.user.User" />
 
   <entry-point class="test.gwt.client.GreetingEntryPoint" />
 
