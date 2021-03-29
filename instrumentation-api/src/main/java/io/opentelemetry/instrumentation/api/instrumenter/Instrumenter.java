@@ -37,6 +37,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class Instrumenter<REQUEST, RESPONSE> {
 
+  /** Returns a new {@link InstrumenterBuilder}. */
   public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> newBuilder(
       OpenTelemetry openTelemetry,
       String instrumentationName,
