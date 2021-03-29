@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
@@ -13,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class TagSettingAsyncListener implements AsyncListener {
   private static final Servlet3HttpServerTracer servletHttpServerTracer =
-      new Servlet3HttpServerTracer();
+      Servlet3HttpServerTracer.tracer();
 
   private final AtomicBoolean responseHandled;
   private final Context context;

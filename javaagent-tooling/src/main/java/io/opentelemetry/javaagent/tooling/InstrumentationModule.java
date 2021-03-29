@@ -28,6 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
@@ -249,6 +250,31 @@ public abstract class InstrumentationModule {
 
   private String mainInstrumentationName() {
     return instrumentationNames.iterator().next();
+  }
+
+  /**
+   * This is an internal helper method for muzzle code generation: generating {@code invokedynamic}
+   * instructions in ASM is so painful that it's much simpler and readable to just have a plain old
+   * Java helper function here.
+   */
+  @SuppressWarnings("unused")
+  protected final Predicate<String> additionalLibraryInstrumentationPackage() {
+    return this::isHelperClass;
+  }
+
+  /**
+   * Instrumentation modules can override this method to specify additional packages (or classes)
+   * that should be treated as "library instrumentation" packages. Classes from those packages will
+   * be treated by muzzle as instrumentation helper classes: they will be scanned for references and
+   * automatically injected into the application classloader if they're used in any type
+   * instrumentation. The classes for which this predicate returns {@code true} will be treated as
+   * helper classes, in addition to the default ones defined in {@link
+   * InstrumentationClassPredicate}.
+   *
+   * @param className The name of the class that may or may not be a helper class.
+   */
+  public boolean isHelperClass(String className) {
+    return false;
   }
 
   /**

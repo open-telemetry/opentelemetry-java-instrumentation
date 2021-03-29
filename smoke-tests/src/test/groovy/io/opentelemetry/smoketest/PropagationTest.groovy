@@ -10,18 +10,19 @@ import static java.util.stream.Collectors.toSet
 import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import okhttp3.Request
+import spock.lang.IgnoreIf
 
 abstract class PropagationTest extends SmokeTest {
 
   @Override
-  protected String getTargetImage(String jdk, String serverVersion) {
+  protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
   }
 
   def "Should propagate test"() {
     setup:
     startTarget(11)
-    String url = "http://localhost:${target.getMappedPort(8080)}/front"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/front"
     def request = new Request.Builder().url(url).get().build()
 
     when:
@@ -45,9 +46,11 @@ abstract class PropagationTest extends SmokeTest {
 
 }
 
+@IgnoreIf({ os.windows })
 class DefaultPropagationTest extends PropagationTest {
 }
 
+@IgnoreIf({ os.windows })
 class W3CPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -55,6 +58,7 @@ class W3CPropagationTest extends PropagationTest {
   }
 }
 
+@IgnoreIf({ os.windows })
 class B3PropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -62,6 +66,7 @@ class B3PropagationTest extends PropagationTest {
   }
 }
 
+@IgnoreIf({ os.windows })
 class B3MultiPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -69,6 +74,7 @@ class B3MultiPropagationTest extends PropagationTest {
   }
 }
 
+@IgnoreIf({ os.windows })
 class JaegerPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {
@@ -76,9 +82,10 @@ class JaegerPropagationTest extends PropagationTest {
   }
 }
 
+@IgnoreIf({ os.windows })
 class OtTracePropagationTest extends SmokeTest {
   @Override
-  protected String getTargetImage(String jdk, String serverVersion) {
+  protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
   }
 
@@ -87,7 +94,7 @@ class OtTracePropagationTest extends SmokeTest {
   def "Should propagate test"() {
     setup:
     startTarget(11)
-    String url = "http://localhost:${target.getMappedPort(8080)}/front"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/front"
     def request = new Request.Builder().url(url).get().build()
 
     when:
@@ -114,6 +121,7 @@ class OtTracePropagationTest extends SmokeTest {
   }
 }
 
+@IgnoreIf({ os.windows })
 class XRayPropagationTest extends PropagationTest {
   @Override
   protected Map<String, String> getExtraEnv() {

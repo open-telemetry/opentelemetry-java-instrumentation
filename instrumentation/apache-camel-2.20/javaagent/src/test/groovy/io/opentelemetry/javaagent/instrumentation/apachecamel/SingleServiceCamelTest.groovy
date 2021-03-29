@@ -38,7 +38,7 @@ class SingleServiceCamelTest extends AgentInstrumentationSpecification implement
   }
 
   def setupSpecUnderRetry() {
-    port = PortUtils.randomOpenPort()
+    port = PortUtils.findOpenPort()
     address = new URI("http://localhost:$port/")
     def app = new SpringApplication(SingleServiceConfig)
     app.setDefaultProperties(["camelService.port": port])

@@ -30,7 +30,7 @@ class MongoBaseTest extends AgentInstrumentationSpecification {
   private static final MongodStarter STARTER = MongodStarter.getDefaultInstance()
 
   @Shared
-  int port = PortUtils.randomOpenPort()
+  int port = PortUtils.findOpenPort()
   @Shared
   MongodExecutable mongodExe
   @Shared

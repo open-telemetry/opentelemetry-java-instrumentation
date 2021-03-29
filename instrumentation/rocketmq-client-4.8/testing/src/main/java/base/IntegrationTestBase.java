@@ -5,6 +5,7 @@
 
 package base;
 
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,7 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.BrokerConfig;
@@ -37,13 +37,6 @@ public class IntegrationTestBase {
   protected static final List<NamesrvController> NAMESRV_CONTROLLERS = new ArrayList<>();
   protected static final int COMMIT_LOG_SIZE = 1024 * 1024 * 100;
   protected static final int INDEX_NUM = 1000;
-  private static final AtomicInteger port = new AtomicInteger(40000);
-
-  public static synchronized int nextPort() {
-    return port.addAndGet(random.nextInt(10) + 10);
-  }
-
-  protected static final Random random = new Random();
 
   private static String createTempDir() {
     String path = null;
@@ -77,7 +70,9 @@ public class IntegrationTestBase {
     namesrvConfig.setKvConfigPath(kvConfigPath.toString());
     namesrvConfig.setConfigStorePath(namesrvPath.toString());
 
-    nameServerNettyServerConfig.setListenPort(nextPort());
+    // find 3 consecutive open ports and use the last one of them
+    // rocketmq will also bind to given port - 2
+    nameServerNettyServerConfig.setListenPort(PortUtils.findOpenPorts(3) + 2);
     NamesrvController namesrvController =
         new NamesrvController(namesrvConfig, nameServerNettyServerConfig);
     try {
@@ -113,8 +108,8 @@ public class IntegrationTestBase {
       MessageStoreConfig storeConfig, BrokerConfig brokerConfig) {
     NettyServerConfig nettyServerConfig = new NettyServerConfig();
     NettyClientConfig nettyClientConfig = new NettyClientConfig();
-    nettyServerConfig.setListenPort(nextPort());
-    storeConfig.setHaListenPort(nextPort());
+    nettyServerConfig.setListenPort(PortUtils.findOpenPort());
+    storeConfig.setHaListenPort(PortUtils.findOpenPort());
     BrokerController brokerController =
         new BrokerController(brokerConfig, nettyServerConfig, nettyClientConfig, storeConfig);
     try {
@@ -125,8 +120,8 @@ public class IntegrationTestBase {
           brokerController.getBrokerAddr());
       brokerController.start();
     } catch (Throwable t) {
-      logger.error("Broker start failed, will exit", t);
-      System.exit(1);
+      logger.error("Broker start failed", t);
+      throw new IllegalStateException("Broker start failed", t);
     }
     BROKER_CONTROLLERS.add(brokerController);
     return brokerController;

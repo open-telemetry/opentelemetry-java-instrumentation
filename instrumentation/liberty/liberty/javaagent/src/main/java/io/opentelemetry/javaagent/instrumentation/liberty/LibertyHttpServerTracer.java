@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.liberty;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
+import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3HttpServerTracer;
 import javax.servlet.http.HttpServletRequest;
 
 public class LibertyHttpServerTracer extends Servlet3HttpServerTracer {

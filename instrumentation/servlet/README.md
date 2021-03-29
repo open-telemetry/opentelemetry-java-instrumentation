@@ -2,15 +2,24 @@
 
 ## A word about version
 
-We support Servlet API starting from version 2.2.
+We support Servlet API starting from version 2.2. 
 But various instrumentations apply to different versions of the API.
-They are divided into 3 sub-modules:
 
-`servlet-common` contains instrumentations applicable to all API versions that we support.
-
-`servlet-2.2` contains instrumentations applicable to Servlet API 2.2, but not to 3+.
-
-`servlet-3.0` contains instrumentations that require Servlet API 3.0 or newer.
+They are divided into the following sub-modules:
+- `servlet-common` contains shared code for both `javax.servlet` and `jakarta.servlet` packages
+  - `library` contains the abstract tracer applicable to all servlet versions given an
+    implementation of `ServletAccessor` to access request and response objects of the specific
+    version
+  - `javaagent` contains shared type instrumentations which can be used by version specific modules
+    by specifying the base package and advice class to use with them. Contains some helper classes
+    used by advices to reduce code duplication. It does not define any instrumentation modules and
+    is used only as a dependency for other `javaagent` modules.
+- Version-specific modules where `library` contains the version-specific tracer and request/response
+  accessor, and `javaagent` contains the instrumentation modules and advices.
+  - `servlet-javax-common` contains instrumentations/abstract tracer common for Servlet API versions `[2.2, 5)`
+  - `servlet-2.2` contains instrumentations/tracer for Servlet API versions `[2.2, 3)` 
+  - `servlet-3.0` contains instrumentations/tracer for Servlet API versions `[3.0, 5)`
+  - `servlet-5.0` contains instrumentations/tracer for Servlet API versions `[5,)`
 
 ## Implementation details
 
@@ -49,7 +58,7 @@ This is the main target for `Servlet3Instrumentation` and `Servlet2Instrumentati
 
 `public void javax.servlet.http.HttpServlet#service(ServletRequest, ServletResponse)`.
 
-These instrumentations are located in two separate submodules `servlet-3.0` and `servlet-2.2`,
+These instrumentations are located in separate submodules `servlet-3.0`, `servlet-2.2` and `servlet-5.0`,
 because they and corresponding tests depend on different versions of the servlet specification.
 
 At last, request processing may reach the specific framework that your application uses.

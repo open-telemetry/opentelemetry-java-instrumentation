@@ -40,7 +40,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
   RedisCommands<String, ?> syncCommands
 
   def setupSpec() {
-    port = PortUtils.randomOpenPort()
+    port = PortUtils.findOpenPort()
     String dbAddr = HOST + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
 

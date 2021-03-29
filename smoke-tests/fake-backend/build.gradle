@@ -1,6 +1,12 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+
 plugins {
   id 'java'
   id 'com.google.cloud.tools.jib' version '2.5.0'
+  id "com.bmuschko.docker-remote-api" version "6.7.0"
+  id 'com.github.johnrengelman.shadow' version '6.1.0'
+  id "de.undercouch.download" version "4.1.1"
 }
 
 group = 'io.opentelemetry'
@@ -8,18 +14,10 @@ version = '0.0.1-SNAPSHOT'
 
 repositories {
   mavenCentral()
-
-  // this is only needed for the working against unreleased otel-java snapshots
-  maven {
-    url "https://oss.jfrog.org/artifactory/oss-snapshot-local"
-    content {
-      includeGroup "io.opentelemetry"
-    }
-  }
 }
 
 compileJava {
-  options.release = 11
+  options.release.set(11)
 }
 
 dependencies {
@@ -28,7 +26,71 @@ dependencies {
   implementation("org.slf4j:slf4j-simple:1.7.30")
 }
 
+shadowJar {
+  manifest {
+    attributes 'Main-Class': 'io.opentelemetry.smoketest.fakebackend.FakeBackendMain'
+  }
+}
+
+ext {
+  extraTag = findProperty("extraTag") ?: new Date().format("yyyyMMdd.HHmmSS")
+}
+
 jib {
   from.image = "gcr.io/distroless/java-debian10:11"
-  to.image = "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-${new Date().format("yyyyMMdd.HHmmSS")}"
+  to.image = "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-$extraTag"
+}
+
+
+//windows containers are built manually since jib does not support windows containers yet
+def backendDockerBuildDir = new File(project.buildDir, "docker-backend")
+
+task windowsBackendImagePrepare(type: Copy) {
+  dependsOn(shadowJar)
+  into(backendDockerBuildDir)
+  from("src/docker/backend")
+  from(shadowJar.outputs) {
+    rename { _ -> "fake-backend.jar" }
+  }
+}
+
+task windowsBackendImageBuild(type: DockerBuildImage) {
+  dependsOn(windowsBackendImagePrepare)
+  inputDir = backendDockerBuildDir
+
+  it.images.add "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-windows-$extraTag"
+  it.dockerFile = new File(backendDockerBuildDir, "windows.dockerfile")
+}
+
+def collectorDockerBuildDir = new File(project.buildDir, "docker-collector")
+
+task windowsCollectorBinaryDownload(type: Download) {
+  doFirst {
+    collectorDockerBuildDir.mkdirs()
+  }
+
+  src("https://github.com/open-telemetry/opentelemetry-collector/releases/latest/download/otelcol_windows_amd64.exe")
+  dest(collectorDockerBuildDir)
+}
+
+task windowsCollectorImagePrepare(type: Copy) {
+  dependsOn(windowsCollectorBinaryDownload)
+  into(collectorDockerBuildDir)
+  from("src/docker/collector")
+}
+
+task windowsCollectorImageBuild(type: DockerBuildImage) {
+  dependsOn(windowsCollectorImagePrepare)
+  inputDir = collectorDockerBuildDir
+
+  it.images.add "ghcr.io/open-telemetry/java-test-containers:collector-windows-$extraTag"
+  it.dockerFile = new File(collectorDockerBuildDir, "windows.dockerfile")
+}
+
+tasks.create("dockerPush", DockerPushImage) {
+  group = "publishing"
+  description = "Push all Docker images for the test backend"
+  dependsOn(windowsBackendImageBuild, windowsCollectorImageBuild)
+  images.set(["ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-windows-$extraTag",
+              "ghcr.io/open-telemetry/java-test-containers:collector-windows-$extraTag"])
 }

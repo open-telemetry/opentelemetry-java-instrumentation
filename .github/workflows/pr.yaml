@@ -96,8 +96,17 @@ jobs:
           if-no-files-found: ignore
 
   smoke-test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest, ubuntu-latest]
+        suite: ["glassfishAndJetty", "libertyAndTomcat", "tomeeAndWildfly", "other"]
+      fail-fast: false
     steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
+        if: matrix.os == 'windows-latest'
+
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -113,7 +122,7 @@ jobs:
           job-id: smokeTests
 
       - name: Test
-        run: ./gradlew :smoke-tests:test
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }}
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
@@ -144,7 +153,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: Run  muzzle
+      - name: Run muzzle
         run: ./gradlew ${{ matrix.module }}:muzzle --no-daemon
 
   accept-pr:

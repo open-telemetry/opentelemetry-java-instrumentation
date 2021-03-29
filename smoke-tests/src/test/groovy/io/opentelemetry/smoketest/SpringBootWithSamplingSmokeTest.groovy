@@ -7,14 +7,16 @@ package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import okhttp3.Request
+import spock.lang.IgnoreIf
 
+@IgnoreIf({ os.windows })
 class SpringBootWithSamplingSmokeTest extends SmokeTest {
 
   static final double SAMPLER_PROBABILITY = 0.2
   static final int NUM_TRIES = 1000
   static final int ALLOWED_DEVIATION = 0.1 * NUM_TRIES
 
-  protected String getTargetImage(String jdk, String serverVersion) {
+  protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
   }
 
@@ -29,7 +31,7 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
   def "spring boot with probability sampling enabled on JDK #jdk"(int jdk) {
     setup:
     startTarget(jdk)
-    String url = "http://localhost:${target.getMappedPort(8080)}/greeting"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/greeting"
     def request = new Request.Builder().url(url).get().build()
 
     when:

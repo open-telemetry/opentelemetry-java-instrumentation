@@ -58,8 +58,8 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
   }
 
   def cleanupSpec() {
-    producer.shutdown()
-    consumer.shutdown()
+    producer?.shutdown()
+    consumer?.shutdown()
     BaseConf.deleteTempDir()
   }
 
@@ -76,7 +76,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     })
     then:
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
           name sharedTopic + " send"
           kind PRODUCER
@@ -88,6 +88,22 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
             "messaging.rocketmq.tags" "TagA"
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
+          }
+        }
+        span(1) {
+          name sharedTopic + " process"
+          kind CONSUMER
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rocketmq"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" sharedTopic
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "topic"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+            "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
+            "messaging.rocketmq.tags" "TagA"
+            "messaging.rocketmq.broker_address" String
+            "messaging.rocketmq.queue_id" Long
+            "messaging.rocketmq.queue_offset" Long
           }
         }
       }

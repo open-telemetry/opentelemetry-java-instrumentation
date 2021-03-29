@@ -18,8 +18,10 @@ processors:
   batch:
 
 exporters:
-  logging:
+  logging/logging_debug:
     loglevel: debug
+  logging/logging_info:
+    loglevel: info
   otlp:
     endpoint: backend:8080
     insecure: true
@@ -29,10 +31,10 @@ service:
     traces:
       receivers: [ otlp, zipkin, jaeger ]
       processors: [ batch ]
-      exporters: [ logging, otlp ]
+      exporters: [ logging/logging_debug, otlp ]
     metrics:
       receivers: [ otlp ]
       processors: [ batch ]
-      exporters: [ logging, otlp ]
+      exporters: [ logging/logging_info, otlp ]
 
   extensions: [ health_check, pprof, zpages ]
