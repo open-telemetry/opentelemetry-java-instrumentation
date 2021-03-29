@@ -26,6 +26,7 @@ abstract class SmokeTest extends Specification {
   protected static final OkHttpClient CLIENT = OkHttpUtils.client()
 
   protected static final TestContainerManager containerManager = createContainerManager()
+  private static boolean containerManagerStarted = false;
 
   @Shared
   private TelemetryRetriever telemetryRetriever
@@ -47,7 +48,14 @@ abstract class SmokeTest extends Specification {
   }
 
   def setupSpec() {
-    containerManager.startEnvironment()
+    // TestContainerManager starts backend and collector, we want to start them only once
+    // and reuse for all tests
+    if (!containerManagerStarted) {
+      containerManagerStarted = true
+      containerManager.startEnvironment()
+      Runtime.addShutdownHook { containerManager.stopEnvironment() }
+    }
+
     telemetryRetriever = new TelemetryRetriever(containerManager.getBackendMappedPort())
   }
 
@@ -79,7 +87,6 @@ abstract class SmokeTest extends Specification {
   }
 
   def cleanupSpec() {
-    containerManager.stopEnvironment()
   }
 
   protected static Stream<AnyValue> findResourceAttribute(Collection<ExportTraceServiceRequest> traces,
