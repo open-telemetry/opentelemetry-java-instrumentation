@@ -22,5 +22,6 @@ dependencies {
 }
 
 tasks.withType(Test) {
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2648
   jvmArgs "-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false"
 }
