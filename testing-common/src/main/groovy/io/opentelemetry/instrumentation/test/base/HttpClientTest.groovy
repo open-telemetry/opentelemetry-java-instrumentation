@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderParentClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
@@ -136,6 +137,28 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     where:
     method << BODY_METHODS
   }
+
+  def "basic #method request with CLIENT parent"() {
+    when:
+    def status = runUnderParentClientSpan {
+      doRequest(method, server.address.resolve("/success"))
+    }
+
+    then:
+    status == 200
+    assertTraces(2) {
+      trace(0, 1) {
+        basicSpan(it, 0, "parent-client-span")
+      }
+      trace(1, 1) {
+        serverSpan(it, 0)
+      }
+    }
+
+    where:
+    method << BODY_METHODS
+  }
+
 
   //FIXME: add tests for POST with large/chunked data
 
