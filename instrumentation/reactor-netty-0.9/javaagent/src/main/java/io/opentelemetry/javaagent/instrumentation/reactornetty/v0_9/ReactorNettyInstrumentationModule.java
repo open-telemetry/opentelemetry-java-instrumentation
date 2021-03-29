@@ -64,7 +64,7 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return singletonMap(
-          isStatic().and(named("create")),
+          isStatic().and(named("create").or(named("newConnection"))),
           ReactorNettyInstrumentationModule.class.getName() + "$CreateAdvice");
     }
   }
