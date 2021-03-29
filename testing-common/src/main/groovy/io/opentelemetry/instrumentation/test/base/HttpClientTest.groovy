@@ -139,6 +139,9 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   }
 
   def "basic #method request with CLIENT parent"() {
+    given:
+    assumeTrue(testWithClientParent())
+
     when:
     def status = runUnderParentClientSpan {
       doRequest(method, server.address.resolve("/success"))
@@ -589,6 +592,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   int extraClientSpans() {
     0
+  }
+
+  boolean testWithClientParent() {
+    true
   }
 
   boolean testRedirects() {

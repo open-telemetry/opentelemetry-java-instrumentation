@@ -10,8 +10,14 @@ import io.opentelemetry.instrumentation.armeria.v1_3.AbstractArmeriaHttpClientTe
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 
 class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest implements AgentTestTrait {
+
   @Override
   WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder
+  }
+
+  boolean testWithClientParent() {
+    // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
+    false
   }
 }
