@@ -10,12 +10,14 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.async.MethodSpanStrategies;
+import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
+import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
 import java.lang.reflect.Method;
 
 class WithSpanAspectTracer extends BaseTracer {
 
-  private final MethodSpanStrategies methodSpanStrategies = MethodSpanStrategies.getInstance();
+  private final AsyncSpanEndStrategies asyncSpanEndStrategies =
+      AsyncSpanEndStrategies.getInstance();
 
   WithSpanAspectTracer(OpenTelemetry openTelemetry) {
     super(openTelemetry);
@@ -59,10 +61,14 @@ class WithSpanAspectTracer extends BaseTracer {
    *     notification of completion.
    */
   public Object end(Context context, Class<?> returnType, Object returnValue) {
-    if (!returnType.isInstance(returnValue)) {
-      end(context);
-      return returnValue;
+    if (returnType.isInstance(returnValue)) {
+      AsyncSpanEndStrategy asyncSpanEndStrategy =
+          asyncSpanEndStrategies.resolveStrategy(returnType);
+      if (asyncSpanEndStrategy != null) {
+        return asyncSpanEndStrategy.end(this, context, returnValue);
+      }
     }
-    return methodSpanStrategies.resolveStrategy(returnType).end(this, context, returnValue);
+    end(context);
+    return returnValue;
   }
 }

@@ -17,7 +17,7 @@ class Jdk8MethodStrategyTest extends Specification {
 
   Context context
 
-  def underTest = Jdk8MethodStrategy.INSTANCE
+  def underTest = Jdk8AsyncEndStrategy.INSTANCE
 
   void setup() {
     tracer = Mock()

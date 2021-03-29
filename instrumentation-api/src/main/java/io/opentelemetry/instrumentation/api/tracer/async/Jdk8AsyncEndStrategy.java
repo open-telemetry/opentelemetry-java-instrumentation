@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-enum Jdk8MethodStrategy implements MethodSpanStrategy {
+enum Jdk8AsyncEndStrategy implements AsyncSpanEndStrategy {
   INSTANCE;
 
   @Override
