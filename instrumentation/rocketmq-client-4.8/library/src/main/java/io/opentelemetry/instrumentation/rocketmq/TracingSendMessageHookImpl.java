@@ -14,7 +14,7 @@ import org.apache.rocketmq.client.hook.SendMessageHook;
 final class TracingSendMessageHookImpl implements SendMessageHook {
 
   private final RocketMqProducerTracer tracer;
-  private boolean propagationEnabled;
+  private final boolean propagationEnabled;
 
   TracingSendMessageHookImpl(RocketMqProducerTracer tracer, boolean propagationEnabled) {
     this.tracer = tracer;
@@ -31,13 +31,12 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     if (context == null) {
       return;
     }
-    Context traceContext =
+    Context otelContext =
         tracer.startProducerSpan(Context.current(), context.getBrokerAddr(), context.getMessage());
     if (propagationEnabled) {
-      tracer.inject(traceContext, context.getMessage().getProperties(), SETTER);
+      tracer.inject(otelContext, context.getMessage().getProperties(), SETTER);
     }
-    ContextAndScope contextAndScope = new ContextAndScope(traceContext, traceContext.makeCurrent());
-    context.setMqTraceContext(contextAndScope);
+    context.setMqTraceContext(otelContext);
   }
 
   @Override
@@ -45,11 +44,10 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     if (context == null || context.getMqTraceContext() == null || context.getSendResult() == null) {
       return;
     }
-    if (context.getMqTraceContext() instanceof ContextAndScope) {
-      ContextAndScope contextAndScope = (ContextAndScope) context.getMqTraceContext();
-      tracer.afterProduce(contextAndScope.getContext(), context.getSendResult());
-      contextAndScope.closeScope();
-      tracer.end(contextAndScope.getContext());
+    if (context.getMqTraceContext() instanceof Context) {
+      Context otelContext = (Context) context.getMqTraceContext();
+      tracer.afterProduce(otelContext, context.getSendResult());
+      tracer.end(otelContext);
     }
   }
 }

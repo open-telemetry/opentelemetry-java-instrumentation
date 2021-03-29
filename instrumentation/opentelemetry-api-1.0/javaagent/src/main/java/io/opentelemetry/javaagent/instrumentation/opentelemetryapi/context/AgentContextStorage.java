@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * always stores and retrieves them from the agent context, even when accessed from the application.
  * All other accesses are to the concrete application context.
  */
-public class AgentContextStorage implements ContextStorage {
+public class AgentContextStorage implements ContextStorage, AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(AgentContextStorage.class);
 
@@ -143,6 +143,15 @@ public class AgentContextStorage implements ContextStorage {
       applicationContext = Context.root();
     }
     return new AgentContextWrapper(io.opentelemetry.context.Context.current(), applicationContext);
+  }
+
+  @Override
+  public void close() throws Exception {
+    io.opentelemetry.context.ContextStorage agentStorage =
+        io.opentelemetry.context.ContextStorage.get();
+    if (agentStorage instanceof AutoCloseable) {
+      ((AutoCloseable) agentStorage).close();
+    }
   }
 
   public static class AgentContextWrapper implements Context {

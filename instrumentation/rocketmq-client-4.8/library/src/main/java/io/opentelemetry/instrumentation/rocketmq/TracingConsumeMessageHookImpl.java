@@ -27,9 +27,8 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     if (context == null || context.getMsgList() == null || context.getMsgList().isEmpty()) {
       return;
     }
-    Context traceContext = tracer.startSpan(Context.current(), context.getMsgList());
-    ContextAndScope contextAndScope = new ContextAndScope(traceContext, traceContext.makeCurrent());
-    context.setMqTraceContext(contextAndScope);
+    Context otelContext = tracer.startSpan(Context.current(), context.getMsgList());
+    context.setMqTraceContext(otelContext);
   }
 
   @Override
@@ -37,10 +36,9 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     if (context == null || context.getMsgList() == null || context.getMsgList().isEmpty()) {
       return;
     }
-    if (context.getMqTraceContext() instanceof ContextAndScope) {
-      ContextAndScope contextAndScope = (ContextAndScope) context.getMqTraceContext();
-      contextAndScope.closeScope();
-      tracer.end(contextAndScope.getContext());
+    if (context.getMqTraceContext() instanceof Context) {
+      Context otelContext = (Context) context.getMqTraceContext();
+      tracer.end(otelContext);
     }
   }
 }

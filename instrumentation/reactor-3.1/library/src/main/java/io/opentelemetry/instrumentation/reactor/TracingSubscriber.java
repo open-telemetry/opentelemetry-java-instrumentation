@@ -44,8 +44,8 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
       Context ctx,
       io.opentelemetry.context.Context contextToPropagate) {
     this.subscriber = subscriber;
-    this.traceContext = contextToPropagate;
     this.context = ctx;
+    this.traceContext = contextToPropagate;
   }
 
   @Override

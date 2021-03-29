@@ -128,10 +128,6 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
-    Scope scope = executionAttributes.getAttribute(SCOPE_ATTRIBUTE);
-    if (scope != null) {
-      scope.close();
-    }
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     clearAttributes(executionAttributes);
     Span span = Span.fromContext(otelContext);
@@ -168,6 +164,10 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   private void clearAttributes(ExecutionAttributes executionAttributes) {
+    Scope scope = executionAttributes.getAttribute(SCOPE_ATTRIBUTE);
+    if (scope != null) {
+      scope.close();
+    }
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, null);
     executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, null);
   }
