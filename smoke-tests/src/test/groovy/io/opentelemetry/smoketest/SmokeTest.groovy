@@ -26,7 +26,7 @@ abstract class SmokeTest extends Specification {
   protected static final OkHttpClient CLIENT = OkHttpUtils.client()
 
   protected static final TestContainerManager containerManager = createContainerManager()
-  private static boolean containerManagerStarted = false;
+  private static boolean containerManagerStarted = false
 
   @Shared
   private TelemetryRetriever telemetryRetriever
