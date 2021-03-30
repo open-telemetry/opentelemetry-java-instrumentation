@@ -5,16 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.client.builder.AwsClientBuilder
-import com.amazonaws.services.sqs.AmazonSQSAsync
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient
+
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 
 @SpringBootConfiguration
@@ -22,12 +19,13 @@ import org.springframework.context.annotation.Bean
 class SqsConfig {
 
   @Bean
-  RouteBuilder consumerRoute() {
+  @ConditionalOnProperty("queueName")
+  RouteBuilder consumerRoute(@Value("\${queueName}") String queueName) {
     return new RouteBuilder() {
 
       @Override
       void configure() throws Exception {
-        from("aws-sqs://sqsCamelTest?amazonSQSClient=#sqsClient")
+        from("aws-sqs://${queueName}?amazonSQSClient=#sqsClient&delay=1000")
           .log(LoggingLevel.INFO, "test", "RECEIVER got body : \${body}")
           .log(LoggingLevel.INFO, "test", "RECEIVER got headers : \${headers}")
       }
@@ -35,7 +33,8 @@ class SqsConfig {
   }
 
   @Bean
-  RouteBuilder producerRoute() {
+  @ConditionalOnProperty("queueName")
+  RouteBuilder producerRoute(@Value("\${queueName}") String queueName) {
     return new RouteBuilder() {
 
       @Override
@@ -43,40 +42,23 @@ class SqsConfig {
         from("direct:input")
           .log(LoggingLevel.INFO, "test", "SENDING body: \${body}")
           .log(LoggingLevel.INFO, "test", "SENDING headers: \${headers}")
-          .to("aws-sqs://sqsCamelTest?amazonSQSClient=#sqsClient")
+          .to("aws-sqs://${queueName}?amazonSQSClient=#sqsClient&delay=1000")
       }
     }
   }
 
   @Bean
-  RouteBuilder separateQueueProducerRoute() {
+  @ConditionalOnProperty("queueSdkConsumerName")
+  RouteBuilder producerRouteForSdkConsumer(@Value("\${queueSdkConsumerName}") String queueSdkConsumerName) {
     return new RouteBuilder() {
 
       @Override
       void configure() throws Exception {
-        from("direct:separate-input")
+        from("direct:inputSdkConsumer")
           .log(LoggingLevel.INFO, "test", "SENDING body: \${body}")
           .log(LoggingLevel.INFO, "test", "SENDING headers: \${headers}")
-          .to("aws-sqs://sqsCamelSeparateQueueTest?amazonSQSClient=#sqsClient")
+          .to("aws-sqs://${queueSdkConsumerName}?amazonSQSClient=#sqsClient&delay=1000")
       }
     }
-  }
-
-  /**
-   * Temporarily using emq instead of localstack till the latter supports AWS trace propagation
-   *
-  @Bean
-  AmazonSQSAsync sqsClient(LocalStackContainer localstack) {
-
-    return AmazonSQSAsyncClient.asyncBuilder().withEndpointConfiguration(localstack.getEndpointConfiguration(LocalStackContainer.Service.SQS))
-      .withCredentials(localstack.getDefaultCredentialsProvider())
-      .build()
-  }**/
-
-  @Bean
-  AmazonSQSAsync sqsClient(@Value("\${sqs.port}") int port) {
-    def credentials = new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"))
-    def endpointConfiguration = new AwsClientBuilder.EndpointConfiguration("http://localhost:"+port, "elasticmq")
-    return AmazonSQSAsyncClient.asyncBuilder().withCredentials(credentials).withEndpointConfiguration(endpointConfiguration).build()
   }
 }
