@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
@@ -63,7 +64,7 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return singletonMap(
-          isStatic().and(named("create")),
+          isStatic().and(namedOneOf("create", "newConnection", "from")),
           ReactorNettyInstrumentationModule.class.getName() + "$CreateAdvice");
     }
   }

@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
@@ -87,7 +88,7 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
 
   def "#poolImpl '#name' reports after canceled jobs"() {
     setup:
-    def pool = poolImpl
+    ExecutorService pool = poolImpl
     def m = method
     List<ScalaAsyncChild> children = new ArrayList<>()
     List<Future> jobFutures = new ArrayList<>()
@@ -128,6 +129,11 @@ class ScalaExecutorInstrumentationTest extends AgentInstrumentationSpecification
 
     expect:
     waitForTraces(1).size() == 1
+
+    // Wait for shutdown to make sure any remaining tasks finish and cleanup context since we don't
+    // wait on the tasks.
+    pool.shutdown()
+    pool.awaitTermination(10, TimeUnit.SECONDS)
 
     where:
     name              | method         | poolImpl

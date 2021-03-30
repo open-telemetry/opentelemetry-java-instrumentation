@@ -3,46 +3,36 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeoutException
 import reactor.netty.http.client.HttpClient
-import reactor.netty.http.client.HttpClientResponse
 
-class ReactorNettyHttpClientTest extends HttpClientTest implements AgentTestTrait {
+class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
 
-  @Override
-  boolean testRedirects() {
-    false
+  HttpClient createHttpClient() {
+    return HttpClient.create()
   }
 
   @Override
-  boolean testConnectionFailure() {
-    false
-  }
+  SingleConnection createSingleConnection(String host, int port) {
+    def httpClient = HttpClient
+      .newConnection()
+      .host(host)
+      .port(port)
 
-  @Override
-  boolean testRemoteConnection() {
-    false
-  }
+    return new SingleConnection() {
 
-  @Override
-  String userAgent() {
-    return "ReactorNetty"
-  }
-  
-  @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null) {
-    HttpClientResponse resp = HttpClient.create()
-      .followRedirect(true)
-      .headers({ h -> headers.each { k, v -> h.add(k, v) } })
-      .baseUrl(server.address.toString())
-      ."${method.toLowerCase()}"()
-      .uri(uri.toString())
-      .response()
-      .block()
-    if (callback != null) {
-      callback.call()
+      @Override
+      int doRequest(String path, Map<String, String> headers) throws ExecutionException, InterruptedException, TimeoutException {
+        return httpClient
+          .headers({ h -> headers.each { k, v -> h.add(k, v) } })
+          .get()
+          .uri(path)
+          .response()
+          .block()
+          .status().code()
+      }
     }
-    return resp.status().code()
   }
 }

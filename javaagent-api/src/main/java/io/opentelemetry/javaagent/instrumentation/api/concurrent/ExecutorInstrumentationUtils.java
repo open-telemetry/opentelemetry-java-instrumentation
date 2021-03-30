@@ -14,6 +14,43 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /** Utils for concurrent instrumentations. */
 public class ExecutorInstrumentationUtils {
 
+  private static final ClassValue<Boolean> NOT_INSTRUMENTED_RUNNABLE_ENCLOSING_CLASS =
+      new ClassValue<Boolean>() {
+        @Override
+        protected Boolean computeValue(Class<?> enclosingClass) {
+          // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to
+          // process a new request which should not have context from them current request.
+          if (enclosingClass.getName().equals("org.eclipse.jetty.io.nio.SelectChannelEndPoint")) {
+            return true;
+          }
+
+          // Don't instrument the executor's own runnables. These runnables may never return until
+          // netty shuts down.
+          if (enclosingClass
+              .getName()
+              .equals("io.netty.util.concurrent.SingleThreadEventExecutor")) {
+            return true;
+          }
+
+          // OkHttp task runner is a lazily-initialized shared pool of continuosly running threads
+          // similar to an event loop. The submitted tasks themselves should already be instrumented
+          // to
+          // allow async propagation.
+          if (enclosingClass.getName().equals("okhttp3.internal.concurrent.TaskRunner")) {
+            return true;
+          }
+
+          // OkHttp connection pool lazily initializes a long running task to detect expired
+          // connections
+          // and should not itself be instrumented.
+          if (enclosingClass.getName().equals("com.squareup.okhttp.ConnectionPool")) {
+            return true;
+          }
+
+          return false;
+        }
+      };
+
   /**
    * Checks if given task should get state attached.
    *
@@ -28,22 +65,37 @@ public class ExecutorInstrumentationUtils {
     Class<?> taskClass = task.getClass();
     Class<?> enclosingClass = taskClass.getEnclosingClass();
 
-    // not much point in propagating root context
-    // plus it causes failures under otel.javaagent.testing.fail-on-context-leak=true
-    return Context.current() != Context.root()
-        // TODO Workaround for
-        // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
-        && !taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")
-        // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to
-        // process a new request which should not have context from them current request.
-        && (enclosingClass == null
-            || !enclosingClass.getName().equals("org.eclipse.jetty.io.nio.SelectChannelEndPoint"))
-        // Don't instrument the executor's own runnables. These runnables may never return until
-        // netty shuts down.
-        && (enclosingClass == null
-            || !enclosingClass
-                .getName()
-                .equals("io.netty.util.concurrent.SingleThreadEventExecutor"));
+    if (Context.current() == Context.root()) {
+      // not much point in propagating root context
+      // plus it causes failures under otel.javaagent.testing.fail-on-context-leak=true
+      return false;
+    }
+
+    // ForkJoinPool threads are initialized lazily and continue to handle tasks similar to an event
+    // loop. They should not have context propagated to the base of the thread, tasks themselves
+    // will have it through other means.
+    if (taskClass.getName().equals("java.util.concurrent.ForkJoinWorkerThread")) {
+      return false;
+    }
+
+    // ThreadPoolExecutor worker threads may be initialized lazily and manage interruption of other
+    // threads. The actual tasks being run on those threads will propagate context but we should not
+    // propagate onto this management thread.
+    if (taskClass.getName().equals("java.util.concurrent.ThreadPoolExecutor$Worker")) {
+      return false;
+    }
+
+    // TODO Workaround for
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
+    if (taskClass.getName().equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")) {
+      return false;
+    }
+
+    if (enclosingClass != null && NOT_INSTRUMENTED_RUNNABLE_ENCLOSING_CLASS.get(enclosingClass)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**

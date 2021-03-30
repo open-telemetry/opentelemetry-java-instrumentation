@@ -9,6 +9,7 @@ import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.context.ContextStorage
 import io.opentelemetry.instrumentation.test.asserts.InMemoryExporterAssert
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
@@ -34,6 +35,13 @@ abstract class InstrumentationSpecification extends Specification {
   def setup() {
     assert !Span.current().getSpanContext().isValid(): "Span is active before test has started: " + Span.current()
     testRunner().clearAllExportedData()
+  }
+
+  def cleanup() {
+    ContextStorage storage = ContextStorage.get()
+    if (storage instanceof AutoCloseable) {
+      ((AutoCloseable) storage).close()
+    }
   }
 
   def cleanupSpec() {
