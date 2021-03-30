@@ -34,7 +34,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
   Server startServer(int port) {
     WebAppContext webAppContext = new WebAppContext()
     webAppContext.setContextPath(getContextPath())
-    webAppContext.setBaseResource(Resource.newResource(new File("build/testapp/war")))
+    webAppContext.setBaseResource(Resource.newResource(new File("build/testapp/web")))
 
     def jettyServer = new Server(port)
     jettyServer.connectors.each {

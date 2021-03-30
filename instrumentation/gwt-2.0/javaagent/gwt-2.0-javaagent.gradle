@@ -45,6 +45,8 @@ dependencies {
   testImplementation group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '9.4.35.v20201120'
 }
 
+def warDir = "$buildDir/testapp/war"
+
 task compileGwt(dependsOn: classes, type: JavaExec) {
   // versions before 2.9 require java8
   javaLauncher = javaToolchains.launcherFor {
@@ -52,7 +54,6 @@ task compileGwt(dependsOn: classes, type: JavaExec) {
   }
 
   def extraDir = "$buildDir/testapp/extra"
-  def warDir = "$buildDir/testapp/war"
 
   outputs.cacheIf { true }
 
@@ -79,7 +80,16 @@ task compileGwt(dependsOn: classes, type: JavaExec) {
   ]
 }
 
-test.dependsOn sourceSets.testapp.output, compileGwt
+task copyTestWebapp(type: Copy) {
+  dependsOn compileGwt
+  
+  from file("src/testapp/webapp")
+  from warDir
+
+  into file("$buildDir/testapp/web")
+}
+
+test.dependsOn sourceSets.testapp.output, copyTestWebapp
 
 test {
   // add test app classes to classpath
