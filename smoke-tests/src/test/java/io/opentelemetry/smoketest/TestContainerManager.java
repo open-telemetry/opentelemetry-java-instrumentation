@@ -10,11 +10,8 @@ import java.util.function.Consumer;
 import org.testcontainers.containers.output.OutputFrame;
 
 public interface TestContainerManager {
-  void startEnvironment();
 
   void startEnvironmentOnce();
-
-  void stopEnvironment();
 
   int getBackendMappedPort();
 

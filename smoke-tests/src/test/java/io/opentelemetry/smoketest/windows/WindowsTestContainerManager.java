@@ -68,7 +68,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
   private Container target;
 
   @Override
-  public void startEnvironment() {
+  protected void startEnvironment() {
     natNetworkId =
         client
             .createNetworkCmd()
@@ -135,7 +135,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
   }
 
   @Override
-  public void stopEnvironment() {
+  protected void stopEnvironment() {
     stopTarget();
 
     killContainer(collector);
