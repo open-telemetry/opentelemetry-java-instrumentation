@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.armeria.v1_3.AbstractArmeriaHttpClientTe
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 
 class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest implements AgentTestTrait {
-
   @Override
   WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder
