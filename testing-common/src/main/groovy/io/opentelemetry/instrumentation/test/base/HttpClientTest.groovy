@@ -533,7 +533,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
       attributes {
         "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
         if (uri.port == UNUSABLE_PORT) {
-          // TODO(anuraaga): For the unusbale port, there isn't actually a peer so we shouldn't be
+          // TODO(anuraaga): For the unusable port, there isn't actually a peer so we shouldn't be
           // filling in peer information but some instrumentation does so based on the URL itself
           // which is present in HTTP attributes. We should fix this.
           "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == uri.host }
