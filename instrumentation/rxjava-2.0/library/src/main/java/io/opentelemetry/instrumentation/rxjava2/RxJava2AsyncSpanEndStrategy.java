@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rxjava2;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
@@ -15,6 +14,7 @@ import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.parallel.ParallelFlowable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.reactivestreams.Publisher;
 
 public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
@@ -66,28 +66,33 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
         .doOnError(exception -> tracer.endExceptionally(context, exception));
   }
 
-  private Observable<?> endWhenObservableComplete(BaseTracer tracer, Context context, Observable<?> observable) {
+  private Observable<?> endWhenObservableComplete(
+      BaseTracer tracer, Context context, Observable<?> observable) {
     return observable
         .doOnComplete(() -> tracer.end(context))
         .doOnError(exception -> tracer.endExceptionally(context, exception));
   }
 
-  private ParallelFlowable<?> endWhenFirstComplete(BaseTracer tracer, Context context, ParallelFlowable<?> parallelFlowable) {
+  private ParallelFlowable<?> endWhenFirstComplete(
+      BaseTracer tracer, Context context, ParallelFlowable<?> parallelFlowable) {
     AtomicBoolean done = new AtomicBoolean(false);
     return parallelFlowable
-        .doOnComplete(() -> {
-          if (done.compareAndSet(false, true)) {
-            tracer.end(context);
-          }
-        })
-        .doOnError(exception -> {
-          if (done.compareAndSet(false, true)) {
-            tracer.endExceptionally(context, exception);
-          }
-        });
+        .doOnComplete(
+            () -> {
+              if (done.compareAndSet(false, true)) {
+                tracer.end(context);
+              }
+            })
+        .doOnError(
+            exception -> {
+              if (done.compareAndSet(false, true)) {
+                tracer.endExceptionally(context, exception);
+              }
+            });
   }
 
-  private Flowable<?> endWhenPublisherComplete(BaseTracer tracer, Context context, Publisher<?> publisher) {
+  private Flowable<?> endWhenPublisherComplete(
+      BaseTracer tracer, Context context, Publisher<?> publisher) {
 
     Flowable<?> flowable;
     if (publisher instanceof Flowable) {

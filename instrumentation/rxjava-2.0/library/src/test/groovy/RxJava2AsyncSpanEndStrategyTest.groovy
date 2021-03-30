@@ -1,4 +1,7 @@
-
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
