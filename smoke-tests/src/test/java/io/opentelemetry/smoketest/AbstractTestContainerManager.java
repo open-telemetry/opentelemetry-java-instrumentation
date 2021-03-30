@@ -30,6 +30,7 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
     return environment;
   }
 
+  @Override
   public void startEnvironmentOnce() {
     if (!started) {
       started = true;
