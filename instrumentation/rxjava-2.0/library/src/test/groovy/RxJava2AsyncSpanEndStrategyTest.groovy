@@ -12,7 +12,7 @@ import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.observers.TestObserver
-import io.reactivex.parallel.ParallelFlowable;
+import io.reactivex.parallel.ParallelFlowable
 import io.reactivex.processors.UnicastProcessor
 import io.reactivex.subjects.CompletableSubject
 import io.reactivex.subjects.MaybeSubject
