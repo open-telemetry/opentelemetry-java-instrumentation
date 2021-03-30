@@ -75,9 +75,8 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
 
   /**
    * The {@link ParallelFlowable} class makes multiple parallel subscriptions which results in the
-   * OnComplete and OnError signals being received multiple times, once for each subscriber. The
-   * use of {@link AtomicBoolean} is to ensure that the span is only ended once for the first
-   * signal.
+   * OnComplete and OnError signals being received multiple times, once for each subscriber. The use
+   * of {@link AtomicBoolean} is to ensure that the span is only ended once for the first signal.
    */
   private ParallelFlowable<?> endWhenFirstComplete(
       BaseTracer tracer, Context context, ParallelFlowable<?> parallelFlowable) {
