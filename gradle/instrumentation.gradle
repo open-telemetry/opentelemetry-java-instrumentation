@@ -58,6 +58,17 @@ afterEvaluate {
 
     testImplementation deps.testcontainers
 
+    // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
+    testInstrumentation project(':instrumentation:executors:javaagent')
+    // FIXME: we should enable this, but currently this fails tests for google http client
+    //testInstrumentation project(':instrumentation:http-url-connection:javaagent')
+    testInstrumentation project(':instrumentation:classloaders:javaagent')
+
+    // Many tests use OpenTelemetry API calls, e.g., via TraceUtils.runUnderTrace
+    testInstrumentation project(':instrumentation:opentelemetry-annotations-1.0:javaagent')
+    // TODO (trask) is full OTel API interop needed, or is @WithSpan enough?
+    testInstrumentation project(':instrumentation:opentelemetry-api-1.0:javaagent')
+
     toolingRuntime(project(path: ":javaagent-tooling", configuration: 'instrumentationMuzzle'))
 
     bootstrapRuntime(project(path: ":javaagent-bootstrap", configuration: 'instrumentationMuzzle'))
@@ -108,12 +119,40 @@ shadowJar {
 
 evaluationDependsOn(":testing:agent-for-testing")
 
+tasks.register('agentTestingJar', Jar) {
+  dependsOn(project(":testing:agent-for-testing").tasks.shadowJar)
+  dependsOn(shadowJar)
+
+  archiveFileName = 'agent-testing-javaagent.jar'
+
+  from(zipTree(project(":testing:agent-for-testing").tasks.shadowJar.archiveFile))
+
+  from(zipTree(shadowJar.archiveFile)) {
+    into 'inst'
+    rename '(^.*)\\.class$', '$1.classdata'
+    // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+    rename '^LICENSE$', 'LICENSE.renamed'
+  }
+
+  duplicatesStrategy = 'EXCLUDE'
+
+  manifest {
+    attributes(
+      "Main-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
+      "Agent-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
+      "Premain-Class": "io.opentelemetry.javaagent.OpenTelemetryAgent",
+      "Can-Redefine-Classes": true,
+      "Can-Retransform-Classes": true,
+    )
+  }
+}
+
 tasks.withType(Test).configureEach {
-  inputs.file(shadowJar.archiveFile)
+  dependsOn(tasks.agentTestingJar)
+  inputs.file(tasks.agentTestingJar.archiveFile)
 
   jvmArgs "-Dotel.javaagent.debug=true"
-  jvmArgs "-javaagent:${project(":testing:agent-for-testing").tasks.shadowJar.archiveFile.get().asFile.absolutePath}"
-  jvmArgs "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
+  jvmArgs "-javaagent:${tasks.agentTestingJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dotel.javaagent.testing.additional-library-ignores.enabled=false"
   jvmArgs "-Dotel.javaagent.testing.fail-on-context-leak=true"
   // prevent sporadic gradle deadlocks, see SafeLogger for more details

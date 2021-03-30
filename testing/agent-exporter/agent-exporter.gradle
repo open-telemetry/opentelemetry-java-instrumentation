@@ -19,17 +19,6 @@ dependencies {
   implementation deps.opentelemetryOtlp
   implementation deps.opentelemetryOtlpMetrics
   implementation group: 'io.grpc', name: 'grpc-testing', version: '1.33.1'
-
-  // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation
-  implementation project(':instrumentation:executors:javaagent')
-  // FIXME: we should enable this, but currently this fails tests for google http client
-  //testImplementation project(':instrumentation:http-url-connection:javaagent')
-  implementation project(':instrumentation:classloaders:javaagent')
-
-  // Many tests use OpenTelemetry API calls, e.g., via TraceUtils.runUnderTrace
-  implementation project(':instrumentation:opentelemetry-annotations-1.0:javaagent')
-  // TODO (trask) is full OTel API interop needed, or is @WithSpan enough?
-  implementation project(':instrumentation:opentelemetry-api-1.0:javaagent')
 }
 
 jar.enabled = false
