@@ -68,10 +68,4 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
   boolean testRemoteConnection() {
     false
   }
-
-  // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
-  @Override
-  boolean testWithClientParent() {
-    false
-  }
 }
