@@ -47,7 +47,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.This ServerBuilder<?> serverBuilder) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(ServerBuilder.class);
       if (callDepth == 0) {
-        serverBuilder.intercept(GrpcInterceptors.SERVER_INTERCEPTOR);
+        serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
       }
     }
 
