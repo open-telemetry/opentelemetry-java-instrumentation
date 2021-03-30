@@ -99,8 +99,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ windows-latest, ubuntu-latest]
-        suite: ["glassfishAndJetty", "libertyAndTomcat", "tomeeAndWildfly", "other"]
+        os: [ windows-latest, ubuntu-latest ]
+        suite: [ "glassfish", "jetty", "liberty", "tomcat", "tomee", "wildfly", "other" ]
       fail-fast: false
     steps:
       - name: Support longpaths
