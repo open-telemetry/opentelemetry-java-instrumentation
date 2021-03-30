@@ -52,7 +52,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
 
   def "test apache dubbo base #dubbo"() {
     setup:
-    def port = PortUtils.randomOpenPort()
+    def port = PortUtils.findOpenPort()
     protocolConfig.setPort(port)
 
     DubboBootstrap bootstrap = DubboBootstrap.getInstance()
@@ -121,7 +121,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
 
   def "test apache dubbo test #dubbo"() {
     setup:
-    def port = PortUtils.randomOpenPort()
+    def port = PortUtils.findOpenPort()
     protocolConfig.setPort(port)
 
     DubboBootstrap bootstrap = DubboBootstrap.getInstance()

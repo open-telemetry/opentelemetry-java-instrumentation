@@ -22,7 +22,7 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
   OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
-    port = PortUtils.randomOpenPort()
+    port = PortUtils.findOpenPort()
     TestSparkJavaApplication.initSpark(port)
   }
 

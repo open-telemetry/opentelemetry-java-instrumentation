@@ -47,7 +47,7 @@ class TestController implements Controller {
   @Action
   def error() {
     HttpServerTest.controller(ERROR) {
-      response.sendError(ERROR.status, ERROR.body)
+      response.sendError(ERROR.status, "unused")
     }
   }
 

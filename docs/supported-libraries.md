@@ -21,7 +21,7 @@ These are the supported libraries and frameworks:
 | Library/Framework                                                                                                                     | Versions                       |
 |---------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                    | 10.0+                          |
-| [Apache Dubbo](https://github.com/apache/dubbo/)                                                                                      | 2.7+                           |
+| [Apache Dubbo](https://github.com/apache/dubbo/)                                                                                      | 2.7+ (not including 3.x yet)   |
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.1+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Apache RocketMQ](https://rocketmq.apache.org/)                                                                                       | 4.8+                           |
@@ -41,6 +41,7 @@ These are the supported libraries and frameworks:
 | [Google HTTP Client](https://github.com/googleapis/google-http-java-client)                                                           | 1.19+                          |
 | [Grizzly](https://javaee.github.io/grizzly/httpserverframework.html)                                                                  | 2.0+ (disabled by default)     |
 | [gRPC](https://github.com/grpc/grpc-java)                                                                                             | 1.5+                           |
+| [GWT](http://www.gwtproject.org/)                                                                                                     | 2.0+                           |
 | [Hibernate](https://github.com/hibernate/hibernate-orm)                                                                               | 3.3+                           |
 | [HttpURLConnection](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html)                     | Java 7+                        |
 | [http4k <sup>&dagger;</sup>](https://www.http4k.org/guide/modules/opentelemetry/)                                                     | 3.270.0+                       |
@@ -86,6 +87,7 @@ These are the supported libraries and frameworks:
 | [Struts2](https://github.com/apache/struts)                                                                                           | 2.3+                           |
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+ (not including 8.x yet)   |
 | [Undertow](https://undertow.io/)                                                                                                      | 1.4+                           |
+| [Vaadin](https://vaadin.com/)                                                                                                         | 14.2+                          |
 | [Vert.x](https://vertx.io)                                                                                                            | 3.0+                           |
 | [Vert.x RxJava2](https://vertx.io/docs/vertx-rx/java2/)                                                                               | 3.5+                           |
 

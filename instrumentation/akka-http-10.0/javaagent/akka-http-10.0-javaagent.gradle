@@ -62,3 +62,8 @@ compileVersion101TestGroovy {
   classpath = classpath.plus(files(compileVersion101TestScala.destinationDir))
   dependsOn compileVersion101TestScala
 }
+
+tasks.withType(Test) {
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2639
+  jvmArgs "-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false"
+}

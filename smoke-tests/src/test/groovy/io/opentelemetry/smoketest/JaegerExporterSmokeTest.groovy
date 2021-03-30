@@ -11,10 +11,12 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 import okhttp3.Request
+import spock.lang.IgnoreIf
 
+@IgnoreIf({ os.windows })
 class JaegerExporterSmokeTest extends SmokeTest {
 
-  protected String getTargetImage(String jdk, String serverVersion) {
+  protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk$jdk-20210218.577304949"
   }
 
@@ -30,7 +32,7 @@ class JaegerExporterSmokeTest extends SmokeTest {
     setup:
     startTarget(11)
 
-    String url = "http://localhost:${target.getMappedPort(8080)}/greeting"
+    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/greeting"
     def request = new Request.Builder().url(url).get().build()
 
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)

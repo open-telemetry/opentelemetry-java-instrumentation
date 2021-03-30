@@ -5,14 +5,15 @@
 
 package io.opentelemetry.smoketest
 
-import org.testcontainers.containers.BindMode
-import org.testcontainers.containers.GenericContainer
+import spock.lang.IgnoreIf
 
 @AppServer(version = "20.0.0.12", jdk = "8")
+@IgnoreIf({ os.windows }) //WindowsTestContainerManager does not support extra resources
 class LibertyServletOnlySmokeTest extends LibertySmokeTest {
 
-  protected void customizeContainer(GenericContainer container) {
-    container.withClasspathResourceMapping("liberty-servlet.xml", "/config/server.xml", BindMode.READ_ONLY)
+  @Override
+  protected Map<String, String> getExtraResources() {
+    return ["liberty-servlet.xml": "/config/server.xml"]
   }
 
 }

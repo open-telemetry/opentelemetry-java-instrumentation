@@ -28,7 +28,7 @@ import spock.lang.Shared
 class RedissonClientTest extends AgentInstrumentationSpecification {
 
   @Shared
-  int port = PortUtils.randomOpenPort()
+  int port = PortUtils.findOpenPort()
 
   @Shared
   RedisServer redisServer = RedisServer.builder()

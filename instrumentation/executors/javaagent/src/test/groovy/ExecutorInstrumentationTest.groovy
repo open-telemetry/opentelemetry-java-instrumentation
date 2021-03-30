@@ -13,6 +13,7 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.ForkJoinTask
 import java.util.concurrent.Future
@@ -134,7 +135,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 
   def "#poolImpl '#name' wrap lambdas"() {
     setup:
-    def pool = poolImpl
+    ExecutorService pool = poolImpl
     def m = method
     def w = wrap
 
@@ -160,7 +161,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     }
 
     cleanup:
-    pool?.shutdown()
+    pool.shutdown()
 
     where:
     name                | method           | wrap                           | poolImpl
@@ -173,7 +174,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 
   def "#poolImpl '#name' reports after canceled jobs"() {
     setup:
-    def pool = poolImpl
+    ExecutorService pool = poolImpl
     def m = method
     List<JavaAsyncChild> children = new ArrayList<>()
     List<Future> jobFutures = new ArrayList<>()
@@ -215,6 +216,11 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 
     expect:
     waitForTraces(1).size() == 1
+
+    // Wait for shutdown since we didn't wait on task completion and want to confirm any pending
+    // ones clean up context.
+    pool.shutdown()
+    pool.awaitTermination(10, TimeUnit.SECONDS)
 
     where:
     name                | method           | poolImpl

@@ -1,0 +1,15 @@
+ext {
+  skipPublish = true
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  compileOnly 'com.vaadin:vaadin-spring-boot-starter:14.2.0'
+
+  api "org.testcontainers:selenium:${versions.testcontainers}"
+  implementation(project(':testing-common')) {
+    exclude(module: 'jetty-server')
+  }
+  implementation 'org.seleniumhq.selenium:selenium-java:3.141.59'
+}

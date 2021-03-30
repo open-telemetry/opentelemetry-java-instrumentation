@@ -5,6 +5,8 @@
 
 package test
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+
 import grails.artefact.Controller
 import grails.web.Action
 
@@ -12,7 +14,7 @@ class ErrorController implements Controller {
 
   @Action
   def index() {
-    render "Error"
+    render ERROR.body
   }
 
   @Action
