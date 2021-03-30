@@ -27,6 +27,11 @@ public class ArmeriaInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isLibraryInstrumentationClass(String className) {
+    return className.startsWith("io.opentelemetry.instrumentation.armeria.v1_3");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ArmeriaWebClientBuilderInstrumentation(), new ArmeriaServerBuilderInstrumentation());

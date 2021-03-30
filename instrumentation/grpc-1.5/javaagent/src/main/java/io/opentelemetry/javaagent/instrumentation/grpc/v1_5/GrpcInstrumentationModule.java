@@ -19,6 +19,11 @@ public class GrpcInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isLibraryInstrumentationClass(String className) {
+    return className.startsWith("io.opentelemetry.instrumentation.grpc.v1_5");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new GrpcClientBuilderBuildInstrumentation(), new GrpcServerBuilderInstrumentation());

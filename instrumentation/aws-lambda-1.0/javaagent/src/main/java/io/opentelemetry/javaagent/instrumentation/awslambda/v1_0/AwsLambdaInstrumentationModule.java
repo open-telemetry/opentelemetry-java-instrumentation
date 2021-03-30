@@ -24,6 +24,11 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isLibraryInstrumentationClass(String className) {
+    return className.startsWith("io.opentelemetry.instrumentation.awslambda.v1_0");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new AwsLambdaRequestHandlerInstrumentation());
   }
