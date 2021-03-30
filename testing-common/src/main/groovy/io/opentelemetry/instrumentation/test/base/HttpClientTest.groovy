@@ -138,7 +138,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     method << BODY_METHODS
   }
 
-  def "basic #method request with CLIENT parent"() {
+  def "should suppress nested CLIENT span if already under parent CLIENT span"() {
     given:
     assumeTrue(testWithClientParent())
 
@@ -149,6 +149,8 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
     then:
     status == 200
+    // there should be 2 separate traces since the nested CLIENT span is suppressed
+    // (and the span context propagation along with it)
     assertTraces(2) {
       trace(0, 1) {
         basicSpan(it, 0, "parent-client-span")
