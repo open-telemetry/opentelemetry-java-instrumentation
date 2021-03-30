@@ -7,21 +7,27 @@ package io.opentelemetry.instrumentation.test.base
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -99,6 +105,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
+  boolean testConcurrency() {
+    false
+  }
+
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
     REDIRECT("redirect", 302, "/redirected"),
@@ -114,7 +124,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     PATH_PARAM("path/123/param", 200, "123"),
     AUTH_REQUIRED("authRequired", 200, null),
     LOGIN("login", 302, null),
-    AUTH_ERROR("basicsecured/endpoint", 401, null)
+    AUTH_ERROR("basicsecured/endpoint", 401, null),
+    INDEXED_CHILD("child", 200, null),
 
     private final URI uriObj
     private final String path
@@ -361,6 +372,70 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     body = null
   }
 
+  /*
+  This test fires a bunch of parallel request to the fixed backend endpoint.
+  That endpoint is supposed to create a new child span in the context of the SERVER span.
+  That child span is expected to have an attribute called "test.request.id".
+  The value of that attribute should be the value of request's parameter called "id".
+
+  This test then asserts that there is the correct number of traces (one per request executed)
+  and that each trace has exactly three spans and both first and the last spans have "test.request.id"
+  attribute with equal value. Server span is not going to have that attribute because it is not
+  under the control of this test.
+
+  This way we verify that child span created by the server actually corresponds to the client request.
+   */
+  def "high concurrency test"() {
+    setup:
+    assumeTrue(testConcurrency())
+    int count = 10
+    def endpoint = INDEXED_CHILD
+
+    def latch = new CountDownLatch(1)
+
+    def pool = Executors.newFixedThreadPool(4)
+    def propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator()
+    def setter = { Request.Builder carrier, String name, String value ->
+      carrier.header(name, value)
+    }
+
+    when:
+    count.times { index ->
+      def job = {
+        latch.await()
+        def url = HttpUrl.get(endpoint.resolvePath(address)).newBuilder()
+          .query("id=$index")
+          .build()
+        Request.Builder builder = request(url, "GET", null)
+        runUnderTrace("client " + index) {
+          Span.current().setAttribute("test.request.id", index)
+          propagator.inject(Context.current(), builder, setter)
+          client.newCall(builder.build()).execute()
+        }
+
+      }
+      pool.submit(job)
+    }
+    latch.countDown()
+
+    then:
+    assertTraces(count) {
+      (0..count - 1).each {
+        trace(it, 3) {
+          def rootSpan = it.span(0)
+          //Traces can be in arbitrary order, let us find out the request id of the current one
+          def requestId = Integer.parseInt(rootSpan.name.substring("client ".length()))
+
+          basicSpan(it, 0, "client " + requestId, null, null) {
+            it."test.request.id" requestId
+          }
+          indexedServerSpan(it, span(0), requestId)
+          indexedControllerSpan(it, 2, span(1), requestId)
+        }
+      }
+    }
+  }
+
   //FIXME: add tests for POST with large/chunked data
 
   void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null, Response response = null) {
@@ -529,4 +604,37 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       }
     }
   }
+
+  void indexedServerSpan(TraceAssert trace, Object parent, int requestId) {
+    ServerEndpoint endpoint = INDEXED_CHILD
+    trace.span(1) {
+      name expectedServerSpanName(endpoint)
+      kind SpanKind.SERVER // can't use static import because of SERVER type parameter
+      errored false
+      childOf((SpanData) parent)
+      attributes {
+        "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
+        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.HTTP_CLIENT_IP.key}" { it == null || it == TEST_CLIENT_IP }
+        "${SemanticAttributes.HTTP_URL.key}" endpoint.resolve(address).toString() + "?id=$requestId"
+        "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+        "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+        "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+        "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+      }
+    }
+  }
+
+  void indexedControllerSpan(TraceAssert trace, int index, Object parent, int requestId) {
+    trace.span(index) {
+      name "controller"
+      errored false
+      childOf((SpanData) parent)
+      attributes {
+        it."test.request.id" requestId
+      }
+    }
+  }
+
+
 }
