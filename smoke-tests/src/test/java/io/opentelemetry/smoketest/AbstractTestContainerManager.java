@@ -17,6 +17,8 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
   protected static final String TARGET_AGENT_FILENAME = "opentelemetry-javaagent.jar";
   protected static final String COLLECTOR_CONFIG_RESOURCE = "/otel.yaml";
 
+  private boolean started = false;
+
   protected Map<String, String> getAgentEnvironment() {
     Map<String, String> environment = new HashMap<>();
     environment.put("JAVA_TOOL_OPTIONS", "-javaagent:/" + TARGET_AGENT_FILENAME);
@@ -26,5 +28,13 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
     environment.put("OTEL_EXPORTER_OTLP_ENDPOINT", "http://" + COLLECTOR_ALIAS + ":55680");
     environment.put("OTEL_RESOURCE_ATTRIBUTES", "service.name=smoke-test");
     return environment;
+  }
+
+  public void startEnvironmentOnce() {
+    if (!started) {
+      started = true;
+      startEnvironment();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> stopEnvironment()));
+    }
   }
 }
