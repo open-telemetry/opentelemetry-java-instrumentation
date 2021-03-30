@@ -32,6 +32,14 @@ public class AsyncSpanEndStrategies {
     strategies.add(strategy);
   }
 
+  public void unregisterStrategy(AsyncSpanEndStrategy strategy) {
+    strategies.remove(strategy);
+  }
+
+  public void unregisterStrategy(Class<? extends AsyncSpanEndStrategy> strategyClass) {
+    strategies.removeIf(strategy -> strategy.getClass() == strategyClass);
+  }
+
   @Nullable
   public AsyncSpanEndStrategy resolveStrategy(Class<?> returnType) {
     for (AsyncSpanEndStrategy strategy : strategies) {
