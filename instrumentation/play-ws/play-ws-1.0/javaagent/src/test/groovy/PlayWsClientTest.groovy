@@ -11,7 +11,6 @@ import play.libs.ws.StandaloneWSResponse
 import play.libs.ws.ahc.StandaloneAhcWSClient
 import scala.collection.JavaConverters
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import spock.lang.Shared
