@@ -5,6 +5,9 @@ muzzle {
     group = "org.grails"
     module = "grails-web-url-mappings"
     versions = "[3.0,)"
+    // 3.1.15 depends on org.grails:grails-datastore-core:5.0.13.BUILD-SNAPSHOT
+    // which (obviously) does not exist
+    skipVersions += ['3.1.15']
     assertInverse = true
   }
 }
