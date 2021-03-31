@@ -63,7 +63,7 @@ public class JettyInstrumentationModule extends InstrumentationModule {
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return singletonMap(
           named("handle")
-              .and(takesArgument(0, named("java.lang.String")))
+              .and(takesArgument(0, String.class))
               .and(takesArgument(1, named("org.eclipse.jetty.server.Request")))
               .and(takesArgument(2, named("javax.servlet.http.HttpServletRequest")))
               .and(takesArgument(3, named("javax.servlet.http.HttpServletResponse")))

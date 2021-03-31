@@ -52,8 +52,8 @@ public class Elasticsearch5RestClientInstrumentationModule extends Instrumentati
           isMethod()
               .and(namedOneOf("performRequestAsync", "performRequestAsyncNoCatch"))
               .and(takesArguments(7))
-              .and(takesArgument(0, named("java.lang.String"))) // method
-              .and(takesArgument(1, named("java.lang.String"))) // endpoint
+              .and(takesArgument(0, String.class)) // method
+              .and(takesArgument(1, String.class)) // endpoint
               .and(takesArgument(5, named("org.elasticsearch.client.ResponseListener"))),
           Elasticsearch5RestClientInstrumentationModule.class.getName()
               + "$ElasticsearchRestClientAdvice");
