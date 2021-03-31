@@ -5,8 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.instrumentation.api.internal.InClassLoaderMatcher;
+import io.opentelemetry.javaagent.tooling.Utils;
+import java.util.List;
+import java.util.stream.Collectors;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public final class ClassLoaderMatcher {
@@ -19,45 +24,40 @@ public final class ClassLoaderMatcher {
   }
 
   /**
-   * NOTICE: Does not match the bootstrap classpath. Don't use with classes expected to be on the
-   * bootstrap.
+   * Creates a matcher that checks if all of the passed classes are in the passed {@link
+   * ClassLoader}. If {@code classNames} is empty the matcher will always return {@code true}.
    *
-   * @param classNames list of names to match. returns true if empty.
-   * @return true if class is available as a resource and not the bootstrap classloader.
+   * <p>NOTICE: Does not match the bootstrap classpath. Don't use with classes expected to be on the
+   * bootstrap.
    */
-  public static ElementMatcher.Junction.AbstractBase<ClassLoader> hasClassesNamed(
-      String... classNames) {
-    return new ClassLoaderHasClassesNamedMatcher(classNames);
+  public static ElementMatcher.Junction<ClassLoader> hasClassesNamed(String... classNames) {
+    return new ClassLoaderHasAllClassesNamedMatcher(asList(classNames));
   }
 
-  private static class ClassLoaderHasClassesNamedMatcher
+  /**
+   * Creates a matcher that checks if any of the passed classes are in the passed {@link
+   * ClassLoader}. If {@code classNames} is empty the matcher will always return {@code false}.
+   *
+   * <p>NOTICE: Does not match the bootstrap classpath. Don't use with classes expected to be on the
+   * bootstrap.
+   */
+  public static ElementMatcher.Junction<ClassLoader> hasAnyClassesNamed(List<String> classNames) {
+    return new ClassLoaderHasAnyClassesNamedMatcher(classNames);
+  }
+
+  private abstract static class AbstractClassLoaderMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
     private final Cache<ClassLoader, Boolean> cache =
         Cache.newBuilder().setWeakKeys().setMaximumSize(25).build();
 
-    private final String[] resources;
+    protected final List<String> resources;
 
-    private ClassLoaderHasClassesNamedMatcher(String... classNames) {
-      resources = classNames;
-      for (int i = 0; i < resources.length; i++) {
-        resources[i] = resources[i].replace(".", "/") + ".class";
-      }
+    private AbstractClassLoaderMatcher(List<String> classNames) {
+      resources = classNames.stream().map(Utils::getResourceName).collect(Collectors.toList());
     }
 
-    private boolean hasResources(ClassLoader cl) {
-      boolean priorValue = InClassLoaderMatcher.getAndSet(true);
-      try {
-        for (String resource : resources) {
-          if (cl.getResource(resource) == null) {
-            return false;
-          }
-        }
-      } finally {
-        InClassLoaderMatcher.set(priorValue);
-      }
-      return true;
-    }
+    protected abstract boolean doMatch(ClassLoader cl);
 
     @Override
     public boolean matches(ClassLoader cl) {
@@ -66,6 +66,49 @@ public final class ClassLoaderMatcher {
         return false;
       }
       return cache.computeIfAbsent(cl, this::hasResources);
+    }
+
+    private boolean hasResources(ClassLoader cl) {
+      boolean priorValue = InClassLoaderMatcher.getAndSet(true);
+      boolean value;
+      try {
+        value = doMatch(cl);
+      } finally {
+        InClassLoaderMatcher.set(priorValue);
+      }
+      return value;
+    }
+  }
+
+  private static class ClassLoaderHasAllClassesNamedMatcher extends AbstractClassLoaderMatcher {
+    private ClassLoaderHasAllClassesNamedMatcher(List<String> classNames) {
+      super(classNames);
+    }
+
+    @Override
+    protected boolean doMatch(ClassLoader cl) {
+      for (String resource : resources) {
+        if (cl.getResource(resource) == null) {
+          return false;
+        }
+      }
+      return true;
+    }
+  }
+
+  private static class ClassLoaderHasAnyClassesNamedMatcher extends AbstractClassLoaderMatcher {
+    private ClassLoaderHasAnyClassesNamedMatcher(List<String> classNames) {
+      super(classNames);
+    }
+
+    @Override
+    protected boolean doMatch(ClassLoader cl) {
+      for (String resource : resources) {
+        if (cl.getResource(resource) != null) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 }

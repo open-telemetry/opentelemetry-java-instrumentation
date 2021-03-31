@@ -22,3 +22,8 @@ dependencies {
 
   testImplementation group: "org.testcontainers", name: "couchbase", version: versions.testcontainers
 }
+
+configurations {
+  // exclude lib from test classpath, otherwise the javaagent would be skipped
+  testImplementation.exclude group: 'com.couchbase.client', module: 'tracing-opentelemetry'
+}
