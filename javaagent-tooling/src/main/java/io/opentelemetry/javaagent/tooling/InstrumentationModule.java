@@ -359,8 +359,8 @@ public abstract class InstrumentationModule {
   }
 
   /**
-   * Allows instrumentation modules to disable themselves on other conditions (not currently used in
-   * this repo, but used by vendor distros).
+   * Allows instrumentation modules to disable themselves by default, or to additionally disable
+   * themselves on some other condition.
    */
   protected boolean defaultEnabled() {
     return DEFAULT_ENABLED;
