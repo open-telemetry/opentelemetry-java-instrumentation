@@ -26,11 +26,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * An instrumenter of the start and end of a request/response lifecycle. Almost all instrumentation
  * of libraries falls into modeling start and end, generating observability signals from these such
  * as a tracing {@link Span}, or metrics such as the duration taken, active requests, etc. When
- * instrumenting a library, there will generally be three steps.
+ * instrumenting a library, there will generally be four steps.
  *
  * <ul>
  *   <li>Create an {@link Instrumenter} using {@link InstrumenterBuilder}. Use the builder to
  *       configure any library-specific customizations, and also expose useful knobs to your user.
+ *   <li>Call {@link Instrumenter#shouldStart(Context, Object)} and do not proceed if {@code false}.
  *   <li>Call {@link Instrumenter#start(Context, Object)} at the beginning of a request.
  *   <li>Call {@link Instrumenter#end(Context, Object, Object, Throwable)} at the end of a request.
  * </ul>
@@ -69,9 +70,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
   /**
    * Returns whether instrumentation should be applied for the {@link REQUEST}. If {@code true},
-   * call {@link #start(Context, Object)} and {@link #end(Context, Object, Object, Throwable)}
-   * arond the operation being instrumented, or if {@code false} execute the operation directly
-   * without calling those methods.
+   * call {@link #start(Context, Object)} and {@link #end(Context, Object, Object, Throwable)} arond
+   * the operation being instrumented, or if {@code false} execute the operation directly without
+   * calling those methods.
    */
   public boolean shouldStart(Context parentContext, REQUEST request) {
     SpanKind spanKind = spanKindExtractor.extract(request);
@@ -141,6 +142,4 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     span.end();
   }
-
-
 }
