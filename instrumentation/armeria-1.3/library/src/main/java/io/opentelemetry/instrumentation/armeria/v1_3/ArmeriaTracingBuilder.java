@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.StatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -30,8 +30,8 @@ public final class ArmeriaTracingBuilder {
       additionalExtractors = new ArrayList<>();
 
   private Function<
-          StatusExtractor<RequestContext, RequestLog>,
-          ? extends StatusExtractor<? super RequestContext, ? super RequestLog>>
+          SpanStatusExtractor<RequestContext, RequestLog>,
+          ? extends SpanStatusExtractor<? super RequestContext, ? super RequestLog>>
       statusExtractorTransformer = Function.identity();
 
   ArmeriaTracingBuilder(OpenTelemetry openTelemetry) {
@@ -40,8 +40,8 @@ public final class ArmeriaTracingBuilder {
 
   public ArmeriaTracingBuilder setStatusExtractor(
       Function<
-              StatusExtractor<RequestContext, RequestLog>,
-              ? extends StatusExtractor<? super RequestContext, ? super RequestLog>>
+              SpanStatusExtractor<RequestContext, RequestLog>,
+              ? extends SpanStatusExtractor<? super RequestContext, ? super RequestLog>>
           statusExtractor) {
     this.statusExtractorTransformer = statusExtractor;
     return this;
@@ -63,8 +63,8 @@ public final class ArmeriaTracingBuilder {
 
     SpanNameExtractor<? super RequestContext> spanNameExtractor =
         SpanNameExtractor.http(httpAttributesExtractor);
-    StatusExtractor<? super RequestContext, ? super RequestLog> statusExtractor =
-        statusExtractorTransformer.apply(StatusExtractor.http(httpAttributesExtractor));
+    SpanStatusExtractor<? super RequestContext, ? super RequestLog> spanStatusExtractor =
+        statusExtractorTransformer.apply(SpanStatusExtractor.http(httpAttributesExtractor));
 
     InstrumenterBuilder<ClientRequestContext, RequestLog> clientInstrumenterBuilder =
         Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
@@ -75,7 +75,7 @@ public final class ArmeriaTracingBuilder {
         .forEach(
             instrumenter ->
                 instrumenter
-                    .setSpanStatusExtractor(statusExtractor)
+                    .setSpanStatusExtractor(spanStatusExtractor)
                     .addAttributesExtractor(httpAttributesExtractor)
                     .addAttributesExtractor(netAttributesExtractor)
                     .addAttributesExtractors(additionalExtractors));

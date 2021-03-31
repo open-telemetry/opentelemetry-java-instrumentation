@@ -13,25 +13,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * to determine its final status.
  */
 @FunctionalInterface
-public interface StatusExtractor<REQUEST, RESPONSE> {
+public interface SpanStatusExtractor<REQUEST, RESPONSE> {
 
   /**
-   * Returns the default {@link StatusExtractor}, which returns {@link StatusCode#ERROR} if the
+   * Returns the default {@link SpanStatusExtractor}, which returns {@link StatusCode#ERROR} if the
    * framework returned an unhandled exception, or {@link StatusCode#UNSET} otherwise.
    */
   @SuppressWarnings("unchecked")
-  static <REQUEST, RESPONSE> StatusExtractor<REQUEST, RESPONSE> getDefault() {
-    return (StatusExtractor<REQUEST, RESPONSE>) DefaultStatusExtractor.INSTANCE;
+  static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> getDefault() {
+    return (SpanStatusExtractor<REQUEST, RESPONSE>) DefaultSpanStatusExtractor.INSTANCE;
   }
 
   /**
-   * Returns the {@link StatusExtractor} for HTTP requests, which will use the HTTP status code to
-   * determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
+   * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
+   * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
    * default status} otherwise.
    */
-  static <REQUEST, RESPONSE> StatusExtractor<REQUEST, RESPONSE> http(
+  static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> http(
       HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
-    return new HttpStatusExtractor<>(attributesExtractor);
+    return new HttpSpanStatusExtractor<>(attributesExtractor);
   }
 
   /** Returns the {@link StatusCode}. */

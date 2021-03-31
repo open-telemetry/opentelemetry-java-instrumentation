@@ -8,10 +8,10 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.trace.StatusCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class DefaultStatusExtractor<REQUEST, RESPONSE>
-    implements StatusExtractor<REQUEST, RESPONSE> {
+final class DefaultSpanStatusExtractor<REQUEST, RESPONSE>
+    implements SpanStatusExtractor<REQUEST, RESPONSE> {
 
-  static final StatusExtractor<Object, Object> INSTANCE = new DefaultStatusExtractor<>();
+  static final SpanStatusExtractor<Object, Object> INSTANCE = new DefaultSpanStatusExtractor<>();
 
   @Override
   public StatusCode extract(REQUEST request, RESPONSE response, @Nullable Throwable error) {

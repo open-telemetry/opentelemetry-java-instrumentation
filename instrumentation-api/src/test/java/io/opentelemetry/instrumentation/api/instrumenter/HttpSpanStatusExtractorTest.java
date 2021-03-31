@@ -21,35 +21,49 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class HttpStatusExtractorTest {
+class HttpSpanStatusExtractorTest {
   @Mock private HttpAttributesExtractor<Map<String, String>, Map<String, String>> extractor;
 
   @ParameterizedTest
   @ValueSource(longs = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
   void hasStatus(long statusCode) {
     when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+
     assertThat(
-            StatusExtractor.http(extractor)
+            SpanStatusExtractor.http(extractor)
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
         .isEqualTo(HttpStatusConverter.statusFromHttpStatus((int) statusCode));
+  }
+
+  @ParameterizedTest
+  @ValueSource(longs = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
+  void hasStatus_ignoresException(long statusCode) {
+    when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
+
     // Presence of exception has no effect.
     assertThat(
-            StatusExtractor.http(extractor)
+            SpanStatusExtractor.http(extractor)
                 .extract(
                     Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
         .isEqualTo(HttpStatusConverter.statusFromHttpStatus((int) statusCode));
   }
 
   @Test
-  void noStatus() {
+  void fallsBackToDefault_unset() {
     when(extractor.statusCode(anyMap(), anyMap())).thenReturn(null);
+
     assertThat(
-            StatusExtractor.http(extractor)
+            SpanStatusExtractor.http(extractor)
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
         .isEqualTo(StatusCode.UNSET);
-    // Presence of exception has no effect.
+  }
+
+  @Test
+  void fallsBackToDefault_error() {
+    when(extractor.statusCode(anyMap(), anyMap())).thenReturn(null);
+
     assertThat(
-            StatusExtractor.http(extractor)
+            SpanStatusExtractor.http(extractor)
                 .extract(
                     Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
         .isEqualTo(StatusCode.ERROR);

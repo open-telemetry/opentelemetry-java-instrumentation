@@ -11,12 +11,12 @@ import io.opentelemetry.api.trace.StatusCode;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
-class DefaultStatusExtractorTest {
+class DefaultSpanStatusExtractorTest {
 
   @Test
   void noException() {
     assertThat(
-            StatusExtractor.getDefault()
+            SpanStatusExtractor.getDefault()
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
         .isEqualTo(StatusCode.UNSET);
   }
@@ -24,7 +24,7 @@ class DefaultStatusExtractorTest {
   @Test
   void exception() {
     assertThat(
-            StatusExtractor.getDefault()
+            SpanStatusExtractor.getDefault()
                 .extract(
                     Collections.emptyMap(),
                     Collections.emptyMap(),
