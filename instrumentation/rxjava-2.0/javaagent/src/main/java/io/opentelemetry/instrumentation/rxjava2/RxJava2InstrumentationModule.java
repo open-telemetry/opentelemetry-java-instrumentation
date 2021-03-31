@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import io.reactivex.plugins.RxJavaPlugins;
@@ -48,18 +47,11 @@ public class RxJava2InstrumentationModule extends InstrumentationModule {
   }
 
   public static class RxJavaPluginsAdvice {
-    @Advice.OnMethodEnter
-    public static int trackCallDepth() {
-      return CallDepthThreadLocalMap.incrementCallDepth(RxJavaPlugins.class);
-    }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void postStaticInitializer(@Advice.Enter int callDepth) {
-      if (callDepth > 0) {
-        return;
-      }
-      TracingAssembly.enable();
-      CallDepthThreadLocalMap.reset(RxJavaPlugins.class);
+    // TODO(anuraaga): Replace with adding a type initializer to RxJavaPlugins
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void activateOncePerClassloader() {
+      TracingAssemblyActivation.activate(RxJavaPlugins.class);
     }
   }
 }
