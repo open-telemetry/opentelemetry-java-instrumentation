@@ -46,9 +46,12 @@ test {
   enabled = enabled && (System.getenv("CI") != null || findProperty('runSmokeTests'))
 
   def suites = [
-    "glassfishAndJetty": ["**/GlassFishSmokeTest.*", "**/JettySmokeTest.*"],
-    "libertyAndTomcat": ["**/LibertySmokeTest.*", "**/LibertyServletOnlySmokeTest.*", "**/TomcatSmokeTest.*"],
-    "tomeeAndWildfly": ["**/TomeeSmokeTest.*", "**/WildflySmokeTest.*"]
+    "glassfish": ["**/GlassFishSmokeTest.*"],
+    "jetty"    : ["**/JettySmokeTest.*"],
+    "liberty"  : ["**/LibertySmokeTest.*", "**/LibertyServletOnlySmokeTest.*"],
+    "tomcat"   : ["**/TomcatSmokeTest.*"],
+    "tomee"    : ["**/TomeeSmokeTest.*"],
+    "wildfly"  : ["**/WildflySmokeTest.*"]
   ]
 
   def suite = findProperty('smokeTestSuite')

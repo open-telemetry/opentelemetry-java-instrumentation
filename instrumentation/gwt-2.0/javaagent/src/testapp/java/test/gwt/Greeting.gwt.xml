@@ -1,0 +1,11 @@
+<module rename-to="greeting">
+  <inherits name="com.google.gwt.user.User" />
+
+  <entry-point class="test.gwt.client.GreetingEntryPoint" />
+
+  <!-- only generate one permutation to make the build faster -->
+  <set-property name="user.agent" value="safari" />
+
+  <source path='client'/>
+  <source path='shared'/>
+</module>

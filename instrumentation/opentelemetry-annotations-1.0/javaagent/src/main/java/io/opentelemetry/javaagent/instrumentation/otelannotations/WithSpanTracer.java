@@ -10,7 +10,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.javaagent.instrumentation.otelannotations.async.MethodSpanStrategies;
+import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
+import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,8 @@ public class WithSpanTracer extends BaseTracer {
 
   private static final Logger log = LoggerFactory.getLogger(WithSpanTracer.class);
 
-  private final MethodSpanStrategies methodSpanStrategies = MethodSpanStrategies.getInstance();
+  private final AsyncSpanEndStrategies asyncSpanEndStrategies =
+      AsyncSpanEndStrategies.getInstance();
 
   public Context startSpan(
       Context parentContext, WithSpan applicationAnnotation, Method method, SpanKind kind) {
@@ -85,11 +87,15 @@ public class WithSpanTracer extends BaseTracer {
    * @throws ClassCastException if returnValue is not an instance of returnType
    */
   public Object end(Context context, Class<?> returnType, Object returnValue) {
-    if (!returnType.isInstance(returnValue)) {
-      end(context);
-      return returnValue;
+    if (returnType.isInstance(returnValue)) {
+      AsyncSpanEndStrategy asyncSpanEndStrategy =
+          asyncSpanEndStrategies.resolveStrategy(returnType);
+      if (asyncSpanEndStrategy != null) {
+        return asyncSpanEndStrategy.end(this, context, returnValue);
+      }
     }
-    return methodSpanStrategies.resolveStrategy(returnType).end(this, context, returnValue);
+    end(context);
+    return returnValue;
   }
 
   @Override

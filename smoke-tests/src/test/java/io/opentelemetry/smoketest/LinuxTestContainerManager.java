@@ -30,7 +30,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
   private GenericContainer<?> target = null;
 
   @Override
-  public void startEnvironment() {
+  protected void startEnvironment() {
     backend =
         new GenericContainer<>(
                 DockerImageName.parse(
@@ -55,7 +55,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
   }
 
   @Override
-  public void stopEnvironment() {
+  protected void stopEnvironment() {
     if (backend != null) {
       backend.stop();
       backend = null;

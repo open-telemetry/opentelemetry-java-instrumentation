@@ -21,7 +21,7 @@ public final class ClientSpan {
    * found.
    */
   @Nullable
-  static Span fromContextOrNull(Context context) {
+  public static Span fromContextOrNull(Context context) {
     return context.get(KEY);
   }
 

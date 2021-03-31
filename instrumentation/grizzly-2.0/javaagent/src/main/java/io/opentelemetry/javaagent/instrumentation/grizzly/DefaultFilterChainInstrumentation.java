@@ -31,7 +31,7 @@ public class DefaultFilterChainInstrumentation implements TypeInstrumentation {
             .and(isPrivate())
             .and(named("notifyFailure"))
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
-            .and(takesArgument(1, named("java.lang.Throwable"))),
+            .and(takesArgument(1, Throwable.class)),
         DefaultFilterChainAdvice.class.getName());
   }
 }

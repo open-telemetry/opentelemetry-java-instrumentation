@@ -29,7 +29,7 @@ public class TestServlet extends HttpServlet {
             if (serverEndpoint == HttpServerTest.ServerEndpoint.REDIRECT) {
               resp.sendRedirect(serverEndpoint.getBody());
             } else if (serverEndpoint == HttpServerTest.ServerEndpoint.ERROR) {
-              resp.sendError(serverEndpoint.getStatus());
+              resp.sendError(serverEndpoint.getStatus(), serverEndpoint.getBody());
             } else {
               resp.setStatus(serverEndpoint.getStatus());
             }

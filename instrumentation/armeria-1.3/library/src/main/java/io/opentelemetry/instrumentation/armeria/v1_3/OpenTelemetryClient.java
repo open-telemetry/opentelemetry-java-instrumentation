@@ -31,6 +31,11 @@ final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
 
   @Override
   public HttpResponse execute(ClientRequestContext ctx, HttpRequest req) throws Exception {
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, ctx)) {
+      return unwrap().execute(ctx, req);
+    }
+
     // Always available in practice.
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();

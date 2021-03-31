@@ -68,6 +68,23 @@ public class Instrumenter<REQUEST, RESPONSE> {
   }
 
   /**
+   * Returns whether instrumentation should be applied for the {@link REQUEST}. If {@code true},
+   * call {@link #start(Context, Object)} and {@link #end(Context, Object, Object, Throwable)}
+   * arond the operation being instrumented, or if {@code false} execute the operation directly
+   * without calling those methods.
+   */
+  public boolean shouldStart(Context parentContext, REQUEST request) {
+    SpanKind spanKind = spanKindExtractor.extract(request);
+    switch (spanKind) {
+      case SERVER:
+        return ServerSpan.fromContextOrNull(parentContext) == null;
+      case CLIENT:
+        return ClientSpan.fromContextOrNull(parentContext) == null;
+    }
+    return true;
+  }
+
+  /**
    * Starts a new operation to be instrumented. The {@code parentContext} is the parent of the
    * resulting instrumented operation and should usually be {@code Context.current()}. The {@code
    * request} is the request object of this operation. The returned {@link Context} should be
@@ -124,4 +141,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     span.end();
   }
+
+
 }

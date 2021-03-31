@@ -12,7 +12,11 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import org.apache.catalina.Context
+import org.apache.catalina.connector.Request
+import org.apache.catalina.connector.Response
+import org.apache.catalina.core.StandardHost
 import org.apache.catalina.startup.Tomcat
+import org.apache.catalina.valves.ErrorReportValve
 
 class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
 
@@ -41,6 +45,9 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
     ServerEndpoint.values().each {
       ctx.addServletMappingDecoded(it.path, "testServlet")
     }
+
+    (tomcat.host as StandardHost).errorReportValveClass = ErrorHandlerValve.name
+
     tomcat.start()
 
     return tomcat
@@ -57,11 +64,6 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   }
 
   @Override
-  boolean testErrorBody() {
-    false
-  }
-
-  @Override
   void responseSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
     switch (endpoint) {
       case REDIRECT:
@@ -70,6 +72,20 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
       case ERROR:
         sendErrorSpan(trace, index, parent)
         break
+    }
+  }
+}
+
+class ErrorHandlerValve extends ErrorReportValve {
+  @Override
+  protected void report(Request request, Response response, Throwable t) {
+    if (response.getStatus() < 400 || response.getContentWritten() > 0 || !response.setErrorReported()) {
+      return
+    }
+    try {
+      response.writer.print(t ? t.cause.message : response.message)
+    } catch (IOException e) {
+      e.printStackTrace()
     }
   }
 }
