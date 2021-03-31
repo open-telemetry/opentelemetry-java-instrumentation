@@ -6,6 +6,9 @@ muzzle {
     module = "axis2-jaxws"
     versions = "[1.6.0,)"
     assertInverse = true
+    // org.apache.axis2:axis2-jaxws:1.2 depends on org.apache.axis2:axis2-kernel:1.2
+    // which depends on org.apache.neethi:neethi:2.0.1 which does not exist
+    skipVersions += ['1.2']
   }
 }
 
