@@ -52,6 +52,9 @@ public abstract class InstrumentationModule {
 
   private static final String[] EMPTY = new String[0];
 
+  private static final boolean DEFAULT_ENABLED =
+      Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
+
   // Added here instead of AgentInstaller's ignores because it's relatively
   // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
   public static final ElementMatcher.Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
@@ -95,7 +98,7 @@ public abstract class InstrumentationModule {
       throw new IllegalArgumentException("InstrumentationModules must be named");
     }
     this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
-    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
+    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, DEFAULT_ENABLED);
   }
 
   private static List<String> toList(String first, String[] rest) {
@@ -353,9 +356,5 @@ public abstract class InstrumentationModule {
    */
   protected Map<String, String> contextStore() {
     return Collections.emptyMap();
-  }
-
-  protected boolean defaultEnabled() {
-    return Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
   }
 }
