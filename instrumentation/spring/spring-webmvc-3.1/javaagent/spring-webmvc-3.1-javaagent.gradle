@@ -5,8 +5,6 @@ muzzle {
     group = 'org.springframework'
     module = 'spring-webmvc'
     versions = "[3.1.0.RELEASE,]"
-    skipVersions += ['1.2.1', '1.2.2', '1.2.3', '1.2.4'] // broken releases... missing dependencies
-    skipVersions += '3.2.1.RELEASE' // missing a required class.  (bad release?)
     extraDependency "javax.servlet:javax.servlet-api:3.0.1"
     assertInverse = true
   }
@@ -16,7 +14,6 @@ muzzle {
     group = 'org.springframework'
     module = 'spring-web'
     versions = "[,]"
-    skipVersions += ['1.2.1', '1.2.2', '1.2.3', '1.2.4'] // broken releases... missing dependencies
     extraDependency "javax.servlet:javax.servlet-api:3.0.1"
   }
 }

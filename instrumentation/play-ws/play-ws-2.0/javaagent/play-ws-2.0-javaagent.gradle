@@ -13,7 +13,6 @@ muzzle {
     group = 'com.typesafe.play'
     module = 'play-ahc-ws-standalone_2.12'
     versions = '[2.0.0,2.1.0)'
-    skipVersions += '2.0.5' // Bad release
     assertInverse = true
   }
 

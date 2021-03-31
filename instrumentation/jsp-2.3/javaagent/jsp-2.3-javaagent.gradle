@@ -7,7 +7,6 @@ muzzle {
     // range [7.0.0,7.0.19) and version 8.0.9 missing from maven
     // tomcat 10 uses JSP 3.0
     versions = "[7.0.19,10)"
-    skipVersions += '8.0.9'
   }
 }
 

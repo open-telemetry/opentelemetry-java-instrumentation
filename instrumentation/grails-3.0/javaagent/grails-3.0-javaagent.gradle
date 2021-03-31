@@ -5,9 +5,6 @@ muzzle {
     group = "org.grails"
     module = "grails-web-url-mappings"
     versions = "[3.0,)"
-    // TODO (trask) 3.3.6 is not in maven central metadata, not sure where it's coming from
-    //  https://repo1.maven.org/maven2/org/grails/grails-web-url-mappings/maven-metadata.xml
-    skipVersions += ['3.1.15', '3.3.6']
     assertInverse = true
   }
 }
