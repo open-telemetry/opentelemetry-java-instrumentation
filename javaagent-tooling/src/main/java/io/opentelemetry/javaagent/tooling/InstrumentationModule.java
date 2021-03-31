@@ -98,7 +98,7 @@ public abstract class InstrumentationModule {
       throw new IllegalArgumentException("InstrumentationModules must be named");
     }
     this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
-    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, DEFAULT_ENABLED);
+    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
   }
 
   private static List<String> toList(String first, String[] rest) {
@@ -356,5 +356,13 @@ public abstract class InstrumentationModule {
    */
   protected Map<String, String> contextStore() {
     return Collections.emptyMap();
+  }
+
+  /**
+   * Allows instrumentation modules to disable themselves on other conditions (not currently used in
+   * this repo, but used by vendor distros).
+   */
+  protected boolean defaultEnabled() {
+    return DEFAULT_ENABLED;
   }
 }
