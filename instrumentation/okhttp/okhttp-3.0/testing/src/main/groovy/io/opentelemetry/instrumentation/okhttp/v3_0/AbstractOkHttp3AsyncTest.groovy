@@ -9,6 +9,7 @@ import static java.util.concurrent.TimeUnit.SECONDS
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Consumer
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Headers
@@ -21,7 +22,7 @@ import okhttp3.internal.http.HttpMethod
 abstract class AbstractOkHttp3AsyncTest extends AbstractOkHttp3Test {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
     def request = new Request.Builder()
       .url(uri.toURL())
@@ -36,7 +37,7 @@ abstract class AbstractOkHttp3AsyncTest extends AbstractOkHttp3Test {
     client.newCall(request).enqueue(new Callback() {
       void onResponse(Call call, Response response) {
         responseRef.set(response)
-        callback?.call()
+        callback?.accept(response.code())
         latch.countDown()
       }
 

@@ -12,6 +12,7 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.function.Consumer
 import spock.lang.Shared
 
 abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements AgentTestTrait {
@@ -20,11 +21,11 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
   def requestFactory = new NetHttpTransport().createRequestFactory()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     doRequest(method, uri, headers, callback, false)
   }
 
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback, boolean throwExceptionOnError) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer>  callback, boolean throwExceptionOnError) {
     GenericUrl genericUrl = new GenericUrl(uri)
 
     HttpRequest request = requestFactory.buildRequest(method, genericUrl, null)
@@ -40,7 +41,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
     request.setThrowExceptionOnExecuteError(throwExceptionOnError)
 
     HttpResponse response = executeRequest(request)
-    callback?.call()
+    callback?.accept(response.getStatusCode())
 
     return response.getStatusCode()
   }

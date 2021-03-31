@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0
 
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -29,14 +30,14 @@ abstract class AbstractOkHttp3Test extends HttpClientTest {
     .build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
     def request = new Request.Builder()
       .url(uri.toURL())
       .method(method, body)
       .headers(Headers.of(headers)).build()
     def response = client.newCall(request).execute()
-    callback?.call()
+    callback?.accept(response.code())
     return response.code()
   }
 

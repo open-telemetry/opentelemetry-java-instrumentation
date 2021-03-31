@@ -12,6 +12,7 @@ import com.squareup.okhttp.internal.http.HttpMethod
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import spock.lang.Shared
 import spock.lang.Timeout
 
@@ -25,7 +26,7 @@ class OkHttp2Test extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
 
     def request = new Request.Builder()
@@ -34,7 +35,7 @@ class OkHttp2Test extends HttpClientTest implements AgentTestTrait {
       .headers(Headers.of(HeadersUtil.headersToArray(headers)))
       .build()
     def response = client.newCall(request).execute()
-    callback?.call()
+    callback?.accept(response.code())
     return response.code()
   }
 

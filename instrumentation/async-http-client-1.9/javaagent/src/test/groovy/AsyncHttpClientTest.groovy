@@ -11,6 +11,7 @@ import com.ning.http.client.Response
 import com.ning.http.client.uri.Uri
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import java.util.function.Consumer
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
@@ -21,7 +22,7 @@ class AsyncHttpClientTest extends HttpClientTest implements AgentTestTrait {
   def client = new AsyncHttpClient()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
 
     RequestBuilder requestBuilder = new RequestBuilder(method)
       .setUri(Uri.create(uri.toString()))
@@ -34,7 +35,7 @@ class AsyncHttpClientTest extends HttpClientTest implements AgentTestTrait {
       @Override
       Object onCompleted(Response response) throws Exception {
         if (callback != null) {
-          callback()
+          callback.accept(response.statusCode)
         }
         return response
       }

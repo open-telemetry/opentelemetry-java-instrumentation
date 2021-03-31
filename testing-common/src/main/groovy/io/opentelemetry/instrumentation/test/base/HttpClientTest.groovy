@@ -24,10 +24,12 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
+import java.util.function.Consumer
 import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
+import spock.util.concurrent.BlockingVariable
 
 @Unroll
 abstract class HttpClientTest extends InstrumentationSpecification {
@@ -87,7 +89,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
    * @param method
    * @return
    */
-  abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null)
+  abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null)
 
   Integer statusOnRedirectError() {
     return null
@@ -163,15 +165,18 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     given:
     assumeTrue(testCallbackWithParent())
 
+    def status = new BlockingVariable<Integer>()
+
     when:
-    def status = runUnderTrace("parent") {
+    runUnderTrace("parent") {
       doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
         runUnderTrace("child") {}
+        status.set(it)
       }
     }
 
     then:
-    status == 200
+    status.get() == 200
     // only one trace (client).
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
@@ -186,14 +191,18 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   }
 
   def "trace request with callback and no parent"() {
+    given:
+    def status = new BlockingVariable<Integer>()
+
     when:
-    def status = doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+    doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
       runUnderTrace("callback") {
       }
+      status.set(it)
     }
 
     then:
-    status == 200
+    status.get() == 200
     // only one trace (client).
     assertTraces(2) {
       trace(0, 1 + extraClientSpans()) {

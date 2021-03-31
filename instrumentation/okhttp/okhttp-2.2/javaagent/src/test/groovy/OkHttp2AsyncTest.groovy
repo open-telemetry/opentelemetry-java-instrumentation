@@ -14,10 +14,11 @@ import com.squareup.okhttp.Response
 import com.squareup.okhttp.internal.http.HttpMethod
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Consumer
 
 class OkHttp2AsyncTest extends OkHttp2Test {
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
     def request = new Request.Builder()
       .url(uri.toURL())
@@ -32,7 +33,7 @@ class OkHttp2AsyncTest extends OkHttp2Test {
     client.newCall(request).enqueue(new Callback() {
       void onResponse(Response response) {
         responseRef.set(response)
-        callback?.call()
+        callback?.accept(response.code())
         latch.countDown()
       }
 

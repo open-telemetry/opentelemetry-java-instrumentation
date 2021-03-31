@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import java.util.function.Consumer
 import spock.lang.Shared
 import spock.lang.Timeout
 
@@ -58,7 +59,7 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
     def result = new CompletableFuture<Integer>()
     ch.pipeline().addLast(new ClientHandler(callback, result))

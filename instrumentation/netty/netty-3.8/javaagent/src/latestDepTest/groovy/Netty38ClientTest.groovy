@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
@@ -30,14 +31,14 @@ class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
   AsyncHttpClient asyncHttpClient = new AsyncHttpClient(clientConfig)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     def methodName = "prepare" + method.toLowerCase().capitalize()
     def requestBuilder = asyncHttpClient."$methodName"(uri.toString())
     headers.each { requestBuilder.setHeader(it.key, it.value) }
     def response = requestBuilder.execute(new AsyncCompletionHandler() {
       @Override
       Object onCompleted(Response response) throws Exception {
-        callback?.call()
+        callback?.accept(response.statusCode)
         return response
       }
     }).get()

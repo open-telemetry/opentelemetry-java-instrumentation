@@ -12,6 +12,7 @@ import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.reactivex.core.Vertx
 import io.vertx.reactivex.ext.web.client.WebClient
+import java.util.function.Consumer
 import spock.lang.Shared
 import spock.lang.Timeout
 
@@ -26,12 +27,12 @@ class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
   WebClient client = WebClient.create(vertx, clientOptions)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
     headers.each { request.putHeader(it.key, it.value) }
     return request
       .rxSend()
-      .doOnSuccess { response -> callback?.call() }
+      .doOnSuccess { response -> callback?.accept(response.statusCode()) }
       .map { it.statusCode() }
       .toObservable()
       .blockingFirst()

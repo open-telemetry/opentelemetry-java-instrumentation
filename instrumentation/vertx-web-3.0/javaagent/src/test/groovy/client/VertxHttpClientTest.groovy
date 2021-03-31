@@ -14,6 +14,7 @@ import io.vertx.core.http.HttpClientOptions
 import io.vertx.core.http.HttpClientResponse
 import io.vertx.core.http.HttpMethod
 import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
 import spock.lang.Shared
 import spock.lang.Timeout
 
@@ -28,12 +29,12 @@ class VertxHttpClientTest extends HttpClientTest implements AgentTestTrait {
   def httpClient = vertx.createHttpClient(clientOptions)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     CompletableFuture<HttpClientResponse> future = new CompletableFuture<>()
     def request = httpClient.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
     headers.each { request.putHeader(it.key, it.value) }
     request.handler { response ->
-      callback?.call()
+      callback?.accept(response.statusCode())
       future.complete(response)
     }
     request.end()

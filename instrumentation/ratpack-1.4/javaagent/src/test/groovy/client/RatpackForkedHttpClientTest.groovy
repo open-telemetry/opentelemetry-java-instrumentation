@@ -5,13 +5,13 @@
 
 package client
 
-
+import java.util.function.Consumer
 import ratpack.exec.ExecResult
 
 class RatpackForkedHttpClientTest extends RatpackHttpClientTest {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     ExecResult<Integer> result = exec.yield {
       def resp = client.request(uri) { spec ->
         spec.method(method)
@@ -22,7 +22,7 @@ class RatpackForkedHttpClientTest extends RatpackHttpClientTest {
         }
       }
       return resp.fork().map {
-        callback?.call()
+        callback?.accept(it.status.code)
         it.status.code
       }
     }

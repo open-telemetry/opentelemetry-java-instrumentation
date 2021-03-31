@@ -4,6 +4,7 @@
  */
 
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import play.libs.ws.StandaloneWSClient
 import play.libs.ws.StandaloneWSRequest
 import play.libs.ws.StandaloneWSResponse
@@ -20,15 +21,14 @@ class PlayJavaWsClientTest extends PlayWsClientTestBase {
   StandaloneWSClient wsClient
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     StandaloneWSRequest wsRequest = wsClient.url(uri.toURL().toString()).setFollowRedirects(true)
 
     headers.entrySet().each { entry -> wsRequest.addHeader(entry.getKey(), entry.getValue()) }
     StandaloneWSResponse wsResponse = wsRequest.setMethod(method).execute()
-      .whenComplete({ response, throwable ->
-        callback?.call()
-      }).toCompletableFuture().get(5, TimeUnit.SECONDS)
+      .toCompletableFuture().get(5, TimeUnit.SECONDS)
 
+    callback?.accept(wsResponse.getStatus())
     return wsResponse.getStatus()
   }
 
@@ -46,18 +46,17 @@ class PlayJavaStreamedWsClientTest extends PlayWsClientTestBase {
   StandaloneWSClient wsClient
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     StandaloneWSRequest wsRequest = wsClient.url(uri.toURL().toString()).setFollowRedirects(true)
 
     headers.entrySet().each { entry -> wsRequest.addHeader(entry.getKey(), entry.getValue()) }
     StandaloneWSResponse wsResponse = wsRequest.setMethod(method).stream()
-      .whenComplete({ response, throwable ->
-        callback?.call()
-      }).toCompletableFuture().get(5, TimeUnit.SECONDS)
+      .toCompletableFuture().get(5, TimeUnit.SECONDS)
 
     // The status can be ready before the body so explicitly call wait for body to be ready
     wsResponse.getBodyAsSource().runFold("", { acc, out -> "" }, materializer)
       .toCompletableFuture().get(5, TimeUnit.SECONDS)
+    callback?.accept(wsResponse.getStatus())
     return wsResponse.getStatus()
   }
 
@@ -75,19 +74,16 @@ class PlayScalaWsClientTest extends PlayWsClientTestBase {
   play.api.libs.ws.StandaloneWSClient wsClient
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     Future<play.api.libs.ws.StandaloneWSResponse> futureResponse = wsClient.url(uri.toURL().toString())
       .withMethod(method)
       .withFollowRedirects(true)
       .withHttpHeaders(JavaConverters.mapAsScalaMap(headers).toSeq())
       .execute()
-      .transform({ theTry ->
-        callback?.call()
-        theTry
-      }, ExecutionContext.global())
 
     play.api.libs.ws.StandaloneWSResponse wsResponse = Await.result(futureResponse, Duration.apply(5, TimeUnit.SECONDS))
 
+    callback?.accept(wsResponse.status())
     return wsResponse.status()
   }
 
@@ -105,16 +101,12 @@ class PlayScalaStreamedWsClientTest extends PlayWsClientTestBase {
   play.api.libs.ws.StandaloneWSClient wsClient
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     Future<play.api.libs.ws.StandaloneWSResponse> futureResponse = wsClient.url(uri.toURL().toString())
       .withMethod(method)
       .withFollowRedirects(true)
       .withHttpHeaders(JavaConverters.mapAsScalaMap(headers).toSeq())
       .stream()
-      .transform({ theTry ->
-        callback?.call()
-        theTry
-      }, ExecutionContext.global())
 
     play.api.libs.ws.StandaloneWSResponse wsResponse = Await.result(futureResponse, Duration.apply(5, TimeUnit.SECONDS))
 
@@ -122,6 +114,7 @@ class PlayScalaStreamedWsClientTest extends PlayWsClientTestBase {
     Await.result(
       wsResponse.bodyAsSource().runFold("", { acc, out -> "" }, materializer),
       Duration.apply(5, TimeUnit.SECONDS))
+    callback?.accept(wsResponse.status())
     return wsResponse.status()
   }
 

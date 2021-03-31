@@ -6,6 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.nio.charset.StandardCharsets
+import java.util.function.Consumer
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -19,7 +20,7 @@ import org.jboss.resteasy.specimpl.ResteasyUriBuilder
 
 class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def proxyMethodName = "${method}_${uri.path}".toLowerCase()
       .replace("/", "")
       .replace('-', '_')
@@ -38,7 +39,7 @@ class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
 
     def response = proxy."$proxyMethodName"(param, isTestServer)
 
-    callback?.call()
+    callback?.accept(response.status)
 
     return response.status
   }

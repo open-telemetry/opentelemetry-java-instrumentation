@@ -8,6 +8,7 @@ package client
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.time.Duration
+import java.util.function.Consumer
 import ratpack.exec.ExecResult
 import ratpack.http.client.HttpClient
 import ratpack.test.exec.ExecHarness
@@ -29,7 +30,7 @@ class RatpackHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     ExecResult<Integer> result = exec.yield {
       def resp = client.request(uri) { spec ->
         spec.connectTimeout(Duration.ofSeconds(2))
@@ -41,7 +42,7 @@ class RatpackHttpClientTest extends HttpClientTest implements AgentTestTrait {
         }
       }
       return resp.map {
-        callback?.call()
+        callback?.accept(it.status.code)
         it.status.code
       }
     }

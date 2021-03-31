@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import spock.lang.Shared
 
 class Netty40ClientTest extends HttpClientTest implements AgentTestTrait {
@@ -48,7 +49,7 @@ class Netty40ClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
     def result = new CompletableFuture<Integer>()
     ch.pipeline().addLast(new ClientHandler(callback, result))

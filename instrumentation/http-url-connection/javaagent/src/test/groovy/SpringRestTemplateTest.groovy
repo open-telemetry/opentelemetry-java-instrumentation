@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import java.util.function.Consumer
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -29,13 +30,13 @@ class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     try {
       def httpHeaders = new HttpHeaders()
       headers.each { httpHeaders.put(it.key, [it.value]) }
       def request = new HttpEntity<String>(httpHeaders)
       ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.resolve(method), request, String)
-      callback?.call()
+      callback?.accept(response.statusCode.value())
       return response.statusCode.value()
     } catch (ResourceAccessException exception) {
       throw exception.getCause()

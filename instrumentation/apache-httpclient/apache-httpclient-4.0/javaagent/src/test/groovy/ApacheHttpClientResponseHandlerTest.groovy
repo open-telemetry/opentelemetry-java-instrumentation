@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import java.util.function.Consumer
 import org.apache.http.HttpResponse
 import org.apache.http.client.ResponseHandler
 import org.apache.http.impl.client.DefaultHttpClient
@@ -39,7 +40,7 @@ class ApacheHttpClientResponseHandlerTest extends HttpClientTest implements Agen
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def request = new HttpUriRequest(method, uri)
     headers.entrySet().each {
       request.addHeader(new BasicHeader(it.key, it.value))
@@ -48,7 +49,7 @@ class ApacheHttpClientResponseHandlerTest extends HttpClientTest implements Agen
     def status = client.execute(request, handler)
 
     // handler execution is included within the client span, so we can't call the callback there.
-    callback?.call()
+    callback?.accept(status)
 
     return status
   }

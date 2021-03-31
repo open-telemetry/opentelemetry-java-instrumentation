@@ -13,6 +13,7 @@ import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import java.util.function.Consumer
 import spock.lang.Shared
 import spock.lang.Timeout
 
@@ -25,20 +26,16 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest implements AgentT
   ActorMaterializer materializer = ActorMaterializer.create(system)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def request = HttpRequest.create(uri.toString())
       .withMethod(HttpMethods.lookup(method).get())
       .addHeaders(headers.collect { RawHeader.create(it.key, it.value) })
 
     def response = Http.get(system)
       .singleRequest(request, materializer)
-    //.whenComplete { result, error ->
-    // FIXME: Callback should be here instead.
-    //  callback?.call()
-    //}
       .toCompletableFuture()
       .get()
-    callback?.call()
+    callback?.accept(response.status().intValue())
     return response.status().intValue()
   }
 

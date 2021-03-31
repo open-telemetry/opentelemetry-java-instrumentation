@@ -6,6 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder
@@ -46,7 +47,7 @@ abstract class ApacheHttpClientResponseHandlerTest<T extends HttpRequest> extend
   abstract int executeRequest(T request)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     def request = new HttpUriRequestBase(method, uri)
     headers.entrySet().each {
       request.addHeader(new BasicHeader(it.key, it.value))
@@ -55,7 +56,7 @@ abstract class ApacheHttpClientResponseHandlerTest<T extends HttpRequest> extend
     def status = executeRequest(request)
 
     // handler execution is included within the client span, so we can't call the callback there.
-    callback?.call()
+    callback?.accept(status)
 
     return status
   }

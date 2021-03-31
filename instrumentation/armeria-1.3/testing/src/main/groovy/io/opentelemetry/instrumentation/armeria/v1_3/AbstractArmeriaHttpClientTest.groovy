@@ -18,6 +18,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.BiConsumer
+import java.util.function.Consumer
 import spock.lang.Shared
 
 abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
@@ -28,7 +29,7 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
   def client = configureClient(WebClient.builder()).build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     HttpRequest request = HttpRequest.of(
       RequestHeaders.builder(HttpMethod.valueOf(method), uri.toString())
         .set(headers.entrySet())
@@ -45,7 +46,7 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
         } else {
           responseRef.set(aggregatedHttpResponse)
         }
-        callback?.call()
+        callback?.accept(aggregatedHttpResponse.status().code())
         latch.countDown()
       }
     }, Context.current().wrap(MoreExecutors.directExecutor()))

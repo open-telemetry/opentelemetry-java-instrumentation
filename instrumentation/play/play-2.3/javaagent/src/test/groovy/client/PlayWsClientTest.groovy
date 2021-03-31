@@ -8,6 +8,7 @@ package client
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import play.GlobalSettings
 import play.libs.ws.WS
 import play.test.FakeApplication
@@ -39,14 +40,14 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def request = client.url(uri.toString())
     headers.entrySet().each {
       request.setHeader(it.key, it.value)
     }
 
     def status = request.execute(method).map({
-      callback?.call()
+      callback?.accept(it.status)
       it
     }).map({
       it.status

@@ -13,6 +13,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import java.util.function.Consumer
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Timeout
@@ -25,7 +26,7 @@ abstract class JdkHttpClientTest extends HttpClientTest implements AgentTestTrai
     ChronoUnit.MILLIS)).followRedirects(HttpClient.Redirect.NORMAL).build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
 
     def builder = HttpRequest.newBuilder().uri(uri).method(method, HttpRequest.BodyPublishers.noBody())
 
@@ -35,7 +36,7 @@ abstract class JdkHttpClientTest extends HttpClientTest implements AgentTestTrai
     def request = builder.build()
 
     def resp = send(request)
-    callback?.call()
+    callback?.accept(resp.statusCode())
     return resp.statusCode()
   }
 

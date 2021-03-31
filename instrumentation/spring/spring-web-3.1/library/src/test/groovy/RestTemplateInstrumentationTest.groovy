@@ -6,6 +6,7 @@
 import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import java.util.function.Consumer
 import org.springframework.http.HttpMethod
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
@@ -23,12 +24,12 @@ class RestTemplateInstrumentationTest extends HttpClientTest implements LibraryT
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     try {
       return restTemplate.execute(uri, HttpMethod.valueOf(method), { request ->
         headers.forEach(request.getHeaders().&add)
       }, { response ->
-        callback?.call()
+        callback?.accept(response.statusCode.value())
         response.statusCode.value()
       })
     } catch (ResourceAccessException exception) {

@@ -6,6 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.Future
+import java.util.function.Consumer
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
@@ -30,7 +31,7 @@ class ApacheHttpAsyncClientNullCallbackTest extends HttpClientTest implements Ag
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     def request = new HttpUriRequest(method, uri)
     headers.entrySet().each {
       request.addHeader(new BasicHeader(it.key, it.value))
@@ -42,7 +43,7 @@ class ApacheHttpAsyncClientNullCallbackTest extends HttpClientTest implements Ag
     Future future = client.execute(request, null)
     future.get()
     if (callback != null) {
-      callback()
+      callback.accept(future.get().statusLine.statusCode)
     }
     return future.get().statusLine.statusCode
   }

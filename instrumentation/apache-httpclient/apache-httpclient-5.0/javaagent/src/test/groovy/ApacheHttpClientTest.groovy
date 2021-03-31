@@ -6,6 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder
@@ -36,7 +37,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     def request = createRequest(method, uri)
     headers.entrySet().each {
       request.addHeader(new BasicHeader(it.key, it.value))
@@ -50,7 +51,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 
   abstract T createRequest(String method, URI uri)
 
-  abstract ClassicHttpResponse executeRequest(T request, URI uri, Closure callback)
+  abstract ClassicHttpResponse executeRequest(T request, URI uri, Consumer<Integer> callback)
 
   static String fullPathFromURI(URI uri) {
     StringBuilder builder = new StringBuilder()
@@ -79,9 +80,9 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Consumer<Integer> callback) {
     def response = client.execute(new HttpHost(uri.getHost(), uri.getPort()), request)
-    callback?.call()
+    callback?.accept(response.code)
     return response
   }
 
@@ -99,9 +100,9 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<ClassicHttpReq
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Consumer<Integer> callback) {
     def response = client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext())
-    callback?.call()
+    callback?.accept(response.code)
     return response
   }
 
@@ -119,9 +120,9 @@ class ApacheClientHostRequestResponseHandler extends ApacheHttpClientTest<Classi
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Consumer<Integer> callback) {
     return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, {
-      callback?.call()
+      callback?.accept(it.code)
       return it
     })
   }
@@ -140,9 +141,9 @@ class ApacheClientHostRequestResponseHandlerContext extends ApacheHttpClientTest
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Consumer<Integer> callback) {
     return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext(), {
-      callback?.call()
+      callback?.accept(it.code)
       return it
     })
   }
@@ -161,9 +162,9 @@ class ApacheClientUriRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Consumer<Integer> callback) {
     def response = client.execute(request)
-    callback?.call()
+    callback?.accept(response.code)
     return response
   }
 }
@@ -176,9 +177,9 @@ class ApacheClientUriRequestContext extends ApacheHttpClientTest<ClassicHttpRequ
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Consumer<Integer> callback) {
     def response = client.execute(request, new BasicHttpContext())
-    callback?.call()
+    callback?.accept(response.code)
     return response
   }
 }
@@ -191,9 +192,9 @@ class ApacheClientUriRequestResponseHandler extends ApacheHttpClientTest<Classic
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Consumer<Integer> callback) {
     return client.execute(request, {
-      callback?.call()
+      callback?.accept(it.code)
       it
     })
   }
@@ -207,9 +208,9 @@ class ApacheClientUriRequestResponseHandlerContext extends ApacheHttpClientTest<
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Consumer<Integer> callback) {
     return client.execute(request, {
-      callback?.call()
+      callback?.accept(it.code)
       it
     })
   }

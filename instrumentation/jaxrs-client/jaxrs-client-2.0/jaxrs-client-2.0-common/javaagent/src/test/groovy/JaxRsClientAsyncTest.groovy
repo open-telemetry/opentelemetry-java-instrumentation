@@ -7,6 +7,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import javax.ws.rs.client.AsyncInvoker
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
@@ -25,7 +26,7 @@ import spock.lang.Timeout
 abstract class JaxRsClientAsyncTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     Client client = builder().build()
     WebTarget service = client.target(uri)
     def builder = service.request(MediaType.TEXT_PLAIN)
@@ -37,7 +38,7 @@ abstract class JaxRsClientAsyncTest extends HttpClientTest implements AgentTestT
     Response response = request.method(method, (Entity) body, new InvocationCallback<Response>() {
       @Override
       void completed(Response s) {
-        callback?.call()
+        callback?.accept(s.status)
         latch.countDown()
       }
 

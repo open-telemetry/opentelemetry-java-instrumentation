@@ -7,6 +7,7 @@ package client
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import java.util.function.Consumer
 import play.libs.ws.WS
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -23,14 +24,14 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   def client = WS.newClient(-1)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def request = client.url(uri.toString())
     headers.entrySet().each {
       request.setHeader(it.key, it.value)
     }
 
     def status = request.execute(method).thenApply {
-      callback?.call()
+      callback?.accept(it.status)
       it
     }.thenApply {
       it.status

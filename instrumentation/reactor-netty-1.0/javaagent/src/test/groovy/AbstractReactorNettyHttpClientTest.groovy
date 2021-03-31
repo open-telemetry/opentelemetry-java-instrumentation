@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import java.util.function.Consumer
 import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientResponse
 
@@ -31,7 +32,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest impleme
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     HttpClientResponse resp = createHttpClient()
       .followRedirect(true)
       .headers({ h -> headers.each { k, v -> h.add(k, v) } })
@@ -41,7 +42,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest impleme
       .response()
       .block()
     if (callback != null) {
-      callback.call()
+      callback.accept(resp.status().code())
     }
     return resp.status().code()
   }

@@ -6,6 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
 import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.concurrent.FutureCallback
@@ -32,7 +33,7 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest implements AgentT
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
     def request = new HttpUriRequest(method, uri)
     headers.entrySet().each {
       request.addHeader(new BasicHeader(it.key, it.value))
@@ -44,7 +45,7 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest implements AgentT
 
       @Override
       void completed(HttpResponse result) {
-        callback?.call()
+        callback?.accept(result.statusLine.statusCode)
         responseFuture.complete(result.statusLine.statusCode)
       }
 

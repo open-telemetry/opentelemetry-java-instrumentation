@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
@@ -27,7 +28,7 @@ import spock.lang.Unroll
 abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
 
     Client client = builder().build()
     WebTarget service = client.target(uri)
@@ -35,7 +36,7 @@ abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait 
     headers.each { request.header(it.key, it.value) }
     def body = BODY_METHODS.contains(method) ? Entity.text("") : null
     Response response = request.method(method, (Entity) body)
-    callback?.call()
+    callback?.accept(response.status)
 
     return response.status
   }
