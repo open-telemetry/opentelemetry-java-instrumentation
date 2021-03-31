@@ -26,6 +26,7 @@ import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -68,7 +69,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
               .and(isPublic())
               .and(named("executeAsync"))
               .and(takesArguments(1))
-              .and(takesArgument(0, (named("java.util.concurrent.Executor")))),
+              .and(takesArgument(0, Executor.class)),
           GoogleHttpClientInstrumentationModule.class.getName() + "$GoogleHttpClientAsyncAdvice");
 
       return transformers;

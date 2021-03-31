@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -52,7 +53,7 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     0, named("com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext")))
-            .and(takesArgument(2, named("java.util.List"))),
+            .and(takesArgument(2, List.class)),
         CouchbaseNetworkInstrumentation.class.getName() + "$CouchbaseNetworkAdvice");
   }
 
