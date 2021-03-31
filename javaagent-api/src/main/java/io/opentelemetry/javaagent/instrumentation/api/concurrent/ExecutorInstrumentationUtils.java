@@ -26,8 +26,8 @@ public class ExecutorInstrumentationUtils {
           }
 
           // ThreadPoolExecutor worker threads may be initialized lazily and manage interruption of
-          // other threads. The actual tasks being run on those threads will propagate context but we
-          // should not propagate onto this management thread.
+          // other threads. The actual tasks being run on those threads will propagate context but
+          // we should not propagate onto this management thread.
           if (taskClass.getName().equals("java.util.concurrent.ThreadPoolExecutor$Worker")) {
             return false;
           }
