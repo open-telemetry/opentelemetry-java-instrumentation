@@ -48,7 +48,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final Tracer tracer;
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
-  private final StatusExtractor<? super REQUEST, ? super RESPONSE> statusExtractor;
+  private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
   private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors;
   private final ErrorCauseExtractor errorCauseExtractor;
 
@@ -56,13 +56,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
       Tracer tracer,
       SpanNameExtractor<? super REQUEST> spanNameExtractor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor,
-      StatusExtractor<? super REQUEST, ? super RESPONSE> statusExtractor,
+      SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor,
       List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors,
       ErrorCauseExtractor errorCauseExtractor) {
     this.tracer = tracer;
     this.spanNameExtractor = spanNameExtractor;
     this.spanKindExtractor = spanKindExtractor;
-    this.statusExtractor = statusExtractor;
+    this.spanStatusExtractor = spanStatusExtractor;
     this.extractors = extractors;
     this.errorCauseExtractor = errorCauseExtractor;
   }
@@ -120,7 +120,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       span.recordException(error);
     }
 
-    span.setStatus(statusExtractor.extract(request, response, error));
+    span.setStatus(spanStatusExtractor.extract(request, response, error));
 
     span.end();
   }

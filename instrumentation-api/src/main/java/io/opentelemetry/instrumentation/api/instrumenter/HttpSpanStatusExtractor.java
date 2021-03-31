@@ -8,11 +8,13 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 
-final class HttpStatusExtractor<REQUEST, RESPONSE> implements StatusExtractor<REQUEST, RESPONSE> {
+final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
+    implements SpanStatusExtractor<REQUEST, RESPONSE> {
 
   private final HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor;
 
-  protected HttpStatusExtractor(HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
+  protected HttpSpanStatusExtractor(
+      HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
     this.attributesExtractor = attributesExtractor;
   }
 
@@ -22,6 +24,6 @@ final class HttpStatusExtractor<REQUEST, RESPONSE> implements StatusExtractor<RE
     if (statusCode != null) {
       return HttpStatusConverter.statusFromHttpStatus((int) (long) statusCode);
     }
-    return StatusExtractor.getDefault().extract(request, response, error);
+    return SpanStatusExtractor.getDefault().extract(request, response, error);
   }
 }

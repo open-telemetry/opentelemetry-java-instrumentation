@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
@@ -20,7 +21,7 @@ import java.util.List;
  * builder with controls that are appropriate for that library and delegate to this to create the
  * {@link Instrumenter}.
  */
-public class InstrumenterBuilder<REQUEST, RESPONSE> {
+public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
@@ -28,8 +29,8 @@ public class InstrumenterBuilder<REQUEST, RESPONSE> {
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
 
-  private StatusExtractor<? super REQUEST, ? super RESPONSE> statusExtractor =
-      StatusExtractor.getDefault();
+  private SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
+      SpanStatusExtractor.getDefault();
   private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
 
   InstrumenterBuilder(
@@ -42,12 +43,11 @@ public class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Sets the {@link StatusExtractor} to use to determine the {@link
-   * io.opentelemetry.api.trace.StatusCode} for a response.
+   * Sets the {@link SpanStatusExtractor} to use to determine the {@link StatusCode} for a response.
    */
   public InstrumenterBuilder<REQUEST, RESPONSE> setSpanStatusExtractor(
-      StatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor) {
-    this.statusExtractor = spanStatusExtractor;
+      SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor) {
+    this.spanStatusExtractor = spanStatusExtractor;
     return this;
   }
 
@@ -117,7 +117,7 @@ public class InstrumenterBuilder<REQUEST, RESPONSE> {
         openTelemetry.getTracer(instrumentationName, InstrumentationVersion.VERSION),
         spanNameExtractor,
         spanKindExtractor,
-        statusExtractor,
+        spanStatusExtractor,
         new ArrayList<>(attributesExtractors),
         errorCauseExtractor);
   }
@@ -127,7 +127,7 @@ public class InstrumenterBuilder<REQUEST, RESPONSE> {
         Tracer tracer,
         SpanNameExtractor<? super RQ> spanNameExtractor,
         SpanKindExtractor<? super RQ> spanKindExtractor,
-        StatusExtractor<? super RQ, ? super RS> statusExtractor,
+        SpanStatusExtractor<? super RQ, ? super RS> spanStatusExtractor,
         List<? extends AttributesExtractor<? super RQ, ? super RS>> extractors,
         ErrorCauseExtractor errorCauseExtractor);
 
