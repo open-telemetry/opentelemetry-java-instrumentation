@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.rxjava2;
 
-import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import io.reactivex.plugins.RxJavaPlugins;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -41,15 +43,23 @@ public class RxJava2InstrumentationModule extends InstrumentationModule {
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return Collections.singletonMap(
-          isTypeInitializer(),
-          RxJava2InstrumentationModule.class.getName() + "$RxJavaPluginsAdvice");
+          isMethod(), RxJava2InstrumentationModule.class.getName() + "$RxJavaPluginsAdvice");
     }
   }
 
   public static class RxJavaPluginsAdvice {
+    @Advice.OnMethodEnter
+    public static int trackCallDepth() {
+      return CallDepthThreadLocalMap.incrementCallDepth(RxJavaPlugins.class);
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void postStaticInitializer() {
+    public static void postStaticInitializer(@Advice.Enter int callDepth) {
+      if (callDepth > 0) {
+        return;
+      }
       TracingAssembly.enable();
+      CallDepthThreadLocalMap.reset(RxJavaPlugins.class);
     }
   }
 }
