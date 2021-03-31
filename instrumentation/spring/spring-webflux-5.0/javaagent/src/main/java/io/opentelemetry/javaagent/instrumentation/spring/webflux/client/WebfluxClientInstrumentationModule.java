@@ -30,6 +30,11 @@ public class WebfluxClientInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isLibraryInstrumentationClass(String className) {
+    return className.startsWith("io.opentelemetry.instrumentation.spring.webflux.client");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new WebClientBuilderInstrumentation());
   }

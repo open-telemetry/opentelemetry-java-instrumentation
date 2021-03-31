@@ -7,5 +7,4 @@ import io.opentelemetry.instrumentation.rxjava2.AbstractRxJava2Test
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 
 class RxJava2Test extends AbstractRxJava2Test implements AgentTestTrait {
-  
 }
