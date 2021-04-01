@@ -27,11 +27,6 @@ public class LogbackInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isLibraryInstrumentationClass(String className) {
-    return className.startsWith("io.opentelemetry.instrumentation.logback.v1_0");
-  }
-
-  @Override
   public Map<String, String> contextStore() {
     return singletonMap("ch.qos.logback.classic.spi.ILoggingEvent", Span.class.getName());
   }

@@ -19,11 +19,6 @@ public class RocketMqInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isLibraryInstrumentationClass(String className) {
-    return className.startsWith("io.opentelemetry.instrumentation.rocketmq");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new RocketMqProducerInstrumentation(), new RocketMqConsumerInstrumentation());
   }

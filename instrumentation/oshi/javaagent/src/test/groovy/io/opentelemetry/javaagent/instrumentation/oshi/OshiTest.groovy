@@ -15,13 +15,13 @@ class OshiTest extends AgentInstrumentationSpecification {
   def "test system metrics is enabled"() {
     expect:
     // TODO (trask) is this the instrumentation library name we want?
-    findMetric("io.opentelemetry.instrumentation.oshi", "system.disk.io") != null
-    findMetric("io.opentelemetry.instrumentation.oshi", "system.disk.operations") != null
-    findMetric("io.opentelemetry.instrumentation.oshi", "system.memory.usage") != null
-    findMetric("io.opentelemetry.instrumentation.oshi", "system.memory.utilization") != null
-    findMetric("io.opentelemetry.instrumentation.oshi", "system.network.errors") != null
-    findMetric("io.opentelemetry.instrumentation.oshi", "system.network.io") != null
-    findMetric("io.opentelemetry.instrumentation.oshi", "system.network.packets") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.disk.io") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.disk.operations") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.memory.usage") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.memory.utilization") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.network.errors") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.network.io") != null
+    findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.network.packets") != null
   }
 
   def findMetric(instrumentationName, metricName) {

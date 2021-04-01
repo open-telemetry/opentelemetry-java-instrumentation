@@ -37,11 +37,6 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isLibraryInstrumentationClass(String className) {
-    return className.startsWith("io.opentelemetry.instrumentation.lettuce.v5_1");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new DefaultClientResourcesInstrumentation());
   }

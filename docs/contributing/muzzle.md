@@ -26,7 +26,7 @@ instrumentations (`InstrumentationModule#typeInstrumentations()`). The reference
 starts from advice classes (values of the map returned by the
 `TypeInstrumentation#transformers()` method) and traverses the class graph until it encounters a
 reference to a non-instrumentation class (determined by `InstrumentationClassPredicate` and
-the `InstrumentationModule#isLibraryInstrumentationClass(String)` predicate). Aside from references,
+the `InstrumentationModule#isHelperClass(String)` predicate). Aside from references,
 the collection process also builds a graph of dependencies between internal instrumentation helper
 classes - this dependency graph is later used to construct a list of helper classes that will be
 injected to the application classloader (`InstrumentationModule#getMuzzleHelperClassNames()`).
