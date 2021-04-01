@@ -5,12 +5,18 @@ muzzle {
     group = "org.elasticsearch.client"
     module = "transport"
     versions = "[6.0.0,)"
+    // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
+    // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
+    skipVersions += ['7.11.0']
     assertInverse = true
   }
   pass {
     group = "org.elasticsearch"
     module = "elasticsearch"
     versions = "[6.0.0,)"
+    // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
+    // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
+    skipVersions += ['7.11.0']
     assertInverse = true
   }
 }

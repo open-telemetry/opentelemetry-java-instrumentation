@@ -5,7 +5,7 @@ muzzle {
     group = "log4j"
     module = "log4j"
     versions = "[1.2,)"
-    // this version has a bad dependency on javax.jms:jms:1.1 which was released as pom only
+    // version 1.2.15 has a bad dependency on javax.jms:jms:1.1 which was released as pom only
     skipVersions += '1.2.15'
   }
 }
