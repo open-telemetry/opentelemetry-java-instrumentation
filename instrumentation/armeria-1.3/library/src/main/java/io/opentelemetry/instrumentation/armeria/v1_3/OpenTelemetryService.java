@@ -9,7 +9,6 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.logging.RequestLog;
-import com.linecorp.armeria.common.logging.RequestLogProperty;
 import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.SimpleDecoratingHttpService;
@@ -17,7 +16,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.concurrent.TimeUnit;
 
 /** Decorates an {@link HttpService} to trace inbound {@link HttpRequest}s. */
 final class OpenTelemetryService extends SimpleDecoratingHttpService {
@@ -32,10 +30,6 @@ final class OpenTelemetryService extends SimpleDecoratingHttpService {
 
   @Override
   public HttpResponse serve(ServiceRequestContext ctx, HttpRequest req) throws Exception {
-    // Always available in practice.
-    long requestStartTimeMicros =
-        ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
-    long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
     Context context = instrumenter.start(Context.current(), ctx);
 
     Span span = Span.fromContext(context);
@@ -44,12 +38,11 @@ final class OpenTelemetryService extends SimpleDecoratingHttpService {
           .whenComplete()
           .thenAccept(
               log -> {
-                if (log.responseHeaders().status() == HttpStatus.NOT_FOUND) {
+                if (log.responseHeaders().status().equals(HttpStatus.NOT_FOUND)) {
                   // Assume a not-found request was not served. The route we use by default will be
                   // some fallback like `/*` which is not as useful as the requested path.
                   span.updateName(ctx.path());
                 }
-                long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
                 instrumenter.end(context, ctx, log, log.responseCause());
               });
     }

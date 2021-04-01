@@ -35,16 +35,19 @@ final class ArmeriaHttpAttributesExtractor
   }
 
   @Override
+  @Nullable
   protected String host(RequestContext ctx) {
     return request(ctx).authority();
   }
 
   @Override
+  @Nullable
   protected String scheme(RequestContext ctx) {
     return request(ctx).scheme();
   }
 
   @Override
+  @Nullable
   protected String userAgent(RequestContext ctx) {
     return request(ctx).headers().get(HttpHeaderNames.USER_AGENT);
   }
@@ -55,15 +58,16 @@ final class ArmeriaHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long requestContentLengthUncompressed(
-      RequestContext ctx, RequestLog requestLog) {
+  @Nullable
+  protected Long requestContentLengthUncompressed(RequestContext ctx, RequestLog requestLog) {
     return null;
   }
 
   @Override
+  @Nullable
   protected Long statusCode(RequestContext ctx, RequestLog requestLog) {
     HttpStatus status = requestLog.responseHeaders().status();
-    if (status != HttpStatus.UNKNOWN) {
+    if (!status.equals(HttpStatus.UNKNOWN)) {
       return (long) status.code();
     }
     return null;
@@ -91,7 +95,8 @@ final class ArmeriaHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String serverName(RequestContext ctx, RequestLog requestLog) {
+  @Nullable
+  protected String serverName(RequestContext ctx, RequestLog requestLog) {
     if (ctx instanceof ServiceRequestContext) {
       return ((ServiceRequestContext) ctx).config().virtualHost().hostnamePattern();
     }
@@ -99,7 +104,8 @@ final class ArmeriaHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String route(RequestContext ctx) {
+  @Nullable
+  protected String route(RequestContext ctx) {
     if (ctx instanceof ServiceRequestContext) {
       return ((ServiceRequestContext) ctx).config().route().patternString();
     }
@@ -107,7 +113,8 @@ final class ArmeriaHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable String clientIp(RequestContext ctx, RequestLog requestLog) {
+  @Nullable
+  protected String clientIp(RequestContext ctx, RequestLog requestLog) {
     return null;
   }
 

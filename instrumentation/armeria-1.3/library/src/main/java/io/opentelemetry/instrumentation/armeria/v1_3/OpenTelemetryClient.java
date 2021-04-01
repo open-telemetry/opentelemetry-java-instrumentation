@@ -11,12 +11,10 @@ import com.linecorp.armeria.client.SimpleDecoratingHttpClient;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.logging.RequestLog;
-import com.linecorp.armeria.common.logging.RequestLogProperty;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.concurrent.TimeUnit;
 
 /** Decorates an {@link HttpClient} to trace outbound {@link HttpResponse}s. */
 final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
@@ -36,10 +34,6 @@ final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
       return unwrap().execute(ctx, req);
     }
 
-    // Always available in practice.
-    long requestStartTimeMicros =
-        ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
-    long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
     Context context = instrumenter.start(Context.current(), ctx);
 
     Span span = Span.fromContext(context);
@@ -48,7 +42,6 @@ final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
           .whenComplete()
           .thenAccept(
               log -> {
-                long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
                 instrumenter.end(context, ctx, log, log.responseCause());
               });
     }
