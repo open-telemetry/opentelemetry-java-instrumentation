@@ -5,7 +5,7 @@ muzzle {
     group = "com.couchbase.client"
     module = "java-client"
     versions = "[3.1,)"
-    // these version were released as ".bundle" instead of ".jar"
+    // these versions were released as ".bundle" instead of ".jar"
     skipVersions += ['2.7.5', '2.7.8']
     assertInverse = true
   }
