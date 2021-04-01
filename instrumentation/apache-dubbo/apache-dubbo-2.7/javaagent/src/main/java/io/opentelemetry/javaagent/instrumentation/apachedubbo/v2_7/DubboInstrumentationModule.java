@@ -33,6 +33,11 @@ public class DubboInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isLibraryInstrumentationClass(String className) {
+    return className.startsWith("io.opentelemetry.instrumentation.apachedubbo.v2_7");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new DubboInstrumentation());
   }

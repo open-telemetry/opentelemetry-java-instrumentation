@@ -27,6 +27,11 @@ public class ReactorInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isLibraryInstrumentationClass(String className) {
+    return className.startsWith("io.opentelemetry.instrumentation.reactor");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HooksInstrumentation());
   }

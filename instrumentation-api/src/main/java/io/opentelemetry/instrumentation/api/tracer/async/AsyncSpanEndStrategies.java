@@ -24,7 +24,7 @@ public class AsyncSpanEndStrategies {
   private final List<AsyncSpanEndStrategy> strategies = new CopyOnWriteArrayList<>();
 
   private AsyncSpanEndStrategies() {
-    strategies.add(Jdk8AsyncEndStrategy.INSTANCE);
+    strategies.add(Jdk8AsyncSpanEndStrategy.INSTANCE);
   }
 
   public void registerStrategy(AsyncSpanEndStrategy strategy) {

@@ -17,7 +17,7 @@ public class HystrixTracer extends BaseTracer {
     return TRACER;
   }
 
-  private final boolean captureExperimentalSpanAttributes =
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
           .getBooleanProperty("otel.instrumentation.hystrix.experimental-span-attributes", false);
 
@@ -35,7 +35,7 @@ public class HystrixTracer extends BaseTracer {
       String spanName = groupName + "." + commandName + "." + methodName;
 
       span.updateName(spanName);
-      if (captureExperimentalSpanAttributes) {
+      if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
         span.setAttribute("hystrix.command", commandName);
         span.setAttribute("hystrix.group", groupName);
         span.setAttribute("hystrix.circuit-open", circuitOpen);

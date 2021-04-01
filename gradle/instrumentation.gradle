@@ -79,15 +79,12 @@ shadowJar {
 
   archiveFileName = 'agent-testing.jar'
 
-  // rewrite library instrumentation dependencies
-  relocate "io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation"
-
   // Prevents conflict with other SLF4J instances. Important for premain.
   relocate 'org.slf4j', 'io.opentelemetry.javaagent.slf4j'
   // rewrite dependencies calling Logger.getLogger
   relocate 'java.util.logging.Logger', 'io.opentelemetry.javaagent.bootstrap.PatchLogger'
 
-  // prevents conflict with library instrumentation
+  // prevents conflict with library instrumentation, which uses its own instrumentation-api
   relocate 'io.opentelemetry.instrumentation.api', 'io.opentelemetry.javaagent.shaded.instrumentation.api'
 
   // relocate OpenTelemetry API usage

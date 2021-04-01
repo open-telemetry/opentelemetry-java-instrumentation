@@ -28,7 +28,7 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew build --stacktrace
+        run: ./gradlew build --stacktrace -x :smoke-tests:test
 
   example-distro:
     runs-on: ubuntu-latest
@@ -51,11 +51,17 @@ jobs:
         run: ./gradlew build --stacktrace
         working-directory: examples/distro
 
-  smoke-test-windows:
-    runs-on: windows-latest
+  smoke-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest, ubuntu-latest ]
+        suite: [ "glassfish", "jetty", "liberty", "tomcat", "tomee", "wildfly", "other" ]
+      fail-fast: false
     steps:
       - name: Support longpaths
         run: git config --system core.longpaths true
+        if: matrix.os == 'windows-latest'
 
       - uses: actions/checkout@v2
         with:
@@ -72,7 +78,10 @@ jobs:
           job-id: smokeTests
 
       - name: Test
-        run: ./gradlew :smoke-tests:test
+        env:
+          S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
+          S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }}
 
   test:
     runs-on: ubuntu-latest
@@ -104,4 +113,4 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
+        run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
