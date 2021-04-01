@@ -48,9 +48,12 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
   }
 
   private Completable endWhenComplete(BaseTracer tracer, Context context, Completable completable) {
-    return completable
+
+    Completable withNotifications = completable
+        .doOnSubscribe(s -> System.out.println("Subscribed!"))
         .doOnComplete(() -> tracer.end(context))
         .doOnError(exception -> tracer.endExceptionally(context, exception));
+    return withNotifications;
   }
 
   private Maybe<?> endWhenMaybeComplete(BaseTracer tracer, Context context, Maybe<?> maybe) {

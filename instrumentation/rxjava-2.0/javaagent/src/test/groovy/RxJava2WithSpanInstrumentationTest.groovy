@@ -11,13 +11,16 @@ import io.reactivex.Completable
 import io.reactivex.observers.TestObserver
 import io.reactivex.subjects.CompletableSubject
 
-class WithSpanInstrumentationTest extends AgentInstrumentationSpecification implements AgentTestTrait {
+class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecification implements AgentTestTrait {
 
-  def "should capture span for already completed CompletionStage"() {
+  def "should capture span for already completed Completable"() {
     setup:
     def observer = new TestObserver()
-    def result = new TracedWithSpan().completable(Completable.complete())
+    def source = Completable.complete()
+    def result = new TracedWithSpan()
+      .completable(source)
     result.subscribe(observer)
+    observer.assertComplete()
 
     expect:
     assertTraces(1) {
@@ -38,14 +41,17 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification impl
     setup:
     def source = CompletableSubject.create()
     def observer = new TestObserver()
-    def result = new TracedWithSpan().completable(source)
-    result.subscribe(observer)
+    new TracedWithSpan()
+      .completable(source)
+      .subscribe(observer)
+    observer.assertSubscribed()
 
     expect:
     Thread.sleep(500) // sleep a bit just to make sure no span is captured
     assertTraces(0) {}
 
     source.onComplete()
+    observer.assertComplete()
 
     assertTraces(1) {
       trace(0, 1) {
