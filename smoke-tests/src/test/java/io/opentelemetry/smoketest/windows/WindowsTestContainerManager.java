@@ -77,7 +77,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             .exec()
             .getId();
 
-    String backendSuffix = "-windows-20210324.684269693";
+    String backendSuffix = "-windows-20210401.709152102";
 
     String backendImageName =
         "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend" + backendSuffix;
