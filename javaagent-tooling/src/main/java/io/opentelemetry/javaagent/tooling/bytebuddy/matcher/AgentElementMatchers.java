@@ -92,4 +92,10 @@ public class AgentElementMatchers {
       }
     }
   }
+
+  /** Execute {@code callback} action whenever decorated {@code matcher} returns true. */
+  public static <T> ElementMatcher.Junction<T> callWhenTrue(
+      ElementMatcher<? super T> matcher, Runnable callback) {
+    return new CallWhenTrueDecorator<>(matcher, callback);
+  }
 }

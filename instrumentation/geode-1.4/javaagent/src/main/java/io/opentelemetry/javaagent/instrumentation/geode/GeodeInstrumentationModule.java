@@ -74,7 +74,7 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
       map.put(
           isMethod()
               .and(named("existsValue").or(named("query")).or(named("selectValue")))
-              .and(takesArgument(0, named("java.lang.String"))),
+              .and(takesArgument(0, String.class)),
           GeodeInstrumentationModule.class.getName() + "$QueryAdvice");
       return map;
     }

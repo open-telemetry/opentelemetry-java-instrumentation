@@ -12,12 +12,12 @@ import spock.lang.Specification
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 
-class Jdk8MethodStrategyTest extends Specification {
+class Jdk8AsyncSpanEndStrategyTest extends Specification {
   BaseTracer tracer
 
   Context context
 
-  def underTest = Jdk8AsyncEndStrategy.INSTANCE
+  def underTest = Jdk8AsyncSpanEndStrategy.INSTANCE
 
   void setup() {
     tracer = Mock()

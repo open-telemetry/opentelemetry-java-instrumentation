@@ -45,4 +45,10 @@ class RestTemplateInstrumentationTest extends HttpClientTest implements LibraryT
   boolean testRemoteConnection() {
     false
   }
+
+  // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
+  @Override
+  boolean testWithClientParent() {
+    false
+  }
 }

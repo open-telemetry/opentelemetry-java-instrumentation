@@ -47,7 +47,7 @@ abstract class SmokeTest extends Specification {
   }
 
   def setupSpec() {
-    containerManager.startEnvironment()
+    containerManager.startEnvironmentOnce()
     telemetryRetriever = new TelemetryRetriever(containerManager.getBackendMappedPort())
   }
 
@@ -76,10 +76,6 @@ abstract class SmokeTest extends Specification {
 
   def stopTarget() {
     containerManager.stopTarget()
-  }
-
-  def cleanupSpec() {
-    containerManager.stopEnvironment()
   }
 
   protected static Stream<AnyValue> findResourceAttribute(Collection<ExportTraceServiceRequest> traces,

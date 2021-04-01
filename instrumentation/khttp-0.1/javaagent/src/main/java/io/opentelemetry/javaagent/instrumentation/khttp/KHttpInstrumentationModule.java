@@ -54,9 +54,9 @@ public class KHttpInstrumentationModule extends InstrumentationModule {
           isMethod()
               .and(not(isAbstract()))
               .and(named("request"))
-              .and(takesArgument(0, named("java.lang.String")))
-              .and(takesArgument(1, named("java.lang.String")))
-              .and(takesArgument(2, named("java.util.Map")))
+              .and(takesArgument(0, String.class))
+              .and(takesArgument(1, String.class))
+              .and(takesArgument(2, Map.class))
               .and(returns(named("khttp.responses.Response"))),
           KHttpAdvice.class.getName());
     }

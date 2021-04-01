@@ -51,7 +51,7 @@ public class RmiClientInstrumentationModule extends InstrumentationModule {
           isMethod()
               .and(named("invoke"))
               .and(takesArgument(0, named("java.rmi.Remote")))
-              .and(takesArgument(1, named("java.lang.reflect.Method"))),
+              .and(takesArgument(1, Method.class)),
           RmiClientInstrumentationModule.class.getName() + "$RmiClientAdvice");
     }
   }

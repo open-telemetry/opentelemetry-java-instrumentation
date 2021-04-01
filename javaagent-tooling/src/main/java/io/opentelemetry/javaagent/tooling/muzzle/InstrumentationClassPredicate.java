@@ -14,8 +14,9 @@ public final class InstrumentationClassPredicate {
   private static final String JAVAAGENT_API_PACKAGE =
       "io.opentelemetry.javaagent.instrumentation.api.";
 
-  // library instrumentation packages (both shaded in the agent)
+  // library instrumentation packages
   private static final String LIBRARY_INSTRUMENTATION_PACKAGE = "io.opentelemetry.instrumentation.";
+  // note that instrumentation-api is shaded in the agent
   private static final String INSTRUMENTATION_API_PACKAGE = "io.opentelemetry.instrumentation.api.";
 
   private final Predicate<String> additionalLibraryInstrumentationPredicate;

@@ -60,7 +60,7 @@ public class VertxRxInstrumentationModule extends InstrumentationModule {
           isConstructor().and(takesArgument(0, named("io.vertx.core.Handler"))),
           VertxRxInstrumentationModule.class.getName() + "$AsyncResultSingleHandlerAdvice");
       result.put(
-          isConstructor().and(takesArgument(0, named("java.util.function.Consumer"))),
+          isConstructor().and(takesArgument(0, Consumer.class)),
           VertxRxInstrumentationModule.class.getName() + "$AsyncResultSingleConsumerAdvice");
       return result;
     }

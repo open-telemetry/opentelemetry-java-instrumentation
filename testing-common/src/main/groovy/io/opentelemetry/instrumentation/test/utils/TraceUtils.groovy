@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.server.ServerTraceUtils
@@ -51,6 +52,11 @@ class TraceUtils {
 
   static void runInternalSpan(String spanName) {
     tracer.spanBuilder(spanName).startSpan().end()
+  }
+
+  @WithSpan(value = "parent-client-span", kind = SpanKind.CLIENT)
+  static <T> T runUnderParentClientSpan(Callable<T> r) {
+    r.call()
   }
 
   static basicSpan(TraceAssert trace, int index, String operation, Object parentSpan = null, Throwable exception = null,
