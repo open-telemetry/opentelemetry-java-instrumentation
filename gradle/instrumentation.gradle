@@ -151,7 +151,7 @@ tasks.register('agentTestingJar', Jar) {
 // need to run this after evaluate because testSets plugin adds new test tasks
 afterEvaluate {
   tasks.withType(Test).configureEach {
-    inputs.file(shadowJar.archiveFile)
+    inputs.file(tasks.agentTestingJar.archiveFile)
 
     jvmArgs "-Dotel.javaagent.debug=true"
     jvmArgs "-javaagent:${tasks.agentTestingJar.archiveFile.get().asFile.absolutePath}"
@@ -160,8 +160,7 @@ afterEvaluate {
     // prevent sporadic gradle deadlocks, see SafeLogger for more details
     jvmArgs "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
 
-    dependsOn shadowJar
-    dependsOn ":testing:agent-for-testing:shadowJar"
+    dependsOn tasks.agentTestingJar
 
     // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
     // configurations will include transitive dependencies as well, which tests do often need.
