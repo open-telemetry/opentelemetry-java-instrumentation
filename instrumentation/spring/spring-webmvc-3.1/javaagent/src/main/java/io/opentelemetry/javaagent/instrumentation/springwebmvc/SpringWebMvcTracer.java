@@ -28,7 +28,7 @@ public class SpringWebMvcTracer extends BaseTracer {
 
   private static final SpringWebMvcTracer TRACER = new SpringWebMvcTracer();
 
-  private final boolean captureExperimentalSpanAttributes =
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
           .getBooleanProperty(
               "otel.instrumentation.spring-webmvc.experimental-span-attributes", false);
@@ -109,7 +109,7 @@ public class SpringWebMvcTracer extends BaseTracer {
   }
 
   private void onRender(SpanBuilder span, ModelAndView mv) {
-    if (captureExperimentalSpanAttributes) {
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       span.setAttribute("spring-webmvc.view.name", mv.getViewName());
       View view = mv.getView();
       if (view != null) {

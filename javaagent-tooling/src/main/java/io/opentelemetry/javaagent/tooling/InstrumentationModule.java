@@ -398,7 +398,13 @@ public abstract class InstrumentationModule {
     return Collections.emptyMap();
   }
 
+  /**
+   * Allows instrumentation modules to disable themselves by default, or to additionally disable
+   * themselves on some other condition.
+   */
   protected boolean defaultEnabled() {
+    // TODO (trask) caching this value statically requires changing (or removing) the tests that
+    //  rely on updating the value
     return Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
   }
 }
