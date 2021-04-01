@@ -83,7 +83,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
 
   def "test start action"() {
     setup:
-    // index.start trigger and action named "start" on index page
+    // index.start triggers an action named "start" on index page
     def url = HttpUrl.get(address.resolve("index.start")).newBuilder().build()
     def request = request(url, "GET", null).build()
     Response response = client.newCall(request).execute()
@@ -109,7 +109,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
 
   def "test exception action"() {
     setup:
-    // index.exception trigger and action named "exception" on index page
+    // index.exception triggers an action named "exception" on index page
     def url = HttpUrl.get(address.resolve("index.exception")).newBuilder().build()
     def request = request(url, "GET", null).build()
     Response response = client.newCall(request).execute()
