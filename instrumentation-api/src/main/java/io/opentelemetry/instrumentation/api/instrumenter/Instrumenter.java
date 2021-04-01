@@ -81,6 +81,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
         return ServerSpan.fromContextOrNull(parentContext) == null;
       case CLIENT:
         return ClientSpan.fromContextOrNull(parentContext) == null;
+      default:
+        // fallthrough
     }
     return true;
   }
