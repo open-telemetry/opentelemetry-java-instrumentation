@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.callWhenTrue;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.failSafe;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasAnyClassesNamed;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -31,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
@@ -133,8 +130,7 @@ public abstract class InstrumentationModule {
       return parentAgentBuilder;
     }
 
-    ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher =
-        createModuleClassLoaderMatcher(helperClassNames);
+    ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher = classLoaderMatcher();
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher();
     HelperInjector helperInjector =
         new HelperInjector(mainInstrumentationName(), helperClassNames, helperResourceNames);
@@ -177,40 +173,6 @@ public abstract class InstrumentationModule {
     helperClassNames.addAll(asList(additionalHelperClassNames()));
     helperClassNames.addAll(asList(getMuzzleHelperClassNames()));
     return helperClassNames;
-  }
-
-  /**
-   * Returns the matcher produced by {@link #classLoaderMatcher()} with an additional condition
-   * added: no library instrumentation classes defined by this module can be present in the
-   * application classloader. This disables the javaagent instrumentation if the library
-   * instrumentation is already used by the application.
-   */
-  private ElementMatcher.Junction<ClassLoader> createModuleClassLoaderMatcher(
-      List<String> helperClassNames) {
-    // TODO: optimization: refactor matcher caching, only the matcher returned by this method should
-    // cache results, the intermediary ones don't need to cache anything
-    // right now every matcher returned from ClassLoaderMatcher caches separately
-    // this will also make those "Skipping ..." logs appear less
-
-    List<String> libraryHelperClasses =
-        helperClassNames.stream()
-            .filter(this::isLibraryInstrumentationClass)
-            .collect(Collectors.toList());
-
-    if (libraryHelperClasses.isEmpty()) {
-      return classLoaderMatcher();
-    }
-
-    ElementMatcher.Junction<ClassLoader> libraryMatcher =
-        callWhenTrue(
-            hasAnyClassesNamed(libraryHelperClasses), this::logLibraryInstrumentationDetected);
-    return classLoaderMatcher().and(not(libraryMatcher));
-  }
-
-  private void logLibraryInstrumentationDetected() {
-    log.debug(
-        "Skipping instrumentation {} because library instrumentation was detected on classpath",
-        mainInstrumentationName());
   }
 
   private AgentBuilder.Identified.Extendable applyInstrumentationTransformers(
@@ -296,8 +258,23 @@ public abstract class InstrumentationModule {
    * Java helper function here.
    */
   @SuppressWarnings("unused")
-  protected final Predicate<String> isLibraryInstrumentationClassPredicate() {
-    return this::isLibraryInstrumentationClass;
+  protected final Predicate<String> additionalLibraryInstrumentationPackage() {
+    return this::isHelperClass;
+  }
+
+  /**
+   * Instrumentation modules can override this method to specify additional packages (or classes)
+   * that should be treated as "library instrumentation" packages. Classes from those packages will
+   * be treated by muzzle as instrumentation helper classes: they will be scanned for references and
+   * automatically injected into the application classloader if they're used in any type
+   * instrumentation. The classes for which this predicate returns {@code true} will be treated as
+   * helper classes, in addition to the default ones defined in {@link
+   * InstrumentationClassPredicate}.
+   *
+   * @param className The name of the class that may or may not be a helper class.
+   */
+  public boolean isHelperClass(String className) {
+    return false;
   }
 
   /**
@@ -328,8 +305,8 @@ public abstract class InstrumentationModule {
   /**
    * Instrumentation modules can override this method to provide additional helper classes that are
    * not located in instrumentation packages described in {@link InstrumentationClassPredicate} and
-   * {@link #isLibraryInstrumentationClass(String)} (and not automatically detected by muzzle).
-   * These additional classes will be injected into the application classloader first.
+   * {@link #isHelperClass(String)} (and not automatically detected by muzzle). These additional
+   * classes will be injected into the application classloader first.
    */
   protected String[] additionalHelperClassNames() {
     return EMPTY;
@@ -363,26 +340,6 @@ public abstract class InstrumentationModule {
    */
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return any();
-  }
-
-  /**
-   * Instrumentation modules that use existing library instrumentation should override this method
-   * to specify additional packages (or classes) that should be treated as "library instrumentation"
-   * packages/classes.
-   *
-   * <p>Classes marked as library instrumentation classes will be treated by muzzle as
-   * instrumentation helper classes: they will be scanned for references and automatically injected
-   * into the application classloader if they're used in any type instrumentation.
-   *
-   * <p>In addition to that, the javaagent will prevent the instrumentations from this module from
-   * being applied when it detects that the application classloader already contains one of the
-   * library classes. This behavior prevents interference between library and javaagent
-   * instrumentation (for example, duplicate telemetry).
-   *
-   * @param className The name of the class that may or may not be a library instrumentation class.
-   */
-  public boolean isLibraryInstrumentationClass(String className) {
-    return false;
   }
 
   /** Returns a list of all individual type instrumentation in this module. */

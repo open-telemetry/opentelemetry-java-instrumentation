@@ -147,8 +147,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
               .flatMap(typeInstrumentation -> typeInstrumentation.transformers().values().stream())
               .collect(Collectors.toSet());
 
-      ReferenceCollector collector =
-          new ReferenceCollector(instrumentationModule::isLibraryInstrumentationClass);
+      ReferenceCollector collector = new ReferenceCollector(instrumentationModule::isHelperClass);
       for (String adviceClass : adviceClassNames) {
         collector.collectReferencesFromAdvice(adviceClass);
       }
@@ -207,7 +206,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
        *                                                        new Reference[]{
        *                                                          // reference builders
        *                                                        },
-       *                                                        this.isLibraryInstrumentationClassPredicate());
+       *                                                        this.additionalLibraryInstrumentationPackage());
        *   }
        *   return this.muzzleReferenceMatcher;
        * }
@@ -473,7 +472,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
         mv.visitMethodInsn(
             Opcodes.INVOKEVIRTUAL,
             instrumentationClassName,
-            "isLibraryInstrumentationClassPredicate",
+            "additionalLibraryInstrumentationPackage",
             "()Ljava/util/function/Predicate;",
             false);
 

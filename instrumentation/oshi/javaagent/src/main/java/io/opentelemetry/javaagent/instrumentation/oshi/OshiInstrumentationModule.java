@@ -32,11 +32,6 @@ public class OshiInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isLibraryInstrumentationClass(String className) {
-    return className.startsWith("io.opentelemetry.instrumentation.oshi");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new SystemInfoInstrumentation());
   }
