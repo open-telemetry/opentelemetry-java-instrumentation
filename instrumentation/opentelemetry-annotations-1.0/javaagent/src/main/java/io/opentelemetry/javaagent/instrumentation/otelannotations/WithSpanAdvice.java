@@ -45,7 +45,7 @@ public class WithSpanAdvice {
       @Advice.Origin Method method,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
-      @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
+      @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
       @Advice.Thrown Throwable throwable) {
     if (scope == null) {
       return;
@@ -55,7 +55,7 @@ public class WithSpanAdvice {
     if (throwable != null) {
       tracer().endExceptionally(context, throwable);
     } else {
-      tracer().end(context, method.getReturnType(), returnValue);
+      returnValue = tracer().end(context, method.getReturnType(), returnValue);
     }
   }
 }
