@@ -85,6 +85,7 @@ These are the supported libraries and frameworks:
 | [Spring Web Services](https://spring.io/projects/spring-ws)                                                                           | 2.0+                           |
 | [Spymemcached](https://github.com/couchbase/spymemcached)                                                                             | 2.12+                          |
 | [Struts2](https://github.com/apache/struts)                                                                                           | 2.3+                           |
+| [Tapestry](https://tapestry.apache.org/)                                                                                              | 5.4+                           |
 | [Twilio](https://github.com/twilio/twilio-java)                                                                                       | 6.6+ (not including 8.x yet)   |
 | [Undertow](https://undertow.io/)                                                                                                      | 1.4+                           |
 | [Vaadin](https://vaadin.com/)                                                                                                         | 14.2+                          |
