@@ -388,6 +388,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
      class GeneratedJava6TestClass implements Runnable {
        @WithSpan
        public void run() {
+         TraceUtils.runUnderTrace("intercept", {})
        }
      }
      */
