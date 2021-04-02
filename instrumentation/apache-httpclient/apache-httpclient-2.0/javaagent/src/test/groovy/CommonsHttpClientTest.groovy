@@ -5,7 +5,6 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.function.Consumer
 import org.apache.commons.httpclient.HttpClient
 import org.apache.commons.httpclient.HttpMethod
 import org.apache.commons.httpclient.methods.DeleteMethod
@@ -33,7 +32,7 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     HttpMethod httpMethod
 
     switch (method) {
@@ -66,7 +65,6 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
     try {
       client.executeMethod(httpMethod)
-      callback?.accept(httpMethod.getStatusCode())
       return httpMethod.getStatusCode()
     } finally {
       httpMethod.releaseConnection()
@@ -76,6 +74,11 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   @Override
   boolean testRedirects() {
     // Generates 4 spans
+    false
+  }
+
+  @Override
+  boolean testAsync() {
     false
   }
 }

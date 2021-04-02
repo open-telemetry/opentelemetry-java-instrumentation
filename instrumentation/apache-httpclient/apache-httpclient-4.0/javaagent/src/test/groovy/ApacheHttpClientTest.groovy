@@ -33,21 +33,36 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     def request = createRequest(method, uri)
     headers.entrySet().each {
       request.addHeader(new BasicHeader(it.key, it.value))
     }
 
-    def response = executeRequest(request, uri, callback)
+    def response = executeRequest(request, uri)
     response.entity?.content?.close() // Make sure the connection is closed.
 
     return response.statusLine.statusCode
   }
 
+  @Override
+  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    def request = createRequest(method, uri)
+    headers.entrySet().each {
+      request.addHeader(new BasicHeader(it.key, it.value))
+    }
+
+    executeRequestAsync(request, uri) {
+      it.entity?.content?.close() // Make sure the connection is closed.
+      callback.accept(it.statusLine.statusCode)
+    }
+  }
+
   abstract T createRequest(String method, URI uri)
 
-  abstract HttpResponse executeRequest(T request, URI uri, Consumer<Integer> callback)
+  abstract HttpResponse executeRequest(T request, URI uri)
+
+  abstract void executeRequestAsync(T request, URI uri, Consumer<HttpResponse> callback)
 
   static String fullPathFromURI(URI uri) {
     StringBuilder builder = new StringBuilder()
@@ -76,10 +91,18 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   }
 
   @Override
-  HttpResponse executeRequest(BasicHttpRequest request, URI uri, Consumer<Integer> callback) {
-    def response = client.execute(new HttpHost(uri.getHost(), uri.getPort()), request)
-    callback?.accept(response.statusLine.statusCode)
-    return response
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request)
+  }
+
+  @Override
+  void executeRequestAsync(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
+    // This is not actually an asynchronous invocation since the response handler is always invoked
+    // inline. But context propagation works the same for a response handler as a callback so we
+    // treat it as an async test.
+    client.execute(new HttpHost(uri.getHost(), uri.getPort()), request) {
+      callback.accept(it)
+    }
   }
 
   @Override
@@ -96,51 +119,17 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpReque
   }
 
   @Override
-  HttpResponse executeRequest(BasicHttpRequest request, URI uri, Consumer<Integer> callback) {
-    def response = client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext())
-    callback?.accept(response.statusLine.statusCode)
-    return response
+  HttpResponse executeRequest(BasicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext())
   }
 
   @Override
-  boolean testRemoteConnection() {
-    return false
-  }
-}
-
-@Timeout(5)
-class ApacheClientHostRequestResponseHandler extends ApacheHttpClientTest<BasicHttpRequest> {
-  @Override
-  BasicHttpRequest createRequest(String method, URI uri) {
-    return new BasicHttpRequest(method, fullPathFromURI(uri))
-  }
-
-  @Override
-  HttpResponse executeRequest(BasicHttpRequest request, URI uri, Consumer<Integer> callback) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, {
-      callback?.accept(it.statusLine.statusCode)
-      return it
-    })
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
-  }
-}
-
-@Timeout(5)
-class ApacheClientHostRequestResponseHandlerContext extends ApacheHttpClientTest<BasicHttpRequest> {
-  @Override
-  BasicHttpRequest createRequest(String method, URI uri) {
-    return new BasicHttpRequest(method, fullPathFromURI(uri))
-  }
-
-  @Override
-  HttpResponse executeRequest(BasicHttpRequest request, URI uri, Consumer<Integer> callback) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, {
-      callback?.accept(it.statusLine.statusCode)
-      return it
+  void executeRequestAsync(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
+    // This is not actually an asynchronous invocation since the response handler is always invoked
+    // inline. But context propagation works the same for a response handler as a callback so we
+    // treat it as an async test.
+    client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, {
+      callback.accept(it)
     }, new BasicHttpContext())
   }
 
@@ -158,10 +147,18 @@ class ApacheClientUriRequest extends ApacheHttpClientTest<HttpUriRequest> {
   }
 
   @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri, Consumer<Integer> callback) {
-    def response = client.execute(request)
-    callback?.accept(response.statusLine.statusCode)
-    return response
+  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
+    return client.execute(request)
+  }
+
+  @Override
+  void executeRequestAsync(HttpUriRequest request, URI uri, Consumer<HttpResponse> callback) {
+    // This is not actually an asynchronous invocation since the response handler is always invoked
+    // inline. But context propagation works the same for a response handler as a callback so we
+    // treat it as an async test.
+    client.execute(request) {
+      callback.accept(it)
+    }
   }
 }
 
@@ -173,41 +170,17 @@ class ApacheClientUriRequestContext extends ApacheHttpClientTest<HttpUriRequest>
   }
 
   @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri, Consumer<Integer> callback) {
-    def response = client.execute(request, new BasicHttpContext())
-    callback?.accept(response.statusLine.statusCode)
-    return response
-  }
-}
-
-@Timeout(5)
-class ApacheClientUriRequestResponseHandler extends ApacheHttpClientTest<HttpUriRequest> {
-  @Override
-  HttpUriRequest createRequest(String method, URI uri) {
-    return new HttpUriRequest(method, uri)
+  HttpResponse executeRequest(HttpUriRequest request, URI uri) {
+    return client.execute(request, new BasicHttpContext())
   }
 
   @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri, Consumer<Integer> callback) {
-    return client.execute(request, {
-      callback?.accept(it.statusLine.statusCode)
-      it
-    })
-  }
-}
-
-@Timeout(5)
-class ApacheClientUriRequestResponseHandlerContext extends ApacheHttpClientTest<HttpUriRequest> {
-  @Override
-  HttpUriRequest createRequest(String method, URI uri) {
-    return new HttpUriRequest(method, uri)
-  }
-
-  @Override
-  HttpResponse executeRequest(HttpUriRequest request, URI uri, Consumer<Integer> callback) {
-    return client.execute(request, {
-      callback?.accept(it.statusLine.statusCode)
-      it
+  void executeRequestAsync(HttpUriRequest request, URI uri, Consumer<HttpResponse> callback) {
+    // This is not actually an asynchronous invocation since the response handler is always invoked
+    // inline. But context propagation works the same for a response handler as a callback so we
+    // treat it as an async test.
+    client.execute(request, {
+      callback.accept(it)
     }, new BasicHttpContext())
   }
 }

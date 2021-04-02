@@ -13,6 +13,7 @@ import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker
 import io.vertx.reactivex.core.Vertx
+import io.vertx.reactivex.ext.web.client.HttpRequest
 import io.vertx.reactivex.ext.web.client.WebClient
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
@@ -35,27 +36,34 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest implements Agent
   )
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
-    def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
-    headers.each { request.putHeader(it.key, it.value) }
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    // VertxRx doesn't seem to provide a synchronous API at all for circuit breaker. Bridge through
+    // a callback.
+    CompletableFuture<Integer> future = new CompletableFuture<>()
+    doRequestAsync(method, uri, headers) {
+      future.complete(it)
+    }
+    return future.get()
+  }
 
-    def future = new CompletableFuture<Integer>()
-
-    breaker.executeCommand({ command ->
+  @Override
+  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    def request = buildRequest(method, uri, headers)
+    breaker.executeCommand({command ->
       request.rxSend().doOnSuccess {
         command.complete(it)
       }.doOnError {
         command.fail(it)
       }.subscribe()
     }, {
-      callback?.accept(it.result().statusCode())
-      if (it.succeeded()) {
-        future.complete(it.result().statusCode())
-      } else {
-        future.completeExceptionally(it.cause())
-      }
+      callback.accept(it.result().statusCode())
     })
-    return future.get()
+  }
+
+  private HttpRequest<?> buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
+    headers.each { request.putHeader(it.key, it.value) }
+    return request
   }
 
   @Override
@@ -84,7 +92,7 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest implements Agent
   }
 
   @Override
-  boolean testCallbackWithParent() {
+  boolean testAsyncWithParent() {
     //Make rxjava2 instrumentation work with vert.x reactive in order to fix this test
     return false
   }

@@ -59,17 +59,32 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
     def result = new CompletableFuture<Integer>()
-    ch.pipeline().addLast(new ClientHandler(callback, result))
+    ch.pipeline().addLast(new ClientHandler(null, result))
 
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.toString(), Unpooled.EMPTY_BUFFER)
-    request.headers().set(HttpHeaderNames.HOST, uri.host)
-    headers.each { k, v -> request.headers().set(k, v) }
+    def request = buildRequest(method, uri, headers)
 
     ch.writeAndFlush(request).get()
     return result.get(20, TimeUnit.SECONDS)
+  }
+
+  @Override
+  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
+    ch.pipeline().addLast(new ClientHandler(callback, CompletableFuture.completedFuture(0)))
+
+    def request = buildRequest(method, uri, headers)
+
+    ch.writeAndFlush(request)
+  }
+
+  private static DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.toString(), Unpooled.EMPTY_BUFFER)
+    request.headers().set(HttpHeaderNames.HOST, uri.host)
+    headers.each { k, v -> request.headers().set(k, v) }
+    return request
   }
 
   @Override

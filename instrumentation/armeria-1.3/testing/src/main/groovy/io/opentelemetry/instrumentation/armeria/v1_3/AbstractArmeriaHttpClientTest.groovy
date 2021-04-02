@@ -5,19 +5,15 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3
 
-import com.google.common.util.concurrent.MoreExecutors
+
 import com.linecorp.armeria.client.WebClient
 import com.linecorp.armeria.client.WebClientBuilder
 import com.linecorp.armeria.common.AggregatedHttpResponse
 import com.linecorp.armeria.common.HttpMethod
 import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.common.RequestHeaders
-import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-import java.util.function.BiConsumer
+import java.util.concurrent.CompletionException
 import java.util.function.Consumer
 import spock.lang.Shared
 
@@ -29,33 +25,28 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
   def client = configureClient(WebClient.builder()).build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
-    HttpRequest request = HttpRequest.of(
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    AggregatedHttpResponse response
+    try {
+      response = client.execute(buildRequest(method, uri, headers)).aggregate().join()
+    } catch(CompletionException e) {
+      throw e.cause
+    }
+    return response.status().code()
+  }
+
+  @Override
+  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    client.execute(buildRequest(method, uri, headers)).aggregate().thenAccept {
+      callback.accept(it.status().code())
+    }
+  }
+
+  private static HttpRequest buildRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    return HttpRequest.of(
       RequestHeaders.builder(HttpMethod.valueOf(method), uri.toString())
         .set(headers.entrySet())
         .build())
-
-    AtomicReference<AggregatedHttpResponse> responseRef = new AtomicReference<>()
-    AtomicReference<Throwable> exRef = new AtomicReference<>()
-    def latch = new CountDownLatch(1)
-    client.execute(request).aggregate().whenCompleteAsync(new BiConsumer<AggregatedHttpResponse, Throwable>() {
-      @Override
-      void accept(AggregatedHttpResponse aggregatedHttpResponse, Throwable throwable) {
-        if (throwable != null) {
-          exRef.set(throwable)
-        } else {
-          responseRef.set(aggregatedHttpResponse)
-        }
-        callback?.accept(aggregatedHttpResponse.status().code())
-        latch.countDown()
-      }
-    }, Context.current().wrap(MoreExecutors.directExecutor()))
-
-    latch.await(30, TimeUnit.SECONDS)
-    if (exRef.get() != null) {
-      throw exRef.get()
-    }
-    return responseRef.get().status().code()
   }
 
   // Not supported yet: https://github.com/line/armeria/issues/2489

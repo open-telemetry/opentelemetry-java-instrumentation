@@ -90,7 +90,12 @@ abstract class HttpClientTest extends InstrumentationSpecification {
    * @param method
    * @return
    */
-  abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null)
+  abstract int doRequest(String method, URI uri, Map<String, String> headers = [:])
+
+  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    // Must be implemented if testAsync is true
+    throw new UnsupportedOperationException()
+  }
 
   Integer statusOnRedirectError() {
     return null
@@ -191,13 +196,14 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   def "trace request with callback and parent"() {
     given:
-    assumeTrue(testCallbackWithParent())
+    assumeTrue(testAsync())
+    assumeTrue(testAsyncWithParent())
 
     def status = new BlockingVariable<Integer>()
 
     when:
     runUnderTrace("parent") {
-      doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+      doRequestAsync(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
         runUnderTrace("child") {}
         status.set(it)
       }
@@ -220,10 +226,12 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   def "trace request with callback and no parent"() {
     given:
+    assumeTrue(testAsync())
+
     def status = new BlockingVariable<Integer>()
 
     when:
-    doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+    doRequestAsync(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
       runUnderTrace("callback") {
       }
       status.set(it)
@@ -634,7 +642,11 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     true
   }
 
-  boolean testCallbackWithParent() {
+  boolean testAsync() {
+    return true
+  }
+
+  boolean testAsyncWithParent() {
     // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
     // function is used.  There is no way to stop a test from a derived class hence the flag
     true

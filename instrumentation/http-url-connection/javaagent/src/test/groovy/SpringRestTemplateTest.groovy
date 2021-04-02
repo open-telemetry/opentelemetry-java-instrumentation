@@ -30,17 +30,28 @@ class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     try {
       def httpHeaders = new HttpHeaders()
       headers.each { httpHeaders.put(it.key, [it.value]) }
       def request = new HttpEntity<String>(httpHeaders)
-      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.resolve(method), request, String)
-      callback?.accept(response.statusCode.value())
+      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
       return response.statusCode.value()
     } catch (ResourceAccessException exception) {
       throw exception.getCause()
     }
+  }
+
+  @Override
+  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    // This is not actually an asynchronous invocation since the response handler is always invoked
+    // inline. But context propagation works the same for a response handler as a callback so we
+    // treat it as an async test.
+    restTemplate.execute(uri, HttpMethod.valueOf(method), { request ->
+      headers.forEach(request.getHeaders().&add)
+    }, { response ->
+      callback.accept(response.statusCode.value())
+    })
   }
 
   @Override

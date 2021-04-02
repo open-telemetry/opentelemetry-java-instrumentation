@@ -6,6 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.function.Consumer
+import reactor.core.publisher.Mono
 import reactor.netty.http.client.HttpClient
 import reactor.netty.http.client.HttpClientResponse
 
@@ -32,19 +33,27 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest impleme
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
-    HttpClientResponse resp = createHttpClient()
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    Mono<HttpClientResponse> response = sendRequest(method, uri, headers)
+    return response.block().status().code()
+  }
+
+  @Override
+  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    Mono<HttpClientResponse> response = sendRequest(method, uri, headers)
+    response.subscribe {
+      callback.accept(it.status().code())
+    }
+  }
+
+  Mono<HttpClientResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
+    return createHttpClient()
       .followRedirect(true)
       .headers({ h -> headers.each { k, v -> h.add(k, v) } })
       .baseUrl(server.address.toString())
       ."${method.toLowerCase()}"()
       .uri(uri.toString())
       .response()
-      .block()
-    if (callback != null) {
-      callback.accept(resp.status().code())
-    }
-    return resp.status().code()
   }
 
   abstract HttpClient createHttpClient()

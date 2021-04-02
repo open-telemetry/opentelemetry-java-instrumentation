@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.function.Consumer
 import spock.lang.Requires
 import spock.lang.Timeout
 import spock.lang.Unroll
@@ -25,7 +24,7 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
   static final STATUS = 200
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers) {
     HttpURLConnection connection = uri.toURL().openConnection()
     try {
       connection.setRequestMethod(method)
@@ -38,7 +37,6 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
       assert Span.current() == parentSpan
       stream.readLines()
       stream.close()
-      callback?.accept(connection.getResponseCode())
       return connection.getResponseCode()
     } finally {
       connection.disconnect()
@@ -53,6 +51,11 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
   @Override
   Integer statusOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testAsync() {
+    return false
   }
 
   @Unroll

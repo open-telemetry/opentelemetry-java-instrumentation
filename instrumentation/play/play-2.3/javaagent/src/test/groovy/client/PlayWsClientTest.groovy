@@ -10,7 +10,10 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import play.GlobalSettings
+import play.libs.F
 import play.libs.ws.WS
+import play.libs.ws.WSClient
+import play.libs.ws.WSResponse
 import play.test.FakeApplication
 import play.test.Helpers
 import spock.lang.Shared
@@ -28,7 +31,7 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   )
 
   @Shared
-  def client
+  WSClient client
 
   def setupSpec() {
     Helpers.start(application)
@@ -40,19 +43,23 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers) {
+    return sendRequest(method, uri, headers).get(1, TimeUnit.SECONDS).status
+  }
+
+  @Override
+  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    sendRequest(method, uri, headers).onRedeem {
+      callback.accept(it.status)
+    }
+  }
+
+  private F.Promise<WSResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
     def request = client.url(uri.toString())
     headers.entrySet().each {
       request.setHeader(it.key, it.value)
     }
-
-    def status = request.execute(method).map({
-      callback?.accept(it.status)
-      it
-    }).map({
-      it.status
-    })
-    return status.get(1, TimeUnit.SECONDS)
+    return request.execute(method)
   }
 
   @Override

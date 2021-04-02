@@ -10,6 +10,8 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
 import com.ning.http.client.AsyncHttpClientConfig
+import com.ning.http.client.Request
+import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
@@ -28,21 +30,32 @@ class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   @AutoCleanup
-  AsyncHttpClient asyncHttpClient = new AsyncHttpClient(clientConfig)
+  AsyncHttpClient client = new AsyncHttpClient(clientConfig)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback = null) {
-    def methodName = "prepare" + method.toLowerCase().capitalize()
-    def requestBuilder = asyncHttpClient."$methodName"(uri.toString())
-    headers.each { requestBuilder.setHeader(it.key, it.value) }
-    def response = requestBuilder.execute(new AsyncCompletionHandler() {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    return client.executeRequest(buildRequest(method, uri, headers)).get().statusCode
+  }
+
+  @Override
+  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    // TODO(anuraaga): Do we also need to test ListenableFuture callback?
+    client.executeRequest(buildRequest(method, uri, headers), new AsyncCompletionHandler<Void>() {
       @Override
-      Object onCompleted(Response response) throws Exception {
-        callback?.accept(response.statusCode)
-        return response
+      Void onCompleted(Response response) throws Exception {
+        callback.accept(response.statusCode)
+        return null
       }
-    }).get()
-    return response.statusCode
+    })
+  }
+
+  private static Request buildRequest(String method, URI uri, Map<String, String> headers) {
+    RequestBuilder requestBuilder = new RequestBuilder(method)
+      .setUrl(uri.toString())
+    headers.entrySet().each {
+      requestBuilder.addHeader(it.key, it.value)
+    }
+    return requestBuilder.build()
   }
 
   @Override

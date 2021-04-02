@@ -12,7 +12,6 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.function.Consumer
 import spock.lang.Shared
 
 abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements AgentTestTrait {
@@ -21,11 +20,20 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
   def requestFactory = new NetHttpTransport().createRequestFactory()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    doRequest(method, uri, headers, callback, false)
+  boolean testAsync() {
+    // executeAsync does not actually allow asynchronous execution since it returns a standard
+    // Future which cannot have callbacks attached. We instrument execute and executeAsync
+    // differently so test both but do not need to run our normal asynchronous tests, which check
+    // context propagation, as there is no possible context propagation.
+    return false
   }
 
-  int doRequest(String method, URI uri, Map<String, String> headers, Consumer<Integer>  callback, boolean throwExceptionOnError) {
+  @Override
+  int doRequest(String method, URI uri, Map<String, String> headers) {
+    doRequest(method, uri, headers, false)
+  }
+
+  int doRequest(String method, URI uri, Map<String, String> headers, boolean throwExceptionOnError) {
     GenericUrl genericUrl = new GenericUrl(uri)
 
     HttpRequest request = requestFactory.buildRequest(method, genericUrl, null)
@@ -41,8 +49,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
     request.setThrowExceptionOnExecuteError(throwExceptionOnError)
 
     HttpResponse response = executeRequest(request)
-    callback?.accept(response.getStatusCode())
-
     return response.getStatusCode()
   }
 
