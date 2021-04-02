@@ -77,9 +77,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       MessageDestination messageDestination =
           tracer().extractDestination(message, defaultDestination);
       context = tracer().startProducerSpan(messageDestination, message);
-      // TODO: why are we propagating context only in this advice class? the other one does not
-      // inject current span context into JMS message
-      scope = tracer().startProducerScope(context, message);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

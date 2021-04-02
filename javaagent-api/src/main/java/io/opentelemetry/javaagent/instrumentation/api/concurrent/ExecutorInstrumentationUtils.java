@@ -45,6 +45,13 @@ public class ExecutorInstrumentationUtils {
             return false;
           }
 
+          // OrderedExecutor$1 is a worker class that processes tasks submitted to OrderedExecutor
+          if (taskClass
+              .getName()
+              .equals("org.hornetq.utils.OrderedExecutorFactory$OrderedExecutor$1")) {
+            return false;
+          }
+
           Class<?> enclosingClass = taskClass.getEnclosingClass();
           if (enclosingClass != null) {
             // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to
