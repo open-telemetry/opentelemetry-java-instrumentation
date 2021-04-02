@@ -5,7 +5,6 @@ muzzle {
     group = "javax.xml.ws"
     module = "jaxws-api"
     versions = "[2.0,]"
-    skipVersions += ['2.1-1', '2.1EA2'] // contain broken dependencies
   }
 }
 
