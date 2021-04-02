@@ -25,6 +25,7 @@ These are the supported libraries and frameworks:
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.1+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Apache RocketMQ](https://rocketmq.apache.org/)                                                                                       | 4.8+                           |
+| [Apache Tapestry](https://tapestry.apache.org/)                                                                                       | 5.4+                           |
 | [Apache Wicket](https://wicket.apache.org/)                                                                                           | 8.0+                           |
 | [Armeria](https://armeria.dev)                                                                                                        | 1.3+                           |
 | [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+                           |

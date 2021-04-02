@@ -1,0 +1,7 @@
+<html t:type="layout" title="Index page"
+  xmlns:t="http://tapestry.apache.org/schema/tapestry_5_4.xsd">
+
+  <t:actionlink t:id="start">start</t:actionlink>
+  <t:actionlink t:id="exception">exception</t:actionlink>
+
+</html>
