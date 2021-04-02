@@ -115,7 +115,7 @@ class JettyHandlerTest extends HttpServerTest<Server> implements AgentTestTrait 
         handleRequest(baseRequest, jettyResponse)
         baseRequest.handled = true
       } else {
-        errorHandler.handle(target, baseRequest, response, response)
+        errorHandler.handle(target, baseRequest, baseRequest, response)
       }
     }
   }

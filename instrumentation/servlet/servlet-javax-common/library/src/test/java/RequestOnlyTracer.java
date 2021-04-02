@@ -23,10 +23,8 @@ public class RequestOnlyTracer extends JavaxServletHttpServerTracer<Void> {
           }
 
           @Override
-          public void addRequestAsyncListener(HttpServletRequest request,
-              ServletAsyncListener<Void> listener) {
-
-          }
+          public void addRequestAsyncListener(
+              HttpServletRequest request, ServletAsyncListener<Void> listener) {}
 
           @Override
           public int getResponseStatus(Void unused) {
