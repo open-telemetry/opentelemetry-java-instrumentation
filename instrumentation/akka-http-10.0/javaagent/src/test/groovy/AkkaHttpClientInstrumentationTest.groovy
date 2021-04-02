@@ -48,11 +48,11 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest implements AgentT
       .singleRequest(request, materializer)
   }
 
-  // TODO(anuraaga): Context leak seems to prevent us from running two asynchronous tests in a row.
-  // Disable one for now.
+  // TODO(anuraaga): Context leak seems to prevent us from running asynchronous tests in a row.
+  // Disable for now.
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2639
   @Override
-  boolean testAsyncWithParent() {
+  boolean testAsync() {
     false
   }
 
