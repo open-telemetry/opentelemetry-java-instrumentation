@@ -26,8 +26,6 @@ public class Tomcat7ServerHandlerAdvice {
       @Advice.Argument(0) Request request,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    System.out.println("7 BEGIN");
-
     try {
       Context attachedContext = tracer().getServerContext(request);
       if (attachedContext != null) {
@@ -51,8 +49,6 @@ public class Tomcat7ServerHandlerAdvice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-
-    System.out.println("7 END");
 
     try {
       TomcatServerHandlerAdviceHelper.stopSpan(

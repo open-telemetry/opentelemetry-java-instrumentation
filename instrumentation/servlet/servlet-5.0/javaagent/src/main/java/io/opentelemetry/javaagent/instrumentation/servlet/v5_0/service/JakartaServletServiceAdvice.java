@@ -29,7 +29,7 @@ public class JakartaServletServiceAdvice {
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    System.out.println("UUUU A");
+
     CallDepthThreadLocalMap.incrementCallDepth(AppServerBridge.getCallDepthKey());
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
