@@ -31,7 +31,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.model.ObjectFactory
-
 /**
  * muzzle task plugin which runs muzzle validation against a range of dependencies.
  */
@@ -39,7 +38,7 @@ class MuzzlePlugin implements Plugin<Project> {
   /**
    * Select a random set of versions to test
    */
-  private static final int RANGE_COUNT_LIMIT = 10000
+  private static final int RANGE_COUNT_LIMIT = 10
   private static final AtomicReference<ClassLoader> TOOLING_LOADER = new AtomicReference<>()
 
   @Override
