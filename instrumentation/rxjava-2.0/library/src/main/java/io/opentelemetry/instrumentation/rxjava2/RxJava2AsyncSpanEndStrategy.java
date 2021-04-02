@@ -36,64 +36,60 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
 
   @Override
   public Object end(BaseTracer tracer, Context context, Object returnValue) {
+
+    EndOnFirstNotificationConsumer<?> notificationConsumer =
+        new EndOnFirstNotificationConsumer<>(tracer, context);
     if (returnValue instanceof Completable) {
-      return endWhenComplete(tracer, context, (Completable) returnValue);
+      return endWhenComplete((Completable) returnValue, notificationConsumer);
     } else if (returnValue instanceof Maybe) {
-      return endWhenMaybeComplete(tracer, context, (Maybe<?>) returnValue);
+      return endWhenMaybeComplete((Maybe<?>) returnValue, notificationConsumer);
     } else if (returnValue instanceof Single) {
-      return endWhenSingleComplete(tracer, context, (Single<?>) returnValue);
+      return endWhenSingleComplete((Single<?>) returnValue, notificationConsumer);
     } else if (returnValue instanceof Observable) {
-      return endWhenObservableComplete(tracer, context, (Observable<?>) returnValue);
+      return endWhenObservableComplete((Observable<?>) returnValue, notificationConsumer);
     } else if (returnValue instanceof ParallelFlowable) {
-      return endWhenFirstComplete(tracer, context, (ParallelFlowable<?>) returnValue);
+      return endWhenFirstComplete((ParallelFlowable<?>) returnValue, notificationConsumer);
     }
-    return endWhenPublisherComplete(tracer, context, (Publisher<?>) returnValue);
+    return endWhenPublisherComplete((Publisher<?>) returnValue, notificationConsumer);
   }
 
-  private Completable endWhenComplete(BaseTracer tracer, Context context, Completable completable) {
-
-    EndOnFirstNotificationConsumer<?> notification =
-        new EndOnFirstNotificationConsumer<>(tracer, context);
-    return completable.doOnEvent(notification);
+  private Completable endWhenComplete(
+      Completable completable, EndOnFirstNotificationConsumer<?> notificationConsumer) {
+    return completable.doOnEvent(notificationConsumer);
   }
 
-  private <T> Maybe<T> endWhenMaybeComplete(BaseTracer tracer, Context context, Maybe<T> maybe) {
-
-    EndOnFirstNotificationConsumer<T> notification =
-        new EndOnFirstNotificationConsumer<>(tracer, context);
-    return maybe.doOnEvent(notification);
+  private <T> Maybe<T> endWhenMaybeComplete(
+      Maybe<T> maybe, EndOnFirstNotificationConsumer<?> notificationConsumer) {
+    @SuppressWarnings("unchecked")
+    EndOnFirstNotificationConsumer<T> typedConsumer =
+        (EndOnFirstNotificationConsumer<T>) notificationConsumer;
+    return maybe.doOnEvent(typedConsumer);
   }
 
   private <T> Single<T> endWhenSingleComplete(
-      BaseTracer tracer, Context context, Single<T> single) {
-
-    EndOnFirstNotificationConsumer<T> notification =
-        new EndOnFirstNotificationConsumer<>(tracer, context);
-    return single.doOnEvent(notification);
+      Single<T> single, EndOnFirstNotificationConsumer<?> notificationConsumer) {
+    @SuppressWarnings("unchecked")
+    EndOnFirstNotificationConsumer<T> typedConsumer =
+        (EndOnFirstNotificationConsumer<T>) notificationConsumer;
+    return single.doOnEvent(typedConsumer);
   }
 
-  private <T> Observable<T> endWhenObservableComplete(
-      BaseTracer tracer, Context context, Observable<T> observable) {
-
-    EndOnFirstNotificationConsumer<?> notification =
-        new EndOnFirstNotificationConsumer<>(tracer, context);
-    return observable.doOnComplete(notification).doOnError(notification);
+  private Observable<?> endWhenObservableComplete(
+      Observable<?> observable, EndOnFirstNotificationConsumer<?> notificationConsumer) {
+    return observable.doOnComplete(notificationConsumer).doOnError(notificationConsumer);
   }
 
-  private <T> ParallelFlowable<T> endWhenFirstComplete(
-      BaseTracer tracer, Context context, ParallelFlowable<T> parallelFlowable) {
-
-    EndOnFirstNotificationConsumer<?> notification =
-        new EndOnFirstNotificationConsumer<>(tracer, context);
-    return parallelFlowable.doOnComplete(notification).doOnError(notification);
+  private ParallelFlowable<?> endWhenFirstComplete(
+      ParallelFlowable<?> parallelFlowable,
+      EndOnFirstNotificationConsumer<?> notificationConsumer) {
+    return parallelFlowable.doOnComplete(notificationConsumer).doOnError(notificationConsumer);
   }
 
-  private <T> Flowable<T> endWhenPublisherComplete(
-      BaseTracer tracer, Context context, Publisher<T> publisher) {
-
-    EndOnFirstNotificationConsumer<?> notification =
-        new EndOnFirstNotificationConsumer<>(tracer, context);
-    return Flowable.fromPublisher(publisher).doOnComplete(notification).doOnError(notification);
+  private Flowable<?> endWhenPublisherComplete(
+      Publisher<?> publisher, EndOnFirstNotificationConsumer<?> notificationConsumer) {
+    return Flowable.fromPublisher(publisher)
+        .doOnComplete(notificationConsumer)
+        .doOnError(notificationConsumer);
   }
 
   /**

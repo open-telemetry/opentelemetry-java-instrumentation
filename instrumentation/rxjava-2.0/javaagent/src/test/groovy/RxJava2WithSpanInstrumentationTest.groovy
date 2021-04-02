@@ -6,7 +6,6 @@
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.rxjava2.TracedWithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
@@ -23,7 +22,7 @@ import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 
-class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecification implements AgentTestTrait {
+class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
 
   def "should capture span for already completed Completable"() {
     setup:
