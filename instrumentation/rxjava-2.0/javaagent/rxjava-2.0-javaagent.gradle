@@ -15,5 +15,4 @@ dependencies {
   implementation project(":instrumentation:rxjava-2.0:library")
 
   testImplementation project(':instrumentation:rxjava-2.0:testing')
-  latestDepTestLibrary group: 'io.reactivex.rxjava2', name: 'rxjava', version: "(,2.2.0)"
 }
