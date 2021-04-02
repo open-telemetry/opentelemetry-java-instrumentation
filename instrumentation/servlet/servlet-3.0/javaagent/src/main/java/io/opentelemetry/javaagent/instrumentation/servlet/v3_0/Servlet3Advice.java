@@ -12,7 +12,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.util.concurrent.atomic.AtomicBoolean;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -84,49 +84,17 @@ public class Servlet3Advice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(AppServerBridge.getCallDepthKey());
 
-    if (scope != null) {
-      scope.close();
-    }
-
-    if (context == null && callDepth == 0) {
-      Context currentContext = Java8BytecodeBridge.currentContext();
-      // Something else is managing the context, we're in the outermost level of Servlet
-      // instrumentation and we have an uncaught throwable. Let's add it to the current span.
-      if (throwable != null) {
-        tracer().addUnwrappedThrowable(currentContext, throwable);
-      }
-      tracer().setPrincipal(currentContext, (HttpServletRequest) request);
-    }
-
-    if (scope == null || context == null) {
+    if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
 
-    tracer().setPrincipal(context, (HttpServletRequest) request);
-    if (throwable != null) {
-      tracer().endExceptionally(context, throwable, (HttpServletResponse) response);
-      return;
-    }
-
-    AtomicBoolean responseHandled = new AtomicBoolean(false);
-
-    // In case of async servlets wait for the actual response to be ready
-    if (request.isAsyncStarted()) {
-      try {
-        request
-            .getAsyncContext()
-            .addListener(new TagSettingAsyncListener(responseHandled, context));
-      } catch (IllegalStateException e) {
-        // org.eclipse.jetty.server.Request may throw an exception here if request became
-        // finished after check above. We just ignore that exception and move on.
-      }
-    }
-
-    // Check again in case the request finished before adding the listener.
-    if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-      tracer().end(context, (HttpServletResponse) response);
-    }
+    ServletAndFilterAdviceHelper.stopSpan(
+        tracer(),
+        (HttpServletRequest) request,
+        (HttpServletResponse) response,
+        throwable,
+        context,
+        scope);
   }
 }

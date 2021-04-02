@@ -1,0 +1,8 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+
+dependencies {
+  implementation deps.slf4j
+  
+  api(project(':instrumentation:servlet:servlet-common:library'))
+  compileOnly group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.4'
+}
