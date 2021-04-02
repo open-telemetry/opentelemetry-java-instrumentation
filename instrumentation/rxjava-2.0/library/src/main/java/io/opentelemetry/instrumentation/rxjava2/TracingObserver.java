@@ -28,33 +28,37 @@ import io.reactivex.Observer;
 import io.reactivex.internal.fuseable.QueueDisposable;
 import io.reactivex.internal.observers.BasicFuseableObserver;
 
-public class TracingObserver<T> extends BasicFuseableObserver<T, T> {
+class TracingObserver<T> extends BasicFuseableObserver<T, T> {
 
+  // BasicFuseableObserver#actual has been renamed to downstream in newer versions, we can't use it
+  // in this class
+  private final Observer<? super T> wrappedObserver;
   private final Context context;
 
   TracingObserver(final Observer<? super T> actual, final Context context) {
     super(actual);
+    this.wrappedObserver = actual;
     this.context = context;
   }
 
   @Override
   public void onNext(T t) {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onNext(t);
+      wrappedObserver.onNext(t);
     }
   }
 
   @Override
   public void onError(Throwable t) {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onError(t);
+      wrappedObserver.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onComplete();
+      wrappedObserver.onComplete();
     }
   }
 
