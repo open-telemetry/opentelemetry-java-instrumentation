@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderParentClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
@@ -138,6 +139,33 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     where:
     method << BODY_METHODS
   }
+
+  def "should suppress nested CLIENT span if already under parent CLIENT span"() {
+    given:
+    assumeTrue(testWithClientParent())
+
+    when:
+    def status = runUnderParentClientSpan {
+      doRequest(method, server.address.resolve("/success"))
+    }
+
+    then:
+    status == 200
+    // there should be 2 separate traces since the nested CLIENT span is suppressed
+    // (and the span context propagation along with it)
+    assertTraces(2) {
+      trace(0, 1) {
+        basicSpan(it, 0, "parent-client-span")
+      }
+      trace(1, 1) {
+        serverSpan(it, 0)
+      }
+    }
+
+    where:
+    method << BODY_METHODS
+  }
+
 
   //FIXME: add tests for POST with large/chunked data
 
@@ -575,6 +603,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   int extraClientSpans() {
     0
+  }
+
+  boolean testWithClientParent() {
+    true
   }
 
   boolean testRedirects() {

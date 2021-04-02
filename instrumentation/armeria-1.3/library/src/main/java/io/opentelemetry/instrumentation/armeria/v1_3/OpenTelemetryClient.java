@@ -28,11 +28,16 @@ final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
 
   @Override
   public HttpResponse execute(ClientRequestContext ctx, HttpRequest req) throws Exception {
+    Context parentContext = Context.current();
+    if (!clientTracer.shouldStartSpan(parentContext)) {
+      return unwrap().execute(ctx, req);
+    }
+
     // Always available in practice.
     long requestStartTimeMicros =
         ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
     long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Context context = clientTracer.startSpan(Context.current(), ctx, ctx, requestStartTimeNanos);
+    Context context = clientTracer.startSpan(parentContext, ctx, ctx, requestStartTimeNanos);
 
     Span span = Span.fromContext(context);
     if (span.isRecording()) {

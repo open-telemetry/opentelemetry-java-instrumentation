@@ -9,17 +9,11 @@ import static java.util.concurrent.TimeUnit.SECONDS
 
 import com.google.common.base.Stopwatch
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import oshi.PlatformEnum
-import oshi.SystemInfo
 
 class OshiTest extends AgentInstrumentationSpecification {
 
   def "test system metrics is enabled"() {
-    setup:
-    PlatformEnum platform = SystemInfo.getCurrentPlatformEnum()
-
     expect:
-    platform != null
     // TODO (trask) is this the instrumentation library name we want?
     findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.disk.io") != null
     findMetric("io.opentelemetry.javaagent.shaded.instrumentation.oshi", "system.disk.operations") != null

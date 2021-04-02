@@ -5,7 +5,6 @@ muzzle {
     group = "com.sun.jersey"
     module = "jersey-client"
     versions = "[1.1,]"
-    skipVersions += ['1.0.3-atlassian-1-logpatch', '1.8-atlassian-6']
     assertInverse = true
   }
 }

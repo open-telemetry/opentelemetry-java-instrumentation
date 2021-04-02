@@ -42,7 +42,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
             .and(isPublic())
             .and(named("handle"))
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
-            .and(takesArgument(1, named("java.lang.Object")))
+            .and(takesArgument(1, Object.class))
             .and(takesArguments(2)),
         HandlerAdapterAdvice.class.getName());
   }

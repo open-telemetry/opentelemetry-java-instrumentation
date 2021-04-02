@@ -16,4 +16,10 @@ class OkHttp3AsyncTest extends AbstractOkHttp3AsyncTest implements LibraryTestTr
   OkHttpClient.Builder configureClient(OkHttpClient.Builder clientBuilder) {
     return clientBuilder.addInterceptor(OkHttpTracing.create(getOpenTelemetry()).newInterceptor())
   }
+
+  // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
+  @Override
+  boolean testWithClientParent() {
+    false
+  }
 }
