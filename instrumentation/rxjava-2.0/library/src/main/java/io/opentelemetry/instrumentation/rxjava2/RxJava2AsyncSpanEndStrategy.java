@@ -14,6 +14,7 @@ import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.functions.Action;
+import io.reactivex.functions.BiConsumer;
 import io.reactivex.functions.Consumer;
 import io.reactivex.parallel.ParallelFlowable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,62 +52,58 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
 
   private Completable endWhenComplete(BaseTracer tracer, Context context, Completable completable) {
 
-    EndOnFirstNotificationConsumer notification = new EndOnFirstNotificationConsumer(tracer, context);
-    return completable
-        .doOnComplete(notification)
-        .doOnError(notification);
+    EndOnFirstNotificationConsumer<?> notification =
+        new EndOnFirstNotificationConsumer<>(tracer, context);
+    return completable.doOnEvent(notification);
   }
 
-  private Maybe<?> endWhenMaybeComplete(BaseTracer tracer, Context context, Maybe<?> maybe) {
+  private <T> Maybe<T> endWhenMaybeComplete(BaseTracer tracer, Context context, Maybe<T> maybe) {
 
-    EndOnFirstNotificationConsumer notification = new EndOnFirstNotificationConsumer(tracer, context);
-    return maybe
-        .doOnComplete(notification)
-        .doOnSuccess(notification::onSuccess)
-        .doOnError(notification);
+    EndOnFirstNotificationConsumer<T> notification =
+        new EndOnFirstNotificationConsumer<>(tracer, context);
+    return maybe.doOnEvent(notification);
   }
 
-  private Single<?> endWhenSingleComplete(BaseTracer tracer, Context context, Single<?> single) {
+  private <T> Single<T> endWhenSingleComplete(
+      BaseTracer tracer, Context context, Single<T> single) {
 
-    EndOnFirstNotificationConsumer notification = new EndOnFirstNotificationConsumer(tracer, context);
-    return single
-        .doOnSuccess(notification::onSuccess)
-        .doOnError(notification);
+    EndOnFirstNotificationConsumer<T> notification =
+        new EndOnFirstNotificationConsumer<>(tracer, context);
+    return single.doOnEvent(notification);
   }
 
-  private Observable<?> endWhenObservableComplete(
-      BaseTracer tracer, Context context, Observable<?> observable) {
+  private <T> Observable<T> endWhenObservableComplete(
+      BaseTracer tracer, Context context, Observable<T> observable) {
 
-    EndOnFirstNotificationConsumer notification = new EndOnFirstNotificationConsumer(tracer, context);
-    return observable
-        .doOnComplete(notification)
-        .doOnError(notification);
+    EndOnFirstNotificationConsumer<?> notification =
+        new EndOnFirstNotificationConsumer<>(tracer, context);
+    return observable.doOnComplete(notification).doOnError(notification);
   }
 
-  private ParallelFlowable<?> endWhenFirstComplete(
-      BaseTracer tracer, Context context, ParallelFlowable<?> parallelFlowable) {
+  private <T> ParallelFlowable<T> endWhenFirstComplete(
+      BaseTracer tracer, Context context, ParallelFlowable<T> parallelFlowable) {
 
-    EndOnFirstNotificationConsumer notification = new EndOnFirstNotificationConsumer(tracer, context);
-    return parallelFlowable
-        .doOnComplete(notification)
-        .doOnError(notification);
+    EndOnFirstNotificationConsumer<?> notification =
+        new EndOnFirstNotificationConsumer<>(tracer, context);
+    return parallelFlowable.doOnComplete(notification).doOnError(notification);
   }
 
-  private Flowable<?> endWhenPublisherComplete(
-      BaseTracer tracer, Context context, Publisher<?> publisher) {
+  private <T> Flowable<T> endWhenPublisherComplete(
+      BaseTracer tracer, Context context, Publisher<T> publisher) {
 
-    EndOnFirstNotificationConsumer notification = new EndOnFirstNotificationConsumer(tracer, context);
-    return Flowable.fromPublisher(publisher)
-        .doOnComplete(notification)
-        .doOnError(notification);
+    EndOnFirstNotificationConsumer<?> notification =
+        new EndOnFirstNotificationConsumer<>(tracer, context);
+    return Flowable.fromPublisher(publisher).doOnComplete(notification).doOnError(notification);
   }
 
   /**
-   * Helper class to ensure that the span is ended exactly once regardless of how many OnComplete or OnError
-   * notifications are received.  Multiple notifications can happen anytime multiple subscribers subscribe to the
-   * same publisher.
+   * Helper class to ensure that the span is ended exactly once regardless of how many OnComplete or
+   * OnError notifications are received. Multiple notifications can happen anytime multiple
+   * subscribers subscribe to the same publisher.
    */
-  private static final class EndOnFirstNotificationConsumer extends AtomicBoolean implements Action, Consumer<Throwable> {
+  private static final class EndOnFirstNotificationConsumer<T> extends AtomicBoolean
+      implements Action, Consumer<Throwable>, BiConsumer<T, Throwable> {
+
     private final BaseTracer tracer;
     private final Context context;
 
@@ -123,15 +120,20 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
       }
     }
 
-    public <T> void onSuccess(T ignored) {
-      run();
+    @Override
+    public void accept(Throwable exception) {
+      if (compareAndSet(false, true)) {
+        if (exception != null) {
+          tracer.endExceptionally(context, exception);
+        } else {
+          tracer.end(context);
+        }
+      }
     }
 
     @Override
-    public void accept(Throwable exception) throws Exception {
-      if (compareAndSet(false, true)) {
-        tracer.endExceptionally(context, exception);
-      }
+    public void accept(T value, Throwable exception) {
+      accept(exception);
     }
   }
 }

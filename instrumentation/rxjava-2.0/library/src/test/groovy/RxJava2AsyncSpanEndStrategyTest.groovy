@@ -13,9 +13,11 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.observers.TestObserver
 import io.reactivex.parallel.ParallelFlowable
+import io.reactivex.processors.ReplayProcessor
 import io.reactivex.processors.UnicastProcessor
 import io.reactivex.subjects.CompletableSubject
 import io.reactivex.subjects.MaybeSubject
+import io.reactivex.subjects.ReplaySubject
 import io.reactivex.subjects.SingleSubject
 import io.reactivex.subjects.UnicastSubject
 import io.reactivex.subscribers.TestSubscriber
@@ -108,6 +110,32 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       then:
       1 * tracer.endExceptionally(context, exception)
       observer.assertError(exception)
+    }
+
+    def "ends span once for multiple subscribers"() {
+      given:
+      def source = CompletableSubject.create()
+      def observer1 = new TestObserver()
+      def observer2 = new TestObserver()
+      def observer3 = new TestObserver()
+
+      when:
+      def result = (Completable) underTest.end(tracer, context, source)
+      result.subscribe(observer1)
+      result.subscribe(observer2)
+      result.subscribe(observer3)
+
+      then:
+      0 * tracer._
+
+      when:
+      source.onComplete()
+
+      then:
+      1 * tracer.end(context)
+      observer1.assertComplete()
+      observer2.assertComplete()
+      observer3.assertComplete()
     }
   }
 
@@ -217,6 +245,35 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       1 * tracer.endExceptionally(context, exception)
       observer.assertError(exception)
     }
+
+    def "ends span once for multiple subscribers"() {
+      given:
+      def source = MaybeSubject.create()
+      def observer1 = new TestObserver()
+      def observer2 = new TestObserver()
+      def observer3 = new TestObserver()
+
+      when:
+      def result = (Maybe<?>) underTest.end(tracer, context, source)
+      result.subscribe(observer1)
+      result.subscribe(observer2)
+      result.subscribe(observer3)
+
+      then:
+      0 * tracer._
+
+      when:
+      source.onSuccess("Value")
+
+      then:
+      1 * tracer.end(context)
+      observer1.assertValue("Value")
+      observer1.assertComplete()
+      observer2.assertValue("Value")
+      observer2.assertComplete()
+      observer3.assertValue("Value")
+      observer3.assertComplete()
+    }
   }
 
   static class SingleTest extends RxJava2AsyncSpanEndStrategyTest {
@@ -291,6 +348,35 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       then:
       1 * tracer.endExceptionally(context, exception)
       observer.assertError(exception)
+    }
+
+    def "ends span once for multiple subscribers"() {
+      given:
+      def source = SingleSubject.create()
+      def observer1 = new TestObserver()
+      def observer2 = new TestObserver()
+      def observer3 = new TestObserver()
+
+      when:
+      def result = (Single<?>) underTest.end(tracer, context, source)
+      result.subscribe(observer1)
+      result.subscribe(observer2)
+      result.subscribe(observer3)
+
+      then:
+      0 * tracer._
+
+      when:
+      source.onSuccess("Value")
+
+      then:
+      1 * tracer.end(context)
+      observer1.assertValue("Value")
+      observer1.assertComplete()
+      observer2.assertValue("Value")
+      observer2.assertComplete()
+      observer3.assertValue("Value")
+      observer3.assertComplete()
     }
   }
 
@@ -367,6 +453,32 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       1 * tracer.endExceptionally(context, exception)
       observer.assertError(exception)
     }
+
+    def "ends span once for multiple subscribers"() {
+      given:
+      def source = ReplaySubject.create()
+      def observer1 = new TestObserver()
+      def observer2 = new TestObserver()
+      def observer3 = new TestObserver()
+
+      when:
+      def result = (Observable<?>) underTest.end(tracer, context, source)
+      result.subscribe(observer1)
+      result.subscribe(observer2)
+      result.subscribe(observer3)
+
+      then:
+      0 * tracer._
+
+      when:
+      source.onComplete()
+
+      then:
+      1 * tracer.end(context)
+      observer1.assertComplete()
+      observer2.assertComplete()
+      observer3.assertComplete()
+    }
   }
 
   static class FlowableTest extends RxJava2AsyncSpanEndStrategyTest {
@@ -441,6 +553,32 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       then:
       1 * tracer.endExceptionally(context, exception)
       observer.assertError(exception)
+    }
+
+    def "ends span once for multiple subscribers"() {
+      given:
+      def source = ReplayProcessor.create()
+      def observer1 = new TestSubscriber()
+      def observer2 = new TestSubscriber()
+      def observer3 = new TestSubscriber()
+
+      when:
+      def result = (Flowable<?>) underTest.end(tracer, context, source)
+      result.subscribe(observer1)
+      result.subscribe(observer2)
+      result.subscribe(observer3)
+
+      then:
+      0 * tracer._
+
+      when:
+      source.onComplete()
+
+      then:
+      1 * tracer.end(context)
+      observer1.assertComplete()
+      observer2.assertComplete()
+      observer3.assertComplete()
     }
   }
 
