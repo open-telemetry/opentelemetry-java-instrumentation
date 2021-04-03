@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0;
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -16,18 +15,12 @@ import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
 import java.util.List;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class Tomcat10InstrumentationModule extends InstrumentationModule {
 
   public Tomcat10InstrumentationModule() {
     super("tomcat", "tomcat-10.0");
-  }
-
-  @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("org.apache.coyote.Adapter", "org.apache.catalina.connector.Request");
   }
 
   @Override
