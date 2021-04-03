@@ -34,7 +34,7 @@ class TracerTest extends AgentInstrumentationSpecification {
           name "test"
           kind PRODUCER
           hasNoParent()
-          status ERROR
+          errored true
           attributes {
             "string" "1"
             "long" 2
