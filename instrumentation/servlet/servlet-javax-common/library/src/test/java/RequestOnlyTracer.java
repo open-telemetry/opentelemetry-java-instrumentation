@@ -14,26 +14,28 @@ public class RequestOnlyTracer extends JavaxServletHttpServerTracer<Void> {
         new JavaxServletAccessor<Void>() {
           @Override
           public Integer getRequestRemotePort(HttpServletRequest httpServletRequest) {
-            return null;
+            throw new UnsupportedOperationException();
           }
 
           @Override
           public boolean isRequestAsyncStarted(HttpServletRequest request) {
-            return false;
+            throw new UnsupportedOperationException();
           }
 
           @Override
           public void addRequestAsyncListener(
-              HttpServletRequest request, ServletAsyncListener<Void> listener) {}
+              HttpServletRequest request, ServletAsyncListener<Void> listener) {
+            throw new UnsupportedOperationException();
+          }
 
           @Override
           public int getResponseStatus(Void unused) {
-            return 0;
+            throw new UnsupportedOperationException();
           }
 
           @Override
           public boolean isResponseCommitted(Void unused) {
-            return false;
+            throw new UnsupportedOperationException();
           }
         });
   }
