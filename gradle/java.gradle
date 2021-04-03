@@ -52,6 +52,7 @@ java {
 
 tasks.withType(JavaCompile) {
   options.release.set(project.ext.release.majorVersion.toInteger())
+  options.compilerArgs.add("-Werror")
 }
 //Groovy and Scala compilers don't actually understand --release option
 tasks.withType(GroovyCompile) {

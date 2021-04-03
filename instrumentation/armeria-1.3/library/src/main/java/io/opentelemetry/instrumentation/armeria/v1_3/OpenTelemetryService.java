@@ -43,7 +43,7 @@ final class OpenTelemetryService extends SimpleDecoratingHttpService {
           .whenComplete()
           .thenAccept(
               log -> {
-                if (log.responseHeaders().status() == HttpStatus.NOT_FOUND) {
+                if (HttpStatus.NOT_FOUND.equals(log.responseHeaders().status())) {
                   // Assume a not-found request was not served. The route we use by default will be
                   // some fallback like `/*` which is not as useful as the requested path.
                   span.updateName(ctx.path());
