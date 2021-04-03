@@ -16,7 +16,6 @@ dependencies {
   library group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.0.0'
   implementation project(':instrumentation:servlet:servlet-5.0:javaagent')
   implementation project(':instrumentation:jetty:jetty-common:javaagent')
-  testInstrumentation project(':instrumentation:servlet:servlet-5.0:javaagent')
 
   // Don't want to conflict with jetty from the test server.
   testImplementation(project(':testing-common')) {
