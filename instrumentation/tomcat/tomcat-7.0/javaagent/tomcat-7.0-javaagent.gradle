@@ -15,6 +15,8 @@ dependencies {
   implementation project(':instrumentation:tomcat:tomcat-common:javaagent')
   implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
+  // Make sure nothing breaks due to both 7.0 and 10.0 modules being present together
+  testInstrumentation project(':instrumentation:tomcat:tomcat-10.0:javaagent')
 
   // Tests need at least version 9 to have necessary classes to configure the embedded tomcat...
   // ... but not newer that version 10, because its servlet 5.

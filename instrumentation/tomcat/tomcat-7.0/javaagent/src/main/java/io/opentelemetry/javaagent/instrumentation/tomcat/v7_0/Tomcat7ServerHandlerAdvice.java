@@ -26,20 +26,15 @@ public class Tomcat7ServerHandlerAdvice {
       @Advice.Argument(0) Request request,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    try {
-      Context attachedContext = tracer().getServerContext(request);
-      if (attachedContext != null) {
-        log.debug(
-            "Unexpected context found before server handler even started: {}", attachedContext);
-        return;
-      }
-
-      context = tracer().startServerSpan(request);
-
-      scope = context.makeCurrent();
-    } catch (Throwable e) {
-      e.printStackTrace();
+    Context attachedContext = tracer().getServerContext(request);
+    if (attachedContext != null) {
+      log.debug("Unexpected context found before server handler even started: {}", attachedContext);
+      return;
     }
+
+    context = tracer().startServerSpan(request);
+
+    scope = context.makeCurrent();
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -50,17 +45,7 @@ public class Tomcat7ServerHandlerAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
-    try {
-      TomcatServerHandlerAdviceHelper.stopSpan(
-          tracer(),
-          Servlet3HttpServerTracer.tracer(),
-          request,
-          response,
-          throwable,
-          context,
-          scope);
-    } catch (Throwable e) {
-      e.printStackTrace();
-    }
+    TomcatServerHandlerAdviceHelper.stopSpan(
+        tracer(), Servlet3HttpServerTracer.tracer(), request, response, throwable, context, scope);
   }
 }

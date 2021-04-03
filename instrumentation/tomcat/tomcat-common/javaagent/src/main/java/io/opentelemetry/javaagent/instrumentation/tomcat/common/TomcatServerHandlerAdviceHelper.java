@@ -9,7 +9,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.instrumentation.servlet.TagSettingAsyncListener;
-import io.opentelemetry.instrumentation.tomcat.common.TomcatTracer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
@@ -66,6 +65,10 @@ public class TomcatServerHandlerAdviceHelper {
           (org.apache.catalina.connector.Request) note;
       if (servletRequest.isAsync()) {
         try {
+          // The Catalina Request always implements the HttpServletRequest (either javax or jakarta)
+          // which is also what REQUEST generic parameter is. We cannot cast normally without a
+          // generic because this class is compiled against javax.servlet which would make it try
+          // to use request from javax.servlet when REQUEST is actually from jakarta.servlet.
           //noinspection unchecked
           servletTracer
               .getServletAccessor()
