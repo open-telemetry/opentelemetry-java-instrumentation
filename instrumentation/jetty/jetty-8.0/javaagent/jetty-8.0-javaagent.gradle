@@ -15,7 +15,6 @@ dependencies {
   implementation project(':instrumentation:servlet:servlet-3.0:javaagent')
   implementation project(':instrumentation:jetty:jetty-common:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
-  testInstrumentation project(':instrumentation:jetty:jetty-common:javaagent')
 
   // Don't want to conflict with jetty from the test server.
   testImplementation(project(':testing-common')) {
