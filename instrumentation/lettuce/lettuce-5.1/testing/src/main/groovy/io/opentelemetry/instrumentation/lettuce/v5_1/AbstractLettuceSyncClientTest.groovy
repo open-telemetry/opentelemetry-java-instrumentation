@@ -454,6 +454,7 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
       trace(0, 1) {
         span(0) {
           name "DEBUG"
+          kind CLIENT
           // Disconnect not an actual error even though an exception is recorded.
           errored false
           attributes {
@@ -488,6 +489,7 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
       trace(0, 1) {
         span(0) {
           name "SHUTDOWN"
+          kind CLIENT
           if (Boolean.getBoolean("testLatestDeps")) {
             // Seems to only be treated as an error with Lettuce 6+
             errored true
