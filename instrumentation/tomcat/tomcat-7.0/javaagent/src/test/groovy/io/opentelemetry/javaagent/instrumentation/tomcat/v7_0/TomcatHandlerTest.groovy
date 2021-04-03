@@ -84,8 +84,9 @@ class ErrorHandlerValve extends ErrorReportValve {
     }
     try {
       response.writer.print(t ? t.cause.message : response.message)
-    } catch (IOException e) {
-      e.printStackTrace()
+    } catch (IOException ignored) {
+      // Ignore exception when writing exception message to response fails on IO - same as is done
+      // by the superclass itself and by other built-in ErrorReportValve implementations.
     }
   }
 }
