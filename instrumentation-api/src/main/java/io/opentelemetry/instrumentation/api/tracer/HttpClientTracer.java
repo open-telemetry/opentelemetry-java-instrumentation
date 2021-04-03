@@ -182,9 +182,13 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
     try {
       URI url = url(request);
       if (url != null) {
+        if (url.getUserInfo() != null) {
+          throw new IllegalArgumentException("http.url MUST NOT contain credentials!");
+        }
         netPeerAttributes.setNetPeer(setter, url.getHost(), null, url.getPort());
         setter.setAttribute(SemanticAttributes.HTTP_URL, url.toString());
       }
+
     } catch (Exception e) {
       log.debug("Error tagging url", e);
     }
