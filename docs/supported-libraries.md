@@ -1,5 +1,5 @@
 
-# Supported libraries, frameworks, and application servers
+# Supported libraries, frameworks, application servers, and JVMs
 
 We automatically instrument and support a huge number of libraries, frameworks,
 and application servers... right out of the box!
@@ -25,6 +25,7 @@ These are the supported libraries and frameworks:
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.1+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
 | [Apache RocketMQ](https://rocketmq.apache.org/)                                                                                       | 4.8+                           |
+| [Apache Tapestry](https://tapestry.apache.org/)                                                                                       | 5.4+                           |
 | [Apache Wicket](https://wicket.apache.org/)                                                                                           | 8.0+                           |
 | [Armeria](https://armeria.dev)                                                                                                        | 1.3+                           |
 | [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client)                                                               | 1.9+                           |
@@ -110,6 +111,15 @@ These are the supported application servers:
 | [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.0.0.12                   | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
 | [WildFly](https://www.wildfly.org/)                                                       | 13.0.x                      | OpenJDK 8        | Ubuntu 18, Windows Server 2019 |
 | [WildFly](https://www.wildfly.org/)                                                       | 17.0.1, 21.0.0              | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+
+## JVMs and operating systems
+
+These are the supported JVM version and OS configurations which the javaagent is tested on:
+
+| JVM                                               | Versions  | OS                             |
+| ------------------------------------------------- | --------- | ------------------------------ |
+| [AdoptOpenJDK Hotspot](https://adoptopenjdk.net/) | 8, 11, 15 | Ubuntu 18, Windows Server 2019 |
+| [AdoptOpenJDK OpenJ9](https://adoptopenjdk.net/)  | 8, 11, 15 | Ubuntu 18, Windows Server 2019 |
 
 ## Disabled instrumentations
 

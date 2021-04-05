@@ -24,6 +24,7 @@ package io.opentelemetry.instrumentation.rxjava2;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.Flowable;
@@ -107,6 +108,8 @@ public final class TracingAssembly {
 
     enableParallel();
 
+    enableWithSpanStrategy();
+
     enabled = true;
   }
 
@@ -126,6 +129,8 @@ public final class TracingAssembly {
     disableFlowable();
 
     disableParallel();
+
+    disableWithSpanStrategy();
 
     enabled = false;
   }
@@ -215,6 +220,10 @@ public final class TracingAssembly {
                     }));
   }
 
+  private static void enableWithSpanStrategy() {
+    AsyncSpanEndStrategies.getInstance().registerStrategy(RxJava2AsyncSpanEndStrategy.INSTANCE);
+  }
+
   private static void disableParallel() {
     RxJavaPlugins.setOnParallelAssembly(oldOnParallelAssembly);
     oldOnParallelAssembly = null;
@@ -245,6 +254,10 @@ public final class TracingAssembly {
     RxJavaPlugins.setOnMaybeSubscribe(
         (BiFunction<? super Maybe, MaybeObserver, ? extends MaybeObserver>) oldOnMaybeSubscribe);
     oldOnMaybeSubscribe = null;
+  }
+
+  private static void disableWithSpanStrategy() {
+    AsyncSpanEndStrategies.getInstance().unregisterStrategy(RxJava2AsyncSpanEndStrategy.INSTANCE);
   }
 
   private static <T> Function<? super T, ? extends T> compose(

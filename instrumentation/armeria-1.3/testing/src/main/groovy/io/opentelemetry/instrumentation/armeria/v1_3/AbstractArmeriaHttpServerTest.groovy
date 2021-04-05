@@ -24,13 +24,30 @@ import com.linecorp.armeria.server.HttpService
 import com.linecorp.armeria.server.Server
 import com.linecorp.armeria.server.ServerBuilder
 import com.linecorp.armeria.server.ServiceRequestContext
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.function.Function
 
 abstract class AbstractArmeriaHttpServerTest extends HttpServerTest<Server> {
 
   abstract ServerBuilder configureServer(ServerBuilder serverBuilder)
+
+  @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_HOST,
+      SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
+      SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+      SemanticAttributes.HTTP_ROUTE,
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_SERVER_NAME,
+      SemanticAttributes.HTTP_TARGET,
+      SemanticAttributes.NET_PEER_NAME,
+      SemanticAttributes.NET_TRANSPORT
+    ]
+  }
 
   @Override
   Server startServer(int port) {
