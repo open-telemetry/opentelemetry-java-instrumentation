@@ -30,39 +30,43 @@ import io.reactivex.internal.subscribers.BasicFuseableConditionalSubscriber;
 
 class TracingConditionalSubscriber<T> extends BasicFuseableConditionalSubscriber<T, T> {
 
+  // BasicFuseableConditionalSubscriber#actual has been renamed to downstream in newer versions, we
+  // can't use it in this class
+  private final ConditionalSubscriber<? super T> wrappedSubscriber;
   private final Context context;
 
   TracingConditionalSubscriber(
       final ConditionalSubscriber<? super T> actual, final Context context) {
     super(actual);
+    this.wrappedSubscriber = actual;
     this.context = context;
   }
 
   @Override
   public boolean tryOnNext(T t) {
     try (Scope ignored = context.makeCurrent()) {
-      return actual.tryOnNext(t);
+      return wrappedSubscriber.tryOnNext(t);
     }
   }
 
   @Override
   public void onNext(T t) {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onNext(t);
+      wrappedSubscriber.onNext(t);
     }
   }
 
   @Override
   public void onError(Throwable t) {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onError(t);
+      wrappedSubscriber.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onComplete();
+      wrappedSubscriber.onComplete();
     }
   }
 

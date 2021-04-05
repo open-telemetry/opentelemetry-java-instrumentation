@@ -13,43 +13,43 @@ import java.security.Principal;
  * wrapper class with extra information attached may be used as well in cases where the class itself
  * does not provide some field (such as response status for Servlet API 2.2).
  *
- * @param <RequestT> HttpServletRequest class (or a wrapper)
- * @param <ResponseT> HttpServletResponse class (or a wrapper)
+ * @param <REQUEST> HttpServletRequest class (or a wrapper)
+ * @param <RESPONSE> HttpServletResponse class (or a wrapper)
  */
-public interface ServletAccessor<RequestT, ResponseT> {
-  String getRequestContextPath(RequestT request);
+public interface ServletAccessor<REQUEST, RESPONSE> {
+  String getRequestContextPath(REQUEST request);
 
-  String getRequestScheme(RequestT request);
+  String getRequestScheme(REQUEST request);
 
-  String getRequestServerName(RequestT request);
+  String getRequestServerName(REQUEST request);
 
-  int getRequestServerPort(RequestT request);
+  int getRequestServerPort(REQUEST request);
 
-  String getRequestUri(RequestT request);
+  String getRequestUri(REQUEST request);
 
-  String getRequestQueryString(RequestT request);
+  String getRequestQueryString(REQUEST request);
 
-  Object getRequestAttribute(RequestT request, String name);
+  Object getRequestAttribute(REQUEST request, String name);
 
-  void setRequestAttribute(RequestT request, String name, Object value);
+  void setRequestAttribute(REQUEST request, String name, Object value);
 
-  String getRequestProtocol(RequestT request);
+  String getRequestProtocol(REQUEST request);
 
-  String getRequestMethod(RequestT request);
+  String getRequestMethod(REQUEST request);
 
-  String getRequestRemoteAddr(RequestT request);
+  String getRequestRemoteAddr(REQUEST request);
 
-  String getRequestHeader(RequestT request, String name);
+  String getRequestHeader(REQUEST request, String name);
 
-  String getRequestServletPath(RequestT request);
+  String getRequestServletPath(REQUEST request);
 
-  Principal getRequestUserPrincipal(RequestT request);
+  Principal getRequestUserPrincipal(REQUEST request);
 
-  Integer getRequestRemotePort(RequestT request);
+  Integer getRequestRemotePort(REQUEST request);
 
-  int getResponseStatus(ResponseT response);
+  int getResponseStatus(RESPONSE response);
 
-  boolean isResponseCommitted(ResponseT response);
+  boolean isResponseCommitted(RESPONSE response);
 
   boolean isServletException(Throwable throwable);
 }

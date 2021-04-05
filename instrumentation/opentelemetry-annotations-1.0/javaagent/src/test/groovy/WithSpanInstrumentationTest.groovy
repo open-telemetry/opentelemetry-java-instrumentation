@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.extension.annotations.WithSpan
+import io.opentelemetry.instrumentation.test.utils.TraceUtils
+import java.lang.reflect.Modifier
 import java.util.concurrent.CompletableFuture
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
@@ -12,6 +15,14 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.test.annotation.TracedWithSpan
+import net.bytebuddy.ByteBuddy
+import net.bytebuddy.ClassFileVersion
+import net.bytebuddy.asm.MemberAttributeExtension
+import net.bytebuddy.description.annotation.AnnotationDescription
+import net.bytebuddy.implementation.MethodDelegation
+import net.bytebuddy.implementation.bind.annotation.RuntimeType
+import net.bytebuddy.implementation.bind.annotation.This
+import net.bytebuddy.matcher.ElementMatchers
 
 /**
  * This test verifies that auto instrumentation supports {@link io.opentelemetry.extension.annotations.WithSpan} contrib annotation.
@@ -363,6 +374,59 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.completableFuture"
           kind SpanKind.INTERNAL
           hasNoParent()
+          errored false
+          attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "instrument java6 class"() {
+    setup:
+    /*
+     class GeneratedJava6TestClass implements Runnable {
+       @WithSpan
+       public void run() {
+         TraceUtils.runUnderTrace("intercept", {})
+       }
+     }
+     */
+    Class<?> generatedClass = new ByteBuddy(ClassFileVersion.JAVA_V6)
+      .subclass(Object)
+      .name("GeneratedJava6TestClass")
+      .implement(Runnable)
+      .defineMethod("run", void.class, Modifier.PUBLIC).intercept(MethodDelegation.to(new Object() {
+        @RuntimeType
+        void intercept(@This Object o) {
+          TraceUtils.runUnderTrace("intercept", {})
+        }
+      }))
+      .visit(new MemberAttributeExtension.ForMethod()
+        .annotateMethod(AnnotationDescription.Builder.ofType(WithSpan).build())
+        .on(ElementMatchers.named("run")))
+      .make()
+      .load(getClass().getClassLoader())
+      .getLoaded()
+
+    Runnable runnable = (Runnable) generatedClass.getConstructor().newInstance()
+    runnable.run()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "GeneratedJava6TestClass.run"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          errored false
+          attributes {
+          }
+        }
+        span(1) {
+          name "intercept"
+          kind SpanKind.INTERNAL
+          childOf(span(0))
           errored false
           attributes {
           }

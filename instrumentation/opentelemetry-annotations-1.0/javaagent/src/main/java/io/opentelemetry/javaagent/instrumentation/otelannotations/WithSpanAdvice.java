@@ -11,6 +11,7 @@ import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -30,7 +31,7 @@ public class WithSpanAdvice {
     WithSpan applicationAnnotation = method.getAnnotation(WithSpan.class);
 
     SpanKind kind = tracer().extractSpanKind(applicationAnnotation);
-    Context current = Context.current();
+    Context current = Java8BytecodeBridge.currentContext();
 
     // don't create a nested span if you're not supposed to.
     if (tracer().shouldStartSpan(current, kind)) {
@@ -44,7 +45,7 @@ public class WithSpanAdvice {
       @Advice.Origin Method method,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope,
-      @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
+      @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
       @Advice.Thrown Throwable throwable) {
     if (scope == null) {
       return;
@@ -54,7 +55,7 @@ public class WithSpanAdvice {
     if (throwable != null) {
       tracer().endExceptionally(context, throwable);
     } else {
-      tracer().end(context, method.getReturnType(), returnValue);
+      returnValue = tracer().end(context, method.getReturnType(), returnValue);
     }
   }
 }
