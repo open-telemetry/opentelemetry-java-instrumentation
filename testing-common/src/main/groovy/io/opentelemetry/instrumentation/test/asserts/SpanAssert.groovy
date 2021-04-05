@@ -160,6 +160,9 @@ class SpanAssert {
     if (!checked.status) {
       errored(false)
     }
+    if (!checked.kind) {
+      kind(SpanKind.INTERNAL)
+    }
   }
 
   void attributes(@ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
@@ -173,7 +176,7 @@ class SpanAssert {
 
   private Map<String, Object> toMap(Attributes attributes) {
     def map = new HashMap()
-    attributes.forEach {key, value ->
+    attributes.forEach { key, value ->
       map.put(key.key, value)
     }
     return map
