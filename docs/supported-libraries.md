@@ -1,5 +1,5 @@
 
-# Supported libraries, frameworks, and application servers
+# Supported libraries, frameworks, application servers, and JVMs
 
 We automatically instrument and support a huge number of libraries, frameworks,
 and application servers... right out of the box!
@@ -11,6 +11,7 @@ or [contributing](../CONTRIBUTING.md).
 
   * [Libraries / Frameworks](#libraries---frameworks)
   * [Application Servers](#application-servers)
+  * [JVMs and Operating Systems](#jvms-and-operating-systems)
   * [Disabled instrumentations](#disabled-instrumentations)
     + [Grizzly instrumentation](#grizzly-instrumentation)
 
@@ -111,6 +112,15 @@ These are the supported application servers:
 | [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.0.0.12                   | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
 | [WildFly](https://www.wildfly.org/)                                                       | 13.0.x                      | OpenJDK 8        | Ubuntu 18, Windows Server 2019 |
 | [WildFly](https://www.wildfly.org/)                                                       | 17.0.1, 21.0.0              | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+
+## JVMs and operating systems
+
+These are the supported JVM version and OS configurations which the javaagent is tested on:
+
+| JVM                                               | Versions  | OS                             |
+| ------------------------------------------------- | --------- | ------------------------------ |
+| [AdoptOpenJDK Hotspot](https://adoptopenjdk.net/) | 8, 11, 15 | Ubuntu 18, Windows Server 2019 |
+| [AdoptOpenJDK OpenJ9](https://adoptopenjdk.net/)  | 8, 11, 15 | Ubuntu 18, Windows Server 2019 |
 
 ## Disabled instrumentations
 

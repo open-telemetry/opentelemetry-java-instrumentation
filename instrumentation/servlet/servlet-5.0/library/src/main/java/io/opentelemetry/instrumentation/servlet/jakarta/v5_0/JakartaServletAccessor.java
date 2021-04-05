@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.servlet.jakarta.v5_0;
 
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.ServletAsyncListener;
+import jakarta.servlet.AsyncEvent;
+import jakarta.servlet.AsyncListener;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -93,6 +96,17 @@ public class JakartaServletAccessor
   }
 
   @Override
+  public boolean isRequestAsyncStarted(HttpServletRequest request) {
+    return request.isAsyncStarted();
+  }
+
+  @Override
+  public void addRequestAsyncListener(
+      HttpServletRequest request, ServletAsyncListener<HttpServletResponse> listener) {
+    request.getAsyncContext().addListener(new Listener(listener));
+  }
+
+  @Override
   public int getResponseStatus(HttpServletResponse response) {
     return response.getStatus();
   }
@@ -105,5 +119,33 @@ public class JakartaServletAccessor
   @Override
   public boolean isServletException(Throwable throwable) {
     return throwable instanceof ServletException;
+  }
+
+  private static class Listener implements AsyncListener {
+    private final ServletAsyncListener<HttpServletResponse> listener;
+
+    private Listener(ServletAsyncListener<HttpServletResponse> listener) {
+      this.listener = listener;
+    }
+
+    @Override
+    public void onComplete(AsyncEvent event) {
+      listener.onComplete((HttpServletResponse) event.getSuppliedResponse());
+    }
+
+    @Override
+    public void onTimeout(AsyncEvent event) {
+      listener.onTimeout(event.getAsyncContext().getTimeout());
+    }
+
+    @Override
+    public void onError(AsyncEvent event) {
+      listener.onError(event.getThrowable(), (HttpServletResponse) event.getSuppliedResponse());
+    }
+
+    @Override
+    public void onStartAsync(AsyncEvent event) {
+      event.getAsyncContext().addListener(this);
+    }
   }
 }

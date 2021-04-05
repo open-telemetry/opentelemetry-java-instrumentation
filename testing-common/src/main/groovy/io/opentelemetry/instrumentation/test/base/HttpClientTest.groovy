@@ -16,6 +16,7 @@ import static org.junit.Assume.assumeTrue
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
@@ -96,6 +97,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   String userAgent() {
     return null
+  }
+
+  List<AttributeKey<?>> extraAttributes() {
+    []
   }
 
   def "basic #method request #url"() {
@@ -540,6 +545,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null, String httpFlavor = "1.1") {
     def userAgent = userAgent()
+    def extraAttributes = extraAttributes()
     trace.span(index) {
       if (parentSpan == null) {
         hasNoParent()
@@ -554,9 +560,17 @@ abstract class HttpClientTest extends InstrumentationSpecification {
       }
       attributes {
         "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
-        "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
+        if (uri.port == UNUSABLE_PORT) {
+          // TODO(anuraaga): For the unusable port, there isn't actually a peer so we shouldn't be
+          // filling in peer information but some instrumentation does so based on the URL itself
+          // which is present in HTTP attributes. We should fix this.
+          "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == uri.host }
+          "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it == UNUSABLE_PORT }
+        } else {
+          "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
+          "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
+        }
         "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
         "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "${SemanticAttributes.HTTP_METHOD.key}" method
         "${SemanticAttributes.HTTP_FLAVOR.key}" httpFlavor
@@ -565,6 +579,22 @@ abstract class HttpClientTest extends InstrumentationSpecification {
         }
         if (status) {
           "${SemanticAttributes.HTTP_STATUS_CODE.key}" status
+        }
+
+        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+          "${SemanticAttributes.HTTP_HOST}" "localhost:${uri.port}"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
+          "${SemanticAttributes.HTTP_TARGET}" uri.path + "${uri.query != null ? "?${uri.query}" : ""}"
         }
       }
     }

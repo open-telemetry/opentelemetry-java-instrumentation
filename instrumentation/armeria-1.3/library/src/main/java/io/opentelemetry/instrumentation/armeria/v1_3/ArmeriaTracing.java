@@ -5,9 +5,13 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
+import com.linecorp.armeria.client.ClientRequestContext;
 import com.linecorp.armeria.client.HttpClient;
+import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.HttpService;
+import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.Function;
 
 /** Entrypoint for tracing Armeria services or clients. */
@@ -15,15 +19,21 @@ public final class ArmeriaTracing {
 
   /** Returns a new {@link ArmeriaTracing} configured with the given {@link OpenTelemetry}. */
   public static ArmeriaTracing create(OpenTelemetry openTelemetry) {
-    return new ArmeriaTracing(openTelemetry);
+    return newBuilder(openTelemetry).build();
   }
 
-  private final ArmeriaClientTracer clientTracer;
-  private final ArmeriaServerTracer serverTracer;
+  public static ArmeriaTracingBuilder newBuilder(OpenTelemetry openTelemetry) {
+    return new ArmeriaTracingBuilder(openTelemetry);
+  }
 
-  ArmeriaTracing(OpenTelemetry openTelemetry) {
-    clientTracer = new ArmeriaClientTracer(openTelemetry);
-    serverTracer = new ArmeriaServerTracer(openTelemetry);
+  private final Instrumenter<ClientRequestContext, RequestLog> clientInstrumenter;
+  private final Instrumenter<ServiceRequestContext, RequestLog> serverInstrumenter;
+
+  ArmeriaTracing(
+      Instrumenter<ClientRequestContext, RequestLog> clientInstrumenter,
+      Instrumenter<ServiceRequestContext, RequestLog> serverInstrumenter) {
+    this.clientInstrumenter = clientInstrumenter;
+    this.serverInstrumenter = serverInstrumenter;
   }
 
   /**
@@ -31,7 +41,7 @@ public final class ArmeriaTracing {
    * com.linecorp.armeria.client.ClientBuilder#decorator(Function)}.
    */
   public Function<? super HttpClient, ? extends HttpClient> newClientDecorator() {
-    return client -> new OpenTelemetryClient(client, clientTracer);
+    return client -> new OpenTelemetryClient(client, clientInstrumenter);
   }
 
   /**
@@ -39,6 +49,6 @@ public final class ArmeriaTracing {
    * HttpService#decorate(Function)}.
    */
   public Function<? super HttpService, ? extends HttpService> newServiceDecorator() {
-    return service -> new OpenTelemetryService(service, serverTracer);
+    return service -> new OpenTelemetryService(service, serverInstrumenter);
   }
 }
