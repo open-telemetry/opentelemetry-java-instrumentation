@@ -14,12 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class JettyHandlerAdviceHelper {
   /**
-   * Prepares the current context span for end. If the span ended exceptionally due to an exception,
-   * the span is ended within this method.
-   *
-   * <p>Returns <code>true</code> if the span can be ended normally. Returns <code>false</code> if
-   * scope or context is null (an existing span was found in start advice), or the span ended
-   * exceptionally, which is handled within this method.
+   * Shared method exit implementation for Jetty handler advices.
    */
   public static <REQUEST, RESPONSE> void stopSpan(
       ServletHttpServerTracer<REQUEST, RESPONSE> tracer,

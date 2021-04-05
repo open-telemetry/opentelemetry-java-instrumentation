@@ -23,7 +23,4 @@ dependencies {
   }
 
   testLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '11.0.0'
-
-  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.+'
-  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '11.+'
 }
