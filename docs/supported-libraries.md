@@ -11,6 +11,7 @@ or [contributing](../CONTRIBUTING.md).
 
   * [Libraries / Frameworks](#libraries---frameworks)
   * [Application Servers](#application-servers)
+  * [JVMs and Operating Systems](#jvms-and-operating-systems)
   * [Disabled instrumentations](#disabled-instrumentations)
     + [Grizzly instrumentation](#grizzly-instrumentation)
 
