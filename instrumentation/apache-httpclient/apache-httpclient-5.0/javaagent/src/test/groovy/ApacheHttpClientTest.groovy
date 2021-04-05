@@ -19,7 +19,6 @@ import org.apache.hc.core5.http.message.BasicHeader
 import org.apache.hc.core5.http.protocol.BasicHttpContext
 import spock.lang.AutoCleanup
 import spock.lang.Shared
-import spock.lang.Timeout
 
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest implements AgentTestTrait {
   @Shared
@@ -71,7 +70,6 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 }
 
-@Timeout(5)
 class ApacheClientHostRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -91,7 +89,6 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   }
 }
 
-@Timeout(5)
 class ApacheClientHostRequestContext extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -111,7 +108,6 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<ClassicHttpReq
   }
 }
 
-@Timeout(5)
 class ApacheClientHostRequestResponseHandler extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -132,7 +128,6 @@ class ApacheClientHostRequestResponseHandler extends ApacheHttpClientTest<Classi
   }
 }
 
-@Timeout(5)
 class ApacheClientHostRequestResponseHandlerContext extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -153,7 +148,6 @@ class ApacheClientHostRequestResponseHandlerContext extends ApacheHttpClientTest
   }
 }
 
-@Timeout(5)
 class ApacheClientUriRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -168,7 +162,6 @@ class ApacheClientUriRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   }
 }
 
-@Timeout(5)
 class ApacheClientUriRequestContext extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -183,7 +176,6 @@ class ApacheClientUriRequestContext extends ApacheHttpClientTest<ClassicHttpRequ
   }
 }
 
-@Timeout(5)
 class ApacheClientUriRequestResponseHandler extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -199,7 +191,6 @@ class ApacheClientUriRequestResponseHandler extends ApacheHttpClientTest<Classic
   }
 }
 
-@Timeout(5)
 class ApacheClientUriRequestResponseHandlerContext extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {

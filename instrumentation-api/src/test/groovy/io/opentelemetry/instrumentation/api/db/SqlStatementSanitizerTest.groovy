@@ -6,10 +6,8 @@
 package io.opentelemetry.instrumentation.api.db
 
 import spock.lang.Specification
-import spock.lang.Timeout
 import spock.lang.Unroll
 
-@Timeout(20)
 class SqlStatementSanitizerTest extends Specification {
 
   def "normalize #originalSql"() {

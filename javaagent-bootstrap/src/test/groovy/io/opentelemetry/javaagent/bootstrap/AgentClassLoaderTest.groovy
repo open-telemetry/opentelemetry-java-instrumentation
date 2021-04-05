@@ -6,12 +6,9 @@
 package io.opentelemetry.javaagent.bootstrap
 
 import java.util.concurrent.Phaser
-import java.util.concurrent.TimeUnit
 import spock.lang.Specification
-import spock.lang.Timeout
 
 class AgentClassLoaderTest extends Specification {
-  @Timeout(value = 60, unit = TimeUnit.SECONDS)
   def "agent classloader does not lock classloading around instance"() {
     setup:
     def className1 = 'some/class/Name1'

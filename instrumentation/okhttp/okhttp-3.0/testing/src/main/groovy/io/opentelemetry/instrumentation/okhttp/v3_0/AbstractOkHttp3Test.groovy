@@ -14,9 +14,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.internal.http.HttpMethod
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 abstract class AbstractOkHttp3Test extends HttpClientTest {
 
   abstract OkHttpClient.Builder configureClient(OkHttpClient.Builder clientBuilder)

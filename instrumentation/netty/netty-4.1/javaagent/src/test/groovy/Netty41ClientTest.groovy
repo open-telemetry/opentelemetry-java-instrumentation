@@ -35,9 +35,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
