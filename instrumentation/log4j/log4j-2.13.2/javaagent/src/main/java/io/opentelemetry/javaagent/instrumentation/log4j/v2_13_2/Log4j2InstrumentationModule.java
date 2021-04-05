@@ -38,11 +38,6 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isLibraryInstrumentationClass(String className) {
-    return className.startsWith("io.opentelemetry.instrumentation.log4j.v2_13_2");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Arrays.asList(new BugFixingInstrumentation(), new EmptyTypeInstrumentation());
   }

@@ -24,6 +24,11 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 public class SpringWebfluxHttpClientTracer
     extends HttpClientTracer<ClientRequest, ClientRequest.Builder, ClientResponse> {
 
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty(
+              "otel.instrumentation.spring-webflux.experimental-span-attributes", false);
+
   private static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
 
   private SpringWebfluxHttpClientTracer() {
@@ -101,11 +106,7 @@ public class SpringWebfluxHttpClientTracer
     }
   }
 
-  // TODO cache this after
-  //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/1643
   private static boolean captureExperimentalSpanAttributes() {
-    return Config.get()
-        .getBooleanProperty(
-            "otel.instrumentation.spring-webflux.experimental-span-attributes", false);
+    return CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES;
   }
 }

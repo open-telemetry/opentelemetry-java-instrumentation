@@ -30,11 +30,6 @@ public class OkHttp3InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isLibraryInstrumentationClass(String className) {
-    return className.startsWith("io.opentelemetry.instrumentation.okhttp.v3_0");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new OkHttpClientInstrumentation());
   }

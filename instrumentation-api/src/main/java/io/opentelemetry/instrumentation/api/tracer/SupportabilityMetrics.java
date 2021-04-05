@@ -64,6 +64,7 @@ class SupportabilityMetrics {
               runnable -> {
                 Thread result = new Thread(runnable, "supportability_metrics_reporter");
                 result.setDaemon(true);
+                result.setContextClassLoader(null);
                 return result;
               })
           .scheduleAtFixedRate(this::report, 5, 5, TimeUnit.SECONDS);
