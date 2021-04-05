@@ -12,8 +12,10 @@ import com.linecorp.armeria.common.AggregatedHttpResponse
 import com.linecorp.armeria.common.HttpMethod
 import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.common.RequestHeaders
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -67,5 +69,16 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
   @Override
   boolean testRemoteConnection() {
     false
+  }
+
+  @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_HOST,
+      SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
+      SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_TARGET,
+    ]
   }
 }

@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -97,6 +98,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   boolean testError() {
     true
+  }
+
+  List<AttributeKey<?>> extraAttributes() {
+    []
   }
 
   enum ServerEndpoint {
@@ -497,6 +502,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
+    def extraAttributes = extraAttributes()
     trace.span(index) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
@@ -526,6 +532,36 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" endpoint.status
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+
+        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+          "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
+          // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
+          // currently reports '/*' which is a fallback route.
+          "${SemanticAttributes.HTTP_ROUTE}" String
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
+          "${SemanticAttributes.HTTP_SERVER_NAME}" String
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
+          "${SemanticAttributes.HTTP_TARGET}" endpoint.path + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
+        }
+        if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+          "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+        }
+        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
+          "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP.value
+        }
       }
     }
   }
