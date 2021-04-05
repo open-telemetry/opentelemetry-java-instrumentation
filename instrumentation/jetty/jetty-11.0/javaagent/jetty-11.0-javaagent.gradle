@@ -1,0 +1,26 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_11
+}
+
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.eclipse.jetty"
+    module = 'jetty-server'
+    versions = "[11,)"
+  }
+}
+
+dependencies {
+  library group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.0.0'
+  implementation project(':instrumentation:servlet:servlet-5.0:javaagent')
+  implementation project(':instrumentation:jetty:jetty-common:javaagent')
+
+  // Don't want to conflict with jetty from the test server.
+  testImplementation(project(':testing-common')) {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
+  }
+
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '11.0.0'
+}

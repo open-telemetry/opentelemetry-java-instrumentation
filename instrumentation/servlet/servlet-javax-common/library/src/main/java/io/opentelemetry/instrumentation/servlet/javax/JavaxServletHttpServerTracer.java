@@ -19,4 +19,9 @@ public abstract class JavaxServletHttpServerTracer<RESPONSE>
   protected TextMapGetter<HttpServletRequest> getGetter() {
     return JavaxHttpServletRequestGetter.GETTER;
   }
+
+  @Override
+  protected String errorExceptionAttributeName() {
+    return "javax.servlet.error.exception";
+  }
 }

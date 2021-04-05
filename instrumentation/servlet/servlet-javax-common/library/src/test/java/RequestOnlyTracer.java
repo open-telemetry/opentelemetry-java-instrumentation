@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.servlet.ServletAsyncListener;
 import io.opentelemetry.instrumentation.servlet.javax.JavaxServletAccessor;
 import io.opentelemetry.instrumentation.servlet.javax.JavaxServletHttpServerTracer;
 import javax.servlet.http.HttpServletRequest;
@@ -13,17 +14,28 @@ public class RequestOnlyTracer extends JavaxServletHttpServerTracer<Void> {
         new JavaxServletAccessor<Void>() {
           @Override
           public Integer getRequestRemotePort(HttpServletRequest httpServletRequest) {
-            return null;
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          public boolean isRequestAsyncStarted(HttpServletRequest request) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          public void addRequestAsyncListener(
+              HttpServletRequest request, ServletAsyncListener<Void> listener) {
+            throw new UnsupportedOperationException();
           }
 
           @Override
           public int getResponseStatus(Void unused) {
-            return 0;
+            throw new UnsupportedOperationException();
           }
 
           @Override
           public boolean isResponseCommitted(Void unused) {
-            return false;
+            throw new UnsupportedOperationException();
           }
         });
   }

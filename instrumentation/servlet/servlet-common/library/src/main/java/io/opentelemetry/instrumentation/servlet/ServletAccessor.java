@@ -47,6 +47,10 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   Integer getRequestRemotePort(REQUEST request);
 
+  boolean isRequestAsyncStarted(REQUEST request);
+
+  void addRequestAsyncListener(REQUEST request, ServletAsyncListener<RESPONSE> listener);
+
   int getResponseStatus(RESPONSE response);
 
   boolean isResponseCommitted(RESPONSE response);

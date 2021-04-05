@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.instrumentation.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
@@ -138,5 +139,10 @@ public class JakartaServletHttpServerTracer
   @Override
   protected TextMapGetter<HttpServletRequest> getGetter() {
     return JakartaHttpServletRequestGetter.GETTER;
+  }
+
+  @Override
+  protected String errorExceptionAttributeName() {
+    return RequestDispatcher.ERROR_EXCEPTION;
   }
 }
