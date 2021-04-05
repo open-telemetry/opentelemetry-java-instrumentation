@@ -24,7 +24,8 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Build
-        run: ./gradlew check --stacktrace -x :smoke-tests:test
+        # running javadoc to fail on javadoc warnings (using -Xwerror, see java.gradle)
+        run: ./gradlew check javadoc --stacktrace -x :smoke-tests:test
 
       - name: Upload deadlock detector artifacts
         if: always()
