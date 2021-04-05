@@ -103,11 +103,6 @@ abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait 
     "/client-error" | 400
     "/error"        | 500
   }
-
-  @Override
-  boolean testAsync() {
-    false
-  }
 }
 
 @Timeout(5)
