@@ -13,9 +13,7 @@ import io.opentelemetry.instrumentation.servlet.TagSettingAsyncListener;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class JettyHandlerAdviceHelper {
-  /**
-   * Shared method exit implementation for Jetty handler advices.
-   */
+  /** Shared method exit implementation for Jetty handler advices. */
   public static <REQUEST, RESPONSE> void stopSpan(
       ServletHttpServerTracer<REQUEST, RESPONSE> tracer,
       REQUEST request,
