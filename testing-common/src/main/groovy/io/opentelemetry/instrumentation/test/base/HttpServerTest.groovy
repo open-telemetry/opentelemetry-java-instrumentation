@@ -434,6 +434,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         }
       }
     }
+    
+    cleanup:
+    pool.shutdownNow()
   }
 
   //FIXME: add tests for POST with large/chunked data
