@@ -38,3 +38,6 @@ tasks.withType(JavaCompile) {
 tasks.withType(GroovyCompile) {
   options.release = null
 }
+tasks.withType(Test) {
+  jvmArgs "-Djava.rmi.server.hostname=127.0.0.1"
+}
