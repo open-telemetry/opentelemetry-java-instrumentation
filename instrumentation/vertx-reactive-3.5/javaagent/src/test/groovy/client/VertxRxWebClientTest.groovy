@@ -13,9 +13,7 @@ import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.reactivex.core.Vertx
 import io.vertx.reactivex.ext.web.client.WebClient
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(10)
 class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared

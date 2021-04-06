@@ -21,7 +21,6 @@ import org.glassfish.jersey.client.ClientConfig
 import org.glassfish.jersey.client.ClientProperties
 import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import spock.lang.Timeout
 import spock.lang.Unroll
 
 abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait {
@@ -83,7 +82,6 @@ abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait 
   }
 }
 
-@Timeout(5)
 class JerseyClientTest extends JaxRsClientTest {
 
   @Override
@@ -98,7 +96,6 @@ class JerseyClientTest extends JaxRsClientTest {
   }
 }
 
-@Timeout(5)
 class ResteasyClientTest extends JaxRsClientTest {
 
   @Override
@@ -112,7 +109,6 @@ class ResteasyClientTest extends JaxRsClientTest {
   }
 }
 
-@Timeout(5)
 class CxfClientTest extends JaxRsClientTest {
 
   @Override

@@ -11,9 +11,7 @@ import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.pool.TypePool
 import spock.lang.Specification
-import spock.lang.Timeout
 
-@Timeout(5)
 class CacheProviderTest extends Specification {
   def "key bootstrap equivalence"() {
     // def loader = null

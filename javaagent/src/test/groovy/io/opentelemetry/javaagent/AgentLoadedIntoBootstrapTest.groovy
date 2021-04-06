@@ -8,9 +8,7 @@ package io.opentelemetry.javaagent
 import jvmbootstraptest.AgentLoadedChecker
 import jvmbootstraptest.MyClassLoaderIsNotBootstrap
 import spock.lang.Specification
-import spock.lang.Timeout
 
-@Timeout(30)
 class AgentLoadedIntoBootstrapTest extends Specification {
 
   def "Agent loads in when separate jvm is launched"() {

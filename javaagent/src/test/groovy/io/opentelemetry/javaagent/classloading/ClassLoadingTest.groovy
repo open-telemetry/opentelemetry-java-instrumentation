@@ -12,9 +12,7 @@ import io.opentelemetry.test.ClassToInstrument
 import io.opentelemetry.test.ClassToInstrumentChild
 import java.lang.ref.WeakReference
 import spock.lang.Specification
-import spock.lang.Timeout
 
-@Timeout(10)
 class ClassLoadingTest extends Specification {
 
   final URL[] classpath = [createJarWithClasses(ClassToInstrument, ClassToInstrumentChild)]

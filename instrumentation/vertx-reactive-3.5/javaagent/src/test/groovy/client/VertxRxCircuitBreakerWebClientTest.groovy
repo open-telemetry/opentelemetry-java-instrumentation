@@ -16,9 +16,7 @@ import io.vertx.reactivex.core.Vertx
 import io.vertx.reactivex.ext.web.client.WebClient
 import java.util.concurrent.CompletableFuture
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(10)
 class VertxRxCircuitBreakerWebClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared

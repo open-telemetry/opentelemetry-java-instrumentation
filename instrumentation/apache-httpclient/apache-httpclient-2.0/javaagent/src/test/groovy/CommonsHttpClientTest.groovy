@@ -15,9 +15,7 @@ import org.apache.commons.httpclient.methods.PostMethod
 import org.apache.commons.httpclient.methods.PutMethod
 import org.apache.commons.httpclient.methods.TraceMethod
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   @Shared
   HttpClient client = new HttpClient()

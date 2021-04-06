@@ -14,9 +14,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared

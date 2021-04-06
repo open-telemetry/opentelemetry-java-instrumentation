@@ -19,11 +19,9 @@ import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.loading.ClassInjector
 import spock.lang.Specification
-import spock.lang.Timeout
 
 class HelperInjectionTest extends Specification {
 
-  @Timeout(10)
   def "helpers injected to non-delegating classloader"() {
     setup:
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'

@@ -12,9 +12,7 @@ import org.apache.http.message.BasicHeader
 import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class ApacheHttpClientResponseHandlerTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
