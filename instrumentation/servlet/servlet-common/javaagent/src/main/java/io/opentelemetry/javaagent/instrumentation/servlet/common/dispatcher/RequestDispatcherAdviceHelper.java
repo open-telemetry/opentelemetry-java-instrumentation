@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class RequestDispatcherAdviceHelper {
   /**
@@ -23,12 +24,12 @@ public class RequestDispatcherAdviceHelper {
   // TODO (trask) do we need to guard against context leak here?
   //  this could be simplified by always using currentContext, only falling back to requestContext
   //  if currentContext does not have a valid span
-  public static Context getStartParentContext(Context currentContext, Context requestContext) {
+  public static @Nullable Context getStartParentContext(
+      Context currentContext, @Nullable Context requestContext) {
     Span currentSpan = Span.fromContext(currentContext);
     SpanContext currentSpanContext = currentSpan.getSpanContext();
 
     if (!currentSpanContext.isValid()) {
-      // this may be null
       return requestContext;
     }
 
