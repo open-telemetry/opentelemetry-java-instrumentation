@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.tracer;
-
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.List;
@@ -23,26 +22,37 @@ import reactor.core.publisher.Mono;
  */
 public class WebClientTracingFilter implements ExchangeFilterFunction {
 
-  public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
+  private final SpringWebfluxHttpClientTracer tracer;
+
+  private WebClientTracingFilter(SpringWebfluxHttpClientTracer tracer) {
+    this.tracer = tracer;
+  }
+
+  public static void addFilter(
+      OpenTelemetry openTelemetry, List<ExchangeFilterFunction> exchangeFilterFunctions) {
     for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {
       if (filterFunction instanceof WebClientTracingFilter) {
         return;
       }
     }
-    exchangeFilterFunctions.add(0, new WebClientTracingFilter());
+    exchangeFilterFunctions.add(
+        0, new WebClientTracingFilter(new SpringWebfluxHttpClientTracer(openTelemetry)));
   }
 
   @Override
   public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-    return new MonoWebClientTrace(request, next);
+    return new MonoWebClientTrace(tracer, request, next);
   }
 
-  public static final class MonoWebClientTrace extends Mono<ClientResponse> {
+  private static final class MonoWebClientTrace extends Mono<ClientResponse> {
 
-    final ExchangeFunction next;
-    final ClientRequest request;
+    private final SpringWebfluxHttpClientTracer tracer;
+    private final ExchangeFunction next;
+    private final ClientRequest request;
 
-    public MonoWebClientTrace(ClientRequest request, ExchangeFunction next) {
+    private MonoWebClientTrace(
+        SpringWebfluxHttpClientTracer tracer, ClientRequest request, ExchangeFunction next) {
+      this.tracer = tracer;
       this.next = next;
       this.request = request;
     }
@@ -50,22 +60,22 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
     @Override
     public void subscribe(CoreSubscriber<? super ClientResponse> subscriber) {
       Context parentContext = Context.current();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!tracer.shouldStartSpan(parentContext)) {
         next.exchange(request).subscribe(subscriber);
         return;
       }
 
       ClientRequest.Builder builder = ClientRequest.from(request);
-      Context context = tracer().startSpan(parentContext, request, builder);
+      Context context = tracer.startSpan(parentContext, request, builder);
       try (Scope ignored = context.makeCurrent()) {
         this.next
             .exchange(builder.build())
             .doOnCancel(
                 () -> {
-                  tracer().onCancel(context);
-                  tracer().end(context);
+                  tracer.onCancel(context);
+                  tracer.end(context);
                 })
-            .subscribe(new TraceWebClientSubscriber(subscriber, context));
+            .subscribe(new TraceWebClientSubscriber(tracer, subscriber, context));
       }
     }
   }
