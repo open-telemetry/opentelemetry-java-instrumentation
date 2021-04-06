@@ -42,7 +42,7 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest implements Agen
   }
 
   @Override
-  boolean testAsync() {
+  boolean testCallback() {
     return false
   }
 }

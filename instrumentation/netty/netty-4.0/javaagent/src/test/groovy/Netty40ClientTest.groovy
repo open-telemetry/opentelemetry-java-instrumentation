@@ -61,7 +61,7 @@ class Netty40ClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
     ch.pipeline().addLast(new ClientHandler(callback, CompletableFuture.completedFuture(0)))
 

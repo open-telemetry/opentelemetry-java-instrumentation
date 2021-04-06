@@ -40,14 +40,14 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest implements Agent
     // VertxRx doesn't seem to provide a synchronous API at all for circuit breaker. Bridge through
     // a callback.
     CompletableFuture<Integer> future = new CompletableFuture<>()
-    doRequestAsync(method, uri, headers) {
+    doRequestWithCallback(method, uri, headers) {
       future.complete(it)
     }
     return future.get()
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     def request = buildRequest(method, uri, headers)
     breaker.executeCommand({command ->
       request.rxSend().doOnSuccess {
@@ -92,7 +92,7 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest implements Agent
   }
 
   @Override
-  boolean testAsyncWithParent() {
+  boolean testCallbackWithParent() {
     //Make rxjava2 instrumentation work with vert.x reactive in order to fix this test
     return false
   }

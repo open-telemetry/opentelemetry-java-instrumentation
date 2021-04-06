@@ -54,7 +54,7 @@ abstract class PlayWsClientTestBase extends HttpClientTest implements AgentTestT
   }
 
   @Override
-  boolean testAsyncWithParent() {
+  boolean testCallbackWithParent() {
     return false
   }
 

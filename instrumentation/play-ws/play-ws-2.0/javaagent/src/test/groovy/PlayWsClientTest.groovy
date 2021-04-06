@@ -31,7 +31,7 @@ class PlayJavaWsClientTest extends PlayWsClientTestBase {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     sendRequest(method, uri, headers).thenAccept {
       callback.accept(it.status)
     }
@@ -64,7 +64,7 @@ class PlayJavaStreamedWsClientTest extends PlayWsClientTestBase {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     sendRequest(method, uri, headers).thenAccept {
       callback.accept(it.status)
     }
@@ -107,7 +107,7 @@ class PlayScalaWsClientTest extends PlayWsClientTestBase {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     Future<play.api.libs.ws.StandaloneWSResponse> futureResponse = sendRequest(method, uri, headers)
     futureResponse.onComplete(new Function1<Try<play.api.libs.ws.StandaloneWSResponse>, Void>() {
       @Override
@@ -158,7 +158,7 @@ class PlayScalaStreamedWsClientTest extends PlayWsClientTestBase {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     Future<play.api.libs.ws.StandaloneWSResponse> futureResponse = sendRequest(method, uri, headers)
     futureResponse.onComplete(new Function1<Try<play.api.libs.ws.StandaloneWSResponse>, Void>() {
       @Override

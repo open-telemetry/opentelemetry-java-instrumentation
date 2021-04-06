@@ -27,7 +27,7 @@ class AsyncHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     // TODO(anuraaga): Do we also need to test ListenableFuture callback?
     client.executeRequest(buildRequest(method, uri, headers), new AsyncCompletionHandler<Void>() {
       @Override

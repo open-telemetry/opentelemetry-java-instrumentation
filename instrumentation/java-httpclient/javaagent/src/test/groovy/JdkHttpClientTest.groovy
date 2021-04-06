@@ -32,7 +32,7 @@ class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     client.sendAsync(buildRequest(method, uri, headers), HttpResponse.BodyHandlers.ofString())
       .thenAccept {
         callback.accept(it.statusCode())

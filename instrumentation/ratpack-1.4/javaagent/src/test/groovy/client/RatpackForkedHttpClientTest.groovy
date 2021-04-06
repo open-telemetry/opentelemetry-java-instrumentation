@@ -19,7 +19,7 @@ class RatpackForkedHttpClientTest extends RatpackHttpClientTest {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     exec.execute(Operation.of {
       sendRequest(method, uri, headers).result {
         callback.accept(it.value)

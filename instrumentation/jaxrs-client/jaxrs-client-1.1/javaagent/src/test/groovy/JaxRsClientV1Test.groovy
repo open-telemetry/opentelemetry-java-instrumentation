@@ -41,7 +41,7 @@ class JaxRsClientV1Test extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  boolean testAsync() {
+  boolean testCallback() {
     false
   }
 }

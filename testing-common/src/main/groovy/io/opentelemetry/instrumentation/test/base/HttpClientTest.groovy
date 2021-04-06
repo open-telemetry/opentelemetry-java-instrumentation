@@ -87,13 +87,57 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   }
 
   /**
-   * Make the request and return the status code response
-   * @param method
-   * @return
+   * Make the request and return the status code of the response synchronously. Some clients, e.g.,
+   * HTTPUrlConnection only support synchronous execution without callbacks, and many offer a
+   * dedicated API for invoking synchronously, such as OkHttp's execute method. When implementing
+   * this method, such an API should be used and the HTTP status code of the response returned,
+   * for example:
+   *
+   * @Override
+   * int doRequest(String method, URI uri, Map<String, String headers = [:]) {
+   *   HttpResponse response = client.execute(new Request(method, uri, headers))
+   *   return response.statusCode()
+   * }
+   *
+   * If there is no synchronous API available at all, for example as in Vert.X, a CompletableFuture
+   * can be used to block on a result, for example:
+   *
+   * @Override
+   * int doRequest(String method, URI uri, Map<String, String headers = [:]) {
+   *   CompletableFuture<Integer> result = new CompletableFuture<>()
+   *   doRequestWithCallback(method, uri, headers) {
+   *     result.complete(it.statusCode())
+   *   }
+   *   return result.join()
+   * }
    */
   abstract int doRequest(String method, URI uri, Map<String, String> headers = [:])
 
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  /**
+   * Maks the request and return the status code of the response through the callback. This method
+   * should be implemented if the client offers any request execution methods that accept a callback
+   * which receives the response. This will generally be an API for asynchronous execution of a
+   * request, such as OkHttp's enqueue method, but may also be a callback executed synchronously,
+   * such as ApacheHttpClient's response handler callbacks. This method is used in tests to verify
+   * the context is propagated correctly to such callbacks.
+   *
+   * @Override
+   * void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+   *   // Hypothetical client accepting a callback
+   *   client.executeAsync(new Request(method, uri, headers)) {
+   *     callback.accept(it.statusCode())
+   *   }
+   *
+   *   // Hypothetical client returning a CompletableFuture
+   *   client.executeAsync(new Request(method, uri, headers)).thenAccept {
+   *     callback.accept(it.statusCode())
+   *   }
+   * }
+   *
+   * If the client offers no APIs that accept callbacks, then this method should not be implemented
+   * and instead, {@link #testCallback} should be implemented to return false.
+   */
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException()
   }
@@ -201,14 +245,14 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   def "trace request with callback and parent"() {
     given:
-    assumeTrue(testAsync())
-    assumeTrue(testAsyncWithParent())
+    assumeTrue(testCallback())
+    assumeTrue(testCallbackWithParent())
 
     def status = new BlockingVariable<Integer>()
 
     when:
     runUnderTrace("parent") {
-      doRequestAsync(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+      doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
         runUnderTrace("child") {}
         status.set(it)
       }
@@ -231,12 +275,12 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   def "trace request with callback and no parent"() {
     given:
-    assumeTrue(testAsync())
+    assumeTrue(testCallback())
 
     def status = new BlockingVariable<Integer>()
 
     when:
-    doRequestAsync(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+    doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
       runUnderTrace("callback") {
       }
       status.set(it)
@@ -672,11 +716,11 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     true
   }
 
-  boolean testAsync() {
+  boolean testCallback() {
     return true
   }
 
-  boolean testAsyncWithParent() {
+  boolean testCallbackWithParent() {
     // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
     // function is used.  There is no way to stop a test from a derived class hence the flag
     true

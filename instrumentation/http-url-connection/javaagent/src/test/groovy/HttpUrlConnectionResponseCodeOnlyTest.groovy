@@ -35,7 +35,7 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest implements Ag
   }
 
   @Override
-  boolean testAsync() {
+  boolean testCallback() {
     return false
   }
 }

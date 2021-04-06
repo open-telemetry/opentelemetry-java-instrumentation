@@ -24,7 +24,7 @@ class KHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  boolean testAsync() {
+  boolean testCallback() {
     return false
   }
 

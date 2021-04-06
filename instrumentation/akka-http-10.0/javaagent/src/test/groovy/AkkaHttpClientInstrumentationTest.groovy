@@ -33,7 +33,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest implements AgentT
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     sendRequest(method, uri, headers).thenAccept {
       callback.accept(it.status().intValue())
     }
@@ -52,7 +52,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest implements AgentT
   // Disable for now.
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2639
   @Override
-  boolean testAsync() {
+  boolean testCallback() {
     false
   }
 

@@ -34,7 +34,7 @@ class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     sendRequest(method, uri, headers)
       .subscribe(new io.reactivex.functions.Consumer<HttpResponse<?>>() {
         @Override
@@ -76,7 +76,7 @@ class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  boolean testAsyncWithParent() {
+  boolean testCallbackWithParent() {
     //Make rxjava2 instrumentation work with vert.x reactive in order to fix this test
     return false
   }

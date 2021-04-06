@@ -37,7 +37,7 @@ abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait 
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     def request = buildRequest(uri, headers).async()
     def body = BODY_METHODS.contains(method) ? Entity.text("") : null
 

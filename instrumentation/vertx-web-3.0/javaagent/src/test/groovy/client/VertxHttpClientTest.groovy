@@ -31,14 +31,14 @@ class VertxHttpClientTest extends HttpClientTest implements AgentTestTrait {
   int doRequest(String method, URI uri, Map<String, String> headers) {
     // Vertx doesn't seem to provide any synchronous API so bridge through a callback
     CompletableFuture<Integer> future = new CompletableFuture<>()
-    doRequestAsync(method, uri, headers) {
+    doRequestWithCallback(method, uri, headers) {
       future.complete(it)
     }
     return future.get()
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     def request = httpClient.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
     headers.each { request.putHeader(it.key, it.value) }
     request.handler { response ->

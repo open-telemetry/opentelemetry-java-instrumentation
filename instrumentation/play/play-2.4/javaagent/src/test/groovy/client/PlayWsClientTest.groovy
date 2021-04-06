@@ -15,6 +15,7 @@ import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Subject
 import spock.lang.Timeout
+
 // Play 2.6+ uses a separately versioned client that shades the underlying dependency
 // This means our built in instrumentation won't work.
 @Timeout(5)
@@ -30,7 +31,7 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     sendRequest(method, uri, headers).thenAccept {
       callback.accept(it.status)
     }

@@ -54,7 +54,7 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  boolean testAsync() {
+  boolean testCallback() {
     return false
   }
 

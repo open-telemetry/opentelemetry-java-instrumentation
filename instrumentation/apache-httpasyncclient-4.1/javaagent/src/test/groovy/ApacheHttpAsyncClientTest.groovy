@@ -38,7 +38,7 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     client.execute(buildRequest(method, uri, headers), new FutureCallback<HttpResponse>() {
       @Override
       void completed(HttpResponse httpResponse) {

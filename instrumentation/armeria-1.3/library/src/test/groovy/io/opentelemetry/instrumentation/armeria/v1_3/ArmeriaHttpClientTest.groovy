@@ -23,7 +23,7 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest implements Lib
   // Agent users have automatic propagation through executor instrumentation, but library users
   // should do manually using Armeria patterns.
   @Override
-  boolean testAsyncWithParent() {
+  boolean testCallbackWithParent() {
     false
   }
 }

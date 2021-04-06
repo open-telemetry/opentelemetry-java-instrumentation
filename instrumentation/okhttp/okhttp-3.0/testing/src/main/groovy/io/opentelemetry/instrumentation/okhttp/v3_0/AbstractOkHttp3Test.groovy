@@ -40,7 +40,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest {
   }
 
   @Override
-  void doRequestAsync(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     def request = buildRequest(method, uri, headers)
     client.newCall(request).enqueue(new Callback() {
       @Override

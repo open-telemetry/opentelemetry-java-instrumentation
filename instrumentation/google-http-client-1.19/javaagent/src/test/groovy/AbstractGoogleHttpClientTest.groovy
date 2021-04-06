@@ -20,7 +20,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
   def requestFactory = new NetHttpTransport().createRequestFactory()
 
   @Override
-  boolean testAsync() {
+  boolean testCallback() {
     // executeAsync does not actually allow asynchronous execution since it returns a standard
     // Future which cannot have callbacks attached. We instrument execute and executeAsync
     // differently so test both but do not need to run our normal asynchronous tests, which check
