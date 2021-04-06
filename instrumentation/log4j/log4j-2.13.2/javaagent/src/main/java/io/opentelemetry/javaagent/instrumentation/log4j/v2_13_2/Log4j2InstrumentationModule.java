@@ -39,11 +39,12 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(new BugFixingInstrumentation(), new EmptyTypeInstrumentation());
+    return Arrays.asList(
+        new BugFixingInstrumentation(), new ResourceInjectingTypeInstrumentation());
   }
 
-  // a type instrumentation is needed to trigger resource injection
-  public static class EmptyTypeInstrumentation implements TypeInstrumentation {
+  // A type instrumentation is needed to trigger resource injection.
+  public static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       // we cannot use ContextDataProvider here because one of the classes that we inject implements
@@ -55,7 +56,7 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
 
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      // Nothing to instrument, no methods to match
+      // Nothing to transform, this type instrumentation is only used for injecting resources.
       return emptyMap();
     }
   }
