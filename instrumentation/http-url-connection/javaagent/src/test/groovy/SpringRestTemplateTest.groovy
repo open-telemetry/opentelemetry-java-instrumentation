@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import java.util.function.Consumer
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -27,17 +28,25 @@ class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     try {
       def httpHeaders = new HttpHeaders()
       headers.each { httpHeaders.put(it.key, [it.value]) }
       def request = new HttpEntity<String>(httpHeaders)
-      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.resolve(method), request, String)
-      callback?.call()
+      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
       return response.statusCode.value()
     } catch (ResourceAccessException exception) {
       throw exception.getCause()
     }
+  }
+
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    restTemplate.execute(uri, HttpMethod.valueOf(method), { request ->
+      headers.forEach(request.getHeaders().&add)
+    }, { response ->
+      callback.accept(response.statusCode.value())
+    })
   }
 
   @Override

@@ -22,7 +22,7 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
   static final STATUS = 200
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers) {
     HttpURLConnection connection = uri.toURL().openConnection()
     try {
       connection.setRequestMethod(method)
@@ -35,7 +35,6 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
       assert Span.current() == parentSpan
       stream.readLines()
       stream.close()
-      callback?.call()
       return connection.getResponseCode()
     } finally {
       connection.disconnect()
@@ -50,6 +49,11 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
   @Override
   Integer statusOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testCallback() {
+    return false
   }
 
   @Unroll

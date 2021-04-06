@@ -5,7 +5,8 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent.CancellationException
+import java.util.function.Consumer
 import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.concurrent.FutureCallback
@@ -30,38 +31,36 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    def request = new HttpUriRequest(method, uri)
-    headers.entrySet().each {
-      request.addHeader(new BasicHeader(it.key, it.value))
-    }
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    return client.execute(buildRequest(method, uri, headers), null).get().statusLine.statusCode
+  }
 
-    def latch = new CountDownLatch(callback == null ? 0 : 1)
-
-    def handler = callback == null ? null : new FutureCallback<HttpResponse>() {
-
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    client.execute(buildRequest(method, uri, headers), new FutureCallback<HttpResponse>() {
       @Override
-      void completed(HttpResponse result) {
-        callback()
-        latch.countDown()
+      void completed(HttpResponse httpResponse) {
+        callback.accept(httpResponse.statusLine.statusCode)
       }
 
       @Override
-      void failed(Exception ex) {
-        latch.countDown()
+      void failed(Exception e) {
+        throw e
       }
 
       @Override
       void cancelled() {
-        latch.countDown()
+        throw new CancellationException()
       }
-    }
+    })
+  }
 
-    def future = client.execute(request, handler)
-    def response = future.get()
-    response.entity?.content?.close() // Make sure the connection is closed.
-    latch.await()
-    response.statusLine.statusCode
+  private static HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = new HttpUriRequest(method, uri)
+    headers.entrySet().each {
+      request.addHeader(new BasicHeader(it.key, it.value))
+    }
+    return request
   }
 
   @Override
@@ -76,6 +75,6 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
 
   @Override
   boolean testCausality() {
-    return false
+    false
   }
 }

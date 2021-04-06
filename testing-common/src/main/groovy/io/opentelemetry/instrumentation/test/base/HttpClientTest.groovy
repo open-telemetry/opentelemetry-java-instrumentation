@@ -27,10 +27,12 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
+import java.util.function.Consumer
 import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
+import spock.util.concurrent.BlockingVariable
 
 @Unroll
 abstract class HttpClientTest extends InstrumentationSpecification {
@@ -86,11 +88,60 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   }
 
   /**
-   * Make the request and return the status code response
-   * @param method
-   * @return
+   * Make the request and return the status code of the response synchronously. Some clients, e.g.,
+   * HTTPUrlConnection only support synchronous execution without callbacks, and many offer a
+   * dedicated API for invoking synchronously, such as OkHttp's execute method. When implementing
+   * this method, such an API should be used and the HTTP status code of the response returned,
+   * for example:
+   *
+   * @Override
+   * int doRequest(String method, URI uri, Map<String, String headers = [:]) {
+   *   HttpResponse response = client.execute(new Request(method, uri, headers))
+   *   return response.statusCode()
+   * }
+   *
+   * If there is no synchronous API available at all, for example as in Vert.X, a CompletableFuture
+   * can be used to block on a result, for example:
+   *
+   * @Override
+   * int doRequest(String method, URI uri, Map<String, String headers = [:]) {
+   *   CompletableFuture<Integer> result = new CompletableFuture<>()
+   *   doRequestWithCallback(method, uri, headers) {
+   *     result.complete(it.statusCode())
+   *   }
+   *   return result.join()
+   * }
    */
-  abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null)
+  abstract int doRequest(String method, URI uri, Map<String, String> headers = [:])
+
+  /**
+   * Maks the request and return the status code of the response through the callback. This method
+   * should be implemented if the client offers any request execution methods that accept a callback
+   * which receives the response. This will generally be an API for asynchronous execution of a
+   * request, such as OkHttp's enqueue method, but may also be a callback executed synchronously,
+   * such as ApacheHttpClient's response handler callbacks. This method is used in tests to verify
+   * the context is propagated correctly to such callbacks.
+   *
+   * @Override
+   * void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+   *   // Hypothetical client accepting a callback
+   *   client.executeAsync(new Request(method, uri, headers)) {
+   *     callback.accept(it.statusCode())
+   *   }
+   *
+   *   // Hypothetical client returning a CompletableFuture
+   *   client.executeAsync(new Request(method, uri, headers)).thenAccept {
+   *     callback.accept(it.statusCode())
+   *   }
+   * }
+   *
+   * If the client offers no APIs that accept callbacks, then this method should not be implemented
+   * and instead, {@link #testCallback} should be implemented to return false.
+   */
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    // Must be implemented if testAsync is true
+    throw new UnsupportedOperationException()
+  }
 
   Integer statusOnRedirectError() {
     return null
@@ -195,17 +246,21 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   def "trace request with callback and parent"() {
     given:
+    assumeTrue(testCallback())
     assumeTrue(testCallbackWithParent())
 
+    def status = new BlockingVariable<Integer>()
+
     when:
-    def status = runUnderTrace("parent") {
-      doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+    runUnderTrace("parent") {
+      doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
         runUnderTrace("child") {}
+        status.set(it)
       }
     }
 
     then:
-    status == 200
+    status.get() == 200
     // only one trace (client).
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
@@ -220,14 +275,20 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   }
 
   def "trace request with callback and no parent"() {
+    given:
+    assumeTrue(testCallback())
+
+    def status = new BlockingVariable<Integer>()
+
     when:
-    def status = doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+    doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
       runUnderTrace("callback") {
       }
+      status.set(it)
     }
 
     then:
-    status == 200
+    status.get() == 200
     // only one trace (client).
     assertTraces(2) {
       trace(0, 1 + extraClientSpans()) {
@@ -654,6 +715,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   boolean testCausality() {
     true
+  }
+
+  boolean testCallback() {
+    return true
   }
 
   boolean testCallbackWithParent() {

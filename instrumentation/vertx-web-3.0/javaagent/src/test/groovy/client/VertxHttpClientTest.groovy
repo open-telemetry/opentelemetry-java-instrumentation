@@ -11,9 +11,9 @@ import io.opentelemetry.instrumentation.test.base.SingleConnection
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpClientOptions
-import io.vertx.core.http.HttpClientResponse
 import io.vertx.core.http.HttpMethod
 import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
 import spock.lang.Shared
 
 class VertxHttpClientTest extends HttpClientTest implements AgentTestTrait {
@@ -26,17 +26,23 @@ class VertxHttpClientTest extends HttpClientTest implements AgentTestTrait {
   def httpClient = vertx.createHttpClient(clientOptions)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    CompletableFuture<HttpClientResponse> future = new CompletableFuture<>()
+  int doRequest(String method, URI uri, Map<String, String> headers) {
+    // Vertx doesn't seem to provide any synchronous API so bridge through a callback
+    CompletableFuture<Integer> future = new CompletableFuture<>()
+    doRequestWithCallback(method, uri, headers) {
+      future.complete(it)
+    }
+    return future.get()
+  }
+
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     def request = httpClient.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
     headers.each { request.putHeader(it.key, it.value) }
     request.handler { response ->
-      callback?.call()
-      future.complete(response)
+      callback.accept(response.statusCode())
     }
     request.end()
-
-    return future.get().statusCode()
   }
 
   @Override

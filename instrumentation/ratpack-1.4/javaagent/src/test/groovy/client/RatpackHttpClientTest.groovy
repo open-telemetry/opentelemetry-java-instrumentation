@@ -8,7 +8,9 @@ package client
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.time.Duration
-import ratpack.exec.ExecResult
+import java.util.function.Consumer
+import ratpack.exec.Operation
+import ratpack.exec.Promise
 import ratpack.http.client.HttpClient
 import ratpack.test.exec.ExecHarness
 import spock.lang.AutoCleanup
@@ -27,23 +29,34 @@ class RatpackHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    ExecResult<Integer> result = exec.yield {
-      def resp = client.request(uri) { spec ->
-        spec.connectTimeout(Duration.ofSeconds(2))
-        spec.method(method)
-        spec.headers { headersSpec ->
-          headers.entrySet().each {
-            headersSpec.add(it.key, it.value)
-          }
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    return exec.yield {
+      sendRequest(method, uri, headers)
+    }.value
+  }
+
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    exec.execute(Operation.of {
+      sendRequest(method, uri, headers).result {
+        callback.accept(it.value)
+      }
+    })
+  }
+
+  private Promise<Integer> sendRequest(String method, URI uri, Map<String, String> headers) {
+    def resp = client.request(uri) { spec ->
+      spec.connectTimeout(Duration.ofSeconds(2))
+      spec.method(method)
+      spec.headers { headersSpec ->
+        headers.entrySet().each {
+          headersSpec.add(it.key, it.value)
         }
       }
-      return resp.map {
-        callback?.call()
-        it.status.code
-      }
     }
-    return result.value
+    return resp.map {
+      it.status.code
+    }
   }
 
   @Override

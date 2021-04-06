@@ -30,7 +30,7 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     HttpMethod httpMethod
 
     switch (method) {
@@ -63,7 +63,6 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
     try {
       client.executeMethod(httpMethod)
-      callback?.call()
       return httpMethod.getStatusCode()
     } finally {
       httpMethod.releaseConnection()
@@ -73,6 +72,11 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   @Override
   boolean testRedirects() {
     // Generates 4 spans
+    false
+  }
+
+  @Override
+  boolean testCallback() {
     false
   }
 }
