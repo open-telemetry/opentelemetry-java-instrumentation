@@ -13,6 +13,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /** Utils for concurrent instrumentations. */
 public class ExecutorInstrumentationUtils {
+  private static final String AGENT_CLASSLOADER_NAME =
+      "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
 
   private static final ClassValue<Boolean> INSTRUMENTED_RUNNABLE_CLASS =
       new ClassValue<Boolean>() {
@@ -73,6 +75,12 @@ public class ExecutorInstrumentationUtils {
             if (enclosingClass.getName().equals("com.squareup.okhttp.ConnectionPool")) {
               return false;
             }
+          }
+
+          ClassLoader taskClassLoader = taskClass.getClassLoader();
+          if (taskClassLoader != null
+              && AGENT_CLASSLOADER_NAME.equals(taskClassLoader.getClass().getName())) {
+            return false;
           }
 
           return true;
