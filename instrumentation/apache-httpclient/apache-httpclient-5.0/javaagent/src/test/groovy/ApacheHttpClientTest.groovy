@@ -57,7 +57,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
       request.addHeader(new BasicHeader(it.key, it.value))
     }
 
-    executeRequestAsync(request, uri) {
+    executeRequestWithCallback(request, uri) {
       it.close() // Make sure the connection is closed.
       callback.accept(it.code)
     }
@@ -67,7 +67,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 
   abstract ClassicHttpResponse executeRequest(T request, URI uri)
 
-  abstract void executeRequestAsync(T request, URI uri, Consumer<ClassicHttpResponse> callback)
+  abstract void executeRequestWithCallback(T request, URI uri, Consumer<ClassicHttpResponse> callback)
 
   static String fullPathFromURI(URI uri) {
     StringBuilder builder = new StringBuilder()
@@ -101,7 +101,7 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   }
 
   @Override
-  void executeRequestAsync(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
+  void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
     // This is not actually an asynchronous invocation since the response handler is always invoked
     // inline. But context propagation works the same for a response handler as a callback so we
     // treat it as an async test.
@@ -129,7 +129,7 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<ClassicHttpReq
   }
 
   @Override
-  void executeRequestAsync(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
+  void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
     // This is not actually an asynchronous invocation since the response handler is always invoked
     // inline. But context propagation works the same for a response handler as a callback so we
     // treat it as an async test.
@@ -157,7 +157,7 @@ class ApacheClientUriRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   }
 
   @Override
-  void executeRequestAsync(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
+  void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
     // This is not actually an asynchronous invocation since the response handler is always invoked
     // inline. But context propagation works the same for a response handler as a callback so we
     // treat it as an async test.
@@ -180,7 +180,7 @@ class ApacheClientUriRequestContext extends ApacheHttpClientTest<ClassicHttpRequ
   }
 
   @Override
-  void executeRequestAsync(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
+  void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
     // This is not actually an asynchronous invocation since the response handler is always invoked
     // inline. But context propagation works the same for a response handler as a callback so we
     // treat it as an async test.
