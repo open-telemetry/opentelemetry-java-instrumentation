@@ -21,7 +21,6 @@ import org.apache.hc.core5.http.message.BasicHeader
 import org.apache.hc.core5.http.protocol.BasicHttpContext
 import spock.lang.AutoCleanup
 import spock.lang.Shared
-import spock.lang.Timeout
 
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest implements AgentTestTrait {
   @Shared

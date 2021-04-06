@@ -16,7 +16,6 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.protocol.BasicHttpContext
 import spock.lang.Shared
-import spock.lang.Timeout
 
 abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest implements AgentTestTrait {
   @Shared
