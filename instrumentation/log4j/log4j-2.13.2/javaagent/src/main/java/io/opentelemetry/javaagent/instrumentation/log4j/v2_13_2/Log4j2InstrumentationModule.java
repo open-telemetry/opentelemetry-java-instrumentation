@@ -42,14 +42,14 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
     return Arrays.asList(new BugFixingInstrumentation(), new EmptyTypeInstrumentation());
   }
 
+  // a type instrumentation is needed to trigger resource injection
   public static class EmptyTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
       // we cannot use ContextDataProvider here because one of the classes that we inject implements
       // this interface, causing the interface to be loaded while it's being transformed, which
-      // leads
-      // to duplicate class definition error after the interface is transformed and the triggering
-      // class loader tries to load it.
+      // leads to duplicate class definition error after the interface is transformed and the
+      // triggering class loader tries to load it.
       return named("org.apache.logging.log4j.core.impl.ThreadContextDataInjector");
     }
 
