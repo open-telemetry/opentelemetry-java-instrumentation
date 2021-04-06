@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.javax.dispatcher;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
@@ -21,7 +22,7 @@ public class RequestDispatcherTracer extends BaseTracer {
     return "io.opentelemetry.javaagent.servlet-javax-common";
   }
 
-  public Context startSpan(Method method) {
-    return startSpan(spanNameForMethod(method));
+  public Context startSpan(Context parentContext, Method method) {
+    return startSpan(parentContext, spanNameForMethod(method), SpanKind.INTERNAL);
   }
 }
