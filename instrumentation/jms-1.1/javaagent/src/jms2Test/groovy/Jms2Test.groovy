@@ -162,7 +162,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
     expect:
     receivedMessage == null
     // span is not created if no message is received
-    assertTraces(0,{})
+    assertTraces(0, {})
 
     cleanup:
     consumer.close()
@@ -192,6 +192,47 @@ class Jms2Test extends AgentInstrumentationSpecification {
     destination                      | destinationType | destinationName
     session.createQueue("someQueue") | "queue"         | "someQueue"
     session.createTopic("someTopic") | "topic"         | "someTopic"
+  }
+
+  def "sending a message to #destinationName #destinationType with explicit destination propagates context"() {
+    given:
+    def producer = session.createProducer(null)
+    def consumer = session.createConsumer(destination)
+
+    def lock = new CountDownLatch(1)
+    def messageRef = new AtomicReference<TextMessage>()
+    consumer.setMessageListener new MessageListener() {
+      @Override
+      void onMessage(Message message) {
+        lock.await() // ensure the producer trace is reported first.
+        messageRef.set(message)
+      }
+    }
+
+    when:
+    producer.send(destination, message)
+    lock.countDown()
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        producerSpan(it, 0, destinationType, destinationName)
+        consumerSpan(it, 1, destinationType, destinationName, messageRef.get().getJMSMessageID(), span(0), "process")
+      }
+    }
+    // This check needs to go after all traces have been accounted for
+    messageRef.get().text == messageText
+
+    cleanup:
+    producer.close()
+    consumer.close()
+
+    where:
+    destination                      | destinationType | destinationName
+    session.createQueue("someQueue") | "queue"         | "someQueue"
+    session.createTopic("someTopic") | "topic"         | "someTopic"
+    session.createTemporaryQueue()   | "queue"         | "(temporary)"
+    session.createTemporaryTopic()   | "topic"         | "(temporary)"
   }
 
   static producerSpan(TraceAssert trace, int index, String destinationType, String destinationName) {

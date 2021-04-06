@@ -45,13 +45,6 @@ public class ExecutorInstrumentationUtils {
             return false;
           }
 
-          // OrderedExecutor$1 is a worker class that processes tasks submitted to OrderedExecutor
-          if (taskClass
-              .getName()
-              .equals("org.hornetq.utils.OrderedExecutorFactory$OrderedExecutor$1")) {
-            return false;
-          }
-
           Class<?> enclosingClass = taskClass.getEnclosingClass();
           if (enclosingClass != null) {
             // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to
@@ -78,6 +71,13 @@ public class ExecutorInstrumentationUtils {
             // OkHttp connection pool lazily initializes a long running task to detect expired
             // connections and should not itself be instrumented.
             if (enclosingClass.getName().equals("com.squareup.okhttp.ConnectionPool")) {
+              return false;
+            }
+
+            // Avoid instrumenting internal OrderedExecutor worker class
+            if (enclosingClass
+                .getName()
+                .equals("org.hornetq.utils.OrderedExecutorFactory$OrderedExecutor")) {
               return false;
             }
           }

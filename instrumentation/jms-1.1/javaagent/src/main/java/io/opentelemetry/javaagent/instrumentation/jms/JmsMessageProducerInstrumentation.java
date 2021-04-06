@@ -88,9 +88,9 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       if (scope == null) {
         return;
       }
-      scope.close();
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
+      scope.close();
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);
       } else {
@@ -127,6 +127,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       }
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
+      scope.close();
       if (throwable != null) {
         tracer().endExceptionally(context, throwable);
       } else {
