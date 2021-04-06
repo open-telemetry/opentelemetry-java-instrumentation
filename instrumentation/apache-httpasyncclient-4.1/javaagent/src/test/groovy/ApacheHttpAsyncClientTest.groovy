@@ -14,9 +14,7 @@ import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared

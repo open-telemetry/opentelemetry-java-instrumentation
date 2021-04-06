@@ -13,11 +13,9 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Requires
-import spock.lang.Timeout
 import spock.lang.Unroll
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
-@Timeout(5)
 class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
 
   static final RESPONSE = "Hello."

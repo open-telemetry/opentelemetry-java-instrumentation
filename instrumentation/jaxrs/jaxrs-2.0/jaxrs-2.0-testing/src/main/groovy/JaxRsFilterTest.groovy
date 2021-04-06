@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -71,6 +72,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name parentSpanName != null ? parentSpanName : "test.span"
+          kind SERVER
           if (runsOnServer()) {
             errored abortNormal
           } else {
@@ -123,6 +125,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name parentResourceName
+          kind SERVER
           if (!runsOnServer()) {
             attributes {
             }

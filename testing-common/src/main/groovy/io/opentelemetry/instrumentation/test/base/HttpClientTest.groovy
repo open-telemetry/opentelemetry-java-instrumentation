@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderParentClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -209,7 +210,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     // (and the span context propagation along with it)
     assertTraces(2) {
       trace(0, 1) {
-        basicSpan(it, 0, "parent-client-span")
+        basicClientSpan(it, 0, "parent-client-span")
       }
       trace(1, 1) {
         serverSpan(it, 0)

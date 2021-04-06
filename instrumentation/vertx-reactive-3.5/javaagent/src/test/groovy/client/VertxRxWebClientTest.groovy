@@ -16,9 +16,7 @@ import io.vertx.reactivex.ext.web.client.HttpResponse
 import io.vertx.reactivex.ext.web.client.WebClient
 import java.util.function.Consumer
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(10)
 class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared

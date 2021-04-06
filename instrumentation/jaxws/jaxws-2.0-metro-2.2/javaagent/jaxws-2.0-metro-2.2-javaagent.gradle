@@ -21,7 +21,7 @@ dependencies {
   testInstrumentation project(":instrumentation:jaxws:jws-1.1:javaagent")
 
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
-  testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
+  testInstrumentation project(':instrumentation:jetty:jetty-8.0:javaagent')
 
   latestDepTestLibrary group: 'com.sun.xml.ws', name: 'jaxws-rt', version: '2+'
 }

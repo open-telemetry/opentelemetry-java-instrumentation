@@ -551,6 +551,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
 
         span(1) {
           name "${datasource.class.simpleName}.getConnection"
+          kind CLIENT
           childOf span(0)
           attributes {
           }
@@ -558,6 +559,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
         if (recursive) {
           span(2) {
             name "${datasource.class.simpleName}.getConnection"
+            kind CLIENT
             childOf span(1)
             attributes {
             }

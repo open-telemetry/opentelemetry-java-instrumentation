@@ -116,6 +116,7 @@ class TestHttpServer implements AutoCloseable {
   static distributedRequestSpan(TraceAssert trace, int index, SpanData parentSpan = null) {
     trace.span(index) {
       name "test-http-server"
+      kind SERVER
       errored false
       if (parentSpan == null) {
         hasNoParent()

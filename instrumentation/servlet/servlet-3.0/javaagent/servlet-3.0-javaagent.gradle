@@ -19,7 +19,7 @@ dependencies {
   api(project(':instrumentation:servlet:servlet-3.0:library'))
   implementation(project(':instrumentation:servlet:servlet-common:javaagent'))
 
-  testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
+  testInstrumentation project(':instrumentation:jetty:jetty-8.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
 
   testImplementation(project(':testing-common')) {

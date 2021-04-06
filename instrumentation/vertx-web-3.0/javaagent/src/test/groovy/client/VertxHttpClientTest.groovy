@@ -15,9 +15,7 @@ import io.vertx.core.http.HttpMethod
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(10)
 class VertxHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared

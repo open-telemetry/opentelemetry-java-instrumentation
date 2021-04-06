@@ -14,11 +14,9 @@ import play.libs.ws.WSResponse
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Subject
-import spock.lang.Timeout
 
 // Play 2.6+ uses a separately versioned client that shades the underlying dependency
 // This means our built in instrumentation won't work.
-@Timeout(5)
 class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   @Subject
   @Shared

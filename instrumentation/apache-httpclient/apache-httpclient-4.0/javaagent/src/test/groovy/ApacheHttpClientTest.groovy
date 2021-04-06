@@ -83,7 +83,6 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 }
 
-@Timeout(5)
 class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
@@ -108,7 +107,6 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   }
 }
 
-@Timeout(5)
 class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
@@ -133,7 +131,6 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpReque
   }
 }
 
-@Timeout(5)
 class ApacheClientUriRequest extends ApacheHttpClientTest<HttpUriRequest> {
   @Override
   HttpUriRequest createRequest(String method, URI uri) {
@@ -153,7 +150,6 @@ class ApacheClientUriRequest extends ApacheHttpClientTest<HttpUriRequest> {
   }
 }
 
-@Timeout(5)
 class ApacheClientUriRequestContext extends ApacheHttpClientTest<HttpUriRequest> {
   @Override
   HttpUriRequest createRequest(String method, URI uri) {

@@ -16,9 +16,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class OkHttp2Test extends HttpClientTest implements AgentTestTrait {
   @Shared
   def client = new OkHttpClient()

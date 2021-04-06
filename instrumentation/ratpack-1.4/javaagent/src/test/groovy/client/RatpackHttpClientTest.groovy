@@ -15,9 +15,7 @@ import ratpack.http.client.HttpClient
 import ratpack.test.exec.ExecHarness
 import spock.lang.AutoCleanup
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class RatpackHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @AutoCleanup

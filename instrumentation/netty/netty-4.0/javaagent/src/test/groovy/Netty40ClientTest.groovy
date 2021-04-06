@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -98,9 +99,9 @@ class Netty40ClientTest extends HttpClientTest implements AgentTestTrait {
     false
   }
 
-  //This is almost identical to "connection error (unopened port)" test from superclass.
-  //But it uses somewhat different span name for the client span.
-  //For now creating a separate test for this, hoping to remove this duplication in the future.
+  // This is almost identical to "connection error (unopened port)" test from superclass.
+  // But it uses somewhat different span name for the client span.
+  // For now creating a separate test for this, hoping to remove this duplication in the future.
   def "netty connection error (unopened port)"() {
     given:
     def uri = new URI("http://127.0.0.1:$UNUSABLE_PORT/") // Use numeric address to avoid ipv4/ipv6 confusion
@@ -120,6 +121,7 @@ class Netty40ClientTest extends HttpClientTest implements AgentTestTrait {
         basicSpan(it, 0, "parent", null, thrownException)
         span(1) {
           name "CONNECT"
+          kind CLIENT
           childOf span(0)
           errored true
           Class errorClass = ConnectException

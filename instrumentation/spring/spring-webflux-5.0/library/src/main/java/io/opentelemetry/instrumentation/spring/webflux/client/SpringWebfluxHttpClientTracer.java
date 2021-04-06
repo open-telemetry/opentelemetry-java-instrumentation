@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter.SETTER;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
@@ -21,7 +22,7 @@ import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-public class SpringWebfluxHttpClientTracer
+class SpringWebfluxHttpClientTracer
     extends HttpClientTracer<ClientRequest, ClientRequest.Builder, ClientResponse> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
@@ -29,19 +30,13 @@ public class SpringWebfluxHttpClientTracer
           .getBooleanProperty(
               "otel.instrumentation.spring-webflux.experimental-span-attributes", false);
 
-  private static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
-
-  private SpringWebfluxHttpClientTracer() {
-    super(new NetPeerAttributes());
-  }
-
-  public static SpringWebfluxHttpClientTracer tracer() {
-    return TRACER;
+  SpringWebfluxHttpClientTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry, new NetPeerAttributes());
   }
 
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
-  public void onCancel(Context context) {
+  void onCancel(Context context) {
     if (captureExperimentalSpanAttributes()) {
       Span span = Span.fromContext(context);
       span.setAttribute("spring-webflux.event", "cancelled");

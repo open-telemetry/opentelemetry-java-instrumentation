@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -35,9 +36,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.function.Consumer
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
@@ -209,7 +208,10 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
     group.shutdownGracefully()
   }
 
-  def "connection error (unopened port)"() {
+  // This is almost identical to "connection error (unopened port)" test from superclass.
+  // But it uses somewhat different span name for the client span.
+  // For now creating a separate test for this, hoping to remove this duplication in the future.
+  def "netty connection error (unopened port)"() {
     given:
     def uri = new URI("http://localhost:$UNUSABLE_PORT/")
 
@@ -234,6 +236,7 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
         for (def i = 1; i < size; i++) {
           span(i) {
             name "CONNECT"
+            kind CLIENT
             childOf span(0)
             errored true
             errorEvent(thrownException.class, ~/Connection refused:( no further information:)? localhost\/\[?[0-9.:]+\]?:$UNUSABLE_PORT/)

@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.dropwizard.testing.junit.ResourceTestRule
@@ -37,6 +38,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name expectedSpanName
+          kind SERVER
           attributes {
           }
         }
@@ -72,6 +74,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name expectedSpanName
+          kind SERVER
           attributes {
           }
         }

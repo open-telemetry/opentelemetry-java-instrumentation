@@ -17,9 +17,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CompletionStage
 import java.util.function.Consumer
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class AkkaHttpClientInstrumentationTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared

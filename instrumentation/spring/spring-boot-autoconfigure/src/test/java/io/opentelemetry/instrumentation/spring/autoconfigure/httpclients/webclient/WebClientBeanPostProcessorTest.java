@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webcli
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 @ExtendWith(MockitoExtension.class)
 class WebClientBeanPostProcessorTest {
 
-  WebClientBeanPostProcessor webClientBeanPostProcessor = new WebClientBeanPostProcessor();
+  WebClientBeanPostProcessor webClientBeanPostProcessor =
+      new WebClientBeanPostProcessor(OpenTelemetry.noop());
 
   @Test
   @DisplayName(

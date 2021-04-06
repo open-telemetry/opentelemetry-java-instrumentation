@@ -16,9 +16,7 @@ import java.time.temporal.ChronoUnit
 import java.util.function.Consumer
 import spock.lang.Requires
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
