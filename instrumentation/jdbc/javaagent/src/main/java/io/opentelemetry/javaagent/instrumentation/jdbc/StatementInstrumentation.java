@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcInstrumenters.instrumenter;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;
@@ -50,20 +50,24 @@ public class StatementInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) String sql,
         @Advice.This Statement statement,
+        @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      request = DbRequest.create(statement, sql);
+
+      if (request == null || !instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, statement, sql);
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
@@ -71,11 +75,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      if (throwable == null) {
-        tracer().end(context);
-      } else {
-        tracer().endExceptionally(context, throwable);
-      }
+      instrumenter().end(context, request, null, throwable);
     }
   }
 }
