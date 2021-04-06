@@ -47,7 +47,7 @@ class MongoClientTest extends AbstractMongoClientTest {
   }
 
   @Override
-  void createCollectionWithAlreadyBuildClientOptions(String dbName, String collectionName) {
+  void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
     def clientOptions = client.mongoClientOptions
     def newClientOptions = MongoClientOptions.builder(clientOptions).build()
     MongoDatabase db = new MongoClient(new ServerAddress("localhost", port), newClientOptions).getDatabase(dbName)

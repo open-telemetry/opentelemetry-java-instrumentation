@@ -20,11 +20,11 @@ class MongoClientTest extends AbstractMongoClientTest {
   @Shared
   MongoClient client
 
-  def setup() throws Exception {
+  def setupSpec() throws Exception {
     client = MongoClients.create("mongodb://localhost:$port")
   }
 
-  def cleanup() throws Exception {
+  def cleanupSpec() throws Exception {
     client?.close()
     client = null
   }
@@ -42,7 +42,7 @@ class MongoClientTest extends AbstractMongoClientTest {
   }
 
   @Override
-  void createCollectionWithAlreadyBuildClientOptions(String dbName, String collectionName) {
+  void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
     throw new AssumptionViolatedException("not tested on 4.0")
   }
 

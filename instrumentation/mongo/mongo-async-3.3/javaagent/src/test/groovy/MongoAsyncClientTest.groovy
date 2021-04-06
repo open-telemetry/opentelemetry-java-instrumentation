@@ -30,7 +30,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest {
   @Shared
   MongoClient client
 
-  def setup() throws Exception {
+  def setupSpec() throws Exception {
     client = MongoClients.create(
       MongoClientSettings.builder()
         .clusterSettings(
@@ -41,7 +41,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest {
         .build())
   }
 
-  def cleanup() throws Exception {
+  def cleanupSpec() throws Exception {
     client?.close()
     client = null
   }
@@ -59,8 +59,11 @@ class MongoAsyncClientTest extends AbstractMongoClientTest {
   }
 
   @Override
-  void createCollectionWithAlreadyBuildClientOptions(String dbName, String collectionName) {
-    throw new AssumptionViolatedException("not tested on 3.3")
+  void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
+    def clientSettings = client.settings
+    def newClientSettings = MongoClientSettings.builder(clientSettings).build()
+    MongoDatabase db = MongoClients.create(newClientSettings).getDatabase(dbName)
+    db.createCollection(collectionName, toCallback {})
   }
 
   @Override
@@ -158,34 +161,6 @@ class MongoAsyncClientTest extends AbstractMongoClientTest {
       result.complete(it)
     })
     throw result.join()
-  }
-
-  // Tests the fix for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/457
-  // TracingCommandListener might get added multiple times if ClientSettings are built using existing ClientSettings or when calling a build method twice.
-  // This test asserts that duplicate traces are not created in those cases.
-  def "test create collection with already built ClientSettings"() {
-    setup:
-    def clientSettings = client.settings
-    def newClientSettings = MongoClientSettings.builder(clientSettings).build()
-    MongoDatabase db = MongoClients.create(newClientSettings).getDatabase(dbName)
-
-    when:
-    db.createCollection(collectionName, toCallback {})
-
-    then:
-    assertTraces(1) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName, dbName) {
-          assert it.replaceAll(" ", "") == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
-            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
-          true
-        }
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = createCollectionName()
   }
 
   SingleResultCallback toCallback(Closure closure) {
