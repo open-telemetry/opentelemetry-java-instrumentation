@@ -24,7 +24,9 @@ import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
+import spock.lang.Unroll
 
+@Unroll
 class Jms1Test extends AgentInstrumentationSpecification {
 
   private static final Logger logger = LoggerFactory.getLogger(Jms1Test)
@@ -211,6 +213,47 @@ class Jms1Test extends AgentInstrumentationSpecification {
         }
       }
     }
+
+    cleanup:
+    producer.close()
+    consumer.close()
+
+    where:
+    destination                      | destinationType | destinationName
+    session.createQueue("someQueue") | "queue"         | "someQueue"
+    session.createTopic("someTopic") | "topic"         | "someTopic"
+    session.createTemporaryQueue()   | "queue"         | "(temporary)"
+    session.createTemporaryTopic()   | "topic"         | "(temporary)"
+  }
+
+  def "sending a message to #destinationName #destinationType with explicit destination propagates context"() {
+    given:
+    def producer = session.createProducer(null)
+    def consumer = session.createConsumer(destination)
+
+    def lock = new CountDownLatch(1)
+    def messageRef = new AtomicReference<TextMessage>()
+    consumer.setMessageListener new MessageListener() {
+      @Override
+      void onMessage(Message message) {
+        lock.await() // ensure the producer trace is reported first.
+        messageRef.set(message)
+      }
+    }
+
+    when:
+    producer.send(destination, message)
+    lock.countDown()
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        producerSpan(it, 0, destinationType, destinationName)
+        consumerSpan(it, 1, destinationType, destinationName, messageRef.get().getJMSMessageID(), span(0), "process")
+      }
+    }
+    // This check needs to go after all traces have been accounted for
+    messageRef.get().text == messageText
 
     cleanup:
     producer.close()

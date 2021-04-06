@@ -10,10 +10,8 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.javaagent.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static io.opentelemetry.javaagent.instrumentation.jms.MessageInjectAdapter.SETTER;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
@@ -43,12 +41,7 @@ public class JmsTracer extends BaseTracer {
       MessageDestination destination, String operation, Message message, long startTime) {
     Context parentContext = Context.root();
     if (message != null && "process".equals(operation)) {
-      // TODO use BaseTracer.extract() which has context leak detection
-      //  (and fix the context leak that it is currently detecting when running Jms2Test)
-      parentContext =
-          GlobalOpenTelemetry.getPropagators()
-              .getTextMapPropagator()
-              .extract(Context.root(), message, GETTER);
+      parentContext = extract(message, GETTER);
     }
 
     SpanBuilder spanBuilder =
@@ -64,12 +57,9 @@ public class JmsTracer extends BaseTracer {
     Context parentContext = Context.current();
     SpanBuilder span = spanBuilder(parentContext, spanName(destination, "send"), PRODUCER);
     afterStart(span, destination, message);
-    return parentContext.with(span.startSpan());
-  }
-
-  public Scope startProducerScope(Context context, Message message) {
+    Context context = parentContext.with(span.startSpan());
     inject(context, message, SETTER);
-    return context.makeCurrent();
+    return context;
   }
 
   public String spanName(MessageDestination destination, String operation) {
