@@ -25,9 +25,7 @@ import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(10)
 class MongoAsyncClientTest extends MongoBaseTest {
 
   @Shared

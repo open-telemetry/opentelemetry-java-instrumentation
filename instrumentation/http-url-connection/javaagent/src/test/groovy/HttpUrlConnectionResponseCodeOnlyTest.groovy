@@ -5,9 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import spock.lang.Timeout
 
-@Timeout(5)
 class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest implements AgentTestTrait {
 
   @Override

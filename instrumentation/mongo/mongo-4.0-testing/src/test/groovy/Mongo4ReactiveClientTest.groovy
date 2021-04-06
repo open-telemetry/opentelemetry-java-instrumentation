@@ -23,9 +23,7 @@ import org.bson.Document
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(10)
 class Mongo4ReactiveClientTest extends MongoBaseTest {
 
   @Shared

@@ -51,3 +51,14 @@ tasks.withType(Test) {
   jvmArgs "-Dotel.instrumentation.apache-camel.experimental-span-attributes=true"
   jvmArgs "-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true"
 }
+
+javadoc {
+  dependencies {
+    // without adding this dependency, javadoc fails:
+    //   warning: unknown enum constant XmlAccessType.PROPERTY
+    //   reason: class file for javax.xml.bind.annotation.XmlAccessType not found
+    // due to usage of org.apache.camel.model.RouteDefinition in CamelTracingService
+    // which has jaxb class-level annotations
+    compileOnly 'javax.xml.bind:jaxb-api:2.3.1'
+  }
+}
