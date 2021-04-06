@@ -13,6 +13,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /** Utils for concurrent instrumentations. */
 public class ExecutorInstrumentationUtils {
+  private static final String AGENT_CLASSLOADER_NAME =
+      "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
 
   private static final ClassValue<Boolean> INSTRUMENTED_RUNNABLE_CLASS =
       new ClassValue<Boolean>() {
@@ -80,6 +82,16 @@ public class ExecutorInstrumentationUtils {
                 .equals("org.hornetq.utils.OrderedExecutorFactory$OrderedExecutor")) {
               return false;
             }
+          }
+
+          // Don't trace runnables from libraries that are packaged inside the agent.
+          // Although GlobalClassloaderIgnoresMatcher excludes these classes from instrumentation
+          // their instances can still be passed to executors which we have instrumented so we need
+          // to exclude them here too.
+          ClassLoader taskClassLoader = taskClass.getClassLoader();
+          if (taskClassLoader != null
+              && AGENT_CLASSLOADER_NAME.equals(taskClassLoader.getClass().getName())) {
+            return false;
           }
 
           return true;
