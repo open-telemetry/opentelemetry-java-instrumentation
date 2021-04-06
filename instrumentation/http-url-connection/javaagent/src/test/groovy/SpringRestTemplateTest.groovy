@@ -44,9 +44,6 @@ class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    // This is not actually an asynchronous invocation since the response handler is always invoked
-    // inline. But context propagation works the same for a response handler as a callback so we
-    // treat it as an async test.
     restTemplate.execute(uri, HttpMethod.valueOf(method), { request ->
       headers.forEach(request.getHeaders().&add)
     }, { response ->

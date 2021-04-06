@@ -97,9 +97,6 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
 
   @Override
   void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
-    // This is not actually an asynchronous invocation since the response handler is always invoked
-    // inline. But context propagation works the same for a response handler as a callback so we
-    // treat it as an async test.
     client.execute(new HttpHost(uri.getHost(), uri.getPort()), request) {
       callback.accept(it)
     }
@@ -125,9 +122,6 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpReque
 
   @Override
   void executeRequestWithCallback(BasicHttpRequest request, URI uri, Consumer<HttpResponse> callback) {
-    // This is not actually an asynchronous invocation since the response handler is always invoked
-    // inline. But context propagation works the same for a response handler as a callback so we
-    // treat it as an async test.
     client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, {
       callback.accept(it)
     }, new BasicHttpContext())
@@ -153,9 +147,6 @@ class ApacheClientUriRequest extends ApacheHttpClientTest<HttpUriRequest> {
 
   @Override
   void executeRequestWithCallback(HttpUriRequest request, URI uri, Consumer<HttpResponse> callback) {
-    // This is not actually an asynchronous invocation since the response handler is always invoked
-    // inline. But context propagation works the same for a response handler as a callback so we
-    // treat it as an async test.
     client.execute(request) {
       callback.accept(it)
     }
@@ -176,9 +167,6 @@ class ApacheClientUriRequestContext extends ApacheHttpClientTest<HttpUriRequest>
 
   @Override
   void executeRequestWithCallback(HttpUriRequest request, URI uri, Consumer<HttpResponse> callback) {
-    // This is not actually an asynchronous invocation since the response handler is always invoked
-    // inline. But context propagation works the same for a response handler as a callback so we
-    // treat it as an async test.
     client.execute(request, {
       callback.accept(it)
     }, new BasicHttpContext())
