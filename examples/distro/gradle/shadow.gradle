@@ -10,7 +10,6 @@ ext.relocatePackages = { shadowJar ->
   // relocate OpenTelemetry API usage
   shadowJar.relocate "io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api"
   shadowJar.relocate "io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv"
-  shadowJar.relocate "io.opentelemetry.spi", "io.opentelemetry.javaagent.shaded.io.opentelemetry.spi"
   shadowJar.relocate "io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context"
 
   // relocate the OpenTelemetry extensions that are used by instrumentation modules
