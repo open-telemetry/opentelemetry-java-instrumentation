@@ -73,6 +73,13 @@ public class ExecutorInstrumentationUtils {
             if (enclosingClass.getName().equals("com.squareup.okhttp.ConnectionPool")) {
               return false;
             }
+
+            // Avoid instrumenting internal OrderedExecutor worker class
+            if (enclosingClass
+                .getName()
+                .equals("org.hornetq.utils.OrderedExecutorFactory$OrderedExecutor")) {
+              return false;
+            }
           }
 
           return true;
