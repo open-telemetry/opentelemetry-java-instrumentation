@@ -20,13 +20,14 @@ import java.util.concurrent.CountDownLatch
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
+import org.junit.AssumptionViolatedException
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Shared
 import spock.lang.Timeout
 
 @Timeout(10)
-class Mongo4ReactiveClientTest extends MongoBaseTest {
+class Mongo4ReactiveClientTest extends AbstractMongoClientTest {
 
   @Shared
   MongoClient client
@@ -40,79 +41,33 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
     client = null
   }
 
-  def "test create collection"() {
-    setup:
+  @Override
+  void createCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName)
-
-    when:
     db.createCollection(collectionName).subscribe(toSubscriber {})
-
-    then:
-    assertTraces(1) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName, dbName) {
-          assert it.replaceAll(" ", "") == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
-            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
-          true
-        }
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
   }
 
-  def "test create collection no description"() {
-    setup:
-    MongoDatabase db = MongoClients.create("mongodb://localhost:$port").getDatabase(dbName)
-
-    when:
+  @Override
+  void createCollectionNoDescription(String dbName, String collectionName) {
+    MongoDatabase db = MongoClients.create("mongodb://localhost:${port}").getDatabase(dbName)
     db.createCollection(collectionName).subscribe(toSubscriber {})
-
-    then:
-    assertTraces(1) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName, dbName, {
-          assert it.replaceAll(" ", "") == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
-            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
-          true
-        })
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
   }
 
-  def "test get collection"() {
-    setup:
-    MongoDatabase db = client.getDatabase(dbName)
+  @Override
+  void createCollectionWithAlreadyBuildClientOptions(String dbName, String collectionName) {
+    throw new AssumptionViolatedException("not tested on 4.0")
+  }
 
-    when:
-    def count = new CompletableFuture()
+  @Override
+  int getCollection(String dbName, String collectionName) {
+    MongoDatabase db = client.getDatabase(dbName)
+    def count = new CompletableFuture<Integer>()
     db.getCollection(collectionName).estimatedDocumentCount().subscribe(toSubscriber { count.complete(it) })
-
-    then:
-    count.get() == 0
-    assertTraces(1) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "count", collectionName, dbName) {
-          assert it.replaceAll(" ", "") == "{\"count\":\"$collectionName\",\"query\":{}}" ||
-            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
-          true
-        }
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
+    return count.join()
   }
 
-  def "test insert"() {
-    setup:
+  @Override
+  int insert(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch1 = new CountDownLatch(1)
@@ -122,39 +77,15 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
       return db.getCollection(collectionName)
     }
     ignoreTracesAndClear(2)
-
-    when:
-    def count = new CompletableFuture()
+    def count = new CompletableFuture<Integer>()
     collection.insertOne(new Document("password", "SECRET")).subscribe(toSubscriber {
       collection.estimatedDocumentCount().subscribe(toSubscriber { count.complete(it) })
     })
-
-    then:
-    count.get() == 1
-    assertTraces(2) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "insert", collectionName, dbName) {
-          assert it.replaceAll(" ", "") == "{\"insert\":\"$collectionName\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}" ||
-            it == "{\"insert\": \"$collectionName\", \"ordered\": \"?\", \"\$db\": \"?\", \"documents\": [{\"_id\": \"?\", \"password\": \"?\"}]}"
-          true
-        }
-      }
-      trace(1, 1) {
-        mongoSpan(it, 0, "count", collectionName, dbName) {
-          assert it.replaceAll(" ", "") == "{\"count\":\"$collectionName\",\"query\":{}}" ||
-            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
-          true
-        }
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
+    return count.join()
   }
 
-  def "test update"() {
-    setup:
+  @Override
+  int update(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch1 = new CountDownLatch(1)
@@ -167,8 +98,6 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
       return coll
     }
     ignoreTracesAndClear(1)
-
-    when:
     def result = new CompletableFuture<UpdateResult>()
     def count = new CompletableFuture()
     collection.updateOne(
@@ -177,34 +106,11 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
       result.complete(it)
       collection.estimatedDocumentCount().subscribe(toSubscriber { count.complete(it) })
     })
-
-    then:
-    result.get().modifiedCount == 1
-    count.get() == 1
-    assertTraces(2) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "update", collectionName, dbName) {
-          assert it.replaceAll(" ", "") == "{\"update\":\"$collectionName\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"\$set\":{\"password\":\"?\"}}}]}" ||
-            it == "{\"update\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"updates\": [{\"q\": {\"password\": \"?\"}, \"u\": {\"\$set\": {\"password\": \"?\"}}}]}"
-          true
-        }
-      }
-      trace(1, 1) {
-        mongoSpan(it, 0, "count", collectionName, dbName) {
-          assert it.replaceAll(" ", "") == "{\"count\":\"$collectionName\",\"query\":{}}" ||
-            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
-          true
-        }
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
+    return result.join().modifiedCount
   }
 
-  def "test delete"() {
-    setup:
+  @Override
+  int delete(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch1 = new CountDownLatch(1)
@@ -217,38 +123,37 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
       return coll
     }
     ignoreTracesAndClear(1)
-
-    when:
     def result = new CompletableFuture<DeleteResult>()
     def count = new CompletableFuture()
     collection.deleteOne(new BsonDocument("password", new BsonString("SECRET"))).subscribe(toSubscriber {
       result.complete(it)
       collection.estimatedDocumentCount().subscribe(toSubscriber { count.complete(it) })
     })
+    return result.join().deletedCount
+  }
 
-    then:
-    result.get().deletedCount == 1
-    count.get() == 0
-    assertTraces(2) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "delete", collectionName, dbName) {
-          assert it.replaceAll(" ", "") == "{\"delete\":\"$collectionName\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}" ||
-            it == "{\"delete\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"deletes\": [{\"q\": {\"password\": \"?\"}, \"limit\": \"?\"}]}"
-          true
-        }
-      }
-      trace(1, 1) {
-        mongoSpan(it, 0, "count", collectionName, dbName) {
-          assert it.replaceAll(" ", "") == "{\"count\":\"$collectionName\",\"query\":{}}" ||
-            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
-          true
-        }
-      }
+  @Override
+  void getMore(String dbName, String collectionName) {
+    throw new AssumptionViolatedException("not tested on reactive")
+  }
+
+  @Override
+  void error(String dbName, String collectionName) {
+    MongoCollection<Document> collection = runUnderTrace("setup") {
+      MongoDatabase db = client.getDatabase(dbName)
+      def latch = new CountDownLatch(1)
+      db.createCollection(collectionName).subscribe(toSubscriber {
+        latch.countDown()
+      })
+      latch.await()
+      return db.getCollection(collectionName)
     }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
+    ignoreTracesAndClear(1)
+    def result = new CompletableFuture<Throwable>()
+    collection.updateOne(new BsonDocument(), new BsonDocument()).subscribe(toSubscriber {
+      result.complete(it)
+    })
+    throw result.join()
   }
 
   def Subscriber<?> toSubscriber(Closure closure) {
@@ -293,7 +198,9 @@ class Mongo4ReactiveClientTest extends MongoBaseTest {
         "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
         "$SemanticAttributes.NET_PEER_PORT.key" port
         "$SemanticAttributes.DB_CONNECTION_STRING.key" "mongodb://localhost:" + port
-        "$SemanticAttributes.DB_STATEMENT.key" statementEval
+        "$SemanticAttributes.DB_STATEMENT.key" {
+          statementEval.call(it.replaceAll(" ", ""))
+        }
         "$SemanticAttributes.DB_SYSTEM.key" "mongodb"
         "$SemanticAttributes.DB_NAME.key" dbName
         "$SemanticAttributes.DB_OPERATION.key" operation
