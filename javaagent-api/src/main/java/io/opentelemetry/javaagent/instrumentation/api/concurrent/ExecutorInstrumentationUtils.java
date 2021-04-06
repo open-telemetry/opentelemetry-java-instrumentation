@@ -77,6 +77,10 @@ public class ExecutorInstrumentationUtils {
             }
           }
 
+          // Don't trace runnables from libraries that are packaged inside the agent.
+          // Although GlobalClassloaderIgnoresMatcher excludes these classes from instrumentation
+          // their instances can still be passed to executors which we have instrumented so we need
+          // to exclude them here too.
           ClassLoader taskClassLoader = taskClass.getClassLoader();
           if (taskClassLoader != null
               && AGENT_CLASSLOADER_NAME.equals(taskClassLoader.getClass().getName())) {
