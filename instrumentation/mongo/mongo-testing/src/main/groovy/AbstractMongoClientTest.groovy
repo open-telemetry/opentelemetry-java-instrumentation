@@ -221,12 +221,14 @@ abstract class AbstractMongoClientTest extends AgentInstrumentationSpecification
     assertTraces(2) {
       trace(0, 1) {
         mongoSpan(it, 0, "find", collectionName, dbName) {
-          it == '{"find":"' + collectionName + '","filter":{"_id":{"$gte":"?"}},"batchSize":"?"}'
+          assert it == '{"find":"' + collectionName + '","filter":{"_id":{"$gte":"?"}},"batchSize":"?"}'
+          true
         }
       }
       trace(1, 1) {
         mongoSpan(it, 0, "getMore", collectionName, dbName) {
-          it == '{"getMore":"?","collection":"?","batchSize":"?"}'
+          assert it == '{"getMore":"?","collection":"?","batchSize":"?"}'
+          true
         }
       }
     }
@@ -258,7 +260,8 @@ abstract class AbstractMongoClientTest extends AgentInstrumentationSpecification
     assertTraces(1) {
       trace(0, 1) {
         mongoSpan(it, 0, "create", collectionName, dbName) {
-          it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}"
+          assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}"
+          true
         }
       }
     }

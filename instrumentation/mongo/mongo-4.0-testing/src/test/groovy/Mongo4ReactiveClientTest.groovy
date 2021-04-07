@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.mongodb.client.result.DeleteResult
@@ -12,9 +11,6 @@ import com.mongodb.reactivestreams.client.MongoClient
 import com.mongodb.reactivestreams.client.MongoClients
 import com.mongodb.reactivestreams.client.MongoCollection
 import com.mongodb.reactivestreams.client.MongoDatabase
-import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import org.bson.BsonDocument
@@ -177,34 +173,6 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest {
           hasResult = true
           closure.call()
         }
-      }
-    }
-  }
-
-  def mongoSpan(TraceAssert trace, int index,
-                String operation, String collection,
-                String dbName, Closure<Boolean> statementEval,
-                Object parentSpan = null, Throwable exception = null) {
-    trace.span(index) {
-      name { operation + " " + dbName + "." + collection }
-      kind CLIENT
-      if (parentSpan == null) {
-        hasNoParent()
-      } else {
-        childOf((SpanData) parentSpan)
-      }
-      attributes {
-        "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-        "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
-        "$SemanticAttributes.NET_PEER_PORT.key" port
-        "$SemanticAttributes.DB_CONNECTION_STRING.key" "mongodb://localhost:" + port
-        "$SemanticAttributes.DB_STATEMENT.key" {
-          statementEval.call(it.replaceAll(" ", ""))
-        }
-        "$SemanticAttributes.DB_SYSTEM.key" "mongodb"
-        "$SemanticAttributes.DB_NAME.key" dbName
-        "$SemanticAttributes.DB_OPERATION.key" operation
-        "$SemanticAttributes.DB_MONGODB_COLLECTION.key" collection
       }
     }
   }
