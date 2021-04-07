@@ -22,9 +22,7 @@ import org.bson.BsonString
 import org.bson.Document
 import org.junit.AssumptionViolatedException
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(10)
 class MongoAsyncClientTest extends AbstractMongoClientTest {
 
   @Shared
