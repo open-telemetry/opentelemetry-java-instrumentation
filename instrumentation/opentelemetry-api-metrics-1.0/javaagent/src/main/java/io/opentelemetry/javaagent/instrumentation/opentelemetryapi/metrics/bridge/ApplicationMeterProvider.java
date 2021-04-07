@@ -15,7 +15,7 @@ public class ApplicationMeterProvider implements MeterProvider {
   private final io.opentelemetry.api.metrics.MeterProvider agentMeterProvider;
 
   public ApplicationMeterProvider() {
-    this.agentMeterProvider = io.opentelemetry.api.metrics.GlobalMetricsProvider.get();
+    this.agentMeterProvider = io.opentelemetry.api.metrics.GlobalMeterProvider.get();
   }
 
   @Override

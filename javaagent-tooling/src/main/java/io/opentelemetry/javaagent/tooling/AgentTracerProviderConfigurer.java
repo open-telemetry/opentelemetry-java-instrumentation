@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.metrics.GlobalMetricsProvider;
+import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory;
@@ -128,7 +128,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     MetricExporter metricExporter = metricExporterFactory.fromConfig(config.asJavaProperties());
     IntervalMetricReader.builder()
         .setMetricExporter(metricExporter)
-        .setMetricProducers(Collections.singleton((SdkMeterProvider) GlobalMetricsProvider.get()))
+        .setMetricProducers(Collections.singleton((SdkMeterProvider) GlobalMeterProvider.get()))
         .build();
     log.info("Installed metric exporter: " + metricExporter.getClass().getName());
   }
