@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.db;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.junit.jupiter.api.Test;
@@ -19,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class DbSpanNameExtractorTest {
   @Mock DbAttributesExtractor<DbRequest> dbAttributesExtractor;
   @Mock SqlAttributesExtractor<DbRequest> sqlAttributesExtractor;
-  @Mock SpanNameExtractor<DbRequest> defaultSpanNameExtractor;
 
   @Test
   void shouldExtractFullSpanName() {
@@ -30,16 +28,13 @@ class DbSpanNameExtractorTest {
     given(sqlAttributesExtractor.rawDbStatement(dbRequest)).willReturn("SELECT * FROM table");
     given(sqlAttributesExtractor.dbName(dbRequest)).willReturn("database");
 
-    SpanNameExtractor<DbRequest> underTest =
-        new DbSpanNameExtractor<>(sqlAttributesExtractor, defaultSpanNameExtractor);
+    SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(sqlAttributesExtractor);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
     assertEquals("SELECT database.table", spanName);
-
-    then(defaultSpanNameExtractor).shouldHaveNoInteractions();
   }
 
   @Test
@@ -50,16 +45,13 @@ class DbSpanNameExtractorTest {
     // cannot stub dbOperation() and dbTable() because they're final
     given(sqlAttributesExtractor.rawDbStatement(dbRequest)).willReturn("SELECT * FROM table");
 
-    SpanNameExtractor<DbRequest> underTest =
-        new DbSpanNameExtractor<>(sqlAttributesExtractor, defaultSpanNameExtractor);
+    SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(sqlAttributesExtractor);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
     assertEquals("SELECT table", spanName);
-
-    then(defaultSpanNameExtractor).shouldHaveNoInteractions();
   }
 
   @Test
@@ -70,16 +62,13 @@ class DbSpanNameExtractorTest {
     given(dbAttributesExtractor.dbOperation(dbRequest)).willReturn("SELECT");
     given(dbAttributesExtractor.dbName(dbRequest)).willReturn("database");
 
-    SpanNameExtractor<DbRequest> underTest =
-        new DbSpanNameExtractor<>(dbAttributesExtractor, defaultSpanNameExtractor);
+    SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(dbAttributesExtractor);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
     assertEquals("SELECT database", spanName);
-
-    then(defaultSpanNameExtractor).shouldHaveNoInteractions();
   }
 
   @Test
@@ -89,16 +78,13 @@ class DbSpanNameExtractorTest {
 
     given(dbAttributesExtractor.dbOperation(dbRequest)).willReturn("SELECT");
 
-    SpanNameExtractor<DbRequest> underTest =
-        new DbSpanNameExtractor<>(dbAttributesExtractor, defaultSpanNameExtractor);
+    SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(dbAttributesExtractor);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
     assertEquals("SELECT", spanName);
-
-    then(defaultSpanNameExtractor).shouldHaveNoInteractions();
   }
 
   @Test
@@ -108,16 +94,13 @@ class DbSpanNameExtractorTest {
 
     given(dbAttributesExtractor.dbName(dbRequest)).willReturn("database");
 
-    SpanNameExtractor<DbRequest> underTest =
-        new DbSpanNameExtractor<>(dbAttributesExtractor, defaultSpanNameExtractor);
+    SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(dbAttributesExtractor);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
     assertEquals("database", spanName);
-
-    then(defaultSpanNameExtractor).shouldHaveNoInteractions();
   }
 
   @Test
@@ -125,10 +108,7 @@ class DbSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    given(defaultSpanNameExtractor.extract(dbRequest)).willReturn("DB Query");
-
-    SpanNameExtractor<DbRequest> underTest =
-        new DbSpanNameExtractor<>(dbAttributesExtractor, defaultSpanNameExtractor);
+    SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(dbAttributesExtractor);
 
     // when
     String spanName = underTest.extract(dbRequest);

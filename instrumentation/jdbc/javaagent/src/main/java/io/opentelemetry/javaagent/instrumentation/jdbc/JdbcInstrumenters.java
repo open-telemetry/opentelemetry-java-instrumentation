@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbSemanticConventions;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 
 public final class JdbcInstrumenters {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jdbc";
@@ -19,7 +19,7 @@ public final class JdbcInstrumenters {
 
   static {
     DbAttributesExtractor<DbRequest> attributesExtractor = new JdbcAttributesExtractor();
-    SpanNameExtractor<DbRequest> spanName = DbSemanticConventions.spanName(attributesExtractor);
+    SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
 
     INSTRUMENTER =
         Instrumenter.<DbRequest, Void>newBuilder(

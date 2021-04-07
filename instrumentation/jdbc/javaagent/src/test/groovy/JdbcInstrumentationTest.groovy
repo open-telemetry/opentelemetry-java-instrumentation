@@ -607,6 +607,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "testdb"
             "$SemanticAttributes.DB_STATEMENT.key" "testing ?"
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
           }
         }
       }
@@ -648,6 +649,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT.key" sanitizedQuery
             "$SemanticAttributes.DB_OPERATION.key" operation
             "$SemanticAttributes.DB_SQL_TABLE.key" table
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
           }
         }
       }
