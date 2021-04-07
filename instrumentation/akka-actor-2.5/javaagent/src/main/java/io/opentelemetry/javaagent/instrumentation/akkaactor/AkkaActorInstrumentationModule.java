@@ -25,7 +25,11 @@ public class AkkaActorInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new AkkaForkJoinPoolInstrumentation(), new AkkaForkJoinTaskInstrumentation());
+    return asList(
+        new AkkaForkJoinPoolInstrumentation(),
+        new AkkaForkJoinTaskInstrumentation(),
+        new AkkaDispatcherInstrumentation(),
+        new AkkaActorCellInstrumentation());
   }
 
   @Override
@@ -34,6 +38,7 @@ public class AkkaActorInstrumentationModule extends InstrumentationModule {
     map.put(Runnable.class.getName(), State.class.getName());
     map.put(Callable.class.getName(), State.class.getName());
     map.put(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME, State.class.getName());
+    map.put("akka.dispatch.Envelope", State.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
