@@ -141,7 +141,7 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew test -PtestLatestDeps=true --stacktrace
+        run: ./gradlew test -x :smoke-tests:test -PtestLatestDeps=true --stacktrace
 
   snapshot:
     runs-on: ubuntu-latest
