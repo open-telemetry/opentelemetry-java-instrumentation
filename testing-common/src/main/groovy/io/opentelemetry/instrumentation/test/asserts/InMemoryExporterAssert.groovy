@@ -9,14 +9,14 @@ import static TraceAssert.assertTrace
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil
 import io.opentelemetry.sdk.trace.data.SpanData
+import java.util.function.Supplier
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
 import org.spockframework.runtime.ConditionNotSatisfiedError
 import org.spockframework.runtime.model.TextPosition
-
-import java.util.function.Supplier
 
 class InMemoryExporterAssert {
   private final List<List<SpanData>> traces
@@ -75,9 +75,14 @@ class InMemoryExporterAssert {
     assertTrace(spanSupplier, traces[index][0].traceId, expectedSize, spec)
   }
 
-  // this doesn't provide any functionality, just a self-documenting marker
-  static void sortTraces(Closure callback) {
-    callback.call()
+  static Comparator<List<SpanData>> orderByRootSpanName(String... names) {
+    def list = Arrays.asList(names)
+    return Comparator.comparing { item -> list.indexOf(item[0].name) }
+  }
+
+  static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
+    def list = Arrays.asList(spanKinds)
+    return Comparator.comparing { item -> list.indexOf(item[0].kind) }
   }
 
   void assertTracesAllVerified() {

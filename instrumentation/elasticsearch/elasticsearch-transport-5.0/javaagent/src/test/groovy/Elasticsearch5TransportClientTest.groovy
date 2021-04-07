@@ -176,14 +176,9 @@ class Elasticsearch5TransportClientTest extends AgentInstrumentationSpecificatio
 
     and:
     assertTraces(5) {
-      sortTraces {
-        // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (traces[2][0].name == "IndexAction") {
-          def tmp = traces[2]
-          traces[2] = traces[3]
-          traces[3] = tmp
-        }
-      }
+      // PutMappingAction and IndexAction run in separate threads so their order can vary
+      traces.subList(2, 4).sort(orderByRootSpanName("PutMappingAction", "IndexAction"))
+
       trace(0, 1) {
         span(0) {
           name "CreateIndexAction"

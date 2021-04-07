@@ -209,6 +209,8 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     // there should be 2 separate traces since the nested CLIENT span is suppressed
     // (and the span context propagation along with it)
     assertTraces(2) {
+      traces.sort(orderByRootSpanKind(CLIENT, SERVER))
+
       trace(0, 1) {
         basicClientSpan(it, 0, "parent-client-span")
       }
