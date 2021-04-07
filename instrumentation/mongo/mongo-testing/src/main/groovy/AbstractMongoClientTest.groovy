@@ -44,7 +44,7 @@ abstract class AbstractMongoClientTest extends AgentInstrumentationSpecification
   abstract void createCollectionNoDescription(String dbName, String collectionName)
 
   // Tests the fix for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/457
-  // TracingCommandListener might get added multiple times if clientOptions are built using existing clientOptions or when calling  a build method twice.
+  // TracingCommandListener might get added multiple times if clientOptions are built using existing clientOptions or when calling a build method twice.
   // This test asserts that duplicate traces are not created in those cases.
   abstract void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName)
 
