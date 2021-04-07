@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer;
+package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.Config;
@@ -16,15 +16,19 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class SupportabilityMetrics {
+public final class SupportabilityMetrics {
   private static final Logger log = LoggerFactory.getLogger(SupportabilityMetrics.class);
   private final boolean agentDebugEnabled;
   private final Consumer<String> reporter;
 
   private final ConcurrentMap<String, KindCounters> suppressionCounters = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, LongAdder> counters = new ConcurrentHashMap<>();
 
-  public SupportabilityMetrics(Config config) {
-    this(config, log::debug);
+  private static final SupportabilityMetrics INSTANCE =
+      new SupportabilityMetrics(Config.get(), log::debug).start();
+
+  public static SupportabilityMetrics instance() {
+    return INSTANCE;
   }
 
   // visible for testing
@@ -33,7 +37,7 @@ class SupportabilityMetrics {
     this.reporter = reporter;
   }
 
-  void recordSuppressedSpan(SpanKind kind, String instrumentationName) {
+  public void recordSuppressedSpan(SpanKind kind, String instrumentationName) {
     if (!agentDebugEnabled) {
       return;
     }
@@ -41,6 +45,14 @@ class SupportabilityMetrics {
     suppressionCounters
         .computeIfAbsent(instrumentationName, s -> new KindCounters())
         .increment(kind);
+  }
+
+  public void incrementCounter(String counterName) {
+    if (!agentDebugEnabled) {
+      return;
+    }
+
+    counters.computeIfAbsent(counterName, k -> new LongAdder()).increment();
   }
 
   // visible for testing
@@ -53,6 +65,13 @@ class SupportabilityMetrics {
               reporter.accept(
                   "Suppressed Spans by '" + instrumentationName + "' (" + kind + ") : " + value);
             }
+          }
+        });
+    counters.forEach(
+        (counterName, counter) -> {
+          long value = counter.sumThenReset();
+          if (value > 0) {
+            reporter.accept("Counter '" + counterName + "' : " + value);
           }
         });
   }

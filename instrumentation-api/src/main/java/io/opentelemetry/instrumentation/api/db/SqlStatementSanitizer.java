@@ -8,15 +8,14 @@ package io.opentelemetry.instrumentation.api.db;
 import static io.opentelemetry.instrumentation.api.db.StatementSanitizationConfig.isStatementSanitizationEnabled;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 
 /**
  * This class is responsible for masking potentially sensitive parameters in SQL (and SQL-like)
  * statements and queries.
  */
 public final class SqlStatementSanitizer {
-  private static final Logger log = LoggerFactory.getLogger(SqlStatementSanitizer.class);
+  private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private static final Cache<String, SqlStatementInfo> sqlToStatementInfoCache =
       Cache.newBuilder().setMaximumSize(1000).build();
@@ -28,7 +27,7 @@ public final class SqlStatementSanitizer {
     return sqlToStatementInfoCache.computeIfAbsent(
         statement,
         k -> {
-          log.trace("SQL statement cache miss");
+          supportability.incrementCounter("SqlStatementSanitizer cache miss");
           return AutoSqlSanitizer.sanitize(statement);
         });
   }
