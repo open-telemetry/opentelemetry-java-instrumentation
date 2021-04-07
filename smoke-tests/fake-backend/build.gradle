@@ -69,7 +69,7 @@ task windowsCollectorBinaryDownload(type: Download) {
     collectorDockerBuildDir.mkdirs()
   }
 
-  src("https://github.com/open-telemetry/opentelemetry-collector/releases/latest/download/otelcol_windows_amd64.exe")
+  src("https://github.com/open-telemetry/opentelemetry-collector-contrib/releases/latest/download/otelcontribcol_windows_amd64.exe")
   dest(collectorDockerBuildDir)
 }
 
