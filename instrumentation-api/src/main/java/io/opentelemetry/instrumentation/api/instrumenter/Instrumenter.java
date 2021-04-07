@@ -85,10 +85,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
     SpanKind spanKind = spanKindExtractor.extract(request);
     switch (spanKind) {
       case SERVER:
-        suppressed = ServerSpan.fromContextOrNull(parentContext) == null;
+        suppressed = ServerSpan.fromContextOrNull(parentContext) != null;
         break;
       case CLIENT:
-        suppressed = ClientSpan.fromContextOrNull(parentContext) == null;
+        suppressed = ClientSpan.fromContextOrNull(parentContext) != null;
         break;
       default:
         break;
