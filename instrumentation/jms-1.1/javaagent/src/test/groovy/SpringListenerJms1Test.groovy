@@ -5,6 +5,7 @@
 
 import static Jms1Test.consumerSpan
 import static Jms1Test.producerSpan
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -25,14 +26,7 @@ class SpringListenerJms1Test extends AgentInstrumentationSpecification {
 
     expect:
     assertTraces(2) {
-      sortTraces {
-        // ensure that traces appear in expected order
-        if (traces[0][0].kind == PRODUCER) {
-          def tmp = traces[0]
-          traces[0] = traces[1]
-          traces[1] = tmp
-        }
-      }
+      traces.sort(orderByRootSpanKind(CONSUMER, PRODUCER))
 
       trace(0, 1) {
         consumerSpan(it, 0, "queue", "SpringListenerJms1", "", null, "receive")
