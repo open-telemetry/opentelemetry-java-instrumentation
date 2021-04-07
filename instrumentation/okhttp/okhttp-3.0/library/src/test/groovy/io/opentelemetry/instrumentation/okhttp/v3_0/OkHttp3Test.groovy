@@ -19,4 +19,11 @@ class OkHttp3Test extends AbstractOkHttp3Test implements LibraryTestTrait {
   boolean testWithClientParent() {
     false
   }
+
+  // TODO(anuraaga): Enable after https://github.com/open-telemetry/opentelemetry-java/blob/main/context/src/main/java/io/opentelemetry/context/Context.java#L128
+  // is released.
+  @Override
+  boolean testCallback() {
+    false
+  }
 }

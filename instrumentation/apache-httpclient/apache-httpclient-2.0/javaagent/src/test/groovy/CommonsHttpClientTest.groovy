@@ -15,9 +15,7 @@ import org.apache.commons.httpclient.methods.PostMethod
 import org.apache.commons.httpclient.methods.PutMethod
 import org.apache.commons.httpclient.methods.TraceMethod
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   @Shared
   HttpClient client = new HttpClient()
@@ -32,7 +30,7 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     HttpMethod httpMethod
 
     switch (method) {
@@ -65,7 +63,6 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
     try {
       client.executeMethod(httpMethod)
-      callback?.call()
       return httpMethod.getStatusCode()
     } finally {
       httpMethod.releaseConnection()
@@ -75,6 +72,11 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   @Override
   boolean testRedirects() {
     // Generates 4 spans
+    false
+  }
+
+  @Override
+  boolean testCallback() {
     false
   }
 }

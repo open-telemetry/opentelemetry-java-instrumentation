@@ -9,10 +9,12 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
 import javax.ws.rs.client.Invocation
+import javax.ws.rs.client.InvocationCallback
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -21,23 +23,42 @@ import org.glassfish.jersey.client.ClientConfig
 import org.glassfish.jersey.client.ClientProperties
 import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import spock.lang.Timeout
 import spock.lang.Unroll
 
 abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request = buildRequest(uri, headers)
+    def body = BODY_METHODS.contains(method) ? Entity.text("") : null
+    Response response = request.method(method, (Entity) body)
+    return response.status
+  }
 
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    def request = buildRequest(uri, headers).async()
+    def body = BODY_METHODS.contains(method) ? Entity.text("") : null
+
+    request.method(method, (Entity) body, new InvocationCallback<Response>() {
+      @Override
+      void completed(Response response) {
+        callback.accept(response.status)
+      }
+
+      @Override
+      void failed(Throwable throwable) {
+        throw throwable
+      }
+    })
+  }
+
+  private Invocation.Builder buildRequest(URI uri, Map<String, String> headers) {
     Client client = builder().build()
     WebTarget service = client.target(uri)
     Invocation.Builder request = service.request(MediaType.TEXT_PLAIN)
     headers.each { request.header(it.key, it.value) }
-    def body = BODY_METHODS.contains(method) ? Entity.text("") : null
-    Response response = request.method(method, (Entity) body)
-    callback?.call()
-
-    return response.status
+    return request
   }
 
   abstract ClientBuilder builder()
@@ -83,7 +104,6 @@ abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait 
   }
 }
 
-@Timeout(5)
 class JerseyClientTest extends JaxRsClientTest {
 
   @Override
@@ -98,7 +118,6 @@ class JerseyClientTest extends JaxRsClientTest {
   }
 }
 
-@Timeout(5)
 class ResteasyClientTest extends JaxRsClientTest {
 
   @Override
@@ -112,7 +131,6 @@ class ResteasyClientTest extends JaxRsClientTest {
   }
 }
 
-@Timeout(5)
 class CxfClientTest extends JaxRsClientTest {
 
   @Override

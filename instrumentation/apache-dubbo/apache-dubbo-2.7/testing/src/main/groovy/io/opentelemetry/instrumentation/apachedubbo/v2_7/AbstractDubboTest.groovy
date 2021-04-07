@@ -36,7 +36,7 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
     reference.setInterface(HelloService)
     reference.setGeneric("true")
-    reference.setUrl("dubbo://localhost:" + port)
+    reference.setUrl("dubbo://localhost:" + port + "/?timeout=30000")
     return reference
   }
 

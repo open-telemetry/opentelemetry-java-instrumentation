@@ -10,9 +10,7 @@ import com.sun.jersey.api.client.filter.LoggingFilter
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class JaxRsClientV1Test extends HttpClientTest implements AgentTestTrait {
 
   @Shared
@@ -26,17 +24,22 @@ class JaxRsClientV1Test extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     def resource = client.resource(uri).requestBuilder
     headers.each { resource.header(it.key, it.value) }
     def body = BODY_METHODS.contains(method) ? "" : null
     ClientResponse response = resource.method(method, ClientResponse, body)
-    callback?.call()
 
     return response.status
   }
 
+  @Override
   boolean testCircularRedirects() {
+    false
+  }
+
+  @Override
+  boolean testCallback() {
     false
   }
 }

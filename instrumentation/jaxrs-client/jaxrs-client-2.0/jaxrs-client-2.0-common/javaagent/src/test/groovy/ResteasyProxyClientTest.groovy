@@ -19,7 +19,7 @@ import org.jboss.resteasy.specimpl.ResteasyUriBuilder
 
 class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers) {
     def proxyMethodName = "${method}_${uri.path}".toLowerCase()
       .replace("/", "")
       .replace('-', '_')
@@ -37,8 +37,6 @@ class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
       .proxy(ResteasyProxyResource)
 
     def response = proxy."$proxyMethodName"(param, isTestServer)
-
-    callback?.call()
 
     return response.status
   }
@@ -60,6 +58,11 @@ class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   boolean testCausality() {
+    false
+  }
+
+  @Override
+  boolean testCallback() {
     false
   }
 

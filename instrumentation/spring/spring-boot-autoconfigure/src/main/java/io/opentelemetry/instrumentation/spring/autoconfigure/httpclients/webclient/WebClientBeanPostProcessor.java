@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.webflux.client.WebClientTracingFilter;
 import java.util.List;
 import java.util.function.Consumer;
@@ -19,26 +20,34 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 final class WebClientBeanPostProcessor implements BeanPostProcessor {
 
+  private final OpenTelemetry openTelemetry;
+
+  WebClientBeanPostProcessor(OpenTelemetry openTelemetry) {
+    this.openTelemetry = openTelemetry;
+  }
+
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     if (bean instanceof WebClient) {
       WebClient webClient = (WebClient) bean;
-      return wrapBuilder(webClient.mutate()).build();
+      return wrapBuilder(openTelemetry, webClient.mutate()).build();
     } else if (bean instanceof WebClient.Builder) {
       WebClient.Builder webClientBuilder = (WebClient.Builder) bean;
-      return wrapBuilder(webClientBuilder);
+      return wrapBuilder(openTelemetry, webClientBuilder);
     }
     return bean;
   }
 
-  private WebClient.Builder wrapBuilder(WebClient.Builder webClientBuilder) {
-    return webClientBuilder.filters(webClientFilterFunctionConsumer());
+  private WebClient.Builder wrapBuilder(
+      OpenTelemetry openTelemetry, WebClient.Builder webClientBuilder) {
+    return webClientBuilder.filters(webClientFilterFunctionConsumer(openTelemetry));
   }
 
-  private Consumer<List<ExchangeFilterFunction>> webClientFilterFunctionConsumer() {
+  private Consumer<List<ExchangeFilterFunction>> webClientFilterFunctionConsumer(
+      OpenTelemetry openTelemetry) {
     return functions -> {
       if (functions.stream().noneMatch(filter -> filter instanceof WebClientTracingFilter)) {
-        WebClientTracingFilter.addFilter(functions);
+        WebClientTracingFilter.addFilter(openTelemetry, functions);
       }
     };
   }

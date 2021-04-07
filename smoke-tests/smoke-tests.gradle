@@ -39,7 +39,8 @@ test {
 
   testLogging.showStandardStreams = true
 
-  timeout.set(Duration.ofMinutes(60))
+  // TODO investigate why smoke tests occasionally hang
+  timeout.set(Duration.ofMinutes(30))
 
   //We enable/disable smoke tests based on the java version requests
   //In addition to that we disable them by default on local machines

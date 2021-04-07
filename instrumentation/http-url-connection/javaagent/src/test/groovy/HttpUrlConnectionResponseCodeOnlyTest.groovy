@@ -5,13 +5,11 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import spock.lang.Timeout
 
-@Timeout(5)
 class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers) {
     HttpURLConnection connection = uri.toURL().openConnection()
     try {
       connection.setRequestMethod(method)
@@ -20,7 +18,6 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest implements Ag
       connection.setRequestProperty("Connection", "close")
       return connection.getResponseCode()
     } finally {
-      callback?.call()
       connection.disconnect()
     }
   }
@@ -33,5 +30,10 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest implements Ag
   @Override
   Integer statusOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testCallback() {
+    return false
   }
 }

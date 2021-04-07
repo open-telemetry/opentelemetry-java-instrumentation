@@ -13,18 +13,16 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Requires
-import spock.lang.Timeout
 import spock.lang.Unroll
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
-@Timeout(5)
 class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
 
   static final RESPONSE = "Hello."
   static final STATUS = 200
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers) {
     HttpURLConnection connection = uri.toURL().openConnection()
     try {
       connection.setRequestMethod(method)
@@ -37,7 +35,6 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
       assert Span.current() == parentSpan
       stream.readLines()
       stream.close()
-      callback?.call()
       return connection.getResponseCode()
     } finally {
       connection.disconnect()
@@ -52,6 +49,11 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
   @Override
   Integer statusOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testCallback() {
+    return false
   }
 
   @Unroll

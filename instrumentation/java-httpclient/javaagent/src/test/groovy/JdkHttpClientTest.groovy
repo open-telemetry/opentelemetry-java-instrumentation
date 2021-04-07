@@ -13,33 +13,38 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import java.util.function.Consumer
 import spock.lang.Requires
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
-abstract class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
+class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   def client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT_MS,
     ChronoUnit.MILLIS)).followRedirects(HttpClient.Redirect.NORMAL).build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    return client.send(buildRequest(method, uri, headers), HttpResponse.BodyHandlers.ofString())
+      .statusCode()
+  }
 
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    client.sendAsync(buildRequest(method, uri, headers), HttpResponse.BodyHandlers.ofString())
+      .thenAccept {
+        callback.accept(it.statusCode())
+      }
+  }
+
+  private static HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     def builder = HttpRequest.newBuilder().uri(uri).method(method, HttpRequest.BodyPublishers.noBody())
 
     headers.entrySet().each {
       builder.header(it.key, it.value)
     }
-    def request = builder.build()
-
-    def resp = send(request)
-    callback?.call()
-    return resp.statusCode()
+    return builder.build()
   }
-
-  abstract HttpResponse send(HttpRequest request)
 
   @Override
   boolean testCircularRedirects() {
