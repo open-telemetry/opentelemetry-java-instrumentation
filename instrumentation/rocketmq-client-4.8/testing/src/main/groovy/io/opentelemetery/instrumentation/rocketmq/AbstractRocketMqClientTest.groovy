@@ -25,11 +25,16 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 @Unroll
 abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
 
+  private static final int CONSUME_TIMEOUT = 30_000
+
   @Shared
   DefaultMQProducer producer
 
   @Shared
   DefaultMQPushConsumer consumer
+
+  @Shared
+  RMQOrderListener messageListener
 
   @Shared
   def sharedTopic
@@ -53,7 +58,8 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     msgs.add(msg2)
     producer = BaseConf.getProducer(BaseConf.nsAddr)
     configureMQProducer(producer)
-    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", new RMQOrderListener())
+    messageListener = new RMQOrderListener()
+    consumer = BaseConf.getConsumer(BaseConf.nsAddr, sharedTopic, "*", messageListener)
     configureMQPushConsumer(consumer)
   }
 
@@ -61,6 +67,10 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     producer?.shutdown()
     consumer?.shutdown()
     BaseConf.deleteTempDir()
+  }
+
+  def setup() {
+    messageListener.clearMsg()
   }
 
   def "test rocketmq produce callback"() {
@@ -74,6 +84,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
       void onException(Throwable throwable) {
       }
     })
+    messageListener.waitForMessageConsume(1, CONSUME_TIMEOUT)
     then:
     assertTraces(1) {
       trace(0, 2) {
@@ -115,6 +126,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     runUnderTrace("parent") {
       producer.send(msg)
     }
+    messageListener.waitForMessageConsume(1, CONSUME_TIMEOUT)
     then:
     assertTraces(1) {
       trace(0, 3) {
@@ -159,6 +171,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
     runUnderTrace("parent") {
       producer.send(msgs)
     }
+    messageListener.waitForMessageConsume(msgs.size(), CONSUME_TIMEOUT)
     then:
     assertTraces(2) {
       def itemStepSpan = null
