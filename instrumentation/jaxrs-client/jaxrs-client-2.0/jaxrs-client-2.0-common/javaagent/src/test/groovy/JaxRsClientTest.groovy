@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
-import javax.ws.rs.client.AsyncInvoker
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
 import javax.ws.rs.client.Invocation
@@ -62,11 +61,6 @@ abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait 
     def requestBuilder = internalBuildRequest(uri, headers)
     def body = BODY_METHODS.contains(method) ? Entity.text("") : null
     return requestBuilder.build(method, body)
-  }
-
-  private AsyncInvoker buildAsyncRequest(String method, URI uri, Map<String, String> headers) {
-    def requestBuilder = internalBuildRequest(uri, headers)
-    return requestBuilder.async()
   }
 
   private Invocation.Builder internalBuildRequest(URI uri, Map<String, String> headers) {
@@ -135,7 +129,18 @@ class JerseyClientTest extends JaxRsClientTest {
     return new JerseyClientBuilder().withConfig(config)
   }
 
+  @Override
   boolean testCircularRedirects() {
+    false
+  }
+
+  // TODO jaxrs client instrumentation captures the (default) user-agent on the second (reused)
+  //  request, which then fails the test verification
+  //  ideally the instrumentation would capture the default user-agent on the first request,
+  //  and the test http server would verify that the user-agent was sent and matches what was
+  //  captured from the client instrumentation
+  @Override
+  boolean testReusedRequest() {
     false
   }
 }

@@ -50,7 +50,8 @@ class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
 
     def isTestServer = headers.get("is-test-server")
 
-    def response = proxy."$proxyMethodName"(param, isTestServer)
+    Response response = proxy."$proxyMethodName"(param, isTestServer)
+    response.close()
 
     return response.status
   }
