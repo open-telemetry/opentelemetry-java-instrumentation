@@ -180,6 +180,7 @@ class TracerTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
+      traces.sort(orderByRootSpanName("parent", "test"))
       trace(0, 1) {
         span(0) {
           name "parent"
