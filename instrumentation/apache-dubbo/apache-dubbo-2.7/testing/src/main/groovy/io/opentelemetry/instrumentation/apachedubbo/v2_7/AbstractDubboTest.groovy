@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.apache.dubbo.common.utils.NetUtils
 import org.apache.dubbo.config.ApplicationConfig
 import org.apache.dubbo.config.ProtocolConfig
 import org.apache.dubbo.config.ReferenceConfig
@@ -31,6 +32,10 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
 
   @Shared
   def protocolConfig = new ProtocolConfig()
+
+  def setupSpec() {
+    NetUtils.LOCAL_ADDRESS = InetAddress.getLoopbackAddress()
+  }
 
   ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
