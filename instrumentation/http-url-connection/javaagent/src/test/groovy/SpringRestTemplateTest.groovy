@@ -9,7 +9,6 @@ import java.util.function.Consumer
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.http.ResponseEntity
 import org.springframework.http.client.ClientHttpRequestFactory
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.web.client.ResourceAccessException
@@ -29,15 +28,15 @@ class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    try {
-      def httpHeaders = new HttpHeaders()
-      headers.each { httpHeaders.put(it.key, [it.value]) }
-      def request = new HttpEntity<String>(httpHeaders)
-      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
-      return response.statusCode.value()
-    } catch (ResourceAccessException exception) {
-      throw exception.getCause()
-    }
+    def request = buildRequest(headers)
+    return sendRequest(request, method, uri)
+  }
+
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest([:])
+    sendRequest(request, method, uri)
+    return sendRequest(request, method, uri)
   }
 
   @Override
@@ -47,6 +46,22 @@ class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
     }, { response ->
       callback.accept(response.statusCode.value())
     })
+  }
+
+  private int sendRequest(HttpEntity<String> request, String method, URI uri) {
+    try {
+      return restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
+        .statusCode
+        .value()
+    } catch (ResourceAccessException exception) {
+      throw exception.getCause()
+    }
+  }
+
+  private static HttpEntity<String> buildRequest(Map<String, String> headers) {
+    def httpHeaders = new HttpHeaders()
+    headers.each { httpHeaders.put(it.key, [it.value]) }
+    return new HttpEntity<String>(httpHeaders)
   }
 
   @Override

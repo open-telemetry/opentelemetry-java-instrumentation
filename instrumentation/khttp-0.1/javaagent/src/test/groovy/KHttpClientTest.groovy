@@ -24,6 +24,11 @@ class KHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
+  boolean testReusedRequest() {
+    return false
+  }
+
+  @Override
   boolean testCallback() {
     return false
   }

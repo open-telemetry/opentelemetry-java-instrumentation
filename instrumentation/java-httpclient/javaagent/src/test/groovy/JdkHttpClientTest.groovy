@@ -25,8 +25,15 @@ class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    return client.send(buildRequest(method, uri, headers), HttpResponse.BodyHandlers.ofString())
-      .statusCode()
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request)
+  }
+
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request)
+    return sendRequest(request)
   }
 
   @Override
@@ -38,12 +45,17 @@ class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   private static HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def builder = HttpRequest.newBuilder().uri(uri).method(method, HttpRequest.BodyPublishers.noBody())
-
+    def requestBuilder = HttpRequest.newBuilder()
+      .uri(uri)
+      .method(method, HttpRequest.BodyPublishers.noBody())
     headers.entrySet().each {
-      builder.header(it.key, it.value)
+      requestBuilder.header(it.key, it.value)
     }
-    return builder.build()
+    return requestBuilder.build()
+  }
+
+  private int sendRequest(HttpRequest request) {
+    return client.send(request, HttpResponse.BodyHandlers.ofString()).statusCode()
   }
 
   @Override

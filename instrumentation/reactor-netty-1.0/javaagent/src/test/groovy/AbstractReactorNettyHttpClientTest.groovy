@@ -34,26 +34,36 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest impleme
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    Mono<HttpClientResponse> response = sendRequest(method, uri, headers)
-    return response.block().status().code()
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request)
+  }
+
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request)
+    return sendRequest(request)
   }
 
   @Override
   void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    Mono<HttpClientResponse> response = sendRequest(method, uri, headers)
-    response.subscribe {
+    def request = buildRequest(method, uri, headers)
+    request.response().subscribe {
       callback.accept(it.status().code())
     }
   }
 
-  Mono<HttpClientResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
+  private HttpClient.ResponseReceiver buildRequest(String method, URI uri, Map<String, String> headers) {
     return createHttpClient()
       .followRedirect(true)
       .headers({ h -> headers.each { k, v -> h.add(k, v) } })
       .baseUrl(server.address.toString())
       ."${method.toLowerCase()}"()
       .uri(uri.toString())
-      .response()
+  }
+
+  private static int sendRequest(HttpClient.ResponseReceiver request) {
+    return request.response().block().status().code()
   }
 
   abstract HttpClient createHttpClient()

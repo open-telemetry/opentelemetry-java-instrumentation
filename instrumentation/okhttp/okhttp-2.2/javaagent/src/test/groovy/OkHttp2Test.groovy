@@ -27,8 +27,15 @@ class OkHttp2Test extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers) {
-    def response = client.newCall(buildRequest(method, uri, headers)).execute()
-    return response.code()
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request)
+  }
+
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request)
+    return sendRequest(request)
   }
 
   @Override
@@ -55,6 +62,11 @@ class OkHttp2Test extends HttpClientTest implements AgentTestTrait {
       .build()
   }
 
+  private int sendRequest(Request request) {
+    return client.newCall(request).execute().code()
+  }
+
+  @Override
   boolean testRedirects() {
     false
   }

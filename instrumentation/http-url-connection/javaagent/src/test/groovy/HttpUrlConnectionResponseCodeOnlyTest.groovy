@@ -10,7 +10,15 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest implements Ag
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers) {
-    HttpURLConnection connection = uri.toURL().openConnection()
+    def request = buildRequest(uri)
+    return sendRequest(request, method, headers)
+  }
+
+  private static HttpURLConnection buildRequest(URI uri) {
+    return uri.toURL().openConnection() as HttpURLConnection
+  }
+
+  private static int sendRequest(HttpURLConnection connection, String method, Map<String, String> headers) {
     try {
       connection.setRequestMethod(method)
       connection.connectTimeout = CONNECT_TIMEOUT_MS
@@ -30,6 +38,12 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest implements Ag
   @Override
   Integer statusOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testReusedRequest() {
+    // HttpURLConnection can't be reused
+    return false
   }
 
   @Override

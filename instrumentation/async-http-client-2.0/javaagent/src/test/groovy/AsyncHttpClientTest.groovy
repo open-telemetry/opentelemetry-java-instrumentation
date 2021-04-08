@@ -23,7 +23,15 @@ class AsyncHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    return client.executeRequest(buildRequest(method, uri, headers)).get().statusCode
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request)
+  }
+
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request)
+    return sendRequest(request)
   }
 
   @Override
@@ -38,12 +46,16 @@ class AsyncHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   private static Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    RequestBuilder requestBuilder = new RequestBuilder(method)
+    def requestBuilder = new RequestBuilder(method)
       .setUri(Uri.create(uri.toString()))
     headers.entrySet().each {
-      requestBuilder.addHeader(it.key, it.value)
+      requestBuilder.setHeader(it.key, it.value)
     }
     return requestBuilder.build()
+  }
+
+  private int sendRequest(Request request) {
+    return client.executeRequest(request).get().statusCode
   }
 
   //TODO see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2347

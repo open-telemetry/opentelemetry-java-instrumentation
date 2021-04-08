@@ -20,6 +20,25 @@ import org.jboss.resteasy.specimpl.ResteasyUriBuilder
 class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers) {
+    def request = buildRequest()
+    return sendRequest(request, method, uri, headers)
+  }
+
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest()
+    sendRequest(request, method, uri, [:])
+    return sendRequest(request, method, uri, [:])
+  }
+
+  private ResteasyProxyResource buildRequest() {
+    return new ResteasyClientBuilder()
+      .build()
+      .target(new ResteasyUriBuilder().uri(server.address))
+      .proxy(ResteasyProxyResource)
+  }
+
+  private static int sendRequest(ResteasyProxyResource proxy, String method, URI uri, Map<String, String> headers) {
     def proxyMethodName = "${method}_${uri.path}".toLowerCase()
       .replace("/", "")
       .replace('-', '_')
@@ -30,11 +49,6 @@ class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
       .orElse(null)
 
     def isTestServer = headers.get("is-test-server")
-
-    def proxy = new ResteasyClientBuilder()
-      .build()
-      .target(new ResteasyUriBuilder().uri(server.address))
-      .proxy(ResteasyProxyResource)
 
     def response = proxy."$proxyMethodName"(param, isTestServer)
 

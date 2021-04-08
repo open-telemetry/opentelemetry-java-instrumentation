@@ -31,41 +31,57 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    HttpMethod httpMethod
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request)
+  }
 
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request)
+    // exception is thrown if it is not recycled (which sort of defeats the purpose of this test)
+    request.recycle()
+    request = buildRequest(method, uri)
+    return sendRequest(request)
+  }
+
+  private static HttpMethod buildRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request
     switch (method) {
       case "GET":
-        httpMethod = new GetMethod(uri.toString())
+        request = new GetMethod(uri.toString())
         break
       case "PUT":
-        httpMethod = new PutMethod(uri.toString())
+        request = new PutMethod(uri.toString())
         break
       case "POST":
-        httpMethod = new PostMethod(uri.toString())
+        request = new PostMethod(uri.toString())
         break
       case "HEAD":
-        httpMethod = new HeadMethod(uri.toString())
+        request = new HeadMethod(uri.toString())
         break
       case "DELETE":
-        httpMethod = new DeleteMethod(uri.toString())
+        request = new DeleteMethod(uri.toString())
         break
       case "OPTIONS":
-        httpMethod = new OptionsMethod(uri.toString())
+        request = new OptionsMethod(uri.toString())
         break
       case "TRACE":
-        httpMethod = new TraceMethod(uri.toString())
+        request = new TraceMethod(uri.toString())
         break
       default:
         throw new RuntimeException("Unsupported method: " + method)
     }
+    headers.each { request.setRequestHeader(it.key, it.value) }
+    return request
+  }
 
-    headers.each { httpMethod.setRequestHeader(it.key, it.value) }
-
+  private int sendRequest(HttpMethod request) {
     try {
-      client.executeMethod(httpMethod)
-      return httpMethod.getStatusCode()
+      client.executeMethod(request)
+      return request.getStatusCode()
     } finally {
-      httpMethod.releaseConnection()
+      request.releaseConnection()
     }
   }
 

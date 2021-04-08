@@ -13,6 +13,7 @@ import play.GlobalSettings
 import play.libs.F
 import play.libs.ws.WS
 import play.libs.ws.WSClient
+import play.libs.ws.WSRequestHolder
 import play.libs.ws.WSResponse
 import play.test.FakeApplication
 import play.test.Helpers
@@ -44,21 +45,38 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers) {
-    return sendRequest(method, uri, headers).get(1, TimeUnit.SECONDS).status
+    def request = buildRequest(uri, headers)
+    return sendRequest(request, method)
+  }
+
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(uri, [:])
+    sendRequest(request, method)
+    return sendRequest(request, method)
   }
 
   @Override
   void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    sendRequest(method, uri, headers).onRedeem {
+    def request = buildRequest(uri, headers)
+    internalSendRequest(request, method).onRedeem {
       callback.accept(it.status)
     }
   }
 
-  private F.Promise<WSResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
+  private WSRequestHolder buildRequest(URI uri, Map<String, String> headers) {
     def request = client.url(uri.toString())
     headers.entrySet().each {
       request.setHeader(it.key, it.value)
     }
+    return request
+  }
+
+  private static int sendRequest(WSRequestHolder request, String method) {
+    return internalSendRequest(request, method).get(1, TimeUnit.SECONDS).status
+  }
+
+  private static F.Promise<WSResponse> internalSendRequest(WSRequestHolder request, String method) {
     return request.execute(method)
   }
 

@@ -30,13 +30,21 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers) {
-    doRequest(method, uri, headers, false)
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request).getStatusCode()
   }
 
-  int doRequest(String method, URI uri, Map<String, String> headers, boolean throwExceptionOnError) {
-    GenericUrl genericUrl = new GenericUrl(uri)
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request)
+    return sendRequest(request).getStatusCode()
+  }
 
-    HttpRequest request = requestFactory.buildRequest(method, genericUrl, null)
+  private HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def genericUrl = new GenericUrl(uri)
+
+    def request = requestFactory.buildRequest(method, genericUrl, null)
     request.connectTimeout = CONNECT_TIMEOUT_MS
 
     // GenericData::putAll method converts all known http headers to List<String>
@@ -46,13 +54,11 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
       -> [(name): (ci.getFieldInfo(name) != null ? [value] : value.toLowerCase())]
     })
 
-    request.setThrowExceptionOnExecuteError(throwExceptionOnError)
-
-    HttpResponse response = executeRequest(request)
-    return response.getStatusCode()
+    request.setThrowExceptionOnExecuteError(false)
+    return request
   }
 
-  abstract HttpResponse executeRequest(HttpRequest request)
+  abstract HttpResponse sendRequest(HttpRequest request)
 
   @Override
   boolean testCircularRedirects() {

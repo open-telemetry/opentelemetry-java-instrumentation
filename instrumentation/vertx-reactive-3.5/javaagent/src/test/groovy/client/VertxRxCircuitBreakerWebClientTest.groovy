@@ -75,6 +75,11 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest implements Agent
   }
 
   @Override
+  boolean testReusedRequest() {
+    false
+  }
+
+  @Override
   boolean testConnectionFailure() {
     false
   }

@@ -38,28 +38,38 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = createRequest(method, uri)
-    headers.entrySet().each {
-      request.addHeader(new BasicHeader(it.key, it.value))
-    }
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request, uri)
+  }
 
-    def response = executeRequest(request, uri)
-    response.close() // Make sure the connection is closed.
-
-    return response.code
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request, uri)
+    return sendRequest(request, uri)
   }
 
   @Override
   void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def request = createRequest(method, uri)
-    headers.entrySet().each {
-      request.addHeader(new BasicHeader(it.key, it.value))
-    }
-
+    def request = buildRequest(method, uri, headers)
     executeRequestWithCallback(request, uri) {
       it.close() // Make sure the connection is closed.
       callback.accept(it.code)
     }
+  }
+
+  private T buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = createRequest(method, uri)
+    headers.entrySet().each {
+      request.setHeader(new BasicHeader(it.key, it.value))
+    }
+    return request
+  }
+
+  private int sendRequest(T request, URI uri) {
+    def response = executeRequest(request, uri)
+    response.close() // Make sure the connection is closed.
+    return response.code
   }
 
   abstract T createRequest(String method, URI uri)

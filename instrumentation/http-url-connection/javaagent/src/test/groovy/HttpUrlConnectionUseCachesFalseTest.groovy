@@ -11,7 +11,15 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest implements Agen
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers) {
-    HttpURLConnection connection = uri.toURL().openConnection()
+    HttpURLConnection connection = buildRequest(uri)
+    return sendRequest(connection, method, headers)
+  }
+
+  private static HttpURLConnection buildRequest(URI uri) {
+    return uri.toURL().openConnection() as HttpURLConnection
+  }
+
+  private static int sendRequest(HttpURLConnection connection, String method, Map<String, String> headers) {
     try {
       connection.setRequestMethod(method)
       headers.each { connection.setRequestProperty(it.key, it.value) }
@@ -37,6 +45,12 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest implements Agen
   @Override
   Integer statusOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testReusedRequest() {
+    // HttpURLConnection can't be reused
+    return false
   }
 
   @Override

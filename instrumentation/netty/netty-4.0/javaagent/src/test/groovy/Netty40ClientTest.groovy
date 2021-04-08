@@ -51,23 +51,23 @@ class Netty40ClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
-    def result = new CompletableFuture<Integer>()
-    ch.pipeline().addLast(new ClientHandler(null, result))
-
     def request = buildRequest(method, uri, headers)
+    return sendRequest(request, uri)
+  }
 
-    ch.writeAndFlush(request).get()
-    return result.get(20, TimeUnit.SECONDS)
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request, uri)
+    return sendRequest(request, uri)
   }
 
   @Override
   void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
-    ch.pipeline().addLast(new ClientHandler(callback, CompletableFuture.completedFuture(0)))
-
     def request = buildRequest(method, uri, headers)
 
+    Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
+    ch.pipeline().addLast(new ClientHandler(callback, CompletableFuture.completedFuture(0)))
     ch.writeAndFlush(request)
   }
 
@@ -77,6 +77,14 @@ class Netty40ClientTest extends HttpClientTest implements AgentTestTrait {
     request.headers().set("user-agent", userAgent())
     headers.each { k, v -> request.headers().set(k, v) }
     return request
+  }
+
+  private int sendRequest(DefaultFullHttpRequest request, URI uri) {
+    def channel = bootstrap.connect(uri.host, uri.port).sync().channel()
+    def result = new CompletableFuture<Integer>()
+    channel.pipeline().addLast(new ClientHandler(null, result))
+    channel.writeAndFlush(request).get()
+    return result.get(20, TimeUnit.SECONDS)
   }
 
   @Override

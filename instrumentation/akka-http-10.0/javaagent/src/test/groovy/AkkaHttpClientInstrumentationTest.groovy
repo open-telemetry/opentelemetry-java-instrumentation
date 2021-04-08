@@ -27,23 +27,38 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest implements AgentT
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers) {
-    return sendRequest(method, uri, headers).toCompletableFuture().get().status().intValue()
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request)
+  }
+
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request)
+    return sendRequest(request)
   }
 
   @Override
   void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    sendRequest(method, uri, headers).thenAccept {
+    def request = buildRequest(method, uri, headers)
+    Http.get(system).singleRequest(request, materializer).thenAccept {
       callback.accept(it.status().intValue())
     }
   }
 
-  private CompletionStage<HttpResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
-    def request = HttpRequest.create(uri.toString())
+  private static HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    return HttpRequest.create(uri.toString())
       .withMethod(HttpMethods.lookup(method).get())
       .addHeaders(headers.collect { RawHeader.create(it.key, it.value) })
+  }
 
+  private int sendRequest(HttpRequest request) {
     return Http.get(system)
       .singleRequest(request, materializer)
+      .toCompletableFuture()
+      .get()
+      .status()
+      .intValue()
   }
 
   // TODO(anuraaga): Context leak seems to prevent us from running asynchronous tests in a row.

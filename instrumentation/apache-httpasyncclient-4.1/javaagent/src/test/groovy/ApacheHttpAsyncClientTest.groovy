@@ -32,7 +32,15 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    return client.execute(buildRequest(method, uri, headers), null).get().statusLine.statusCode
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request)
+  }
+
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request)
+    return sendRequest(request)
   }
 
   @Override
@@ -61,6 +69,10 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
       request.addHeader(new BasicHeader(it.key, it.value))
     }
     return request
+  }
+
+  private int sendRequest(HttpUriRequest request) {
+    return client.execute(request, null).get().statusLine.statusCode
   }
 
   @Override

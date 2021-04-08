@@ -51,6 +51,11 @@ class VertxHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
+  boolean testReusedRequest() {
+    false
+  }
+
+  @Override
   boolean testConnectionFailure() {
     false
   }
