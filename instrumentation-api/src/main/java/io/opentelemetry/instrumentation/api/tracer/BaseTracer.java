@@ -18,8 +18,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
+import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
@@ -48,9 +48,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * are able to see those attributes in the {@code onStart()} method and can freely read/modify them.
  */
 public abstract class BaseTracer {
-  // should we make this injectable?
-  private static final SupportabilityMetrics supportability =
-      new SupportabilityMetrics(Config.get()).start();
+  private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private final Tracer tracer;
   private final ContextPropagators propagators;

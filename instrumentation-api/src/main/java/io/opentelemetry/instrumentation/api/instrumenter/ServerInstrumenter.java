@@ -17,6 +17,7 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
   private final TextMapGetter<REQUEST> getter;
 
   ServerInstrumenter(
+      String instrumentationName,
       Tracer tracer,
       SpanNameExtractor<? super REQUEST> spanNameExtractor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor,
@@ -26,6 +27,7 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
       ContextPropagators propagators,
       TextMapGetter<REQUEST> getter) {
     super(
+        instrumentationName,
         tracer,
         spanNameExtractor,
         spanKindExtractor,

@@ -114,6 +114,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
     return constructor.create(
+        instrumentationName,
         openTelemetry.getTracer(instrumentationName, InstrumentationVersion.VERSION),
         spanNameExtractor,
         spanKindExtractor,
@@ -124,6 +125,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private interface InstrumenterConstructor<RQ, RS> {
     Instrumenter<RQ, RS> create(
+        String instrumentationName,
         Tracer tracer,
         SpanNameExtractor<? super RQ> spanNameExtractor,
         SpanKindExtractor<? super RQ> spanKindExtractor,
@@ -137,8 +139,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
     static <RQ, RS> InstrumenterConstructor<RQ, RS> propagatingToDownstream(
         ContextPropagators propagators, TextMapSetter<RQ> setter) {
-      return (tracer, spanName, spanKind, spanStatus, attributes, errorCauseExtractor) ->
+      return (instrumentationName,
+          tracer,
+          spanName,
+          spanKind,
+          spanStatus,
+          attributes,
+          errorCauseExtractor) ->
           new ClientInstrumenter<>(
+              instrumentationName,
               tracer,
               spanName,
               spanKind,
@@ -151,8 +160,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
     static <RQ, RS> InstrumenterConstructor<RQ, RS> propagatingFromUpstream(
         ContextPropagators propagators, TextMapGetter<RQ> getter) {
-      return (tracer, spanName, spanKind, spanStatus, attributes, errorCauseExtractor) ->
+      return (instrumentationName,
+          tracer,
+          spanName,
+          spanKind,
+          spanStatus,
+          attributes,
+          errorCauseExtractor) ->
           new ServerInstrumenter<>(
+              instrumentationName,
               tracer,
               spanName,
               spanKind,

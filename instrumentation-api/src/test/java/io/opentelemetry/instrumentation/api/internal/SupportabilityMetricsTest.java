@@ -3,15 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.tracer;
+package io.opentelemetry.instrumentation.api.internal;
 
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -28,6 +26,9 @@ class SupportabilityMetricsTest {
     metrics.recordSuppressedSpan(SpanKind.SERVER, "favoriteInstrumentation");
     metrics.recordSuppressedSpan(SpanKind.CLIENT, "favoriteInstrumentation");
     metrics.recordSuppressedSpan(SpanKind.INTERNAL, "otherInstrumentation");
+    metrics.incrementCounter("some counter");
+    metrics.incrementCounter("another counter");
+    metrics.incrementCounter("some counter");
 
     metrics.report();
 
@@ -45,17 +46,19 @@ class SupportabilityMetricsTest {
     metrics.recordSuppressedSpan(SpanKind.SERVER, "favoriteInstrumentation");
     metrics.recordSuppressedSpan(SpanKind.CLIENT, "favoriteInstrumentation");
     metrics.recordSuppressedSpan(SpanKind.INTERNAL, "otherInstrumentation");
+    metrics.incrementCounter("some counter");
+    metrics.incrementCounter("another counter");
+    metrics.incrementCounter("some counter");
 
     metrics.report();
 
     assertThat(reports)
-        .isNotEmpty()
-        .hasSize(3)
-        .hasSameElementsAs(
-            Arrays.asList(
-                "Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 2",
-                "Suppressed Spans by 'favoriteInstrumentation' (SERVER) : 1",
-                "Suppressed Spans by 'otherInstrumentation' (INTERNAL) : 1"));
+        .containsExactlyInAnyOrder(
+            "Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 2",
+            "Suppressed Spans by 'favoriteInstrumentation' (SERVER) : 1",
+            "Suppressed Spans by 'otherInstrumentation' (INTERNAL) : 1",
+            "Counter 'some counter' : 2",
+            "Counter 'another counter' : 1");
   }
 
   @Test
@@ -66,14 +69,14 @@ class SupportabilityMetricsTest {
             Config.create(Collections.singletonMap("otel.javaagent.debug", "true")), reports::add);
 
     metrics.recordSuppressedSpan(SpanKind.CLIENT, "favoriteInstrumentation");
+    metrics.incrementCounter("some counter");
 
     metrics.report();
     metrics.report();
 
     assertThat(reports)
-        .isNotEmpty()
-        .hasSize(1)
-        .hasSameElementsAs(
-            singletonList("Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 1"));
+        .containsExactlyInAnyOrder(
+            "Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 1",
+            "Counter 'some counter' : 1");
   }
 }

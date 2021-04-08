@@ -14,6 +14,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.util.List;
@@ -46,6 +47,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
     return new InstrumenterBuilder<>(openTelemetry, instrumentationName, spanNameExtractor);
   }
 
+  private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
+
+  private final String instrumentationName;
   private final Tracer tracer;
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
@@ -54,12 +58,14 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final ErrorCauseExtractor errorCauseExtractor;
 
   Instrumenter(
+      String instrumentationName,
       Tracer tracer,
       SpanNameExtractor<? super REQUEST> spanNameExtractor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor,
       SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor,
       List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors,
       ErrorCauseExtractor errorCauseExtractor) {
+    this.instrumentationName = instrumentationName;
     this.tracer = tracer;
     this.spanNameExtractor = spanNameExtractor;
     this.spanKindExtractor = spanKindExtractor;
@@ -70,21 +76,27 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
   /**
    * Returns whether instrumentation should be applied for the {@link REQUEST}. If {@code true},
-   * call {@link #start(Context, Object)} and {@link #end(Context, Object, Object, Throwable)} arond
-   * the operation being instrumented, or if {@code false} execute the operation directly without
-   * calling those methods.
+   * call {@link #start(Context, Object)} and {@link #end(Context, Object, Object, Throwable)}
+   * around the operation being instrumented, or if {@code false} execute the operation directly
+   * without calling those methods.
    */
   public boolean shouldStart(Context parentContext, REQUEST request) {
+    boolean suppressed = false;
     SpanKind spanKind = spanKindExtractor.extract(request);
     switch (spanKind) {
       case SERVER:
-        return ServerSpan.fromContextOrNull(parentContext) == null;
+        suppressed = ServerSpan.fromContextOrNull(parentContext) != null;
+        break;
       case CLIENT:
-        return ClientSpan.fromContextOrNull(parentContext) == null;
+        suppressed = ClientSpan.fromContextOrNull(parentContext) != null;
+        break;
       default:
-        // fallthrough
+        break;
     }
-    return true;
+    if (suppressed) {
+      supportability.recordSuppressedSpan(spanKind, instrumentationName);
+    }
+    return !suppressed;
   }
 
   /**
