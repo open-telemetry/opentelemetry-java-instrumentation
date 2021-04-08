@@ -32,6 +32,7 @@ import io.opentelemetry.proto.common.v1.StringKeyValue;
 import io.opentelemetry.proto.metrics.v1.DoubleDataPoint;
 import io.opentelemetry.proto.metrics.v1.DoubleHistogramDataPoint;
 import io.opentelemetry.proto.metrics.v1.DoubleSum;
+import io.opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint;
 import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
 import io.opentelemetry.proto.metrics.v1.IntDataPoint;
 import io.opentelemetry.proto.metrics.v1.IntSum;
@@ -45,6 +46,8 @@ import io.opentelemetry.proto.trace.v1.Status;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.DoubleGaugeData;
+import io.opentelemetry.sdk.metrics.data.DoubleHistogramData;
+import io.opentelemetry.sdk.metrics.data.DoubleHistogramPointData;
 import io.opentelemetry.sdk.metrics.data.DoublePointData;
 import io.opentelemetry.sdk.metrics.data.DoubleSumData;
 import io.opentelemetry.sdk.metrics.data.DoubleSummaryData;
@@ -66,6 +69,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
 public final class AgentTestingExporterAccess {
@@ -306,6 +310,16 @@ public final class AgentTestingExporterAccess {
                 getTemporality(doubleSum.getAggregationTemporality()),
                 getDoublePointDatas(metric.getDoubleSum().getDataPointsList())));
       case DOUBLE_HISTOGRAM:
+        return MetricData.createDoubleHistogram(
+            resource,
+            instrumentationLibraryInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            DoubleHistogramData.create(
+                getTemporality(metric.getDoubleHistogram().getAggregationTemporality()),
+                getDoubleHistogramDataPoints(metric.getDoubleHistogram().getDataPointsList())));
+      case DOUBLE_SUMMARY:
         return MetricData.createDoubleSummary(
             resource,
             instrumentationLibraryInfo,
@@ -313,7 +327,7 @@ public final class AgentTestingExporterAccess {
             metric.getDescription(),
             metric.getUnit(),
             DoubleSummaryData.create(
-                getDoubleHistogramDataPoints(metric.getDoubleHistogram().getDataPointsList())));
+                getDoubleSummaryDataPoints(metric.getDoubleSummary().getDataPointsList())));
       default:
         throw new AssertionError("Unexpected metric data: " + metric.getDataCase());
     }
@@ -351,8 +365,23 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static Collection<DoubleSummaryPointData> getDoubleHistogramDataPoints(
+  private static Collection<DoubleHistogramPointData> getDoubleHistogramDataPoints(
       List<DoubleHistogramDataPoint> dataPointsList) {
+    return dataPointsList.stream()
+        .map(
+            point ->
+                DoubleHistogramPointData.create(
+                    point.getStartTimeUnixNano(),
+                    point.getTimeUnixNano(),
+                    createLabels(point.getLabelsList()),
+                    point.getSum(),
+                    point.getExplicitBoundsList(),
+                    point.getBucketCountsList()))
+        .collect(toList());
+  }
+
+  private static Collection<DoubleSummaryPointData> getDoubleSummaryDataPoints(
+      List<DoubleSummaryDataPoint> dataPointsList) {
     return dataPointsList.stream()
         .map(
             point ->
@@ -366,12 +395,10 @@ public final class AgentTestingExporterAccess {
         .collect(toList());
   }
 
-  private static List<ValueAtPercentile> getValues(DoubleHistogramDataPoint point) {
-    List<ValueAtPercentile> values = new ArrayList<>();
-    for (int i = 0; i < point.getExplicitBoundsCount(); i++) {
-      values.add(ValueAtPercentile.create(point.getExplicitBounds(i), point.getBucketCounts(i)));
-    }
-    return values;
+  private static List<ValueAtPercentile> getValues(DoubleSummaryDataPoint point) {
+    return point.getQuantileValuesList().stream()
+        .map(v -> ValueAtPercentile.create(v.getQuantile(), v.getValue()))
+        .collect(Collectors.toList());
   }
 
   private static AggregationTemporality getTemporality(

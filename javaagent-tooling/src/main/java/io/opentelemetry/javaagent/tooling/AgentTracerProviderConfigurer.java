@@ -129,7 +129,7 @@ public class AgentTracerProviderConfigurer implements SdkTracerProviderConfigure
     IntervalMetricReader.builder()
         .setMetricExporter(metricExporter)
         .setMetricProducers(Collections.singleton((SdkMeterProvider) GlobalMeterProvider.get()))
-        .build();
+        .buildAndStart();
     log.info("Installed metric exporter: " + metricExporter.getClass().getName());
   }
 }

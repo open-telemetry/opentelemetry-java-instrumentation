@@ -264,6 +264,7 @@ class MeterTest extends AgentInstrumentationSpecification {
   List<PointData> points(MetricData metricData) {
     def points = []
     points.addAll(metricData.getDoubleGaugeData().getPoints())
+    points.addAll(metricData.getDoubleHistogramData().getPoints())
     points.addAll(metricData.getDoubleSumData().getPoints())
     points.addAll(metricData.getDoubleSummaryData().getPoints())
     points.addAll(metricData.getLongGaugeData().getPoints())

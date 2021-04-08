@@ -35,6 +35,6 @@ public class AgentTestingSdkCustomizer implements SdkTracerProviderConfigurer {
         .setExportIntervalMillis(100)
         .setMetricExporter(AgentTestingExporterFactory.metricExporter)
         .setMetricProducers(Collections.singleton((SdkMeterProvider) GlobalMeterProvider.get()))
-        .build();
+        .buildAndStart();
   }
 }
