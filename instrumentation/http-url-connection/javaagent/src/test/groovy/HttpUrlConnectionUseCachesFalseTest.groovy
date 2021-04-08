@@ -7,19 +7,15 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 
-class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest implements AgentTestTrait {
+class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpURLConnection> implements AgentTestTrait {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    HttpURLConnection connection = buildRequest(uri)
-    return sendRequest(connection, method, headers)
-  }
-
-  private static HttpURLConnection buildRequest(URI uri) {
+  HttpURLConnection buildRequest(String method, URI uri, Map<String, String> headers) {
     return uri.toURL().openConnection() as HttpURLConnection
   }
 
-  private static int sendRequest(HttpURLConnection connection, String method, Map<String, String> headers) {
+  @Override
+  int sendRequest(HttpURLConnection connection, String method, URI uri, Map<String, String> headers) {
     try {
       connection.setRequestMethod(method)
       headers.each { connection.setRequestProperty(it.key, it.value) }

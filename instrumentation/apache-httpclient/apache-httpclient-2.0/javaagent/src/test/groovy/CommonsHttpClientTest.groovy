@@ -16,7 +16,7 @@ import org.apache.commons.httpclient.methods.PutMethod
 import org.apache.commons.httpclient.methods.TraceMethod
 import spock.lang.Shared
 
-class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
+class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentTestTrait {
   @Shared
   HttpClient client = new HttpClient()
 
@@ -30,22 +30,7 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
-  }
-
-  @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    // exception is thrown if it is not recycled (which sort of defeats the purpose of this test)
-    request.recycle()
-    request = buildRequest(method, uri)
-    return sendRequest(request)
-  }
-
-  private static HttpMethod buildRequest(String method, URI uri, Map<String, String> headers = [:]) {
+  HttpMethod buildRequest(String method, URI uri, Map<String, String> headers) {
     def request
     switch (method) {
       case "GET":
@@ -76,10 +61,14 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
     return request
   }
 
-  private int sendRequest(HttpMethod request) {
+  @Override
+  int sendRequest(HttpMethod request, String method, URI uri, Map<String, String> headers) {
     try {
       client.executeMethod(request)
-      return request.getStatusCode()
+      def code = request.getStatusCode()
+      // apache commons throws an exception if the request is reused without being recycled first
+      request.recycle()
+      return code
     } finally {
       request.releaseConnection()
     }

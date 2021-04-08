@@ -15,7 +15,7 @@ import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
 
-class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
+class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implements AgentTestTrait {
 
   @Shared
   ClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory()
@@ -27,28 +27,14 @@ class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(headers)
-    return sendRequest(request, method, uri)
+  HttpEntity<String> buildRequest(String method, URI uri, Map<String, String> headers) {
+    def httpHeaders = new HttpHeaders()
+    headers.each { httpHeaders.put(it.key, [it.value]) }
+    return new HttpEntity<String>(httpHeaders)
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest([:])
-    sendRequest(request, method, uri)
-    return sendRequest(request, method, uri)
-  }
-
-  @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    restTemplate.execute(uri, HttpMethod.valueOf(method), { request ->
-      headers.forEach(request.getHeaders().&add)
-    }, { response ->
-      callback.accept(response.statusCode.value())
-    })
-  }
-
-  private int sendRequest(HttpEntity<String> request, String method, URI uri) {
+  int sendRequest(HttpEntity<String> request, String method, URI uri, Map<String, String> headers) {
     try {
       return restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
         .statusCode
@@ -58,10 +44,13 @@ class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
     }
   }
 
-  private static HttpEntity<String> buildRequest(Map<String, String> headers) {
-    def httpHeaders = new HttpHeaders()
-    headers.each { httpHeaders.put(it.key, [it.value]) }
-    return new HttpEntity<String>(httpHeaders)
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    restTemplate.execute(uri, HttpMethod.valueOf(method), { request ->
+      headers.forEach(request.getHeaders().&add)
+    }, { response ->
+      callback.accept(response.statusCode.value())
+    })
   }
 
   @Override

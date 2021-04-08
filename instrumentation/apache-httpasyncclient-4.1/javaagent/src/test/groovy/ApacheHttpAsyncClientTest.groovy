@@ -15,7 +15,7 @@ import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait {
+class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implements AgentTestTrait {
 
   @Shared
   RequestConfig requestConfig = RequestConfig.custom()
@@ -31,16 +31,17 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
+  HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = new HttpUriRequest(method, uri)
+    headers.entrySet().each {
+      request.addHeader(new BasicHeader(it.key, it.value))
+    }
+    return request
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request)
+  int sendRequest(HttpUriRequest request, String method, URI uri, Map<String, String> headers) {
+    return client.execute(request, null).get().statusLine.statusCode
   }
 
   @Override
@@ -61,18 +62,6 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
         throw new CancellationException()
       }
     })
-  }
-
-  private static HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = new HttpUriRequest(method, uri)
-    headers.entrySet().each {
-      request.addHeader(new BasicHeader(it.key, it.value))
-    }
-    return request
-  }
-
-  private int sendRequest(HttpUriRequest request) {
-    return client.execute(request, null).get().statusLine.statusCode
   }
 
   @Override

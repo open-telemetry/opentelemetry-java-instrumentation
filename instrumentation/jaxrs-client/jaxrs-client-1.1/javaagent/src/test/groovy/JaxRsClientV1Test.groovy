@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.Shared
 
-class JaxRsClientV1Test extends HttpClientTest implements AgentTestTrait {
+class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements AgentTestTrait {
 
   @Shared
   Client client = Client.create()
@@ -25,25 +25,14 @@ class JaxRsClientV1Test extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(uri, headers)
-    return sendRequest(request, method)
-  }
-
-  @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(uri, [:])
-    sendRequest(request, method)
-    return sendRequest(request, method)
-  }
-
-  private WebResource.Builder buildRequest(URI uri, Map<String, String> headers) {
+  WebResource.Builder buildRequest(String method, URI uri, Map<String, String> headers) {
     def resource = client.resource(uri).requestBuilder
     headers.each { resource.header(it.key, it.value) }
     return resource
   }
 
-  private int sendRequest(WebResource.Builder resource, String method) {
+  @Override
+  int sendRequest(WebResource.Builder resource, String method, URI uri, Map<String, String> headers) {
     def body = BODY_METHODS.contains(method) ? "" : null
     return resource.method(method, ClientResponse, body).status
   }

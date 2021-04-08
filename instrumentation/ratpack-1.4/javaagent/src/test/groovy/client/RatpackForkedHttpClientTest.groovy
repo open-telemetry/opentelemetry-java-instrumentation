@@ -5,29 +5,12 @@
 
 package client
 
-import java.util.function.Consumer
-import ratpack.exec.Operation
 import ratpack.exec.Promise
 
 class RatpackForkedHttpClientTest extends RatpackHttpClientTest {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    exec.yield {
-      sendRequest(method, uri, headers)
-    }.value
-  }
-
-  @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    exec.execute(Operation.of {
-      sendRequest(method, uri, headers).result {
-        callback.accept(it.value)
-      }
-    })
-  }
-
-  private Promise<Integer> sendRequest(String method, URI uri, Map<String, String> headers) {
+  Promise<Integer> internalSendRequest(String method, URI uri, Map<String, String> headers) {
     def resp = client.request(uri) { spec ->
       spec.method(method)
       spec.headers { headersSpec ->

@@ -24,19 +24,20 @@ import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 import spock.lang.Unroll
 
-abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait {
+abstract class JaxRsClientTest extends HttpClientTest<Invocation> implements AgentTestTrait {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
+  Invocation buildRequest(String method, URI uri, Map<String, String> headers) {
+    def requestBuilder = internalBuildRequest(uri, headers)
+    def body = BODY_METHODS.contains(method) ? Entity.text("") : null
+    return requestBuilder.build(method, body)
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request)
+  int sendRequest(Invocation request, String method, URI uri, Map<String, String> headers) {
+    def response = request.invoke()
+    response.close()
+    return response.status
   }
 
   @Override
@@ -57,24 +58,12 @@ abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait 
     })
   }
 
-  private Invocation buildRequest(String method, URI uri, Map<String, String> headers) {
-    def requestBuilder = internalBuildRequest(uri, headers)
-    def body = BODY_METHODS.contains(method) ? Entity.text("") : null
-    return requestBuilder.build(method, body)
-  }
-
   private Invocation.Builder internalBuildRequest(URI uri, Map<String, String> headers) {
     def client = builder().build()
     def service = client.target(uri)
     def requestBuilder = service.request(MediaType.TEXT_PLAIN)
     headers.each { requestBuilder.header(it.key, it.value) }
     return requestBuilder
-  }
-
-  private static int sendRequest(Invocation request) {
-    def response = request.invoke()
-    response.close()
-    return response.status
   }
 
   abstract ClientBuilder builder()

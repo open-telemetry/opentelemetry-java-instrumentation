@@ -19,7 +19,7 @@ import play.test.FakeApplication
 import play.test.Helpers
 import spock.lang.Shared
 
-class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
+class PlayWsClientTest extends HttpClientTest<WSRequestHolder> implements AgentTestTrait {
   @Shared
   def application = new FakeApplication(
     new File("."),
@@ -44,27 +44,7 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def request = buildRequest(uri, headers)
-    return sendRequest(request, method)
-  }
-
-  @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(uri, [:])
-    sendRequest(request, method)
-    return sendRequest(request, method)
-  }
-
-  @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def request = buildRequest(uri, headers)
-    internalSendRequest(request, method).onRedeem {
-      callback.accept(it.status)
-    }
-  }
-
-  private WSRequestHolder buildRequest(URI uri, Map<String, String> headers) {
+  WSRequestHolder buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = client.url(uri.toString())
     headers.entrySet().each {
       request.setHeader(it.key, it.value)
@@ -72,8 +52,17 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
     return request
   }
 
-  private static int sendRequest(WSRequestHolder request, String method) {
+  @Override
+  int sendRequest(WSRequestHolder request, String method, URI uri, Map<String, String> headers) {
     return internalSendRequest(request, method).get(1, TimeUnit.SECONDS).status
+  }
+
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    def request = buildRequest(method, uri, headers)
+    internalSendRequest(request, method).onRedeem {
+      callback.accept(it.status)
+    }
   }
 
   private static F.Promise<WSResponse> internalSendRequest(WSRequestHolder request, String method) {

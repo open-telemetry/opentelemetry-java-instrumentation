@@ -16,22 +16,18 @@ import spock.lang.Requires
 import spock.lang.Unroll
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
-class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
+class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements AgentTestTrait {
 
   static final RESPONSE = "Hello."
   static final STATUS = 200
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def request = buildRequest(uri)
-    return sendRequest(request, method, headers)
-  }
-
-  private static HttpURLConnection buildRequest(URI uri) {
+  HttpURLConnection buildRequest(String method, URI uri, Map<String, String> headers) {
     return uri.toURL().openConnection() as HttpURLConnection
   }
 
-  private static int sendRequest(HttpURLConnection connection, String method, Map<String, String> headers) {
+  @Override
+  int sendRequest(HttpURLConnection connection, String method, URI uri, Map<String, String> headers) {
     try {
       connection.setRequestMethod(method)
       headers.each { connection.setRequestProperty(it.key, it.value) }

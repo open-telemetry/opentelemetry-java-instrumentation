@@ -3,22 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import akka.actor.ActorSystem
 import akka.http.javadsl.Http
 import akka.http.javadsl.model.HttpMethods
 import akka.http.javadsl.model.HttpRequest
-import akka.http.javadsl.model.HttpResponse
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.concurrent.CompletionStage
 import java.util.function.Consumer
 import spock.lang.Shared
 
-class AkkaHttpClientInstrumentationTest extends HttpClientTest implements AgentTestTrait {
+class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
 
   @Shared
   ActorSystem system = ActorSystem.create()
@@ -26,16 +25,20 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest implements AgentT
   ActorMaterializer materializer = ActorMaterializer.create(system)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
+  HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    return HttpRequest.create(uri.toString())
+      .withMethod(HttpMethods.lookup(method).get())
+      .addHeaders(headers.collect { RawHeader.create(it.key, it.value) })
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request)
+  int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
+    return Http.get(system)
+      .singleRequest(request, materializer)
+      .toCompletableFuture()
+      .get()
+      .status()
+      .intValue()
   }
 
   @Override
@@ -44,21 +47,6 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest implements AgentT
     Http.get(system).singleRequest(request, materializer).thenAccept {
       callback.accept(it.status().intValue())
     }
-  }
-
-  private static HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    return HttpRequest.create(uri.toString())
-      .withMethod(HttpMethods.lookup(method).get())
-      .addHeaders(headers.collect { RawHeader.create(it.key, it.value) })
-  }
-
-  private int sendRequest(HttpRequest request) {
-    return Http.get(system)
-      .singleRequest(request, materializer)
-      .toCompletableFuture()
-      .get()
-      .status()
-      .intValue()
   }
 
   // TODO(anuraaga): Context leak seems to prevent us from running asynchronous tests in a row.

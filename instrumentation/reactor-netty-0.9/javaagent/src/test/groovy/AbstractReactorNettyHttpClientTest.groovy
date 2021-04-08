@@ -8,7 +8,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.function.Consumer
 import reactor.netty.http.client.HttpClient
 
-abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest implements AgentTestTrait {
+abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpClient.ResponseReceiver> implements AgentTestTrait {
 
   @Override
   boolean testRedirects() {
@@ -31,27 +31,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest impleme
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
-  }
-
-  @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request)
-  }
-
-  @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def request = buildRequest(method, uri, headers)
-    request.response().subscribe {
-      callback.accept(it.status().code())
-    }
-  }
-
-  private HttpClient.ResponseReceiver buildRequest(String method, URI uri, Map<String, String> headers) {
+  HttpClient.ResponseReceiver buildRequest(String method, URI uri, Map<String, String> headers) {
     return createHttpClient()
       .followRedirect(true)
       .headers({ h -> headers.each { k, v -> h.add(k, v) } })
@@ -60,8 +40,17 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest impleme
       .uri(uri.toString())
   }
 
-  private static int sendRequest(HttpClient.ResponseReceiver request) {
+  @Override
+  int sendRequest(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers) {
     return request.response().block().status().code()
+  }
+
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    def request = buildRequest(method, uri, headers)
+    request.response().subscribe {
+      callback.accept(it.status().code())
+    }
   }
 
   abstract HttpClient createHttpClient()

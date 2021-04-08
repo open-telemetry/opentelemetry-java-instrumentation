@@ -19,7 +19,7 @@ import okhttp3.Response
 import okhttp3.internal.http.HttpMethod
 import spock.lang.Shared
 
-abstract class AbstractOkHttp3Test extends HttpClientTest {
+abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
 
   abstract OkHttpClient.Builder configureClient(OkHttpClient.Builder clientBuilder)
 
@@ -31,16 +31,17 @@ abstract class AbstractOkHttp3Test extends HttpClientTest {
     .build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
+  Request buildRequest(String method, URI uri, Map<String, String> headers) {
+    def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
+    return new Request.Builder()
+      .url(uri.toURL())
+      .method(method, body)
+      .headers(Headers.of(headers)).build()
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request)
+  int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+    return client.newCall(request).execute().code()
   }
 
   @Override
@@ -57,18 +58,6 @@ abstract class AbstractOkHttp3Test extends HttpClientTest {
         callback.accept(response.code())
       }
     })
-  }
-
-  private static Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
-    return new Request.Builder()
-      .url(uri.toURL())
-      .method(method, body)
-      .headers(Headers.of(headers)).build()
-  }
-
-  private int sendRequest(Request request) {
-    return client.newCall(request).execute().code()
   }
 
   @Override

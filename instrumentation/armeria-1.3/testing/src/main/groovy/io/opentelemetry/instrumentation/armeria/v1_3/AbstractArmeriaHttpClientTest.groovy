@@ -17,7 +17,7 @@ import java.util.concurrent.CompletionException
 import java.util.function.Consumer
 import spock.lang.Shared
 
-abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
+abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest> {
 
   abstract WebClientBuilder configureClient(WebClientBuilder clientBuilder)
 
@@ -25,26 +25,15 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
   def client = configureClient(WebClient.builder()).build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
-  }
-
-  @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    client.execute(buildRequest(method, uri, headers)).aggregate().thenAccept {
-      callback.accept(it.status().code())
-    }
-  }
-
-  private static HttpRequest buildRequest(String method, URI uri, Map<String, String> headers = [:]) {
+  HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     return HttpRequest.of(
       RequestHeaders.builder(HttpMethod.valueOf(method), uri.toString())
         .set(headers.entrySet())
         .build())
   }
 
-  private int sendRequest(HttpRequest request) {
+  @Override
+  int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
     try {
       return client.execute(request)
         .aggregate()
@@ -56,6 +45,13 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
     }
   }
 
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    client.execute(buildRequest(method, uri, headers)).aggregate().thenAccept {
+      callback.accept(it.status().code())
+    }
+  }
+
   // Not supported yet: https://github.com/line/armeria/issues/2489
   @Override
   boolean testRedirects() {
@@ -64,6 +60,7 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
 
   @Override
   boolean testReusedRequest() {
+    // armeria requests can't be reused
     false
   }
 

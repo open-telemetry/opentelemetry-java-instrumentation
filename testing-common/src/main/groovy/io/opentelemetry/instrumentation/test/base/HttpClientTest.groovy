@@ -35,7 +35,7 @@ import spock.lang.Unroll
 import spock.util.concurrent.BlockingVariable
 
 @Unroll
-abstract class HttpClientTest extends InstrumentationSpecification {
+abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 5000
   protected static final BASIC_AUTH_KEY = "custom-authorization-header"
@@ -112,7 +112,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
    *   return result.join()
    * }
    */
-  abstract int doRequest(String method, URI uri, Map<String, String> headers = [:])
+  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request, method, uri, headers)
+  }
 
   /**
    * Make the request twice, reusing the same request object for both, and return the response's
@@ -125,10 +128,15 @@ abstract class HttpClientTest extends InstrumentationSpecification {
    * @param method
    * @return
    */
-  int doReusedRequest(String method, URI uri) {
-    // Must be implemented if testReusedRequest is true
-    throw new UnsupportedOperationException()
+  int doReusedRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request = buildRequest(method, uri, headers)
+    sendRequest(request, method, uri, headers)
+    return sendRequest(request, method, uri, headers)
   }
+
+  abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
+
+  abstract int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
 
   /**
    * Make the request and return the status code of the response through the callback. This method

@@ -22,7 +22,7 @@ import org.apache.hc.core5.http.protocol.BasicHttpContext
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest implements AgentTestTrait {
+abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<T> implements AgentTestTrait {
   @Shared
   @AutoCleanup
   CloseableHttpClient client
@@ -37,16 +37,19 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request, uri)
+  T buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = createRequest(method, uri)
+    headers.entrySet().each {
+      request.setHeader(new BasicHeader(it.key, it.value))
+    }
+    return request
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request, uri)
-    return sendRequest(request, uri)
+  int sendRequest(T request, String method, URI uri, Map<String, String> headers) {
+    def response = executeRequest(request, uri)
+    response.close() // Make sure the connection is closed.
+    return response.code
   }
 
   @Override
@@ -56,20 +59,6 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
       it.close() // Make sure the connection is closed.
       callback.accept(it.code)
     }
-  }
-
-  private T buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = createRequest(method, uri)
-    headers.entrySet().each {
-      request.setHeader(new BasicHeader(it.key, it.value))
-    }
-    return request
-  }
-
-  private int sendRequest(T request, URI uri) {
-    def response = executeRequest(request, uri)
-    response.close() // Make sure the connection is closed.
-    return response.code
   }
 
   abstract T createRequest(String method, URI uri)

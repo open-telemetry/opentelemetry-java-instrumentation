@@ -22,7 +22,7 @@ import java.util.function.Consumer
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
+class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrait {
 
   @Shared
   def clientConfig = new AsyncHttpClientConfig.Builder()
@@ -34,16 +34,18 @@ class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
   AsyncHttpClient client = new AsyncHttpClient(clientConfig)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
+  Request buildRequest(String method, URI uri, Map<String, String> headers) {
+    def requestBuilder = new RequestBuilder(method)
+      .setUrl(uri.toString())
+    headers.entrySet().each {
+      requestBuilder.addHeader(it.key, it.value)
+    }
+    return requestBuilder.build()
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request)
+  int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+    return client.executeRequest(request).get().statusCode
   }
 
   @Override
@@ -56,19 +58,6 @@ class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
         return null
       }
     })
-  }
-
-  private static Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    def requestBuilder = new RequestBuilder(method)
-      .setUrl(uri.toString())
-    headers.entrySet().each {
-      requestBuilder.addHeader(it.key, it.value)
-    }
-    return requestBuilder.build()
-  }
-
-  private int sendRequest(Request request) {
-    return client.executeRequest(request).get().statusCode
   }
 
   @Override

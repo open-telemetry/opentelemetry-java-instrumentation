@@ -37,7 +37,7 @@ import java.util.concurrent.TimeoutException
 import java.util.function.Consumer
 import spock.lang.Shared
 
-class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
+class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implements AgentTestTrait {
 
   @Shared
   private Bootstrap bootstrap
@@ -57,16 +57,20 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request, uri)
+  DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.toString(), Unpooled.EMPTY_BUFFER)
+    request.headers().set(HttpHeaderNames.HOST, uri.host)
+    headers.each { k, v -> request.headers().set(k, v) }
+    return request
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request, uri)
-    return sendRequest(request, uri)
+  int sendRequest(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers) {
+    def channel = bootstrap.connect(uri.host, uri.port).sync().channel()
+    def result = new CompletableFuture<Integer>()
+    channel.pipeline().addLast(new ClientHandler(null, result))
+    channel.writeAndFlush(request).get()
+    return result.get(20, TimeUnit.SECONDS)
   }
 
   @Override
@@ -76,21 +80,6 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
     Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
     ch.pipeline().addLast(new ClientHandler(callback, CompletableFuture.completedFuture(0)))
     ch.writeAndFlush(request)
-  }
-
-  private static DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.toString(), Unpooled.EMPTY_BUFFER)
-    request.headers().set(HttpHeaderNames.HOST, uri.host)
-    headers.each { k, v -> request.headers().set(k, v) }
-    return request
-  }
-
-  private int sendRequest(DefaultFullHttpRequest request, URI uri) {
-    def channel = bootstrap.connect(uri.host, uri.port).sync().channel()
-    def result = new CompletableFuture<Integer>()
-    channel.pipeline().addLast(new ClientHandler(null, result))
-    channel.writeAndFlush(request).get()
-    return result.get(20, TimeUnit.SECONDS)
   }
 
   @Override

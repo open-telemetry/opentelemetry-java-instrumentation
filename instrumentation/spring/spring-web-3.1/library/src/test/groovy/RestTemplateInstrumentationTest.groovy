@@ -14,7 +14,7 @@ import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
 
-class RestTemplateInstrumentationTest extends HttpClientTest implements LibraryTestTrait {
+class RestTemplateInstrumentationTest extends HttpClientTest<HttpEntity<String>> implements LibraryTestTrait {
   @Shared
   RestTemplate restTemplate
 
@@ -26,16 +26,21 @@ class RestTemplateInstrumentationTest extends HttpClientTest implements LibraryT
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(headers)
-    return sendRequest(request, method, uri)
+  HttpEntity<String> buildRequest(String method, URI uri, Map<String, String> headers) {
+    def httpHeaders = new HttpHeaders()
+    headers.each { httpHeaders.put(it.key, [it.value]) }
+    return new HttpEntity<String>(httpHeaders)
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest([:])
-    sendRequest(request, method, uri)
-    return sendRequest(request, method, uri)
+  int sendRequest(HttpEntity<String> request, String method, URI uri, Map<String, String> headers) {
+    try {
+      return restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
+        .statusCode
+        .value()
+    } catch (ResourceAccessException exception) {
+      throw exception.getCause()
+    }
   }
 
   @Override
@@ -45,22 +50,6 @@ class RestTemplateInstrumentationTest extends HttpClientTest implements LibraryT
     }, { response ->
       callback.accept(response.statusCode.value())
     })
-  }
-
-  private static HttpEntity<String> buildRequest(Map<String, String> headers) {
-    def httpHeaders = new HttpHeaders()
-    headers.each { httpHeaders.put(it.key, [it.value]) }
-    return new HttpEntity<String>(httpHeaders)
-  }
-
-  private int sendRequest(HttpEntity<String> request, String method, URI uri) {
-    try {
-      return restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
-        .statusCode
-        .value()
-    } catch (ResourceAccessException exception) {
-      throw exception.getCause()
-    }
   }
 
   @Override

@@ -11,19 +11,18 @@ import java.util.function.Consumer
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.WebClient
 
-class SpringWebfluxHttpClientTest extends HttpClientTest implements AgentTestTrait {
+class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySpec> implements AgentTestTrait {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
+  WebClient.RequestBodySpec buildRequest(String method, URI uri, Map<String, String> headers) {
+    return WebClient.builder().build().method(HttpMethod.resolve(method))
+      .uri(uri)
+      .headers { h -> headers.forEach({ key, value -> h.add(key, value) }) }
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request)
+  int sendRequest(WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers) {
+    return request.exchange().block().statusCode().value()
   }
 
   @Override
@@ -32,16 +31,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest implements AgentTestTra
     request.exchange().subscribe {
       callback.accept(it.statusCode().value())
     }
-  }
-
-  private static WebClient.RequestBodySpec buildRequest(String method, URI uri, headers) {
-    return WebClient.builder().build().method(HttpMethod.resolve(method))
-      .uri(uri)
-      .headers { h -> headers.forEach({ key, value -> h.add(key, value) }) }
-  }
-
-  private static int sendRequest(WebClient.RequestBodySpec request) {
-    return request.exchange().block().statusCode().value()
   }
 
   @Override

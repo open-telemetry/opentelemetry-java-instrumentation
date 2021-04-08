@@ -17,7 +17,7 @@ import org.apache.http.params.HttpParams
 import org.apache.http.protocol.BasicHttpContext
 import spock.lang.Shared
 
-abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest implements AgentTestTrait {
+abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<T> implements AgentTestTrait {
   @Shared
   def client = new DefaultHttpClient()
 
@@ -32,16 +32,19 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request, uri)
+  T buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = createRequest(method, uri)
+    headers.entrySet().each {
+      request.setHeader(new BasicHeader(it.key, it.value))
+    }
+    return request
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request, uri)
-    return sendRequest(request, uri)
+  int sendRequest(T request, String method, URI uri, Map<String, String> headers) {
+    def response = executeRequest(request, uri)
+    response.entity?.content?.close() // Make sure the connection is closed.
+    return response.statusLine.statusCode
   }
 
   @Override
@@ -51,20 +54,6 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
       it.entity?.content?.close() // Make sure the connection is closed.
       callback.accept(it.statusLine.statusCode)
     }
-  }
-
-  private T buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = createRequest(method, uri)
-    headers.entrySet().each {
-      request.setHeader(new BasicHeader(it.key, it.value))
-    }
-    return request
-  }
-
-  private int sendRequest(T request, URI uri) {
-    def response = executeRequest(request, uri)
-    response.entity?.content?.close() // Make sure the connection is closed.
-    return response.statusLine.statusCode
   }
 
   abstract T createRequest(String method, URI uri)

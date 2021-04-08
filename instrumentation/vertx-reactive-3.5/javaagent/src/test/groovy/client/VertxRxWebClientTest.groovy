@@ -18,7 +18,7 @@ import io.vertx.reactivex.ext.web.client.WebClient
 import java.util.function.Consumer
 import spock.lang.Shared
 
-class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
+class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implements AgentTestTrait {
 
   @Shared
   Vertx vertx = Vertx.vertx(new VertxOptions())
@@ -28,16 +28,15 @@ class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
   WebClient client = WebClient.create(vertx, clientOptions)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
+  HttpRequest<Buffer> buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
+    headers.each { request.putHeader(it.key, it.value) }
+    return request
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request)
+  int sendRequest(HttpRequest<Buffer> request, String method, URI uri, Map<String, String> headers) {
+    return request.rxSend().blockingGet().statusCode()
   }
 
   @Override
@@ -50,16 +49,6 @@ class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
           callback.accept(httpResponse.statusCode())
         }
       })
-  }
-
-  private HttpRequest<Buffer> buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
-    headers.each { request.putHeader(it.key, it.value) }
-    return request
-  }
-
-  private static int sendRequest(request) {
-    return request.rxSend().blockingGet().statusCode()
   }
 
   @Override

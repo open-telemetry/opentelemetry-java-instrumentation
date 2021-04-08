@@ -17,28 +17,18 @@ import org.apache.http.client.utils.URLEncodedUtils
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 import org.jboss.resteasy.specimpl.ResteasyUriBuilder
 
-class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
-  @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def request = buildRequest()
-    return sendRequest(request, method, uri, headers)
-  }
+class ResteasyProxyClientTest extends HttpClientTest<ResteasyProxyResource> implements AgentTestTrait {
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest()
-    sendRequest(request, method, uri, [:])
-    return sendRequest(request, method, uri, [:])
-  }
-
-  private ResteasyProxyResource buildRequest() {
+  ResteasyProxyResource buildRequest(String method, URI uri, Map<String, String> headers) {
     return new ResteasyClientBuilder()
       .build()
       .target(new ResteasyUriBuilder().uri(server.address))
       .proxy(ResteasyProxyResource)
   }
 
-  private static int sendRequest(ResteasyProxyResource proxy, String method, URI uri, Map<String, String> headers) {
+  @Override
+  int sendRequest(ResteasyProxyResource proxy, String method, URI uri, Map<String, String> headers) {
     def proxyMethodName = "${method}_${uri.path}".toLowerCase()
       .replace("/", "")
       .replace('-', '_')

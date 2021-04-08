@@ -15,23 +15,25 @@ import org.asynchttpclient.uri.Uri
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class AsyncHttpClientTest extends HttpClientTest implements AgentTestTrait {
+class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTrait {
 
   @AutoCleanup
   @Shared
   def client = Dsl.asyncHttpClient()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
+  Request buildRequest(String method, URI uri, Map<String, String> headers) {
+    def requestBuilder = new RequestBuilder(method)
+      .setUri(Uri.create(uri.toString()))
+    headers.entrySet().each {
+      requestBuilder.setHeader(it.key, it.value)
+    }
+    return requestBuilder.build()
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request)
+  int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+    return client.executeRequest(request).get().statusCode
   }
 
   @Override
@@ -43,19 +45,6 @@ class AsyncHttpClientTest extends HttpClientTest implements AgentTestTrait {
         return null
       }
     })
-  }
-
-  private static Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    def requestBuilder = new RequestBuilder(method)
-      .setUri(Uri.create(uri.toString()))
-    headers.entrySet().each {
-      requestBuilder.setHeader(it.key, it.value)
-    }
-    return requestBuilder.build()
-  }
-
-  private int sendRequest(Request request) {
-    return client.executeRequest(request).get().statusCode
   }
 
   //TODO see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2347

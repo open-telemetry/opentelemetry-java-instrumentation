@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
-abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements AgentTestTrait {
+abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
 
   @Shared
   def requestFactory = new NetHttpTransport().createRequestFactory()
@@ -29,19 +29,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request).getStatusCode()
-  }
-
-  @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request).getStatusCode()
-  }
-
-  private HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+  HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     def genericUrl = new GenericUrl(uri)
 
     def request = requestFactory.buildRequest(method, genericUrl, null)
@@ -56,6 +44,11 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
 
     request.setThrowExceptionOnExecuteError(false)
     return request
+  }
+
+  @Override
+  int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
+    return sendRequest(request).getStatusCode()
   }
 
   abstract HttpResponse sendRequest(HttpRequest request)

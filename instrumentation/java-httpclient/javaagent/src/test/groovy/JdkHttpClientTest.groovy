@@ -17,34 +17,14 @@ import java.util.function.Consumer
 import spock.lang.Requires
 import spock.lang.Shared
 
-class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
+class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
 
   @Shared
   def client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT_MS,
     ChronoUnit.MILLIS)).followRedirects(HttpClient.Redirect.NORMAL).build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request)
-  }
-
-  @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(method, uri, [:])
-    sendRequest(request)
-    return sendRequest(request)
-  }
-
-  @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    client.sendAsync(buildRequest(method, uri, headers), HttpResponse.BodyHandlers.ofString())
-      .thenAccept {
-        callback.accept(it.statusCode())
-      }
-  }
-
-  private static HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+  HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     def requestBuilder = HttpRequest.newBuilder()
       .uri(uri)
       .method(method, HttpRequest.BodyPublishers.noBody())
@@ -54,8 +34,17 @@ class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
     return requestBuilder.build()
   }
 
-  private int sendRequest(HttpRequest request) {
+  @Override
+  int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
     return client.send(request, HttpResponse.BodyHandlers.ofString()).statusCode()
+  }
+
+  @Override
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    client.sendAsync(buildRequest(method, uri, headers), HttpResponse.BodyHandlers.ofString())
+      .thenAccept {
+        callback.accept(it.statusCode())
+      }
   }
 
   @Override

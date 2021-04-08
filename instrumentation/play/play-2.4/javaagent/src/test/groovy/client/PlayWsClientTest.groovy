@@ -18,23 +18,24 @@ import spock.lang.Subject
 
 // Play 2.6+ uses a separately versioned client that shades the underlying dependency
 // This means our built in instrumentation won't work.
-class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
+class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTrait {
   @Subject
   @Shared
   @AutoCleanup
   def client = WS.newClient(-1)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def request = buildRequest(uri, headers)
-    return sendRequest(request, method)
+  WSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = client.url(uri.toString())
+    headers.entrySet().each {
+      request.setHeader(it.key, it.value)
+    }
+    return request
   }
 
   @Override
-  int doReusedRequest(String method, URI uri) {
-    def request = buildRequest(uri, [:])
-    sendRequest(request, method)
-    return sendRequest(request, method)
+  int sendRequest(WSRequest request, String method, URI uri, Map<String, String> headers) {
+    return internalSendRequest(request, method).toCompletableFuture().get().status
   }
 
   @Override
@@ -43,18 +44,6 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
     internalSendRequest(request, method).thenAccept {
       callback.accept(it.status)
     }
-  }
-
-  private WSRequest buildRequest(URI uri, Map<String, String> headers) {
-    def request = client.url(uri.toString())
-    headers.entrySet().each {
-      request.setHeader(it.key, it.value)
-    }
-    return request
-  }
-
-  private static int sendRequest(WSRequest request, String method) {
-    return internalSendRequest(request, method).toCompletableFuture().get().status
   }
 
   private static CompletionStage<WSResponse> internalSendRequest(WSRequest request, String method) {
