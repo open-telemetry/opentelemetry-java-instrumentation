@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -14,8 +15,10 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.sql.CallableStatement
 import java.sql.Connection
+import java.sql.DatabaseMetaData
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.sql.Statement
 import javax.sql.DataSource
 import org.apache.derby.jdbc.EmbeddedDataSource
@@ -723,5 +726,50 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     "hikari"           | _
     "tomcat"           | _
     "c3p0"             | _
+  }
+
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2644
+  def "should handle recursive Statements inside Connection#getMetaData()"() {
+    given:
+    def connection = new DbCallingConnection()
+
+    when:
+    runUnderTrace("parent") {
+      def statement = connection.createStatement()
+      return statement.executeQuery("SELECT * FROM table")
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        basicSpan(it, 0, "parent")
+        span(1) {
+          name "SELECT table"
+          kind CLIENT
+          childOf span(0)
+          errored false
+          attributes {
+            "$SemanticAttributes.DB_SYSTEM.key" "testdb"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"
+            "$SemanticAttributes.DB_STATEMENT.key" "SELECT * FROM table"
+            "$SemanticAttributes.DB_OPERATION.key" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE.key" "table"
+          }
+        }
+      }
+    }
+  }
+
+  class DbCallingConnection extends TestConnection {
+    DbCallingConnection() {
+      super(false)
+    }
+
+    @Override
+    DatabaseMetaData getMetaData() throws SQLException {
+      // simulate retrieving DB metadata from the DB itself
+      createStatement().executeQuery("SELECT * from DB_METADATA")
+      return super.getMetaData()
+    }
   }
 }

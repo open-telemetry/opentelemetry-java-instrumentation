@@ -17,8 +17,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -51,6 +53,11 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.This PreparedStatement statement,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      // prevent recursive Statement calls
+      if (CallDepthThreadLocalMap.getCallDepth(Statement.class).getAndIncrement() > 0) {
+        return;
+      }
+
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
@@ -68,6 +75,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       if (scope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(Statement.class);
 
       scope.close();
       if (throwable == null) {
