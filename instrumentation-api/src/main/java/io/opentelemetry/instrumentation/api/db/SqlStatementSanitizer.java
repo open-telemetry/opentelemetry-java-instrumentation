@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.db;
 
 import static io.opentelemetry.instrumentation.api.db.StatementSanitizationConfig.isStatementSanitizationEnabled;
+import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_STATEMENT_SANITIZER_CACHE_MISS;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
@@ -27,7 +28,7 @@ public final class SqlStatementSanitizer {
     return sqlToStatementInfoCache.computeIfAbsent(
         statement,
         k -> {
-          supportability.incrementCounter("SqlStatementSanitizer cache miss");
+          supportability.incrementCounter(SQL_STATEMENT_SANITIZER_CACHE_MISS);
           return AutoSqlSanitizer.sanitize(statement);
         });
   }

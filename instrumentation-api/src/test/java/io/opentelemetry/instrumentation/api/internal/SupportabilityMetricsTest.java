@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -54,15 +53,12 @@ class SupportabilityMetricsTest {
     metrics.report();
 
     assertThat(reports)
-        .isNotEmpty()
-        .hasSize(5)
-        .hasSameElementsAs(
-            Arrays.asList(
-                "Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 2",
-                "Suppressed Spans by 'favoriteInstrumentation' (SERVER) : 1",
-                "Suppressed Spans by 'otherInstrumentation' (INTERNAL) : 1",
-                "Counter 'some counter' : 2",
-                "Counter 'another counter' : 1"));
+        .containsExactlyInAnyOrder(
+            "Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 2",
+            "Suppressed Spans by 'favoriteInstrumentation' (SERVER) : 1",
+            "Suppressed Spans by 'otherInstrumentation' (INTERNAL) : 1",
+            "Counter 'some counter' : 2",
+            "Counter 'another counter' : 1");
   }
 
   @Test
@@ -79,11 +75,8 @@ class SupportabilityMetricsTest {
     metrics.report();
 
     assertThat(reports)
-        .isNotEmpty()
-        .hasSize(2)
-        .hasSameElementsAs(
-            Arrays.asList(
-                "Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 1",
-                "Counter 'some counter' : 1"));
+        .containsExactlyInAnyOrder(
+            "Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 1",
+            "Counter 'some counter' : 1");
   }
 }

@@ -91,6 +91,13 @@ public final class SupportabilityMetrics {
     return this;
   }
 
+  public static final class CounterNames {
+    public static final String SQL_STATEMENT_SANITIZER_CACHE_MISS =
+        "SqlStatementSanitizer cache miss";
+
+    private CounterNames() {}
+  }
+
   // this class is threadsafe.
   private static class KindCounters {
     private final LongAdder server = new LongAdder();
