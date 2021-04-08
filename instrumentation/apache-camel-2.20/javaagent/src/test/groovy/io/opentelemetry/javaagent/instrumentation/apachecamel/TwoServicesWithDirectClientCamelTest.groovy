@@ -112,9 +112,9 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           parentSpanId(span(2).spanId)
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
-            "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
+            "$SemanticAttributes.HTTP_URL.key" "http://127.0.0.1:$portTwo/serviceTwo"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
-            "apache-camel.uri" "http://0.0.0.0:$portTwo/serviceTwo"
+            "apache-camel.uri" "http://127.0.0.1:$portTwo/serviceTwo"
           }
         }
         it.span(4) {
@@ -124,13 +124,12 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
             "$SemanticAttributes.HTTP_STATUS_CODE.key" 200
-            "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
+            "$SemanticAttributes.HTTP_URL.key" "http://127.0.0.1:$portTwo/serviceTwo"
             "$SemanticAttributes.NET_PEER_PORT.key" Number
-            "$SemanticAttributes.NET_PEER_IP.key" InetAddress.getLocalHost().getHostAddress().toString()
+            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.HTTP_USER_AGENT.key" "Jakarta Commons-HttpClient/3.1"
             "$SemanticAttributes.HTTP_FLAVOR.key" "1.1"
-            "$SemanticAttributes.HTTP_CLIENT_IP.key" InetAddress.getLocalHost().getHostAddress().toString()
-
+            "$SemanticAttributes.HTTP_CLIENT_IP.key" "127.0.0.1"
           }
         }
         it.span(5) {
@@ -139,7 +138,7 @@ class TwoServicesWithDirectClientCamelTest extends AgentInstrumentationSpecifica
           parentSpanId(span(4).spanId)
           attributes {
             "$SemanticAttributes.HTTP_METHOD.key" "POST"
-            "$SemanticAttributes.HTTP_URL.key" "http://0.0.0.0:$portTwo/serviceTwo"
+            "$SemanticAttributes.HTTP_URL.key" "http://127.0.0.1:$portTwo/serviceTwo"
             "apache-camel.uri" "jetty:http://0.0.0.0:$portTwo/serviceTwo?arg=value"
           }
         }
