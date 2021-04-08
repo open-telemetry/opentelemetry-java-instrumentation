@@ -33,8 +33,14 @@ abstract class AbstractOkHttp3Test extends HttpClientTest {
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers) {
     def request = buildRequest(method, uri, headers)
-    def response = client.newCall(request).execute()
-    return response.code()
+    return sendRequest(request)
+  }
+
+  @Override
+  int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request)
+    return sendRequest(request)
   }
 
   @Override
@@ -61,6 +67,11 @@ abstract class AbstractOkHttp3Test extends HttpClientTest {
       .headers(Headers.of(headers)).build()
   }
 
+  private int sendRequest(Request request) {
+    return client.newCall(request).execute().code()
+  }
+
+  @Override
   boolean testRedirects() {
     false
   }
@@ -69,5 +80,4 @@ abstract class AbstractOkHttp3Test extends HttpClientTest {
   boolean testCausality() {
     false
   }
-
 }

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.armeria.v1_3
 
 import com.linecorp.armeria.client.WebClient
 import com.linecorp.armeria.client.WebClientBuilder
-import com.linecorp.armeria.common.AggregatedHttpResponse
 import com.linecorp.armeria.common.HttpMethod
 import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.common.RequestHeaders
@@ -27,13 +26,8 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    AggregatedHttpResponse response
-    try {
-      response = client.execute(buildRequest(method, uri, headers)).aggregate().join()
-    } catch(CompletionException e) {
-      throw e.cause
-    }
-    return response.status().code()
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request)
   }
 
   @Override
@@ -50,9 +44,26 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
         .build())
   }
 
+  private int sendRequest(HttpRequest request) {
+    try {
+      return client.execute(request)
+        .aggregate()
+        .join()
+        .status()
+        .code()
+    } catch (CompletionException e) {
+      throw e.cause
+    }
+  }
+
   // Not supported yet: https://github.com/line/armeria/issues/2489
   @Override
   boolean testRedirects() {
+    false
+  }
+
+  @Override
+  boolean testReusedRequest() {
     false
   }
 

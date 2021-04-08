@@ -15,6 +15,6 @@ public final class ResteasyInjectAdapter implements TextMapSetter<ClientInvocati
   @Override
   public void set(ClientInvocation carrier, String key, String value) {
     // Don't allow duplicates.
-    carrier.getHeaders().header(key, value);
+    carrier.getHeaders().getHeaders().putSingle(key, value);
   }
 }
