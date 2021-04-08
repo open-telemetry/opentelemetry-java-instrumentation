@@ -65,12 +65,11 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch1 = new CountDownLatch(1)
-      // This creates a trace that isn't linked to the parent... using NIO internally that we don't handle.
       db.createCollection(collectionName).subscribe(toSubscriber { latch1.countDown() })
       latch1.await()
       return db.getCollection(collectionName)
     }
-    ignoreTracesAndClear(2)
+    ignoreTracesAndClear(1)
     def count = new CompletableFuture<Integer>()
     collection.insertOne(new Document("password", "SECRET")).subscribe(toSubscriber {
       collection.estimatedDocumentCount().subscribe(toSubscriber { count.complete(it) })
