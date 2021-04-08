@@ -249,6 +249,10 @@ class TestHttpServer implements AutoCloseable {
         isTestServer = Boolean.parseBoolean(request.getHeader("is-test-server"))
       }
       if (isTestServer) {
+        def headers = req.getHeaders("traceparent")
+        if (headers.hasMoreElements() && headers.nextElement() && headers.hasMoreElements()) {
+          throw new AssertionError("more than one traceparent header present")
+        }
         final SpanBuilder spanBuilder = tracer.spanBuilder("test-http-server").setSpanKind(SERVER)
         // using Context.root() to avoid inheriting any potentially leaked context here
         spanBuilder.setParent(GlobalOpenTelemetry.getPropagators().getTextMapPropagator().extract(Context.root(), req, GETTER))

@@ -115,7 +115,23 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   abstract int doRequest(String method, URI uri, Map<String, String> headers = [:])
 
   /**
-   * Maks the request and return the status code of the response through the callback. This method
+   * Make the request twice, reusing the same request object for both, and return the response's
+   * status code.
+   *
+   * The purpose of this test is to verify that the traceparent header is not added multiple times
+   * to the request, and that the last one wins (TestHttpServer has explicit logic to throw
+   * exception if there are multiple).
+   *
+   * @param method
+   * @return
+   */
+  int doReusedRequest(String method, URI uri) {
+    // Must be implemented if testReusedRequest is true
+    throw new UnsupportedOperationException()
+  }
+
+  /**
+   * Make the request and return the status code of the response through the callback. This method
    * should be implemented if the client offers any request execution methods that accept a callback
    * which receives the response. This will generally be an API for asynchronous execution of a
    * request, such as OkHttp's enqueue method, but may also be a callback executed synchronously,
@@ -401,6 +417,32 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
     where:
     method = "GET"
+  }
+
+  def "reuse request"() {
+    given:
+    assumeTrue(testReusedRequest())
+
+    when:
+    def status = doReusedRequest(method, url)
+
+    then:
+    status == 200
+    assertTraces(2) {
+      trace(0, 2 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, url)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+      }
+      trace(1, 2 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, url)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+      }
+    }
+
+    where:
+    path = "/success"
+    method = "GET"
+    url = server.address.resolve(path)
   }
 
   def "connection error (unopened port)"() {
@@ -705,6 +747,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   // maximum number of redirects that http client follows before giving up
   int maxRedirects() {
     2
+  }
+
+  boolean testReusedRequest() {
+    true
   }
 
   boolean testConnectionFailure() {
