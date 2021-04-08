@@ -40,7 +40,7 @@ class TestServlet3 {
             break
           case INDEXED_CHILD:
             resp.status = endpoint.status
-            Span.current().setAttribute("test.request.id", req.getParameter("id") as int)
+            Span.current().setAttribute("test.request.id", req.getParameter("id") as long)
             break
           case QUERY_PARAM:
             resp.status = endpoint.status
