@@ -47,7 +47,8 @@ import org.slf4j.LoggerFactory;
  * possible to extend and reuse them in vendor distributions.
  */
 public abstract class InstrumentationModule {
-  private static final Logger log = LoggerFactory.getLogger(InstrumentationModule.class);
+  private static final TransformSafeLogger log =
+      TransformSafeLogger.getLogger(InstrumentationModule.class);
   private static final Logger muzzleLog = LoggerFactory.getLogger("muzzleMatcher");
 
   private static final String[] EMPTY = new String[0];
@@ -233,7 +234,7 @@ public abstract class InstrumentationModule {
             }
           }
         } else {
-          if (muzzleLog.isDebugEnabled()) {
+          if (log.isDebugEnabled()) {
             log.debug(
                 "Applying instrumentation: {} -- {} on {}",
                 mainInstrumentationName(),
