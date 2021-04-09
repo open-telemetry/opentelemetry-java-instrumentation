@@ -87,6 +87,29 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
   }
 
+  private int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request, method, uri, headers)
+  }
+
+  private int doReusedRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request = buildRequest(method, uri, headers)
+    sendRequest(request, method, uri, headers)
+    return sendRequest(request, method, uri, headers)
+  }
+
+  /**
+   * Build the request to be passed to
+   * {@link #sendRequest(java.lang.Object, java.lang.String, java.net.URI, java.util.Map)}.
+   *
+   * By splitting this step out separate from {@code sendRequest}, tests and re-execute the same
+   * request a second time to verify that the traceparent header is not added multiple times to the
+   * request, and that the last one wins
+   * ({@link io.opentelemetry.instrumentation.test.server.http.TestHttpServer) has explicit logic
+   * to throw exception if there are multiple).
+   */
+  abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
+
   /**
    * Make the request and return the status code of the response synchronously. Some clients, e.g.,
    * HTTPUrlConnection only support synchronous execution without callbacks, and many offer a
@@ -104,7 +127,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * can be used to block on a result, for example:
    *
    * @Override
-   * int doRequest(String method, URI uri, Map<String, String headers = [:]) {
+   * int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers) {
    *   CompletableFuture<Integer> result = new CompletableFuture<>()
    *   doRequestWithCallback(method, uri, headers) {
    *     result.complete(it.statusCode())
@@ -112,30 +135,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    *   return result.join()
    * }
    */
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    return sendRequest(request, method, uri, headers)
-  }
-
-  /**
-   * Make the request twice, reusing the same request object for both, and return the response's
-   * status code.
-   *
-   * The purpose of this test is to verify that the traceparent header is not added multiple times
-   * to the request, and that the last one wins (TestHttpServer has explicit logic to throw
-   * exception if there are multiple).
-   *
-   * @param method
-   * @return
-   */
-  int doReusedRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    def request = buildRequest(method, uri, headers)
-    sendRequest(request, method, uri, headers)
-    return sendRequest(request, method, uri, headers)
-  }
-
-  abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
-
   abstract int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
 
   /**
