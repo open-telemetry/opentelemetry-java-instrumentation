@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.sql.Statement;
 import java.util.Map;
@@ -52,6 +53,17 @@ public class StatementInstrumentation implements TypeInstrumentation {
         @Advice.This Statement statement,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      // Connection#getMetaData() may execute a Statement or PreparedStatement to retrieve DB info
+      // this happens before the DB CLIENT span is started (and put in the current context), so this
+      // instrumentation runs again and the shouldStartSpan() check always returns true - and so on
+      // until we get a StackOverflowError
+      // using CallDepth prevents this, because this check happens before Connection#getMetadata()
+      // is called - the first recursive Statement call is just skipped and we do not create a span
+      // for it
+      if (CallDepthThreadLocalMap.getCallDepth(Statement.class).getAndIncrement() > 0) {
+        return;
+      }
+
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
@@ -69,6 +81,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
       if (scope == null) {
         return;
       }
+      CallDepthThreadLocalMap.reset(Statement.class);
 
       scope.close();
       if (throwable == null) {

@@ -41,7 +41,7 @@ class TestConnection implements Connection {
 
   @Override
   PreparedStatement prepareStatement(String sql) throws SQLException {
-    return null
+    return new TestPreparedStatement(this)
   }
 
   @Override

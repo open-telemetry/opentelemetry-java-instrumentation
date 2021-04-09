@@ -14,8 +14,10 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.sql.CallableStatement
 import java.sql.Connection
+import java.sql.DatabaseMetaData
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.sql.Statement
 import javax.sql.DataSource
 import org.apache.derby.jdbc.EmbeddedDataSource
@@ -723,5 +725,64 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     "hikari"           | _
     "tomcat"           | _
     "c3p0"             | _
+  }
+
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2644
+  @Unroll
+  def "should handle recursive Statements inside Connection.getMetaData(): #desc"() {
+    given:
+    def connection = new DbCallingConnection(usePreparedStatementInConnection)
+
+    when:
+    runUnderTrace("parent") {
+      executeQueryFunction(connection, "SELECT * FROM table")
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        basicSpan(it, 0, "parent")
+        span(1) {
+          name "SELECT table"
+          kind CLIENT
+          childOf span(0)
+          errored false
+          attributes {
+            "$SemanticAttributes.DB_SYSTEM.key" "testdb"
+            "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"
+            "$SemanticAttributes.DB_STATEMENT.key" "SELECT * FROM table"
+            "$SemanticAttributes.DB_OPERATION.key" "SELECT"
+            "$SemanticAttributes.DB_SQL_TABLE.key" "table"
+          }
+        }
+      }
+    }
+
+    where:
+    desc                                                           | usePreparedStatementInConnection | executeQueryFunction
+    "getMetaData() uses Statement, test Statement"                 | false                            | { con, query -> con.createStatement().executeQuery(query) }
+    "getMetaData() uses PreparedStatement, test Statement"         | true                             | { con, query -> con.createStatement().executeQuery(query) }
+    "getMetaData() uses Statement, test PreparedStatement"         | false                            | { con, query -> con.prepareStatement(query).executeQuery() }
+    "getMetaData() uses PreparedStatement, test PreparedStatement" | true                             | { con, query -> con.prepareStatement(query).executeQuery() }
+  }
+
+  class DbCallingConnection extends TestConnection {
+    final boolean usePreparedStatement
+
+    DbCallingConnection(boolean usePreparedStatement) {
+      super(false)
+      this.usePreparedStatement = usePreparedStatement
+    }
+
+    @Override
+    DatabaseMetaData getMetaData() throws SQLException {
+      // simulate retrieving DB metadata from the DB itself
+      if (usePreparedStatement) {
+        prepareStatement("SELECT * from DB_METADATA").executeQuery()
+      } else {
+        createStatement().executeQuery("SELECT * from DB_METADATA")
+      }
+      return super.getMetaData()
+    }
   }
 }
