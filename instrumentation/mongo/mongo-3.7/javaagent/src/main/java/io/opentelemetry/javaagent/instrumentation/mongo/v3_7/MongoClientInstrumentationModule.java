@@ -14,10 +14,12 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.async.SingleResultCallback;
 import com.mongodb.connection.AsyncCompletionHandler;
 import com.mongodb.event.CommandListener;
 import io.opentelemetry.context.Scope;
@@ -51,7 +53,8 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new MongoClientSettingsBuilderInstrumentation(),
-        new MongoAsyncCompletionHandlerInstrumentation());
+        new AsyncCompletionHandlerInstrumentation(),
+        new BaseClusterInstrumentation());
   }
 
   @Override
@@ -100,8 +103,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     }
   }
 
-  private static final class MongoAsyncCompletionHandlerInstrumentation
-      implements TypeInstrumentation {
+  private static final class AsyncCompletionHandlerInstrumentation implements TypeInstrumentation {
 
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
@@ -156,6 +158,34 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
       if (scope != null) {
         scope.close();
       }
+    }
+  }
+
+  private static final class BaseClusterInstrumentation implements TypeInstrumentation {
+
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("com.mongodb.connection.BaseCluster");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod()
+              .and(isPublic())
+              .and(named("selectServerAsync"))
+              .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
+              .and(takesArgument(1, named("com.mongodb.async.SingleResultCallback"))),
+          MongoClientInstrumentationModule.class.getName() + "$ServerSelectionAdvice");
+    }
+  }
+
+  public static class ServerSelectionAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void wrapCallback(
+        @Advice.Argument(value = 1, readOnly = false) SingleResultCallback callback) {
+      callback = new ServerSelectionCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
     }
   }
 }

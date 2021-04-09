@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3;
+package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -19,10 +18,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import com.mongodb.async.SingleResultCallback;
-import com.mongodb.async.client.MongoClientSettings;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.connection.AsyncCompletionHandler;
 import com.mongodb.event.CommandListener;
+import com.mongodb.internal.async.SingleResultCallback;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
@@ -44,16 +43,16 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MongoAsyncClientInstrumentationModule extends InstrumentationModule {
+public class MongoClientInstrumentationModule extends InstrumentationModule {
 
-  public MongoAsyncClientInstrumentationModule() {
-    super("mongo-async", "mongo-async-3.3", "mongo");
+  public MongoClientInstrumentationModule() {
+    super("mongo", "mongo-4.0");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new MongoClientSettingsBuildersInstrumentation(),
+        new MongoClientSettingsBuilderInstrumentation(),
         new AsyncCompletionHandlerInstrumentation(),
         new BaseClusterInstrumentation());
   }
@@ -63,11 +62,11 @@ public class MongoAsyncClientInstrumentationModule extends InstrumentationModule
     return singletonMap("com.mongodb.connection.AsyncCompletionHandler", State.class.getName());
   }
 
-  private static final class MongoClientSettingsBuildersInstrumentation
+  private static final class MongoClientSettingsBuilderInstrumentation
       implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("com.mongodb.async.client.MongoClientSettings$Builder")
+      return named("com.mongodb.MongoClientSettings$Builder")
           .and(
               declaresMethod(
                   named("addCommandListener")
@@ -78,19 +77,18 @@ public class MongoAsyncClientInstrumentationModule extends InstrumentationModule
                                   Modifier.PUBLIC,
                                   null,
                                   Collections.<TypeDescription.Generic>emptyList())))
-                      .and(isPublic())))
-          .and(declaresField(named("commandListeners")));
+                      .and(isPublic())));
     }
 
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return singletonMap(
           isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
-          MongoAsyncClientInstrumentationModule.class.getName() + "$MongoAsyncClientAdvice");
+          MongoClientInstrumentationModule.class.getName() + "$MongoClientAdvice");
     }
   }
 
-  public static class MongoAsyncClientAdvice {
+  public static class MongoClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void injectTraceListener(
@@ -121,14 +119,13 @@ public class MongoAsyncClientInstrumentationModule extends InstrumentationModule
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
       transformers.put(
-          isConstructor(),
-          MongoAsyncClientInstrumentationModule.class.getName() + "$SetupStateAdvice");
+          isConstructor(), MongoClientInstrumentationModule.class.getName() + "$SetupStateAdvice");
       transformers.put(
           isMethod().and(isPublic()).and(named("completed")).and(takesArguments(1)),
-          MongoAsyncClientInstrumentationModule.class.getName() + "$TaskScopeAdvice");
+          MongoClientInstrumentationModule.class.getName() + "$TaskScopeAdvice");
       transformers.put(
           isMethod().and(isPublic()).and(named("failed")).and(takesArguments(Throwable.class)),
-          MongoAsyncClientInstrumentationModule.class.getName() + "$TaskScopeAdvice");
+          MongoClientInstrumentationModule.class.getName() + "$TaskScopeAdvice");
       return transformers;
     }
   }
@@ -168,7 +165,7 @@ public class MongoAsyncClientInstrumentationModule extends InstrumentationModule
 
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("com.mongodb.connection.BaseCluster");
+      return named("com.mongodb.internal.connection.BaseCluster");
     }
 
     @Override
@@ -178,8 +175,8 @@ public class MongoAsyncClientInstrumentationModule extends InstrumentationModule
               .and(isPublic())
               .and(named("selectServerAsync"))
               .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
-              .and(takesArgument(1, named("com.mongodb.async.SingleResultCallback"))),
-          MongoAsyncClientInstrumentationModule.class.getName() + "$ServerSelectionAdvice");
+              .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
+          MongoClientInstrumentationModule.class.getName() + "$ServerSelectionAdvice");
     }
   }
 
