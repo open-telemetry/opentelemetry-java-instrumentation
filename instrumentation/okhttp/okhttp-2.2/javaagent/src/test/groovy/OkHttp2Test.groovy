@@ -41,10 +41,10 @@ class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    client.newCall(buildRequest(method, uri, headers)).enqueue(new Callback() {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    client.newCall(request).enqueue(new Callback() {
       @Override
-      void onFailure(Request request, IOException e) {
+      void onFailure(Request req, IOException e) {
         throw e
       }
 

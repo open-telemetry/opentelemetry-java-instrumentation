@@ -53,8 +53,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def request = buildRequest(method, uri, headers)
+  void sendRequestWithCallback(T request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     executeRequestWithCallback(request, uri) {
       it.close() // Make sure the connection is closed.
       callback.accept(it.code)

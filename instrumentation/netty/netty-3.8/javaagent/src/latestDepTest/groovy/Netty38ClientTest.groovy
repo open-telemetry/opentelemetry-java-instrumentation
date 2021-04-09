@@ -52,9 +52,9 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     // TODO(anuraaga): Do we also need to test ListenableFuture callback?
-    client.executeRequest(buildRequest(method, uri, headers), new AsyncCompletionHandler<Void>() {
+    client.executeRequest(request, new AsyncCompletionHandler<Void>() {
       @Override
       Void onCompleted(Response response) throws Exception {
         callback.accept(response.statusCode)

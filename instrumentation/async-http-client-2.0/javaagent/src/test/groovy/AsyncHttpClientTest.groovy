@@ -37,8 +37,8 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    client.executeRequest(buildRequest(method, uri, headers), new AsyncCompletionHandler<Void>() {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    client.executeRequest(request, new AsyncCompletionHandler<Void>() {
       @Override
       Void onCompleted(Response response) throws Exception {
         callback.accept(response.statusCode)

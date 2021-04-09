@@ -40,8 +40,8 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    client.sendAsync(buildRequest(method, uri, headers), HttpResponse.BodyHandlers.ofString())
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
       .thenAccept {
         callback.accept(it.statusCode())
       }

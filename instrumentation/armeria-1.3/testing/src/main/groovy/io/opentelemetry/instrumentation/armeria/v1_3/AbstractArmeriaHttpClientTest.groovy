@@ -46,8 +46,8 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest>
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    client.execute(buildRequest(method, uri, headers)).aggregate().thenAccept {
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    client.execute(request).aggregate().thenAccept {
       callback.accept(it.status().code())
     }
   }

@@ -58,8 +58,7 @@ class PlayWsClientTest extends HttpClientTest<WSRequestHolder> implements AgentT
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def request = buildRequest(method, uri, headers)
+  void sendRequestWithCallback(WSRequestHolder request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     internalSendRequest(request, method).onRedeem {
       callback.accept(it.status)
     }

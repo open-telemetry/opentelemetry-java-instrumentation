@@ -23,28 +23,26 @@ import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 import spock.lang.Unroll
 
-abstract class JaxRsClientTest extends HttpClientTest<Invocation> implements AgentTestTrait {
+abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implements AgentTestTrait {
 
   @Override
-  Invocation buildRequest(String method, URI uri, Map<String, String> headers) {
-    def requestBuilder = internalBuildRequest(uri, headers)
-    def body = BODY_METHODS.contains(method) ? Entity.text("") : null
-    return requestBuilder.build(method, body)
+  Invocation.Builder buildRequest(String method, URI uri, Map<String, String> headers) {
+    return internalBuildRequest(uri, headers)
   }
 
   @Override
-  int sendRequest(Invocation request, String method, URI uri, Map<String, String> headers) {
-    def response = request.invoke()
+  int sendRequest(Invocation.Builder request, String method, URI uri, Map<String, String> headers) {
+    def body = BODY_METHODS.contains(method) ? Entity.text("") : null
+    def response = request.build(method, body).invoke()
     response.close()
     return response.status
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def requestBuilder = internalBuildRequest(uri, headers)
+  void sendRequestWithCallback(Invocation.Builder request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     def body = BODY_METHODS.contains(method) ? Entity.text("") : null
 
-    requestBuilder.async().method(method, (Entity) body, new InvocationCallback<Response>() {
+    request.async().method(method, (Entity) body, new InvocationCallback<Response>() {
       @Override
       void completed(Response response) {
         callback.accept(response.status)

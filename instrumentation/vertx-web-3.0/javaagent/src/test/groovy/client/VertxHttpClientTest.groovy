@@ -44,8 +44,7 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    def request = buildRequest(method, uri, headers)
+  void sendRequestWithCallback(HttpClientRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     internalSendRequest(request, callback)
   }
 

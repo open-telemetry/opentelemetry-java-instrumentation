@@ -41,7 +41,7 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     exec.execute(Operation.of {
       internalSendRequest(method, uri, headers).result {
         callback.accept(it.value)

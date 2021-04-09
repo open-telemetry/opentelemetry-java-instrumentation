@@ -74,9 +74,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def request = buildRequest(method, uri, headers)
-
+  void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
     ch.pipeline().addLast(new ClientHandler(callback, CompletableFuture.completedFuture(0)))
     ch.writeAndFlush(request)

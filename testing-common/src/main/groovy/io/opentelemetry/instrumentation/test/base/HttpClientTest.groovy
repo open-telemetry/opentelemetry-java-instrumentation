@@ -100,7 +100,13 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     return sendRequest(request, method, uri, headers)
   }
 
-  /**
+  // this is overridden by a couple of tests that do not fit the pattern
+  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    def request = buildRequest(method, uri, headers)
+    sendRequestWithCallback(request, method, uri, headers, callback)
+  }
+
+    /**
    * Build the request to be passed to
    * {@link #sendRequest(java.lang.Object, java.lang.String, java.net.URI, java.util.Map)}.
    *
@@ -163,7 +169,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * If the client offers no APIs that accept callbacks, then this method should not be implemented
    * and instead, {@link #testCallback} should be implemented to return false.
    */
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(REQUEST request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException()
   }

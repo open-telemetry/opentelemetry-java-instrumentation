@@ -41,8 +41,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def request = buildRequest(method, uri, headers)
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     Http.get(system).singleRequest(request, materializer).thenAccept {
       callback.accept(it.status().intValue())
     }
