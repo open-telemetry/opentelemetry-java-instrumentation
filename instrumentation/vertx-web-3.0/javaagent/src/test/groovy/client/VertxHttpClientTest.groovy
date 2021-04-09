@@ -37,7 +37,7 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   int sendRequest(HttpClientRequest request, String method, URI uri, Map<String, String> headers) {
     // Vertx doesn't seem to provide any synchronous API so bridge through a callback
     CompletableFuture<Integer> future = new CompletableFuture<>()
-    internalSendRequest(request) {
+    sendRequestWithCallback(request, method, uri, headers) {
       future.complete(it)
     }
     return future.get()
@@ -45,10 +45,6 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
 
   @Override
   void sendRequestWithCallback(HttpClientRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    internalSendRequest(request, callback)
-  }
-
-  private static void internalSendRequest(HttpClientRequest request, Consumer<Integer> callback) {
     request.handler { response ->
       callback.accept(response.statusCode())
     }

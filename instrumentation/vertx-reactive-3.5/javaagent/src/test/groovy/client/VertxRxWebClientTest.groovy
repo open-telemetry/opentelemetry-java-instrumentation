@@ -40,7 +40,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
-  void sendRequestWithCallback(HttpRequest<Buffer> request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(HttpRequest<Buffer> request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     request.rxSend()
       .subscribe(new io.reactivex.functions.Consumer<HttpResponse<?>>() {
         @Override

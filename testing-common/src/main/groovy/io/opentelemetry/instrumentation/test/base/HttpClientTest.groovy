@@ -100,13 +100,14 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     return sendRequest(request, method, uri, headers)
   }
 
-  // this is overridden by a couple of tests that do not fit the pattern
+  // this can be overridden if http client callback execution doesn't operate on the same request
+  // that is used for non-callback executions
   void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     def request = buildRequest(method, uri, headers)
     sendRequestWithCallback(request, method, uri, headers, callback)
   }
 
-    /**
+  /**
    * Build the request to be passed to
    * {@link #sendRequest(java.lang.Object, java.lang.String, java.net.URI, java.util.Map)}.
    *
@@ -126,8 +127,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * for example:
    *
    * @Override
-   * int doRequest(String method, URI uri, Map<String, String headers = [:]) {
-   *   HttpResponse response = client.execute(new Request(method, uri, headers))
+   * int sendRequest(Request request, String method, URI uri, Map<String, String headers = [:]) {
+   *   HttpResponse response = client.execute(request)
    *   return response.statusCode()
    * }
    *
@@ -135,12 +136,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * can be used to block on a result, for example:
    *
    * @Override
-   * int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers) {
-   *   CompletableFuture<Integer> result = new CompletableFuture<>()
-   *   doRequestWithCallback(method, uri, headers) {
-   *     result.complete(it.statusCode())
+   * int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+   *   CompletableFuture<Integer> future = new CompletableFuture<>(
+   *   sendRequestWithCallback(request, method, uri, headers) {
+   *     future.complete(it.statusCode())
    *   }
-   *   return result.join()
+   *   return future.get()
    * }
    */
   abstract int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
@@ -154,14 +155,14 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * the context is propagated correctly to such callbacks.
    *
    * @Override
-   * void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
    *   // Hypothetical client accepting a callback
-   *   client.executeAsync(new Request(method, uri, headers)) {
+   *   client.executeAsync(request) {
    *     callback.accept(it.statusCode())
    *   }
    *
    *   // Hypothetical client returning a CompletableFuture
-   *   client.executeAsync(new Request(method, uri, headers)).thenAccept {
+   *   client.executeAsync(request).thenAccept {
    *     callback.accept(it.statusCode())
    *   }
    * }
@@ -169,7 +170,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * If the client offers no APIs that accept callbacks, then this method should not be implemented
    * and instead, {@link #testCallback} should be implemented to return false.
    */
-  void sendRequestWithCallback(REQUEST request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(REQUEST request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException()
   }

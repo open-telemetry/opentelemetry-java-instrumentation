@@ -45,18 +45,14 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
     // VertxRx doesn't seem to provide a synchronous API at all for circuit breaker. Bridge through
     // a callback.
     CompletableFuture<Integer> future = new CompletableFuture<>()
-    internalSendRequest(request) {
+    sendRequestWithCallback(request, method, uri, headers) {
       future.complete(it)
     }
     return future.get()
   }
 
   @Override
-  void sendRequestWithCallback(HttpRequest<?> request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    internalSendRequest(request, callback)
-  }
-
-  private void internalSendRequest(HttpRequest<?> request, Consumer<Integer> callback) {
+  void sendRequestWithCallback(HttpRequest<?> request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     breaker.executeCommand({ command ->
       request.rxSend().doOnSuccess {
         command.complete(it)

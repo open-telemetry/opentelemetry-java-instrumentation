@@ -39,7 +39,7 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   }
 
   @Override
-  void sendRequestWithCallback(WSRequest request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(WSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     internalSendRequest(request, method).thenAccept {
       callback.accept(it.status)
     }

@@ -36,7 +36,7 @@ class PlayJavaWsClientTestBase extends PlayWsClientTestBaseBase<StandaloneWSRequ
   }
 
   @Override
-  void sendRequestWithCallback(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     request.execute().thenAccept {
       callback.accept(it.status)
     }
@@ -69,7 +69,7 @@ class PlayJavaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<Standalo
   }
 
   @Override
-  void sendRequestWithCallback(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     internalSendRequest(request).thenAccept {
       callback.accept(it.status)
     }
@@ -116,7 +116,7 @@ class PlayScalaWsClientTestBase extends PlayWsClientTestBaseBase<play.api.libs.w
   }
 
   @Override
-  void sendRequestWithCallback(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     request.execute().onComplete(new Function1<Try<play.api.libs.ws.StandaloneWSResponse>, Void>() {
       @Override
       Void apply(Try<play.api.libs.ws.StandaloneWSResponse> response) {
@@ -153,7 +153,7 @@ class PlayScalaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<play.ap
   }
 
   @Override
-  void sendRequestWithCallback(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     internalSendRequest(request).onComplete(new Function1<Try<play.api.libs.ws.StandaloneWSResponse>, Void>() {
       @Override
       Void apply(Try<play.api.libs.ws.StandaloneWSResponse> response) {

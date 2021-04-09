@@ -39,7 +39,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
   }
 
   @Override
-  void sendRequestWithCallback(Invocation.Builder request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(Invocation.Builder request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     def body = BODY_METHODS.contains(method) ? Entity.text("") : null
 
     request.async().method(method, (Entity) body, new InvocationCallback<Response>() {

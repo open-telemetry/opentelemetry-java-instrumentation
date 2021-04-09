@@ -45,7 +45,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
   }
 
   @Override
-  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     client.newCall(request).enqueue(new Callback() {
       @Override
       void onFailure(Call call, IOException e) {

@@ -44,7 +44,7 @@ class RestTemplateInstrumentationTest extends HttpClientTest<HttpEntity<String>>
   }
 
   @Override
-  void sendRequestWithCallback(HttpEntity<String> request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(HttpEntity<String> request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     restTemplate.execute(uri, HttpMethod.valueOf(method), { req ->
       headers.forEach(req.getHeaders().&add)
     }, { response ->

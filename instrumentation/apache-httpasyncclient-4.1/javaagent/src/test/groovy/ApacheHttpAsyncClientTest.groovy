@@ -45,7 +45,7 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implement
   }
 
   @Override
-  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     client.execute(request, new FutureCallback<HttpResponse>() {
       @Override
       void completed(HttpResponse httpResponse) {
