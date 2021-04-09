@@ -58,7 +58,7 @@ These are the supported libraries and frameworks:
 | [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
 | [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1+                           |
 | [Kubernetes Client](https://github.com/kubernetes-client/java)                                                                        | 7.0+                           |
-| [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+ (not including 6.x yet)   |
+| [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
 | [Log4j 1](https://logging.apache.org/log4j/1.2/)                                                                                      | 1.2+                           |
 | [Log4j 2](https://logging.apache.org/log4j/2.x/)                                                                                      | 2.7+                           |
 | [Logback](http://logback.qos.ch/)                                                                                                     | 1.0+                           |
