@@ -87,12 +87,14 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
   }
 
-  private int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+  // ideally private, but then groovy closures in this class cannot find them
+  final int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     def request = buildRequest(method, uri, headers)
     return sendRequest(request, method, uri, headers)
   }
 
-  private int doReusedRequest(String method, URI uri, Map<String, String> headers = [:]) {
+  // ideally private, but then groovy closures in this class cannot find them
+  final int doReusedRequest(String method, URI uri, Map<String, String> headers = [:]) {
     def request = buildRequest(method, uri, headers)
     sendRequest(request, method, uri, headers)
     return sendRequest(request, method, uri, headers)
