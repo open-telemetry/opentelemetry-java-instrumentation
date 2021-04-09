@@ -728,14 +728,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
   }
 
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2644
-  def "should handle recursive Statements inside Connection#getMetaData()"() {
+  @Unroll
+  def "should handle recursive Statements inside Connection.getMetaData(): #desc"() {
     given:
-    def connection = new DbCallingConnection()
+    def connection = new DbCallingConnection(usePreparedStatementInConnection)
 
     when:
     runUnderTrace("parent") {
-      def statement = connection.createStatement()
-      return statement.executeQuery("SELECT * FROM table")
+      executeQueryFunction(connection, "SELECT * FROM table")
     }
 
     then:
@@ -757,17 +757,31 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
         }
       }
     }
+
+    where:
+    desc                                                           | usePreparedStatementInConnection | executeQueryFunction
+    "getMetaData() uses Statement, test Statement"                 | false                            | { con, query -> con.createStatement().executeQuery(query) }
+    "getMetaData() uses PreparedStatement, test Statement"         | true                             | { con, query -> con.createStatement().executeQuery(query) }
+    "getMetaData() uses Statement, test PreparedStatement"         | false                            | { con, query -> con.prepareStatement(query).executeQuery() }
+    "getMetaData() uses PreparedStatement, test PreparedStatement" | true                             | { con, query -> con.prepareStatement(query).executeQuery() }
   }
 
   class DbCallingConnection extends TestConnection {
-    DbCallingConnection() {
+    final boolean usePreparedStatement
+
+    DbCallingConnection(boolean usePreparedStatement) {
       super(false)
+      this.usePreparedStatement = usePreparedStatement
     }
 
     @Override
     DatabaseMetaData getMetaData() throws SQLException {
       // simulate retrieving DB metadata from the DB itself
-      createStatement().executeQuery("SELECT * from DB_METADATA")
+      if (usePreparedStatement) {
+        prepareStatement("SELECT * from DB_METADATA").executeQuery()
+      } else {
+        createStatement().executeQuery("SELECT * from DB_METADATA")
+      }
       return super.getMetaData()
     }
   }
