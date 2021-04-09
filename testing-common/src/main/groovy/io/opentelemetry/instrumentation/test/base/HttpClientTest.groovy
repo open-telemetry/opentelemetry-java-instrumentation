@@ -100,9 +100,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     return sendRequest(request, method, uri, headers)
   }
 
-  // this can be overridden if http client callback execution doesn't operate on the same request
-  // that is used for non-callback executions
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  // ideally private, but then groovy closures in this class cannot find them
+  final void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     def request = buildRequest(method, uri, headers)
     sendRequestWithCallback(request, method, uri, headers, callback)
   }

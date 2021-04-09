@@ -15,7 +15,7 @@ import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
 
-class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implements AgentTestTrait {
+class SpringRestTemplateTest extends HttpClientTest<Void> implements AgentTestTrait {
 
   @Shared
   ClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory()
@@ -27,16 +27,17 @@ class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implemen
   }
 
   @Override
-  HttpEntity<String> buildRequest(String method, URI uri, Map<String, String> headers) {
-    def httpHeaders = new HttpHeaders()
-    headers.each { httpHeaders.put(it.key, [it.value]) }
-    return new HttpEntity<String>(httpHeaders)
+  Void buildRequest(String method, URI uri, Map<String, String> headers) {
+    return null
   }
 
   @Override
-  int sendRequest(HttpEntity<String> request, String method, URI uri, Map<String, String> headers) {
+  int sendRequest(Void request, String method, URI uri, Map<String, String> headers) {
+    def httpHeaders = new HttpHeaders()
+    headers.each { httpHeaders.put(it.key, [it.value]) }
+    def requestEntity = new HttpEntity<String>(httpHeaders)
     try {
-      return restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
+      return restTemplate.exchange(uri, HttpMethod.valueOf(method), requestEntity, String)
         .statusCode
         .value()
     } catch (ResourceAccessException exception) {
@@ -45,9 +46,9 @@ class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implemen
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    restTemplate.execute(uri, HttpMethod.valueOf(method), { request ->
-      headers.forEach(request.getHeaders().&add)
+  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    restTemplate.execute(uri, HttpMethod.valueOf(method), { req ->
+      headers.forEach(req.getHeaders().&add)
     }, { response ->
       callback.accept(response.statusCode.value())
     })
