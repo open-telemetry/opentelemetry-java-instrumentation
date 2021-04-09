@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.function.Consumer
+import spock.lang.Ignore
 import spock.lang.Shared
 
 class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
@@ -101,6 +102,8 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
     return false
   }
 
+  // this ignored test exists to show the fundamental flaw of trying to instrument netty channels
+  @Ignore
   def "test connection interference"() {
     setup:
     //Create a simple Netty pipeline
@@ -123,30 +126,31 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
     request.headers().set(HttpHeaderNames.HOST, server.address.host)
 
     when:
-    runUnderTrace("parent1") {
-      ch.writeAndFlush(request).get()
+    for (int i = 0; i < 10; i++) {
+      runUnderTrace("parent" + i) {
+        ch.writeAndFlush(request).get()
+      }
     }
-    runUnderTrace("parent2") {
-      ch.writeAndFlush(request).get()
+
+    def rootSpanNames = new String[10]
+    for (int i = 0; i < 10; i++) {
+      rootSpanNames[i] = "parent" + i
     }
 
     then:
-    assertTraces(2) {
-      trace(0, 3) {
-        basicSpan(it, 0, "parent1")
-        clientSpan(it, 1, span(0))
-        serverSpan(it, 2, span(1))
-      }
-      trace(1, 3) {
-        basicSpan(it, 0, "parent2")
-        clientSpan(it, 1, span(0))
-        serverSpan(it, 2, span(1))
+    assertTraces(10) {
+      traces.sort(orderByRootSpanName(rootSpanNames))
+      for (int i = 0; i < 10; i++) {
+        trace(0, 3) {
+          basicSpan(it, 0, "parent" + i)
+          clientSpan(it, 1, span(0))
+          serverSpan(it, 2, span(1))
+        }
       }
     }
     cleanup:
     group.shutdownGracefully()
   }
-
 
   def "test connection reuse and second request with lazy execute"() {
     setup:
