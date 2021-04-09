@@ -65,10 +65,7 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
   int sendRequest(HttpMethod request, String method, URI uri, Map<String, String> headers) {
     try {
       client.executeMethod(request)
-      def code = request.getStatusCode()
-      // apache commons throws an exception if the request is reused without being recycled first
-      request.recycle()
-      return code
+      return request.getStatusCode()
     } finally {
       request.releaseConnection()
     }
@@ -77,6 +74,13 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
   @Override
   boolean testRedirects() {
     // Generates 4 spans
+    false
+  }
+
+  @Override
+  boolean testReusedRequest() {
+    // apache commons throws an exception if the request is reused without being recycled first
+    // at which point this test is not useful (and requires re-populating uri)
     false
   }
 

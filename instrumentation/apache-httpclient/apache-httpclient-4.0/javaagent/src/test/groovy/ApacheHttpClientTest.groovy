@@ -40,7 +40,7 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
     return request
   }
 
-  @Override
+  // compilation fails with @Override annotation on this method (groovy quirk?)
   int sendRequest(T request, String method, URI uri, Map<String, String> headers) {
     def response = executeRequest(request, uri)
     response.entity?.content?.close() // Make sure the connection is closed.
