@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p>Get Exporter Endpoint
  */
-@ConfigurationProperties(prefix = "opentelemetry.trace.exporter.zipkin")
+@ConfigurationProperties(prefix = "otel.exporter.zipkin")
 public class ZipkinSpanExporterProperties {
 
   private boolean enabled = true;

@@ -10,10 +10,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Configuration for the tracing instrumentation of Spring WebMVC
  *
- * <p>Sets default value of opentelemetry.trace.web.enabled to true if the configuration does not
+ * <p>Sets default value of otel.instrumentation.web.enabled to true if the configuration does not
  * exist in application context
  */
-@ConfigurationProperties(prefix = "opentelemetry.trace.web")
+@ConfigurationProperties(prefix = "otel.instrumentation.web")
 public final class WebMvcProperties {
   private boolean enabled = true;
 

@@ -25,24 +25,20 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @EnableConfigurationProperties(OtlpGrpcSpanExporterProperties.class)
-@ConditionalOnProperty(
-    prefix = "opentelemetry.trace.exporter.otlp",
-    name = "enabled",
-    matchIfMissing = true)
+@ConditionalOnProperty(prefix = "otel.exporter.otlp", name = "enabled", matchIfMissing = true)
 @ConditionalOnClass({OtlpGrpcSpanExporter.class, ManagedChannel.class})
 public class OtlpGrpcSpanExporterAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(
-      OtlpGrpcSpanExporterProperties otlpGrpcSpanExporterProperties) {
+  public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(OtlpGrpcSpanExporterProperties properties) {
 
     OtlpGrpcSpanExporterBuilder builder = OtlpGrpcSpanExporter.builder();
-    if (otlpGrpcSpanExporterProperties.getEndpoint() != null) {
-      builder.setEndpoint(otlpGrpcSpanExporterProperties.getEndpoint());
+    if (properties.getEndpoint() != null) {
+      builder.setEndpoint(properties.getEndpoint());
     }
-    if (otlpGrpcSpanExporterProperties.getSpanTimeout() != null) {
-      builder.setTimeout(otlpGrpcSpanExporterProperties.getSpanTimeout());
+    if (properties.getTimeout() != null) {
+      builder.setTimeout(properties.getTimeout());
     }
     return builder.build();
   }

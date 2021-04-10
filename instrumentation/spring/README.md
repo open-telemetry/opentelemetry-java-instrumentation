@@ -678,15 +678,13 @@ The following tracer configurations can be used to customize your instrumentatio
 server.port=8081
 
 ## Set Tracer name
-opentelemetry.trace.tracer.name=time_service
-opentelemetry.trace.tracer.samplerProbability=1
+otel.traces.sampler.probability=1
 
 ## Default configurations
-#opentelemetry.trace.web.enabled=true
-#opentelemetry.trace.httpclients.enabled=true
-#opentelemetry.trace.tracer.samplingProbablity=1
-#opentelemetry.trace.exporter.loggin.enabled=true
-#opentelemetry.trace.aspects.enabled=true
+#otel.traces.sampler.probability=1
+#otel.instrumentation.web.enabled=true
+#otel.instrumentation.httpclients.enabled=true
+#otel.instrumentation.aspects.enabled=true
 
 ```
 
@@ -866,18 +864,14 @@ Add the following configurations to overwrite the default exporter values listed
 
 ```
 ## Default tracer configurations
-opentelemetry.trace.tracer.name=main_service
-#opentelemetry.trace.tracer.samplerProbability=1
+#otel.traces.sampler.probability=1
 
 ## Default exporter configurations
-#opentelemetry.trace.exporters.otlp.servicename=unknown
-#opentelemetry.trace.exporters.otlp.endpoint=localhost:55680
-#opentelemetry.trace.exporters.otlp.spantimeout=1s
-#opentelemetry.trace.exporters.jaeger.servicename=unknown
-#opentelemetry.trace.exporters.jaeger.endpoint=localhost:14250
-#opentelemetry.trace.exporters.jaeger.spantimeout=1s
-#opentelemetry.trace.exporters.zipkin.servicename=unknown
-#opentelemetry.trace.exporters.zipkin.endpoint=http://localhost:9411/api/v2/spans
+#otel.exporter.otlp.endpoint=localhost:55680
+#otel.exporter.otlp.timeout=10s
+#otel.exporter.jaeger.endpoint=localhost:14250
+#otel.exporter.jaeger.timeout=10s
+#otel.exporter.zipkin.endpoint=http://localhost:9411/api/v2/spans
 ```
 
 ### Sample Trace Zipkin

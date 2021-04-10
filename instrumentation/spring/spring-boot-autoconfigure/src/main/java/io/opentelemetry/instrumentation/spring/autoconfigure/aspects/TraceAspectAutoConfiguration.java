@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties(TraceAspectProperties.class)
 @ConditionalOnProperty(
-    prefix = "opentelemetry.trace.aspects",
+    prefix = "otel.instrumentation.aspects",
     name = "enabled",
     matchIfMissing = true)
 @ConditionalOnClass({Aspect.class, WithSpan.class})
