@@ -682,9 +682,9 @@ otel.traces.sampler.probability=1
 
 ## Default configurations
 #otel.traces.sampler.probability=1
-#otel.instrumentation.web.enabled=true
-#otel.instrumentation.httpclients.enabled=true
-#otel.instrumentation.aspects.enabled=true
+#otel.springboot.web.enabled=true
+#otel.springboot.httpclients.enabled=true
+#otel.springboot.aspects.enabled=true
 
 ```
 

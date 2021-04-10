@@ -17,7 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 /** Configures {@link WebMvcTracingFilter} for tracing. */
 @Configuration
 @EnableConfigurationProperties(WebMvcProperties.class)
-@ConditionalOnProperty(prefix = "otel.instrumentation.web", name = "enabled", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "otel.springboot.web", name = "enabled", matchIfMissing = true)
 @ConditionalOnClass(OncePerRequestFilter.class)
 public class WebMvcFilterAutoConfiguration {
 

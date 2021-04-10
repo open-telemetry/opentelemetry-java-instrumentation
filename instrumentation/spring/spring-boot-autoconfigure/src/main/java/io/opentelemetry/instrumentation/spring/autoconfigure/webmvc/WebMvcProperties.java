@@ -10,10 +10,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Configuration for the tracing instrumentation of Spring WebMVC
  *
- * <p>Sets default value of otel.instrumentation.web.enabled to true if the configuration does not
- * exist in application context
+ * <p>Sets default value of otel.springboot.web.enabled to true if the configuration does not exist
+ * in application context
  */
-@ConfigurationProperties(prefix = "otel.instrumentation.web")
+@ConfigurationProperties(prefix = "otel.springboot.web")
 public final class WebMvcProperties {
   private boolean enabled = true;
 
