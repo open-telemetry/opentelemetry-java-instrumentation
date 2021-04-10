@@ -106,7 +106,7 @@
   ([#2629](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2629))
 - Make muzzle reference creation package(s) configurable
   ([#2615](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2615))
-- New Instrumenter API 
+- New Instrumenter API
   ([#2596](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2596))
 - Added Concurrent server test
   ([#2680](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2680),
