@@ -12,8 +12,8 @@ muzzle {
 dependencies {
   library group: 'io.reactivex.rxjava2', name: 'rxjava', version: "2.0.6"
 
-  implementation project(":instrumentation:rxjava-2.0:library")
+  implementation project(":instrumentation:rxjava:rxjava-2.0:library")
 
   testImplementation deps.opentelemetryExtAnnotations
-  testImplementation project(':instrumentation:rxjava-2.0:testing')
+  testImplementation project(':instrumentation:rxjava:rxjava-2.0:testing')
 }
