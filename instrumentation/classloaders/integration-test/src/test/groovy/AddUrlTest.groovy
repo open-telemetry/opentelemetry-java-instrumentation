@@ -13,12 +13,20 @@ class AddUrlTest extends AgentInstrumentationSpecification {
     given:
     TestURLClassLoader loader = new TestURLClassLoader()
 
-    // need to load a class in the URLClassLoader in order to trigger
+    when:
+    // this is just to verify the assumption that TestURLClassLoader is not finding SystemUtils via
+    // the test class path (in which case the verification below would not be very meaningful)
+    loader.loadClass(SystemUtils.getName())
+
+    then:
+    thrown ClassNotFoundException
+
+    when:
+    // loading a class in the URLClassLoader in order to trigger
     // a negative cache hit on org.apache.commons.lang3.SystemUtils
     loader.addURL(IOUtils.getProtectionDomain().getCodeSource().getLocation())
     loader.loadClass(IOUtils.getName())
 
-    when:
     loader.addURL(SystemUtils.getProtectionDomain().getCodeSource().getLocation())
     def clazz = loader.loadClass(SystemUtils.getName())
 
