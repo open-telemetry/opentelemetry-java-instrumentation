@@ -24,7 +24,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class URLClassLoaderInstrumentation implements TypeInstrumentation {
+public class UrlClassLoaderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -40,7 +40,7 @@ public class URLClassLoaderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, URL.class))
             .and(isProtected())
             .and(not(isStatic())),
-        URLClassLoaderInstrumentation.class.getName() + "$InvalidateClassLoaderMatcher");
+        UrlClassLoaderInstrumentation.class.getName() + "$InvalidateClassLoaderMatcher");
   }
 
   public static class InvalidateClassLoaderMatcher {
