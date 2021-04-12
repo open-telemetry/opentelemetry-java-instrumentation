@@ -35,7 +35,6 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.function.Consumer
-import spock.lang.Ignore
 import spock.lang.Shared
 
 class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
@@ -100,56 +99,6 @@ class Netty41ClientTest extends HttpClientTest implements AgentTestTrait {
   @Override
   boolean testRemoteConnection() {
     return false
-  }
-
-  // this ignored test exists to show the fundamental flaw of trying to instrument netty channels
-  @Ignore
-  def "test connection interference"() {
-    setup:
-    //Create a simple Netty pipeline
-    EventLoopGroup group = new NioEventLoopGroup()
-    Bootstrap b = new Bootstrap()
-    b.group(group)
-      .channel(NioSocketChannel)
-      .handler(new ChannelInitializer<SocketChannel>() {
-        @Override
-        protected void initChannel(SocketChannel socketChannel) throws Exception {
-          ChannelPipeline pipeline = socketChannel.pipeline()
-          pipeline.addLast(new HttpClientCodec())
-        }
-      })
-
-    //Important! Separate connect, outside of any request
-    Channel ch = b.connect(server.address.host, server.address.port).sync().channel()
-
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, server.address.resolve("/success").toString(), Unpooled.EMPTY_BUFFER)
-    request.headers().set(HttpHeaderNames.HOST, server.address.host)
-
-    when:
-    for (int i = 0; i < 10; i++) {
-      runUnderTrace("parent" + i) {
-        ch.writeAndFlush(request).get()
-      }
-    }
-
-    def rootSpanNames = new String[10]
-    for (int i = 0; i < 10; i++) {
-      rootSpanNames[i] = "parent" + i
-    }
-
-    then:
-    assertTraces(10) {
-      traces.sort(orderByRootSpanName(rootSpanNames))
-      for (int i = 0; i < 10; i++) {
-        trace(0, 3) {
-          basicSpan(it, 0, "parent" + i)
-          clientSpan(it, 1, span(0))
-          serverSpan(it, 2, span(1))
-        }
-      }
-    }
-    cleanup:
-    group.shutdownGracefully()
   }
 
   def "test connection reuse and second request with lazy execute"() {
