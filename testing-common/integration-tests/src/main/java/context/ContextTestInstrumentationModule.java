@@ -47,15 +47,6 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
     return singletonList(new ContextTestInstrumentation());
   }
 
-  @Override
-  public Map<String, String> contextStore() {
-    Map<String, String> store = new HashMap<>(3);
-    store.put("library.KeyClass", getClass().getName() + "$Context");
-    store.put("library.UntransformableKeyClass", getClass().getName() + "$Context");
-    store.put("library.DisabledKeyClass", getClass().getName() + "$Context");
-    return store;
-  }
-
   public static class ContextTestInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
@@ -71,11 +62,6 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
       transformers.put(named("getContextCount"), GetApiUsageAdvice.class.getName());
       transformers.put(named("putContextCount"), PutApiUsageAdvice.class.getName());
       transformers.put(named("removeContextCount"), RemoveApiUsageAdvice.class.getName());
-      transformers.put(
-          named("incorrectKeyClassUsage"), IncorrectKeyClassContextApiUsageAdvice.class.getName());
-      transformers.put(
-          named("incorrectContextClassUsage"),
-          IncorrectContextClassContextApiUsageAdvice.class.getName());
       transformers.put(
           named("incorrectCallUsage"), IncorrectCallContextApiUsageAdvice.class.getName());
       return transformers;
@@ -139,20 +125,6 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
       ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
       contextStore.put(thiz, null);
-    }
-  }
-
-  public static class IncorrectKeyClassContextApiUsageAdvice {
-    @Advice.OnMethodExit
-    public static void methodExit() {
-      InstrumentationContext.get(Object.class, Context.class);
-    }
-  }
-
-  public static class IncorrectContextClassContextApiUsageAdvice {
-    @Advice.OnMethodExit
-    public static void methodExit() {
-      InstrumentationContext.get(KeyClass.class, Object.class);
     }
   }
 

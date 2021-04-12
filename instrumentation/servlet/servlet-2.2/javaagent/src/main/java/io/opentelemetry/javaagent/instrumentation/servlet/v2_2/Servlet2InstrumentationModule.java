@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -15,7 +14,6 @@ import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
@@ -37,10 +35,5 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
         new ServletAndFilterInstrumentation(
             "javax.servlet",
             Servlet2InstrumentationModule.class.getPackage().getName() + ".Servlet2Advice"));
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("javax.servlet.ServletResponse", Integer.class.getName());
   }
 }

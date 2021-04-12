@@ -41,11 +41,6 @@ public class GuavaInstrumentationModule extends InstrumentationModule {
     return singletonList(new ListenableFutureInstrumentation());
   }
 
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap(Runnable.class.getName(), State.class.getName());
-  }
-
   public static class ListenableFutureInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {

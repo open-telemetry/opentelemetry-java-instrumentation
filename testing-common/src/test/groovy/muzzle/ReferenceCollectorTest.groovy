@@ -14,6 +14,8 @@ import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice
 
 import external.instrumentation.ExternalHelper
+import io.opentelemetry.context.Context
+import io.opentelemetry.instrumentation.InstrumentationContextTestClasses
 import io.opentelemetry.instrumentation.OtherTestHelperClasses
 import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
@@ -253,6 +255,34 @@ class ReferenceCollectorTest extends Specification {
     then:
     collector.references.isEmpty()
     collector.sortedHelperClasses.isEmpty()
+  }
+
+  def "should collect context store classes"() {
+    when:
+    def collector = new ReferenceCollector({ false })
+    collector.collectReferencesFromAdvice(InstrumentationContextTestClasses.ValidAdvice.name)
+
+    then:
+    def contextStore = collector.getContextStoreClasses()
+    contextStore == [
+      (InstrumentationContextTestClasses.Key1.name): Context.name,
+      (InstrumentationContextTestClasses.Key2.name): Context.name
+    ]
+  }
+
+  def "should not collect context store classes for invalid scenario: #desc"() {
+    when:
+    def collector = new ReferenceCollector({ false })
+    collector.collectReferencesFromAdvice(adviceClassName)
+
+    then:
+    def contextStore = collector.getContextStoreClasses()
+    contextStore.isEmpty()
+
+    where:
+    desc                                                                        | adviceClassName
+    "passing arbitrary variables or parameters to InstrumentationContext.get()" | InstrumentationContextTestClasses.NotUsingClassRefAdvice.name
+    "storing class ref in a local var"                                          | InstrumentationContextTestClasses.PassingVariableAdvice.name
   }
 
   private static assertHelperSuperClassMethod(Reference reference, boolean isAbstract) {

@@ -46,6 +46,7 @@ import net.bytebuddy.jar.asm.ClassReader;
 public class ReferenceCollector {
   private final Map<String, Reference> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
+  private final Map<String, String> contextStoreClasses = new LinkedHashMap<>();
   private final Set<String> visitedClasses = new HashSet<>();
   private final InstrumentationClassPredicate instrumentationClassPredicate;
 
@@ -142,6 +143,7 @@ public class ReferenceCollector {
         collectHelperClasses(
             isAdviceClass, visitedClassName, cv.getHelperClasses(), cv.getHelperSuperClasses());
 
+        contextStoreClasses.putAll(cv.getContextStoreClasses());
       } catch (IOException e) {
         throw new IllegalStateException("Error reading class " + visitedClassName, e);
       }
@@ -231,5 +233,9 @@ public class ReferenceCollector {
       }
     }
     return helpersWithNoDeps;
+  }
+
+  public Map<String, String> getContextStoreClasses() {
+    return contextStoreClasses;
   }
 }
