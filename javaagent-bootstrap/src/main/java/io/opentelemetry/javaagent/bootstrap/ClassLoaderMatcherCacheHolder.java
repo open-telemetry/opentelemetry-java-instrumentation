@@ -24,7 +24,9 @@ public class ClassLoaderMatcherCacheHolder {
   private ClassLoaderMatcherCacheHolder() {}
 
   public static void addCache(Cache<ClassLoader, Boolean> cache) {
-    allCaches.add(cache);
+    synchronized (allCaches) {
+      allCaches.add(cache);
+    }
   }
 
   public static void invalidateAllCachesForClassLoader(ClassLoader loader) {
