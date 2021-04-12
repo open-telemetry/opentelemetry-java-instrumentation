@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
+package io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3;
 
-import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.async.SingleResultCallback;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-public class ServerSelectionCallbackWrapper implements SingleResultCallback<Object> {
+public class SingleResultCallbackWrapper implements SingleResultCallback<Object> {
   private final Context context;
   private final SingleResultCallback<Object> delegate;
 
-  public ServerSelectionCallbackWrapper(Context context, SingleResultCallback<Object> delegate) {
+  public SingleResultCallbackWrapper(Context context, SingleResultCallback<Object> delegate) {
     this.context = context;
     this.delegate = delegate;
   }
