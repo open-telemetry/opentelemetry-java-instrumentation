@@ -15,7 +15,7 @@ import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
 
-class SpringRestTemplateTest extends HttpClientTest<Void> implements AgentTestTrait {
+class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implements AgentTestTrait {
 
   @Shared
   ClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory()
@@ -27,17 +27,16 @@ class SpringRestTemplateTest extends HttpClientTest<Void> implements AgentTestTr
   }
 
   @Override
-  Void buildRequest(String method, URI uri, Map<String, String> headers) {
-    return null
+  HttpEntity<String> buildRequest(String method, URI uri, Map<String, String> headers) {
+    def httpHeaders = new HttpHeaders()
+    headers.each { httpHeaders.put(it.key, [it.value]) }
+    return new HttpEntity<String>(httpHeaders)
   }
 
   @Override
-  int sendRequest(Void request, String method, URI uri, Map<String, String> headers) {
-    def httpHeaders = new HttpHeaders()
-    headers.each { httpHeaders.put(it.key, [it.value]) }
-    def requestEntity = new HttpEntity<String>(httpHeaders)
+  int sendRequest(HttpEntity<String> request, String method, URI uri, Map<String, String> headers) {
     try {
-      return restTemplate.exchange(uri, HttpMethod.valueOf(method), requestEntity, String)
+      return restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
         .statusCode
         .value()
     } catch (ResourceAccessException exception) {
@@ -46,9 +45,9 @@ class SpringRestTemplateTest extends HttpClientTest<Void> implements AgentTestTr
   }
 
   @Override
-  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(HttpEntity<String> request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
     restTemplate.execute(uri, HttpMethod.valueOf(method), { req ->
-      headers.forEach(req.getHeaders().&add)
+      req.getHeaders().putAll(request.getHeaders())
     }, { response ->
       callback.accept(response.statusCode.value())
     })
