@@ -29,18 +29,26 @@ dependencies {
   // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
   // here.
   // 2.3.9 is the earliest version in maven central
-  compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.3.9'
+  compileOnly(group: 'com.typesafe.play', name: 'play_2.11', version: '2.3.9') {
+    // 2.3.x versions depend on netty-http-pipelining 1.1.2 which is not in maven central
+    exclude group: 'com.typesafe.netty', module: 'netty-http-pipelining'
+  }
 
   testInstrumentation project(':instrumentation:netty:netty-3.8:javaagent')
 
-  testLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.9'
+  testLibrary(group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.9') {
+    exclude group: 'com.typesafe.netty', module: 'netty-http-pipelining'
+  }
   testLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.9') {
     exclude group: 'org.eclipse.jetty', module: 'jetty-websocket'
+    exclude group: 'com.typesafe.netty', module: 'netty-http-pipelining'
   }
 
-  latestDepTestLibrary group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.3.+'
-  latestDepTestLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.+'
+  latestDepTestLibrary(group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.+') {
+    exclude group: 'com.typesafe.netty', module: 'netty-http-pipelining'
+  }
   latestDepTestLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.+') {
     exclude group: 'org.eclipse.jetty', module: 'jetty-websocket'
+    exclude group: 'com.typesafe.netty', module: 'netty-http-pipelining'
   }
 }
