@@ -51,8 +51,9 @@ dependencies {
   annotationProcessor deps.autoservice
   implementation deps.autoservice
   implementation deps.slf4j
+  implementation deps.guava
 
-  implementation group: 'io.grpc', name: 'grpc-netty', version: '1.35.1'
+  implementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.35.1'
 
   testImplementation project(':testing-common')
   testImplementation deps.assertj
