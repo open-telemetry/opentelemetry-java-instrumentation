@@ -22,7 +22,7 @@ import org.apache.hc.core5.http.protocol.BasicHttpContext
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest implements AgentTestTrait {
+abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<T> implements AgentTestTrait {
   @Shared
   @AutoCleanup
   CloseableHttpClient client
@@ -37,25 +37,23 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+  T buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = createRequest(method, uri)
     headers.entrySet().each {
-      request.addHeader(new BasicHeader(it.key, it.value))
+      request.setHeader(new BasicHeader(it.key, it.value))
     }
+    return request
+  }
 
+  // compilation fails with @Override annotation on this method (groovy quirk?)
+  int sendRequest(T request, String method, URI uri, Map<String, String> headers) {
     def response = executeRequest(request, uri)
     response.close() // Make sure the connection is closed.
-
     return response.code
   }
 
-  @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def request = createRequest(method, uri)
-    headers.entrySet().each {
-      request.addHeader(new BasicHeader(it.key, it.value))
-    }
-
+  // compilation fails with @Override annotation on this method (groovy quirk?)
+  void sendRequestWithCallback(T request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     executeRequestWithCallback(request, uri) {
       it.close() // Make sure the connection is closed.
       callback.accept(it.code)

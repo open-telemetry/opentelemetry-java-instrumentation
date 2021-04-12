@@ -16,14 +16,18 @@ import spock.lang.Requires
 import spock.lang.Unroll
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
-class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
+class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements AgentTestTrait {
 
   static final RESPONSE = "Hello."
   static final STATUS = 200
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    HttpURLConnection connection = uri.toURL().openConnection()
+  HttpURLConnection buildRequest(String method, URI uri, Map<String, String> headers) {
+    return uri.toURL().openConnection() as HttpURLConnection
+  }
+
+  @Override
+  int sendRequest(HttpURLConnection connection, String method, URI uri, Map<String, String> headers) {
     try {
       connection.setRequestMethod(method)
       headers.each { connection.setRequestProperty(it.key, it.value) }
@@ -49,6 +53,12 @@ class HttpUrlConnectionTest extends HttpClientTest implements AgentTestTrait {
   @Override
   Integer statusOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testReusedRequest() {
+    // HttpURLConnection can't be reused
+    return false
   }
 
   @Override

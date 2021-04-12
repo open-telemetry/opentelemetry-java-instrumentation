@@ -17,33 +17,34 @@ import java.util.function.Consumer
 import spock.lang.Requires
 import spock.lang.Shared
 
-class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
+class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
 
   @Shared
   def client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT_MS,
     ChronoUnit.MILLIS)).followRedirects(HttpClient.Redirect.NORMAL).build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    return client.send(buildRequest(method, uri, headers), HttpResponse.BodyHandlers.ofString())
-      .statusCode()
+  HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def requestBuilder = HttpRequest.newBuilder()
+      .uri(uri)
+      .method(method, HttpRequest.BodyPublishers.noBody())
+    headers.entrySet().each {
+      requestBuilder.header(it.key, it.value)
+    }
+    return requestBuilder.build()
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    client.sendAsync(buildRequest(method, uri, headers), HttpResponse.BodyHandlers.ofString())
+  int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
+    return client.send(request, HttpResponse.BodyHandlers.ofString()).statusCode()
+  }
+
+  @Override
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
       .thenAccept {
         callback.accept(it.statusCode())
       }
-  }
-
-  private static HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def builder = HttpRequest.newBuilder().uri(uri).method(method, HttpRequest.BodyPublishers.noBody())
-
-    headers.entrySet().each {
-      builder.header(it.key, it.value)
-    }
-    return builder.build()
   }
 
   @Override

@@ -13,12 +13,13 @@ import play.GlobalSettings
 import play.libs.F
 import play.libs.ws.WS
 import play.libs.ws.WSClient
+import play.libs.ws.WSRequestHolder
 import play.libs.ws.WSResponse
 import play.test.FakeApplication
 import play.test.Helpers
 import spock.lang.Shared
 
-class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
+class PlayWsClientTest extends HttpClientTest<WSRequestHolder> implements AgentTestTrait {
   @Shared
   def application = new FakeApplication(
     new File("."),
@@ -43,22 +44,27 @@ class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    return sendRequest(method, uri, headers).get(1, TimeUnit.SECONDS).status
-  }
-
-  @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    sendRequest(method, uri, headers).onRedeem {
-      callback.accept(it.status)
-    }
-  }
-
-  private F.Promise<WSResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
+  WSRequestHolder buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = client.url(uri.toString())
     headers.entrySet().each {
       request.setHeader(it.key, it.value)
     }
+    return request
+  }
+
+  @Override
+  int sendRequest(WSRequestHolder request, String method, URI uri, Map<String, String> headers) {
+    return internalSendRequest(request, method).get(1, TimeUnit.SECONDS).status
+  }
+
+  @Override
+  void sendRequestWithCallback(WSRequestHolder request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    internalSendRequest(request, method).onRedeem {
+      callback.accept(it.status)
+    }
+  }
+
+  private static F.Promise<WSResponse> internalSendRequest(WSRequestHolder request, String method) {
     return request.execute(method)
   }
 

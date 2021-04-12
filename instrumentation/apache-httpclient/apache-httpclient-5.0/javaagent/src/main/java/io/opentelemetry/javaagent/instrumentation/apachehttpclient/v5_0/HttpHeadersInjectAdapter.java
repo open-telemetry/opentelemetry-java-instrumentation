@@ -14,6 +14,6 @@ class HttpHeadersInjectAdapter implements TextMapSetter<ClassicHttpRequest> {
 
   @Override
   public void set(ClassicHttpRequest carrier, String key, String value) {
-    carrier.addHeader(key, value);
+    carrier.setHeader(key, value);
   }
 }

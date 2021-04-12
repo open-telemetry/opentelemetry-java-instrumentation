@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
-abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements AgentTestTrait {
+abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
 
   @Shared
   def requestFactory = new NetHttpTransport().createRequestFactory()
@@ -29,14 +29,10 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    doRequest(method, uri, headers, false)
-  }
+  HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def genericUrl = new GenericUrl(uri)
 
-  int doRequest(String method, URI uri, Map<String, String> headers, boolean throwExceptionOnError) {
-    GenericUrl genericUrl = new GenericUrl(uri)
-
-    HttpRequest request = requestFactory.buildRequest(method, genericUrl, null)
+    def request = requestFactory.buildRequest(method, genericUrl, null)
     request.connectTimeout = CONNECT_TIMEOUT_MS
 
     // GenericData::putAll method converts all known http headers to List<String>
@@ -46,13 +42,16 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
       -> [(name): (ci.getFieldInfo(name) != null ? [value] : value.toLowerCase())]
     })
 
-    request.setThrowExceptionOnExecuteError(throwExceptionOnError)
-
-    HttpResponse response = executeRequest(request)
-    return response.getStatusCode()
+    request.setThrowExceptionOnExecuteError(false)
+    return request
   }
 
-  abstract HttpResponse executeRequest(HttpRequest request)
+  @Override
+  int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
+    return sendRequest(request).getStatusCode()
+  }
+
+  abstract HttpResponse sendRequest(HttpRequest request)
 
   @Override
   boolean testCircularRedirects() {

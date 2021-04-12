@@ -16,7 +16,7 @@ import ratpack.test.exec.ExecHarness
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class RatpackHttpClientTest extends HttpClientTest implements AgentTestTrait {
+class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTrait {
 
   @AutoCleanup
   @Shared
@@ -29,22 +29,28 @@ class RatpackHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+  Void buildRequest(String method, URI uri, Map<String, String> headers) {
+    return null
+  }
+
+  @Override
+  int sendRequest(Void request, String method, URI uri, Map<String, String> headers) {
     return exec.yield {
-      sendRequest(method, uri, headers)
+      internalSendRequest(method, uri, headers)
     }.value
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     exec.execute(Operation.of {
-      sendRequest(method, uri, headers).result {
+      internalSendRequest(method, uri, headers).result {
         callback.accept(it.value)
       }
     })
   }
 
-  private Promise<Integer> sendRequest(String method, URI uri, Map<String, String> headers) {
+  // overridden in RatpackForkedHttpClientTest
+  Promise<Integer> internalSendRequest(String method, URI uri, Map<String, String> headers) {
     def resp = client.request(uri) { spec ->
       spec.connectTimeout(Duration.ofSeconds(2))
       spec.method(method)
@@ -61,6 +67,12 @@ class RatpackHttpClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   boolean testRedirects() {
+    false
+  }
+
+  @Override
+  boolean testReusedRequest() {
+    // these tests will pass, but they don't really test anything since REQUEST is Void
     false
   }
 

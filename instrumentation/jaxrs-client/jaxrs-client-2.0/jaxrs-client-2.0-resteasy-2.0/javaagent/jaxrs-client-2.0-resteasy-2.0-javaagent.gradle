@@ -9,7 +9,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.0.Final'
+  library group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.10.Final'
 
   implementation project(':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-common:javaagent')
 }

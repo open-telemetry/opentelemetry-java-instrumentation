@@ -23,7 +23,8 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * This is a demo instrumentation which hooks into servlet invocation and modifies the http response.
+ * This is a demo instrumentation which hooks into servlet invocation and modifies the http
+ * response.
  */
 @AutoService(InstrumentationModule.class)
 public final class DemoServlet3InstrumentationModule extends InstrumentationModule {
@@ -78,12 +79,10 @@ public final class DemoServlet3InstrumentationModule extends InstrumentationModu
 
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
         if (!httpServletResponse.containsHeader("X-server-id")) {
-          httpServletResponse
-              .addHeader("X-server-id",
-                  Java8BytecodeBridge.currentSpan().getSpanContext().getTraceId());
+          httpServletResponse.setHeader(
+              "X-server-id", Java8BytecodeBridge.currentSpan().getSpanContext().getTraceId());
         }
       }
-
     }
   }
 }

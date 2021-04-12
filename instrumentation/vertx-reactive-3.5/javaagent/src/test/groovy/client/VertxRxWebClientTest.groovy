@@ -7,17 +7,18 @@ package client
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.reactivex.Single
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.client.WebClientOptions
 import io.vertx.reactivex.core.Vertx
+import io.vertx.reactivex.core.buffer.Buffer
+import io.vertx.reactivex.ext.web.client.HttpRequest
 import io.vertx.reactivex.ext.web.client.HttpResponse
 import io.vertx.reactivex.ext.web.client.WebClient
 import java.util.function.Consumer
 import spock.lang.Shared
 
-class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
+class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implements AgentTestTrait {
 
   @Shared
   Vertx vertx = Vertx.vertx(new VertxOptions())
@@ -27,25 +28,26 @@ class VertxRxWebClientTest extends HttpClientTest implements AgentTestTrait {
   WebClient client = WebClient.create(vertx, clientOptions)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    return sendRequest(method, uri, headers).blockingGet().statusCode()
+  HttpRequest<Buffer> buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
+    headers.each { request.putHeader(it.key, it.value) }
+    return request
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    sendRequest(method, uri, headers)
+  int sendRequest(HttpRequest<Buffer> request, String method, URI uri, Map<String, String> headers) {
+    return request.rxSend().blockingGet().statusCode()
+  }
+
+  @Override
+  void sendRequestWithCallback(HttpRequest<Buffer> request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    request.rxSend()
       .subscribe(new io.reactivex.functions.Consumer<HttpResponse<?>>() {
         @Override
         void accept(HttpResponse<?> httpResponse) throws Exception {
           callback.accept(httpResponse.statusCode())
         }
       })
-  }
-
-  private Single<HttpResponse<?>> sendRequest(String method, URI uri, Map<String, String> headers) {
-    def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
-    headers.each { request.putHeader(it.key, it.value) }
-    return request.rxSend()
   }
 
   @Override
