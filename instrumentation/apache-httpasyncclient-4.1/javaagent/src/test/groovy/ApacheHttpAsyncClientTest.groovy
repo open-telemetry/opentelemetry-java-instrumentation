@@ -15,7 +15,7 @@ import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait {
+class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implements AgentTestTrait {
 
   @Shared
   RequestConfig requestConfig = RequestConfig.custom()
@@ -31,13 +31,22 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    return client.execute(buildRequest(method, uri, headers), null).get().statusLine.statusCode
+  HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = new HttpUriRequest(method, uri)
+    headers.entrySet().each {
+      request.addHeader(new BasicHeader(it.key, it.value))
+    }
+    return request
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    client.execute(buildRequest(method, uri, headers), new FutureCallback<HttpResponse>() {
+  int sendRequest(HttpUriRequest request, String method, URI uri, Map<String, String> headers) {
+    return client.execute(request, null).get().statusLine.statusCode
+  }
+
+  @Override
+  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    client.execute(request, new FutureCallback<HttpResponse>() {
       @Override
       void completed(HttpResponse httpResponse) {
         callback.accept(httpResponse.statusLine.statusCode)
@@ -53,14 +62,6 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
         throw new CancellationException()
       }
     })
-  }
-
-  private static HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = new HttpUriRequest(method, uri)
-    headers.entrySet().each {
-      request.addHeader(new BasicHeader(it.key, it.value))
-    }
-    return request
   }
 
   @Override

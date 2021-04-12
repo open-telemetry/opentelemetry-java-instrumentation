@@ -14,7 +14,7 @@ import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClient
 import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClientConfig
 import spock.lang.Shared
 
-abstract class PlayWsClientTestBaseBase extends HttpClientTest implements AgentTestTrait {
+abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST> implements AgentTestTrait {
   @Shared
   ActorSystem system
 

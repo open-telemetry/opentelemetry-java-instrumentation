@@ -17,7 +17,7 @@ import org.bson.BsonString
 import org.bson.Document
 import spock.lang.Shared
 
-class MongoClientTest extends AbstractMongoClientTest {
+class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
 
   @Shared
   MongoClient client
@@ -61,19 +61,24 @@ class MongoClientTest extends AbstractMongoClientTest {
   }
 
   @Override
-  int insert(String dbName, String collectionName) {
+  MongoCollection<Document> setupInsert(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
     ignoreTracesAndClear(1)
+    return collection
+  }
+
+  @Override
+  int insert(MongoCollection<Document> collection) {
     collection.insertOne(new Document("password", "SECRET"))
     return collection.count()
   }
 
   @Override
-  int update(String dbName, String collectionName) {
+  MongoCollection<Document> setupUpdate(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
@@ -82,6 +87,11 @@ class MongoClientTest extends AbstractMongoClientTest {
       return coll
     }
     ignoreTracesAndClear(1)
+    return collection
+  }
+
+  @Override
+  int update(MongoCollection<Document> collection) {
     def result = collection.updateOne(
       new BsonDocument("password", new BsonString("OLDPW")),
       new BsonDocument('$set', new BsonDocument("password", new BsonString("NEWPW"))))
@@ -90,7 +100,7 @@ class MongoClientTest extends AbstractMongoClientTest {
   }
 
   @Override
-  int delete(String dbName, String collectionName) {
+  MongoCollection<Document> setupDelete(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
@@ -99,13 +109,18 @@ class MongoClientTest extends AbstractMongoClientTest {
       return coll
     }
     ignoreTracesAndClear(1)
+    return collection
+  }
+
+  @Override
+  int delete(MongoCollection<Document> collection) {
     def result = collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")))
     collection.count()
     return result.deletedCount
   }
 
   @Override
-  void getMore(String dbName, String collectionName) {
+  MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def coll = db.getCollection(collectionName)
@@ -113,6 +128,11 @@ class MongoClientTest extends AbstractMongoClientTest {
       return coll
     }
     ignoreTracesAndClear(1)
+    return collection
+  }
+
+  @Override
+  void getMore(MongoCollection<Document> collection) {
     collection.find().filter(new Document("_id", new Document('$gte', 0)))
       .batchSize(2).into(new ArrayList())
   }

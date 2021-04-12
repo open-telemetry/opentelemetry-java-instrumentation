@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 import spock.lang.Shared
 
-class VertxRxCircuitBreakerWebClientTest extends HttpClientTest implements AgentTestTrait {
+class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> implements AgentTestTrait {
 
   @Shared
   Vertx vertx = Vertx.vertx(new VertxOptions())
@@ -34,20 +34,26 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest implements Agent
   )
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+  HttpRequest<?> buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
+    headers.each { request.putHeader(it.key, it.value) }
+    return request
+  }
+
+  @Override
+  int sendRequest(HttpRequest<?> request, String method, URI uri, Map<String, String> headers) {
     // VertxRx doesn't seem to provide a synchronous API at all for circuit breaker. Bridge through
     // a callback.
     CompletableFuture<Integer> future = new CompletableFuture<>()
-    doRequestWithCallback(method, uri, headers) {
+    sendRequestWithCallback(request, method, uri, headers) {
       future.complete(it)
     }
     return future.get()
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def request = buildRequest(method, uri, headers)
-    breaker.executeCommand({command ->
+  void sendRequestWithCallback(HttpRequest<?> request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    breaker.executeCommand({ command ->
       request.rxSend().doOnSuccess {
         command.complete(it)
       }.doOnError {
@@ -56,12 +62,6 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest implements Agent
     }, {
       callback.accept(it.result().statusCode())
     })
-  }
-
-  private HttpRequest<?> buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
-    headers.each { request.putHeader(it.key, it.value) }
-    return request
   }
 
   @Override

@@ -5,13 +5,14 @@
 
 import com.sun.jersey.api.client.Client
 import com.sun.jersey.api.client.ClientResponse
+import com.sun.jersey.api.client.WebResource
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter
 import com.sun.jersey.api.client.filter.LoggingFilter
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import spock.lang.Shared
 
-class JaxRsClientV1Test extends HttpClientTest implements AgentTestTrait {
+class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements AgentTestTrait {
 
   @Shared
   Client client = Client.create()
@@ -24,13 +25,16 @@ class JaxRsClientV1Test extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+  WebResource.Builder buildRequest(String method, URI uri, Map<String, String> headers) {
     def resource = client.resource(uri).requestBuilder
     headers.each { resource.header(it.key, it.value) }
-    def body = BODY_METHODS.contains(method) ? "" : null
-    ClientResponse response = resource.method(method, ClientResponse, body)
+    return resource
+  }
 
-    return response.status
+  @Override
+  int sendRequest(WebResource.Builder resource, String method, URI uri, Map<String, String> headers) {
+    def body = BODY_METHODS.contains(method) ? "" : null
+    return resource.method(method, ClientResponse, body).status
   }
 
   @Override
