@@ -2,6 +2,14 @@
 
 ## Unreleased:
 
+### ☢️ Breaking changes
+
+- Update servlet attribute names for log injection, from `traceId` and `spanId` to `trace_id` and
+  `span_id`
+  ([#2593](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2593))
+- Renamed `runtime.jvm.gc.collection` metric to `runtime.jvm.gc.time`
+  ([#2616](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2616))
+
 ### 🌟 New javaagent instrumentation
 
 - Elasticsearch 7
@@ -125,11 +133,3 @@
    [#2759](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2759))
 - Split HttpClientTest execution methods for sync and callback
   ([#2675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2675))
-
-### ☢️ Breaking changes
-
-- Update servlet attribute names for log injection, from `traceId` and `spanId` to `trace_id` and
-  `span_id`
-  ([#2593](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2593))
-- Renamed `runtime.jvm.gc.collection` metric to `runtime.jvm.gc.time`
-  ([#2616](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2616))
