@@ -13,6 +13,6 @@ public class RequestBuilderInjectAdapter implements TextMapSetter<Request.Builde
 
   @Override
   public void set(Request.Builder carrier, String key, String value) {
-    carrier.addHeader(key, value);
+    carrier.header(key, value);
   }
 }

@@ -33,7 +33,7 @@ class RestTemplateAutoConfigurationTest {
   @DisplayName("when httpclients are ENABLED should initialize RestTemplateInterceptor bean")
   void httpClientsEnabled() {
     this.contextRunner
-        .withPropertyValues("opentelemetry.trace.httpclients.enabled=true")
+        .withPropertyValues("otel.springboot.httpclients.enabled=true")
         .run(
             (context) -> {
               assertThat(
@@ -47,7 +47,7 @@ class RestTemplateAutoConfigurationTest {
   @DisplayName("when httpclients are DISABLED should NOT initialize RestTemplateInterceptor bean")
   void disabledProperty() {
     this.contextRunner
-        .withPropertyValues("opentelemetry.trace.httpclients.enabled=false")
+        .withPropertyValues("otel.springboot.httpclients.enabled=false")
         .run(
             (context) -> {
               assertThat(context.containsBean("otelRestTemplateBeanPostProcessor")).isFalse();

@@ -33,7 +33,7 @@ class WebClientAutoConfigurationTest {
   @DisplayName("when httpclients are ENABLED should initialize WebClientBeanPostProcessor bean")
   void httpClientsEnabled() {
     this.contextRunner
-        .withPropertyValues("opentelemetry.trace.httpclients.enabled=true")
+        .withPropertyValues("otel.springboot.httpclients.enabled=true")
         .run(
             (context) -> {
               assertThat(
@@ -48,7 +48,7 @@ class WebClientAutoConfigurationTest {
       "when httpclients are DISABLED should NOT initialize WebClientBeanPostProcessor bean")
   void disabledProperty() {
     this.contextRunner
-        .withPropertyValues("opentelemetry.trace.httpclients.enabled=false")
+        .withPropertyValues("otel.springboot.httpclients.enabled=false")
         .run(
             (context) -> {
               assertThat(context.containsBean("otelWebClientBeanPostProcessor")).isFalse();

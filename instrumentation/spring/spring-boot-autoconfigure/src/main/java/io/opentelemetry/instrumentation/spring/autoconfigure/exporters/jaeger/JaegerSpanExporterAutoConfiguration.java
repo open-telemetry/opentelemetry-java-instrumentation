@@ -25,24 +25,20 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @EnableConfigurationProperties(JaegerSpanExporterProperties.class)
-@ConditionalOnProperty(
-    prefix = "opentelemetry.trace.exporter.jaeger",
-    name = "enabled",
-    matchIfMissing = true)
+@ConditionalOnProperty(prefix = "otel.exporter.jaeger", name = "enabled", matchIfMissing = true)
 @ConditionalOnClass({JaegerGrpcSpanExporter.class, ManagedChannel.class})
 public class JaegerSpanExporterAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public JaegerGrpcSpanExporter otelJaegerSpanExporter(
-      JaegerSpanExporterProperties jaegerSpanExporterProperties) {
+  public JaegerGrpcSpanExporter otelJaegerSpanExporter(JaegerSpanExporterProperties properties) {
 
     JaegerGrpcSpanExporterBuilder builder = JaegerGrpcSpanExporter.builder();
-    if (jaegerSpanExporterProperties.getEndpoint() != null) {
-      builder.setEndpoint(jaegerSpanExporterProperties.getEndpoint());
+    if (properties.getEndpoint() != null) {
+      builder.setEndpoint(properties.getEndpoint());
     }
-    if (jaegerSpanExporterProperties.getSpanTimeout() != null) {
-      builder.setTimeout(jaegerSpanExporterProperties.getSpanTimeout());
+    if (properties.getTimeout() != null) {
+      builder.setTimeout(properties.getTimeout());
     }
     return builder.build();
   }

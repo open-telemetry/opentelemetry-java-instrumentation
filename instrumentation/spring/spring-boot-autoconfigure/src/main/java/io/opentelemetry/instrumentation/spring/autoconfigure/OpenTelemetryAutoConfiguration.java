@@ -29,13 +29,14 @@ import org.springframework.context.annotation.Configuration;
  * <p>Updates the sampler probability for the configured {@link TracerProvider}.
  */
 @Configuration
-@EnableConfigurationProperties(TracerProperties.class)
+@EnableConfigurationProperties(SamplerProperties.class)
 public class OpenTelemetryAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
   public OpenTelemetry openTelemetry(
-      TracerProperties tracerProperties, ObjectProvider<List<SpanExporter>> spanExportersProvider) {
+      SamplerProperties samplerProperties,
+      ObjectProvider<List<SpanExporter>> spanExportersProvider) {
     SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
 
     spanExportersProvider.getIfAvailable(Collections::emptyList).stream()
@@ -45,7 +46,7 @@ public class OpenTelemetryAutoConfiguration {
 
     SdkTracerProvider tracerProvider =
         tracerProviderBuilder
-            .setSampler(Sampler.traceIdRatioBased(tracerProperties.getSamplerProbability()))
+            .setSampler(Sampler.traceIdRatioBased(samplerProperties.getProbability()))
             .build();
     return OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).buildAndRegisterGlobal();
   }

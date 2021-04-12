@@ -23,7 +23,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @ConditionalOnClass(WebClient.class)
 @EnableConfigurationProperties(HttpClientsProperties.class)
 @ConditionalOnProperty(
-    prefix = "opentelemetry.trace.httpclients",
+    prefix = "otel.springboot.httpclients",
     name = "enabled",
     matchIfMissing = true)
 public class WebClientAutoConfiguration {

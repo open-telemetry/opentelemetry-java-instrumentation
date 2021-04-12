@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import spock.lang.Shared
 
-class OkHttp2Test extends HttpClientTest implements AgentTestTrait {
+class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
   @Shared
   def client = new OkHttpClient()
 
@@ -26,16 +26,25 @@ class OkHttp2Test extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def response = client.newCall(buildRequest(method, uri, headers)).execute()
-    return response.code()
+  Request buildRequest(String method, URI uri, Map<String, String> headers) {
+    def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
+    return new Request.Builder()
+      .url(uri.toURL())
+      .method(method, body)
+      .headers(Headers.of(HeadersUtil.headersToArray(headers)))
+      .build()
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    client.newCall(buildRequest(method, uri, headers)).enqueue(new Callback() {
+  int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+    return client.newCall(request).execute().code()
+  }
+
+  @Override
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    client.newCall(request).enqueue(new Callback() {
       @Override
-      void onFailure(Request request, IOException e) {
+      void onFailure(Request req, IOException e) {
         throw e
       }
 
@@ -46,15 +55,7 @@ class OkHttp2Test extends HttpClientTest implements AgentTestTrait {
     })
   }
 
-  private static Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
-    return new Request.Builder()
-      .url(uri.toURL())
-      .method(method, body)
-      .headers(Headers.of(HeadersUtil.headersToArray(headers)))
-      .build()
-  }
-
+  @Override
   boolean testRedirects() {
     false
   }

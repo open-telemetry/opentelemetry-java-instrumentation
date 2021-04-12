@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CompletionStage
 import java.util.function.Consumer
 import play.libs.ws.WS
+import play.libs.ws.WSRequest
 import play.libs.ws.WSResponse
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -17,30 +18,34 @@ import spock.lang.Subject
 
 // Play 2.6+ uses a separately versioned client that shades the underlying dependency
 // This means our built in instrumentation won't work.
-class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
+class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTrait {
   @Subject
   @Shared
   @AutoCleanup
   def client = WS.newClient(-1)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    return sendRequest(method, uri, headers).toCompletableFuture().get().status
-  }
-
-  @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    sendRequest(method, uri, headers).thenAccept {
-      callback.accept(it.status)
-    }
-  }
-
-  private CompletionStage<WSResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
+  WSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = client.url(uri.toString())
     headers.entrySet().each {
       request.setHeader(it.key, it.value)
     }
+    return request
+  }
 
+  @Override
+  int sendRequest(WSRequest request, String method, URI uri, Map<String, String> headers) {
+    return internalSendRequest(request, method).toCompletableFuture().get().status
+  }
+
+  @Override
+  void sendRequestWithCallback(WSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    internalSendRequest(request, method).thenAccept {
+      callback.accept(it.status)
+    }
+  }
+
+  private static CompletionStage<WSResponse> internalSendRequest(WSRequest request, String method) {
     return request.execute(method)
   }
 
