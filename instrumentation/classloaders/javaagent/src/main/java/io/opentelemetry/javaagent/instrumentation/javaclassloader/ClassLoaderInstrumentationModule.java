@@ -27,6 +27,7 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ClassLoaderInstrumentation(),
+        new UrlClassLoaderInstrumentation(),
         new ProxyInstrumentation(),
         new ResourceInjectionInstrumentation());
   }
