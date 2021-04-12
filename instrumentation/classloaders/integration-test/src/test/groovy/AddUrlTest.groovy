@@ -15,12 +15,12 @@ class AddUrlTest extends AgentInstrumentationSpecification {
 
     // need to load a class in the URLClassLoader in order to trigger
     // a negative cache hit on org.apache.commons.lang3.SystemUtils
-    loader.addURL(IOUtils.class.getProtectionDomain().getCodeSource().getLocation())
-    loader.loadClass(IOUtils.class.getName())
+    loader.addURL(IOUtils.getProtectionDomain().getCodeSource().getLocation())
+    loader.loadClass(IOUtils.getName())
 
     when:
-    loader.addURL(SystemUtils.class.getProtectionDomain().getCodeSource().getLocation())
-    def clazz = loader.loadClass(SystemUtils.class.getName())
+    loader.addURL(SystemUtils.getProtectionDomain().getCodeSource().getLocation())
+    def clazz = loader.loadClass(SystemUtils.getName())
 
     then:
     clazz.getClassLoader() == loader
@@ -31,12 +31,6 @@ class AddUrlTest extends AgentInstrumentationSpecification {
 
     TestURLClassLoader() {
       super(new URL[0], (ClassLoader) null)
-    }
-
-    // overridden to make public
-    @Override
-    void addURL(URL url) {
-      super.addURL(url)
     }
   }
 }
