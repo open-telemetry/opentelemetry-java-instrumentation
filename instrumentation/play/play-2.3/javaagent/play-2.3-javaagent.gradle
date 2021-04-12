@@ -28,12 +28,13 @@ muzzle {
 dependencies {
   // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
   // here.
-  compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.3.0'
+  // 2.3.9 is the earliest version in maven central
+  compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.3.9'
 
   testInstrumentation project(':instrumentation:netty:netty-3.8:javaagent')
 
-  testLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.0'
-  testLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.0') {
+  testLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.3.9'
+  testLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.3.9') {
     exclude group: 'org.eclipse.jetty', module: 'jetty-websocket'
   }
 
