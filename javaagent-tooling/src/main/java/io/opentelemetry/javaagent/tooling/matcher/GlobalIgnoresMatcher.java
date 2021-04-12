@@ -124,6 +124,9 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
       if (name.startsWith("java.rmi.") || name.startsWith("java.util.concurrent.")) {
         return false;
       }
+      if (name.equals("java.lang.reflect.Proxy")) {
+        return false;
+      }
       if (name.equals("java.lang.ClassLoader")) {
         return false;
       }
