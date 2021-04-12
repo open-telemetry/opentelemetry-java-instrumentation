@@ -22,8 +22,6 @@ import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.mongo.TracingCommandListener;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.lang.reflect.Modifier;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,14 +53,10 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
           .and(
               declaresMethod(
                   named("addCommandListener")
+                      .and(isPublic())
                       .and(
-                          takesArguments(
-                              new TypeDescription.Latent(
-                                  "com.mongodb.event.CommandListener",
-                                  Modifier.PUBLIC,
-                                  null,
-                                  Collections.<TypeDescription.Generic>emptyList())))
-                      .and(isPublic())));
+                          takesArguments(1)
+                              .and(takesArgument(0, named("com.mongodb.event.CommandListener"))))));
     }
 
     @Override
