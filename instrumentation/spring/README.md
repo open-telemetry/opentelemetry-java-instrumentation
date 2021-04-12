@@ -677,9 +677,6 @@ The following tracer configurations can be used to customize your instrumentatio
 ## Setting the server port of MainService to 8081 will prevent conflicts
 server.port=8081
 
-## Set Tracer name
-otel.traces.sampler.probability=1
-
 ## Default configurations
 #otel.traces.sampler.probability=1
 #otel.springboot.web.enabled=true
