@@ -30,12 +30,10 @@ public class ClassLoaderMatcherCacheHolder {
   }
 
   public static void invalidateAllCachesForClassLoader(ClassLoader loader) {
-    List<Cache<ClassLoader, Boolean>> allCachesCopy;
     synchronized (allCaches) {
-      allCachesCopy = new ArrayList<>(allCaches);
-    }
-    for (Cache<ClassLoader, Boolean> cache : allCachesCopy) {
-      cache.remove(loader);
+      for (Cache<ClassLoader, Boolean> cache : allCaches) {
+        cache.remove(loader);
+      }
     }
   }
 }
