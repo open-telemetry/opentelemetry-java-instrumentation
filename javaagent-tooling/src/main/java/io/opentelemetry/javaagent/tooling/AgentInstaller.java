@@ -170,7 +170,6 @@ public class AgentInstaller {
 
   private static void installComponentsBeforeByteBuddy(
       Iterable<ComponentInstaller> componentInstallers, Config config) {
-    Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader());
     for (ComponentInstaller componentInstaller : componentInstallers) {
       componentInstaller.beforeByteBuddyAgent(config);
     }
@@ -243,7 +242,7 @@ public class AgentInstaller {
 
   private static List<InstrumentationModule> loadInstrumentationModules() {
     return SafeServiceLoader.load(
-            InstrumentationModule.class, AgentInstaller.class.getClassLoader())
+            InstrumentationModule.class, Thread.currentThread().getContextClassLoader())
         .stream()
         .sorted(Comparator.comparingInt(InstrumentationModule::getOrder))
         .collect(Collectors.toList());
@@ -297,7 +296,7 @@ public class AgentInstaller {
         new ArrayList<>(Arrays.asList(Constants.BOOTSTRAP_PACKAGE_PREFIXES));
     Iterable<BootstrapPackagesProvider> bootstrapPackagesProviders =
         SafeServiceLoader.load(
-            BootstrapPackagesProvider.class, AgentInstaller.class.getClassLoader());
+            BootstrapPackagesProvider.class, Thread.currentThread().getContextClassLoader());
     for (BootstrapPackagesProvider provider : bootstrapPackagesProviders) {
       List<String> packagePrefixes = provider.getPackagePrefixes();
       log.debug(
@@ -492,7 +491,9 @@ public class AgentInstaller {
 
     private static boolean isIgnored(Class<?> c) {
       ClassLoader cl = c.getClassLoader();
-      if (cl != null && cl.getClass() == AgentClassLoader.class) {
+      if (cl != null
+          && (cl.getClass() == AgentClassLoader.class
+              || cl.getClass() == ExtensionClassLoader.class)) {
         return true;
       }
 

@@ -184,7 +184,10 @@ public abstract class InstrumentationModule {
       agentBuilder =
           agentBuilder.transform(
               new AgentBuilder.Transformer.ForAdvice()
-                  .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
+                  .include(
+                      Utils.getBootstrapProxy(),
+                      Utils.getAgentClassLoader(),
+                      Utils.getExtensionsClassLoader())
                   .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
                   .advice(entry.getKey(), entry.getValue()));
     }
@@ -233,18 +236,17 @@ public abstract class InstrumentationModule {
               muzzleLog.warn("-- {}", mismatch);
             }
           }
-        } else {
-          if (log.isDebugEnabled()) {
-            log.debug(
-                "Applying instrumentation: {} -- {} on {}",
-                mainInstrumentationName(),
-                InstrumentationModule.this.getClass().getName(),
-                classLoader);
-          }
+          return false;
         }
-
-        return isMatch;
       }
+      if (log.isDebugEnabled()) {
+        log.debug(
+            "Applying instrumentation: {} -- {} on {}",
+            mainInstrumentationName(),
+            InstrumentationModule.this.getClass().getName(),
+            classLoader);
+      }
+
       return true;
     }
   }

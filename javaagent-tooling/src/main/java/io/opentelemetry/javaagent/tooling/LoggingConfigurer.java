@@ -31,6 +31,7 @@ class LoggingConfigurer {
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "io.perfmark.PerfMark", "INFO");
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "io.grpc.Context", "INFO");
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "io.grpc.internal.ServerImplBuilder", "INFO");
+      setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "io.grpc.ManagedChannelRegistry", "INFO");
       setSystemPropertyDefault(
           SIMPLE_LOGGER_PREFIX + "io.grpc.internal.ManagedChannelImplBuilder", "INFO");
     } else {

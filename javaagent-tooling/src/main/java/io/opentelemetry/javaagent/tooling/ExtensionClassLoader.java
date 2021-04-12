@@ -7,25 +7,28 @@ package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.tooling.ShadingRemapper.rule;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import net.bytebuddy.jar.asm.ClassReader;
 import net.bytebuddy.jar.asm.ClassWriter;
 import net.bytebuddy.jar.asm.commons.ClassRemapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-/** @deprecated in favor of {@link ExtensionClassLoader} */
-@Deprecated
-public class ExporterClassLoader extends URLClassLoader {
-
-  private static final Logger log = LoggerFactory.getLogger(ExporterClassLoader.class);
+/**
+ * This classloader is used to load arbitrary extensions for Otel Java instrumentation agent. Such
+ * extensions may include SDK components (exporters or propagators) and additional instrumentations.
+ * They have to be isolated and shaded to reduce interference with the user application and to make
+ * it compatible with shaded SDK used by the agent.
+ */
+// TODO find a way to initialize logging before using this class
+public class ExtensionClassLoader extends URLClassLoader {
 
   // We need to prefix the names to prevent the gradle shadowJar relocation rules from touching
   // them. It's possible to do this by excluding this class from shading, but it may cause issue
@@ -44,27 +47,38 @@ public class ExporterClassLoader extends URLClassLoader {
 
   private final Manifest manifest;
 
-  public ExporterClassLoader(URL url, ClassLoader parent) {
+  public static ClassLoader getInstance(ClassLoader parent) {
+    // TODO add support for old deprecated properties, otel.exporter.jar and otel.initializer.jar
+    // TODO add support for system properties
+    URL extension = parseLocation(System.getenv("OTEL_JAVAAGENT_EXTENSIONS"));
+    if (extension != null) {
+      return new ExtensionClassLoader(extension, parent);
+    }
+    return null;
+  }
+
+  private static URL parseLocation(String name) {
+    if (name == null) {
+      return null;
+    }
+    try {
+      return new File(name).toURI().toURL();
+    } catch (MalformedURLException e) {
+      System.err.println("Filename could not be parsed: %s. Extension location is ignored");
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  public ExtensionClassLoader(URL url, ClassLoader parent) {
     super(new URL[] {url}, parent);
     this.manifest = getManifest(url);
   }
 
   @Override
-  public Enumeration<URL> getResources(String name) throws IOException {
-    // A small hack to prevent other exporters from being loaded by this classloader if they
-    // should happen to appear on the classpath.
-    if (name.equals("META-INF/services/io.opentelemetry.javaagent.spi.exporter.SpanExporterFactory")
-        || name.equals(
-            "META-INF/services/io.opentelemetry.javaagent.spi.exporter.MetricExporterFactory")) {
-      return findResources(name);
-    }
-    return super.getResources(name);
-  }
-
-  @Override
   protected Class<?> findClass(String name) throws ClassNotFoundException {
     // Use resource loading to get the class as a stream of bytes, then use ASM to transform it.
-    InputStream in = getResourceAsStream(name.replace('.', '/') + ".class");
+    InputStream in = super.getResourceAsStream(name.replace('.', '/') + ".class");
     if (in == null) {
       throw new ClassNotFoundException(name);
     }
@@ -78,9 +92,25 @@ public class ExporterClassLoader extends URLClassLoader {
       try {
         in.close();
       } catch (IOException e) {
-        log.debug(e.getMessage(), e);
+        e.printStackTrace();
+        //        log.debug(e.getMessage(), e);
       }
     }
+  }
+
+  @Override
+  public InputStream getResourceAsStream(String name) {
+    InputStream originalStream = super.getResourceAsStream(name);
+    if (name.endsWith(".class")) {
+      try {
+        byte[] remappedClass = remapClassBytes(originalStream);
+        return new ByteArrayInputStream(remappedClass);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+
+    return originalStream;
   }
 
   private void definePackageIfNeeded(String className) {
@@ -100,7 +130,8 @@ public class ExporterClassLoader extends URLClassLoader {
       // to race condition with the check above
       if (!isPackageDefined(packageName)) {
         // this shouldn't happen however
-        log.error(e.getMessage(), e);
+        e.printStackTrace();
+        //        log.error(e.getMessage(), e);
       }
     }
   }
@@ -133,7 +164,8 @@ public class ExporterClassLoader extends URLClassLoader {
     try (JarFile jarFile = new JarFile(url.toURI().getPath())) {
       return jarFile.getManifest();
     } catch (IOException | URISyntaxException e) {
-      log.warn(e.getMessage(), e);
+      e.printStackTrace();
+      //      log.warn(e.getMessage(), e);
     }
     return null;
   }

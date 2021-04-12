@@ -26,6 +26,7 @@ public class AgentClassLoader extends URLClassLoader {
     ClassLoader.registerAsParallelCapable();
   }
 
+  // TODO remove in favor of ExtensionClassLoader
   private static final String AGENT_INITIALIZER_JAR =
       System.getProperty("otel.javaagent.experimental.initializer.jar", "");
 

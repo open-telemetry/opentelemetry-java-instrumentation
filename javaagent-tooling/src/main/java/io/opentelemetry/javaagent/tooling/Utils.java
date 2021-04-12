@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader.BootstrapClassLoaderProxy;
+import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import java.net.URL;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -21,6 +22,10 @@ public class Utils {
   /** Return the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
     return AgentInstaller.class.getClassLoader();
+  }
+
+  public static ClassLoader getExtensionsClassLoader() {
+    return AgentInitializer.getAgentClassloader();
   }
 
   /** Return a classloader which can be used to look up bootstrap resources. */
