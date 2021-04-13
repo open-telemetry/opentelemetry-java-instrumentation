@@ -1,0 +1,6 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  testImplementation project(':instrumentation:classloaders:javaagent')
+  testImplementation project(':javaagent-bootstrap')
+}
