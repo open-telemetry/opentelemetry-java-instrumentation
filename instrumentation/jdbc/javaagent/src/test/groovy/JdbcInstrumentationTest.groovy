@@ -755,6 +755,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT.key" "SELECT * FROM table"
             "$SemanticAttributes.DB_OPERATION.key" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE.key" "table"
+            "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
           }
         }
       }
