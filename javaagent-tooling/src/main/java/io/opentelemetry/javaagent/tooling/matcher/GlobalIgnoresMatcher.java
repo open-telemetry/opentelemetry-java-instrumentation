@@ -26,18 +26,17 @@ import net.bytebuddy.matcher.ElementMatcher;
  *   number of classes we apply expensive matchers to.
  * </ul>
  */
-public class GlobalIgnoresMatcher<T extends TypeDescription>
-    extends ElementMatcher.Junction.AbstractBase<T> {
+public class GlobalIgnoresMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
 
   private static final Pattern COM_MCHANGE_PROXY =
       Pattern.compile("com\\.mchange\\.v2\\.c3p0\\..*Proxy");
 
-  public static <T extends TypeDescription> ElementMatcher.Junction<T> globalIgnoresMatcher(
+  public static ElementMatcher.Junction<TypeDescription> globalIgnoresMatcher(
       boolean additionalLibraryMatcher, IgnoreMatcherProvider ignoreMatcherProviders) {
-    return new GlobalIgnoresMatcher<>(additionalLibraryMatcher, ignoreMatcherProviders);
+    return new GlobalIgnoresMatcher(additionalLibraryMatcher, ignoreMatcherProviders);
   }
 
-  private final ElementMatcher<T> additionalLibraryIgnoreMatcher =
+  private final ElementMatcher<TypeDescription> additionalLibraryIgnoreMatcher =
       AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher();
   private final boolean additionalLibraryMatcher;
   private final IgnoreMatcherProvider ignoreMatcherProvider;
@@ -54,7 +53,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
    * don't have to load additional info.
    */
   @Override
-  public boolean matches(T target) {
+  public boolean matches(TypeDescription target) {
     IgnoreMatcherProvider.Result ignoreResult = ignoreMatcherProvider.type(target);
     switch (ignoreResult) {
       case IGNORE:
@@ -219,7 +218,7 @@ public class GlobalIgnoresMatcher<T extends TypeDescription>
     if (!(obj instanceof GlobalIgnoresMatcher)) {
       return false;
     }
-    GlobalIgnoresMatcher<?> other = (GlobalIgnoresMatcher<?>) obj;
+    GlobalIgnoresMatcher other = (GlobalIgnoresMatcher) obj;
     return additionalLibraryIgnoreMatcher.equals(other.additionalLibraryIgnoreMatcher);
   }
 
