@@ -10,10 +10,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Configuration for the tracing instrumentation of HTTP clients.
  *
- * <p>Sets default value of opentelemetry.trace.httpclients.enabled to true if the configuration
- * does not exist in application context.
+ * <p>Sets default value of otel.springboot.httpclients.enabled to true if the configuration does
+ * not exist in application context.
  */
-@ConfigurationProperties(prefix = "opentelemetry.trace.httpclients")
+@ConfigurationProperties(prefix = "otel.springboot.httpclients")
 public final class HttpClientsProperties {
   private boolean enabled = true;
 

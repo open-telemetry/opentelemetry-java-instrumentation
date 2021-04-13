@@ -20,7 +20,7 @@ import org.bson.BsonString
 import org.bson.Document
 import spock.lang.Shared
 
-abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest {
+abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
 
   abstract void configureMongoClientOptions(MongoClientOptions.Builder options);
 

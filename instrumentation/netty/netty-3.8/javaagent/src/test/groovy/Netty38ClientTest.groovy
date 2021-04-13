@@ -22,7 +22,7 @@ import java.util.function.Consumer
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
+class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrait {
 
   @Shared
   def clientConfig = new AsyncHttpClientConfig.Builder()
@@ -34,29 +34,30 @@ class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
   AsyncHttpClient client = new AsyncHttpClient(clientConfig)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    return client.executeRequest(buildRequest(method, uri, headers)).get().statusCode
+  Request buildRequest(String method, URI uri, Map<String, String> headers) {
+    def requestBuilder = new RequestBuilder(method)
+      .setUrl(uri.toString())
+    headers.entrySet().each {
+      requestBuilder.addHeader(it.key, it.value)
+    }
+    return requestBuilder.build()
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+    return client.executeRequest(request).get().statusCode
+  }
+
+  @Override
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     // TODO(anuraaga): Do we also need to test ListenableFuture callback?
-    client.executeRequest(buildRequest(method, uri, headers), new AsyncCompletionHandler<Void>() {
+    client.executeRequest(request, new AsyncCompletionHandler<Void>() {
       @Override
       Void onCompleted(Response response) throws Exception {
         callback.accept(response.statusCode)
         return null
       }
     })
-  }
-
-  private static Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    RequestBuilder requestBuilder = new RequestBuilder(method)
-      .setUrl(uri.toString())
-    headers.entrySet().each {
-      requestBuilder.addHeader(it.key, it.value)
-    }
-    return requestBuilder.build()
   }
 
   @Override

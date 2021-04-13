@@ -16,7 +16,7 @@ import org.apache.commons.httpclient.methods.PutMethod
 import org.apache.commons.httpclient.methods.TraceMethod
 import spock.lang.Shared
 
-class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
+class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentTestTrait {
   @Shared
   HttpClient client = new HttpClient()
 
@@ -30,48 +30,57 @@ class CommonsHttpClientTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    HttpMethod httpMethod
-
+  HttpMethod buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request
     switch (method) {
       case "GET":
-        httpMethod = new GetMethod(uri.toString())
+        request = new GetMethod(uri.toString())
         break
       case "PUT":
-        httpMethod = new PutMethod(uri.toString())
+        request = new PutMethod(uri.toString())
         break
       case "POST":
-        httpMethod = new PostMethod(uri.toString())
+        request = new PostMethod(uri.toString())
         break
       case "HEAD":
-        httpMethod = new HeadMethod(uri.toString())
+        request = new HeadMethod(uri.toString())
         break
       case "DELETE":
-        httpMethod = new DeleteMethod(uri.toString())
+        request = new DeleteMethod(uri.toString())
         break
       case "OPTIONS":
-        httpMethod = new OptionsMethod(uri.toString())
+        request = new OptionsMethod(uri.toString())
         break
       case "TRACE":
-        httpMethod = new TraceMethod(uri.toString())
+        request = new TraceMethod(uri.toString())
         break
       default:
         throw new RuntimeException("Unsupported method: " + method)
     }
+    headers.each { request.setRequestHeader(it.key, it.value) }
+    return request
+  }
 
-    headers.each { httpMethod.setRequestHeader(it.key, it.value) }
-
+  @Override
+  int sendRequest(HttpMethod request, String method, URI uri, Map<String, String> headers) {
     try {
-      client.executeMethod(httpMethod)
-      return httpMethod.getStatusCode()
+      client.executeMethod(request)
+      return request.getStatusCode()
     } finally {
-      httpMethod.releaseConnection()
+      request.releaseConnection()
     }
   }
 
   @Override
   boolean testRedirects() {
     // Generates 4 spans
+    false
+  }
+
+  @Override
+  boolean testReusedRequest() {
+    // apache commons throws an exception if the request is reused without being recycled first
+    // at which point this test is not useful (and requires re-populating uri)
     false
   }
 

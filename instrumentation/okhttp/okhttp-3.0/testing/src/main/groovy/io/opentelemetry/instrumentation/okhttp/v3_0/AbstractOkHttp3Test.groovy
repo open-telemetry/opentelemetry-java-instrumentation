@@ -19,7 +19,7 @@ import okhttp3.Response
 import okhttp3.internal.http.HttpMethod
 import spock.lang.Shared
 
-abstract class AbstractOkHttp3Test extends HttpClientTest {
+abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
 
   abstract OkHttpClient.Builder configureClient(OkHttpClient.Builder clientBuilder)
 
@@ -31,15 +31,21 @@ abstract class AbstractOkHttp3Test extends HttpClientTest {
     .build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    def request = buildRequest(method, uri, headers)
-    def response = client.newCall(request).execute()
-    return response.code()
+  Request buildRequest(String method, URI uri, Map<String, String> headers) {
+    def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
+    return new Request.Builder()
+      .url(uri.toURL())
+      .method(method, body)
+      .headers(Headers.of(headers)).build()
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    def request = buildRequest(method, uri, headers)
+  int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+    return client.newCall(request).execute().code()
+  }
+
+  @Override
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     client.newCall(request).enqueue(new Callback() {
       @Override
       void onFailure(Call call, IOException e) {
@@ -53,14 +59,7 @@ abstract class AbstractOkHttp3Test extends HttpClientTest {
     })
   }
 
-  private static Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
-    return new Request.Builder()
-      .url(uri.toURL())
-      .method(method, body)
-      .headers(Headers.of(headers)).build()
-  }
-
+  @Override
   boolean testRedirects() {
     false
   }
@@ -69,5 +68,4 @@ abstract class AbstractOkHttp3Test extends HttpClientTest {
   boolean testCausality() {
     false
   }
-
 }

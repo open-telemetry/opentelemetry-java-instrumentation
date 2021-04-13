@@ -35,7 +35,7 @@ import spock.lang.Unroll
 import spock.util.concurrent.BlockingVariable
 
 @Unroll
-abstract class HttpClientTest extends InstrumentationSpecification {
+abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 5000
   protected static final BASIC_AUTH_KEY = "custom-authorization-header"
@@ -87,6 +87,37 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     }
   }
 
+  // ideally private, but then groovy closures in this class cannot find them
+  final int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request, method, uri, headers)
+  }
+
+  // ideally private, but then groovy closures in this class cannot find them
+  final int doReusedRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request = buildRequest(method, uri, headers)
+    sendRequest(request, method, uri, headers)
+    return sendRequest(request, method, uri, headers)
+  }
+
+  // ideally private, but then groovy closures in this class cannot find them
+  final void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    def request = buildRequest(method, uri, headers)
+    sendRequestWithCallback(request, method, uri, headers, callback)
+  }
+
+  /**
+   * Build the request to be passed to
+   * {@link #sendRequest(java.lang.Object, java.lang.String, java.net.URI, java.util.Map)}.
+   *
+   * By splitting this step out separate from {@code sendRequest}, tests and re-execute the same
+   * request a second time to verify that the traceparent header is not added multiple times to the
+   * request, and that the last one wins
+   * ({@link io.opentelemetry.instrumentation.test.server.http.TestHttpServer) has explicit logic
+   * to throw exception if there are multiple).
+   */
+  abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
+
   /**
    * Make the request and return the status code of the response synchronously. Some clients, e.g.,
    * HTTPUrlConnection only support synchronous execution without callbacks, and many offer a
@@ -95,8 +126,8 @@ abstract class HttpClientTest extends InstrumentationSpecification {
    * for example:
    *
    * @Override
-   * int doRequest(String method, URI uri, Map<String, String headers = [:]) {
-   *   HttpResponse response = client.execute(new Request(method, uri, headers))
+   * int sendRequest(Request request, String method, URI uri, Map<String, String headers = [:]) {
+   *   HttpResponse response = client.execute(request)
    *   return response.statusCode()
    * }
    *
@@ -104,18 +135,18 @@ abstract class HttpClientTest extends InstrumentationSpecification {
    * can be used to block on a result, for example:
    *
    * @Override
-   * int doRequest(String method, URI uri, Map<String, String headers = [:]) {
-   *   CompletableFuture<Integer> result = new CompletableFuture<>()
-   *   doRequestWithCallback(method, uri, headers) {
-   *     result.complete(it.statusCode())
+   * int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+   *   CompletableFuture<Integer> future = new CompletableFuture<>(
+   *   sendRequestWithCallback(request, method, uri, headers) {
+   *     future.complete(it.statusCode())
    *   }
-   *   return result.join()
+   *   return future.get()
    * }
    */
-  abstract int doRequest(String method, URI uri, Map<String, String> headers = [:])
+  abstract int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
 
   /**
-   * Maks the request and return the status code of the response through the callback. This method
+   * Make the request and return the status code of the response through the callback. This method
    * should be implemented if the client offers any request execution methods that accept a callback
    * which receives the response. This will generally be an API for asynchronous execution of a
    * request, such as OkHttp's enqueue method, but may also be a callback executed synchronously,
@@ -123,14 +154,14 @@ abstract class HttpClientTest extends InstrumentationSpecification {
    * the context is propagated correctly to such callbacks.
    *
    * @Override
-   * void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
    *   // Hypothetical client accepting a callback
-   *   client.executeAsync(new Request(method, uri, headers)) {
+   *   client.executeAsync(request) {
    *     callback.accept(it.statusCode())
    *   }
    *
    *   // Hypothetical client returning a CompletableFuture
-   *   client.executeAsync(new Request(method, uri, headers)).thenAccept {
+   *   client.executeAsync(request).thenAccept {
    *     callback.accept(it.statusCode())
    *   }
    * }
@@ -138,7 +169,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
    * If the client offers no APIs that accept callbacks, then this method should not be implemented
    * and instead, {@link #testCallback} should be implemented to return false.
    */
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  void sendRequestWithCallback(REQUEST request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException()
   }
@@ -401,6 +432,32 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
     where:
     method = "GET"
+  }
+
+  def "reuse request"() {
+    given:
+    assumeTrue(testReusedRequest())
+
+    when:
+    def status = doReusedRequest(method, url)
+
+    then:
+    status == 200
+    assertTraces(2) {
+      trace(0, 2 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, url)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+      }
+      trace(1, 2 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, url)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+      }
+    }
+
+    where:
+    path = "/success"
+    method = "GET"
+    url = server.address.resolve(path)
   }
 
   def "connection error (unopened port)"() {
@@ -705,6 +762,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   // maximum number of redirects that http client follows before giving up
   int maxRedirects() {
     2
+  }
+
+  boolean testReusedRequest() {
+    true
   }
 
   boolean testConnectionFailure() {

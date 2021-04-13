@@ -23,7 +23,7 @@ import org.springframework.web.client.RestTemplate;
 @ConditionalOnClass(RestTemplate.class)
 @EnableConfigurationProperties(HttpClientsProperties.class)
 @ConditionalOnProperty(
-    prefix = "opentelemetry.trace.httpclients",
+    prefix = "otel.springboot.httpclients",
     name = "enabled",
     matchIfMissing = true)
 public class RestTemplateAutoConfiguration {

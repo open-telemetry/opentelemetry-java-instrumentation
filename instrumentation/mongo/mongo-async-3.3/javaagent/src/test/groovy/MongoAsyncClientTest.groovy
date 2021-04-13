@@ -25,7 +25,7 @@ import org.bson.Document
 import org.junit.AssumptionViolatedException
 import spock.lang.Shared
 
-class MongoAsyncClientTest extends AbstractMongoClientTest implements AgentTestTrait{
+class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Document>> implements AgentTestTrait{
 
   @Shared
   MongoClient client
@@ -75,7 +75,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest implements AgentTestT
   }
 
   @Override
-  int insert(String dbName, String collectionName) {
+  MongoCollection<Document> setupInsert(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch1 = new CountDownLatch(1)
@@ -84,6 +84,11 @@ class MongoAsyncClientTest extends AbstractMongoClientTest implements AgentTestT
       return db.getCollection(collectionName)
     }
     ignoreTracesAndClear(1)
+    return collection
+  }
+
+  @Override
+  int insert(MongoCollection<Document> collection) {
     def count = new CompletableFuture<Integer>()
     collection.insertOne(new Document("password", "SECRET"), toCallback {
       collection.count toCallback { count.complete(it) }
@@ -92,7 +97,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest implements AgentTestT
   }
 
   @Override
-  int update(String dbName, String collectionName) {
+  MongoCollection<Document> setupUpdate(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch1 = new CountDownLatch(1)
@@ -105,6 +110,11 @@ class MongoAsyncClientTest extends AbstractMongoClientTest implements AgentTestT
       return coll
     }
     ignoreTracesAndClear(1)
+    return collection
+  }
+
+  @Override
+  int update(MongoCollection<Document> collection) {
     def result = new CompletableFuture<UpdateResult>()
     def count = new CompletableFuture()
     collection.updateOne(
@@ -117,7 +127,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest implements AgentTestT
   }
 
   @Override
-  int delete(String dbName, String collectionName) {
+  MongoCollection<Document> setupDelete(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def latch1 = new CountDownLatch(1)
@@ -130,6 +140,11 @@ class MongoAsyncClientTest extends AbstractMongoClientTest implements AgentTestT
       return coll
     }
     ignoreTracesAndClear(1)
+    return collection
+  }
+
+  @Override
+  int delete(MongoCollection<Document> collection) {
     def result = new CompletableFuture<DeleteResult>()
     def count = new CompletableFuture()
     collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")), toCallback {
@@ -140,7 +155,12 @@ class MongoAsyncClientTest extends AbstractMongoClientTest implements AgentTestT
   }
 
   @Override
-  void getMore(String dbName, String collectionName) {
+  MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
+    throw new AssumptionViolatedException("not tested on async")
+  }
+
+  @Override
+  void getMore(MongoCollection<Document> collection) {
     throw new AssumptionViolatedException("not tested on async")
   }
 

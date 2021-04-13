@@ -19,27 +19,27 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 import spock.lang.Shared
 
-class PlayJavaWsClientTestBase extends PlayWsClientTestBaseBase {
+class PlayJavaWsClientTestBase extends PlayWsClientTestBaseBase<StandaloneWSRequest> {
   @Shared
   StandaloneWSClient wsClient
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    return sendRequest(method, uri, headers).toCompletableFuture().get().status
+  StandaloneWSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = wsClient.url(uri.toURL().toString()).setFollowRedirects(true)
+    headers.entrySet().each { entry -> request.addHeader(entry.getKey(), entry.getValue()) }
+    return request.setMethod(method)
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    sendRequest(method, uri, headers).thenAccept {
-      callback.accept(it.status)
-    }
+  int sendRequest(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers) {
+    return request.execute().toCompletableFuture().get().status
   }
 
-  private CompletionStage<StandaloneWSResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
-    StandaloneWSRequest wsRequest = wsClient.url(uri.toURL().toString()).setFollowRedirects(true)
-
-    headers.entrySet().each { entry -> wsRequest.addHeader(entry.getKey(), entry.getValue()) }
-    return wsRequest.setMethod(method).execute()
+  @Override
+  void sendRequestWithCallback(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    request.execute().thenAccept {
+      callback.accept(it.status)
+    }
   }
 
   def setupSpec() {
@@ -51,27 +51,32 @@ class PlayJavaWsClientTestBase extends PlayWsClientTestBaseBase {
   }
 }
 
-class PlayJavaStreamedWsClientTestBase extends PlayWsClientTestBaseBase {
+class PlayJavaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<StandaloneWSRequest> {
   @Shared
   StandaloneWSClient wsClient
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    return sendRequest(method, uri, headers).toCompletableFuture().get().status
+  StandaloneWSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def request = wsClient.url(uri.toURL().toString()).setFollowRedirects(true)
+    headers.entrySet().each { entry -> request.addHeader(entry.getKey(), entry.getValue()) }
+    request.setMethod(method)
+    return request
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    sendRequest(method, uri, headers).thenAccept {
+  int sendRequest(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers) {
+    return internalSendRequest(request).toCompletableFuture().get().status
+  }
+
+  @Override
+  void sendRequestWithCallback(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    internalSendRequest(request).thenAccept {
       callback.accept(it.status)
     }
   }
 
-  private CompletionStage<StandaloneWSResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
-    StandaloneWSRequest wsRequest = wsClient.url(uri.toURL().toString()).setFollowRedirects(true)
-
-    headers.entrySet().each { entry -> wsRequest.addHeader(entry.getKey(), entry.getValue()) }
-    CompletionStage<StandaloneWSResponse> stream = wsRequest.setMethod(method).stream()
+  private CompletionStage<StandaloneWSResponse> internalSendRequest(StandaloneWSRequest request) {
+    def stream = request.stream()
     // The status can be ready before the body so explicitly call wait for body to be ready
     return stream
       .thenCompose { StandaloneWSResponse response ->
@@ -91,35 +96,34 @@ class PlayJavaStreamedWsClientTestBase extends PlayWsClientTestBaseBase {
   }
 }
 
-class PlayScalaWsClientTestBase extends PlayWsClientTestBaseBase {
+class PlayScalaWsClientTestBase extends PlayWsClientTestBaseBase<play.api.libs.ws.StandaloneWSRequest> {
   @Shared
   play.api.libs.ws.StandaloneWSClient wsClient
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers) {
-    Future<play.api.libs.ws.StandaloneWSResponse> futureResponse = sendRequest(method, uri, headers)
-    play.api.libs.ws.StandaloneWSResponse wsResponse = Await.result(futureResponse, Duration.apply(5, TimeUnit.SECONDS))
-    return wsResponse.status()
+  play.api.libs.ws.StandaloneWSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    return wsClient.url(uri.toURL().toString())
+      .withMethod(method)
+      .withFollowRedirects(true)
+      .withHttpHeaders(JavaConverters.mapAsScalaMap(headers).toSeq())
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    Future<play.api.libs.ws.StandaloneWSResponse> futureResponse = sendRequest(method, uri, headers)
-    futureResponse.onComplete(new Function1<Try<play.api.libs.ws.StandaloneWSResponse>, Void>() {
+  int sendRequest(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers) {
+    def futureResponse = request.execute()
+    def response = Await.result(futureResponse, Duration.apply(5, TimeUnit.SECONDS))
+    return response.status()
+  }
+
+  @Override
+  void sendRequestWithCallback(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    request.execute().onComplete(new Function1<Try<play.api.libs.ws.StandaloneWSResponse>, Void>() {
       @Override
       Void apply(Try<play.api.libs.ws.StandaloneWSResponse> response) {
         callback.accept(response.get().status())
         return null
       }
     }, ExecutionContext.global())
-  }
-
-  private Future<play.api.libs.ws.StandaloneWSResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
-    return wsClient.url(uri.toURL().toString())
-      .withMethod(method)
-      .withFollowRedirects(true)
-      .withHttpHeaders(JavaConverters.mapAsScalaMap(headers).toSeq())
-      .execute()
   }
 
   def setupSpec() {
@@ -131,21 +135,26 @@ class PlayScalaWsClientTestBase extends PlayWsClientTestBaseBase {
   }
 }
 
-class PlayScalaStreamedWsClientTestBase extends PlayWsClientTestBaseBase {
+class PlayScalaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<play.api.libs.ws.StandaloneWSRequest> {
   @Shared
   play.api.libs.ws.StandaloneWSClient wsClient
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
-    Future<play.api.libs.ws.StandaloneWSResponse> futureResponse = sendRequest(method, uri, headers)
-    play.api.libs.ws.StandaloneWSResponse wsResponse = Await.result(futureResponse, Duration.apply(5, TimeUnit.SECONDS))
-    return wsResponse.status()
+  play.api.libs.ws.StandaloneWSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    return wsClient.url(uri.toURL().toString())
+      .withMethod(method)
+      .withFollowRedirects(true)
+      .withHttpHeaders(JavaConverters.mapAsScalaMap(headers).toSeq())
   }
 
   @Override
-  void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    Future<play.api.libs.ws.StandaloneWSResponse> futureResponse = sendRequest(method, uri, headers)
-    futureResponse.onComplete(new Function1<Try<play.api.libs.ws.StandaloneWSResponse>, Void>() {
+  int sendRequest(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers) {
+    Await.result(internalSendRequest(request), Duration.apply(5, TimeUnit.SECONDS)).status()
+  }
+
+  @Override
+  void sendRequestWithCallback(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    internalSendRequest(request).onComplete(new Function1<Try<play.api.libs.ws.StandaloneWSResponse>, Void>() {
       @Override
       Void apply(Try<play.api.libs.ws.StandaloneWSResponse> response) {
         callback.accept(response.get().status())
@@ -154,12 +163,8 @@ class PlayScalaStreamedWsClientTestBase extends PlayWsClientTestBaseBase {
     }, ExecutionContext.global())
   }
 
-  private Future<play.api.libs.ws.StandaloneWSResponse> sendRequest(String method, URI uri, Map<String, String> headers) {
-    Future<play.api.libs.ws.StandaloneWSResponse> futureResponse = wsClient.url(uri.toURL().toString())
-      .withMethod(method)
-      .withFollowRedirects(true)
-      .withHttpHeaders(JavaConverters.mapAsScalaMap(headers).toSeq())
-      .stream()
+  private Future<play.api.libs.ws.StandaloneWSResponse> internalSendRequest(play.api.libs.ws.StandaloneWSRequest request) {
+    Future<play.api.libs.ws.StandaloneWSResponse> futureResponse = request.stream()
     // The status can be ready before the body so explicitly call wait for body to be ready
     Future<String> bodyResponse = futureResponse.flatMap(new Function1<play.api.libs.ws.StandaloneWSResponse, Future<String>>() {
       @Override

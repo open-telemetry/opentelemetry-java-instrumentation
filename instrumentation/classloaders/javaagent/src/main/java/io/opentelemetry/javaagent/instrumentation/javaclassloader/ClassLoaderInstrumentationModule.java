@@ -25,6 +25,10 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new ClassLoaderInstrumentation(), new ResourceInjectionInstrumentation());
+    return asList(
+        new ClassLoaderInstrumentation(),
+        new UrlClassLoaderInstrumentation(),
+        new ProxyInstrumentation(),
+        new ResourceInjectionInstrumentation());
   }
 }

@@ -24,6 +24,6 @@ final class RequestBuilderInjectAdapter implements TextMapSetter<Request.Builder
     if (carrier == null) {
       return;
     }
-    carrier.addHeader(key, value);
+    carrier.header(key, value);
   }
 }

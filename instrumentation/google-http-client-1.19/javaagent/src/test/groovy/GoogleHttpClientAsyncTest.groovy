@@ -8,7 +8,7 @@ import com.google.api.client.http.HttpResponse
 
 class GoogleHttpClientAsyncTest extends AbstractGoogleHttpClientTest {
   @Override
-  HttpResponse executeRequest(HttpRequest request) {
+  HttpResponse sendRequest(HttpRequest request) {
     return request.executeAsync().get()
   }
 }
