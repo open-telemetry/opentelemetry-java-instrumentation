@@ -54,7 +54,7 @@ public class ExtensionClassLoader extends URLClassLoader {
     if (extension != null) {
       return new ExtensionClassLoader(extension, parent);
     }
-    return null;
+    return parent;
   }
 
   private static URL parseLocation(String name) {
