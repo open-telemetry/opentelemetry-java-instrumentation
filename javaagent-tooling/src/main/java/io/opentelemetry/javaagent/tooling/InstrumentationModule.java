@@ -308,6 +308,9 @@ public abstract class InstrumentationModule {
    * not located in instrumentation packages described in {@link InstrumentationClassPredicate} and
    * {@link #isHelperClass(String)} (and not automatically detected by muzzle). These additional
    * classes will be injected into the application classloader first.
+   *
+   * <p>Implementing {@link #isHelperClass(String)} is generally simpler and less error-prone
+   * compared to implementing this method.
    */
   protected String[] additionalHelperClassNames() {
     return EMPTY;

@@ -38,8 +38,8 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  protected String[] additionalHelperClassNames() {
-    return new String[] {getClass().getName() + "$Context"};
+  public boolean isHelperClass(String className) {
+    return className.equals(getClass().getName() + "$Context");
   }
 
   @Override

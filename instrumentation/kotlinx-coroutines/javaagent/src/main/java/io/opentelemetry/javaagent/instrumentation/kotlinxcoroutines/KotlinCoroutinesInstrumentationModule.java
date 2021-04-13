@@ -29,12 +29,8 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String[] additionalHelperClassNames() {
-    return new String[] {
-      "io.opentelemetry.extension.kotlin.ContextExtensionsKt",
-      "io.opentelemetry.extension.kotlin.KotlinContextElement",
-      "io.opentelemetry.extension.kotlin.KotlinContextElement$1"
-    };
+  public boolean isHelperClass(String className) {
+    return className.startsWith("io.opentelemetry.extension.kotlin.");
   }
 
   @Override
