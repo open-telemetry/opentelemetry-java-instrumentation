@@ -62,8 +62,6 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
       transformers.put(named("getContextCount"), GetApiUsageAdvice.class.getName());
       transformers.put(named("putContextCount"), PutApiUsageAdvice.class.getName());
       transformers.put(named("removeContextCount"), RemoveApiUsageAdvice.class.getName());
-      transformers.put(
-          named("incorrectCallUsage"), IncorrectCallContextApiUsageAdvice.class.getName());
       return transformers;
     }
   }
@@ -125,16 +123,6 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
       ContextStore<KeyClass, Context> contextStore =
           InstrumentationContext.get(KeyClass.class, Context.class);
       contextStore.put(thiz, null);
-    }
-  }
-
-  public static class IncorrectCallContextApiUsageAdvice {
-    @Advice.OnMethodExit
-    public static void methodExit() {
-      // Our instrumentation doesn't handle variables being passed to InstrumentationContext.get,
-      // so we make sure that this actually fails instrumentation.
-      Class clazz = null;
-      InstrumentationContext.get(clazz, Object.class);
     }
   }
 

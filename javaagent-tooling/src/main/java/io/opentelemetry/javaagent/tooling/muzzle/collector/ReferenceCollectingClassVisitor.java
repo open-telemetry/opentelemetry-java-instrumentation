@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
+import com.google.common.collect.EvictingQueue;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import io.opentelemetry.javaagent.tooling.muzzle.Reference;
@@ -245,7 +246,8 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     // Additional references we could check
     // - Classes in signature (return type, params) and visible from this package
     return new AdviceReferenceMethodVisitor(
-        super.visitMethod(access, name, descriptor, signature, exceptions));
+        new InstrumentationContextMethodVisitor(
+            super.visitMethod(access, name, descriptor, signature, exceptions)));
   }
 
   private static VisibilityFlag computeVisibilityFlag(int access) {
@@ -280,10 +282,6 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
 
   private class AdviceReferenceMethodVisitor extends MethodVisitor {
     private int currentLineNumber = -1;
-
-    // this data structure will remember last two LDC <class> instructions before
-    // InstrumentationContext.get() call
-    private final FixedSizeQueue<String> lastTwoClassConstants = new FixedSizeQueue<>(2);
 
     public AdviceReferenceMethodVisitor(MethodVisitor methodVisitor) {
       super(Opcodes.ASM7, methodVisitor);
@@ -342,7 +340,6 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
                 .build());
       }
 
-      registerOpcode(opcode, null);
       super.visitFieldInsn(opcode, owner, name, descriptor);
     }
 
@@ -364,23 +361,6 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
           owner.startsWith("[")
               ? underlyingType(Type.getType(owner))
               : Type.getType("L" + owner + ";");
-
-      // remember used context classes if this is an InstrumentationContext.get() call
-      if ("io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext"
-              .equals(ownerType.getClassName())
-          && "get".equals(name)
-          && methodType.getArgumentTypes().length == 2) {
-        // in case of invalid scenario (not using .class ref directly) don't store anything and
-        // clear the last LDC <class> stack
-        // note that FieldBackedProvider also check for an invalid context call in the runtime
-        if (lastTwoClassConstants.hasMaxSize()) {
-          String className = lastTwoClassConstants.pop();
-          String contextClassName = lastTwoClassConstants.pop();
-          contextStoreClasses.put(className, contextClassName);
-        } else {
-          lastTwoClassConstants.clear();
-        }
-      }
 
       { // ref for method return type
         Type returnType = underlyingType(methodType.getReturnType());
@@ -424,7 +404,6 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
                   methodType.getArgumentTypes())
               .build());
 
-      registerOpcode(opcode, null);
       super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
     }
 
@@ -439,7 +418,6 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
                 .build());
       }
 
-      registerOpcode(opcode, null);
       super.visitTypeInsn(opcode, type);
     }
 
@@ -485,20 +463,23 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
                   .build());
         }
       }
-      registerOpcode(Opcodes.LDC, value);
       super.visitLdcInsn(value);
+    }
+  }
+
+  private class InstrumentationContextMethodVisitor extends MethodVisitor {
+    // this data structure will remember last two LDC <class> instructions before
+    // InstrumentationContext.get() call
+    private final EvictingQueue<String> lastTwoClassConstants = EvictingQueue.create(2);
+
+    InstrumentationContextMethodVisitor(MethodVisitor methodVisitor) {
+      super(Opcodes.ASM7, methodVisitor);
     }
 
     @Override
     public void visitInsn(int opcode) {
       registerOpcode(opcode, null);
       super.visitInsn(opcode);
-    }
-
-    @Override
-    public void visitJumpInsn(int opcode, Label label) {
-      registerOpcode(opcode, null);
-      super.visitJumpInsn(opcode, label);
     }
 
     @Override
@@ -511,6 +492,61 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     public void visitVarInsn(int opcode, int var) {
       registerOpcode(opcode, null);
       super.visitVarInsn(opcode, var);
+    }
+
+    @Override
+    public void visitTypeInsn(int opcode, String type) {
+      registerOpcode(opcode, null);
+      super.visitTypeInsn(opcode, type);
+    }
+
+    @Override
+    public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
+      registerOpcode(opcode, null);
+      super.visitFieldInsn(opcode, owner, name, descriptor);
+    }
+
+    @Override
+    public void visitMethodInsn(
+        int opcode, String owner, String name, String descriptor, boolean isInterface) {
+
+      Type methodType = Type.getMethodType(descriptor);
+      Type ownerType = Type.getType("L" + owner + ";");
+
+      // remember used context classes if this is an InstrumentationContext.get() call
+      if ("io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext"
+              .equals(ownerType.getClassName())
+          && "get".equals(name)
+          && methodType.getArgumentTypes().length == 2) {
+        // in case of invalid scenario (not using .class ref directly) don't store anything and
+        // clear the last LDC <class> stack
+        // note that FieldBackedProvider also check for an invalid context call in the runtime
+        if (lastTwoClassConstants.remainingCapacity() == 0) {
+          String className = lastTwoClassConstants.poll();
+          String contextClassName = lastTwoClassConstants.poll();
+          contextStoreClasses.put(className, contextClassName);
+        } else {
+          throw new MuzzleCompilationException(
+              "Invalid InstrumentationContext#get(Class, Class) usage: you cannot pass variables,"
+                  + " method parameters, compute classes; class references need to be passed"
+                  + " directly to the get() method");
+        }
+      }
+
+      registerOpcode(opcode, null);
+      super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+    }
+
+    @Override
+    public void visitJumpInsn(int opcode, Label label) {
+      registerOpcode(opcode, null);
+      super.visitJumpInsn(opcode, label);
+    }
+
+    @Override
+    public void visitLdcInsn(Object value) {
+      registerOpcode(Opcodes.LDC, value);
+      super.visitLdcInsn(value);
     }
 
     private void registerOpcode(int opcode, Object value) {
@@ -529,7 +565,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
 
       // instruction other than LDC <class> visited; pop the first element if present - this will
       // prevent adding wrong context key pairs in case of an invalid scenario
-      lastTwoClassConstants.pop();
+      lastTwoClassConstants.poll();
     }
   }
 }

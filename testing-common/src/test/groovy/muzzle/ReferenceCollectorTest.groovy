@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.InstrumentationContextTestClasses
 import io.opentelemetry.instrumentation.OtherTestHelperClasses
 import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
+import io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCompilationException
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -276,8 +277,7 @@ class ReferenceCollectorTest extends Specification {
     collector.collectReferencesFromAdvice(adviceClassName)
 
     then:
-    def contextStore = collector.getContextStoreClasses()
-    contextStore.isEmpty()
+    thrown(MuzzleCompilationException)
 
     where:
     desc                                                                        | adviceClassName

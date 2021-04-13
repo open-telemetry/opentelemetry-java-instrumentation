@@ -15,7 +15,6 @@ import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.concurrent.atomic.AtomicReference
-import library.IncorrectCallUsageKeyClass
 import library.KeyClass
 import library.UntransformableKeyClass
 import net.bytebuddy.agent.ByteBuddyAgent
@@ -184,11 +183,6 @@ class FieldBackedProviderTest extends AgentInstrumentationSpecification {
     !new UntransformableKeyClass().isInstrumented()
     new KeyClass().incrementContextCount() == 1
     new UntransformableKeyClass().incrementContextCount() == 1
-  }
-
-  def "incorrect call usage fails at class load time"() {
-    expect:
-    !new IncorrectCallUsageKeyClass().isInstrumented()
   }
 }
 
