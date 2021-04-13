@@ -36,7 +36,7 @@ final class MongoClientTracer
     extends DatabaseClientTracer<CommandStartedEvent, BsonDocument, String> {
 
   private final int maxNormalizedQueryLength;
-  private final JsonWriterSettings jsonWriterSettings;
+  @Nullable private final JsonWriterSettings jsonWriterSettings;
 
   MongoClientTracer(OpenTelemetry openTelemetry, int maxNormalizedQueryLength) {
     super(openTelemetry, NetPeerAttributes.INSTANCE);
@@ -54,7 +54,13 @@ final class MongoClientTracer
   @SuppressWarnings("JdkObsolete")
   protected String sanitizeStatement(BsonDocument command) {
     StringWriter stringWriter = new StringWriter(128);
-    writeScrubbed(command, new JsonWriter(stringWriter, jsonWriterSettings), true);
+    // jsonWriterSettings is generally not null but could be due to security manager or unknown
+    // API incompatibilities, which we can't detect by Muzzle because we use reflection.
+    JsonWriter jsonWriter =
+        jsonWriterSettings != null
+            ? new JsonWriter(stringWriter, jsonWriterSettings)
+            : new JsonWriter(stringWriter);
+    writeScrubbed(command, jsonWriter, true);
     // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
     // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
     StringBuffer buf = stringWriter.getBuffer();
@@ -140,6 +146,7 @@ final class MongoClientTracer
             .orElse(null);
   }
 
+  @Nullable
   private JsonWriterSettings createJsonWriterSettings(int maxNormalizedQueryLength) {
     JsonWriterSettings settings = null;
     try {
@@ -178,7 +185,15 @@ final class MongoClientTracer
       // Ignore
     }
     if (settings == null) {
-      settings = new JsonWriterSettings(false);
+      try {
+        // Constructor removed in 4.0+ so use reflection. 4.0+ will have used the builder above.
+        settings = JsonWriterSettings.class.getConstructor(Boolean.TYPE).newInstance(false);
+      } catch (InstantiationException
+          | IllegalAccessException
+          | InvocationTargetException
+          | NoSuchMethodException ignored) {
+        // Ignore
+      }
     }
 
     return settings;
