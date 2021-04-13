@@ -85,9 +85,11 @@ include ':instrumentation:aws-sdk:aws-sdk-2.2:testing'
 include ':instrumentation:cassandra:cassandra-3.0:javaagent'
 include ':instrumentation:cassandra:cassandra-4.0:javaagent'
 include ':instrumentation:cdi-testing'
-include ':instrumentation:classloaders:javaagent'
-include ':instrumentation:classloaders:javaagent-integration-tests'
-include ':instrumentation:classloaders:javaagent-unittests'
+include ':instrumentation:internal-class-loader:javaagent'
+include ':instrumentation:internal-proxy:javaagent'
+include ':instrumentation:internal-proxy:javaagent-unittests'
+include ':instrumentation:internal-url-class-loader:javaagent'
+include ':instrumentation:internal-url-class-loader:javaagent-integration-tests'
 include ':instrumentation:couchbase:couchbase-2.0:javaagent'
 include ':instrumentation:couchbase:couchbase-2.0:javaagent-unittests'
 include ':instrumentation:couchbase:couchbase-2.6:javaagent'
@@ -280,7 +282,10 @@ include ':benchmark-e2e'
 def setBuildFile(project) {
   // javaagent-unittests modules are needed until those projects have library modules
   // at which time those unittests can be moved to the library modules
-  if (['javaagent', 'javaagent-unittests', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {
+  //
+  // javaagent-integration-tests modules are only needed by "internal-" instrumentation
+  // which needs to be tested by creating some other "test" instrumentation
+  if (['javaagent', 'javaagent-unittests', 'javaagent-integration-tests', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {
     project.buildFileName = "${project.projectDir.parentFile.name}-${project.projectDir.name}.gradle"
   } else {
     project.buildFileName = "${project.name}.gradle"
