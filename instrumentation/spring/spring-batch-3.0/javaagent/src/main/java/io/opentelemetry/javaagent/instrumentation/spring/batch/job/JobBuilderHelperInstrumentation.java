@@ -25,7 +25,7 @@ import org.springframework.batch.core.job.builder.JobBuilderHelper;
 
 public class JobBuilderHelperInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     // Java DSL Job config
     return named("org.springframework.batch.core.job.builder.JobBuilderHelper");
   }

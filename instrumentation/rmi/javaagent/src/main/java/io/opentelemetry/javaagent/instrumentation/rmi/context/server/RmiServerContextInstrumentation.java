@@ -24,7 +24,7 @@ import sun.rmi.transport.Target;
 public class RmiServerContextInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("sun.rmi.transport.ObjectTable"));
   }
 

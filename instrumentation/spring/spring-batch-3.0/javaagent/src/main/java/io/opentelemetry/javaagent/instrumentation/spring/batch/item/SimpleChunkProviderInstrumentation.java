@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 // after beforeRead(), using listener here would cause unfinished spans/scopes
 public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.batch.core.step.item.SimpleChunkProvider");
   }
 

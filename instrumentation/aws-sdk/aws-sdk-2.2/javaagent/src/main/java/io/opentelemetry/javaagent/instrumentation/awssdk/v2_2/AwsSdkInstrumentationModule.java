@@ -58,7 +58,7 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
   // A type instrumentation is needed to trigger resource injection.
   public static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       // This is essentially the entry point of the AWS SDK, all clients implement it. We can ensure
       // our interceptor service definition is injected as early as possible if we typematch against
       // it.

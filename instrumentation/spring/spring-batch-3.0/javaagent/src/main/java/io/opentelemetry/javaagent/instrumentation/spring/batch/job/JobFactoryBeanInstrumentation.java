@@ -28,7 +28,7 @@ import org.springframework.batch.core.jsr.configuration.xml.JobFactoryBean;
 
 public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     // JSR-352 XML config
     return named("org.springframework.batch.core.jsr.configuration.xml.JobFactoryBean");
   }

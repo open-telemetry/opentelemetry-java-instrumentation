@@ -19,23 +19,23 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AgentElementMatchers {
 
   public static <T extends TypeDescription> ElementMatcher.Junction<T> extendsClass(
-      ElementMatcher<? super TypeDescription> matcher) {
+      ElementMatcher<TypeDescription> matcher) {
     return not(isInterface()).and(new SafeExtendsClassMatcher<>(new SafeErasureMatcher<>(matcher)));
   }
 
   public static <T extends TypeDescription> ElementMatcher.Junction<T> implementsInterface(
-      ElementMatcher<? super TypeDescription> matcher) {
+      ElementMatcher<TypeDescription> matcher) {
     return not(isInterface())
         .and(new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), true));
   }
 
   public static <T extends TypeDescription> ElementMatcher.Junction<T> hasInterface(
-      ElementMatcher<? super TypeDescription> matcher) {
+      ElementMatcher<TypeDescription> matcher) {
     return new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), true);
   }
 
   public static <T extends TypeDescription> ElementMatcher.Junction<T> safeHasSuperType(
-      ElementMatcher<? super TypeDescription> matcher) {
+      ElementMatcher<TypeDescription> matcher) {
     return not(isInterface())
         .and(new SafeHasSuperTypeMatcher<>(new SafeErasureMatcher<>(matcher), false));
   }
@@ -48,7 +48,7 @@ public class AgentElementMatchers {
    * @return a matcher that matches method's declaring class against a given type matcher.
    */
   public static <T extends MethodDescription> ElementMatcher.Junction<T> methodIsDeclaredByType(
-      ElementMatcher<? super TypeDescription> matcher) {
+      ElementMatcher<TypeDescription> matcher) {
     return new MethodDeclaringTypeMatcher<>(matcher);
   }
 

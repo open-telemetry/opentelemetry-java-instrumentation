@@ -32,7 +32,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ResourceInjectionInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("java.lang.ClassLoader"));
   }
 

@@ -42,7 +42,7 @@ public class HttpServletResponseInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(named("javax.servlet.http.HttpServletResponse"));
   }
 

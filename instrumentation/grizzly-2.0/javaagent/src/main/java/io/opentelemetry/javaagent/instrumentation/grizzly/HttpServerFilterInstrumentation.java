@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class HttpServerFilterInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.glassfish.grizzly.http.HttpServerFilter");
   }
 

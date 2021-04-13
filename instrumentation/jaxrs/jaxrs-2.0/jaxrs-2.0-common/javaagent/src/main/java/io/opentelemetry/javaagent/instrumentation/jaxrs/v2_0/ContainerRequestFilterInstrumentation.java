@@ -34,7 +34,7 @@ public class ContainerRequestFilterInstrumentation implements TypeInstrumentatio
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("javax.ws.rs.container.ContainerRequestFilter"));
   }
 

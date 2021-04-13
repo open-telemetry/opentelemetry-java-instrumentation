@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.linecorp.armeria.client.WebClientBuilder");
   }
 

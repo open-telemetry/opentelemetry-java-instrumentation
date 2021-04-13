@@ -36,7 +36,7 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     // Exact class because private fields are used
     return nameStartsWith("com.couchbase.client.")
         .<TypeDescription>and(

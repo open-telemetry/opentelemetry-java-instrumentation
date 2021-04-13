@@ -41,7 +41,7 @@ public class WebfluxClientInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return implementsInterface(
           named("org.springframework.web.reactive.function.client.WebClient$Builder"));
     }

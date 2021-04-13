@@ -22,7 +22,7 @@ import ratpack.func.Action;
 public class DefaultExecutionInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("ratpack.exec.internal.DefaultExecution");
   }
 

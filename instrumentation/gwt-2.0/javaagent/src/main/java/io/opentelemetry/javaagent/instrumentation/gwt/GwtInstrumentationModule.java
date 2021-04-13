@@ -47,7 +47,7 @@ public class GwtInstrumentationModule extends InstrumentationModule {
   public static class RpcInstrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("com.google.gwt.user.server.rpc.RPC");
     }
 

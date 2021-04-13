@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.dispatch.Dispatcher");
   }
 

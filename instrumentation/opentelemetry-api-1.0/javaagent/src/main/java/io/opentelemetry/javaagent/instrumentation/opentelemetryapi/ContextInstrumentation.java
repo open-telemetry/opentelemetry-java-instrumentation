@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ContextInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("application.io.opentelemetry.context.ArrayBasedContext");
   }
 

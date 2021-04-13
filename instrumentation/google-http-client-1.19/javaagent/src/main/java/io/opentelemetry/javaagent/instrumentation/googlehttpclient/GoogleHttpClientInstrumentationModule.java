@@ -50,7 +50,7 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
 
   public static class HttpRequestInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       // HttpRequest is a final class.  Only need to instrument it exactly
       // Note: the rest of com.google.api is ignored in AdditionalLibraryIgnoresMatcher to speed
       // things up
