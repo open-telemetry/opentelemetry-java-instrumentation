@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
+package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
@@ -16,8 +16,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.async.SingleResultCallback;
 import com.mongodb.event.CommandListener;
+import com.mongodb.internal.async.SingleResultCallback;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.mongo.TracingCommandListener;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
@@ -34,7 +34,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class MongoClientInstrumentationModule extends InstrumentationModule {
 
   public MongoClientInstrumentationModule() {
-    super("mongo", "mongo-3.7");
+    super("mongo", "mongo-4.0");
   }
 
   @Override
@@ -96,17 +96,17 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
       transformers.put(
           isMethod()
               .and(named("openAsync"))
-              .and(takesArgument(0, named("com.mongodb.async.SingleResultCallback"))),
+              .and(takesArgument(0, named("com.mongodb.internal.async.SingleResultCallback"))),
           MongoClientInstrumentationModule.class.getName() + "$SingleResultCallbackArg0Advice");
       transformers.put(
           isMethod()
               .and(named("readAsync"))
-              .and(takesArgument(1, named("com.mongodb.async.SingleResultCallback"))),
+              .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
           MongoClientInstrumentationModule.class.getName() + "$SingleResultCallbackArg1Advice");
       transformers.put(
           isMethod()
               .and(named("writeAsync"))
-              .and(takesArgument(1, named("com.mongodb.async.SingleResultCallback"))),
+              .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
           MongoClientInstrumentationModule.class.getName() + "$SingleResultCallbackArg1Advice");
       return transformers;
     }
@@ -116,8 +116,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
 
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("com.mongodb.connection.BaseCluster")
-          .or(named("com.mongodb.internal.connection.BaseCluster"));
+      return named("com.mongodb.internal.connection.BaseCluster");
     }
 
     @Override
@@ -127,7 +126,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
               .and(isPublic())
               .and(named("selectServerAsync"))
               .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
-              .and(takesArgument(1, named("com.mongodb.async.SingleResultCallback"))),
+              .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
           MongoClientInstrumentationModule.class.getName() + "$SingleResultCallbackArg1Advice");
     }
   }

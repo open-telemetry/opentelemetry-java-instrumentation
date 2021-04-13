@@ -50,5 +50,10 @@ public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
       }
       return null;
     }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void exitDispatch(@Advice.Enter State state, @Advice.Thrown Throwable throwable) {
+      ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
+    }
   }
 }
