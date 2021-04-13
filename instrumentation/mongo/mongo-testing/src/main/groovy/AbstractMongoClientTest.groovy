@@ -133,6 +133,7 @@ abstract class AbstractMongoClientTest<T> extends AgentInstrumentationSpecificat
         basicSpan(it, 0, "parent")
         mongoSpan(it, 1, "count", collectionName, dbName, span(0)) {
           assert it == "{\"count\":\"$collectionName\",\"query\":{}}" ||
+            it == "{\"count\":\"$collectionName\"}" ||
             it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
         }
@@ -163,6 +164,7 @@ abstract class AbstractMongoClientTest<T> extends AgentInstrumentationSpecificat
         }
         mongoSpan(it, 2, "count", collectionName, dbName, span(0)) {
           assert it == "{\"count\":\"$collectionName\",\"query\":{}}" ||
+            it == "{\"count\":\"$collectionName\"}" ||
             it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
         }
@@ -193,6 +195,7 @@ abstract class AbstractMongoClientTest<T> extends AgentInstrumentationSpecificat
         }
         mongoSpan(it, 2, "count", collectionName, dbName, span(0)) {
           assert it == "{\"count\":\"$collectionName\",\"query\":{}}" ||
+            it == "{\"count\":\"$collectionName\"}" ||
             it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
         }
@@ -223,6 +226,7 @@ abstract class AbstractMongoClientTest<T> extends AgentInstrumentationSpecificat
         }
         mongoSpan(it, 2, "count", collectionName, dbName, span(0)) {
           assert it == "{\"count\":\"$collectionName\",\"query\":{}}" ||
+            it == "{\"count\":\"$collectionName\"}" ||
             it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
         }
