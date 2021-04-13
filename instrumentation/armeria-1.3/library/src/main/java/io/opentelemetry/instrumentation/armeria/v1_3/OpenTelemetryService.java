@@ -8,34 +8,29 @@ package io.opentelemetry.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
-import com.linecorp.armeria.common.logging.RequestLogProperty;
+import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.SimpleDecoratingHttpService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import java.util.concurrent.TimeUnit;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /** Decorates an {@link HttpService} to trace inbound {@link HttpRequest}s. */
 final class OpenTelemetryService extends SimpleDecoratingHttpService {
 
-  private final ArmeriaServerTracer serverTracer;
+  private final Instrumenter<ServiceRequestContext, RequestLog> instrumenter;
 
-  OpenTelemetryService(HttpService delegate, ArmeriaServerTracer serverTracer) {
+  OpenTelemetryService(
+      HttpService delegate, Instrumenter<ServiceRequestContext, RequestLog> instrumenter) {
     super(delegate);
-    this.serverTracer = serverTracer;
+    this.instrumenter = instrumenter;
   }
 
   @Override
   public HttpResponse serve(ServiceRequestContext ctx, HttpRequest req) throws Exception {
-    String spanName = ctx.config().route().patternString();
-
-    // Always available in practice.
-    long requestStartTimeMicros =
-        ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
-    long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Context context = serverTracer.startSpan(req, ctx, null, spanName, requestStartTimeNanos);
+    Context context = instrumenter.start(Context.current(), ctx);
 
     Span span = Span.fromContext(context);
     if (span.isRecording()) {
@@ -43,18 +38,12 @@ final class OpenTelemetryService extends SimpleDecoratingHttpService {
           .whenComplete()
           .thenAccept(
               log -> {
-                if (log.responseHeaders().status() == HttpStatus.NOT_FOUND) {
+                if (log.responseHeaders().status().equals(HttpStatus.NOT_FOUND)) {
                   // Assume a not-found request was not served. The route we use by default will be
                   // some fallback like `/*` which is not as useful as the requested path.
                   span.updateName(ctx.path());
                 }
-                long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
-                if (log.responseCause() != null) {
-                  serverTracer.endExceptionally(
-                      context, log.responseCause(), log, requestEndTimeNanos);
-                } else {
-                  serverTracer.end(context, log, requestEndTimeNanos);
-                }
+                instrumenter.end(context, ctx, log, log.responseCause());
               });
     }
 

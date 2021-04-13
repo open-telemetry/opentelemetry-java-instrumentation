@@ -11,9 +11,7 @@ import com.netflix.hystrix.HystrixCommand
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
-import spock.lang.Timeout
 
-@Timeout(10)
 class HystrixTest extends AgentInstrumentationSpecification {
 
   def "test command #action"() {

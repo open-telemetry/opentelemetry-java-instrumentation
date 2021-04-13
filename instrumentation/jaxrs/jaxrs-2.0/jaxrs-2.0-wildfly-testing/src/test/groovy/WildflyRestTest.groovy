@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.WebTarget
@@ -57,6 +59,7 @@ class WildflyRestTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name getContextRoot() + path
+          kind SERVER
           hasNoParent()
         }
         span(1) {
@@ -67,7 +70,7 @@ class WildflyRestTest extends AgentInstrumentationSpecification {
     }
 
     where:
-    path        | className
+    path       | className
     "cdiHello" | "CdiRestResource"
     "ejbHello" | "EjbRestResource"
   }

@@ -34,7 +34,7 @@ dependencies {
 
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
-  testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
+  testInstrumentation project(':instrumentation:jetty:jetty-8.0:javaagent')
 
   testImplementation "org.testcontainers:selenium:${versions.testcontainers}"
   testImplementation 'org.seleniumhq.selenium:selenium-java:3.141.59'
@@ -45,10 +45,7 @@ dependencies {
   testImplementation group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '9.4.35.v20201120'
 }
 
-task copyTestWebapp(type: Copy) {
-  from file("src/testapp/webapp")
-  into file("$buildDir/testapp/war")
-}
+def warDir = "$buildDir/testapp/war"
 
 task compileGwt(dependsOn: classes, type: JavaExec) {
   // versions before 2.9 require java8
@@ -57,13 +54,11 @@ task compileGwt(dependsOn: classes, type: JavaExec) {
   }
 
   def extraDir = "$buildDir/testapp/extra"
-  def warDir = "$buildDir/testapp/war"
 
+  outputs.cacheIf { true }
+
+  outputs.dir extraDir
   outputs.dir warDir
-
-  doFirst {
-    file(warDir).mkdirs()
-  }
 
   main = 'com.google.gwt.dev.Compiler'
 
@@ -85,7 +80,16 @@ task compileGwt(dependsOn: classes, type: JavaExec) {
   ]
 }
 
-test.dependsOn sourceSets.testapp.output, compileGwt, copyTestWebapp
+task copyTestWebapp(type: Copy) {
+  dependsOn compileGwt
+  
+  from file("src/testapp/webapp")
+  from warDir
+
+  into file("$buildDir/testapp/web")
+}
+
+test.dependsOn sourceSets.testapp.output, copyTestWebapp
 
 test {
   // add test app classes to classpath

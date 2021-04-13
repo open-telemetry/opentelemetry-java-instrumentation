@@ -6,8 +6,10 @@
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase
 import org.apache.hc.client5.http.config.RequestConfig
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.core5.http.ClassicHttpRequest
@@ -19,12 +21,11 @@ import org.apache.hc.core5.http.message.BasicHeader
 import org.apache.hc.core5.http.protocol.BasicHttpContext
 import spock.lang.AutoCleanup
 import spock.lang.Shared
-import spock.lang.Timeout
 
-abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest implements AgentTestTrait {
+abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTest<T> implements AgentTestTrait {
   @Shared
   @AutoCleanup
-  def client
+  CloseableHttpClient client
 
   def setupSpec() {
     HttpClientBuilder builder = HttpClients.custom()
@@ -36,21 +37,34 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  T buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = createRequest(method, uri)
     headers.entrySet().each {
-      request.addHeader(new BasicHeader(it.key, it.value))
+      request.setHeader(new BasicHeader(it.key, it.value))
     }
+    return request
+  }
 
-    def response = executeRequest(request, uri, callback)
+  // compilation fails with @Override annotation on this method (groovy quirk?)
+  int sendRequest(T request, String method, URI uri, Map<String, String> headers) {
+    def response = executeRequest(request, uri)
     response.close() // Make sure the connection is closed.
-
     return response.code
+  }
+
+  // compilation fails with @Override annotation on this method (groovy quirk?)
+  void sendRequestWithCallback(T request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    executeRequestWithCallback(request, uri) {
+      it.close() // Make sure the connection is closed.
+      callback.accept(it.code)
+    }
   }
 
   abstract T createRequest(String method, URI uri)
 
-  abstract ClassicHttpResponse executeRequest(T request, URI uri, Closure callback)
+  abstract ClassicHttpResponse executeRequest(T request, URI uri)
+
+  abstract void executeRequestWithCallback(T request, URI uri, Consumer<ClassicHttpResponse> callback)
 
   static String fullPathFromURI(URI uri) {
     StringBuilder builder = new StringBuilder()
@@ -71,7 +85,6 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 }
 
-@Timeout(5)
 class ApacheClientHostRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -79,10 +92,15 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
-    def response = client.execute(new HttpHost(uri.getHost(), uri.getPort()), request)
-    callback?.call()
-    return response
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request)
+  }
+
+  @Override
+  void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort()), request) {
+      callback.accept(it)
+    }
   }
 
   @Override
@@ -91,7 +109,6 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   }
 }
 
-@Timeout(5)
 class ApacheClientHostRequestContext extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -99,10 +116,15 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<ClassicHttpReq
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
-    def response = client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext())
-    callback?.call()
-    return response
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) {
+    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext())
+  }
+
+  @Override
+  void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
+    client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext()) {
+      callback.accept(it)
+    }
   }
 
   @Override
@@ -111,49 +133,6 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<ClassicHttpReq
   }
 }
 
-@Timeout(5)
-class ApacheClientHostRequestResponseHandler extends ApacheHttpClientTest<ClassicHttpRequest> {
-  @Override
-  ClassicHttpRequest createRequest(String method, URI uri) {
-    return new BasicClassicHttpRequest(method, fullPathFromURI(uri))
-  }
-
-  @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, {
-      callback?.call()
-      return it
-    })
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
-  }
-}
-
-@Timeout(5)
-class ApacheClientHostRequestResponseHandlerContext extends ApacheHttpClientTest<ClassicHttpRequest> {
-  @Override
-  ClassicHttpRequest createRequest(String method, URI uri) {
-    return new BasicClassicHttpRequest(method, fullPathFromURI(uri))
-  }
-
-  @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext(), {
-      callback?.call()
-      return it
-    })
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
-  }
-}
-
-@Timeout(5)
 class ApacheClientUriRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -161,14 +140,18 @@ class ApacheClientUriRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
-    def response = client.execute(request)
-    callback?.call()
-    return response
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) {
+    return client.execute(request)
+  }
+
+  @Override
+  void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
+    client.execute(request) {
+      callback.accept(it)
+    }
   }
 }
 
-@Timeout(5)
 class ApacheClientUriRequestContext extends ApacheHttpClientTest<ClassicHttpRequest> {
   @Override
   ClassicHttpRequest createRequest(String method, URI uri) {
@@ -176,41 +159,14 @@ class ApacheClientUriRequestContext extends ApacheHttpClientTest<ClassicHttpRequ
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
-    def response = client.execute(request, new BasicHttpContext())
-    callback?.call()
-    return response
-  }
-}
-
-@Timeout(5)
-class ApacheClientUriRequestResponseHandler extends ApacheHttpClientTest<ClassicHttpRequest> {
-  @Override
-  ClassicHttpRequest createRequest(String method, URI uri) {
-    return new HttpUriRequestBase(method, uri)
+  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) {
+    return client.execute(request, new BasicHttpContext())
   }
 
   @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
-    return client.execute(request, {
-      callback?.call()
-      it
-    })
-  }
-}
-
-@Timeout(5)
-class ApacheClientUriRequestResponseHandlerContext extends ApacheHttpClientTest<ClassicHttpRequest> {
-  @Override
-  ClassicHttpRequest createRequest(String method, URI uri) {
-    return new HttpUriRequestBase(method, uri)
-  }
-
-  @Override
-  ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri, Closure callback) {
-    return client.execute(request, {
-      callback?.call()
-      it
-    })
+  void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
+    client.execute(request, new BasicHttpContext()) {
+      callback.accept(it)
+    }
   }
 }

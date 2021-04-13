@@ -22,11 +22,9 @@ import okhttp3.Callback
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.Response
-import spock.lang.Timeout
 import spock.lang.Unroll
 
 abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements AgentTestTrait {
-  @Timeout(10)
   @Unroll
   def "should handle #desc AsyncResponse"() {
     given:
@@ -72,7 +70,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     "canceled"   | "cancel"  | 503        | { it instanceof String } | true        | false   | null
   }
 
-  @Timeout(10)
   @Unroll
   def "should handle #desc CompletionStage (JAX-RS 2.1+ only)"() {
     assumeTrue(shouldTestCompletableStageAsync())

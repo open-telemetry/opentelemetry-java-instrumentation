@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /** Configuration for enabling tracing aspects. */
-@ConfigurationProperties(prefix = "opentelemetry.trace.aspects")
+@ConfigurationProperties(prefix = "otel.springboot.aspects")
 public final class TraceAspectProperties {
   private boolean enabled;
 

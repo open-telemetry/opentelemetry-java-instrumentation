@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
@@ -51,6 +52,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentInstrumentationS
       trace(0, 2) {
         span(0) {
           name paramName
+          kind SERVER
           hasNoParent()
           attributes {
           }
@@ -137,6 +139,7 @@ abstract class JaxRsAnnotationsInstrumentationTest extends AgentInstrumentationS
       trace(0, 1) {
         span(0) {
           name "test"
+          kind SERVER
           attributes {
           }
         }

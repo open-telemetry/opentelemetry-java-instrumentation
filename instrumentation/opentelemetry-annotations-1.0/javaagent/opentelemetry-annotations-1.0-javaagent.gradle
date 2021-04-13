@@ -8,6 +8,7 @@ dependencies {
   compileOnly project(path: ':opentelemetry-ext-annotations-shaded-for-instrumenting', configuration: 'shadow')
 
   testImplementation deps.opentelemetryExtAnnotations
+  testImplementation "net.bytebuddy:byte-buddy:${versions.bytebuddy}"
 }
 
 test {

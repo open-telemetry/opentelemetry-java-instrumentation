@@ -28,7 +28,7 @@ class TwoServicesConfig {
           .log("Service One request: \${body}")
           .delay(simple("\${random(1000,2000)}"))
           .transform(simple("Service-One-\${body}"))
-          .to("http://0.0.0.0:{{service.two.port}}/serviceTwo")
+          .to("http://127.0.0.1:{{service.two.port}}/serviceTwo")
           .log("Service One response: \${body}")
       }
     }

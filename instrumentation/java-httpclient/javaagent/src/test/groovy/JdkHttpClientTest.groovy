@@ -13,33 +13,39 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import java.util.function.Consumer
 import spock.lang.Requires
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
-abstract class JdkHttpClientTest extends HttpClientTest implements AgentTestTrait {
+class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
 
   @Shared
   def client = HttpClient.newBuilder().connectTimeout(Duration.of(CONNECT_TIMEOUT_MS,
     ChronoUnit.MILLIS)).followRedirects(HttpClient.Redirect.NORMAL).build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-
-    def builder = HttpRequest.newBuilder().uri(uri).method(method, HttpRequest.BodyPublishers.noBody())
-
+  HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def requestBuilder = HttpRequest.newBuilder()
+      .uri(uri)
+      .method(method, HttpRequest.BodyPublishers.noBody())
     headers.entrySet().each {
-      builder.header(it.key, it.value)
+      requestBuilder.header(it.key, it.value)
     }
-    def request = builder.build()
-
-    def resp = send(request)
-    callback?.call()
-    return resp.statusCode()
+    return requestBuilder.build()
   }
 
-  abstract HttpResponse send(HttpRequest request)
+  @Override
+  int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
+    return client.send(request, HttpResponse.BodyHandlers.ofString()).statusCode()
+  }
+
+  @Override
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+      .thenAccept {
+        callback.accept(it.statusCode())
+      }
+  }
 
   @Override
   boolean testCircularRedirects() {
@@ -50,6 +56,13 @@ abstract class JdkHttpClientTest extends HttpClientTest implements AgentTestTrai
   @Override
   boolean testRemoteConnection() {
     return false
+  }
+
+  // TODO nested client span is not created, but context is still injected
+  //  which is not what the test expects
+  @Override
+  boolean testWithClientParent() {
+    false
   }
 
   @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })

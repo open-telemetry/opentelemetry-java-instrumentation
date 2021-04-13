@@ -10,9 +10,9 @@ There are a few key components that make this possible, described below.
 * shades the instrumentation
 * adds jvm args to the test configuration
   * -javaagent:[agent for testing]
-  * -Dotel.initializer.jar=[shaded instrumentation jar]
+  * -Dotel.javaagent.experimental.initializer.jar=[shaded instrumentation jar]
 
-The `otel.initializer.jar` property is used to load the shaded instrumentation jar into the
+The `otel.javaagent.experimental.initializer.jar` property is used to load the shaded instrumentation jar into the
 `AgentClassLoader`, so that the javaagent jar doesn't need to be re-built each time.
 
 ### :testing:agent-exporter

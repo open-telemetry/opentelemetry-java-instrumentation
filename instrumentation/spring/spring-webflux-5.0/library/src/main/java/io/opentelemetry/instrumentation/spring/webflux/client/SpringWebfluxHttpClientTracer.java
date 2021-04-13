@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.instrumentation.spring.webflux.client.HttpHeadersInjectAdapter.SETTER;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
@@ -21,22 +22,21 @@ import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
-public class SpringWebfluxHttpClientTracer
+class SpringWebfluxHttpClientTracer
     extends HttpClientTracer<ClientRequest, ClientRequest.Builder, ClientResponse> {
 
-  private static final SpringWebfluxHttpClientTracer TRACER = new SpringWebfluxHttpClientTracer();
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty(
+              "otel.instrumentation.spring-webflux.experimental-span-attributes", false);
 
-  private SpringWebfluxHttpClientTracer() {
-    super(new NetPeerAttributes());
-  }
-
-  public static SpringWebfluxHttpClientTracer tracer() {
-    return TRACER;
+  SpringWebfluxHttpClientTracer(OpenTelemetry openTelemetry) {
+    super(openTelemetry, new NetPeerAttributes());
   }
 
   private static final MethodHandle RAW_STATUS_CODE = findRawStatusCode();
 
-  public void onCancel(Context context) {
+  void onCancel(Context context) {
     if (captureExperimentalSpanAttributes()) {
       Span span = Span.fromContext(context);
       span.setAttribute("spring-webflux.event", "cancelled");
@@ -101,11 +101,7 @@ public class SpringWebfluxHttpClientTracer
     }
   }
 
-  // TODO cache this after
-  //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/1643
   private static boolean captureExperimentalSpanAttributes() {
-    return Config.get()
-        .getBooleanProperty(
-            "otel.instrumentation.spring-webflux.experimental-span-attributes", false);
+    return CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES;
   }
 }

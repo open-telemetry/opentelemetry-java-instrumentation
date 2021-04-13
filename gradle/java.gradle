@@ -52,6 +52,7 @@ java {
 
 tasks.withType(JavaCompile) {
   options.release.set(project.ext.release.majorVersion.toInteger())
+  options.compilerArgs.add("-Werror")
 }
 //Groovy and Scala compilers don't actually understand --release option
 tasks.withType(GroovyCompile) {
@@ -94,9 +95,6 @@ jar {
 repositories {
   mavenCentral()
   mavenLocal()
-  maven {
-    url "https://repo.typesafe.com/typesafe/releases"
-  }
 }
 
 dependencies {
@@ -136,6 +134,8 @@ normalization {
 
 javadoc {
   options.addStringOption('Xdoclint:none', '-quiet')
+  // non-standard option to fail on warnings, see https://bugs.openjdk.java.net/browse/JDK-8200363
+  options.addStringOption('Xwerror', '-quiet')
 
   doFirst {
     if (project.ext.has("apiLinks")) {
@@ -224,9 +224,9 @@ tasks.withType(Test).configureEach {
 
   // There's no real harm in setting this for all tests even if any happen to not be using context
   // propagation.
-  jvmArgs "-Dio.opentelemetry.context.enableStrictContext=true"
+  jvmArgs "-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty('enableStrictContext') ?: false}"
   // TODO(anuraaga): Have agent map unshaded to shaded.
-  jvmArgs "-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=true"
+  jvmArgs "-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty('enableStrictContext') ?: false}"
 }
 
 tasks.withType(AbstractArchiveTask) {

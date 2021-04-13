@@ -5,19 +5,17 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import java.util.function.Consumer
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.http.ResponseEntity
 import org.springframework.http.client.ClientHttpRequestFactory
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
-class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
+class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implements AgentTestTrait {
 
   @Shared
   ClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory()
@@ -29,17 +27,30 @@ class SpringRestTemplateTest extends HttpClientTest implements AgentTestTrait {
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  HttpEntity<String> buildRequest(String method, URI uri, Map<String, String> headers) {
+    def httpHeaders = new HttpHeaders()
+    headers.each { httpHeaders.put(it.key, [it.value]) }
+    return new HttpEntity<String>(httpHeaders)
+  }
+
+  @Override
+  int sendRequest(HttpEntity<String> request, String method, URI uri, Map<String, String> headers) {
     try {
-      def httpHeaders = new HttpHeaders()
-      headers.each { httpHeaders.put(it.key, [it.value]) }
-      def request = new HttpEntity<String>(httpHeaders)
-      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.resolve(method), request, String)
-      callback?.call()
-      return response.statusCode.value()
+      return restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
+        .statusCode
+        .value()
     } catch (ResourceAccessException exception) {
       throw exception.getCause()
     }
+  }
+
+  @Override
+  void sendRequestWithCallback(HttpEntity<String> request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    restTemplate.execute(uri, HttpMethod.valueOf(method), { req ->
+      req.getHeaders().putAll(request.getHeaders())
+    }, { response ->
+      callback.accept(response.statusCode.value())
+    })
   }
 
   @Override

@@ -13,4 +13,17 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest implements Lib
   WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder.decorator(ArmeriaTracing.create(getOpenTelemetry()).newClientDecorator())
   }
+
+  // library instrumentation doesn't have a good way of suppressing nested CLIENT spans yet
+  @Override
+  boolean testWithClientParent() {
+    false
+  }
+
+  // Agent users have automatic propagation through executor instrumentation, but library users
+  // should do manually using Armeria patterns.
+  @Override
+  boolean testCallbackWithParent() {
+    false
+  }
 }

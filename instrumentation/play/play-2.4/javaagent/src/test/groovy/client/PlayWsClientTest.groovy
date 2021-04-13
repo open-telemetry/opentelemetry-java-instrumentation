@@ -7,35 +7,46 @@ package client
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import java.util.concurrent.CompletionStage
+import java.util.function.Consumer
 import play.libs.ws.WS
+import play.libs.ws.WSRequest
+import play.libs.ws.WSResponse
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Subject
-import spock.lang.Timeout
 
 // Play 2.6+ uses a separately versioned client that shades the underlying dependency
 // This means our built in instrumentation won't work.
-@Timeout(5)
-class PlayWsClientTest extends HttpClientTest implements AgentTestTrait {
+class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTrait {
   @Subject
   @Shared
   @AutoCleanup
   def client = WS.newClient(-1)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  WSRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = client.url(uri.toString())
     headers.entrySet().each {
       request.setHeader(it.key, it.value)
     }
+    return request
+  }
 
-    def status = request.execute(method).thenApply {
-      callback?.call()
-      it
-    }.thenApply {
-      it.status
+  @Override
+  int sendRequest(WSRequest request, String method, URI uri, Map<String, String> headers) {
+    return internalSendRequest(request, method).toCompletableFuture().get().status
+  }
+
+  @Override
+  void sendRequestWithCallback(WSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    internalSendRequest(request, method).thenAccept {
+      callback.accept(it.status)
     }
-    return status.toCompletableFuture().get()
+  }
+
+  private static CompletionStage<WSResponse> internalSendRequest(WSRequest request, String method) {
+    return request.execute(method)
   }
 
   //TODO see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2347

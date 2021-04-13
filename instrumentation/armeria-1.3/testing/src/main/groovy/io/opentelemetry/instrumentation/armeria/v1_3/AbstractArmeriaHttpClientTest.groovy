@@ -5,22 +5,19 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3
 
-import com.google.common.util.concurrent.MoreExecutors
 import com.linecorp.armeria.client.WebClient
 import com.linecorp.armeria.client.WebClientBuilder
-import com.linecorp.armeria.common.AggregatedHttpResponse
 import com.linecorp.armeria.common.HttpMethod
 import com.linecorp.armeria.common.HttpRequest
 import com.linecorp.armeria.common.RequestHeaders
-import io.opentelemetry.context.Context
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-import java.util.function.BiConsumer
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import java.util.concurrent.CompletionException
+import java.util.function.Consumer
 import spock.lang.Shared
 
-abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
+abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest> {
 
   abstract WebClientBuilder configureClient(WebClientBuilder clientBuilder)
 
@@ -28,33 +25,31 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
   def client = configureClient(WebClient.builder()).build()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    HttpRequest request = HttpRequest.of(
+  HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    return HttpRequest.of(
       RequestHeaders.builder(HttpMethod.valueOf(method), uri.toString())
         .set(headers.entrySet())
         .build())
+  }
 
-    AtomicReference<AggregatedHttpResponse> responseRef = new AtomicReference<>()
-    AtomicReference<Throwable> exRef = new AtomicReference<>()
-    def latch = new CountDownLatch(1)
-    client.execute(request).aggregate().whenCompleteAsync(new BiConsumer<AggregatedHttpResponse, Throwable>() {
-      @Override
-      void accept(AggregatedHttpResponse aggregatedHttpResponse, Throwable throwable) {
-        if (throwable != null) {
-          exRef.set(throwable)
-        } else {
-          responseRef.set(aggregatedHttpResponse)
-        }
-        callback?.call()
-        latch.countDown()
-      }
-    }, Context.current().wrap(MoreExecutors.directExecutor()))
-
-    latch.await(30, TimeUnit.SECONDS)
-    if (exRef.get() != null) {
-      throw exRef.get()
+  @Override
+  int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
+    try {
+      return client.execute(request)
+        .aggregate()
+        .join()
+        .status()
+        .code()
+    } catch (CompletionException e) {
+      throw e.cause
     }
-    return responseRef.get().status().code()
+  }
+
+  @Override
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    client.execute(request).aggregate().thenAccept {
+      callback.accept(it.status().code())
+    }
   }
 
   // Not supported yet: https://github.com/line/armeria/issues/2489
@@ -63,9 +58,26 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest {
     false
   }
 
+  @Override
+  boolean testReusedRequest() {
+    // armeria requests can't be reused
+    false
+  }
+
   // TODO(anuraaga): Enable after fixing the test https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2344
   @Override
   boolean testRemoteConnection() {
     false
+  }
+
+  @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_HOST,
+      SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
+      SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_TARGET,
+    ]
   }
 }

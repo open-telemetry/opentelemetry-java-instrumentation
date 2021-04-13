@@ -1,0 +1,6 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+dependencies {
+  api(project(':instrumentation:servlet:servlet-common:library'))
+  compileOnly group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.4'
+}

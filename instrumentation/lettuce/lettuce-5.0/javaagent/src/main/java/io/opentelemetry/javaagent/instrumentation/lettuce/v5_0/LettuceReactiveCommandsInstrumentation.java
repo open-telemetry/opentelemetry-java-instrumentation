@@ -18,6 +18,7 @@ import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx.LettuceMonoCre
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -35,7 +36,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     transformers.put(
         isMethod()
             .and(named("createMono"))
-            .and(takesArgument(0, named("java.util.function.Supplier")))
+            .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Mono"))),
         LettuceMonoCreationAdvice.class.getName());
     transformers.put(
@@ -43,7 +44,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
             .and(nameStartsWith("create"))
             .and(nameEndsWith("Flux"))
             .and(isPublic())
-            .and(takesArgument(0, named("java.util.function.Supplier")))
+            .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Flux"))),
         LettuceFluxCreationAdvice.class.getName());
 

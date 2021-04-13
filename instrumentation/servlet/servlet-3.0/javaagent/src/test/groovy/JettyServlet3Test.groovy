@@ -122,6 +122,11 @@ class JettyServlet3TestSync extends JettyServlet3Test {
   Class<Servlet> servlet() {
     TestServlet3.Sync
   }
+
+  @Override
+  boolean testConcurrency() {
+    return true
+  }
 }
 
 class JettyServlet3TestAsync extends JettyServlet3Test {

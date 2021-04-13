@@ -5,7 +5,8 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent.CancellationException
+import java.util.function.Consumer
 import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.concurrent.FutureCallback
@@ -13,10 +14,8 @@ import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
-class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait {
+class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implements AgentTestTrait {
 
   @Shared
   RequestConfig requestConfig = RequestConfig.custom()
@@ -32,38 +31,37 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     def request = new HttpUriRequest(method, uri)
     headers.entrySet().each {
       request.addHeader(new BasicHeader(it.key, it.value))
     }
+    return request
+  }
 
-    def latch = new CountDownLatch(callback == null ? 0 : 1)
+  @Override
+  int sendRequest(HttpUriRequest request, String method, URI uri, Map<String, String> headers) {
+    return client.execute(request, null).get().statusLine.statusCode
+  }
 
-    def handler = callback == null ? null : new FutureCallback<HttpResponse>() {
-
+  @Override
+  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    client.execute(request, new FutureCallback<HttpResponse>() {
       @Override
-      void completed(HttpResponse result) {
-        callback()
-        latch.countDown()
+      void completed(HttpResponse httpResponse) {
+        callback.accept(httpResponse.statusLine.statusCode)
       }
 
       @Override
-      void failed(Exception ex) {
-        latch.countDown()
+      void failed(Exception e) {
+        throw e
       }
 
       @Override
       void cancelled() {
-        latch.countDown()
+        throw new CancellationException()
       }
-    }
-
-    def future = client.execute(request, handler)
-    def response = future.get()
-    response.entity?.content?.close() // Make sure the connection is closed.
-    latch.await()
-    response.statusLine.statusCode
+    })
   }
 
   @Override
@@ -78,6 +76,6 @@ class ApacheHttpAsyncClientTest extends HttpClientTest implements AgentTestTrait
 
   @Override
   boolean testCausality() {
-    return false
+    false
   }
 }

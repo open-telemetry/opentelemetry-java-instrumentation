@@ -33,7 +33,7 @@ class WebMvcFilterAutoConfigurationTest {
   @DisplayName("when web is ENABLED should initialize WebMvcTracingFilter bean")
   void webEnabled() {
     this.contextRunner
-        .withPropertyValues("opentelemetry.trace.web.enabled=true")
+        .withPropertyValues("otel.springboot.web.enabled=true")
         .run(
             (context) -> {
               assertThat(context.getBean("otelWebMvcTracingFilter", WebMvcTracingFilter.class))
@@ -45,7 +45,7 @@ class WebMvcFilterAutoConfigurationTest {
   @DisplayName("when web is DISABLED should NOT initialize WebMvcTracingFilter bean")
   void disabledProperty() {
     this.contextRunner
-        .withPropertyValues("opentelemetry.trace.web.enabled=false")
+        .withPropertyValues("otel.springboot.web.enabled=false")
         .run(
             (context) -> {
               assertThat(context.containsBean("otelWebMvcTracingFilter")).isFalse();

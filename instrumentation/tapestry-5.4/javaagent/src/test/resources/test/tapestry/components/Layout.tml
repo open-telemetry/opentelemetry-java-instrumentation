@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:t="http://tapestry.apache.org/schema/tapestry_5_4.xsd">
+
+  <head>
+    <title>${title}</title>
+  </head>
+
+  <body>
+    <t:body />
+  </body>
+</html>

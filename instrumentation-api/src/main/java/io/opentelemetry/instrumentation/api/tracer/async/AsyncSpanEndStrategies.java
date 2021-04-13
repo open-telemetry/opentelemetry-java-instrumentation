@@ -24,12 +24,20 @@ public class AsyncSpanEndStrategies {
   private final List<AsyncSpanEndStrategy> strategies = new CopyOnWriteArrayList<>();
 
   private AsyncSpanEndStrategies() {
-    strategies.add(Jdk8AsyncEndStrategy.INSTANCE);
+    strategies.add(Jdk8AsyncSpanEndStrategy.INSTANCE);
   }
 
   public void registerStrategy(AsyncSpanEndStrategy strategy) {
     Objects.requireNonNull(strategy);
     strategies.add(strategy);
+  }
+
+  public void unregisterStrategy(AsyncSpanEndStrategy strategy) {
+    strategies.remove(strategy);
+  }
+
+  public void unregisterStrategy(Class<? extends AsyncSpanEndStrategy> strategyClass) {
+    strategies.removeIf(strategy -> strategy.getClass() == strategyClass);
   }
 
   @Nullable

@@ -47,7 +47,8 @@ import org.slf4j.LoggerFactory;
  * possible to extend and reuse them in vendor distributions.
  */
 public abstract class InstrumentationModule {
-  private static final Logger log = LoggerFactory.getLogger(InstrumentationModule.class);
+  private static final TransformSafeLogger log =
+      TransformSafeLogger.getLogger(InstrumentationModule.class);
   private static final Logger muzzleLog = LoggerFactory.getLogger("muzzleMatcher");
 
   private static final String[] EMPTY = new String[0];
@@ -233,7 +234,7 @@ public abstract class InstrumentationModule {
             }
           }
         } else {
-          if (muzzleLog.isDebugEnabled()) {
+          if (log.isDebugEnabled()) {
             log.debug(
                 "Applying instrumentation: {} -- {} on {}",
                 mainInstrumentationName(),
@@ -304,9 +305,9 @@ public abstract class InstrumentationModule {
 
   /**
    * Instrumentation modules can override this method to provide additional helper classes that are
-   * not located in instrumentation packages described in {@link InstrumentationClassPredicate} (and
-   * not automatically detected by muzzle). These additional classes will be injected into the
-   * application classloader first.
+   * not located in instrumentation packages described in {@link InstrumentationClassPredicate} and
+   * {@link #isHelperClass(String)} (and not automatically detected by muzzle). These additional
+   * classes will be injected into the application classloader first.
    */
   protected String[] additionalHelperClassNames() {
     return EMPTY;
@@ -355,7 +356,13 @@ public abstract class InstrumentationModule {
     return Collections.emptyMap();
   }
 
+  /**
+   * Allows instrumentation modules to disable themselves by default, or to additionally disable
+   * themselves on some other condition.
+   */
   protected boolean defaultEnabled() {
+    // TODO (trask) caching this value statically requires changing (or removing) the tests that
+    //  rely on updating the value
     return Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
   }
 }

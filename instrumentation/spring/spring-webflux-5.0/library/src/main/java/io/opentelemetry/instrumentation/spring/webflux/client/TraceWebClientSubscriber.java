@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
-import static io.opentelemetry.instrumentation.spring.webflux.client.SpringWebfluxHttpClientTracer.tracer;
-
 import io.opentelemetry.context.Scope;
 import org.reactivestreams.Subscription;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -16,17 +14,21 @@ import reactor.core.CoreSubscriber;
  * Based on Spring Sleuth's Reactor instrumentation.
  * https://github.com/spring-cloud/spring-cloud-sleuth/blob/master/spring-cloud-sleuth-core/src/main/java/org/springframework/cloud/sleuth/instrument/web/client/TraceWebClientBeanPostProcessor.java
  */
-public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
+final class TraceWebClientSubscriber implements CoreSubscriber<ClientResponse> {
 
-  final CoreSubscriber<? super ClientResponse> actual;
+  private final SpringWebfluxHttpClientTracer tracer;
 
-  final reactor.util.context.Context context;
+  private final CoreSubscriber<? super ClientResponse> actual;
+
+  private final reactor.util.context.Context context;
 
   private final io.opentelemetry.context.Context tracingContext;
 
-  public TraceWebClientSubscriber(
+  TraceWebClientSubscriber(
+      SpringWebfluxHttpClientTracer tracer,
       CoreSubscriber<? super ClientResponse> actual,
       io.opentelemetry.context.Context tracingContext) {
+    this.tracer = tracer;
     this.actual = actual;
     this.tracingContext = tracingContext;
     this.context = actual.currentContext();
@@ -42,7 +44,7 @@ public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResp
     try (Scope ignored = tracingContext.makeCurrent()) {
       this.actual.onNext(response);
     } finally {
-      tracer().end(tracingContext, response);
+      tracer.end(tracingContext, response);
     }
   }
 
@@ -51,7 +53,7 @@ public final class TraceWebClientSubscriber implements CoreSubscriber<ClientResp
     try (Scope ignored = tracingContext.makeCurrent()) {
       this.actual.onError(t);
     } finally {
-      tracer().endExceptionally(tracingContext, t);
+      tracer.endExceptionally(tracingContext, t);
     }
   }
 

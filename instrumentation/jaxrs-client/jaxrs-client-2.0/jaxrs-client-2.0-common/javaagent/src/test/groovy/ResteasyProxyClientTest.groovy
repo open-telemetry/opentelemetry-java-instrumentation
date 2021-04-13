@@ -17,9 +17,18 @@ import org.apache.http.client.utils.URLEncodedUtils
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 import org.jboss.resteasy.specimpl.ResteasyUriBuilder
 
-class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
+class ResteasyProxyClientTest extends HttpClientTest<ResteasyProxyResource> implements AgentTestTrait {
+
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  ResteasyProxyResource buildRequest(String method, URI uri, Map<String, String> headers) {
+    return new ResteasyClientBuilder()
+      .build()
+      .target(new ResteasyUriBuilder().uri(server.address))
+      .proxy(ResteasyProxyResource)
+  }
+
+  @Override
+  int sendRequest(ResteasyProxyResource proxy, String method, URI uri, Map<String, String> headers) {
     def proxyMethodName = "${method}_${uri.path}".toLowerCase()
       .replace("/", "")
       .replace('-', '_')
@@ -31,14 +40,8 @@ class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
 
     def isTestServer = headers.get("is-test-server")
 
-    def proxy = new ResteasyClientBuilder()
-      .build()
-      .target(new ResteasyUriBuilder().uri(server.address))
-      .proxy(ResteasyProxyResource)
-
-    def response = proxy."$proxyMethodName"(param, isTestServer)
-
-    callback?.call()
+    Response response = proxy."$proxyMethodName"(param, isTestServer)
+    response.close()
 
     return response.status
   }
@@ -60,6 +63,11 @@ class ResteasyProxyClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Override
   boolean testCausality() {
+    false
+  }
+
+  @Override
+  boolean testCallback() {
     false
   }
 

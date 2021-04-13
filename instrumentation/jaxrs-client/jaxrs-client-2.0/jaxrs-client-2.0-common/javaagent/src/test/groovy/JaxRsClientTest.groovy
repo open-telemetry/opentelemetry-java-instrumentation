@@ -9,11 +9,11 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.client.Client
+import java.util.function.Consumer
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
 import javax.ws.rs.client.Invocation
-import javax.ws.rs.client.WebTarget
+import javax.ws.rs.client.InvocationCallback
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
@@ -21,23 +21,46 @@ import org.glassfish.jersey.client.ClientConfig
 import org.glassfish.jersey.client.ClientProperties
 import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import spock.lang.Timeout
 import spock.lang.Unroll
 
-abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait {
+abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implements AgentTestTrait {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  Invocation.Builder buildRequest(String method, URI uri, Map<String, String> headers) {
+    return internalBuildRequest(uri, headers)
+  }
 
-    Client client = builder().build()
-    WebTarget service = client.target(uri)
-    Invocation.Builder request = service.request(MediaType.TEXT_PLAIN)
-    headers.each { request.header(it.key, it.value) }
+  @Override
+  int sendRequest(Invocation.Builder request, String method, URI uri, Map<String, String> headers) {
     def body = BODY_METHODS.contains(method) ? Entity.text("") : null
-    Response response = request.method(method, (Entity) body)
-    callback?.call()
-
+    def response = request.build(method, body).invoke()
+    response.close()
     return response.status
+  }
+
+  @Override
+  void sendRequestWithCallback(Invocation.Builder request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    def body = BODY_METHODS.contains(method) ? Entity.text("") : null
+
+    request.async().method(method, (Entity) body, new InvocationCallback<Response>() {
+      @Override
+      void completed(Response response) {
+        callback.accept(response.status)
+      }
+
+      @Override
+      void failed(Throwable throwable) {
+        throw throwable
+      }
+    })
+  }
+
+  private Invocation.Builder internalBuildRequest(URI uri, Map<String, String> headers) {
+    def client = builder().build()
+    def service = client.target(uri)
+    def requestBuilder = service.request(MediaType.TEXT_PLAIN)
+    headers.each { requestBuilder.header(it.key, it.value) }
+    return requestBuilder
   }
 
   abstract ClientBuilder builder()
@@ -83,7 +106,6 @@ abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait 
   }
 }
 
-@Timeout(5)
 class JerseyClientTest extends JaxRsClientTest {
 
   @Override
@@ -93,12 +115,22 @@ class JerseyClientTest extends JaxRsClientTest {
     return new JerseyClientBuilder().withConfig(config)
   }
 
+  @Override
   boolean testCircularRedirects() {
+    false
+  }
+
+  // TODO jaxrs client instrumentation captures the (default) user-agent on the second (reused)
+  //  request, which then fails the test verification
+  //  ideally the instrumentation would capture the default user-agent on the first request,
+  //  and the test http server would verify that the user-agent was sent and matches what was
+  //  captured from the client instrumentation
+  @Override
+  boolean testReusedRequest() {
     false
   }
 }
 
-@Timeout(5)
 class ResteasyClientTest extends JaxRsClientTest {
 
   @Override
@@ -112,7 +144,6 @@ class ResteasyClientTest extends JaxRsClientTest {
   }
 }
 
-@Timeout(5)
 class CxfClientTest extends JaxRsClientTest {
 
   @Override

@@ -52,7 +52,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
   @Shared
   def scheduleCallable = { e, c -> e.schedule((Callable) c, 10, TimeUnit.MILLISECONDS) }
 
-  def "#poolImpl '#name' propagates"() {
+  def "#poolName '#name' propagates"() {
     setup:
     def pool = poolImpl
     def m = method
@@ -82,8 +82,9 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     }
 
     cleanup:
-    if (pool?.hasProperty("shutdown")) {
-      pool?.shutdown()
+    if (pool.hasProperty("shutdown")) {
+      pool.shutdown()
+      pool.awaitTermination(10, TimeUnit.SECONDS)
     }
 
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
@@ -131,9 +132,10 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 
     // Internal executor used by CompletableFuture
     "execute Runnable"       | executeRunnable     | new CompletableFuture.ThreadPerTaskExecutor()
+    poolName = poolImpl.class.simpleName
   }
 
-  def "#poolImpl '#name' wrap lambdas"() {
+  def "#poolName '#name' wrap lambdas"() {
     setup:
     ExecutorService pool = poolImpl
     def m = method
@@ -162,6 +164,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
 
     cleanup:
     pool.shutdown()
+    pool.awaitTermination(10, TimeUnit.SECONDS)
 
     where:
     name                | method           | wrap                           | poolImpl
@@ -170,9 +173,10 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     "submit Callable"   | submitCallable   | { LambdaGen.wrapCallable(it) } | new ScheduledThreadPoolExecutor(1)
     "schedule Runnable" | scheduleRunnable | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
     "schedule Callable" | scheduleCallable | { LambdaGen.wrapCallable(it) } | new ScheduledThreadPoolExecutor(1)
+    poolName = poolImpl.class.simpleName
   }
 
-  def "#poolImpl '#name' reports after canceled jobs"() {
+  def "#poolName '#name' reports after canceled jobs"() {
     setup:
     ExecutorService pool = poolImpl
     def m = method
@@ -217,8 +221,6 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     expect:
     waitForTraces(1).size() == 1
 
-    // Wait for shutdown since we didn't wait on task completion and want to confirm any pending
-    // ones clean up context.
     pool.shutdown()
     pool.awaitTermination(10, TimeUnit.SECONDS)
 
@@ -236,6 +238,7 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     // ForkJoinPool has additional set of method overloads for ForkJoinTask to deal with
     "submit Runnable"   | submitRunnable   | new ForkJoinPool()
     "submit Callable"   | submitCallable   | new ForkJoinPool()
+    poolName = poolImpl.class.simpleName
   }
 
   static class CustomThreadPoolExecutor extends AbstractExecutorService {

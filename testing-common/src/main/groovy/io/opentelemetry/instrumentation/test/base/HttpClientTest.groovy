@@ -9,12 +9,15 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderParentClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
@@ -24,13 +27,15 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
+import java.util.function.Consumer
 import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
+import spock.util.concurrent.BlockingVariable
 
 @Unroll
-abstract class HttpClientTest extends InstrumentationSpecification {
+abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   protected static final BODY_METHODS = ["POST", "PUT"]
   protected static final CONNECT_TIMEOUT_MS = 5000
   protected static final BASIC_AUTH_KEY = "custom-authorization-header"
@@ -82,12 +87,92 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     }
   }
 
+  // ideally private, but then groovy closures in this class cannot find them
+  final int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request = buildRequest(method, uri, headers)
+    return sendRequest(request, method, uri, headers)
+  }
+
+  // ideally private, but then groovy closures in this class cannot find them
+  final int doReusedRequest(String method, URI uri, Map<String, String> headers = [:]) {
+    def request = buildRequest(method, uri, headers)
+    sendRequest(request, method, uri, headers)
+    return sendRequest(request, method, uri, headers)
+  }
+
+  // ideally private, but then groovy closures in this class cannot find them
+  final void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+    def request = buildRequest(method, uri, headers)
+    sendRequestWithCallback(request, method, uri, headers, callback)
+  }
+
   /**
-   * Make the request and return the status code response
-   * @param method
-   * @return
+   * Build the request to be passed to
+   * {@link #sendRequest(java.lang.Object, java.lang.String, java.net.URI, java.util.Map)}.
+   *
+   * By splitting this step out separate from {@code sendRequest}, tests and re-execute the same
+   * request a second time to verify that the traceparent header is not added multiple times to the
+   * request, and that the last one wins
+   * ({@link io.opentelemetry.instrumentation.test.server.http.TestHttpServer) has explicit logic
+   * to throw exception if there are multiple).
    */
-  abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null)
+  abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
+
+  /**
+   * Make the request and return the status code of the response synchronously. Some clients, e.g.,
+   * HTTPUrlConnection only support synchronous execution without callbacks, and many offer a
+   * dedicated API for invoking synchronously, such as OkHttp's execute method. When implementing
+   * this method, such an API should be used and the HTTP status code of the response returned,
+   * for example:
+   *
+   * @Override
+   * int sendRequest(Request request, String method, URI uri, Map<String, String headers = [:]) {
+   *   HttpResponse response = client.execute(request)
+   *   return response.statusCode()
+   * }
+   *
+   * If there is no synchronous API available at all, for example as in Vert.X, a CompletableFuture
+   * can be used to block on a result, for example:
+   *
+   * @Override
+   * int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+   *   CompletableFuture<Integer> future = new CompletableFuture<>(
+   *   sendRequestWithCallback(request, method, uri, headers) {
+   *     future.complete(it.statusCode())
+   *   }
+   *   return future.get()
+   * }
+   */
+  abstract int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
+
+  /**
+   * Make the request and return the status code of the response through the callback. This method
+   * should be implemented if the client offers any request execution methods that accept a callback
+   * which receives the response. This will generally be an API for asynchronous execution of a
+   * request, such as OkHttp's enqueue method, but may also be a callback executed synchronously,
+   * such as ApacheHttpClient's response handler callbacks. This method is used in tests to verify
+   * the context is propagated correctly to such callbacks.
+   *
+   * @Override
+   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+   *   // Hypothetical client accepting a callback
+   *   client.executeAsync(request) {
+   *     callback.accept(it.statusCode())
+   *   }
+   *
+   *   // Hypothetical client returning a CompletableFuture
+   *   client.executeAsync(request).thenAccept {
+   *     callback.accept(it.statusCode())
+   *   }
+   * }
+   *
+   * If the client offers no APIs that accept callbacks, then this method should not be implemented
+   * and instead, {@link #testCallback} should be implemented to return false.
+   */
+  void sendRequestWithCallback(REQUEST request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    // Must be implemented if testAsync is true
+    throw new UnsupportedOperationException()
+  }
 
   Integer statusOnRedirectError() {
     return null
@@ -95,6 +180,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   String userAgent() {
     return null
+  }
+
+  List<AttributeKey<?>> extraAttributes() {
+    []
   }
 
   def "basic #method request #url"() {
@@ -137,6 +226,35 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     method << BODY_METHODS
   }
 
+  def "should suppress nested CLIENT span if already under parent CLIENT span"() {
+    given:
+    assumeTrue(testWithClientParent())
+
+    when:
+    def status = runUnderParentClientSpan {
+      doRequest(method, server.address.resolve("/success"))
+    }
+
+    then:
+    status == 200
+    // there should be 2 separate traces since the nested CLIENT span is suppressed
+    // (and the span context propagation along with it)
+    assertTraces(2) {
+      traces.sort(orderByRootSpanKind(CLIENT, SERVER))
+
+      trace(0, 1) {
+        basicClientSpan(it, 0, "parent-client-span")
+      }
+      trace(1, 1) {
+        serverSpan(it, 0)
+      }
+    }
+
+    where:
+    method << BODY_METHODS
+  }
+
+
   //FIXME: add tests for POST with large/chunked data
 
   def "trace request without propagation"() {
@@ -161,17 +279,21 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   def "trace request with callback and parent"() {
     given:
+    assumeTrue(testCallback())
     assumeTrue(testCallbackWithParent())
 
+    def status = new BlockingVariable<Integer>()
+
     when:
-    def status = runUnderTrace("parent") {
-      doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+    runUnderTrace("parent") {
+      doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
         runUnderTrace("child") {}
+        status.set(it)
       }
     }
 
     then:
-    status == 200
+    status.get() == 200
     // only one trace (client).
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
@@ -186,14 +308,20 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   }
 
   def "trace request with callback and no parent"() {
+    given:
+    assumeTrue(testCallback())
+
+    def status = new BlockingVariable<Integer>()
+
     when:
-    def status = doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+    doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
       runUnderTrace("callback") {
       }
+      status.set(it)
     }
 
     then:
-    status == 200
+    status.get() == 200
     // only one trace (client).
     assertTraces(2) {
       trace(0, 1 + extraClientSpans()) {
@@ -304,6 +432,32 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
     where:
     method = "GET"
+  }
+
+  def "reuse request"() {
+    given:
+    assumeTrue(testReusedRequest())
+
+    when:
+    def status = doReusedRequest(method, url)
+
+    then:
+    status == 200
+    assertTraces(2) {
+      trace(0, 2 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, url)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+      }
+      trace(1, 2 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, url)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+      }
+    }
+
+    where:
+    path = "/success"
+    method = "GET"
+    url = server.address.resolve(path)
   }
 
   def "connection error (unopened port)"() {
@@ -512,6 +666,7 @@ abstract class HttpClientTest extends InstrumentationSpecification {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null, String httpFlavor = "1.1") {
     def userAgent = userAgent()
+    def extraAttributes = extraAttributes()
     trace.span(index) {
       if (parentSpan == null) {
         hasNoParent()
@@ -526,9 +681,17 @@ abstract class HttpClientTest extends InstrumentationSpecification {
       }
       attributes {
         "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
-        "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
+        if (uri.port == UNUSABLE_PORT) {
+          // TODO(anuraaga): For the unusable port, there isn't actually a peer so we shouldn't be
+          // filling in peer information but some instrumentation does so based on the URL itself
+          // which is present in HTTP attributes. We should fix this.
+          "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == uri.host }
+          "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it == UNUSABLE_PORT }
+        } else {
+          "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
+          "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
+        }
         "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
-        "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
         "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "${SemanticAttributes.HTTP_METHOD.key}" method
         "${SemanticAttributes.HTTP_FLAVOR.key}" httpFlavor
@@ -537,6 +700,22 @@ abstract class HttpClientTest extends InstrumentationSpecification {
         }
         if (status) {
           "${SemanticAttributes.HTTP_STATUS_CODE.key}" status
+        }
+
+        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+          "${SemanticAttributes.HTTP_HOST}" "localhost:${uri.port}"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
+          "${SemanticAttributes.HTTP_TARGET}" uri.path + "${uri.query != null ? "?${uri.query}" : ""}"
         }
       }
     }
@@ -568,6 +747,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     0
   }
 
+  boolean testWithClientParent() {
+    true
+  }
+
   boolean testRedirects() {
     true
   }
@@ -581,6 +764,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
     2
   }
 
+  boolean testReusedRequest() {
+    true
+  }
+
   boolean testConnectionFailure() {
     true
   }
@@ -591,6 +778,10 @@ abstract class HttpClientTest extends InstrumentationSpecification {
 
   boolean testCausality() {
     true
+  }
+
+  boolean testCallback() {
+    return true
   }
 
   boolean testCallbackWithParent() {

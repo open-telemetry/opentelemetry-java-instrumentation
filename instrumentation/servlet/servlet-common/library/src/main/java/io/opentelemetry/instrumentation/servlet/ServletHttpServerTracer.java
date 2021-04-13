@@ -131,6 +131,10 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   @Override
   protected abstract TextMapGetter<REQUEST> getGetter();
 
+  public ServletAccessor<REQUEST, RESPONSE> getServletAccessor() {
+    return accessor;
+  }
+
   public void addUnwrappedThrowable(Context context, Throwable throwable) {
     if (AppServerBridge.shouldRecordException(context)) {
       onException(context, throwable);
@@ -161,6 +165,18 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   protected String requestHeader(REQUEST httpServletRequest, String name) {
     return accessor.getRequestHeader(httpServletRequest, name);
   }
+
+  public Throwable errorException(REQUEST request) {
+    Object value = accessor.getRequestAttribute(request, errorExceptionAttributeName());
+
+    if (value instanceof Throwable) {
+      return (Throwable) value;
+    } else {
+      return null;
+    }
+  }
+
+  protected abstract String errorExceptionAttributeName();
 
   public String getSpanName(REQUEST request) {
     String servletPath = accessor.getRequestServletPath(request);

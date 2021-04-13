@@ -7,11 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class JdbcUtils {
+public final class JdbcUtils {
 
   private static final Logger log = LoggerFactory.getLogger(JdbcUtils.class);
 
@@ -60,4 +62,36 @@ public abstract class JdbcUtils {
     }
     return connection;
   }
+
+  public static DbInfo extractDbInfo(Connection connection) {
+    return JdbcMaps.connectionInfo.computeIfAbsent(connection, JdbcUtils::computeDbInfo);
+  }
+
+  private static DbInfo computeDbInfo(Connection connection) {
+    /*
+     * Logic to get the DBInfo from a JDBC Connection, if the connection was not created via
+     * Driver.connect, or it has never seen before, the connectionInfo map will return null and will
+     * attempt to extract DBInfo from the connection. If the DBInfo can't be extracted, then the
+     * connection will be stored with the DEFAULT DBInfo as the value in the connectionInfo map to
+     * avoid retry overhead.
+     */
+    try {
+      DatabaseMetaData metaData = connection.getMetaData();
+      String url = metaData.getURL();
+      if (url != null) {
+        try {
+          return JdbcConnectionUrlParser.parse(url, connection.getClientInfo());
+        } catch (Throwable ex) {
+          // getClientInfo is likely not allowed.
+          return JdbcConnectionUrlParser.parse(url, null);
+        }
+      } else {
+        return DbInfo.DEFAULT;
+      }
+    } catch (SQLException se) {
+      return DbInfo.DEFAULT;
+    }
+  }
+
+  private JdbcUtils() {}
 }

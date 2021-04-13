@@ -9,43 +9,44 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class RequestDispatcherAdviceHelper {
   /**
    * Determines if the advice for {@link RequestDispatcherInstrumentation} should create a new span
    * and provides the context in which that span should be created.
    *
-   * @param servletContextObject Value of the {@link HttpServerTracer#CONTEXT_ATTRIBUTE} attribute
-   *     of the servlet request.
+   * @param requestContext Value of the {@link HttpServerTracer#CONTEXT_ATTRIBUTE} attribute of the
+   *     servlet request.
    * @return The context in which the advice should create the dispatcher span in. Returns <code>
    *     null</code> in case a new span should not be created.
    */
-  public static Context getStartParentContext(Object servletContextObject) {
-    Context parentContext = Context.current();
+  // TODO (trask) do we need to guard against context leak here?
+  //  this could be simplified by always using currentContext, only falling back to requestContext
+  //  if currentContext does not have a valid span
+  public static @Nullable Context getStartParentContext(
+      Context currentContext, @Nullable Context requestContext) {
+    Span currentSpan = Span.fromContext(currentContext);
+    SpanContext currentSpanContext = currentSpan.getSpanContext();
 
-    Context servletContext =
-        servletContextObject instanceof Context ? (Context) servletContextObject : null;
-
-    Span parentSpan = Span.fromContext(parentContext);
-    SpanContext parentSpanContext = parentSpan.getSpanContext();
-    if (!parentSpanContext.isValid() && servletContext == null) {
-      // Don't want to generate a new top-level span
-      return null;
+    if (!currentSpanContext.isValid()) {
+      return requestContext;
     }
 
-    Span servletSpan = servletContext != null ? Span.fromContext(servletContext) : null;
-    Context parent;
-    if (servletContext == null
-        || (parentSpanContext.isValid()
-            && servletSpan.getSpanContext().getTraceId().equals(parentSpanContext.getTraceId()))) {
-      // Use the parentSpan if the servletSpan is null or part of the same trace.
-      parent = parentContext;
-    } else {
-      // parentSpan is part of a different trace, so lets ignore it.
-      // This can happen with the way Tomcat does error handling.
-      parent = servletContext;
+    if (requestContext == null) {
+      return currentContext;
     }
 
-    return parent;
+    // at this point: currentContext has a valid span and requestContext is not null
+
+    Span requestSpan = Span.fromContext(requestContext);
+    if (requestSpan.getSpanContext().getTraceId().equals(currentSpanContext.getTraceId())) {
+      // currentContext is part of the same trace, so return it
+      return currentContext;
+    }
+
+    // currentContext is part of a different trace, so lets ignore it.
+    // This can happen with the way Tomcat does error handling.
+    return requestContext;
   }
 }

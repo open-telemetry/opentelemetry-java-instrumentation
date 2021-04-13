@@ -3,6 +3,9 @@
 
   <entry-point class="test.gwt.client.GreetingEntryPoint" />
 
+  <!-- only generate one permutation to make the build faster -->
+  <set-property name="user.agent" value="safari" />
+
   <source path='client'/>
   <source path='shared'/>
 </module>

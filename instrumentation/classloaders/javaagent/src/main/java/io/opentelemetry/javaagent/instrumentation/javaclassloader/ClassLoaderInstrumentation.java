@@ -62,11 +62,11 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
             .and(named("loadClass"))
             .and(
                 takesArguments(1)
-                    .and(takesArgument(0, named("java.lang.String")))
+                    .and(takesArgument(0, String.class))
                     .or(
                         takesArguments(2)
-                            .and(takesArgument(0, named("java.lang.String")))
-                            .and(takesArgument(1, named("boolean")))))
+                            .and(takesArgument(0, String.class))
+                            .and(takesArgument(1, boolean.class))))
             .and(isPublic().or(isProtected()))
             .and(not(isStatic())),
         ClassLoaderInstrumentation.class.getName() + "$LoadClassAdvice");

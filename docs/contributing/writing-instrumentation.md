@@ -128,7 +128,7 @@ Ideally javaagent instrumentation is just a thin wrapper over library instrument
 is no need to write unit tests that directly access the javaagent instrumentation classes.
 
 If you still want to write a unit test against javaagent instrumentation, add another module
-named `javaagent-unittests`. Continuing with the example above:
+named `javaagent-unit-tests`. Continuing with the example above:
 
 ```
 instrumentation ->
@@ -136,8 +136,8 @@ instrumentation ->
     yarpc-1.0 ->
         javaagent
             yarpc-1.0-javaagent.gradle
-        javaagent-unittest
-            yarpc-1.0-javaagent-unittest.gradle
+        javaagent-unit-tests
+            yarpc-1.0-javaagent-unit-tests.gradle
         ...
 ```
 

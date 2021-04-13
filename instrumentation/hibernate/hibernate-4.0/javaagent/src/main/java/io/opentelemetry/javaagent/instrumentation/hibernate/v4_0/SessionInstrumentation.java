@@ -76,10 +76,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
     // Handle the non-generic 'get' separately.
     transformers.put(
-        isMethod()
-            .and(named("get"))
-            .and(returns(named("java.lang.Object")))
-            .and(takesArgument(0, named("java.lang.String"))),
+        isMethod().and(named("get")).and(returns(Object.class)).and(takesArgument(0, String.class)),
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
 
     // These methods return some object that we want to instrument, and so the Advice will pin the

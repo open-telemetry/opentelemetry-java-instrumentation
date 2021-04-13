@@ -17,10 +17,7 @@ import org.springframework.context.annotation.Configuration;
 /** Configures {@link WithSpanAspect} to trace bean methods annotated with {@link WithSpan}. */
 @Configuration
 @EnableConfigurationProperties(TraceAspectProperties.class)
-@ConditionalOnProperty(
-    prefix = "opentelemetry.trace.aspects",
-    name = "enabled",
-    matchIfMissing = true)
+@ConditionalOnProperty(prefix = "otel.springboot.aspects", name = "enabled", matchIfMissing = true)
 @ConditionalOnClass({Aspect.class, WithSpan.class})
 public class TraceAspectAutoConfiguration {
 

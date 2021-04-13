@@ -7,9 +7,7 @@ package io.opentelemetry.javaagent
 
 import jvmbootstraptest.LogLevelChecker
 import spock.lang.Specification
-import spock.lang.Timeout
 
-@Timeout(30)
 class LogLevelTest extends Specification {
 
 

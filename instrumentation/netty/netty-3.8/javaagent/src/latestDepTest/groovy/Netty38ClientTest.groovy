@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -10,15 +11,21 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
 import com.ning.http.client.AsyncHttpClientConfig
+import com.ning.http.client.Request
+import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
+import com.ning.http.client.uri.Uri
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
+class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrait {
+
+  // NB: Copied from AsyncHttpClientTest.
 
   @Shared
   def clientConfig = new AsyncHttpClientConfig.Builder()
@@ -27,21 +34,33 @@ class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
 
   @Shared
   @AutoCleanup
-  AsyncHttpClient asyncHttpClient = new AsyncHttpClient(clientConfig)
+  AsyncHttpClient client = new AsyncHttpClient(clientConfig)
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    def methodName = "prepare" + method.toLowerCase().capitalize()
-    def requestBuilder = asyncHttpClient."$methodName"(uri.toString())
-    headers.each { requestBuilder.setHeader(it.key, it.value) }
-    def response = requestBuilder.execute(new AsyncCompletionHandler() {
+  Request buildRequest(String method, URI uri, Map<String, String> headers) {
+    def requestBuilder = new RequestBuilder(method)
+      .setUri(Uri.create(uri.toString()))
+    headers.entrySet().each {
+      requestBuilder.addHeader(it.key, it.value)
+    }
+    return requestBuilder.build()
+  }
+
+  @Override
+  int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+    return client.executeRequest(request).get().statusCode
+  }
+
+  @Override
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+    // TODO(anuraaga): Do we also need to test ListenableFuture callback?
+    client.executeRequest(request, new AsyncCompletionHandler<Void>() {
       @Override
-      Object onCompleted(Response response) throws Exception {
-        callback?.call()
-        return response
+      Void onCompleted(Response response) throws Exception {
+        callback.accept(response.statusCode)
+        return null
       }
-    }).get()
-    return response.statusCode
+    })
   }
 
   @Override
@@ -64,7 +83,10 @@ class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
     return false
   }
 
-  def "connection error (unopened port)"() {
+  // This is almost identical to "connection error (unopened port)" test from superclass.
+  // But it uses somewhat different span name for the client span.
+  // For now creating a separate test for this, hoping to remove this duplication in the future.
+  def "netty connection error (unopened port)"() {
     given:
     def uri = new URI("http://127.0.0.1:$UNUSABLE_PORT/")
 
@@ -84,6 +106,7 @@ class Netty38ClientTest extends HttpClientTest implements AgentTestTrait {
 
         span(1) {
           name "CONNECT"
+          kind CLIENT
           childOf span(0)
           errored true
           Class errorClass = ConnectException

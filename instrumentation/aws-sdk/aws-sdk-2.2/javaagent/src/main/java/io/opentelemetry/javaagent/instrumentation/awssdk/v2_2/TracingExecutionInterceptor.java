@@ -41,15 +41,16 @@ import software.amazon.awssdk.http.SdkHttpResponse;
  */
 public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      Config.get()
+          .getBooleanProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", false);
+
   private final ExecutionInterceptor delegate;
 
   public TracingExecutionInterceptor() {
     delegate =
         AwsSdkTracing.newBuilder(GlobalOpenTelemetry.get())
-            .setCaptureExperimentalSpanAttributes(
-                Config.get()
-                    .getBooleanProperty(
-                        "otel.instrumentation.aws-sdk.experimental-span-attributes", false))
+            .setCaptureExperimentalSpanAttributes(CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES)
             .build()
             .newExecutionInterceptor();
   }
