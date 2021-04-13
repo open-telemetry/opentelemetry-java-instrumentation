@@ -3,9 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.instrumentation.mongo.testing
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -15,7 +22,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 
-abstract class AbstractMongoClientTest extends AgentInstrumentationSpecification {
+abstract class AbstractMongoClientTest extends InstrumentationSpecification {
 
   @Shared
   GenericContainer mongodb

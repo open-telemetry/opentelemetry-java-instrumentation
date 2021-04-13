@@ -15,6 +15,8 @@ import com.mongodb.async.client.MongoDatabase
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.connection.ClusterSettings
+import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import org.bson.BsonDocument
@@ -23,7 +25,7 @@ import org.bson.Document
 import org.junit.AssumptionViolatedException
 import spock.lang.Shared
 
-class MongoAsyncClientTest extends AbstractMongoClientTest {
+class MongoAsyncClientTest extends AbstractMongoClientTest implements AgentTestTrait{
 
   @Shared
   MongoClient client

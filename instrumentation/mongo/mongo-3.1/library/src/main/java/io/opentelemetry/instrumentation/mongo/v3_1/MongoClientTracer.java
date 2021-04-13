@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mongo;
+package io.opentelemetry.instrumentation.mongo.v3_1;
 
 import static java.util.Arrays.asList;
 
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
@@ -29,26 +30,18 @@ import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class MongoClientTracer
+final class MongoClientTracer
     extends DatabaseClientTracer<CommandStartedEvent, BsonDocument, String> {
-  private static final MongoClientTracer TRACER = new MongoClientTracer();
 
   private final int maxNormalizedQueryLength;
   private final JsonWriterSettings jsonWriterSettings;
 
-  public MongoClientTracer() {
-    this(32 * 1024);
-  }
-
-  public MongoClientTracer(int maxNormalizedQueryLength) {
-    super(NetPeerAttributes.INSTANCE);
+  MongoClientTracer(OpenTelemetry openTelemetry, int maxNormalizedQueryLength) {
+    super(openTelemetry, NetPeerAttributes.INSTANCE);
     this.maxNormalizedQueryLength = maxNormalizedQueryLength;
     this.jsonWriterSettings = createJsonWriterSettings(maxNormalizedQueryLength);
-  }
-
-  public static MongoClientTracer tracer() {
-    return TRACER;
   }
 
   @Override
@@ -57,18 +50,23 @@ public class MongoClientTracer
   }
 
   @Override
+  // TODO(anuraaga): Migrate off of StringWriter to avoid synchronization.
+  @SuppressWarnings("JdkObsolete")
   protected String sanitizeStatement(BsonDocument command) {
     StringWriter stringWriter = new StringWriter(128);
     writeScrubbed(command, new JsonWriter(stringWriter, jsonWriterSettings), true);
     // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
     // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
-    return stringWriter
-        .getBuffer()
-        .substring(0, Math.min(maxNormalizedQueryLength, stringWriter.getBuffer().length()));
+    StringBuffer buf = stringWriter.getBuffer();
+    if (buf.length() <= maxNormalizedQueryLength) {
+      return buf.toString();
+    }
+    return buf.substring(0, maxNormalizedQueryLength);
   }
 
   @Override
-  public String spanName(CommandStartedEvent event, BsonDocument document, String normalizedQuery) {
+  protected String spanName(
+      CommandStartedEvent event, BsonDocument document, String normalizedQuery) {
     return conventionSpanName(dbName(event), event.getCommandName(), collectionName(event));
   }
 
@@ -92,6 +90,7 @@ public class MongoClientTracer
   }
 
   @Override
+  @Nullable
   protected String dbConnectionString(CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription != null) {
@@ -109,6 +108,7 @@ public class MongoClientTracer
   }
 
   @Override
+  @Nullable
   protected InetSocketAddress peerAddress(CommandStartedEvent event) {
     if (event.getConnectionDescription() != null
         && event.getConnectionDescription().getServerAddress() != null) {
@@ -130,7 +130,7 @@ public class MongoClientTracer
     return event.getCommandName();
   }
 
-  private static final Method IS_TRUNCATED_METHOD;
+  @Nullable private static final Method IS_TRUNCATED_METHOD;
 
   static {
     IS_TRUNCATED_METHOD =
@@ -175,15 +175,10 @@ public class MongoClientTracer
                 builderClass.getMethod("build", (Class<?>[]) null).invoke(builder, (Object[]) null);
       }
     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ignored) {
+      // Ignore
     }
     if (settings == null) {
-      try {
-        settings = JsonWriterSettings.class.getConstructor(Boolean.TYPE).newInstance(false);
-      } catch (InstantiationException
-          | IllegalAccessException
-          | InvocationTargetException
-          | NoSuchMethodException ignored) {
-      }
+      settings = new JsonWriterSettings(false);
     }
 
     return settings;
@@ -264,6 +259,7 @@ public class MongoClientTracer
               "createIndexes",
               "listIndexes"));
 
+  @Nullable
   private static String collectionName(CommandStartedEvent event) {
     if (event.getCommandName().equals("getMore")) {
       if (event.getCommand().containsKey("collection")) {

@@ -9,13 +9,15 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
+import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
 import org.junit.AssumptionViolatedException
 import spock.lang.Shared
 
-class MongoClientTest extends AbstractMongoClientTest {
+class MongoClientTest extends AbstractMongoClientTest implements AgentTestTrait {
 
   @Shared
   MongoClient client

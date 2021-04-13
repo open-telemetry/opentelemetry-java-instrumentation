@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.event.CommandListener;
-import io.opentelemetry.javaagent.instrumentation.mongo.TracingCommandListener;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Modifier;
@@ -72,12 +71,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     public static void injectTraceListener(
         @Advice.This MongoClientSettings.Builder builder,
         @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
-      for (CommandListener commandListener : commandListeners) {
-        if (commandListener instanceof TracingCommandListener) {
-          return;
-        }
-      }
-      builder.addCommandListener(new TracingCommandListener());
+      builder.addCommandListener(MongoInstrumentationSingletons.LISTENER);
     }
   }
 }

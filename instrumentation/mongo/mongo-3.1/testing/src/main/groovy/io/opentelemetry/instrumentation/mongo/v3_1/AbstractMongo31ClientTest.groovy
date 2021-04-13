@@ -3,36 +3,34 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
+package io.opentelemetry.instrumentation.mongo.v3_1
+
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import com.mongodb.MongoClientSettings
+import com.mongodb.MongoClient
+import com.mongodb.MongoClientOptions
 import com.mongodb.MongoTimeoutException
 import com.mongodb.ServerAddress
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest
-import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
 import spock.lang.Shared
 
-class MongoClientTest extends AbstractMongoClientTest implements AgentTestTrait {
+abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest {
+
+  abstract void configureMongoClientOptions(MongoClientOptions.Builder options);
 
   @Shared
   MongoClient client
 
   def setupSpec() throws Exception {
-    client = MongoClients.create(MongoClientSettings.builder()
-      .applyToClusterSettings({ builder ->
-        builder.hosts(Arrays.asList(
-          new ServerAddress("localhost", port)))
-          .description("some-description")
-      })
-      .build())
+    def options = MongoClientOptions.builder().description("some-description")
+    configureMongoClientOptions(options)
+    client = new MongoClient(new ServerAddress("localhost", port), options.build())
   }
 
   def cleanupSpec() throws Exception {
@@ -48,21 +46,17 @@ class MongoClientTest extends AbstractMongoClientTest implements AgentTestTrait 
 
   @Override
   void createCollectionNoDescription(String dbName, String collectionName) {
-    MongoDatabase db = MongoClients.create("mongodb://localhost:${port}").getDatabase(dbName)
+    def options = MongoClientOptions.builder()
+    configureMongoClientOptions(options)
+    MongoDatabase db = new MongoClient(new ServerAddress("localhost", port), options.build()).getDatabase(dbName)
     db.createCollection(collectionName)
   }
 
   @Override
   void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
-    def clientSettings = MongoClientSettings.builder()
-      .applyToClusterSettings({ builder ->
-        builder.hosts(Arrays.asList(
-          new ServerAddress("localhost", port)))
-          .description("some-description")
-      })
-      .build()
-    def newClientSettings = MongoClientSettings.builder(clientSettings).build()
-    MongoDatabase db = MongoClients.create(newClientSettings).getDatabase(dbName)
+    def clientOptions = client.mongoClientOptions
+    def newClientOptions = MongoClientOptions.builder(clientOptions).build()
+    MongoDatabase db = new MongoClient(new ServerAddress("localhost", port), newClientOptions).getDatabase(dbName)
     db.createCollection(collectionName)
   }
 
@@ -142,7 +136,8 @@ class MongoClientTest extends AbstractMongoClientTest implements AgentTestTrait 
 
   def "test client failure"() {
     setup:
-    def client = MongoClients.create("mongodb://localhost:" + UNUSABLE_PORT + "/?connectTimeoutMS=10")
+    def options = MongoClientOptions.builder().serverSelectionTimeout(10).build()
+    def client = new MongoClient(new ServerAddress("localhost", PortUtils.UNUSABLE_PORT), [], options)
 
     when:
     MongoDatabase db = client.getDatabase(dbName)

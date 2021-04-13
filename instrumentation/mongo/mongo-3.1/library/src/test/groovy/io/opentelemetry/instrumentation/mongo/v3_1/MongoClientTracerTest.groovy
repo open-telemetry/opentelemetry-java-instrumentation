@@ -3,10 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.instrumentation.mongo.v3_1
+
+import static io.opentelemetry.instrumentation.mongo.v3_1.MongoTracingBuilder.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH
 import static java.util.Arrays.asList
 
 import com.mongodb.event.CommandStartedEvent
-import MongoClientTracer
+import io.opentelemetry.api.OpenTelemetry
 import org.bson.BsonArray
 import org.bson.BsonDocument
 import org.bson.BsonInt32
@@ -16,7 +19,7 @@ import spock.lang.Specification
 class MongoClientTracerTest extends Specification {
   def 'should sanitize statements to json'() {
     setup:
-    def tracer = new MongoClientTracer()
+    def tracer = new MongoClientTracer(OpenTelemetry.noop(), DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
 
     expect:
     sanitizeStatementAcrossVersions(tracer,
@@ -36,7 +39,7 @@ class MongoClientTracerTest extends Specification {
 
   def 'should only preserve string value if it is the value of the first top-level key'() {
     setup:
-    def tracer = new MongoClientTracer()
+    def tracer = new MongoClientTracer(OpenTelemetry.noop(), DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
 
     expect:
     sanitizeStatementAcrossVersions(tracer,
@@ -48,7 +51,7 @@ class MongoClientTracerTest extends Specification {
 
   def 'should truncate simple command'() {
     setup:
-    def tracer = new MongoClientTracer(20)
+    def tracer = new MongoClientTracer(OpenTelemetry.noop(), 20)
 
     def normalized = sanitizeStatementAcrossVersions(tracer,
       new BsonDocument("cmd", new BsonString("c"))
@@ -61,11 +64,11 @@ class MongoClientTracerTest extends Specification {
 
   def 'should truncate array'() {
     setup:
-    def tracer = new MongoClientTracer(27)
+    def tracer = new MongoClientTracer(OpenTelemetry.noop(), 27)
 
     def normalized = sanitizeStatementAcrossVersions(tracer,
       new BsonDocument("cmd", new BsonString("c"))
-        .append("f1", new BsonArray(Arrays.asList(new BsonString("c1"), new BsonString("c2"))))
+        .append("f1", new BsonArray(asList(new BsonString("c1"), new BsonString("c2"))))
         .append("f2", new BsonString("c3")))
     expect:
     // this can vary because of different whitespace for different mongo versions
@@ -74,7 +77,7 @@ class MongoClientTracerTest extends Specification {
 
   def 'test span name with no dbName'() {
     setup:
-    def tracer = new MongoClientTracer()
+    def tracer = new MongoClientTracer(OpenTelemetry.noop(), DEFAULT_MAX_NORMALIZED_QUERY_LENGTH)
     def event = new CommandStartedEvent(
       0, null, null, command, new BsonDocument(command, new BsonInt32(1)))
 
