@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonMap;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.client.RmiClientContextInstrumentation;
@@ -14,7 +13,6 @@ import io.opentelemetry.javaagent.instrumentation.rmi.context.server.RmiServerCo
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
-import java.util.Map;
 
 @AutoService(InstrumentationModule.class)
 public class RmiContextPropagationInstrumentationModule extends InstrumentationModule {
@@ -25,11 +23,5 @@ public class RmiContextPropagationInstrumentationModule extends InstrumentationM
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new RmiClientContextInstrumentation(), new RmiServerContextInstrumentation());
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    // caching if a connection can support enhanced format
-    return singletonMap("sun.rmi.transport.Connection", "java.lang.Boolean");
   }
 }

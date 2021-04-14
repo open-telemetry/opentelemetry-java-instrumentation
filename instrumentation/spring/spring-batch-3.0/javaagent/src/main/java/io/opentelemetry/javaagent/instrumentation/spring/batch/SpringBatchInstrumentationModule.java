@@ -21,9 +21,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.step.StepBuilderH
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
@@ -35,17 +33,6 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // JSR-352 Batch API
     return hasClassesNamed("org.springframework.batch.core.jsr.launch.JsrJobOperator");
-  }
-
-  @Override
-  protected Map<String, String> contextStore() {
-    Map<String, String> context = new HashMap<>();
-    String contextAndScope =
-        "io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope";
-    context.put("org.springframework.batch.core.JobExecution", contextAndScope);
-    context.put("org.springframework.batch.core.StepExecution", contextAndScope);
-    context.put("org.springframework.batch.core.scope.context.ChunkContext", contextAndScope);
-    return context;
   }
 
   @Override
