@@ -6,13 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_5;
 
 import io.grpc.ClientInterceptor;
+import io.grpc.Context;
 import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.grpc.v1_5.GrpcTracing;
+import io.opentelemetry.instrumentation.grpc.v1_5.internal.ContextStorageBridge;
 
-// Holds singleton references to tracers.
-public final class GrpcInterceptors {
+// Holds singleton references.
+public final class GrpcSingletons {
   private static final GrpcTracing TRACING =
       GrpcTracing.newBuilder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(
@@ -24,4 +26,6 @@ public final class GrpcInterceptors {
   public static final ClientInterceptor CLIENT_INTERCEPTOR = TRACING.newClientInterceptor();
 
   public static final ServerInterceptor SERVER_INTERCEPTOR = TRACING.newServerInterceptor();
+
+  public static final Context.Storage STORAGE = new ContextStorageBridge();
 }

@@ -9,5 +9,6 @@ dependencies {
   testLibrary group: 'io.grpc', name: 'grpc-protobuf', version: grpcVersion
   testLibrary group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
 
+  testImplementation deps.assertj
   testImplementation project(':instrumentation:grpc-1.5:testing')
 }
