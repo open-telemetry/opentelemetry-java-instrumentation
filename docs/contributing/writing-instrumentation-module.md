@@ -86,6 +86,7 @@ whether an instrumentation should be applied:
 public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   return hasClassesNamed("org.my.library.Version2Class");
 }
+```
 
 The above example will skip instrumenting the application code if it does not contain the class that was
 introduced in the version your instrumentation covers.
