@@ -6,10 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
+import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /** Utils for concurrent instrumentations. */
 public class ExecutorInstrumentationUtils {
@@ -130,12 +128,7 @@ public class ExecutorInstrumentationUtils {
   public static <T> State setupState(ContextStore<T, State> contextStore, T task, Context context) {
     State state = contextStore.putIfAbsent(task, State.FACTORY);
     if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
-      List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(context);
-      if (locations == null) {
-        locations = new CopyOnWriteArrayList<>();
-        context = ContextPropagationDebug.withLocations(locations, context);
-      }
-      locations.add(0, new Exception().getStackTrace());
+      context = ContextPropagationDebug.appendLocations(context, new Exception().getStackTrace());
     }
     state.setParentContext(context);
     return state;
