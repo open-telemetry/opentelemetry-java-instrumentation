@@ -35,7 +35,7 @@ public class RxJava3InstrumentationModule extends InstrumentationModule {
   public static class PluginInstrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("io.reactivex.rxjava3.plugins.RxJavaPlugins");
     }
 
