@@ -25,7 +25,7 @@ import org.springframework.batch.item.ItemWriter;
 
 public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.batch.core.step.item.SimpleChunkProcessor");
   }
 

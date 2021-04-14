@@ -48,7 +48,7 @@ public class VertxRxInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("io.vertx.reactivex.core.impl.AsyncResultSingle")
           .or(named("io.vertx.reactivex.impl.AsyncResultSingle"));
     }

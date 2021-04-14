@@ -46,7 +46,7 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
   // A type instrumentation is needed to trigger resource injection.
   public static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       // we cannot use ContextDataProvider here because one of the classes that we inject implements
       // this interface, causing the interface to be loaded while it's being transformed, which
       // leads to duplicate class definition error after the interface is transformed and the

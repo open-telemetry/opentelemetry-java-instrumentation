@@ -50,7 +50,7 @@ import sun.rmi.transport.Connection;
 public class RmiClientContextInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("sun.rmi.transport.StreamRemoteCall"));
   }
 

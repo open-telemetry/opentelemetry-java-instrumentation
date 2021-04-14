@@ -54,7 +54,7 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return nameStartsWith("com.twitter.finatra.")
           .<TypeDescription>and(
               extendsClass(named("com.twitter.finatra.http.internal.routing.Route")));

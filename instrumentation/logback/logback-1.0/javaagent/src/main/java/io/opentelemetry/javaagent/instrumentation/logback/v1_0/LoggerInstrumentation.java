@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class LoggerInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("ch.qos.logback.classic.Logger");
   }
 

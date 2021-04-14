@@ -38,7 +38,7 @@ public class TestInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.apache.commons.lang3.SystemUtils");
     }
 

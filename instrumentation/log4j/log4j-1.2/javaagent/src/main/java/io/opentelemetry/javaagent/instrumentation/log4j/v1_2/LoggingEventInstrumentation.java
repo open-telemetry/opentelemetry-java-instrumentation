@@ -30,7 +30,7 @@ import org.apache.log4j.spi.LoggingEvent;
 
 public class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.log4j.spi.LoggingEvent");
   }
 

@@ -32,16 +32,14 @@ import org.slf4j.LoggerFactory;
  * failSafe(hasSuperType(...))} does) which means the code is more resilient to classpath
  * inconsistencies
  *
- * @param <T> The type of the matched entity.
  * @see net.bytebuddy.matcher.HasSuperTypeMatcher
  */
-class SafeHasSuperTypeMatcher<T extends TypeDescription>
-    extends ElementMatcher.Junction.AbstractBase<T> {
+class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
 
   private static final Logger log = LoggerFactory.getLogger(SafeHasSuperTypeMatcher.class);
 
   /** The matcher to apply to any super type of the matched type. */
-  private final ElementMatcher<? super TypeDescription.Generic> matcher;
+  private final ElementMatcher<TypeDescription.Generic> matcher;
 
   private final boolean interfacesOnly;
 
@@ -51,13 +49,13 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
    * @param matcher The matcher to apply to any super type of the matched type.
    */
   public SafeHasSuperTypeMatcher(
-      ElementMatcher<? super TypeDescription.Generic> matcher, boolean interfacesOnly) {
+      ElementMatcher<TypeDescription.Generic> matcher, boolean interfacesOnly) {
     this.matcher = matcher;
     this.interfacesOnly = interfacesOnly;
   }
 
   @Override
-  public boolean matches(T target) {
+  public boolean matches(TypeDescription target) {
     Set<TypeDescription> checkedInterfaces = new HashSet<>(8);
     // We do not use foreach loop and iterator interface here because we need to catch exceptions
     // in {@code getSuperClass} calls
@@ -127,7 +125,7 @@ class SafeHasSuperTypeMatcher<T extends TypeDescription>
     if (!(obj instanceof SafeHasSuperTypeMatcher)) {
       return false;
     }
-    SafeHasSuperTypeMatcher<?> other = (SafeHasSuperTypeMatcher<?>) obj;
+    SafeHasSuperTypeMatcher other = (SafeHasSuperTypeMatcher) obj;
     return matcher.equals(other.matcher);
   }
 

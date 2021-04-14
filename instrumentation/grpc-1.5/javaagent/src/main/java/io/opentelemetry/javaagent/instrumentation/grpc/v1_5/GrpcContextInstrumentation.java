@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public class GrpcContextInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.grpc.Context");
   }
 

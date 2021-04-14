@@ -27,7 +27,7 @@ import org.apache.logging.log4j.core.config.Property;
 // https://github.com/apache/logging-log4j2/commit/e5394028c000008505991c45b8ce593422f7ac55
 public class BugFixingInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named(
         "org.apache.logging.log4j.core.impl.ThreadContextDataInjector$ForCopyOnWriteThreadContextMap");
   }

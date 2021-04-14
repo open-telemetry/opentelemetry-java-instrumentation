@@ -49,7 +49,7 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
 
   public static class ContextTestInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return nameStartsWith("library.");
     }
 

@@ -25,7 +25,7 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 
 public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.batch.core.step.item.ChunkOrientedTasklet");
   }
 
