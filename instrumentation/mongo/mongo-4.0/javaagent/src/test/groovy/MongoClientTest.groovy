@@ -5,17 +5,21 @@
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import com.mongodb.MongoClientSettings
+import com.mongodb.ServerAddress
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
+import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
 import org.junit.AssumptionViolatedException
 import spock.lang.Shared
 
-class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
+class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>> implements AgentTestTrait {
 
   @Shared
   MongoClient client
@@ -44,6 +48,18 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   @Override
   void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
     throw new AssumptionViolatedException("not tested on 4.0")
+  }
+
+  @Override
+  void createCollectionCallingBuildTwice(String dbName, String collectionName) {
+    def settings = MongoClientSettings.builder()
+      .applyToClusterSettings({ builder ->
+        builder.hosts(Arrays.asList(
+          new ServerAddress("localhost", port)))
+      })
+    settings.build()
+    MongoDatabase db = MongoClients.create(settings.build()).getDatabase(dbName)
+    db.createCollection(collectionName)
   }
 
   @Override

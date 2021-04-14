@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientTracer.tracer;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -36,11 +35,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GoogleHttpClientInstrumentationModule extends InstrumentationModule {
   public GoogleHttpClientInstrumentationModule() {
     super("google-http-client", "google-http-client-1.19");
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("com.google.api.client.http.HttpRequest", Context.class.getName());
   }
 
   @Override
