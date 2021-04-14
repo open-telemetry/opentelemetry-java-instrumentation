@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpU
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -50,11 +49,6 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpUrlConnectionInstrumentation());
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("java.net.HttpURLConnection", getClass().getName() + "$HttpUrlState");
   }
 
   public static class HttpUrlConnectionInstrumentation implements TypeInstrumentation {

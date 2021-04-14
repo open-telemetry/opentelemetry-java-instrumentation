@@ -15,6 +15,8 @@ import com.mongodb.async.client.MongoDatabase
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.connection.ClusterSettings
+import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import org.bson.BsonDocument
@@ -23,7 +25,7 @@ import org.bson.Document
 import org.junit.AssumptionViolatedException
 import spock.lang.Shared
 
-class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
+class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Document>> implements AgentTestTrait{
 
   @Shared
   MongoClient client
@@ -61,6 +63,19 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
     def clientSettings = client.settings
     def newClientSettings = MongoClientSettings.builder(clientSettings).build()
     MongoDatabase db = MongoClients.create(newClientSettings).getDatabase(dbName)
+    db.createCollection(collectionName, toCallback {})
+  }
+
+  @Override
+  void createCollectionCallingBuildTwice(String dbName, String collectionName) {
+    def settings = MongoClientSettings.builder()
+      .clusterSettings(
+        ClusterSettings.builder()
+          .description("some-description")
+          .applyConnectionString(new ConnectionString("mongodb://localhost:$port"))
+          .build())
+    settings.build()
+    MongoDatabase db = MongoClients.create(settings.build()).getDatabase(dbName)
     db.createCollection(collectionName, toCallback {})
   }
 

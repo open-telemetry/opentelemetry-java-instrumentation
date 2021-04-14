@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -43,11 +42,6 @@ public class Jetty8InstrumentationModule extends InstrumentationModule {
             "javax.servlet",
             Jetty8InstrumentationModule.class.getPackage().getName() + ".Jetty8HandlerAdvice"),
         new JettyQueuedThreadPoolInstrumentation());
-  }
-
-  @Override
-  public Map<String, String> contextStore() {
-    return singletonMap(Runnable.class.getName(), State.class.getName());
   }
 
   public static class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
