@@ -61,7 +61,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
   public void updateSpanNames(
       Context context, Span span, Span serverSpan, Class<?> target, Method method) {
     String pathBasedSpanName = getPathSpanName(target, method);
-    // If path based name is empty skip appending context path so that path based name would
+    // If path based name is empty skip prepending context path so that path based name would
     // remain as an empty string for which we skip updating span name. Path base span name is
     // empty when method and class don't have a jax-rs path annotation, this can happen when
     // creating an "abort" span, see RequestContextHelper.
