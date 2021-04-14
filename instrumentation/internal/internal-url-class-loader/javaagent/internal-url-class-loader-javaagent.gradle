@@ -1,0 +1,28 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+dependencies {
+  compileOnly project(':javaagent-bootstrap')
+
+  testImplementation project(':javaagent-bootstrap')
+
+  // This is the earliest version that has org.apache.catalina.loader.ParallelWebappClassLoader
+  // which is used in the test
+  testLibrary group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '8.0.14'
+
+  testImplementation group: 'org.jboss.modules', name: 'jboss-modules', version: '1.3.10.Final'
+
+  // TODO: we should separate core and Eclipse tests at some point,
+  // but right now core-specific tests are quite dumb and are run with
+  // core version provided by Eclipse implementation.
+  //testImplementation group: 'org.osgi', name: 'org.osgi.core', version: '4.0.0'
+  testImplementation group: 'org.eclipse.platform', name: 'org.eclipse.osgi', version: '3.13.200'
+  testImplementation group: 'org.apache.felix', name: 'org.apache.felix.framework', version: '6.0.2'
+}
+
+// TODO (trask) ResourceInjectionTest is sort of hybrid integration/unit test
+//  maybe cleaner turning it into integration test with its own test instrumentation,
+//  similar to :testing-common:integration-tests
+//  then wouldn't need this shadowJar and wouldn't need HelperInjectorAccess
+shadowJar {
+  from("src/test/resources/")
+}
