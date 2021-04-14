@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
@@ -49,17 +50,22 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     // We create span and immediately update its name
     // We do that in order to reuse logic inside updateSpanNames method, which is used externally as
     // well.
-    Span span = spanBuilder(parentContext, "jax-rs.request", INTERNAL).startSpan();
+    SpanBuilder spanBuilder = spanBuilder(parentContext, "jax-rs.request", INTERNAL);
+    setCodeAttributes(spanBuilder, target, method);
+    Span span = spanBuilder.startSpan();
     updateSpanNames(
         parentContext, span, ServerSpan.fromContextOrNull(parentContext), target, method);
-    setCodeAttributes(span, target, method);
     return parentContext.with(span);
   }
 
   public void updateSpanNames(
       Context context, Span span, Span serverSpan, Class<?> target, Method method) {
     String pathBasedSpanName = getPathSpanName(target, method);
-    if (pathBasedSpanName != null) {
+    // If path based name is empty skip appending context path so that path based name would
+    // remain as an empty string for which we skip updating span name. Path base span name is
+    // empty when method and class don't have a jax-rs path annotation, this can happen when
+    // creating an "abort" span, see RequestContextHelper.
+    if (!pathBasedSpanName.isEmpty()) {
       pathBasedSpanName = ServletContextPath.prepend(context, pathBasedSpanName);
     }
     if (serverSpan == null) {
@@ -71,15 +77,15 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
   }
 
   private void updateSpanName(Span span, String spanName) {
-    if (spanName != null && !spanName.isEmpty()) {
+    if (!spanName.isEmpty()) {
       span.updateName(spanName);
     }
   }
 
-  private void setCodeAttributes(Span span, Class<?> target, Method method) {
-    span.setAttribute(SemanticAttributes.CODE_NAMESPACE, target.getName());
+  private void setCodeAttributes(SpanBuilder spanBuilder, Class<?> target, Method method) {
+    spanBuilder.setAttribute(SemanticAttributes.CODE_NAMESPACE, target.getName());
     if (method != null) {
-      span.setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName());
+      spanBuilder.setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName());
     }
   }
 
