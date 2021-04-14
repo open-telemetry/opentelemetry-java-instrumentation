@@ -63,9 +63,9 @@ public final class ContextStorageBridge extends Context.Storage {
     } else {
       // gRPC context without an OTel context associated with it. This is only possible when
       // attaching a context directly created by Context.ROOT, e.g., Context.ROOT.with(...) which
-      // is not common. We go ahead and assume the OTel context should also be reset to root in this
-      // case.
-      newOtelContext = io.opentelemetry.context.Context.root().with(GRPC_CONTEXT, toAttach);
+      // is not common. We go ahead and assume the gRPC context can be reset while using the current
+      // OTel context.
+      newOtelContext = io.opentelemetry.context.Context.current().with(GRPC_CONTEXT, toAttach);
     }
 
     Scope scope = newOtelContext.makeCurrent();
