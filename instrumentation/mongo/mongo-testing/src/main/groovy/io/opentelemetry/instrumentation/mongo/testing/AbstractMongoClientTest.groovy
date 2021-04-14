@@ -3,11 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.instrumentation.mongo.testing
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -17,7 +19,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import spock.lang.Shared
 
-abstract class AbstractMongoClientTest<T> extends AgentInstrumentationSpecification {
+abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   @Shared
   GenericContainer mongodb
@@ -49,6 +51,8 @@ abstract class AbstractMongoClientTest<T> extends AgentInstrumentationSpecificat
   // TracingCommandListener might get added multiple times if clientOptions are built using existing clientOptions or when calling a build method twice.
   // This test asserts that duplicate traces are not created in those cases.
   abstract void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName)
+
+  abstract void createCollectionCallingBuildTwice(String dbName, String collectionName)
 
   abstract int getCollection(String dbName, String collectionName)
 
@@ -112,6 +116,29 @@ abstract class AbstractMongoClientTest<T> extends AgentInstrumentationSpecificat
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
         })
+      }
+    }
+
+    where:
+    dbName = "test_db"
+    collectionName = createCollectionName()
+  }
+
+  def "test create collection calling build twice"() {
+    when:
+    runUnderTrace("parent") {
+      createCollectionCallingBuildTwice(dbName, collectionName)
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        basicSpan(it, 0, "parent")
+        mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
+          assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
+            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          true
+        }
       }
     }
 

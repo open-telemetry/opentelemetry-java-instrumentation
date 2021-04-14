@@ -121,6 +121,7 @@ public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATE
     return null;
   }
 
+  @Nullable
   protected String dbConnectionString(CONNECTION connection) {
     return null;
   }
@@ -129,6 +130,7 @@ public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATE
     netPeerAttributes.setNetPeer(span, peerAddress(connection));
   }
 
+  @Nullable
   protected abstract InetSocketAddress peerAddress(CONNECTION connection);
 
   protected void onStatement(
