@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.context;
+package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -11,6 +11,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,12 +36,14 @@ public final class ContextPropagationDebug {
     return THREAD_PROPAGATION_DEBUGGER;
   }
 
-  public static List<StackTraceElement[]> getLocations(Context context) {
-    return context.get(THREAD_PROPAGATION_LOCATIONS);
-  }
-
-  public static Context withLocations(List<StackTraceElement[]> locations, Context context) {
-    return context.with(THREAD_PROPAGATION_LOCATIONS, locations);
+  public static Context appendLocations(Context context, StackTraceElement[] locations) {
+    List<StackTraceElement[]> currentLocations = ContextPropagationDebug.getLocations(context);
+    if (currentLocations == null) {
+      currentLocations = new CopyOnWriteArrayList<>();
+      context = context.with(THREAD_PROPAGATION_LOCATIONS, currentLocations);
+    }
+    currentLocations.add(0, locations);
+    return context;
   }
 
   public static void debugContextLeakIfEnabled() {
@@ -64,8 +67,12 @@ public final class ContextPropagationDebug {
     }
   }
 
+  private static List<StackTraceElement[]> getLocations(Context context) {
+    return context.get(THREAD_PROPAGATION_LOCATIONS);
+  }
+
   private static void debugContextPropagation(Context context) {
-    List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(context);
+    List<StackTraceElement[]> locations = getLocations(context);
     if (locations != null) {
       StringBuilder sb = new StringBuilder();
       Iterator<StackTraceElement[]> i = locations.iterator();
