@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import java.time.Instant;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -106,13 +107,29 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * propagated along with the operation and passed to {@link #end(Context, Object, Object,
    * Throwable)} when it is finished.
    */
-  public Context start(Context parentContext, REQUEST request) {
+  public final Context start(Context parentContext, REQUEST request) {
+    return start(parentContext, request, null);
+  }
+
+  /**
+   * Starts a new operation to be instrumented. The {@code parentContext} is the parent of the
+   * resulting instrumented operation and should usually be {@code Context.current()}. The {@code
+   * request} is the request object of this operation. The {@code startTime} marks the moment when
+   * the operation has started. If not provided, OpenTelemetry uses current time as the operation
+   * start. The returned {@link Context} should be propagated along with the operation and passed to
+   * {@link #end(Context, Object, Object, Throwable)} when it is finished.
+   */
+  public Context start(Context parentContext, REQUEST request, @Nullable Instant startTime) {
     SpanKind spanKind = spanKindExtractor.extract(request);
     SpanBuilder spanBuilder =
         tracer
             .spanBuilder(spanNameExtractor.extract(request))
             .setSpanKind(spanKind)
             .setParent(parentContext);
+
+    if (startTime != null) {
+      spanBuilder.setStartTimestamp(startTime);
+    }
 
     AttributesBuilder attributes = Attributes.builder();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {

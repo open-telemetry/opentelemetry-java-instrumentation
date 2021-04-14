@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -314,5 +315,27 @@ class InstrumenterTest {
                             .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId("090a0b0c0d0e0f00")));
+  }
+
+  @Test
+  void shouldStartSpanWithGivenStartTime() {
+    Instrumenter<String, Void> instrumenter =
+        Instrumenter.<String, Void>newBuilder(
+                otelTesting.getOpenTelemetry(), "test", request -> request)
+            .newInstrumenter();
+
+    Instant startTime = Instant.ofEpochSecond(100);
+
+    // when
+    Context context = instrumenter.start(Context.root(), "test span", startTime);
+    instrumenter.end(context, "test span", null, null);
+
+    // then
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("test span").startsAt(startTime)));
   }
 }

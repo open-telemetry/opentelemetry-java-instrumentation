@@ -247,6 +247,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
         if (destinationName == "(temporary)") {
           "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key}" true
         }
+        "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
       }
     }
   }

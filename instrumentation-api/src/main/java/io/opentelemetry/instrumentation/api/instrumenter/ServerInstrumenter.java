@@ -10,7 +10,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
+import java.time.Instant;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, RESPONSE> {
 
@@ -40,10 +42,10 @@ final class ServerInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
   }
 
   @Override
-  public Context start(Context parentContext, REQUEST request) {
+  public Context start(Context parentContext, REQUEST request, @Nullable Instant startTime) {
     ContextPropagationDebug.debugContextLeakIfEnabled();
 
     Context extracted = propagators.getTextMapPropagator().extract(parentContext, request, getter);
-    return super.start(extracted, request);
+    return super.start(extracted, request, startTime);
   }
 }

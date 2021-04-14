@@ -9,7 +9,9 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import java.time.Instant;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ClientInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, RESPONSE> {
 
@@ -39,8 +41,8 @@ final class ClientInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
   }
 
   @Override
-  public Context start(Context parentContext, REQUEST request) {
-    Context newContext = super.start(parentContext, request);
+  public Context start(Context parentContext, REQUEST request, @Nullable Instant startTime) {
+    Context newContext = super.start(parentContext, request, startTime);
     propagators.getTextMapPropagator().inject(newContext, request, setter);
     return newContext;
   }

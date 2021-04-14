@@ -83,8 +83,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns a new client {@link Instrumenter} which will create client spans and inject context
-   * into requests.
+   * Returns a new {@link Instrumenter} which will create client spans and inject context into
+   * requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newClientInstrumenter(TextMapSetter<REQUEST> setter) {
     return newInstrumenter(
@@ -93,13 +93,33 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns a new server {@link Instrumenter} which will create server spans and extract context
-   * from requests.
+   * Returns a new {@link Instrumenter} which will create server spans and extract context from
+   * requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(TextMapGetter<REQUEST> getter) {
     return newInstrumenter(
         InstrumenterConstructor.propagatingFromUpstream(openTelemetry.getPropagators(), getter),
         SpanKindExtractor.alwaysServer());
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create producer spans and inject context into
+   * requests.
+   */
+  public Instrumenter<REQUEST, RESPONSE> newProducerInstrumenter(TextMapSetter<REQUEST> setter) {
+    return newInstrumenter(
+        InstrumenterConstructor.propagatingToDownstream(openTelemetry.getPropagators(), setter),
+        SpanKindExtractor.alwaysProducer());
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create consumer spans and extract context from
+   * requests.
+   */
+  public Instrumenter<REQUEST, RESPONSE> newConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
+    return newInstrumenter(
+        InstrumenterConstructor.propagatingFromUpstream(openTelemetry.getPropagators(), getter),
+        SpanKindExtractor.alwaysConsumer());
   }
 
   /**
