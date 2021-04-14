@@ -222,6 +222,8 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
       }
       childOf((SpanData) parent)
       attributes {
+        "${SemanticAttributes.CODE_NAMESPACE.key}" "JaxRsTestResource"
+        "${SemanticAttributes.CODE_FUNCTION.key}" methodName
         if (isCancelled) {
           "jaxrs.canceled" true
         }

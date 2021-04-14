@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.ClassHierarchyIterable;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -51,12 +52,16 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     Span span = spanBuilder(parentContext, "jax-rs.request", INTERNAL).startSpan();
     updateSpanNames(
         parentContext, span, ServerSpan.fromContextOrNull(parentContext), target, method);
+    setCodeAttributes(span, target, method);
     return parentContext.with(span);
   }
 
   public void updateSpanNames(
       Context context, Span span, Span serverSpan, Class<?> target, Method method) {
-    String pathBasedSpanName = ServletContextPath.prepend(context, getPathSpanName(target, method));
+    String pathBasedSpanName = getPathSpanName(target, method);
+    if (pathBasedSpanName != null) {
+      pathBasedSpanName = ServletContextPath.prepend(context, pathBasedSpanName);
+    }
     if (serverSpan == null) {
       updateSpanName(span, pathBasedSpanName);
     } else {
@@ -66,8 +71,15 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
   }
 
   private void updateSpanName(Span span, String spanName) {
-    if (!spanName.isEmpty()) {
+    if (spanName != null && !spanName.isEmpty()) {
       span.updateName(spanName);
+    }
+  }
+
+  private void setCodeAttributes(Span span, Class<?> target, Method method) {
+    span.setAttribute(SemanticAttributes.CODE_NAMESPACE, target.getName());
+    if (method != null) {
+      span.setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName());
     }
   }
 
