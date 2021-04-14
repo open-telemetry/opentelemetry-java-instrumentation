@@ -6,12 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.ClassHierarchyIterable;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -49,7 +51,17 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
       updateServerSpanName(parentContext, serverSpan, pathBasedSpanName);
     }
 
-    return startSpan(parentContext, spanName, SpanKind.INTERNAL);
+    SpanBuilder spanBuilder = spanBuilder(parentContext, spanName, SpanKind.INTERNAL);
+    setCodeAttributes(spanBuilder, target, method);
+    Span span = spanBuilder.startSpan();
+    return parentContext.with(span);
+  }
+
+  private void setCodeAttributes(SpanBuilder spanBuilder, Class<?> target, Method method) {
+    spanBuilder.setAttribute(SemanticAttributes.CODE_NAMESPACE, target.getName());
+    if (method != null) {
+      spanBuilder.setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName());
+    }
   }
 
   private void updateServerSpanName(Context context, Span span, String spanName) {
