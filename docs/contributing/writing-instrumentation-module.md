@@ -14,7 +14,7 @@ explanations of how to use a particular method (and why it works the way it does
 An `InstrumentationModule` describes a set of individual `TypeInstrumentation`s that need to be
 applied together to correctly instrument a particular library. Type instrumentations grouped in a
 module share helper classes, [muzzle runtime checks](muzzle.md), have the same classloader criteria
-for application, they get enabled/disabled together.
+for being applied, and get enabled/disabled together.
 
 The OpenTelemetry javaagent finds all modules by using the Java `ServiceLoader` API. To make your
 instrumentation visible you need to make sure that a proper `META-INF/services/` file is present in
@@ -31,34 +31,33 @@ class MyLibraryInstrumentationModule extends InstrumentationModule {
 An `InstrumentationModule` needs to have at least one name. The user of the javaagent can
 [suppress a chosen instrumentation](../suppressing-instrumentation.md) by referring to it by one of
 its names. The instrumentation module names use kebab-case. The main instrumentation name (the first
-one) is supposed to be the same as the gradle module name.
+one) is supposed to be the same as the gradle module name (excluding the version suffix if it has one).
 
 ```java
 public MyLibraryInstrumentationModule() {
-  super("my-library","my-library-1.0");
+  super("my-library", "my-library-1.0");
 }
 ```
 
 For detailed information on `InstrumentationModule` names please read the
-`#InstrumentationModule(String, String...)` Javadoc.
+`InstrumentationModule#InstrumentationModule(String, String...)` Javadoc.
+
+### `isHelperClass()`
 
 The OpenTelemetry javaagent picks up helper classes used in the instrumentation/advice classes and
 injects them into the application classpath. It can automatically find those classes that follow our
 package conventions (see [muzzle docs](muzzle.md#compile-time-reference-collection) for more info on
 this topic), but it is also possible to explicitly tell which packages/classes are supposed to be
-treated as helper classes by extending one of these methods:
+treated as helper classes by implementing `isHelperClass(String)`:
 
 ```java
-@Override
-protected String[] additionalHelperClassNames() {
-  return new String[] {"some.additional.HelperClass"};
-}
-
 @Override
 public boolean isHelperClass(String className) {
   return className.startsWith("org.my.library.opentelemetry");
 }
 ```
+
+### `helperResourceNames()`
 
 Some libraries may expose SPI interfaces that you can easily implement to provide
 telemetry-gathering capabilities. The OpenTelemetry javaagent is able to inject `ServiceLoader`
@@ -75,6 +74,8 @@ All classes referenced by service providers defined in the `helperResourceNames(
 treated as helper classes: they'll be checked for invalid references and automatically injected into
 the application classloader.
 
+### `classLoaderMatcher()`
+
 Different versions of the same library often need completely different instrumentations:
 for example, servlet 3 introduces several new async classes that need to be instrumented to produce
 correct telemetry data. An `InstrumentationModule` can define additional criteria for checking
@@ -83,12 +84,13 @@ whether an instrumentation should be applied:
 ```java
 @Override
 public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-  return hasClassesNamed("org.my.library.Version1Class");
+  return hasClassesNamed("org.my.library.Version2Class");
 }
-```
 
-For example: skip instrumenting the application code if it does not contain the class that was
+The above example will skip instrumenting the application code if it does not contain the class that was
 introduced in the version your instrumentation covers.
+
+### `typeInstrumentations()`
 
 Finally, an `InstrumentationModule` implementation needs to provide at least one
 `TypeInstrumentation` implementation:
@@ -114,14 +116,18 @@ class MyTypeInstrumentation implements TypeInstrumentation {
 }
 ```
 
+### `typeMatcher()`
+
 A type instrumentation needs to declare what class (or classes) are going to be instrumented:
 
 ```java
 @Override
-public ElementMatcher<? super TypeDescription>typeMatcher() {
+public ElementMatcher<TypeDescription> typeMatcher() {
   return named("org.my.library.SomeClass");
 }
 ```
+
+### `classLoaderOptimization()`
 
 When you need to instrument all classes that implement a particular interface, or all classes that
 are annotated with a particular annotation you should also implement the
@@ -143,6 +149,7 @@ public ElementMatcher<? super TypeDescription> typeMatcher() {
 }
 ```
 
+### `transformers()`
 The last `TypeInstrumentation` method describes which methods should be instrumented with which
 advice classes. It is suggested to make the method matchers as strict as possible - the type
 instrumentation should only instrument the code that it's supposed to, not more.
@@ -178,14 +185,14 @@ Simply referring to the inner class and calling `getName()` would be easier to r
 than this odd mix of string concatenation, but please note that **this is intentional**
 and should be maintained.
 
-Instrumentation modules are loaded by the agent's classloader, and this string concatenation is an
-optimization that prevents the actual advice class from being loaded.
+Instrumentation modules are loaded by the agent's class loader, and this string concatenation is an
+optimization that prevents the actual advice class from being loaded into the agent's class loader.
 
 ## Advice classes
 
-Advice classes are not really "classes", they're raw pieces of code that will be pasted directly to
+Advice classes are not really "classes", they're raw pieces of code that will be pasted directly into
 the instrumented library class files. You should not treat them as ordinary, plain Java classes -
-unfortunately most clean code practices do not apply to them:
+unfortunately many standard practices do not apply to them:
 
 * they MUST only contain static methods;
 * they MUST NOT contain any state (fields) whatsoever - static constants included! Only the advice
