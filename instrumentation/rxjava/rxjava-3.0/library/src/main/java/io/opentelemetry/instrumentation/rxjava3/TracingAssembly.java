@@ -43,13 +43,13 @@ import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.reactivestreams.Subscriber;
 
 /**
- * rxjava3 library instrumentation.
+ * RxJava3 library instrumentation.
  *
- * <p>In order to enable rxjava3 instrumentation one has to call the {@link
+ * <p>In order to enable RxJava3 instrumentation one has to call the {@link
  * TracingAssembly#enable()} method.
  *
  * <p>Instrumentation uses <code>on*Assembly</code> and <code>on*Subscribe</code> RxJavaPlugin hooks
- * to wrap rxjava3 classes in their tracing equivalents.
+ * to wrap RxJava3 classes in their tracing equivalents.
  *
  * <p>Instrumentation can be disabled by calling the {@link TracingAssembly#disable()} method.
  */
