@@ -19,8 +19,8 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  protected String[] additionalHelperClassNames() {
-    return new String[] {"io.opentelemetry.javaagent.tooling.Constants"};
+  public boolean isHelperClass(String className) {
+    return className.equals("io.opentelemetry.javaagent.tooling.Constants");
   }
 
   @Override
