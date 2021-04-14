@@ -9,7 +9,7 @@ import com.mongodb.event.CommandListener;
 import io.opentelemetry.api.OpenTelemetry;
 
 /** Entrypoint to OpenTelemetry instrumentation of the MongoDB client. */
-public class MongoTracing {
+public final class MongoTracing {
 
   /** Returns a new {@link MongoTracing} configured with the given {@link OpenTelemetry}. */
   public static MongoTracing create(OpenTelemetry openTelemetry) {

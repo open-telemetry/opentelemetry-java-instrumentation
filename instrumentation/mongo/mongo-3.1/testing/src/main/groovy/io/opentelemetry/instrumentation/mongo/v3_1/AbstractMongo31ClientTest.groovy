@@ -37,6 +37,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
     client?.close()
     client = null
   }
+
   @Override
   void createCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName)
