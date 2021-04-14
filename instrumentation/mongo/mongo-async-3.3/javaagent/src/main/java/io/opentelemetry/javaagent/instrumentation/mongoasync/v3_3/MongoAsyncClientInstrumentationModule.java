@@ -74,6 +74,11 @@ public class MongoAsyncClientInstrumentationModule extends InstrumentationModule
     public static void injectTraceListener(
         @Advice.This MongoClientSettings.Builder builder,
         @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
+      for (CommandListener commandListener : commandListeners) {
+        if (commandListener == MongoInstrumentationSingletons.LISTENER) {
+          return;
+        }
+      }
       builder.addCommandListener(MongoInstrumentationSingletons.LISTENER);
     }
   }

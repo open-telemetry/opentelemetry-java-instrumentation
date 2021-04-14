@@ -52,6 +52,8 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   // This test asserts that duplicate traces are not created in those cases.
   abstract void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName)
 
+  abstract void createCollectionCallingBuildTwice(String dbName, String collectionName)
+
   abstract int getCollection(String dbName, String collectionName)
 
   abstract T setupInsert(String dbName, String collectionName)
@@ -114,6 +116,29 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
         })
+      }
+    }
+
+    where:
+    dbName = "test_db"
+    collectionName = createCollectionName()
+  }
+
+  def "test create collection calling build twice"() {
+    when:
+    runUnderTrace("parent") {
+      createCollectionCallingBuildTwice(dbName, collectionName)
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 2) {
+        basicSpan(it, 0, "parent")
+        mongoSpan(it, 1, "create", collectionName, dbName, span(0)) {
+          assert it == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
+            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          true
+        }
       }
     }
 

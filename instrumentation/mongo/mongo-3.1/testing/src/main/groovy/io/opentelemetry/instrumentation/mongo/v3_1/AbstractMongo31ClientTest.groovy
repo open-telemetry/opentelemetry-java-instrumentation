@@ -61,6 +61,15 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
   }
 
   @Override
+  void createCollectionCallingBuildTwice(String dbName, String collectionName) {
+    def options = MongoClientOptions.builder().description("some-description")
+    configureMongoClientOptions(options)
+    options.build()
+    MongoDatabase db = new MongoClient(new ServerAddress("localhost", port), options.build()).getDatabase(dbName)
+    db.createCollection(collectionName)
+  }
+
+  @Override
   int getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName)
     return db.getCollection(collectionName).count()

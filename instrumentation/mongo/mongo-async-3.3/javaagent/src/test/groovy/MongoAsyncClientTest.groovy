@@ -67,6 +67,19 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
+  void createCollectionCallingBuildTwice(String dbName, String collectionName) {
+    def settings = MongoClientSettings.builder()
+      .clusterSettings(
+        ClusterSettings.builder()
+          .description("some-description")
+          .applyConnectionString(new ConnectionString("mongodb://localhost:$port"))
+          .build())
+    settings.build()
+    MongoDatabase db = MongoClients.create(settings.build()).getDatabase(dbName)
+    db.createCollection(collectionName, toCallback {})
+  }
+
+  @Override
   int getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName)
     def count = new CompletableFuture<Integer>()

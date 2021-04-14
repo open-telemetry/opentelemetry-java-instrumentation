@@ -5,6 +5,8 @@
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import com.mongodb.MongoClientSettings
+import com.mongodb.ServerAddress
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
 import com.mongodb.reactivestreams.client.MongoClient
@@ -52,6 +54,18 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   @Override
   void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
     throw new AssumptionViolatedException("not tested on 4.0")
+  }
+
+  @Override
+  void createCollectionCallingBuildTwice(String dbName, String collectionName) {
+    def settings = MongoClientSettings.builder()
+      .applyToClusterSettings({ builder ->
+        builder.hosts(Arrays.asList(
+          new ServerAddress("localhost", port)))
+      })
+    settings.build()
+    MongoDatabase db = MongoClients.create(settings.build()).getDatabase(dbName)
+    db.createCollection(collectionName).subscribe(toSubscriber {})
   }
 
   @Override

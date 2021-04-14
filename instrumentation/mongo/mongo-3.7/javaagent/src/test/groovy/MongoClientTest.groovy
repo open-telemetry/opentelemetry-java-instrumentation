@@ -67,6 +67,19 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
+  void createCollectionCallingBuildTwice(String dbName, String collectionName) {
+    def clientSettings = MongoClientSettings.builder()
+      .applyToClusterSettings({ builder ->
+        builder.hosts(Arrays.asList(
+          new ServerAddress("localhost", port)))
+          .description("some-description")
+      })
+    clientSettings.build()
+    MongoDatabase db = MongoClients.create(clientSettings.build()).getDatabase(dbName)
+    db.createCollection(collectionName)
+  }
+
+  @Override
   int getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName)
     return db.getCollection(collectionName).count()
