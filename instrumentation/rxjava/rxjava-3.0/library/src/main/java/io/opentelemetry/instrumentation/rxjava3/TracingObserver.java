@@ -30,35 +30,31 @@ import io.reactivex.rxjava3.internal.observers.BasicFuseableObserver;
 
 class TracingObserver<T> extends BasicFuseableObserver<T, T> {
 
-  // BasicFuseableObserver#actual has been renamed to downstream in newer versions, we can't use it
-  // in this class
-  private final Observer<? super T> wrappedObserver;
   private final Context context;
 
-  TracingObserver(final Observer<? super T> actual, final Context context) {
-    super(actual);
-    this.wrappedObserver = actual;
+  TracingObserver(final Observer<? super T> downstream, final Context context) {
+    super(downstream);
     this.context = context;
   }
 
   @Override
   public void onNext(T t) {
     try (Scope ignored = context.makeCurrent()) {
-      wrappedObserver.onNext(t);
+      downstream.onNext(t);
     }
   }
 
   @Override
   public void onError(Throwable t) {
     try (Scope ignored = context.makeCurrent()) {
-      wrappedObserver.onError(t);
+      downstream.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
     try (Scope ignored = context.makeCurrent()) {
-      wrappedObserver.onComplete();
+      downstream.onComplete();
     }
   }
 

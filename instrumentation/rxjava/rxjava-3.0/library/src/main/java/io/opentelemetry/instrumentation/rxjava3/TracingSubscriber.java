@@ -30,35 +30,31 @@ import org.reactivestreams.Subscriber;
 
 class TracingSubscriber<T> extends BasicFuseableSubscriber<T, T> {
 
-  // BasicFuseableSubscriber#actual has been renamed to downstream in newer versions, we can't use
-  // it in this class
-  private final Subscriber<? super T> wrappedSubscriber;
   private final Context context;
 
-  TracingSubscriber(final Subscriber<? super T> actual, final Context context) {
-    super(actual);
-    this.wrappedSubscriber = actual;
+  TracingSubscriber(final Subscriber<? super T> downstream, final Context context) {
+    super(downstream);
     this.context = context;
   }
 
   @Override
   public void onNext(T t) {
     try (Scope ignored = context.makeCurrent()) {
-      wrappedSubscriber.onNext(t);
+      downstream.onNext(t);
     }
   }
 
   @Override
   public void onError(Throwable t) {
     try (Scope ignored = context.makeCurrent()) {
-      wrappedSubscriber.onError(t);
+      downstream.onError(t);
     }
   }
 
   @Override
   public void onComplete() {
     try (Scope ignored = context.makeCurrent()) {
-      wrappedSubscriber.onComplete();
+      downstream.onComplete();
     }
   }
 
