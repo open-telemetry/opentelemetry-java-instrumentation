@@ -23,7 +23,6 @@ You can suppress agent instrumentation of specific libraries by using
 | aws-sdk|
 | axis2|
 | cassandra|
-| classloader |
 | couchbase|
 | cxf|
 | dropwizard-views |
