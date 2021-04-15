@@ -120,7 +120,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
         int access, String name, String descriptor, String signature, Object value) {
       if (MUZZLE_REF_MATCHER_FIELD_NAME.equals(name)) {
         generateReferenceMatcherField = false;
-        log.warn(
+        log.info(
             "The '{}' field was already found in class '{}'. Muzzle will not generate it again",
             MUZZLE_REF_MATCHER_FIELD_NAME,
             instrumentationClassName);
@@ -133,21 +133,21 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
         int access, String name, String descriptor, String signature, String[] exceptions) {
       if (MUZZLE_REF_MATCHER_METHOD_NAME.equals(name)) {
         generateReferenceMatcherMethod = false;
-        log.warn(
+        log.info(
             "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
             MUZZLE_REF_MATCHER_METHOD_NAME,
             instrumentationClassName);
       }
       if (MUZZLE_HELPER_CLASSES_METHOD_NAME.equals(name)) {
         generateHelperClassNamesMethod = false;
-        log.warn(
+        log.info(
             "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
             MUZZLE_HELPER_CLASSES_METHOD_NAME,
             instrumentationClassName);
       }
       if (MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME.equals(name)) {
         generateContextStoreClassesMethod = false;
-        log.warn(
+        log.info(
             "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
             MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME,
             instrumentationClassName);

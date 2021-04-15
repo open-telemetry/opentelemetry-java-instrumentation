@@ -34,7 +34,8 @@ Muzzle also automatically generates the `InstrumentationModule#getMuzzleContextS
 method.
 
 If you extend any of these `getMuzzle...()` methods in your `InstrumentationModule`, the muzzle
-compile plugin will not override your code: muzzle will skip those custom methods.
+compile plugin will not override your code: muzzle will only override those methods that do not have
+a custom implementation.
 
 All collected references are then used to create a `ReferenceMatcher` instance. This matcher
 is stored in the instrumentation module class in the method `InstrumentationModule#getMuzzleReferenceMatcher()`
