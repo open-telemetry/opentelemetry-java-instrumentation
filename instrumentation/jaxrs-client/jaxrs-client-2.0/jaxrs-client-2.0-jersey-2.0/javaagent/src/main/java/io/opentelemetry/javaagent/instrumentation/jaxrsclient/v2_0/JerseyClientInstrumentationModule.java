@@ -37,10 +37,8 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] additionalHelperClassNames() {
-    return new String[] {
-      "org.glassfish.jersey.client.ResponseCallbackWrapper",
-    };
+  public boolean isHelperClass(String className) {
+    return className.equals("org.glassfish.jersey.client.ResponseCallbackWrapper");
   }
 
   @Override
@@ -59,7 +57,10 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
       Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
 
       transformers.put(
-          isMethod().and(isPublic()).and(named("invoke")),
+          isMethod()
+              .and(isPublic())
+              .and(named("invoke"))
+              .and(takesArgument(0, named("org.glassfish.jersey.client.ClientRequest"))),
           JerseyClientInstrumentationModule.class.getName() + "$InvokeAdvice");
       transformers.put(
           isMethod()
