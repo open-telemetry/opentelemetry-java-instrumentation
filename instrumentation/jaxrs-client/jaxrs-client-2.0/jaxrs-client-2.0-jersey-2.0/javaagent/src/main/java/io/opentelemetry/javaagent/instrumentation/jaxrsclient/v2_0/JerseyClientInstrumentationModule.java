@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
@@ -17,12 +17,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ResponseCallbackWrapper;
 
 /**
  * JAX-RS Client API doesn't define a good point where we can handle connection failures, so we must
@@ -36,6 +37,13 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public String[] additionalHelperClassNames() {
+    return new String[] {
+      "org.glassfish.jersey.client.ResponseCallbackWrapper",
+    };
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new JerseyClientConnectionErrorInstrumentation());
   }
@@ -43,7 +51,7 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
   public static class JerseyClientConnectionErrorInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("org.glassfish.jersey.client.JerseyInvocation");
+      return named("org.glassfish.jersey.client.ClientRuntime");
     }
 
     @Override
@@ -53,9 +61,11 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
       transformers.put(
           isMethod().and(isPublic()).and(named("invoke")),
           JerseyClientInstrumentationModule.class.getName() + "$InvokeAdvice");
-
       transformers.put(
-          isMethod().and(isPublic()).and(named("submit")).and(returns(Future.class)),
+          isMethod()
+              .and(named("submit").or(named("createRunnableForAsyncProcessing")))
+              .and(takesArgument(0, named("org.glassfish.jersey.client.ClientRequest")))
+              .and(takesArgument(1, named("org.glassfish.jersey.client.ResponseCallback"))),
           JerseyClientInstrumentationModule.class.getName() + "$SubmitAdvice");
 
       return transformers;
@@ -66,8 +76,7 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void handleError(
-        @Advice.FieldValue("requestContext") ClientRequest context,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Argument(0) ClientRequest context, @Advice.Thrown Throwable throwable) {
       if (throwable != null) {
         JerseyClientUtil.handleException(context, throwable);
       }
@@ -76,11 +85,13 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
 
   public static class SubmitAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    // using dynamic typing because parameter type is package private
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void handleError(
-        @Advice.FieldValue("requestContext") ClientRequest context,
-        @Advice.Return(readOnly = false) Future<?> future) {
-      future = JerseyClientUtil.addErrorReporting(context, future);
+        @Advice.Argument(0) ClientRequest context,
+        @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
+            Object callback) {
+      callback = ResponseCallbackWrapper.wrap(context, callback);
     }
   }
 }
