@@ -30,6 +30,8 @@ import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.pool.TypePool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class generates the actual implementation of the {@link
@@ -40,10 +42,12 @@ import net.bytebuddy.pool.TypePool;
  * <p>This class is run at compile time by the {@link MuzzleCodeGenerationPlugin} ByteBuddy plugin.
  */
 class MuzzleCodeGenerator implements AsmVisitorWrapper {
-  public static final String MUZZLE_REF_MATCHER_FIELD_NAME = "muzzleReferenceMatcher";
-  public static final String MUZZLE_REF_MATCHER_METHOD_NAME = "getMuzzleReferenceMatcher";
-  public static final String MUZZLE_HELPER_CLASSES_METHOD_NAME = "getMuzzleHelperClassNames";
-  public static final String MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME =
+  private static final Logger log = LoggerFactory.getLogger(MuzzleCodeGenerator.class);
+
+  private static final String MUZZLE_REF_MATCHER_FIELD_NAME = "muzzleReferenceMatcher";
+  private static final String MUZZLE_REF_MATCHER_METHOD_NAME = "getMuzzleReferenceMatcher";
+  private static final String MUZZLE_HELPER_CLASSES_METHOD_NAME = "getMuzzleHelperClassNames";
+  private static final String MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME =
       "getMuzzleContextStoreClasses";
 
   @Override
@@ -78,6 +82,11 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     private String instrumentationClassName;
     private InstrumentationModule instrumentationModule;
 
+    private boolean generateReferenceMatcherField = true;
+    private boolean generateReferenceMatcherMethod = true;
+    private boolean generateHelperClassNamesMethod = true;
+    private boolean generateContextStoreClassesMethod = true;
+
     public GenerateMuzzleReferenceMatcherMethodAndField(ClassVisitor classVisitor, boolean frames) {
       super(Opcodes.ASM7, classVisitor);
       this.frames = frames;
@@ -110,10 +119,11 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     public FieldVisitor visitField(
         int access, String name, String descriptor, String signature, Object value) {
       if (MUZZLE_REF_MATCHER_FIELD_NAME.equals(name)) {
-        // muzzle field has been generated
-        // by previous compilation
-        // ignore and recompute in visitEnd
-        return null;
+        generateReferenceMatcherField = false;
+        log.warn(
+            "The '{}' field was already found in class '{}'. Muzzle will not generate it again",
+            MUZZLE_REF_MATCHER_FIELD_NAME,
+            instrumentationClassName);
       }
       return super.visitField(access, name, descriptor, signature, value);
     }
@@ -122,10 +132,25 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     public MethodVisitor visitMethod(
         int access, String name, String descriptor, String signature, String[] exceptions) {
       if (MUZZLE_REF_MATCHER_METHOD_NAME.equals(name)) {
-        // muzzle getter has been generated
-        // by previous compilation
-        // ignore and recompute in visitEnd
-        return null;
+        generateReferenceMatcherMethod = false;
+        log.warn(
+            "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
+            MUZZLE_REF_MATCHER_METHOD_NAME,
+            instrumentationClassName);
+      }
+      if (MUZZLE_HELPER_CLASSES_METHOD_NAME.equals(name)) {
+        generateHelperClassNamesMethod = false;
+        log.warn(
+            "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
+            MUZZLE_HELPER_CLASSES_METHOD_NAME,
+            instrumentationClassName);
+      }
+      if (MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME.equals(name)) {
+        generateContextStoreClassesMethod = false;
+        log.warn(
+            "The '{}' method was already found in class '{}'. Muzzle will not generate it again",
+            MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME,
+            instrumentationClassName);
       }
       MethodVisitor methodVisitor =
           super.visitMethod(access, name, descriptor, signature, exceptions);
@@ -138,10 +163,18 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     @Override
     public void visitEnd() {
       ReferenceCollector collector = collectReferences();
-      generateMuzzleHelperClassNamesMethod(collector);
-      generateMuzzleReferenceMatcherMethod(collector);
-      generateMuzzleReferenceMatcherField();
-      generateMuzzleContextStoreClassesMethod(collector);
+      if (generateReferenceMatcherField) {
+        generateMuzzleReferenceMatcherField();
+      }
+      if (generateReferenceMatcherMethod) {
+        generateMuzzleReferenceMatcherMethod(collector);
+      }
+      if (generateHelperClassNamesMethod) {
+        generateMuzzleHelperClassNamesMethod(collector);
+      }
+      if (generateContextStoreClassesMethod) {
+        generateMuzzleContextStoreClassesMethod(collector);
+      }
       super.visitEnd();
     }
 
