@@ -23,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.jersey.client.ClientRequest;
-import org.glassfish.jersey.client.ResponseCallbackWrapper;
+import org.glassfish.jersey.client.OpenTelemetryResponseCallbackWrapper;
 
 /**
  * JAX-RS Client API doesn't define a good point where we can handle connection failures, so we must
@@ -92,7 +92,7 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
         @Advice.Argument(0) ClientRequest context,
         @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
             Object callback) {
-      callback = ResponseCallbackWrapper.wrap(context, callback);
+      callback = OpenTelemetryResponseCallbackWrapper.wrap(context, callback);
     }
   }
 }

@@ -11,18 +11,18 @@ import javax.ws.rs.ProcessingException;
 import org.glassfish.jersey.process.internal.RequestScope;
 
 // implemented interface is package private so wrapper needs to be in the same package
-public class ResponseCallbackWrapper implements ResponseCallback {
+public class OpenTelemetryResponseCallbackWrapper implements ResponseCallback {
   private final ClientRequest request;
   private final ResponseCallback delegate;
 
-  public ResponseCallbackWrapper(ClientRequest request, ResponseCallback delegate) {
+  public OpenTelemetryResponseCallbackWrapper(ClientRequest request, ResponseCallback delegate) {
     this.request = request;
     this.delegate = delegate;
   }
 
   public static Object wrap(ClientRequest request, Object callback) {
     if (callback instanceof ResponseCallback) {
-      return new ResponseCallbackWrapper(request, (ResponseCallback) callback);
+      return new OpenTelemetryResponseCallbackWrapper(request, (ResponseCallback) callback);
     }
     return callback;
   }
