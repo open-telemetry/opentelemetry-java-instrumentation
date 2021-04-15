@@ -38,7 +38,7 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isHelperClass(String className) {
-    return className.equals("org.glassfish.jersey.client.ResponseCallbackWrapper");
+    return className.equals("org.glassfish.jersey.client.OpenTelemetryResponseCallbackWrapper");
   }
 
   @Override
