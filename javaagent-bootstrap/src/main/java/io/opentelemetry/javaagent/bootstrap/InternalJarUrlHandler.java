@@ -8,13 +8,11 @@ package io.opentelemetry.javaagent.bootstrap;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.security.Permission;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -49,6 +47,8 @@ public class InternalJarUrlHandler extends URLStreamHandler {
 
   @Override
   protected URLConnection openConnection(URL url) throws IOException {
+//    System.out.println("InternalJarUrlHandler openConnection " + url);
+//    Thread.dumpStack();
     String filename = url.getFile();
     if ("/".equals(filename)) {
       // "/" is used as the default url of the jar
@@ -92,38 +92,6 @@ public class InternalJarUrlHandler extends URLStreamHandler {
       sb.append("data");
     }
     return sb.toString();
-  }
-
-  private static class InternalJarUrlConnection extends URLConnection {
-    private final InputStream inputStream;
-    private final long contentLength;
-
-    private InternalJarUrlConnection(URL url, InputStream inputStream, long contentLength) {
-      super(url);
-      this.inputStream = inputStream;
-      this.contentLength = contentLength;
-    }
-
-    @Override
-    public void connect() {
-      connected = true;
-    }
-
-    @Override
-    public InputStream getInputStream() {
-      return inputStream;
-    }
-
-    @Override
-    public Permission getPermission() {
-      // No permissions needed because all classes are in memory
-      return null;
-    }
-
-    @Override
-    public long getContentLengthLong() {
-      return contentLength;
-    }
   }
 
   private static class FileNotInInternalJar extends IOException {
