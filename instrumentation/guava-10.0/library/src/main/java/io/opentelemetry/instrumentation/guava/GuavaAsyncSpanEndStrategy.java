@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.guava;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
@@ -25,8 +24,7 @@ public enum GuavaAsyncSpanEndStrategy implements AsyncSpanEndStrategy {
     if (future.isDone()) {
       endSpan(tracer, context, future);
     } else {
-      future.addListener(
-          () -> endSpan(tracer, context, future), MoreExecutors.sameThreadExecutor());
+      future.addListener(() -> endSpan(tracer, context, future), Runnable::run);
     }
     return future;
   }
