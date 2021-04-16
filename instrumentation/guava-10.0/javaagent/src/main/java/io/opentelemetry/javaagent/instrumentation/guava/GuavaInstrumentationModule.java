@@ -22,7 +22,7 @@ import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -53,11 +53,9 @@ public class GuavaInstrumentationModule extends InstrumentationModule {
 
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<? super MethodDescription>, String> map = new LinkedHashMap<>();
-      // map.put(isTypeInitializer(), GuavaInstrumentationModule.class.getName() +
-      // "$AbstractFutureAdvice1");
+      Map<ElementMatcher<? super MethodDescription>, String> map = new HashMap<>();
       map.put(
-          isConstructor(), GuavaInstrumentationModule.class.getName() + "$AbstractFutureAdvice2");
+          isConstructor(), GuavaInstrumentationModule.class.getName() + "$AbstractFutureAdvice");
       map.put(
           named("addListener").and(ElementMatchers.takesArguments(Runnable.class, Executor.class)),
           GuavaInstrumentationModule.class.getName() + "$AddListenerAdvice");
@@ -65,15 +63,7 @@ public class GuavaInstrumentationModule extends InstrumentationModule {
     }
   }
 
-  public static class AbstractFutureAdvice1 {
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onPostStaticInitializer() {
-      AsyncSpanEndStrategies.getInstance().registerStrategy(GuavaAsyncSpanEndStrategy.INSTANCE);
-    }
-  }
-
-  public static class AbstractFutureAdvice2 {
+  public static class AbstractFutureAdvice {
     public static final ClassValue<AtomicBoolean> activated =
         new ClassValue<AtomicBoolean>() {
           @Override
@@ -82,7 +72,9 @@ public class GuavaInstrumentationModule extends InstrumentationModule {
           }
         };
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    // TODO(HaloFour): Replace with adding a type initializer to AbstractFuture
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2685
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruction() {
       if (activated.get(AbstractFuture.class).compareAndSet(false, true)) {
         AsyncSpanEndStrategies.getInstance().registerStrategy(GuavaAsyncSpanEndStrategy.INSTANCE);
