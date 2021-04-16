@@ -15,7 +15,8 @@ import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
 
 public final class MessageWithDestination {
-  private static final String TIBCO_TMP_PREFIX = "$TMP$";
+  // visible for tests
+  static final String TIBCO_TMP_PREFIX = "$TMP$";
 
   private final Message message;
   private final MessageOperation messageOperation;
@@ -23,7 +24,7 @@ public final class MessageWithDestination {
   private final String destinationKind;
   private final boolean temporaryDestination;
 
-  MessageWithDestination(
+  private MessageWithDestination(
       Message message,
       MessageOperation messageOperation,
       String destinationName,

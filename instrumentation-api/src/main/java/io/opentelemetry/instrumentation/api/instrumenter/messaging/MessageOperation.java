@@ -11,11 +11,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.messaging;
  * that may be used in a messaging system.
  */
 public enum MessageOperation {
-  SEND,
-  RECEIVE,
-  PROCESS;
-
-  public String operationName() {
-    return name().toLowerCase();
-  }
+  send,
+  receive,
+  process
 }

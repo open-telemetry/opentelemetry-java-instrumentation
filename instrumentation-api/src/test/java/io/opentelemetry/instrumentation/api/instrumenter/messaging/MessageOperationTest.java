@@ -14,6 +14,6 @@ class MessageOperationTest {
   @ParameterizedTest
   @EnumSource(MessageOperation.class)
   void shouldGetCorrectOperationName(MessageOperation operation) {
-    assertEquals(operation.name().toLowerCase(), operation.operationName());
+    assertEquals(operation.name().toLowerCase(), operation.name());
   }
 }

@@ -68,7 +68,7 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       MessageWithDestination request =
-          MessageWithDestination.create(message, MessageOperation.RECEIVE, null);
+          MessageWithDestination.create(message, MessageOperation.receive, null);
 
       if (consumerInstrumenter().shouldStart(parentContext, request)) {
         Context context = consumerInstrumenter().start(parentContext, request, startTime);

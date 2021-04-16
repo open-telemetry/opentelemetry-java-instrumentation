@@ -78,7 +78,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = MessageWithDestination.create(message, MessageOperation.SEND, defaultDestination);
+      request = MessageWithDestination.create(message, MessageOperation.send, defaultDestination);
       if (!producerInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
@@ -118,7 +118,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = MessageWithDestination.create(message, MessageOperation.SEND, destination);
+      request = MessageWithDestination.create(message, MessageOperation.send, destination);
       if (!producerInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
