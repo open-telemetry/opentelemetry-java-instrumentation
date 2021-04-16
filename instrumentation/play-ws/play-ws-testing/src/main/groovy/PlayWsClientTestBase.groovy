@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 import play.libs.ws.StandaloneWSClient
 import play.libs.ws.StandaloneWSRequest
 import play.libs.ws.StandaloneWSResponse
@@ -36,9 +36,9 @@ class PlayJavaWsClientTestBase extends PlayWsClientTestBaseBase<StandaloneWSRequ
   }
 
   @Override
-  void sendRequestWithCallback(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    request.execute().thenAccept {
-      callback.accept(it.status)
+  void sendRequestWithCallback(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, HttpClientTest.RequestResult requestResult) {
+    request.execute().whenComplete { response, throwable ->
+      requestResult.complete({ response.status }, throwable)
     }
   }
 
@@ -69,9 +69,9 @@ class PlayJavaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<Standalo
   }
 
   @Override
-  void sendRequestWithCallback(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    internalSendRequest(request).thenAccept {
-      callback.accept(it.status)
+  void sendRequestWithCallback(StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, HttpClientTest.RequestResult requestResult) {
+    internalSendRequest(request).whenComplete { response, throwable ->
+      requestResult.complete({ response.status }, throwable?.getCause())
     }
   }
 
@@ -116,11 +116,15 @@ class PlayScalaWsClientTestBase extends PlayWsClientTestBaseBase<play.api.libs.w
   }
 
   @Override
-  void sendRequestWithCallback(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, HttpClientTest.RequestResult requestResult) {
     request.execute().onComplete(new Function1<Try<play.api.libs.ws.StandaloneWSResponse>, Void>() {
       @Override
       Void apply(Try<play.api.libs.ws.StandaloneWSResponse> response) {
-        callback.accept(response.get().status())
+        if (response.isSuccess()) {
+          requestResult.complete(response.get().status())
+        } else {
+          requestResult.complete(response.failed().get())
+        }
         return null
       }
     }, ExecutionContext.global())
@@ -153,11 +157,15 @@ class PlayScalaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<play.ap
   }
 
   @Override
-  void sendRequestWithCallback(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers, HttpClientTest.RequestResult requestResult) {
     internalSendRequest(request).onComplete(new Function1<Try<play.api.libs.ws.StandaloneWSResponse>, Void>() {
       @Override
       Void apply(Try<play.api.libs.ws.StandaloneWSResponse> response) {
-        callback.accept(response.get().status())
+        if (response.isSuccess()) {
+          requestResult.complete(response.get().status())
+        } else {
+          requestResult.complete(response.failed().get())
+        }
         return null
       }
     }, ExecutionContext.global())

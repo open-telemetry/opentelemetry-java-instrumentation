@@ -5,7 +5,6 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.function.Consumer
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.Dsl
 import org.asynchttpclient.Request
@@ -37,12 +36,17 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   }
 
   @Override
-  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     client.executeRequest(request, new AsyncCompletionHandler<Void>() {
       @Override
       Void onCompleted(Response response) throws Exception {
-        callback.accept(response.statusCode)
+        requestResult.complete(response.statusCode)
         return null
+      }
+
+      @Override
+      void onThrowable(Throwable throwable) {
+        requestResult.complete(throwable)
       }
     })
   }

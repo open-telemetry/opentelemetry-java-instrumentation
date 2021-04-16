@@ -13,7 +13,6 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import java.util.function.Consumer
 import spock.lang.Requires
 import spock.lang.Shared
 
@@ -40,10 +39,10 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
   }
 
   @Override
-  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-      .thenAccept {
-        callback.accept(it.statusCode())
+      .whenComplete {response, throwable ->
+        requestResult.complete({ response.statusCode() }, throwable?.getCause())
       }
   }
 
@@ -63,6 +62,12 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
   @Override
   boolean testWithClientParent() {
     false
+  }
+
+  // TODO: context not propagated to callback
+  @Override
+  boolean testErrorWithCallback() {
+    return false
   }
 
   @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
