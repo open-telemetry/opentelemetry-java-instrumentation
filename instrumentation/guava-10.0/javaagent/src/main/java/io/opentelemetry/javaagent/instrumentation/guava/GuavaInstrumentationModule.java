@@ -6,12 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.guava;
 
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import com.google.common.util.concurrent.AbstractFuture;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
+import io.opentelemetry.instrumentation.guava.GuavaAsyncSpanEndStrategy;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -20,9 +22,11 @@ import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -49,9 +53,40 @@ public class GuavaInstrumentationModule extends InstrumentationModule {
 
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+      Map<ElementMatcher<? super MethodDescription>, String> map = new LinkedHashMap<>();
+      // map.put(isTypeInitializer(), GuavaInstrumentationModule.class.getName() +
+      // "$AbstractFutureAdvice1");
+      map.put(
+          isConstructor(), GuavaInstrumentationModule.class.getName() + "$AbstractFutureAdvice2");
+      map.put(
           named("addListener").and(ElementMatchers.takesArguments(Runnable.class, Executor.class)),
           GuavaInstrumentationModule.class.getName() + "$AddListenerAdvice");
+      return map;
+    }
+  }
+
+  public static class AbstractFutureAdvice1 {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onPostStaticInitializer() {
+      AsyncSpanEndStrategies.getInstance().registerStrategy(GuavaAsyncSpanEndStrategy.INSTANCE);
+    }
+  }
+
+  public static class AbstractFutureAdvice2 {
+    public static final ClassValue<AtomicBoolean> activated =
+        new ClassValue<AtomicBoolean>() {
+          @Override
+          protected AtomicBoolean computeValue(Class<?> type) {
+            return new AtomicBoolean();
+          }
+        };
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onConstruction() {
+      if (activated.get(AbstractFuture.class).compareAndSet(false, true)) {
+        AsyncSpanEndStrategies.getInstance().registerStrategy(GuavaAsyncSpanEndStrategy.INSTANCE);
+      }
     }
   }
 
