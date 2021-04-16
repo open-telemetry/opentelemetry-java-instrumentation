@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.guava;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -20,7 +25,8 @@ public enum GuavaAsyncSpanEndStrategy implements AsyncSpanEndStrategy {
     if (future.isDone()) {
       endSpan(tracer, context, future);
     } else {
-      future.addListener(() -> endSpan(tracer, context, future), MoreExecutors.sameThreadExecutor());
+      future.addListener(
+          () -> endSpan(tracer, context, future), MoreExecutors.sameThreadExecutor());
     }
     return future;
   }
