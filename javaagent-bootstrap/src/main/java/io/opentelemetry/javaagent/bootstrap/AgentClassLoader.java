@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -101,6 +102,15 @@ public class AgentClassLoader extends URLClassLoader {
     } else {
       return bootstrapResource;
     }
+  }
+
+  @Override
+  public InputStream getResourceAsStream(String name) {
+//    System.out.println("Agent.getResourceAsStream " + name);
+//    if(name.contains("DemoServlet3Advice")){
+//      Thread.dumpStack();
+//    }
+    return super.getResourceAsStream(name);
   }
 
   public BootstrapClassLoaderProxy getBootstrapProxy() {
