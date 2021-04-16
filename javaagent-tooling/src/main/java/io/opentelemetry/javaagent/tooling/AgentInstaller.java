@@ -492,8 +492,7 @@ public class AgentInstaller {
     private static boolean isIgnored(Class<?> c) {
       ClassLoader cl = c.getClassLoader();
       if (cl != null
-          && (cl.getClass() == AgentClassLoader.class
-              || cl.getClass() == ExtensionClassLoader.class)) {
+          && (cl.getClass() == AgentClassLoader.class)) {
         return true;
       }
 

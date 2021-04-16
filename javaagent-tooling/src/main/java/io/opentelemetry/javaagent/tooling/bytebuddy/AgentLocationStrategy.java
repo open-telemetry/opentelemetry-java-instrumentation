@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
+import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.utility.JavaModule;
@@ -18,12 +21,20 @@ import net.bytebuddy.utility.JavaModule;
  * cannot find the desired resource, check up the classloader hierarchy until a resource is found.
  */
 public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
+  private final Set<ClassLoader> known = new HashSet<>();
+
   public ClassFileLocator classFileLocator(ClassLoader classLoader) {
     return classFileLocator(classLoader, null);
   }
 
   @Override
   public ClassFileLocator classFileLocator(ClassLoader classLoader, JavaModule javaModule) {
+    if(known.add(classLoader)) {
+      System.out.println("Creating ClassFileLocator for " + classLoader);
+      if(classLoader instanceof AgentClassLoader) {
+        Thread.dumpStack();
+      }
+    }
     List<ClassFileLocator> locators = new ArrayList<>();
     locators.add(ClassFileLocator.ForClassLoader.of(Utils.getBootstrapProxy()));
     while (classLoader != null) {
