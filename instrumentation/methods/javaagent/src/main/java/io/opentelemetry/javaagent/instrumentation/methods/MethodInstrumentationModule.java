@@ -55,7 +55,7 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   // the default configuration has empty "otel.instrumentation.methods.include", and so doesn't
   // generate any TypeInstrumentation for muzzle to analyze
   @Override
-  protected String[] additionalHelperClassNames() {
+  protected String[] getMuzzleHelperClassNames() {
     return typeInstrumentations.isEmpty()
         ? new String[0]
         : new String[] {"io.opentelemetry.javaagent.instrumentation.methods.MethodTracer"};

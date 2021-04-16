@@ -283,7 +283,8 @@ public abstract class InstrumentationModule {
    * {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
-   * <p><b>This method is generated automatically, do not override it.</b>
+   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
+   * will not generate a new implementation, it will leave the existing one.
    */
   protected ReferenceMatcher getMuzzleReferenceMatcher() {
     return null;
@@ -297,7 +298,8 @@ public abstract class InstrumentationModule {
    * the {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
-   * <p><b>This method is generated automatically, do not override it.</b>
+   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
+   * will not generate a new implementation, it will leave the existing one.
    */
   protected String[] getMuzzleHelperClassNames() {
     return EMPTY;
@@ -311,7 +313,8 @@ public abstract class InstrumentationModule {
    * the {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
-   * <p><b>This method is generated automatically, do not override it.</b>
+   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
+   * will not generate a new implementation, it will leave the existing one.
    */
   protected Map<String, String> getMuzzleContextStoreClasses() {
     return Collections.emptyMap();
@@ -325,7 +328,10 @@ public abstract class InstrumentationModule {
    *
    * <p>Implementing {@link #isHelperClass(String)} is generally simpler and less error-prone
    * compared to implementing this method.
+   *
+   * @deprecated Use {@link #isHelperClass(String)} instead.
    */
+  @Deprecated
   protected String[] additionalHelperClassNames() {
     return EMPTY;
   }
