@@ -12,8 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import com.google.common.util.concurrent.AbstractFuture;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
-import io.opentelemetry.instrumentation.guava.GuavaAsyncSpanEndStrategy;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -26,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -64,21 +61,9 @@ public class GuavaInstrumentationModule extends InstrumentationModule {
   }
 
   public static class AbstractFutureAdvice {
-    public static final ClassValue<AtomicBoolean> activated =
-        new ClassValue<AtomicBoolean>() {
-          @Override
-          protected AtomicBoolean computeValue(Class<?> type) {
-            return new AtomicBoolean();
-          }
-        };
-
-    // TODO(HaloFour): Replace with adding a type initializer to AbstractFuture
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2685
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruction() {
-      if (activated.get(AbstractFuture.class).compareAndSet(false, true)) {
-        AsyncSpanEndStrategies.getInstance().registerStrategy(GuavaAsyncSpanEndStrategy.INSTANCE);
-      }
+      InstrumentationHelper.initialize();
     }
   }
 
