@@ -14,8 +14,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // TODO In search for a better home package
 
@@ -31,6 +35,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *     Use Void if your subclass does not have an implementation specific storage need.
  */
 public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> extends BaseTracer {
+
+  private static final Logger log = LoggerFactory.getLogger(HttpClientTracer.class);
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
@@ -185,7 +191,22 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   recommended combinations of attributes and are forced to use http.url.
    */
   private void setUrl(SpanBuilder spanBuilder, REQUEST request) {
-    spanBuilder.setAttribute(SemanticAttributes.HTTP_URL, url(request));
+    try {
+      URI url = url(request);
+      spanBuilder.setAttribute(
+          SemanticAttributes.HTTP_URL,
+          new URI(
+                  url.getScheme(),
+                  null,
+                  url.getHost(),
+                  url.getPort(),
+                  url.getPath(),
+                  url.getQuery(),
+                  url.getFragment())
+              .toString());
+    } catch (Exception e) {
+      log.debug("Error tagging url", e);
+    }
   }
 
   protected void onConnectionAndRequest(
@@ -267,7 +288,8 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   protected abstract TextMapGetter<REQUEST> getGetter();
 
-  protected abstract String url(REQUEST request);
+  @Nullable
+  protected abstract URI url(REQUEST request) throws URISyntaxException;
 
   protected abstract String method(REQUEST request);
 
