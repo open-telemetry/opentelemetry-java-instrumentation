@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
@@ -84,10 +85,12 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    if (endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND) {
+    if (endpoint == PATH_PARAM) {
+      return "/path/{id}/param"
+    } else if (endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND) {
       return "/error"
     }
-    return "HTTP GET"
+    return endpoint.resolvePath(address).path
   }
 
   @Override
