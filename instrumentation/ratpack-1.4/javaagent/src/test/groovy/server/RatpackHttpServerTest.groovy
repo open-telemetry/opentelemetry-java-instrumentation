@@ -98,7 +98,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> implements Agent
   }
 
   @Override
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
 

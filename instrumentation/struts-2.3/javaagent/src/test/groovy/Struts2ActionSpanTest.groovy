@@ -5,6 +5,7 @@
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
@@ -28,11 +29,6 @@ import org.eclipse.jetty.util.resource.FileResource
 class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestTrait {
 
   @Override
-  boolean testNotFound() {
-    return false
-  }
-
-  @Override
   boolean testPathParam() {
     return true
   }
@@ -43,13 +39,13 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
   }
 
   @Override
-  boolean hasHandlerSpan() {
-    return true
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
+    return endpoint != NOT_FOUND
   }
 
   @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
-    endpoint == REDIRECT || endpoint == ERROR || endpoint == EXCEPTION
+    endpoint == REDIRECT || endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
   }
 
   @Override
@@ -60,13 +56,21 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
         break
       case ERROR:
       case EXCEPTION:
+      case NOT_FOUND:
         sendErrorSpan(trace, index, handlerSpan)
         break
     }
   }
 
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path
+    switch (endpoint) {
+      case PATH_PARAM:
+        return getContextPath() + "/path/{id}/param"
+      case NOT_FOUND:
+        return "HTTP GET"
+      default:
+        return endpoint.resolvePath(address).path
+    }
   }
 
   @Override

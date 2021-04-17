@@ -17,8 +17,8 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
@@ -46,12 +46,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     return ""
   }
 
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     false
   }
 
-  boolean hasExceptionOnServerSpan() {
-    !hasHandlerSpan()
+  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
+    !hasHandlerSpan(endpoint)
   }
 
   boolean hasRenderSpan(ServerEndpoint endpoint) {
@@ -390,6 +390,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   This way we verify that child span created by the server actually corresponds to the client request.
    */
+
   def "high concurrency test"() {
     setup:
     assumeTrue(testConcurrency())
@@ -448,10 +449,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null, Response response = null) {
     def spanCount = 1 // server span
-    if (hasHandlerSpan()) {
+    if (hasResponseSpan(endpoint)) {
       spanCount++
     }
-    if (hasResponseSpan(endpoint)) {
+    if (hasHandlerSpan(endpoint)) {
       spanCount++
     }
     if (endpoint != NOT_FOUND) {
@@ -474,12 +475,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         trace(it, spanCount) {
           def spanIndex = 0
           serverSpan(it, spanIndex++, traceID, parentID, method, response?.body()?.contentLength(), endpoint)
-          if (hasHandlerSpan()) {
+          if (hasHandlerSpan(endpoint)) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
           if (endpoint != NOT_FOUND) {
             def controllerSpanIndex = 0
-            if (hasHandlerSpan()) {
+            if (hasHandlerSpan(endpoint)) {
               controllerSpanIndex++
             }
             if (hasForwardSpan()) {

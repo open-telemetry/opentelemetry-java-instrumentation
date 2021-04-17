@@ -36,7 +36,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       try {
         ServerProperties.getDeclaredMethod("getServlet")
         contextPathKey = "server.servlet.contextPath"
-      } catch (NoSuchMethodException ignore) {}
+      } catch (NoSuchMethodException ignore) {
+      }
       Map<String, Object> properties = new HashMap<>()
       properties.put("server.port", port)
       properties.put(contextPathKey, contextPath)
@@ -80,12 +81,12 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
   }
 
   @Override
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
 
   @Override
-  boolean hasExceptionOnServerSpan() {
+  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
     true
   }
 

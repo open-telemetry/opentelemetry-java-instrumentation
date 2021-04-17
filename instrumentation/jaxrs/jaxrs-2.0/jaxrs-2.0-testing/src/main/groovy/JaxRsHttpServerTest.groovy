@@ -109,7 +109,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
   }
 
   @Override
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
 
