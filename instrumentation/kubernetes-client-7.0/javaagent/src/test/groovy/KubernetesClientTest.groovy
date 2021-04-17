@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.distributedRequestSpan
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
@@ -172,8 +174,8 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
       name spanName
       kind CLIENT
       childOf trace.span(0)
-      errored hasFailed
       if (hasFailed) {
+        status ERROR
         errorEvent exception.class, exception.message
       }
       attributes {

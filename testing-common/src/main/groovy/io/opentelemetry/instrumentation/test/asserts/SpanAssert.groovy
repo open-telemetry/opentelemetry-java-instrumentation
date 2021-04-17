@@ -148,7 +148,7 @@ class SpanAssert {
 
   void assertDefaults() {
     if (!checked.status) {
-      errored(false)
+      status(StatusCode.UNSET)
     }
     if (!checked.kind) {
       kind(SpanKind.INTERNAL)

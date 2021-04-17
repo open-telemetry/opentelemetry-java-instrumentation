@@ -7,6 +7,7 @@ package test.boot
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.AUTH_ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.LOGIN
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
@@ -191,8 +192,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     trace.span(index) {
       name handlerSpanName
       kind INTERNAL
-      errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
+        status ERROR
         errorEvent(Exception, EXCEPTION.body)
       }
       childOf((SpanData) parent)

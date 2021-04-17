@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
-import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
@@ -38,7 +39,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.otel"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -161,7 +162,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completionStage"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -185,7 +186,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completionStage"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -205,7 +206,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completionStage"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -231,7 +232,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completionStage"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -251,7 +252,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completionStage"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -270,7 +271,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completableFuture"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -294,7 +295,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completableFuture"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -314,7 +315,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completableFuture"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -340,7 +341,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completableFuture"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -360,7 +361,7 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completableFuture"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -404,14 +405,14 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "GeneratedJava6TestClass.run"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
         }
         span(1) {
           name "intercept"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           childOf(span(0))
           attributes {
           }

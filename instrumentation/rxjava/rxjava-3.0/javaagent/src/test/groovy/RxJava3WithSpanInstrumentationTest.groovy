@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
-import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.rxjava3.TracedWithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.reactivex.rxjava3.core.Completable
@@ -40,7 +41,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -68,7 +69,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -92,7 +93,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -123,7 +124,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -149,7 +150,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.maybe"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -172,7 +173,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.maybe"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -201,7 +202,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.maybe"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -225,7 +226,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.maybe"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -256,7 +257,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.maybe"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -282,7 +283,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.single"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -311,7 +312,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.single"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -335,7 +336,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.single"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -366,7 +367,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.single"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -392,7 +393,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.observable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -426,7 +427,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.observable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -450,7 +451,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.observable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -487,7 +488,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.observable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -513,7 +514,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.flowable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -547,7 +548,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.flowable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -571,7 +572,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.flowable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -608,7 +609,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.flowable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -635,7 +636,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.parallelFlowable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -670,7 +671,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.parallelFlowable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -695,7 +696,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.parallelFlowable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -733,7 +734,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.parallelFlowable"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
@@ -763,7 +764,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.publisher"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           attributes {
           }
@@ -792,7 +793,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.publisher"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")

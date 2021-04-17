@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -74,11 +76,8 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
         span(0) {
           name parentSpanName != null ? parentSpanName : "test.span"
           kind SERVER
-          if (runsOnServer()) {
-            errored abortNormal
-          } else {
-            attributes {
-            }
+          if (runsOnServer() && abortNormal) {
+            status ERROR
           }
         }
         span(1) {

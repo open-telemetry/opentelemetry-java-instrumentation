@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
@@ -605,7 +607,9 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
       name operation
       kind CLIENT
-      errored(error != null && error != "canceled")
+      if (error != null && error != "canceled") {
+        status ERROR
+      }
 
       if (error == "timeout") {
         errorEvent(

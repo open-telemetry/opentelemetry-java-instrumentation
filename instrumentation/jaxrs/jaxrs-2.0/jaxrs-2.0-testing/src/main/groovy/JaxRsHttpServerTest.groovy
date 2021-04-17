@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -173,7 +175,9 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     trace.span(index) {
       name path
       kind SERVER
-      errored isError
+      if (isError) {
+        status ERROR
+      }
       if (parentID != null) {
         traceId traceID
         parentSpanId parentID
@@ -216,8 +220,8 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     trace.span(index) {
       name "JaxRsTestResource.${methodName}"
       kind INTERNAL
-      errored isError
       if (isError) {
+        status ERROR
         errorEvent(Exception, exceptionMessage)
       }
       childOf((SpanData) parent)
