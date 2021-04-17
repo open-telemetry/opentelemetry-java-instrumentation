@@ -592,7 +592,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
     return trace.span(index) {
       name parentOperation
       hasNoParent()
-      errored false
+      status UNSET
       attributes {
       }
     }

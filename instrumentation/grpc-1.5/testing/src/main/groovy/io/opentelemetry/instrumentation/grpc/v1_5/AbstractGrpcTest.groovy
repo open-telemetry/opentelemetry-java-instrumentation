@@ -85,7 +85,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           childOf span(0)
-          errored false
+          status UNSET
           event(0) {
             eventName "message"
             attributes {
@@ -103,7 +103,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(1)
-          errored false
+          status UNSET
           event(0) {
             eventName "message"
             attributes {
@@ -167,7 +167,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           hasNoParent()
-          errored true
+          status ERROR
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -178,7 +178,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(0)
-          errored true
+          status ERROR
           event(0) {
             eventName "message"
             attributes {
@@ -252,7 +252,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           hasNoParent()
-          errored true
+          status ERROR
           // NB: Exceptions thrown on the server don't appear to be propagated to the client, at
           // least for the version we test against.
           attributes {
@@ -265,7 +265,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(0)
-          errored true
+          status ERROR
           event(0) {
             eventName "message"
             attributes {
@@ -409,7 +409,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           childOf span(0)
-          errored false
+          status UNSET
           event(0) {
             eventName "message"
             attributes {
@@ -427,7 +427,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(1)
-          errored false
+          status UNSET
           event(0) {
             eventName "message"
             attributes {

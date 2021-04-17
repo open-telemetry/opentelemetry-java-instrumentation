@@ -72,7 +72,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> 
       trace(0, 2) {
         span(0) {
           kind CLIENT
-          errored true
+          status ERROR
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"

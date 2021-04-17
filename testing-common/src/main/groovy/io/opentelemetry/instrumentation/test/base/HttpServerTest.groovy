@@ -17,8 +17,8 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
@@ -390,6 +390,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   This way we verify that child span created by the server actually corresponds to the client request.
    */
+
   def "high concurrency test"() {
     setup:
     assumeTrue(testConcurrency())
@@ -649,7 +650,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     trace.span(1) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
-      errored false
+      status UNSET
       childOf((SpanData) parent)
       attributes {
         "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
@@ -667,7 +668,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   void indexedControllerSpan(TraceAssert trace, int index, Object parent, int requestId) {
     trace.span(index) {
       name "controller"
-      errored false
+      status UNSET
       childOf((SpanData) parent)
       attributes {
         it."test.request.id" requestId

@@ -153,7 +153,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "DynamoDb.CreateTable"
           kind CLIENT
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -189,7 +189,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "DynamoDb.Query"
           kind CLIENT
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -224,7 +224,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind CLIENT
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -337,7 +337,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind CLIENT
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -426,7 +426,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind CLIENT
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -526,7 +526,7 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "S3.GetObject"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent SdkClientException, "Unable to execute HTTP request: Read timed out"
           hasNoParent()
           attributes {

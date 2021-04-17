@@ -90,7 +90,7 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
         span(0) {
           name "S3.HeadBucket"
           kind SpanKind.CLIENT
-          errored true
+          status ERROR
           errorEvent RuntimeException, "bad handler"
           hasNoParent()
           attributes {

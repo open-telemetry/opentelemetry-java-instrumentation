@@ -118,7 +118,7 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           name "CONNECT"
           kind CLIENT
           childOf span(0)
-          errored true
+          status ERROR
           Class errorClass = ConnectException
           try {
             errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')

@@ -16,7 +16,7 @@ class CouchbaseSpanUtil {
     trace.span(index) {
       name spanName
       kind CLIENT
-      errored false
+      status UNSET
       if (parentSpan == null) {
         hasNoParent()
       } else {
@@ -41,7 +41,7 @@ class CouchbaseSpanUtil {
         // that do have operation ids
         "couchbase.operation_id" { it == null || String }
 
-        "${SemanticAttributes.DB_STATEMENT.key}" (statement ?: spanName)
+        "${SemanticAttributes.DB_STATEMENT.key}"(statement ?: spanName)
       }
     }
   }

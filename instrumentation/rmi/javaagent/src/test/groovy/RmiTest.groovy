@@ -107,7 +107,7 @@ class RmiTest extends AgentInstrumentationSpecification {
           name "rmi.app.Greeter/exceptional"
           kind CLIENT
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(RuntimeException, String)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"
@@ -119,7 +119,7 @@ class RmiTest extends AgentInstrumentationSpecification {
         span(2) {
           name "rmi.app.Server/exceptional"
           kind SERVER
-          errored true
+          status ERROR
           errorEvent(RuntimeException, String)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"

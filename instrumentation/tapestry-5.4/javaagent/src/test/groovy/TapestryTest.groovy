@@ -123,7 +123,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
           hasNoParent()
           kind SpanKind.SERVER
           name getContextPath() + "/Index"
-          errored true
+          status ERROR
         }
         basicSpan(it, 1, "activate/Index", span(0))
         basicSpan(it, 2, "action/Index:exception", span(0), new IllegalStateException("expected"))

@@ -63,14 +63,14 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
         span(0) {
           name "parent"
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
         span(1) {
           name "ExampleGroup.HystrixObservableChainTest\$1.execute"
           childOf span(0)
-          errored false
+          status UNSET
           attributes {
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -80,14 +80,14 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
         span(2) {
           name "tracedMethod"
           childOf span(1)
-          errored false
+          status UNSET
           attributes {
           }
         }
         span(3) {
           name "OtherGroup.HystrixObservableChainTest\$2.execute"
           childOf span(1)
-          errored false
+          status UNSET
           attributes {
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
@@ -97,7 +97,7 @@ class HystrixObservableChainTest extends AgentInstrumentationSpecification {
         span(4) {
           name "anotherTracedMethod"
           childOf span(3)
-          errored false
+          status UNSET
           attributes {
           }
         }

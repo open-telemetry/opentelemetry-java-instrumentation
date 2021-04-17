@@ -68,7 +68,7 @@ class TracingRequestWrapperTest extends TracingRequestWrapperTestBase {
         span(0) {
           name("my_function")
           kind SERVER
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {
             "$ResourceAttributes.FAAS_ID.key" "arn:aws:lambda:us-east-1:123456789:function:test"

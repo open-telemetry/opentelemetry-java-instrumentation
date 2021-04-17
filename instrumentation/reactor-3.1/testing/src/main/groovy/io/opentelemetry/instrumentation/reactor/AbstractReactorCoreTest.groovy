@@ -97,7 +97,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "trace-parent"
-          errored true
+          status ERROR
           errorEvent(RuntimeException, EXCEPTION_MESSAGE)
           hasNoParent()
         }
@@ -128,7 +128,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
       trace(0, workSpans + 2) {
         span(0) {
           name "trace-parent"
-          errored true
+          status ERROR
           errorEvent(RuntimeException, EXCEPTION_MESSAGE)
           hasNoParent()
         }

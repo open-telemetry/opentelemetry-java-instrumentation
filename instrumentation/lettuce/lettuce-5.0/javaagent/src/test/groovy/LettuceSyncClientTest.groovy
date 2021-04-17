@@ -100,7 +100,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "CONNECT"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
             "$SemanticAttributes.NET_PEER_IP.key" PEER_IP
@@ -131,7 +131,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "CONNECT"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent AbstractChannel.AnnotatedConnectException, String
           attributes {
             "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
@@ -156,7 +156,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SET"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SET TESTSETKEY ?"
@@ -177,7 +177,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "GET TESTKEY"
@@ -198,7 +198,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "GET NON_EXISTENT_KEY"
@@ -219,7 +219,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "RANDOMKEY"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
@@ -240,7 +240,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "LPUSH"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "LPUSH TESTLIST ?"
@@ -261,7 +261,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "HMSET"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "HMSET user firstname ? lastname ? age ?"
@@ -282,7 +282,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "HGETALL"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "HGETALL TESTHM"
@@ -302,7 +302,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "DEBUG"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "DEBUG SEGFAULT"
@@ -322,7 +322,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SHUTDOWN"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SHUTDOWN NOSAVE"

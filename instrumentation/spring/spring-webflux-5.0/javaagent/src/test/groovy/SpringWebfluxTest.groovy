@@ -161,7 +161,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         span(2) {
           name "tracedMethod"
           childOf span(0)
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -249,7 +249,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         span(2) {
           name "tracedMethod"
           childOf span(annotatedMethod ? 0 : 1)
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -278,7 +278,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           name "/**"
           kind SERVER
           hasNoParent()
-          errored true
+          status ERROR
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -294,7 +294,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           name "ResourceWebHandler.handle"
           kind INTERNAL
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(ResponseStatusException, String)
           attributes {
             "spring-webflux.handler.type" "org.springframework.web.reactive.resource.ResourceWebHandler"
@@ -370,7 +370,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         span(0) {
           name urlPathWithVariables
           kind SERVER
-          errored true
+          status ERROR
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -393,7 +393,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           }
           kind INTERNAL
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(RuntimeException, "bad things happen")
           attributes {
             if (annotatedMethod == null) {

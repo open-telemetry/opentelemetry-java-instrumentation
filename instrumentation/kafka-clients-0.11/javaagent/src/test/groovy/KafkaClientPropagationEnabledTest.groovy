@@ -88,7 +88,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         span(1) {
           name SHARED_TOPIC + " send"
           kind PRODUCER
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -99,7 +99,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         span(2) {
           name SHARED_TOPIC + " process"
           kind CONSUMER
-          errored false
+          status UNSET
           childOf span(1)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -178,7 +178,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         span(1) {
           name SHARED_TOPIC + " send"
           kind PRODUCER
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -189,7 +189,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         span(2) {
           name SHARED_TOPIC + " process"
           kind CONSUMER
-          errored false
+          status UNSET
           childOf span(1)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -261,7 +261,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         span(0) {
           name SHARED_TOPIC + " send"
           kind PRODUCER
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -274,7 +274,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         span(1) {
           name SHARED_TOPIC + " process"
           kind CONSUMER
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -336,7 +336,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         span(0) {
           name SHARED_TOPIC + " send"
           kind PRODUCER
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -348,7 +348,7 @@ class KafkaClientPropagationEnabledTest extends KafkaClientBaseTest {
         span(1) {
           name SHARED_TOPIC + " process"
           kind CONSUMER
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"

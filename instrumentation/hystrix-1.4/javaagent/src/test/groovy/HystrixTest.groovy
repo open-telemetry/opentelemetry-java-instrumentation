@@ -38,14 +38,14 @@ class HystrixTest extends AgentInstrumentationSpecification {
         span(0) {
           name "parent"
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
         span(1) {
           name "ExampleGroup.HystrixTest\$1.execute"
           childOf span(0)
-          errored false
+          status UNSET
           attributes {
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -55,7 +55,7 @@ class HystrixTest extends AgentInstrumentationSpecification {
         span(2) {
           name "tracedMethod"
           childOf span(1)
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -100,14 +100,14 @@ class HystrixTest extends AgentInstrumentationSpecification {
         span(0) {
           name "parent"
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
         span(1) {
           name "ExampleGroup.HystrixTest\$2.execute"
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException)
           attributes {
             "hystrix.command" "HystrixTest\$2"
@@ -118,7 +118,7 @@ class HystrixTest extends AgentInstrumentationSpecification {
         span(2) {
           name "ExampleGroup.HystrixTest\$2.fallback"
           childOf span(1)
-          errored false
+          status UNSET
           attributes {
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"

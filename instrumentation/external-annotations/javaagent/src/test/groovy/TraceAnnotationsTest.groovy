@@ -21,7 +21,7 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SayTracedHello.sayHello"
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
             "myattr" "test"
           }
@@ -41,7 +41,7 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SayTracedHello.sayHelloSayHa"
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
             "myattr" "test2"
           }
@@ -49,7 +49,7 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(1) {
           name "SayTracedHello.sayHello"
           childOf span(0)
-          errored false
+          status UNSET
           attributes {
             "myattr" "test"
           }
@@ -57,7 +57,7 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(2) {
           name "SayTracedHello.sayHello"
           childOf span(0)
-          errored false
+          status UNSET
           attributes {
             "myattr" "test"
           }
@@ -80,7 +80,7 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "SayTracedHello.sayError"
-          errored true
+          status ERROR
           errorEvent(error.class)
         }
       }

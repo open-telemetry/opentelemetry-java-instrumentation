@@ -121,7 +121,7 @@ class RequestDispatcherTest extends AgentInstrumentationSpecification {
         span(1) {
           name "TestDispatcher.$operation"
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(ex.class, ex.message)
         }
         basicSpan(it, 2, "$operation-child", span(1))

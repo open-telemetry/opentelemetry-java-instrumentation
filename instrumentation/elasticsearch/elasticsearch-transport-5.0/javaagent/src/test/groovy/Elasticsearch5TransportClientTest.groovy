@@ -121,7 +121,7 @@ class Elasticsearch5TransportClientTest extends AgentInstrumentationSpecificatio
         span(0) {
           name "GetAction"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent RemoteTransportException, String
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"

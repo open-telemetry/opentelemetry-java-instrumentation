@@ -36,7 +36,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       try {
         ServerProperties.getDeclaredMethod("getServlet")
         contextPathKey = "server.servlet.contextPath"
-      } catch (NoSuchMethodException ignore) {}
+      } catch (NoSuchMethodException ignore) {
+      }
       Map<String, Object> properties = new HashMap<>()
       properties.put("server.port", port)
       properties.put(contextPathKey, contextPath)
@@ -116,7 +117,7 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
     trace.span(index + 1) {
       name errorSpanName
       kind INTERNAL
-      errored false
+      status UNSET
       attributes {
       }
     }
@@ -124,7 +125,7 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       trace.span(index + 2) {
         name ~/\.sendError$/
         kind INTERNAL
-        errored false
+        status UNSET
         attributes {
         }
       }
@@ -136,7 +137,7 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
     trace.span(index) {
       name endpoint == REDIRECT ? ~/\.sendRedirect$/ : ~/\.sendError$/
       kind INTERNAL
-      errored false
+      status UNSET
       attributes {
       }
     }

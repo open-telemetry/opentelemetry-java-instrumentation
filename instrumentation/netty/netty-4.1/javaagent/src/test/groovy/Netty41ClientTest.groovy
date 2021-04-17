@@ -185,7 +185,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
             name "CONNECT"
             kind CLIENT
             childOf span(0)
-            errored true
+            status ERROR
             errorEvent(thrownException.class, ~/Connection refused:( no further information:)? localhost\/\[?[0-9.:]+\]?:$UNUSABLE_PORT/)
           }
         }
@@ -285,7 +285,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
         span(1) {
           childOf span(0)
           name "tracedMethod"
-          errored false
+          status UNSET
           attributes {
           }
         }

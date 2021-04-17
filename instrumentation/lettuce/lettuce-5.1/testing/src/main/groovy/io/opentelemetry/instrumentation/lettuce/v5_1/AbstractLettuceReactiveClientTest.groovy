@@ -97,7 +97,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
         span(0) {
           name "SET"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -131,7 +131,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
         span(0) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -173,7 +173,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
         span(0) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -213,7 +213,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
         span(0) {
           name "RANDOMKEY"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -243,7 +243,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
         span(0) {
           name "COMMAND"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -285,14 +285,14 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
       trace(0, 3) {
         span(0) {
           name "test-parent"
-          errored false
+          status UNSET
           attributes {
           }
         }
         span(1) {
           name "SET"
           kind CLIENT
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -312,7 +312,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
         span(2) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -346,14 +346,14 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
       trace(0, 3) {
         span(0) {
           name "test-parent"
-          errored false
+          status UNSET
           attributes {
           }
         }
         span(1) {
           name "SET"
           kind CLIENT
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -373,7 +373,7 @@ abstract class AbstractLettuceReactiveClientTest extends InstrumentationSpecific
         span(2) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"

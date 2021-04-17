@@ -120,6 +120,11 @@ class SpanAssert {
     assert found
   }
 
+  def status(StatusCode status) {
+    assert span.status.statusCode == status
+    checked.status = true
+  }
+
   def errored(boolean errored) {
     if (errored) {
       // comparing only canonical code, since description may be different

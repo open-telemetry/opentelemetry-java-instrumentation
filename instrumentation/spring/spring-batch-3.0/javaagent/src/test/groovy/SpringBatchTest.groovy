@@ -61,7 +61,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           name "BatchJob taskletJob.step.Chunk"
           kind INTERNAL
           childOf span(1)
-          errored true
+          status ERROR
           errorEvent RuntimeException, "fail"
         }
       }

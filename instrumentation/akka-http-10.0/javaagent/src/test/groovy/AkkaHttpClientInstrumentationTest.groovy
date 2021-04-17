@@ -84,7 +84,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
           hasNoParent()
           name "HTTP request"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent(NullPointerException, e.getMessage())
         }
       }

@@ -81,7 +81,7 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
     trace.span(index) {
       name endpoint == REDIRECT ? "Response.sendRedirect" : "Response.sendError"
       kind INTERNAL
-      errored false
+      status UNSET
       childOf((SpanData) parent)
       attributes {
       }

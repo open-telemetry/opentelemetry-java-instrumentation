@@ -108,7 +108,7 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
         span(1) {
           name 'HttpServletResponseTest$2.sendRedirect'
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(ex.class, ex.message)
         }
       }

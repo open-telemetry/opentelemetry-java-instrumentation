@@ -81,7 +81,7 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
           hasNoParent()
           name expectedOperationName(method)
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" uri.host

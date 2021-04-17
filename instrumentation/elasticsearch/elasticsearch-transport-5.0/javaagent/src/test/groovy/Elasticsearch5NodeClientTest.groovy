@@ -101,7 +101,7 @@ class Elasticsearch5NodeClientTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "GetAction"
-          errored true
+          status ERROR
           errorEvent IndexNotFoundException, "no such index"
           kind CLIENT
           attributes {

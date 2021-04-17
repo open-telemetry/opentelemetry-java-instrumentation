@@ -96,7 +96,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SET"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SET TESTSETKEY ?"
@@ -120,7 +120,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "GET TESTKEY"
@@ -152,7 +152,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "GET NON_EXISTENT_KEY"
@@ -182,7 +182,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "RANDOMKEY"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
@@ -202,7 +202,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "COMMAND"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
@@ -223,7 +223,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "COMMAND"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
@@ -254,7 +254,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "DEBUG"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "DEBUG SEGFAULT"
@@ -274,7 +274,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SHUTDOWN"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SHUTDOWN NOSAVE"
@@ -297,14 +297,14 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
       trace(0, 3) {
         span(0) {
           name "test-parent"
-          errored false
+          status UNSET
           attributes {
           }
         }
         span(1) {
           name "SET"
           kind CLIENT
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -314,7 +314,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(2) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -338,14 +338,14 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
       trace(0, 3) {
         span(0) {
           name "test-parent"
-          errored false
+          status UNSET
           attributes {
           }
         }
         span(1) {
           name "SET"
           kind CLIENT
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -355,7 +355,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(2) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -380,14 +380,14 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
       trace(0, 3) {
         span(0) {
           name "test-parent"
-          errored false
+          status UNSET
           attributes {
           }
         }
         span(1) {
           name "SET"
           kind CLIENT
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -397,7 +397,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
         span(2) {
           name "GET"
           kind CLIENT
-          errored false
+          status UNSET
           childOf span(0)
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"

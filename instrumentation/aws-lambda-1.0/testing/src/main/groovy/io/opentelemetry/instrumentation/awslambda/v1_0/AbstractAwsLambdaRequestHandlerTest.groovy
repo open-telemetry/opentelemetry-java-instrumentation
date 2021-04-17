@@ -67,7 +67,7 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
         span(0) {
           name("my_function")
           kind SERVER
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"

@@ -93,7 +93,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
         span(0) {
           name "RefreshAction"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent IndexNotFoundException, "no such index"
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"

@@ -40,7 +40,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.completable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -69,7 +69,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.completable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -94,7 +94,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.completable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -125,7 +125,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.completable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -151,7 +151,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.maybe"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -162,7 +162,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for already empty Maybe"() {
     setup:
     def observer = new TestObserver()
-    def source = Maybe.<String>empty()
+    def source = Maybe.<String> empty()
     new TracedWithSpan()
       .maybe(source)
       .subscribe(observer)
@@ -175,7 +175,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.maybe"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -185,7 +185,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
 
   def "should capture span for eventually completed Maybe"() {
     setup:
-    def source = MaybeSubject.<String>create()
+    def source = MaybeSubject.<String> create()
     def observer = new TestObserver()
     new TracedWithSpan()
       .maybe(source)
@@ -205,7 +205,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.maybe"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -217,7 +217,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
-    def source = Maybe.<String>error(error)
+    def source = Maybe.<String> error(error)
     new TracedWithSpan()
       .maybe(source)
       .subscribe(observer)
@@ -230,7 +230,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.maybe"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -242,7 +242,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for eventually errored Maybe"() {
     setup:
     def error = new IllegalArgumentException("Boom")
-    def source = MaybeSubject.<String>create()
+    def source = MaybeSubject.<String> create()
     def observer = new TestObserver()
     new TracedWithSpan()
       .maybe(source)
@@ -261,7 +261,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.maybe"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -287,7 +287,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.single"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -297,7 +297,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
 
   def "should capture span for eventually completed Single"() {
     setup:
-    def source = SingleSubject.<String>create()
+    def source = SingleSubject.<String> create()
     def observer = new TestObserver()
     new TracedWithSpan()
       .single(source)
@@ -317,7 +317,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.single"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -329,7 +329,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
-    def source = Single.<String>error(error)
+    def source = Single.<String> error(error)
     new TracedWithSpan()
       .single(source)
       .subscribe(observer)
@@ -342,7 +342,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.single"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -354,7 +354,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for eventually errored Single"() {
     setup:
     def error = new IllegalArgumentException("Boom")
-    def source = SingleSubject.<String>create()
+    def source = SingleSubject.<String> create()
     def observer = new TestObserver()
     new TracedWithSpan()
       .single(source)
@@ -373,7 +373,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.single"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -385,7 +385,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for already completed Observable"() {
     setup:
     def observer = new TestObserver()
-    def source = Observable.<String>just("Value")
+    def source = Observable.<String> just("Value")
     new TracedWithSpan()
       .observable(source)
       .subscribe(observer)
@@ -399,7 +399,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.observable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -409,7 +409,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
 
   def "should capture span for eventually completed Observable"() {
     setup:
-    def source = UnicastSubject.<String>create()
+    def source = UnicastSubject.<String> create()
     def observer = new TestObserver()
     new TracedWithSpan()
       .observable(source)
@@ -434,7 +434,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.observable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -446,7 +446,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def error = new IllegalArgumentException("Boom")
     def observer = new TestObserver()
-    def source = Observable.<String>error(error)
+    def source = Observable.<String> error(error)
     new TracedWithSpan()
       .observable(source)
       .subscribe(observer)
@@ -459,7 +459,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.observable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -471,7 +471,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for eventually errored Observable"() {
     setup:
     def error = new IllegalArgumentException("Boom")
-    def source = UnicastSubject.<String>create()
+    def source = UnicastSubject.<String> create()
     def observer = new TestObserver()
     new TracedWithSpan()
       .observable(source)
@@ -496,7 +496,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.observable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -508,7 +508,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for already completed Flowable"() {
     setup:
     def observer = new TestSubscriber()
-    def source = Flowable.<String>just("Value")
+    def source = Flowable.<String> just("Value")
     new TracedWithSpan()
       .flowable(source)
       .subscribe(observer)
@@ -522,7 +522,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.flowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -532,7 +532,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
 
   def "should capture span for eventually completed Flowable"() {
     setup:
-    def source = UnicastProcessor.<String>create()
+    def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
     new TracedWithSpan()
       .flowable(source)
@@ -557,7 +557,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.flowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -569,7 +569,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def error = new IllegalArgumentException("Boom")
     def observer = new TestSubscriber()
-    def source = Flowable.<String>error(error)
+    def source = Flowable.<String> error(error)
     new TracedWithSpan()
       .flowable(source)
       .subscribe(observer)
@@ -582,7 +582,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.flowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -594,7 +594,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for eventually errored Flowable"() {
     setup:
     def error = new IllegalArgumentException("Boom")
-    def source = UnicastProcessor.<String>create()
+    def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
     new TracedWithSpan()
       .flowable(source)
@@ -619,7 +619,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.flowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -631,7 +631,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for already completed ParallelFlowable"() {
     setup:
     def observer = new TestSubscriber()
-    def source = Flowable.<String>just("Value")
+    def source = Flowable.<String> just("Value")
     new TracedWithSpan()
       .parallelFlowable(source.parallel())
       .sequential()
@@ -646,7 +646,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.parallelFlowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -656,7 +656,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
 
   def "should capture span for eventually completed ParallelFlowable"() {
     setup:
-    def source = UnicastProcessor.<String>create()
+    def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
     new TracedWithSpan()
       .parallelFlowable(source.parallel())
@@ -682,7 +682,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.parallelFlowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -694,7 +694,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     setup:
     def error = new IllegalArgumentException("Boom")
     def observer = new TestSubscriber()
-    def source = Flowable.<String>error(error)
+    def source = Flowable.<String> error(error)
     new TracedWithSpan()
       .parallelFlowable(source.parallel())
       .sequential()
@@ -708,7 +708,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.parallelFlowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -720,7 +720,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
   def "should capture span for eventually errored ParallelFlowable"() {
     setup:
     def error = new IllegalArgumentException("Boom")
-    def source = UnicastProcessor.<String>create()
+    def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
     new TracedWithSpan()
       .parallelFlowable(source.parallel())
@@ -746,7 +746,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.parallelFlowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -776,7 +776,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.publisher"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
           }
         }
@@ -806,7 +806,7 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.publisher"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -833,9 +833,9 @@ class RxJava3WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     }
 
     @Override
-    void request(long l) { }
+    void request(long l) {}
 
     @Override
-    void cancel() { }
+    void cancel() {}
   }
 }

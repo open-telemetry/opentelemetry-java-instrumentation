@@ -73,7 +73,7 @@ class RatpackOtherTest extends AgentInstrumentationSpecification {
           name "/$route"
           kind SERVER
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -89,7 +89,7 @@ class RatpackOtherTest extends AgentInstrumentationSpecification {
           name "/$route"
           kind INTERNAL
           childOf span(0)
-          errored false
+          status UNSET
           attributes {
           }
         }

@@ -90,7 +90,7 @@ class FinatraServerLatestTest extends HttpServerTest<HttpServer> implements Agen
       childOf(parent as SpanData)
       // Finatra doesn't propagate the stack trace or exception to the instrumentation
       // so the normal errorAttributes() method can't be used
-      errored false
+      status UNSET
       attributes {
       }
     }

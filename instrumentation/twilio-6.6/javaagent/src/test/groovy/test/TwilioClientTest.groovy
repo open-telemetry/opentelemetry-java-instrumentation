@@ -135,7 +135,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "test"
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
           }
@@ -143,7 +143,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
         span(1) {
           name "MessageCreator.create"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -179,7 +179,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "test"
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
           }
@@ -187,7 +187,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
         span(1) {
           name "CallCreator.create"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Call"
             "twilio.account" "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -245,7 +245,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "test"
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
           }
@@ -254,7 +254,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           name "MessageCreator.create"
           kind CLIENT
           childOf(span(0))
-          errored false
+          status UNSET
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -327,7 +327,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "test"
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
           }
@@ -336,7 +336,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           name "MessageCreator.create"
           kind CLIENT
           childOf(span(0))
-          errored false
+          status UNSET
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -416,7 +416,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "test"
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
           }
@@ -425,7 +425,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           name "MessageCreator.createAsync"
           kind CLIENT
           childOf(span(0))
-          errored false
+          status UNSET
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -466,14 +466,14 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "test"
-          errored true
+          status ERROR
           errorEvent(ApiException, "Testing Failure")
           hasNoParent()
         }
         span(1) {
           name "MessageCreator.create"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent(ApiException, "Testing Failure")
         }
       }
@@ -502,7 +502,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           name "MessageCreator.create"
           kind CLIENT
           hasNoParent()
-          errored false
+          status UNSET
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -547,7 +547,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "test"
-          errored false
+          status UNSET
           hasNoParent()
           attributes {
           }
@@ -555,7 +555,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
         span(1) {
           name "MessageCreator.createAsync"
           kind CLIENT
-          errored false
+          status UNSET
           attributes {
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
@@ -607,14 +607,14 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "test"
-          errored true
+          status ERROR
           errorEvent(ApiException, "Testing Failure")
           hasNoParent()
         }
         span(1) {
           name "MessageCreator.createAsync"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent(ApiException, "Testing Failure")
         }
       }

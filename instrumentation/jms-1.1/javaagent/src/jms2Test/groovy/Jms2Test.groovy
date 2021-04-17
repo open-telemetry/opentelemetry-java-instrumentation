@@ -239,7 +239,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
     trace.span(index) {
       name destinationName + " send"
       kind PRODUCER
-      errored false
+      status UNSET
       hasNoParent()
       attributes {
         "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
@@ -264,7 +264,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
       } else {
         hasNoParent()
       }
-      errored false
+      status UNSET
       attributes {
         "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
         "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName
