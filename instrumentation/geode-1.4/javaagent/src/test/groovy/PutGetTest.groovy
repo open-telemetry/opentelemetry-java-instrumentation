@@ -112,12 +112,10 @@ class PutGetTest extends AgentInstrumentationSpecification {
         span(0) {
           name "someTrace"
           kind INTERNAL
-          status UNSET
         }
         span(1) {
           name "clear"
           kind CLIENT
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "geode"
             "$SemanticAttributes.DB_NAME.key" "test-region"
@@ -127,7 +125,6 @@ class PutGetTest extends AgentInstrumentationSpecification {
         span(2) {
           name "put"
           kind CLIENT
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "geode"
             "$SemanticAttributes.DB_NAME.key" "test-region"
@@ -137,7 +134,6 @@ class PutGetTest extends AgentInstrumentationSpecification {
         span(3) {
           name verb
           kind CLIENT
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "geode"
             "$SemanticAttributes.DB_NAME.key" "test-region"
@@ -171,7 +167,6 @@ class PutGetTest extends AgentInstrumentationSpecification {
         span(0) {
           name "query"
           kind CLIENT
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "geode"
             "$SemanticAttributes.DB_NAME.key" "test-region"

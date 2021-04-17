@@ -650,7 +650,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     trace.span(1) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
-      status UNSET
       childOf((SpanData) parent)
       attributes {
         "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
@@ -668,7 +667,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   void indexedControllerSpan(TraceAssert trace, int index, Object parent, int requestId) {
     trace.span(index) {
       name "controller"
-      status UNSET
       childOf((SpanData) parent)
       attributes {
         it."test.request.id" requestId

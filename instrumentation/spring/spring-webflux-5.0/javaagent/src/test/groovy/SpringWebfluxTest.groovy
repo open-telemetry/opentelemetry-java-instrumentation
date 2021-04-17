@@ -162,7 +162,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         span(2) {
           name "tracedMethod"
           childOf span(0)
-          status UNSET
           attributes {
           }
         }
@@ -250,7 +249,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         span(2) {
           name "tracedMethod"
           childOf span(annotatedMethod ? 0 : 1)
-          status UNSET
           attributes {
           }
         }

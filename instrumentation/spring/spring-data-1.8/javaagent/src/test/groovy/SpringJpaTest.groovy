@@ -61,7 +61,6 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         span(0) {
           name "JpaRepository.findAll"
           kind INTERNAL
-          status UNSET
           attributes {
           }
         }
@@ -94,7 +93,6 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         span(0) {
           name "CrudRepository.save"
           kind INTERNAL
-          status UNSET
           attributes {
           }
         }
@@ -127,7 +125,6 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         span(0) {
           name "CrudRepository.save"
           kind INTERNAL
-          status UNSET
           attributes {
           }
         }
@@ -172,7 +169,6 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         span(0) {
           name "JpaCustomerRepository.findByLastName"
           kind INTERNAL
-          status UNSET
           attributes {
           }
         }
@@ -203,7 +199,6 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         span(0) {
           name "CrudRepository.delete"
           kind INTERNAL
-          status UNSET
           attributes {
           }
         }

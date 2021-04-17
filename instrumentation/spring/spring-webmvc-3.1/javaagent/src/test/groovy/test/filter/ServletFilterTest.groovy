@@ -107,7 +107,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
     trace.span(index) {
       name "ApplicationDispatcher.forward"
       kind INTERNAL
-      status UNSET
       childOf((SpanData) parent)
       attributes {
       }
@@ -115,7 +114,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
     trace.span(index + 1) {
       name "BasicErrorController.error"
       kind INTERNAL
-      status UNSET
       childOf(trace.span(index))
       attributes {
       }

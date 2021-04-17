@@ -154,7 +154,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "DynamoDb.CreateTable"
           kind CLIENT
-          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -190,7 +189,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "DynamoDb.Query"
           kind CLIENT
-          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -225,7 +223,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind CLIENT
-          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -338,7 +335,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind CLIENT
-          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -427,7 +423,6 @@ abstract class AbstractAws2ClientTest extends InstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind CLIENT
-          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"

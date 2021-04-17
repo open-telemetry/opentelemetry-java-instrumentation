@@ -117,7 +117,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "CONNECT"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key}" HOST
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -176,7 +175,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SET"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "SET"
@@ -209,7 +207,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "GET"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "GET"
@@ -256,7 +253,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "GET"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "GET"
@@ -289,7 +285,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "RANDOMKEY"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "RANDOMKEY"
@@ -341,7 +336,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "HMSET"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "HMSET"
@@ -352,7 +346,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "HGETALL"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "HGETALL"
@@ -429,7 +422,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SADD"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "SADD"
@@ -450,7 +442,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "DEBUG"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "DEBUG"
@@ -471,7 +462,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SHUTDOWN"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "SHUTDOWN"

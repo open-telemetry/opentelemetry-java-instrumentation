@@ -117,7 +117,6 @@ class TestHttpServer implements AutoCloseable {
     trace.span(index) {
       name "test-http-server"
       kind SERVER
-      status UNSET
       if (parentSpan == null) {
         hasNoParent()
       } else {

@@ -180,7 +180,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           name spanName
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" system
             "$SemanticAttributes.DB_NAME.key" dbNameLower
@@ -238,7 +237,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           name spanName
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" system
             "$SemanticAttributes.DB_NAME.key" dbNameLower
@@ -288,7 +286,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           name spanName
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" system
             "$SemanticAttributes.DB_NAME.key" dbNameLower
@@ -338,7 +335,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           name spanName
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" system
             "$SemanticAttributes.DB_NAME.key" dbName.toLowerCase()
@@ -388,7 +384,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           name dbNameLower
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" system
             "$SemanticAttributes.DB_NAME.key" dbNameLower
@@ -439,7 +434,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           name dbNameLower
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" system
             "$SemanticAttributes.DB_NAME.key" dbName.toLowerCase()
@@ -501,7 +495,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           name spanName
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" system
             "$SemanticAttributes.DB_NAME.key" dbNameLower
@@ -604,7 +597,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           name "DB Query"
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "testdb"
             "$SemanticAttributes.DB_STATEMENT.key" "testing ?"
@@ -643,7 +635,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           name spanName
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "testdb"
             "$SemanticAttributes.DB_NAME.key" databaseName
@@ -702,7 +693,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           span(0) {
             name "SELECT ${dbNameLower}.INFORMATION_SCHEMA.SYSTEM_USERS"
             kind CLIENT
-            status UNSET
             attributes {
               "$SemanticAttributes.DB_SYSTEM.key" "hsqldb"
               "$SemanticAttributes.DB_NAME.key" dbNameLower
@@ -748,7 +738,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           name "SELECT table"
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "testdb"
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "testdb://localhost"

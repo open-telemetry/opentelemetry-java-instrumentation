@@ -86,7 +86,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/$forwardFromFileName"
           kind SERVER
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -101,7 +100,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /$forwardFromFileName"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.$jspForwardFromClassPrefix$jspForwardFromClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -110,7 +108,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /$forwardFromFileName"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -118,12 +115,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(3) {
           childOf span(2)
           name "ApplicationDispatcher.forward"
-          status UNSET
         }
         span(4) {
           childOf span(3)
           name "Compile /$forwardDestFileName"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.$jspForwardDestClassPrefix$jspForwardDestClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -132,7 +127,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(5) {
           childOf span(3)
           name "Render /$forwardDestFileName"
-          status UNSET
           attributes {
             "jsp.forwardOrigin" "/$forwardFromFileName"
             "jsp.requestURL" baseUrl + "/$forwardDestFileName"
@@ -166,7 +160,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/forwards/forwardToHtml.jsp"
           kind SERVER
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -181,7 +174,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /forwards/forwardToHtml.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -190,7 +182,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /forwards/forwardToHtml.jsp"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -198,7 +189,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(3) {
           childOf span(2)
           name "ApplicationDispatcher.forward"
-          status UNSET
         }
       }
     }
@@ -223,7 +213,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
           kind SERVER
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -238,7 +227,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /forwards/forwardToIncludeMulti.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToIncludeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -247,7 +235,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /forwards/forwardToIncludeMulti.jsp"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -255,12 +242,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(3) {
           childOf span(2)
           name "ApplicationDispatcher.forward"
-          status UNSET
         }
         span(4) {
           childOf span(3)
           name "Compile /includes/includeMulti.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -269,7 +254,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(5) {
           childOf span(3)
           name "Render /includes/includeMulti.jsp"
-          status UNSET
           attributes {
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
@@ -278,12 +262,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(6) {
           childOf span(5)
           name "ApplicationDispatcher.include"
-          status UNSET
         }
         span(7) {
           childOf span(6)
           name "Compile /common/javaLoopH2.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -292,7 +274,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(8) {
           childOf span(6)
           name "Render /common/javaLoopH2.jsp"
-          status UNSET
           attributes {
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
@@ -301,12 +282,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(9) {
           childOf span(5)
           name "ApplicationDispatcher.include"
-          status UNSET
         }
         span(10) {
           childOf span(9)
           name "Compile /common/javaLoopH2.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -315,7 +294,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(11) {
           childOf span(9)
           name "Render /common/javaLoopH2.jsp"
-          status UNSET
           attributes {
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
@@ -344,7 +322,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/forwards/forwardToJspForward.jsp"
           kind SERVER
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -359,7 +336,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /forwards/forwardToJspForward.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToJspForward_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -368,7 +344,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /forwards/forwardToJspForward.jsp"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -376,12 +351,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(3) {
           childOf span(2)
           name "ApplicationDispatcher.forward"
-          status UNSET
         }
         span(4) {
           childOf span(3)
           name "Compile /forwards/forwardToSimpleJava.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToSimpleJava_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -390,7 +363,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(5) {
           childOf span(3)
           name "Render /forwards/forwardToSimpleJava.jsp"
-          status UNSET
           attributes {
             "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
             "jsp.requestURL" baseUrl + "/forwards/forwardToSimpleJava.jsp"
@@ -399,12 +371,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(6) {
           childOf span(5)
           name "ApplicationDispatcher.forward"
-          status UNSET
         }
         span(7) {
           childOf span(6)
           name "Compile /common/loop.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.common.loop_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -413,7 +383,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(8) {
           childOf span(6)
           name "Render /common/loop.jsp"
-          status UNSET
           attributes {
             "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
             "jsp.requestURL" baseUrl + "/common/loop.jsp"
@@ -458,7 +427,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /forwards/forwardToCompileError.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToCompileError_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -527,7 +495,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /forwards/forwardToNonExistent.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToNonExistent_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -536,7 +503,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /forwards/forwardToNonExistent.jsp"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }

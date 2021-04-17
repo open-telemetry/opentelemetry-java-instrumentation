@@ -37,7 +37,6 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
         span(0) {
           name SHARED_TOPIC + " send"
           kind PRODUCER
-          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -62,7 +61,6 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
         span(0) {
           name SHARED_TOPIC + " send"
           kind PRODUCER
-          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -75,7 +73,6 @@ class KafkaClientPropagationDisabledTest extends KafkaClientBaseTest {
         span(0) {
           name SHARED_TOPIC + " process"
           kind CONSUMER
-          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"

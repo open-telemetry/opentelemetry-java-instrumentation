@@ -134,7 +134,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         span(0) {
           name "SET"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -168,7 +167,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         span(0) {
           name "SET"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -200,7 +198,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         span(0) {
           name "GET"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -231,7 +228,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         span(0) {
           name "GET"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -262,7 +258,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         span(0) {
           name "RANDOMKEY"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -293,7 +288,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         span(0) {
           name "LPUSH"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -324,7 +318,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         span(0) {
           name "HMSET"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -355,7 +348,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         span(0) {
           name "HGETALL"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -391,7 +383,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         span(0) {
           name "EVAL"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -426,7 +417,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
         span(0) {
           name "MSET"
           kind CLIENT
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -457,7 +447,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
           name "DEBUG"
           kind CLIENT
           // Disconnect not an actual error even though an exception is recorded.
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"

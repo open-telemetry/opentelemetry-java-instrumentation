@@ -88,7 +88,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/$jspFileName"
           kind SERVER
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -103,7 +102,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /$jspFileName"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -112,7 +110,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /$jspFileName"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -147,7 +144,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/getQuery.jsp"
           kind SERVER
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -162,7 +158,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /getQuery.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -171,7 +166,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /getQuery.jsp"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -203,7 +197,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/post.jsp"
           kind SERVER
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -218,7 +211,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /post.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -227,7 +219,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /post.jsp"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -283,7 +274,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /$jspFileName"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -338,7 +328,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/includes/includeHtml.jsp"
           kind SERVER
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -353,7 +342,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /includes/includeHtml.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -362,7 +350,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /includes/includeHtml.jsp"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -370,7 +357,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(3) {
           childOf span(2)
           name "ApplicationDispatcher.include"
-          status UNSET
         }
       }
     }
@@ -395,7 +381,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/includes/includeMulti.jsp"
           kind SERVER
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -410,7 +395,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /includes/includeMulti.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -419,7 +403,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /includes/includeMulti.jsp"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -427,12 +410,10 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(3) {
           childOf span(2)
           name "ApplicationDispatcher.include"
-          status UNSET
         }
         span(4) {
           childOf span(3)
           name "Compile /common/javaLoopH2.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -441,7 +422,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(5) {
           childOf span(3)
           name "Render /common/javaLoopH2.jsp"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -449,12 +429,10 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(6) {
           childOf span(2)
           name "ApplicationDispatcher.include"
-          status UNSET
         }
         span(7) {
           childOf span(6)
           name "Compile /common/javaLoopH2.jsp"
-          status UNSET
           attributes {
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -463,7 +441,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(8) {
           childOf span(6)
           name "Render /common/javaLoopH2.jsp"
-          status UNSET
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -543,7 +520,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/*"
           kind SERVER
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long

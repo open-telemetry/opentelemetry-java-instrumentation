@@ -93,7 +93,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           name "org.apache.dubbo.rpc.service.GenericService/\$invoke"
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
             "${SemanticAttributes.RPC_SERVICE.key}" "org.apache.dubbo.rpc.service.GenericService"
@@ -106,7 +105,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           name "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
           kind SERVER
           childOf span(1)
-          status UNSET
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
             "${SemanticAttributes.RPC_SERVICE.key}" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
@@ -162,7 +160,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           name "org.apache.dubbo.rpc.service.GenericService/\$invokeAsync"
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
             "${SemanticAttributes.RPC_SERVICE.key}" "org.apache.dubbo.rpc.service.GenericService"
@@ -175,7 +172,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           name "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
           kind SERVER
           childOf span(1)
-          status UNSET
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
             "${SemanticAttributes.RPC_SERVICE.key}" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"

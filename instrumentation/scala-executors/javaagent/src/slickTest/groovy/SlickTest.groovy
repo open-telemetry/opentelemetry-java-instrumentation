@@ -26,7 +26,6 @@ class SlickTest extends AgentInstrumentationSpecification {
         span(0) {
           name "run query"
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -34,7 +33,6 @@ class SlickTest extends AgentInstrumentationSpecification {
           name "SELECT ${SlickUtils.Db()}"
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "h2"
             "$SemanticAttributes.DB_NAME.key" SlickUtils.Db()

@@ -23,7 +23,6 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SayTracedHello.sayHello"
           hasNoParent()
-          status UNSET
           attributes {
             "myattr" "test"
           }
@@ -43,7 +42,6 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SayTracedHello.sayHelloSayHa"
           hasNoParent()
-          status UNSET
           attributes {
             "myattr" "test2"
           }
@@ -51,7 +49,6 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(1) {
           name "SayTracedHello.sayHello"
           childOf span(0)
-          status UNSET
           attributes {
             "myattr" "test"
           }
@@ -59,7 +56,6 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(2) {
           name "SayTracedHello.sayHello"
           childOf span(0)
-          status UNSET
           attributes {
             "myattr" "test"
           }

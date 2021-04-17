@@ -155,7 +155,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     trace.span(index) {
       name "BasicErrorController.error"
       kind INTERNAL
-      status UNSET
       attributes {
       }
     }
@@ -167,7 +166,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     trace.span(index) {
       name responseSpanName
       kind INTERNAL
-      status UNSET
       attributes {
       }
     }
@@ -178,7 +176,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     trace.span(index) {
       name "Render RedirectView"
       kind INTERNAL
-      status UNSET
       attributes {
         "spring-webmvc.view.type" RedirectView.simpleName
       }

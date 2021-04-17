@@ -40,7 +40,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.otel"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -58,7 +57,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
         span(0) {
           name "manualName"
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -77,7 +75,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.oneOfAKind"
           kind PRODUCER
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -96,14 +93,12 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.server"
           kind SERVER
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
         span(1) {
           name "TracedWithSpan.otel"
           childOf span(0)
-          status UNSET
           attributes {
           }
         }
@@ -122,7 +117,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.nestedServers"
           kind SERVER
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -141,7 +135,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.nestedClients"
           kind CLIENT
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -170,7 +163,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.completionStage"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -195,7 +187,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.completionStage"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -262,7 +253,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.completionStage"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -282,7 +272,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.completableFuture"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -307,7 +296,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.completableFuture"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -374,7 +362,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.completableFuture"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -419,7 +406,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "GeneratedJava6TestClass.run"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -427,7 +413,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "intercept"
           kind SpanKind.INTERNAL
           childOf(span(0))
-          status UNSET
           attributes {
           }
         }

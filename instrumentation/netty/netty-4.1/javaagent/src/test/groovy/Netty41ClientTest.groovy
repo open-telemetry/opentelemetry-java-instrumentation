@@ -286,7 +286,6 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
         span(1) {
           childOf span(0)
           name "tracedMethod"
-          status UNSET
           attributes {
           }
         }

@@ -16,7 +16,6 @@ class CouchbaseSpanUtil {
     trace.span(index) {
       name spanName
       kind CLIENT
-      status UNSET
       if (parentSpan == null) {
         hasNoParent()
       } else {

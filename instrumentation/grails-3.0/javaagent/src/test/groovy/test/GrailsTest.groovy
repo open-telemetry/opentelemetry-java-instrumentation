@@ -117,7 +117,6 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
     trace.span(index + 1) {
       name errorSpanName
       kind INTERNAL
-      status UNSET
       attributes {
       }
     }
@@ -125,7 +124,6 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       trace.span(index + 2) {
         name ~/\.sendError$/
         kind INTERNAL
-        status UNSET
         attributes {
         }
       }
@@ -137,7 +135,6 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
     trace.span(index) {
       name endpoint == REDIRECT ? ~/\.sendRedirect$/ : ~/\.sendError$/
       kind INTERNAL
-      status UNSET
       attributes {
       }
     }

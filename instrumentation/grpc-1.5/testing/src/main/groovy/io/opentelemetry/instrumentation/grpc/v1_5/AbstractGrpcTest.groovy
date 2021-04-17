@@ -86,7 +86,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           childOf span(0)
-          status UNSET
           event(0) {
             eventName "message"
             attributes {
@@ -104,7 +103,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(1)
-          status UNSET
           event(0) {
             eventName "message"
             attributes {
@@ -410,7 +408,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           childOf span(0)
-          status UNSET
           event(0) {
             eventName "message"
             attributes {
@@ -428,7 +425,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(1)
-          status UNSET
           event(0) {
             eventName "message"
             attributes {

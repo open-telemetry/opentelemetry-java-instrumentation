@@ -107,7 +107,6 @@ abstract class AbstractCouchbaseTest extends AgentInstrumentationSpecification {
     trace.span(index) {
       name spanName
       kind CLIENT
-      status UNSET
       if (parentSpan == null) {
         hasNoParent()
       } else {

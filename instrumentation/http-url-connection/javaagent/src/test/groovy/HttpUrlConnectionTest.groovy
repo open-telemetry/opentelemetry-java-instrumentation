@@ -99,7 +99,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
         span(0) {
           name "someTrace"
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -107,7 +106,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           name expectedOperationName("GET")
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
@@ -122,7 +120,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           name "test-http-server"
           kind SERVER
           childOf span(1)
-          status UNSET
           attributes {
           }
         }
@@ -130,7 +127,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           name expectedOperationName("GET")
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
@@ -145,7 +141,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           name "test-http-server"
           kind SERVER
           childOf span(3)
-          status UNSET
           attributes {
           }
         }
@@ -190,7 +185,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
         span(0) {
           name "someTrace"
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -198,7 +192,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           name expectedOperationName("GET")
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
@@ -213,7 +206,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           name expectedOperationName("GET")
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
@@ -249,7 +241,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
         span(0) {
           name "someTrace"
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -257,7 +248,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           name expectedOperationName("GET")
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
@@ -308,7 +298,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
         span(0) {
           name "someTrace"
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -316,7 +305,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           name expectedOperationName("POST")
           kind CLIENT
           childOf span(0)
-          status UNSET
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
@@ -331,7 +319,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           name "test-http-server"
           kind SERVER
           childOf span(1)
-          status UNSET
           attributes {
           }
         }

@@ -102,7 +102,6 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind CLIENT
-          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"

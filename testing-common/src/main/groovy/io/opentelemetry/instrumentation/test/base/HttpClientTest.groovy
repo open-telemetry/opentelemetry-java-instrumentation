@@ -716,7 +716,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     traces.span(index) {
       name "test-http-server"
       kind SERVER
-      status UNSET
       if (parentSpan == null) {
         hasNoParent()
       } else {

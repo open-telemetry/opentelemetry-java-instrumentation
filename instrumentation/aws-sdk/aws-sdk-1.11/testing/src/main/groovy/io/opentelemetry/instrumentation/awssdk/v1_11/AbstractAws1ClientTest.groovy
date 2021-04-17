@@ -95,7 +95,6 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind operation == "SendMessage" ? PRODUCER : CLIENT
-          status UNSET
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"

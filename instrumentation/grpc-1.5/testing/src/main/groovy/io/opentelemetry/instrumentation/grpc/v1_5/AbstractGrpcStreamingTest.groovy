@@ -108,7 +108,6 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
           name "example.Greeter/Conversation"
           kind CLIENT
           hasNoParent()
-          status UNSET
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -129,7 +128,6 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
           name "example.Greeter/Conversation"
           kind SERVER
           childOf span(0)
-          status UNSET
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"

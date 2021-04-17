@@ -42,7 +42,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.completable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -72,7 +71,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.completable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -155,7 +153,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.maybe"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -179,7 +176,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.maybe"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -210,7 +206,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.maybe"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -293,7 +288,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.single"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -324,7 +318,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.single"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -407,7 +400,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.observable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -443,7 +435,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.observable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -532,7 +523,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.flowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -568,7 +558,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.flowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -658,7 +647,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.parallelFlowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -695,7 +683,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.parallelFlowable"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
@@ -791,7 +778,6 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.publisher"
           kind SpanKind.INTERNAL
           hasNoParent()
-          status UNSET
           attributes {
           }
         }
