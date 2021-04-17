@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11
 
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+
 import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.Request
 import com.amazonaws.auth.BasicAWSCredentials
