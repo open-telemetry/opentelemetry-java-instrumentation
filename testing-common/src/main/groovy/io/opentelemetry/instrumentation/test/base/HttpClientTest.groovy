@@ -164,7 +164,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     throw new UnsupportedOperationException()
   }
 
-  Integer statusOnRedirectError() {
+  Integer responseCodeOnRedirectError() {
     return null
   }
 
@@ -389,7 +389,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 1 + extraClientSpans() + maxRedirects()) {
-        clientSpan(it, 0, null, method, uri, statusOnRedirectError(), thrownException)
+        clientSpan(it, 0, null, method, uri, responseCodeOnRedirectError(), thrownException)
         def start = 1 + extraClientSpans()
         for (int i = start; i < maxRedirects() + start; i++) {
           serverSpan(it, i, span(extraClientSpans()))
@@ -654,7 +654,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null, String httpFlavor = "1.1") {
+  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer responseCode = 200, Throwable exception = null, String httpFlavor = "1.1") {
     def userAgent = userAgent()
     def extraAttributes = extraAttributes()
     trace.span(index) {
@@ -688,8 +688,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         if (userAgent) {
           "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith(userAgent) }
         }
-        if (status) {
-          "${SemanticAttributes.HTTP_STATUS_CODE.key}" status
+        if (responseCode) {
+          "${SemanticAttributes.HTTP_STATUS_CODE.key}" responseCode
         }
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {

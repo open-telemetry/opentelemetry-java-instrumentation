@@ -514,7 +514,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     trace.span(index) {
       name "controller"
       if (errorMessage) {
-        status ERROR
+        status StatusCode.ERROR
         errorEvent(exceptionClass, errorMessage)
       }
       childOf((SpanData) parent)
