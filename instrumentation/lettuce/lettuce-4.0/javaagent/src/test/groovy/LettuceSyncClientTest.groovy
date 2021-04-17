@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import com.lambdaworks.redis.ClientOptions
 import com.lambdaworks.redis.RedisClient

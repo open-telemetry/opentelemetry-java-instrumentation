@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.rxjava2.TracedWithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification

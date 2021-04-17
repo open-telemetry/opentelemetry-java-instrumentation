@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static java.util.Collections.emptyMap
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
