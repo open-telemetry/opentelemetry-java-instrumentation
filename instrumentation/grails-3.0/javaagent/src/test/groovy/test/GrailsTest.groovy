@@ -36,7 +36,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       try {
         ServerProperties.getDeclaredMethod("getServlet")
         contextPathKey = "server.servlet.contextPath"
-      } catch (NoSuchMethodException ignore) {}
+      } catch (NoSuchMethodException ignore) {
+      }
       Map<String, Object> properties = new HashMap<>()
       properties.put("server.port", port)
       properties.put(contextPathKey, contextPath)
@@ -56,8 +57,10 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       return getContextPath() + "/test/path"
     } else if (endpoint == QUERY_PARAM) {
       return getContextPath() + "/test/query"
-    } else if (endpoint == ERROR || endpoint == EXCEPTION) {
+    } else if (endpoint == ERROR) {
       return getContextPath() + "/error/index"
+    } else if (endpoint == EXCEPTION) {
+      return getContextPath() + "/error"
     } else if (endpoint == NOT_FOUND) {
       return getContextPath() + "/**"
     }
