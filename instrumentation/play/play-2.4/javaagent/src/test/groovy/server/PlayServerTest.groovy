@@ -62,7 +62,7 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   }
 
   @Override
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
 

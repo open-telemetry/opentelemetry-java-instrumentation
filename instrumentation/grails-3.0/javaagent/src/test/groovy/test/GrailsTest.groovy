@@ -82,12 +82,12 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
   }
 
   @Override
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
 
   @Override
-  boolean hasExceptionOnServerSpan() {
+  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
     true
   }
 
@@ -103,7 +103,7 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
 
   @Override
   int getErrorPageSpansCount(ServerEndpoint endpoint) {
-    endpoint == NOT_FOUND ? 3 : 2
+    endpoint == NOT_FOUND ? 1 : 2
   }
 
   @Override
@@ -114,16 +114,9 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
   @Override
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint) {
     forwardSpan(trace, index, trace.span(0))
-    def errorSpanName = endpoint == NOT_FOUND ? "ErrorController.notFound" : "ErrorController.index"
-    trace.span(index + 1) {
-      name errorSpanName
-      kind INTERNAL
-      attributes {
-      }
-    }
-    if (endpoint == NOT_FOUND) {
-      trace.span(index + 2) {
-        name ~/\.sendError$/
+    if (endpoint != NOT_FOUND) {
+      trace.span(index + 1) {
+        name "ErrorController.index"
         kind INTERNAL
         attributes {
         }

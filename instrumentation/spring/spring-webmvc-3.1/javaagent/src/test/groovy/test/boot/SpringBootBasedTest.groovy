@@ -50,12 +50,12 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   }
 
   @Override
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
 
   @Override
-  boolean hasExceptionOnServerSpan() {
+  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
     true
   }
 
@@ -74,24 +74,29 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     true
   }
 
+  @Override
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
     endpoint == NOT_FOUND
   }
 
+  @Override
   int getErrorPageSpansCount(ServerEndpoint endpoint) {
     2
   }
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    if (endpoint == PATH_PARAM) {
-      return getContextPath() + "/path/{id}/param"
-    } else if (endpoint == AUTH_ERROR || endpoint == NOT_FOUND) {
-      return getContextPath() + "/error"
-    } else if (endpoint == LOGIN) {
-      return "HTTP POST"
+    switch (endpoint) {
+      case PATH_PARAM:
+        return getContextPath() + "/path/{id}/param"
+      case AUTH_ERROR:
+      case NOT_FOUND:
+        return getContextPath() + "/error"
+      case LOGIN:
+        return "HTTP POST"
+      default:
+        return super.expectedServerSpanName(endpoint)
     }
-    return super.expectedServerSpanName(endpoint)
   }
 
   def "test spans with auth error"() {
