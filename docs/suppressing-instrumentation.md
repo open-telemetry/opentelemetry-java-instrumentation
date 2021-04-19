@@ -6,99 +6,96 @@ You can disable the agent using `-Dotel.javaagent.enabled=false`
 ## Suppressing specific agent instrumentation
 
 You can suppress agent instrumentation of specific libraries by using
-`-Dotel.instrumentation.[name].enabled=false` where `name` is the instrumentation `name`
-(main or additional):
+`-Dotel.instrumentation.[name].enabled=false` where `name` is the corresponding instrumentation `name`:
 
-| Instrumentation name |
-|---------------------------|
-| akka-actor|
-| akka-http|
-| apache-camel|
-| apache-dubbo|
-| apache-httpasyncclient|
-| apache-httpclient|
-| armeria|
-| async-http-client|
-| aws-lambda|
-| aws-sdk|
-| axis2|
-| cassandra|
-| couchbase|
-| cxf|
-| dropwizard-views |
-| eclipse-osgi |
-| elasticsearch-rest|
-| elasticsearch-transport|
-| executor |
-| external-annotations |
-| finatra|
-| geode|
-| google-http-client|
-| grails|
-| grizzly|
-| grpc|
-| guava|
-| gwt|
-| hibernate|
-| http-url-connection |
-| httpclient |
-| hystrix|
-| jaxrs-client|
-| jaxrs|
-| jaxws|
-| jdbc |
-| jdbc-datasource |
-| jedis|
-| jetty|
-| jms|
-| jsp |
-| kafka |
-| khttp |
-| kotlinx-coroutines |
-| kubernetes-client|
-| lettuce|
-| liberty |
-| log4j|
-| logback|
-| methods |
-| metro|
-| mojarra|
-| mongo |
-| myfaces|
-| netty|
-| okhttp|
-| opentelemetry-annotations |
-| opentelemetry-api |
-| opentelemetry-metrics-api |
-| oshi |
-| play-ws|
-| play|
-| rabbitmq|
-| ratpack|
-| reactor-netty|
-| reactor|
-| rediscala|
-| rmi|
-| rocketmq-client|
-| rxjava2 |
-| scala-executors |
-| servlet|
-| spark|
-| spring-core|
-| spring-data|
-| spring-scheduling|
-| spring-webflux|
-| spring-webmvc|
-| spring-ws|
-| spymemcached|
-| struts|
-| tapestry|
-| tomcat|
-| twilio|
-| undertow|
-| vaadin|
-| vertx |
-| wicket|
+| Library/Framework | Instrumentation name |
+|-------------------|----------------------|
+| Akka Actor | akka-actor|
+| Akka HTTP | akka-http|
+| Apache Camel | apache-camel|
+| Apache Dubbo | apache-dubbo|
+| Apache HttpAsyncClient | apache-httpasyncclient|
+| Apache HttpClient | apache-httpclient|
+| Armeria | armeria|
+| AsyncHttpClient (AHC) | async-http-client|
+| AWS Lambda | aws-lambda|
+| AWS SDK | aws-sdk|
+| Apache Axis2 | axis2|
+| Apache Cassandra | cassandra|
+| Couchbase | couchbase|
+| Apache CXF | cxf|
+| Dropwizard Views | dropwizard-views |
+| Eclipse OSGi | eclipse-osgi |
+| Elasticsearch REST client | elasticsearch-rest|
+| Elasticsearch client | elasticsearch-transport|
+| java.util.concurrent | executor |
+| Additional tracing annotations | external-annotations |
+| Twitter Finatra | finatra|
+| Apache Geode | geode|
+| Google HTTP client | google-http-client|
+| Grails | grails|
+| Java EE Grizzly | grizzly|
+| GRPC | grpc|
+| Google Guava | guava|
+| Google Web Toolkit | gwt|
+| Hibernate | hibernate|
+| Java HTTP URL connection | http-url-connection |
+| Java HTTP Client | httpclient |
+| Netflix Hystrix | hystrix|
+| JAX-RS Clieny | jaxrs-client|
+| JAX-RS | jaxrs|
+| JAX-WS | jaxws|
+| Java JDBC | jdbc |
+| Java JDBC data source | jdbc-datasource |
+| Redis Jedis | jedis|
+| Jetty | jetty|
+| JMS | jms|
+| JSP | jsp |
+| Apache Kafka | kafka |
+| Kotlin HTTP (kHttp) | khttp |
+| kotlinx.coroutines | kotlinx-coroutines |
+| K8s Client | kubernetes-client|
+| Lettuce (Redis) | lettuce|
+| OpenLiberty | liberty |
+| Log4j | log4j|
+| Logback | logback|
+| Additional methods tracing | methods |
+| JAX-WS Metro | metro|
+| JSF Mojarra | mojarra|
+| MongoDB | mongo |
+| JSF MyFaces | myfaces|
+| Netty | netty|
+| OkHttp | okhttp|
+| OpenTelemetry Trace annotations | opentelemetry-annotations |
+| OSHI (Operating System and Hardware Information) | oshi |
+| Play WS HTTP Client | play-ws|
+| Play Framework | play|
+| RabbitMQ Client | rabbitmq|
+| Ratpack | ratpack|
+| Reactor Netty | reactor-netty|
+| Reactor | reactor|
+| Rediscala | rediscala|
+| Java RMI | rmi|
+| Apache RocketMQ | rocketmq-client|
+| ReactiveX RxJava | rxjava2 |
+| Scala executors | scala-executors |
+| Java Servlet | servlet|
+| Apache Spark | spark|
+| Spring Core | spring-core|
+| Spring Data | spring-data|
+| Spring Scheduling | spring-scheduling|
+| Spring Webflux | spring-webflux|
+| Spring WebMVC | spring-webmvc|
+| Spring WS | spring-ws|
+| Spymemcached | spymemcached|
+| Struts | struts|
+| Apache Tapestry | tapestry|
+| Apache Tomcat | tomcat|
+| Twilio SDK | twilio|
+| Undertow | undertow|
+| Vaadin | vaadin|
+| Vert.x RxJava2 | vertx |
+| Apache Wicket | wicket|
 
 ### Even more fine-grained control
 
