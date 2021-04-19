@@ -80,7 +80,7 @@ You can suppress agent instrumentation of specific libraries by using
 | ReactiveX RxJava | rxjava2 |
 | Scala executors | scala-executors |
 | Java Servlet | servlet|
-| Apache Spark | spark|
+| Spark Web Framework | spark|
 | Spring Core | spring-core|
 | Spring Data | spring-data|
 | Spring Scheduling | spring-scheduling|
