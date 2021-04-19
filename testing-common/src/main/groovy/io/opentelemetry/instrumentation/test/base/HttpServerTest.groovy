@@ -17,8 +17,8 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
@@ -59,14 +59,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   boolean hasResponseSpan(ServerEndpoint endpoint) {
-    false
-  }
-
-  boolean hasForwardSpan() {
-    false
-  }
-
-  boolean hasIncludeSpan() {
     false
   }
 
@@ -390,6 +382,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   This way we verify that child span created by the server actually corresponds to the client request.
    */
+
   def "high concurrency test"() {
     setup:
     assumeTrue(testConcurrency())
@@ -459,12 +452,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       if (hasRenderSpan(endpoint)) {
         spanCount++
       }
-      if (hasForwardSpan()) {
-        spanCount++
-      }
-      if (hasIncludeSpan()) {
-        spanCount++
-      }
     }
     if (hasErrorPageSpans(endpoint)) {
       spanCount += getErrorPageSpansCount(endpoint)
@@ -480,14 +467,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           if (endpoint != NOT_FOUND) {
             def controllerSpanIndex = 0
             if (hasHandlerSpan()) {
-              controllerSpanIndex++
-            }
-            if (hasForwardSpan()) {
-              forwardSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
-              controllerSpanIndex++
-            }
-            if (hasIncludeSpan()) {
-              includeSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
               controllerSpanIndex++
             }
             controllerSpan(it, spanIndex++, span(controllerSpanIndex), errorMessage, expectedExceptionClass())
@@ -550,30 +529,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     trace.span(index) {
       name ~/\.sendError$/
       kind SpanKind.INTERNAL
-      childOf((SpanData) parent)
-    }
-  }
-
-  void forwardSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
-    trace.span(index) {
-      name ~/\.forward$/
-      kind SpanKind.INTERNAL
-      errored errorMessage != null
-      if (errorMessage) {
-        errorEvent(exceptionClass, errorMessage)
-      }
-      childOf((SpanData) parent)
-    }
-  }
-
-  void includeSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
-    trace.span(index) {
-      name ~/\.include$/
-      kind SpanKind.INTERNAL
-      errored errorMessage != null
-      if (errorMessage) {
-        errorEvent(exceptionClass, errorMessage)
-      }
       childOf((SpanData) parent)
     }
   }

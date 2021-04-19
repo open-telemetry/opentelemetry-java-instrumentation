@@ -131,10 +131,9 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
 
     and:
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         basicServerSpan(it, 0, getContextPath() + "/dispatch", null)
         basicSpan(it, 1, "GreetingAction.dispatch_servlet", span(0))
-        basicSpan(it, 2, "Dispatcher.forward", span(0))
       }
     }
   }

@@ -36,7 +36,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       try {
         ServerProperties.getDeclaredMethod("getServlet")
         contextPathKey = "server.servlet.contextPath"
-      } catch (NoSuchMethodException ignore) {}
+      } catch (NoSuchMethodException ignore) {
+      }
       Map<String, Object> properties = new HashMap<>()
       properties.put("server.port", port)
       properties.put(contextPathKey, contextPath)
@@ -101,7 +102,7 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
 
   @Override
   int getErrorPageSpansCount(ServerEndpoint endpoint) {
-    endpoint == NOT_FOUND ? 3 : 2
+    endpoint == NOT_FOUND ? 2 : 1
   }
 
   @Override
@@ -111,9 +112,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
 
   @Override
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint) {
-    forwardSpan(trace, index, trace.span(0))
     def errorSpanName = endpoint == NOT_FOUND ? "ErrorController.notFound" : "ErrorController.index"
-    trace.span(index + 1) {
+    trace.span(index) {
       name errorSpanName
       kind INTERNAL
       errored false
@@ -121,7 +121,7 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       }
     }
     if (endpoint == NOT_FOUND) {
-      trace.span(index + 2) {
+      trace.span(index + 1) {
         name ~/\.sendError$/
         kind INTERNAL
         errored false
