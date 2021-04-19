@@ -127,17 +127,22 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * for example:
    *
    * @Override
-   * int sendRequest(Request request, String method, URI uri, Map<String, String headers = [:]) {*   HttpResponse response = client.execute(request)
+   * int sendRequest(Request request, String method, URI uri, Map<String, String headers = [:]) {
+   *   HttpResponse response = client.execute(request)
    *   return response.statusCode()
-   *}*
+   * }
+   *
    * If there is no synchronous API available at all, for example as in Vert.X, a CompletableFuture
    * can be used to block on a result, for example:
    *
    * @Override
-   * int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {*   CompletableFuture<Integer> future = new CompletableFuture<>(
-   *   sendRequestWithCallback(request, method, uri, headers) {*     future.complete(it.statusCode())
-   *}*   return future.get()
-   *}
+   * int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
+   *   CompletableFuture<Integer> future = new CompletableFuture<>(
+   *   sendRequestWithCallback(request, method, uri, headers) {
+   *     future.complete(it.statusCode())
+   *   }
+   *   return future.get()
+   * }
    */
   abstract int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
 
@@ -150,12 +155,18 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * the context is propagated correctly to such callbacks.
    *
    * @Override
-   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {*   // Hypothetical client accepting a callback
-   *   client.executeAsync(request) {*     callback.accept(it.statusCode())
-   *}*
+   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+   *   // Hypothetical client accepting a callback
+   *   client.executeAsync(request) {
+   *     callback.accept(it.statusCode())
+   *   }
+   *
    *   // Hypothetical client returning a CompletableFuture
-   *   client.executeAsync(request).thenAccept {*     callback.accept(it.statusCode())
-   *}*}*
+   *   client.executeAsync(request).thenAccept {
+   *     callback.accept(it.statusCode())
+   *   }
+   * }
+   *
    * If the client offers no APIs that accept callbacks, then this method should not be implemented
    * and instead, {@link #testCallback} should be implemented to return false.
    */
