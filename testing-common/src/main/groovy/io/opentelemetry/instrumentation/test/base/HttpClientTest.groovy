@@ -178,10 +178,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "basic #method request #url"() {
     when:
-    def status = doRequest(method, url)
+    def responseCode = doRequest(method, url)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
         clientSpan(it, 0, null, method, url)
@@ -198,12 +198,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "basic #method request with parent"() {
     when:
-    def status = runUnderTrace("parent") {
+    def responseCode = runUnderTrace("parent") {
       doRequest(method, server.address.resolve("/success"))
     }
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
@@ -221,12 +221,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testWithClientParent())
 
     when:
-    def status = runUnderParentClientSpan {
+    def responseCode = runUnderParentClientSpan {
       doRequest(method, server.address.resolve("/success"))
     }
 
     then:
-    status == 200
+    responseCode == 200
     // there should be 2 separate traces since the nested CLIENT span is suppressed
     // (and the span context propagation along with it)
     assertTraces(2) {
@@ -249,12 +249,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "trace request without propagation"() {
     when:
-    def status = runUnderTrace("parent") {
+    def responseCode = runUnderTrace("parent") {
       doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"])
     }
 
     then:
-    status == 200
+    responseCode == 200
     // only one trace (client).
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
@@ -272,18 +272,18 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testCallback())
     assumeTrue(testCallbackWithParent())
 
-    def status = new BlockingVariable<Integer>()
+    def responseCode = new BlockingVariable<Integer>()
 
     when:
     runUnderTrace("parent") {
       doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
         runUnderTrace("child") {}
-        status.set(it)
+        responseCode.set(it)
       }
     }
 
     then:
-    status.get() == 200
+    responseCode.get() == 200
     // only one trace (client).
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
@@ -301,17 +301,17 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     given:
     assumeTrue(testCallback())
 
-    def status = new BlockingVariable<Integer>()
+    def responseCode = new BlockingVariable<Integer>()
 
     when:
     doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
       runUnderTrace("callback") {
       }
-      status.set(it)
+      responseCode.set(it)
     }
 
     then:
-    status.get() == 200
+    responseCode.get() == 200
     // only one trace (client).
     assertTraces(2) {
       trace(0, 1 + extraClientSpans()) {
@@ -335,10 +335,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = server.address.resolve("/redirect")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -357,10 +357,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = server.address.resolve("/another-redirect")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 4 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -408,10 +408,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     when:
 
-    def status = doRequest(method, uri, [(BASIC_AUTH_KEY): BASIC_AUTH_VAL])
+    def responseCode = doRequest(method, uri, [(BASIC_AUTH_KEY): BASIC_AUTH_VAL])
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -429,10 +429,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testReusedRequest())
 
     when:
-    def status = doReusedRequest(method, url)
+    def responseCode = doReusedRequest(method, url)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(2) {
       trace(0, 2 + extraClientSpans()) {
         clientSpan(it, 0, null, method, url)
@@ -533,10 +533,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = new URI("https://www.google.com/")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 1 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)

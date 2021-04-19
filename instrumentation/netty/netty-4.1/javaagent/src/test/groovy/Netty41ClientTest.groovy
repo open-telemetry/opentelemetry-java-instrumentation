@@ -274,12 +274,12 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     def annotatedClass = new TracedClass()
 
     when:
-    def status = runUnderTrace("parent") {
+    def responseCode = runUnderTrace("parent") {
       annotatedClass.tracedMethod(method)
     }
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 4) {
         basicSpan(it, 0, "parent")

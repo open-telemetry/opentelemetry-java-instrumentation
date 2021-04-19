@@ -67,10 +67,10 @@ class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest()).get()
 
-    def status = result.status
+    def clusterHealthStatus = result.status
 
     expect:
-    status.name() == "GREEN"
+    clusterHealthStatus.name() == "GREEN"
 
     assertTraces(1) {
       trace(0, 1) {

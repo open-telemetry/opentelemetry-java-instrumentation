@@ -85,10 +85,10 @@ class Elasticsearch5TransportClientTest extends AgentInstrumentationSpecificatio
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest())
 
-    def status = result.get().status
+    def clusterHealthStatus = result.get().status
 
     expect:
-    status.name() == "GREEN"
+    clusterHealthStatus.name() == "GREEN"
 
     assertTraces(1) {
       trace(0, 1) {

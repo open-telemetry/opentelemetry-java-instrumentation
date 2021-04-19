@@ -65,10 +65,10 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> 
     def uri = server.address.resolve("/error")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 500
+    responseCode == 500
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
