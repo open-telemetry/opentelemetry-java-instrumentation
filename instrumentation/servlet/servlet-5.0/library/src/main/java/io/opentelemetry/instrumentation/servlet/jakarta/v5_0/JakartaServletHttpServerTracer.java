@@ -34,13 +34,8 @@ public class JakartaServletHttpServerTracer
   }
 
   public Context startSpan(Object servletOrFilter, HttpServletRequest request) {
-    Context context = startSpan(request, getSpanName(servletOrFilter, request));
-    // server span name shouldn't be update when server span was created from a call to Servlet
-    // if server span was created from a call to Filter then name may be updated from updateContext.
-    if (servletOrFilter instanceof Servlet) {
-      ServletSpanNaming.setServletUpdatedServerSpanName(context);
-    }
-    return context;
+    return startSpan(
+        request, getSpanName(servletOrFilter, request), servletOrFilter instanceof Servlet);
   }
 
   private String getSpanName(Object servletOrFilter, HttpServletRequest request) {
@@ -119,16 +114,23 @@ public class JakartaServletHttpServerTracer
 
   public Context updateContext(
       Context context, Object servletOrFilter, HttpServletRequest request) {
+    updateServerSpanName(context, servletOrFilter, request);
+    return updateContext(context, request);
+  }
+
+  private void updateServerSpanName(
+      Context context, Object servletOrFilter, HttpServletRequest request) {
     Span span = ServerSpan.fromContextOrNull(context);
-    if (span != null && ServletSpanNaming.shouldUpdateServerSpanName(context)) {
-      String spanName = getSpanNameFromPath(servletOrFilter, request);
-      if (spanName != null) {
-        span.updateName(spanName);
-        ServletSpanNaming.setServletUpdatedServerSpanName(context);
+    if (span != null) {
+      ServletSpanNaming servletSpanNaming = ServletSpanNaming.from(context);
+      if (servletSpanNaming.shouldServletUpdateServerSpanName()) {
+        String spanName = getSpanNameFromPath(servletOrFilter, request);
+        if (spanName != null) {
+          span.updateName(spanName);
+          servletSpanNaming.setServletUpdatedServerSpanName();
+        }
       }
     }
-
-    return updateContext(context, request);
   }
 
   @Override

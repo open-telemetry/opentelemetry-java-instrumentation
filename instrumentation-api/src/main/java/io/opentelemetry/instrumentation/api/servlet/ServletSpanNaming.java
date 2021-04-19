@@ -11,7 +11,7 @@ import io.opentelemetry.context.ContextKey;
 /**
  * Helper container for tracking whether servlet integration should update server span name or not.
  */
-public class ServletSpanNaming {
+public abstract class ServletSpanNaming {
 
   private static final ContextKey<ServletSpanNaming> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-span-naming-key");
@@ -20,39 +20,81 @@ public class ServletSpanNaming {
     if (context.get(CONTEXT_KEY) != null) {
       return context;
     }
-    return context.with(CONTEXT_KEY, new ServletSpanNaming());
+    return context.with(CONTEXT_KEY, new DefaultServletSpanNaming());
   }
 
-  private volatile boolean servletUpdatedServerSpanName = false;
+  public static ServletSpanNaming from(Context context) {
+    ServletSpanNaming servletSpanNaming = context.get(CONTEXT_KEY);
+    return servletSpanNaming == null ? NoopServletSpanNaming.INSTANCE : servletSpanNaming;
+  }
 
   private ServletSpanNaming() {}
 
   /**
-   * Returns true, if servlet integration should update server span name. After server span name has
-   * been updated with <code>setServletUpdatedServerSpanName</code> this method will return <code>
-   * false</code>.
-   *
-   * @param context server context
-   * @return <code>true</code>, if the server span name should be updated by servlet integration, or
-   *     <code>false</code> otherwise.
+   * This should be called before servlet instrumentation updates the server span name. If it
+   * returns true, the servlet instrumentation should update the server span name and then should
+   * call {@link #setServletUpdatedServerSpanName}.
    */
-  public static boolean shouldUpdateServerSpanName(Context context) {
-    ServletSpanNaming servletSpanNaming = context.get(CONTEXT_KEY);
-    if (servletSpanNaming != null) {
-      return !servletSpanNaming.servletUpdatedServerSpanName;
-    }
-    return false;
-  }
+  public abstract boolean shouldServletUpdateServerSpanName();
+
+  /** This should be called after servlet instrumentation updates the server span name. */
+  public abstract void setServletUpdatedServerSpanName();
 
   /**
-   * Indicate that the servlet integration has updated the name for the server span.
-   *
-   * @param context server context
+   * This should be called before controller instrumentation updates the server span name. If it
+   * returns true, the controller instrumentation should update the server span name and then should
+   * call {@link #setControllerUpdatedServerSpanName}.
    */
-  public static void setServletUpdatedServerSpanName(Context context) {
-    ServletSpanNaming servletSpanNaming = context.get(CONTEXT_KEY);
-    if (servletSpanNaming != null) {
-      servletSpanNaming.servletUpdatedServerSpanName = true;
+  public abstract boolean shouldControllerUpdateServerSpanName();
+
+  /** This should be called after controller instrumentation updates the server span name. */
+  public abstract void setControllerUpdatedServerSpanName();
+
+  private static class DefaultServletSpanNaming extends ServletSpanNaming {
+
+    private volatile boolean servletUpdatedServerSpanName;
+    private volatile boolean controllerUpdatedServerSpanName;
+
+    @Override
+    public boolean shouldServletUpdateServerSpanName() {
+      return !servletUpdatedServerSpanName;
     }
+
+    @Override
+    public void setServletUpdatedServerSpanName() {
+      servletUpdatedServerSpanName = true;
+    }
+
+    @Override
+    public boolean shouldControllerUpdateServerSpanName() {
+      return !controllerUpdatedServerSpanName;
+    }
+
+    @Override
+    public void setControllerUpdatedServerSpanName() {
+      controllerUpdatedServerSpanName = true;
+      servletUpdatedServerSpanName = true; // just in case not set already
+    }
+  }
+
+  private static class NoopServletSpanNaming extends ServletSpanNaming {
+
+    private static final ServletSpanNaming INSTANCE = new NoopServletSpanNaming();
+
+    @Override
+    public boolean shouldServletUpdateServerSpanName() {
+      return true;
+    }
+
+    @Override
+    public void setServletUpdatedServerSpanName() {}
+
+    @Override
+    public boolean shouldControllerUpdateServerSpanName() {
+      return true;
+    }
+
+    @Override
+    public void setControllerUpdatedServerSpanName() {}
   }
 }

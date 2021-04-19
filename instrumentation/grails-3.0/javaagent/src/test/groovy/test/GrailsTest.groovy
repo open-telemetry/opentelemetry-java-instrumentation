@@ -57,8 +57,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       return getContextPath() + "/test/path"
     } else if (endpoint == QUERY_PARAM) {
       return getContextPath() + "/test/query"
-    } else if (endpoint == ERROR || endpoint == EXCEPTION) {
-      return getContextPath() + "/error/index"
+    } else if (endpoint == ERROR) {
+      return getContextPath() + "/test/error"
     } else if (endpoint == NOT_FOUND) {
       return getContextPath() + "/**"
     }

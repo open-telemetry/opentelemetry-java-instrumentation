@@ -24,21 +24,24 @@ public class Servlet2HttpServerTracer extends JavaxServletHttpServerTracer<Respo
   }
 
   public Context startSpan(HttpServletRequest request) {
-    Context context = startSpan(request, getSpanName(request));
-    // server span name shouldn't be update when server span was created by servlet 2.2
-    // instrumentation
-    ServletSpanNaming.setServletUpdatedServerSpanName(context);
-    return context;
+    return startSpan(request, getSpanName(request), true);
   }
 
+  @Override
   public Context updateContext(Context context, HttpServletRequest request) {
-    Span span = ServerSpan.fromContextOrNull(context);
-    if (span != null && ServletSpanNaming.shouldUpdateServerSpanName(context)) {
-      span.updateName(getSpanName(request));
-      ServletSpanNaming.setServletUpdatedServerSpanName(context);
-    }
-
+    updateServerSpanName(context, request);
     return super.updateContext(context, request);
+  }
+
+  private void updateServerSpanName(Context context, HttpServletRequest request) {
+    Span span = ServerSpan.fromContextOrNull(context);
+    if (span != null) {
+      ServletSpanNaming servletSpanNaming = ServletSpanNaming.from(context);
+      if (servletSpanNaming.shouldServletUpdateServerSpanName()) {
+        span.updateName(getSpanName(request));
+        servletSpanNaming.setServletUpdatedServerSpanName();
+      }
+    }
   }
 
   @Override

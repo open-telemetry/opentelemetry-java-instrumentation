@@ -63,7 +63,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
-        tracer().onRequest(parentContext, serverSpan, request);
+        tracer().updateServerSpanName(parentContext, serverSpan, request);
         // Now create a span for handler/controller execution.
         context = tracer().startHandlerSpan(parentContext, handler);
         if (context != null) {

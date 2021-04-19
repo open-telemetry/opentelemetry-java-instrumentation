@@ -49,7 +49,7 @@ public class HandlerMappingResourceNameFilter implements Filter, Ordered {
 
           // Name the parent span based on the matching pattern
           // Let the parent span resource name be set with the attribute set in findMapping.
-          tracer().onRequest(context, serverSpan, (HttpServletRequest) request);
+          tracer().updateServerSpanName(context, serverSpan, (HttpServletRequest) request);
         }
       } catch (Exception ignored) {
         // mapping.getHandler() threw exception.  Ignore

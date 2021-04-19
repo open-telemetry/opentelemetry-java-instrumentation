@@ -37,7 +37,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     this.accessor = accessor;
   }
 
-  public Context startSpan(REQUEST request, String spanName) {
+  public Context startSpan(REQUEST request, String spanName, boolean servlet) {
     Context context = startSpan(request, request, request, spanName);
 
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
@@ -45,13 +45,17 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
     accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
 
+    if (servlet) {
+      // server span name shouldn't be updated when server span was created from a call to Servlet
+      // (if created from a call to Filter then name may be updated from updateContext)
+      ServletSpanNaming.from(context).setServletUpdatedServerSpanName();
+    }
     return addServletContextPath(context, request);
   }
 
   @Override
   protected Context customizeContext(Context context, REQUEST request) {
-    // add context for tracking whether servlet instrumentation has updated
-    // server span
+    // add context for tracking whether servlet instrumentation has updated the server span name
     context = ServletSpanNaming.init(context);
     // add context for current request's context path
     return addServletContextPath(context, request);

@@ -50,6 +50,11 @@ public class Struts2Tracer extends BaseTracer {
       return;
     }
 
+    ServletSpanNaming servletSpanNaming = ServletSpanNaming.from(context);
+    if (!servletSpanNaming.shouldControllerUpdateServerSpanName()) {
+      return;
+    }
+
     // We take name from the config, because it contains the path pattern from the
     // configuration.
     String result = actionProxy.getConfig().getName();
@@ -69,7 +74,7 @@ public class Struts2Tracer extends BaseTracer {
 
     serverSpan.updateName(ServletContextPath.prepend(context, result));
     // prevent servlet integration from doing further updates to server span name
-    ServletSpanNaming.setServletUpdatedServerSpanName(context);
+    servletSpanNaming.setControllerUpdatedServerSpanName();
   }
 
   @Override

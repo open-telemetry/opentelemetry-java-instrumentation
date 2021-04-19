@@ -49,14 +49,16 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         return;
       }
       if (handler instanceof IPageClassRequestHandler) {
-        // using class name as page name
-        String pageName = ((IPageClassRequestHandler) handler).getPageClass().getName();
-        // wicket filter mapping without wildcard, if wicket filter is mapped to /*
-        // this will be an empty string
-        String filterPath = RequestCycle.get().getRequest().getFilterPath();
-        serverSpan.updateName(ServletContextPath.prepend(context, filterPath + "/" + pageName));
-        // prevent servlet integration from doing further updates to server span name
-        ServletSpanNaming.setServletUpdatedServerSpanName(context);
+        ServletSpanNaming servletSpanNaming = ServletSpanNaming.from(context);
+        if (servletSpanNaming.shouldControllerUpdateServerSpanName()) {
+          // using class name as page name
+          String pageName = ((IPageClassRequestHandler) handler).getPageClass().getName();
+          // wicket filter mapping without wildcard, if wicket filter is mapped to /*
+          // this will be an empty string
+          String filterPath = RequestCycle.get().getRequest().getFilterPath();
+          serverSpan.updateName(ServletContextPath.prepend(context, filterPath + "/" + pageName));
+          servletSpanNaming.setControllerUpdatedServerSpanName();
+        }
       }
     }
   }
