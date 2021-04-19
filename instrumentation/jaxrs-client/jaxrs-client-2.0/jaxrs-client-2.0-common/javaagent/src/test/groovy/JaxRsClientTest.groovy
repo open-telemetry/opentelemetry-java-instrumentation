@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
@@ -90,7 +91,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
           hasNoParent()
           name expectedOperationName(method)
           kind CLIENT
-          errored true
+          status ERROR
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" uri.host

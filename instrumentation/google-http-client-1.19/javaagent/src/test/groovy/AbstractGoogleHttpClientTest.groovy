@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import com.google.api.client.http.GenericUrl
 import com.google.api.client.http.HttpRequest
@@ -64,15 +65,15 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> 
     def uri = server.address.resolve("/error")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 500
+    responseCode == 500
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
           kind CLIENT
-          errored true
+          status ERROR
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"

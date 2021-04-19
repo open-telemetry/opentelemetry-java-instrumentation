@@ -64,7 +64,7 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implement
   }
 
   @Override
-  Integer statusOnRedirectError() {
+  Integer responseCodeOnRedirectError() {
     return 302
   }
 

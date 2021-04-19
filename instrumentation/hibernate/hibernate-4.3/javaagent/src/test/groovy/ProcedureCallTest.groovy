@@ -5,6 +5,7 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -151,7 +152,7 @@ class ProcedureCallTest extends AgentInstrumentationSpecification {
           name "ProcedureCall.getOutputs TEST_PROC"
           kind INTERNAL
           childOf span(0)
-          errored(true)
+          status ERROR
           errorEvent(SQLGrammarException, "could not prepare statement")
         }
         span(2) {

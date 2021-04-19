@@ -21,7 +21,6 @@ class TraceProvidersTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SayTracedHello.${provider.toLowerCase()}"
           hasNoParent()
-          errored false
           attributes {
             "providerAttr" provider
           }

@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -109,7 +110,7 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
           name "CONNECT"
           kind CLIENT
           childOf span(0)
-          errored true
+          status ERROR
           Class errorClass = ConnectException
           try {
             errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')

@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static java.util.Collections.emptyMap
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -61,7 +62,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           name "BatchJob taskletJob.step.Chunk"
           kind INTERNAL
           childOf span(1)
-          errored true
+          status ERROR
           errorEvent RuntimeException, "fail"
         }
       }

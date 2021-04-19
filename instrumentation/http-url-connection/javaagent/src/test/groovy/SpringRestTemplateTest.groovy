@@ -62,7 +62,7 @@ class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implemen
   }
 
   @Override
-  Integer statusOnRedirectError() {
+  Integer responseCodeOnRedirectError() {
     return 302
   }
 }

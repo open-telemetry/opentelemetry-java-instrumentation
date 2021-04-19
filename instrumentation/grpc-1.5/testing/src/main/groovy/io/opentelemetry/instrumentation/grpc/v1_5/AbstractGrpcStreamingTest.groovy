@@ -16,9 +16,9 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.grpc.stub.StreamObserver
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -108,7 +108,6 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
           name "example.Greeter/Conversation"
           kind CLIENT
           hasNoParent()
-          errored false
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -129,7 +128,6 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
           name "example.Greeter/Conversation"
           kind SERVER
           childOf span(0)
-          errored false
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"

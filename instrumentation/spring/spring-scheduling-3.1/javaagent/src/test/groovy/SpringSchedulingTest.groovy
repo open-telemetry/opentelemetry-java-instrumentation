@@ -23,7 +23,6 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
         span(0) {
           name "TriggerTask.run"
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -45,7 +44,6 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
         span(0) {
           name "IntervalTask.run"
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -67,7 +65,6 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
         span(0) {
           nameContains "LambdaTaskConfigurer\$\$Lambda\$"
           hasNoParent()
-          errored false
           attributes {
           }
         }

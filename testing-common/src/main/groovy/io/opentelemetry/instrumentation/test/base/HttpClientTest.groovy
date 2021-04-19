@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.test.base
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicClientSpan
@@ -228,7 +229,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     throw new UnsupportedOperationException()
   }
 
-  Integer statusOnRedirectError() {
+  Integer responseCodeOnRedirectError() {
     return null
   }
 
@@ -242,10 +243,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "basic #method request #url"() {
     when:
-    def status = doRequest(method, url)
+    def responseCode = doRequest(method, url)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
         clientSpan(it, 0, null, method, url)
@@ -262,12 +263,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "basic #method request with parent"() {
     when:
-    def status = runUnderTrace("parent") {
+    def responseCode = runUnderTrace("parent") {
       doRequest(method, server.address.resolve("/success"))
     }
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
@@ -285,12 +286,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testWithClientParent())
 
     when:
-    def status = runUnderParentClientSpan {
+    def responseCode = runUnderParentClientSpan {
       doRequest(method, server.address.resolve("/success"))
     }
 
     then:
-    status == 200
+    responseCode == 200
     // there should be 2 separate traces since the nested CLIENT span is suppressed
     // (and the span context propagation along with it)
     assertTraces(2) {
@@ -313,12 +314,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "trace request without propagation"() {
     when:
-    def status = runUnderTrace("parent") {
+    def responseCode = runUnderTrace("parent") {
       doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"])
     }
 
     then:
-    status == 200
+    responseCode == 200
     // only one trace (client).
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
@@ -393,10 +394,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = server.address.resolve("/redirect")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -415,10 +416,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = server.address.resolve("/another-redirect")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 4 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -447,7 +448,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 1 + extraClientSpans() + maxRedirects()) {
-        clientSpan(it, 0, null, method, uri, statusOnRedirectError(), thrownException)
+        clientSpan(it, 0, null, method, uri, responseCodeOnRedirectError(), thrownException)
         def start = 1 + extraClientSpans()
         for (int i = start; i < maxRedirects() + start; i++) {
           serverSpan(it, i, span(extraClientSpans()))
@@ -466,10 +467,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     when:
 
-    def status = doRequest(method, uri, [(BASIC_AUTH_KEY): BASIC_AUTH_VAL])
+    def responseCode = doRequest(method, uri, [(BASIC_AUTH_KEY): BASIC_AUTH_VAL])
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -487,10 +488,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testReusedRequest())
 
     when:
-    def status = doReusedRequest(method, url)
+    def responseCode = doReusedRequest(method, url)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(2) {
       trace(0, 2 + extraClientSpans()) {
         clientSpan(it, 0, null, method, url)
@@ -624,10 +625,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = new URI("https://www.google.com/")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 1 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -745,7 +746,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null, String httpFlavor = "1.1") {
+  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer responseCode = 200, Throwable exception = null, String httpFlavor = "1.1") {
     def userAgent = userAgent()
     def extraAttributes = extraAttributes()
     trace.span(index) {
@@ -756,8 +757,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       }
       name expectedOperationName(method)
       kind CLIENT
-      errored exception != null
       if (exception) {
+        status ERROR
         errorEvent(exception.class, exception.message)
       }
       attributes {
@@ -779,8 +780,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         if (userAgent) {
           "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith(userAgent) }
         }
-        if (status) {
-          "${SemanticAttributes.HTTP_STATUS_CODE.key}" status
+        if (responseCode) {
+          "${SemanticAttributes.HTTP_STATUS_CODE.key}" responseCode
         }
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
@@ -808,7 +809,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     traces.span(index) {
       name "test-http-server"
       kind SERVER
-      errored false
       if (parentSpan == null) {
         hasNoParent()
       } else {

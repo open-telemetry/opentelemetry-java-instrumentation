@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -126,7 +127,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     // set up form parameter for post
     RequestBody formBody = new FormBody.Builder()
       .add("app-form", "app-form")
-      // value used for name is returned in app-form:output-message element
+    // value used for name is returned in app-form:output-message element
       .add("app-form:name", "test")
       .add("app-form:submit", "Say hello")
       .add("app-form_SUBMIT", "1") // MyFaces
@@ -186,7 +187,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     // set up form parameter for post
     RequestBody formBody = new FormBody.Builder()
       .add("app-form", "app-form")
-      // setting name parameter to "exception" triggers throwing exception in GreetingForm
+    // setting name parameter to "exception" triggers throwing exception in GreetingForm
       .add("app-form:name", "exception")
       .add("app-form:submit", "Say hello")
       .add("app-form_SUBMIT", "1") // MyFaces
@@ -219,8 +220,8 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     trace.span(index) {
       name spanName
       kind INTERNAL
-      errored expectedException != null
       if (expectedException != null) {
+        status ERROR
         errorEvent(expectedException.getClass(), expectedException.getMessage())
       }
       childOf((SpanData) parent)

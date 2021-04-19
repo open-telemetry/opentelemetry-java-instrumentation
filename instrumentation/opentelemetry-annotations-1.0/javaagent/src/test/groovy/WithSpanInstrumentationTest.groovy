@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.extension.annotations.WithSpan
-import io.opentelemetry.instrumentation.test.utils.TraceUtils
-import java.lang.reflect.Modifier
-import java.util.concurrent.CompletableFuture
-
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
-import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.extension.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.utils.TraceUtils
 import io.opentelemetry.test.annotation.TracedWithSpan
+import java.lang.reflect.Modifier
+import java.util.concurrent.CompletableFuture
 import net.bytebuddy.ByteBuddy
 import net.bytebuddy.ClassFileVersion
 import net.bytebuddy.asm.MemberAttributeExtension
@@ -38,9 +38,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.otel"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -58,7 +57,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
         span(0) {
           name "manualName"
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -77,7 +75,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.oneOfAKind"
           kind PRODUCER
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -96,14 +93,12 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.server"
           kind SERVER
           hasNoParent()
-          errored false
           attributes {
           }
         }
         span(1) {
           name "TracedWithSpan.otel"
           childOf span(0)
-          errored false
           attributes {
           }
         }
@@ -122,7 +117,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.nestedServers"
           kind SERVER
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -141,7 +135,6 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
           name "TracedWithSpan.nestedClients"
           kind CLIENT
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -168,9 +161,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completionStage"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -193,9 +185,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completionStage"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -214,9 +205,9 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completionStage"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -240,9 +231,9 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completionStage"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -260,9 +251,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completionStage"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -280,9 +270,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completableFuture"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -305,9 +294,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completableFuture"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -326,9 +314,9 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completableFuture"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -352,9 +340,9 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completableFuture"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -372,9 +360,8 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "TracedWithSpan.completableFuture"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -397,11 +384,11 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       .name("GeneratedJava6TestClass")
       .implement(Runnable)
       .defineMethod("run", void.class, Modifier.PUBLIC).intercept(MethodDelegation.to(new Object() {
-        @RuntimeType
-        void intercept(@This Object o) {
-          TraceUtils.runUnderTrace("intercept", {})
-        }
-      }))
+      @RuntimeType
+      void intercept(@This Object o) {
+        TraceUtils.runUnderTrace("intercept", {})
+      }
+    }))
       .visit(new MemberAttributeExtension.ForMethod()
         .annotateMethod(AnnotationDescription.Builder.ofType(WithSpan).build())
         .on(ElementMatchers.named("run")))
@@ -417,17 +404,15 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "GeneratedJava6TestClass.run"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
         span(1) {
           name "intercept"
-          kind SpanKind.INTERNAL
+          kind INTERNAL
           childOf(span(0))
-          errored false
           attributes {
           }
         }
