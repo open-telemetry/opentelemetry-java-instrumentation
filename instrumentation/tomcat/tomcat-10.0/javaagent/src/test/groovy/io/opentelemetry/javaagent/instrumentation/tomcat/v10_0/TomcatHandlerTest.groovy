@@ -31,6 +31,12 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   }
 
   @Override
+  boolean testNotFound() {
+    // currently span name is /notFound which indicates it won't be low-cardinality
+    false
+  }
+
+  @Override
   Tomcat startServer(int port) {
     Tomcat tomcat = new Tomcat()
     tomcat.setBaseDir(File.createTempDir().absolutePath)
