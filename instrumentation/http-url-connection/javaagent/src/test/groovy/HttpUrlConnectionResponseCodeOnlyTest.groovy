@@ -32,7 +32,7 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest<HttpURLConnec
   }
 
   @Override
-  Integer statusOnRedirectError() {
+  Integer responseCodeOnRedirectError() {
     return 302
   }
 

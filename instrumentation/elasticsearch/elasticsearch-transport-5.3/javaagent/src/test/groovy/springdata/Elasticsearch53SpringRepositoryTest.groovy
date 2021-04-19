@@ -89,7 +89,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
         span(1) {
           name "SearchAction"
           kind CLIENT
-          errored false
           childOf span(0)
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"

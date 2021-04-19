@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
@@ -82,10 +83,10 @@ class Elasticsearch6TransportClientTest extends AgentInstrumentationSpecificatio
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest())
 
-    def status = result.get().status
+    def clusterHealthStatus = result.get().status
 
     expect:
-    status.name() == "GREEN"
+    clusterHealthStatus.name() == "GREEN"
 
     assertTraces(1) {
       trace(0, 1) {
@@ -119,7 +120,7 @@ class Elasticsearch6TransportClientTest extends AgentInstrumentationSpecificatio
         span(0) {
           name "GetAction"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent RemoteTransportException, String
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"

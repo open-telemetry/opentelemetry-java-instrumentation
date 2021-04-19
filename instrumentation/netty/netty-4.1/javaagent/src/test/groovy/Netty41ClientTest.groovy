@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -185,7 +186,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
             name "CONNECT"
             kind CLIENT
             childOf span(0)
-            errored true
+            status ERROR
             errorEvent(thrownException.class, ~/Connection refused:( no further information:)? localhost\/\[?[0-9.:]+\]?:$UNUSABLE_PORT/)
           }
         }
@@ -273,19 +274,18 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     def annotatedClass = new TracedClass()
 
     when:
-    def status = runUnderTrace("parent") {
+    def responseCode = runUnderTrace("parent") {
       annotatedClass.tracedMethod(method)
     }
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 4) {
         basicSpan(it, 0, "parent")
         span(1) {
           childOf span(0)
           name "tracedMethod"
-          errored false
           attributes {
           }
         }

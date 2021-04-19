@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import grails.boot.GrailsApp
 import grails.boot.config.GrailsAutoConfiguration
 import groovy.transform.CompileStatic
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -36,7 +37,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       try {
         ServerProperties.getDeclaredMethod("getServlet")
         contextPathKey = "server.servlet.contextPath"
-      } catch (NoSuchMethodException ignore) {}
+      } catch (NoSuchMethodException ignore) {
+      }
       Map<String, Object> properties = new HashMap<>()
       properties.put("server.port", port)
       properties.put(contextPathKey, contextPath)
@@ -116,7 +118,6 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
     trace.span(index + 1) {
       name errorSpanName
       kind INTERNAL
-      errored false
       attributes {
       }
     }
@@ -124,7 +125,6 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       trace.span(index + 2) {
         name ~/\.sendError$/
         kind INTERNAL
-        errored false
         attributes {
         }
       }
@@ -136,7 +136,6 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
     trace.span(index) {
       name endpoint == REDIRECT ? ~/\.sendRedirect$/ : ~/\.sendError$/
       kind INTERNAL
-      errored false
       attributes {
       }
     }
@@ -155,8 +154,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
         name "TestController.${endpoint.name().toLowerCase()}"
       }
       kind INTERNAL
-      errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
+        status StatusCode.ERROR
         errorEvent(Exception, EXCEPTION.body)
       }
       childOf((SpanData) parent)

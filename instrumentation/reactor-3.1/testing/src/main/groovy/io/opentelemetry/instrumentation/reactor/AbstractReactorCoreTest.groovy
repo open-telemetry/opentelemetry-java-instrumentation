@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.reactor
 
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
@@ -97,7 +98,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name "trace-parent"
-          errored true
+          status ERROR
           errorEvent(RuntimeException, EXCEPTION_MESSAGE)
           hasNoParent()
         }
@@ -128,7 +129,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
       trace(0, workSpans + 2) {
         span(0) {
           name "trace-parent"
-          errored true
+          status ERROR
           errorEvent(RuntimeException, EXCEPTION_MESSAGE)
           hasNoParent()
         }
