@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import akka.actor.ActorSystem
 import akka.http.javadsl.Http
@@ -84,7 +85,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
           hasNoParent()
           name "HTTP request"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent(NullPointerException, e.getMessage())
         }
       }

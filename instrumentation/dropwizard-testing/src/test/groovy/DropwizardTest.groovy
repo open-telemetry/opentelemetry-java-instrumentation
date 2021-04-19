@@ -19,6 +19,7 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -84,8 +85,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
     trace.span(index) {
       name "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
       kind INTERNAL
-      errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
+        status StatusCode.ERROR
         errorEvent(Exception, EXCEPTION.body)
       }
       childOf((SpanData) parent)
@@ -98,7 +99,9 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
     trace.span(index) {
       name expectedServerSpanName(endpoint)
       kind SERVER
-      errored endpoint.errored
+      if (endpoint.errored) {
+        status StatusCode.ERROR
+      }
       if (parentID != null) {
         traceId traceID
         parentSpanId parentID

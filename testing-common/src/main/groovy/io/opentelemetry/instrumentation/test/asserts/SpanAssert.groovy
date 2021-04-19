@@ -125,16 +125,6 @@ class SpanAssert {
     checked.status = true
   }
 
-  def errored(boolean errored) {
-    if (errored) {
-      // comparing only canonical code, since description may be different
-      assert span.status.statusCode == StatusCode.ERROR
-    } else {
-      assert span.status.statusCode == StatusCode.UNSET
-    }
-    checked.status = true
-  }
-
   def errorEvent(Class<Throwable> errorType) {
     errorEvent(errorType, null)
   }
@@ -158,7 +148,7 @@ class SpanAssert {
 
   void assertDefaults() {
     if (!checked.status) {
-      errored(false)
+      status(StatusCode.UNSET)
     }
     if (!checked.kind) {
       kind(SpanKind.INTERNAL)

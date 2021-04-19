@@ -5,6 +5,7 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -107,7 +108,7 @@ class RmiTest extends AgentInstrumentationSpecification {
           name "rmi.app.Greeter/exceptional"
           kind CLIENT
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(RuntimeException, String)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"
@@ -119,7 +120,7 @@ class RmiTest extends AgentInstrumentationSpecification {
         span(2) {
           name "rmi.app.Server/exceptional"
           kind SERVER
-          errored true
+          status ERROR
           errorEvent(RuntimeException, String)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"

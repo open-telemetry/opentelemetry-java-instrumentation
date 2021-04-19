@@ -71,17 +71,16 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
     def uri = new URI("https://www.google.com/")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 1 + extraClientSpans()) {
         span(0) {
           hasNoParent()
           name expectedOperationName(method)
           kind CLIENT
-          errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
@@ -91,7 +90,7 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
             "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
             "${SemanticAttributes.HTTP_METHOD.key}" method
             "${SemanticAttributes.HTTP_FLAVOR.key}" "2.0"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" status
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" responseCode
           }
         }
       }
