@@ -50,6 +50,12 @@ abstract class AbstractArmeriaHttpServerTest extends HttpServerTest<Server> {
   }
 
   @Override
+  boolean testNotFound() {
+    // currently span name is /notFound which indicates it won't be low-cardinality
+    false
+  }
+
+  @Override
   Server startServer(int port) {
     ServerBuilder sb = Server.builder()
 
@@ -61,31 +67,31 @@ abstract class AbstractArmeriaHttpServerTest extends HttpServerTest<Server> {
       }
     }
 
-    sb.service(REDIRECT.path) {ctx, req ->
+    sb.service(REDIRECT.path) { ctx, req ->
       controller(REDIRECT) {
         HttpResponse.of(ResponseHeaders.of(HttpStatus.valueOf(REDIRECT.status), HttpHeaderNames.LOCATION, REDIRECT.body))
       }
     }
 
-    sb.service(ERROR.path) {ctx, req ->
+    sb.service(ERROR.path) { ctx, req ->
       controller(ERROR) {
         HttpResponse.of(HttpStatus.valueOf(ERROR.status), MediaType.PLAIN_TEXT_UTF_8, ERROR.body)
       }
     }
 
-    sb.service(EXCEPTION.path) {ctx, req ->
+    sb.service(EXCEPTION.path) { ctx, req ->
       controller(EXCEPTION) {
         throw new Exception(EXCEPTION.body)
       }
     }
 
-    sb.service("/query") {ctx, req ->
+    sb.service("/query") { ctx, req ->
       controller(QUERY_PARAM) {
         HttpResponse.of(HttpStatus.valueOf(QUERY_PARAM.status), MediaType.PLAIN_TEXT_UTF_8, "some=${QueryParams.fromQueryString(ctx.query()).get("some")}")
       }
     }
 
-    sb.service("/path/:id/param") {ctx, req ->
+    sb.service("/path/:id/param") { ctx, req ->
       controller(PATH_PARAM) {
         HttpResponse.of(HttpStatus.valueOf(PATH_PARAM.status), MediaType.PLAIN_TEXT_UTF_8, ctx.pathParam("id"))
       }
