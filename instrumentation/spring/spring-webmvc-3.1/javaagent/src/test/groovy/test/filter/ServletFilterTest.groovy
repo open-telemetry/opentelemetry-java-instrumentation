@@ -85,12 +85,12 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    if (endpoint == PATH_PARAM) {
-      return "/path/{id}/param"
-    } else if (endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND) {
-      return "/error"
+    switch (endpoint) {
+      case PATH_PARAM:
+        return getContextPath() + "/path/{id}/param"
+      default:
+        return super.expectedServerSpanName(endpoint)
     }
-    return endpoint.resolvePath(address).path
   }
 
   @Override
