@@ -8,7 +8,6 @@ package client
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.time.Duration
-import java.util.function.Consumer
 import ratpack.exec.Operation
 import ratpack.exec.Promise
 import ratpack.http.client.HttpClient
@@ -41,10 +40,10 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
-  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     exec.execute(Operation.of {
       internalSendRequest(method, uri, headers).result {
-        callback.accept(it.value)
+        requestResult.complete(it.value)
       }
     })
   }
