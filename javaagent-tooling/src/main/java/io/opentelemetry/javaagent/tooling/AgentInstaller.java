@@ -89,7 +89,6 @@ public class AgentInstaller {
     Config config = Config.get();
     if (config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
       Iterable<ComponentInstaller> componentInstallers = loadComponentProviders();
-      installComponentsBeforeByteBuddy(componentInstallers, config);
       installBytebuddyAgent(inst, componentInstallers);
     } else {
       log.debug("Tracing is disabled, not installing instrumentations.");
@@ -105,6 +104,9 @@ public class AgentInstaller {
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
       Instrumentation inst, Iterable<ComponentInstaller> componentInstallers) {
+
+    Config config = Config.get();
+    installComponentsBeforeByteBuddy(componentInstallers, config);
 
     INSTRUMENTATION = inst;
 
@@ -128,7 +130,6 @@ public class AgentInstaller {
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), GlobalClassloaderIgnoresMatcher.skipClassLoader(ignoreMatcherProvider));
 
-    Config config = Config.get();
     ignoredAgentBuilder =
         ignoredAgentBuilder.or(
             globalIgnoresMatcher(
