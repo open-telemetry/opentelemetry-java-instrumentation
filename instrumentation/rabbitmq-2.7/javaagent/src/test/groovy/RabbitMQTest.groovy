@@ -114,6 +114,7 @@ class RabbitMQTest extends AgentInstrumentationSpecification {
 
     and:
     assertTraces(3) {
+      traces.subList(1, 3).sort(orderByRootSpanKind(PRODUCER, CLIENT))
       trace(0, 1) {
         rabbitSpan(it, 0, null, null, null, "queue.declare")
       }
@@ -278,6 +279,7 @@ class RabbitMQTest extends AgentInstrumentationSpecification {
 
     and:
     assertTraces(3) {
+      traces.subList(1, 3).sort(orderByRootSpanKind(PRODUCER, CLIENT))
       trace(0, 1) {
         rabbitSpan(it, null, null, null, "queue.declare")
       }
