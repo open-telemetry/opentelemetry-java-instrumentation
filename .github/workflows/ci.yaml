@@ -84,7 +84,11 @@ jobs:
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }}
+        uses: nick-invision/retry@v2.4.0
+        with:
+          timeout_minutes: 45
+          max_attempts: 3
+          command: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }}
 
   test:
     runs-on: ubuntu-latest

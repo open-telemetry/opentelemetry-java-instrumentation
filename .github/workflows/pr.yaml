@@ -127,7 +127,11 @@ jobs:
           job-id: smokeTests
 
       - name: Test
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }}
+        uses: nick-invision/retry@v2.4.0
+        with:
+          timeout_minutes: 45
+          max_attempts: 3
+          command: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }}
 
   setup-muzzle-matrix:
     runs-on: ubuntu-latest
