@@ -12,8 +12,8 @@ import com.opensymphony.xwork2.ActionProxy;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -50,8 +50,8 @@ public class Struts2Tracer extends BaseTracer {
       return;
     }
 
-    ServletSpanNaming servletSpanNaming = ServletSpanNaming.from(context);
-    if (!servletSpanNaming.shouldControllerUpdateServerSpanName()) {
+    ServerSpanNaming serverSpanNaming = ServerSpanNaming.from(context);
+    if (!serverSpanNaming.shouldControllerUpdateServerSpanName()) {
       return;
     }
 
@@ -74,7 +74,7 @@ public class Struts2Tracer extends BaseTracer {
 
     serverSpan.updateName(ServletContextPath.prepend(context, result));
     // prevent servlet integration from doing further updates to server span name
-    servletSpanNaming.setControllerUpdatedServerSpanName();
+    serverSpanNaming.setControllerUpdatedServerSpanName();
   }
 
   @Override

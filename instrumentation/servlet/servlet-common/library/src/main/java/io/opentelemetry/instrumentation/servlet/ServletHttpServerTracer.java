@@ -12,8 +12,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
@@ -48,7 +48,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     if (servlet) {
       // server span name shouldn't be updated when server span was created from a call to Servlet
       // (if created from a call to Filter then name may be updated from updateContext)
-      ServletSpanNaming.from(context).setServletUpdatedServerSpanName();
+      ServerSpanNaming.from(context).setServletUpdatedServerSpanName();
     }
     return addServletContextPath(context, request);
   }
@@ -56,7 +56,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   @Override
   protected Context customizeContext(Context context, REQUEST request) {
     // add context for tracking whether servlet instrumentation has updated the server span name
-    context = ServletSpanNaming.init(context);
+    context = ServerSpanNaming.init(context);
     // add context for current request's context path
     return addServletContextPath(context, request);
   }

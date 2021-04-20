@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.servlet.v3_0;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.instrumentation.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.javax.JavaxServletHttpServerTracer;
@@ -119,12 +119,12 @@ public class Servlet3HttpServerTracer extends JavaxServletHttpServerTracer<HttpS
       Context context, Object servletOrFilter, HttpServletRequest request) {
     Span serverSpan = ServerSpan.fromContextOrNull(context);
     if (serverSpan != null) {
-      ServletSpanNaming servletSpanNaming = ServletSpanNaming.from(context);
-      if (servletSpanNaming.shouldServletUpdateServerSpanName()) {
+      ServerSpanNaming serverSpanNaming = ServerSpanNaming.from(context);
+      if (serverSpanNaming.shouldServletUpdateServerSpanName()) {
         String spanName = getSpanNameFromPath(servletOrFilter, request);
         if (spanName != null) {
           serverSpan.updateName(spanName);
-          servletSpanNaming.setServletUpdatedServerSpanName();
+          serverSpanNaming.setServletUpdatedServerSpanName();
         }
       }
     }

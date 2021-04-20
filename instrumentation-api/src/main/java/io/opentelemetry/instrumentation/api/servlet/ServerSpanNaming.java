@@ -11,24 +11,24 @@ import io.opentelemetry.context.ContextKey;
 /**
  * Helper container for tracking whether servlet integration should update server span name or not.
  */
-public abstract class ServletSpanNaming {
+public abstract class ServerSpanNaming {
 
-  private static final ContextKey<ServletSpanNaming> CONTEXT_KEY =
+  private static final ContextKey<ServerSpanNaming> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-span-naming-key");
 
   public static Context init(Context context) {
     if (context.get(CONTEXT_KEY) != null) {
       return context;
     }
-    return context.with(CONTEXT_KEY, new DefaultServletSpanNaming());
+    return context.with(CONTEXT_KEY, new DefaultServerSpanNaming());
   }
 
-  public static ServletSpanNaming from(Context context) {
-    ServletSpanNaming servletSpanNaming = context.get(CONTEXT_KEY);
-    return servletSpanNaming == null ? NoopServletSpanNaming.INSTANCE : servletSpanNaming;
+  public static ServerSpanNaming from(Context context) {
+    ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
+    return serverSpanNaming == null ? NoopServerSpanNaming.INSTANCE : serverSpanNaming;
   }
 
-  private ServletSpanNaming() {}
+  private ServerSpanNaming() {}
 
   /**
    * This should be called before servlet instrumentation updates the server span name. If it
@@ -50,7 +50,7 @@ public abstract class ServletSpanNaming {
   /** This should be called after controller instrumentation updates the server span name. */
   public abstract void setControllerUpdatedServerSpanName();
 
-  private static class DefaultServletSpanNaming extends ServletSpanNaming {
+  private static class DefaultServerSpanNaming extends ServerSpanNaming {
 
     private volatile boolean servletUpdatedServerSpanName;
     private volatile boolean controllerUpdatedServerSpanName;
@@ -77,9 +77,9 @@ public abstract class ServletSpanNaming {
     }
   }
 
-  private static class NoopServletSpanNaming extends ServletSpanNaming {
+  private static class NoopServerSpanNaming extends ServerSpanNaming {
 
-    private static final ServletSpanNaming INSTANCE = new NoopServletSpanNaming();
+    private static final ServerSpanNaming INSTANCE = new NoopServerSpanNaming();
 
     @Override
     public boolean shouldServletUpdateServerSpanName() {
