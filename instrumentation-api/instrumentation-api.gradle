@@ -35,3 +35,11 @@ dependencies {
   testImplementation deps.awaitility
   testImplementation deps.opentelemetrySdkTesting
 }
+
+task createVersionFile {
+  def dir = 'src/main/resources/io/opentelemetry/instrumentation/api'
+  file(dir).mkdirs()
+  new File(projectDir, "${dir}/instrumentation-version.txt").text = "${project.version}"
+}
+
+jar.dependsOn createVersionFile
