@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -121,7 +122,7 @@ class RequestDispatcherTest extends AgentInstrumentationSpecification {
         span(1) {
           name "TestDispatcher.$operation"
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(ex.class, ex.message)
         }
         basicSpan(it, 2, "$operation-child", span(1))

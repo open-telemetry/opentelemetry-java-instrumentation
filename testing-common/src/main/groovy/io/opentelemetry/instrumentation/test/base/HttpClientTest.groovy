@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.test.base
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicClientSpan
@@ -27,12 +28,13 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
-import java.util.function.Consumer
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.function.Supplier
 import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
-import spock.util.concurrent.BlockingVariable
 
 @Unroll
 abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
@@ -101,9 +103,56 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   // ideally private, but then groovy closures in this class cannot find them
-  final void doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
+  final RequestResult doRequestWithCallback(String method, URI uri, Map<String, String> headers = [:],
+      Runnable callback) {
     def request = buildRequest(method, uri, headers)
-    sendRequestWithCallback(request, method, uri, headers, callback)
+    def requestResult = new RequestResult(callback)
+    sendRequestWithCallback(request, method, uri, headers, requestResult)
+    return requestResult
+  }
+
+  /**
+   * Helper class for capturing result of asynchronous request and running a callback when result
+   * is received.
+   */
+  static class RequestResult {
+    private static final long timeout = 10_000
+    private final CountDownLatch valueReady = new CountDownLatch(1)
+    private final Runnable callback
+    private int status
+    private Throwable throwable
+
+    RequestResult(Runnable callback) {
+      this.callback = callback
+    }
+
+    void complete(int status) {
+      complete({ status }, null)
+    }
+
+    void complete(Throwable throwable) {
+      complete(null, throwable)
+    }
+
+    void complete(Supplier<Integer> status, Throwable throwable) {
+      if (throwable != null) {
+        this.throwable = throwable
+      } else {
+        this.status = status.get()
+      }
+      callback.run()
+      valueReady.countDown()
+    }
+
+    int get() {
+      if (!valueReady.await(timeout, TimeUnit.MILLISECONDS)) {
+        throw new TimeoutException("Timed out waiting for response in " + timeout + "ms")
+      }
+      if (throwable != null) {
+        throw throwable
+      }
+      return status
+    }
   }
 
   /**
@@ -154,27 +203,33 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    * the context is propagated correctly to such callbacks.
    *
    * @Override
-   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+   * void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
    *   // Hypothetical client accepting a callback
    *   client.executeAsync(request) {
-   *     callback.accept(it.statusCode())
+   *     void success(Response response) {
+   *       requestResult.complete(response.statusCode())
+   *     }
+   *     void failure(Throwable throwable) {
+   *       requestResult.complete(throwable)
+   *     }
    *   }
    *
    *   // Hypothetical client returning a CompletableFuture
-   *   client.executeAsync(request).thenAccept {
-   *     callback.accept(it.statusCode())
+   *   client.executeAsync(request).whenComplete { response, throwable ->
+   *     requestResult.complete({ response.statusCode() }, throwable)
    *   }
    * }
    *
    * If the client offers no APIs that accept callbacks, then this method should not be implemented
    * and instead, {@link #testCallback} should be implemented to return false.
    */
-  void sendRequestWithCallback(REQUEST request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(REQUEST request, String method, URI uri, Map<String, String> headers,
+        RequestResult requestResult) {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException()
   }
 
-  Integer statusOnRedirectError() {
+  Integer responseCodeOnRedirectError() {
     return null
   }
 
@@ -188,10 +243,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "basic #method request #url"() {
     when:
-    def status = doRequest(method, url)
+    def responseCode = doRequest(method, url)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
         clientSpan(it, 0, null, method, url)
@@ -208,12 +263,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "basic #method request with parent"() {
     when:
-    def status = runUnderTrace("parent") {
+    def responseCode = runUnderTrace("parent") {
       doRequest(method, server.address.resolve("/success"))
     }
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent")
@@ -231,12 +286,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testWithClientParent())
 
     when:
-    def status = runUnderParentClientSpan {
+    def responseCode = runUnderParentClientSpan {
       doRequest(method, server.address.resolve("/success"))
     }
 
     then:
-    status == 200
+    responseCode == 200
     // there should be 2 separate traces since the nested CLIENT span is suppressed
     // (and the span context propagation along with it)
     assertTraces(2) {
@@ -259,12 +314,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "trace request without propagation"() {
     when:
-    def status = runUnderTrace("parent") {
+    def responseCode = runUnderTrace("parent") {
       doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"])
     }
 
     then:
-    status == 200
+    responseCode == 200
     // only one trace (client).
     assertTraces(1) {
       trace(0, 2 + extraClientSpans()) {
@@ -282,18 +337,15 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testCallback())
     assumeTrue(testCallbackWithParent())
 
-    def status = new BlockingVariable<Integer>()
-
     when:
-    runUnderTrace("parent") {
+    def requestResult = runUnderTrace("parent") {
       doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
         runUnderTrace("child") {}
-        status.set(it)
       }
     }
 
     then:
-    status.get() == 200
+    requestResult.get() == 200
     // only one trace (client).
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
@@ -311,17 +363,14 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     given:
     assumeTrue(testCallback())
 
-    def status = new BlockingVariable<Integer>()
-
     when:
-    doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+    def requestResult = doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
       runUnderTrace("callback") {
       }
-      status.set(it)
     }
 
     then:
-    status.get() == 200
+    requestResult.get() == 200
     // only one trace (client).
     assertTraces(2) {
       trace(0, 1 + extraClientSpans()) {
@@ -345,10 +394,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = server.address.resolve("/redirect")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -367,10 +416,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = server.address.resolve("/another-redirect")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 4 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -399,7 +448,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     and:
     assertTraces(1) {
       trace(0, 1 + extraClientSpans() + maxRedirects()) {
-        clientSpan(it, 0, null, method, uri, statusOnRedirectError(), thrownException)
+        clientSpan(it, 0, null, method, uri, responseCodeOnRedirectError(), thrownException)
         def start = 1 + extraClientSpans()
         for (int i = start; i < maxRedirects() + start; i++) {
           serverSpan(it, i, span(extraClientSpans()))
@@ -418,10 +467,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     when:
 
-    def status = doRequest(method, uri, [(BASIC_AUTH_KEY): BASIC_AUTH_VAL])
+    def responseCode = doRequest(method, uri, [(BASIC_AUTH_KEY): BASIC_AUTH_VAL])
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -439,10 +488,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testReusedRequest())
 
     when:
-    def status = doReusedRequest(method, url)
+    def responseCode = doReusedRequest(method, url)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(2) {
       trace(0, 2 + extraClientSpans()) {
         clientSpan(it, 0, null, method, url)
@@ -479,6 +528,39 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       trace(0, 2 + extraClientSpans()) {
         basicSpan(it, 0, "parent", null, thrownException)
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
+      }
+    }
+
+    where:
+    method = "GET"
+  }
+
+  def "connection error (unopened port) with callback"() {
+    given:
+    assumeTrue(testConnectionFailure())
+    assumeTrue(testCallback())
+    assumeTrue(testErrorWithCallback())
+    def uri = new URI("http://localhost:$UNUSABLE_PORT/")
+
+    when:
+    def requestResult = runUnderTrace("parent") {
+      doRequestWithCallback(method, uri, [:]) {
+        runUnderTrace("callback") {
+        }
+      }
+    }
+    requestResult.get()
+
+    then:
+    def ex = thrown(Exception)
+    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
+
+    and:
+    assertTraces(1) {
+      trace(0, 3 + extraClientSpans()) {
+        basicSpan(it, 0, "parent")
+        clientSpan(it, 1, span(0), method, uri, null, thrownException)
+        basicSpan(it, 2, "callback", span(0))
       }
     }
 
@@ -543,10 +625,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = new URI("https://www.google.com/")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 1 + extraClientSpans()) {
         clientSpan(it, 0, null, method, uri)
@@ -664,7 +746,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null, String httpFlavor = "1.1") {
+  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer responseCode = 200, Throwable exception = null, String httpFlavor = "1.1") {
     def userAgent = userAgent()
     def extraAttributes = extraAttributes()
     trace.span(index) {
@@ -675,8 +757,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       }
       name expectedOperationName(method)
       kind CLIENT
-      errored exception != null
       if (exception) {
+        status ERROR
         errorEvent(exception.class, exception.message)
       }
       attributes {
@@ -698,8 +780,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         if (userAgent) {
           "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith(userAgent) }
         }
-        if (status) {
-          "${SemanticAttributes.HTTP_STATUS_CODE.key}" status
+        if (responseCode) {
+          "${SemanticAttributes.HTTP_STATUS_CODE.key}" responseCode
         }
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
@@ -727,7 +809,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     traces.span(index) {
       name "test-http-server"
       kind SERVER
-      errored false
       if (parentSpan == null) {
         hasNoParent()
       } else {
@@ -788,6 +869,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     // FIXME: this hack is here because callback with parent is broken in play-ws when the stream()
     // function is used.  There is no way to stop a test from a derived class hence the flag
     true
+  }
+
+  boolean testErrorWithCallback() {
+    return true
   }
 
   URI removeFragment(URI uri) {

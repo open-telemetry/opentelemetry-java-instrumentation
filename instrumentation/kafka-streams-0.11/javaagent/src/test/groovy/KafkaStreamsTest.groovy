@@ -130,7 +130,6 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
         span(0) {
           name STREAM_PENDING + " send"
           kind PRODUCER
-          errored false
           hasNoParent()
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -142,7 +141,6 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
         span(1) {
           name STREAM_PENDING + " process"
           kind CONSUMER
-          errored false
           childOf span(0)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -159,7 +157,6 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
         span(2) {
           name STREAM_PENDING + " process"
           kind CONSUMER
-          errored false
           childOf span(0)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -175,7 +172,6 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
         span(3) {
           name STREAM_PROCESSED + " send"
           kind PRODUCER
-          errored false
           childOf span(2)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"
@@ -187,7 +183,6 @@ class KafkaStreamsTest extends AgentInstrumentationSpecification {
         span(4) {
           name STREAM_PROCESSED + " process"
           kind CONSUMER
-          errored false
           childOf span(3)
           attributes {
             "${SemanticAttributes.MESSAGING_SYSTEM.key}" "kafka"

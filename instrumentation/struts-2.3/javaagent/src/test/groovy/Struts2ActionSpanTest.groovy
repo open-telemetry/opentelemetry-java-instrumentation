@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
@@ -11,7 +12,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
-import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -77,9 +78,9 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
   void handlerSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
     trace.span(index) {
       name "GreetingAction.${endpoint.name().toLowerCase()}"
-      kind SpanKind.INTERNAL
-      errored endpoint == EXCEPTION
+      kind INTERNAL
       if (endpoint == EXCEPTION) {
+        status StatusCode.ERROR
         errorEvent(Exception, EXCEPTION.body)
       }
       def expectedMethodName = endpoint.name().toLowerCase()

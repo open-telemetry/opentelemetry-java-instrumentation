@@ -7,7 +7,6 @@ package client
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.function.Consumer
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.WebClient
 
@@ -26,10 +25,12 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
   }
 
   @Override
-  void sendRequestWithCallback(WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    request.exchange().subscribe {
-      callback.accept(it.statusCode().value())
-    }
+  void sendRequestWithCallback(WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+    request.exchange().subscribe({
+      requestResult.complete(it.statusCode().value())
+    }, {
+      requestResult.complete(it)
+    })
   }
 
   @Override

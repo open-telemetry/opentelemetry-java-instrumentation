@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
@@ -66,10 +67,10 @@ class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest()).get()
 
-    def status = result.status
+    def clusterHealthStatus = result.status
 
     expect:
-    status.name() == "GREEN"
+    clusterHealthStatus.name() == "GREEN"
 
     assertTraces(1) {
       trace(0, 1) {
@@ -100,7 +101,7 @@ class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "GetAction"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent IndexNotFoundException, ~/no such index( \[invalid-index\])?/
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"

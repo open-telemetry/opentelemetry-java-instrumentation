@@ -71,7 +71,6 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
         span(0) {
           name "AUTH"
           kind CLIENT
-          errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"

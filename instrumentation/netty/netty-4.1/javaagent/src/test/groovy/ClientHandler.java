@@ -8,7 +8,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /*
 Bridges from async Netty world to the sync world of our http client tests.
@@ -16,11 +15,9 @@ When request initiated by a test gets a response, calls a given callback and com
 future with response's status code.
 */
 public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
-  private final Consumer<Integer> callback;
   private final CompletableFuture<Integer> responseCode;
 
-  public ClientHandler(Consumer<Integer> callback, CompletableFuture<Integer> responseCode) {
-    this.callback = callback;
+  public ClientHandler(CompletableFuture<Integer> responseCode) {
     this.responseCode = responseCode;
   }
 
@@ -29,10 +26,6 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
     if (msg instanceof HttpResponse) {
       ctx.pipeline().remove(this);
 
-      if (callback != null) {
-        callback.accept(((HttpResponse) msg).status().code());
-      }
-
       HttpResponse response = (HttpResponse) msg;
       responseCode.complete(response.getStatus().code());
     }
@@ -40,7 +33,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-    cause.printStackTrace();
+    responseCode.completeExceptionally(cause);
     ctx.close();
   }
 }

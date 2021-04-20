@@ -5,7 +5,6 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.function.Consumer
 import reactor.netty.http.client.HttpClient
 
 abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpClient.ResponseReceiver> implements AgentTestTrait {
@@ -46,9 +45,9 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
-  void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     request.response().subscribe {
-      callback.accept(it.status().code())
+      requestResult.complete(it.status().code())
     }
   }
 

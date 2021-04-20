@@ -39,7 +39,7 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpURLConnecti
   }
 
   @Override
-  Integer statusOnRedirectError() {
+  Integer responseCodeOnRedirectError() {
     return 302
   }
 

@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -18,7 +19,6 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
@@ -49,13 +49,18 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
   }
 
   @Override
-  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(Request request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     // TODO(anuraaga): Do we also need to test ListenableFuture callback?
     client.executeRequest(request, new AsyncCompletionHandler<Void>() {
       @Override
       Void onCompleted(Response response) throws Exception {
-        callback.accept(response.statusCode)
+        requestResult.complete(response.statusCode)
         return null
+      }
+
+      @Override
+      void onThrowable(Throwable throwable) {
+        requestResult.complete(throwable)
       }
     })
   }
@@ -105,7 +110,7 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
           name "CONNECT"
           kind CLIENT
           childOf span(0)
-          errored true
+          status ERROR
           Class errorClass = ConnectException
           try {
             errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')

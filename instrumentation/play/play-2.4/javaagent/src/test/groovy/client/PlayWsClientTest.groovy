@@ -8,7 +8,6 @@ package client
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CompletionStage
-import java.util.function.Consumer
 import play.libs.ws.WS
 import play.libs.ws.WSRequest
 import play.libs.ws.WSResponse
@@ -39,9 +38,9 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   }
 
   @Override
-  void sendRequestWithCallback(WSRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    internalSendRequest(request, method).thenAccept {
-      callback.accept(it.status)
+  void sendRequestWithCallback(WSRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+    internalSendRequest(request, method).whenComplete {response, throwable ->
+      requestResult.complete({ response.status }, throwable)
     }
   }
 

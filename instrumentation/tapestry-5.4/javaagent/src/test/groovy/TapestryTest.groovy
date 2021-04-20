@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
 import io.opentelemetry.api.trace.SpanKind
@@ -123,7 +124,7 @@ class TapestryTest extends AgentInstrumentationSpecification implements HttpServ
           hasNoParent()
           kind SpanKind.SERVER
           name getContextPath() + "/Index"
-          errored true
+          status ERROR
         }
         basicSpan(it, 1, "activate/Index", span(0))
         basicSpan(it, 2, "action/Index:exception", span(0), new IllegalStateException("expected"))
