@@ -13,10 +13,13 @@ dependencies {
   implementation project(':instrumentation:reactor-3.1:library')
 
   testLibrary group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
+  testLibrary group: 'io.projectreactor', name: 'reactor-test', version: '3.1.0.RELEASE'
 
   testImplementation project(':instrumentation:reactor-3.1:testing')
+  testImplementation deps.opentelemetryExtAnnotations
 
   latestDepTestLibrary group: 'io.projectreactor', name: 'reactor-core', version: '3.+'
+  latestDepTestLibrary group: 'io.projectreactor', name: 'reactor-test', version: '3.+'
   // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
   latestDepTestLibrary group: 'io.micrometer', name: 'micrometer-core', version: '1.+'
 }
