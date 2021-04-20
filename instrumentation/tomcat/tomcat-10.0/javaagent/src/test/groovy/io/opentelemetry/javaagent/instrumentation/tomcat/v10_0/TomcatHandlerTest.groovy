@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
@@ -31,9 +32,13 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
   }
 
   @Override
-  boolean testNotFound() {
-    // currently span name is /notFound which indicates it won't be low-cardinality
-    false
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    switch (endpoint) {
+      case NOT_FOUND:
+        return "HTTP GET"
+      default:
+        return endpoint.resolvePath(address).path
+    }
   }
 
   @Override
@@ -48,9 +53,11 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
     Tomcat.addServlet(ctx, "testServlet", new TestServlet())
 
     // Mapping servlet to /* will result in all requests have a name of just a context.
-    ServerEndpoint.values().each {
-      ctx.addServletMappingDecoded(it.path, "testServlet")
-    }
+    ServerEndpoint.values().toList().stream()
+      .filter { it != NOT_FOUND }
+      .forEach {
+        ctx.addServletMappingDecoded(it.path, "testServlet")
+      }
 
     (tomcat.host as StandardHost).errorReportValveClass = ErrorHandlerValve.name
 
@@ -66,7 +73,7 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
 
   @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
-    endpoint == REDIRECT || endpoint == ERROR
+    endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND
   }
 
   @Override
@@ -76,6 +83,7 @@ class TomcatHandlerTest extends HttpServerTest<Tomcat> implements AgentTestTrait
         redirectSpan(trace, index, parent)
         break
       case ERROR:
+      case NOT_FOUND:
         sendErrorSpan(trace, index, parent)
         break
     }
