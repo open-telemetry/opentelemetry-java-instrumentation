@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.osgi;
+package io.opentelemetry.javaagent.instrumentation.internal.osgi;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -34,7 +34,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class EclipseOsgiInstrumentationModule extends InstrumentationModule {
   public EclipseOsgiInstrumentationModule() {
-    super("eclipse-osgi");
+    super("internal-eclipse-osgi");
   }
 
   @Override

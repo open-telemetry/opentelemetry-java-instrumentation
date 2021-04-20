@@ -25,6 +25,7 @@ dependencies {
   // FIXME: we should enable this, but currently this fails tests for google http client
   //testImplementation project(':instrumentation:http-url-connection:javaagent')
   implementation project(':instrumentation:internal:internal-class-loader:javaagent')
+  implementation project(':instrumentation:internal:internal-eclipse-osgi-3.6:javaagent')
   implementation project(':instrumentation:internal:internal-proxy:javaagent')
   implementation project(':instrumentation:internal:internal-url-class-loader:javaagent')
 
