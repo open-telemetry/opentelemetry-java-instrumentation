@@ -13,4 +13,6 @@ dependencies {
   implementation project(':javaagent-api')
   implementation project(':instrumentation-api')
   implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
+
+  compileOnly group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '8.0.0.v20110901'
 }

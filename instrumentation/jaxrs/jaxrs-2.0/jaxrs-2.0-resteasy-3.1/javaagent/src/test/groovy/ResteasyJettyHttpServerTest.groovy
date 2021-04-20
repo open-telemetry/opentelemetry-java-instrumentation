@@ -3,5 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-class WildflyRestTest extends ArquillianRestTest {
+class ResteasyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
+
 }

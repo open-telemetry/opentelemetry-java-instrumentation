@@ -190,6 +190,7 @@ public class GlobalIgnoresMatcher extends ElementMatcher.Junction.AbstractBase<T
         || name.contains(".asm.")
         || name.contains("$__sisu")
         || name.contains("$$EnhancerByProxool$$")
+        || name.contains("__EJB31_Generated__") // glassfish ejb proxy
         || name.startsWith("org.springframework.core.$Proxy")) {
       return true;
     }

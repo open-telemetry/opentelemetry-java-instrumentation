@@ -7,11 +7,19 @@ muzzle {
     group = "org.apache.cxf"
     module = "cxf-rt-frontend-jaxrs"
     versions = "[3.2,)"
+    extraDependency "javax.servlet:javax.servlet-api:3.1.0"
+  }
+  pass {
+    group = "org.apache.tomee"
+    module = "openejb-cxf-rs"
+    versions = "(7,)"
+    extraDependency "javax.servlet:javax.servlet-api:3.1.0"
   }
 }
 
 dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
   library group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxrs', version: '3.2.0'
 
   implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
@@ -21,6 +29,7 @@ dependencies {
 
   testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing')
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
+  testImplementation group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '9.4.6.v20170531'
 
   testLibrary group: 'org.apache.cxf', name: 'cxf-rt-transports-http-jetty', version: '3.2.0'
   testLibrary group: 'org.apache.cxf', name: 'cxf-rt-ws-policy', version: '3.2.0'

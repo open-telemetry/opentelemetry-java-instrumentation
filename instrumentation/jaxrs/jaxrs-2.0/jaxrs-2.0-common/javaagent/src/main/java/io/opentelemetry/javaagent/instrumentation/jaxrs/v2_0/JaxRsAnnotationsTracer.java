@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.jaxrs.JaxrsContextPath;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
@@ -66,6 +67,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     // empty when method and class don't have a jax-rs path annotation, this can happen when
     // creating an "abort" span, see RequestContextHelper.
     if (!pathBasedSpanName.isEmpty()) {
+      pathBasedSpanName = JaxrsContextPath.prepend(context, pathBasedSpanName);
       pathBasedSpanName = ServletContextPath.prepend(context, pathBasedSpanName);
     }
     if (serverSpan == null) {
