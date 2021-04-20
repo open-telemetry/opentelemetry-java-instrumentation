@@ -45,7 +45,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       case PATH_PARAM:
         return getContextPath() + "/path/:id/param"
       case NOT_FOUND:
-        return getContextPath() + "/**"
+        return getContextPath() + "/*"
       default:
         return endpoint.resolvePath(address).path
     }
