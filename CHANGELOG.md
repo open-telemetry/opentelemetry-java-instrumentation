@@ -2,6 +2,8 @@
 
 ## Unreleased:
 
+## Version 1.1.0 - 2021-04-14
+
 ### ☢️ Breaking changes
 
 - Update servlet attribute names for log injection, from `traceId` and `spanId` to `trace_id` and
@@ -94,42 +96,9 @@
 
 ### 🧰 Tooling
 
-- Run smoke tests on Windows too!
-  ([#2568](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2568),
-   [#2621](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2621),
-   [#2617](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2617))
-- Added concurrent http client test with connection reuse
-  ([#2550](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2550),
-   [#2630](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2630),
-   [#2647](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2647))
-- Verify in smoke tests that runtime metrics are exported
-  ([#2603](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2603))
-- Remove JCenter which is about to be sunset
-  ([#2387](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2387))
-- Make sure muzzle build-time check actually validates anything
-  ([#2599](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2599))
-- Use Caffeine for weak maps
-  ([#2601](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2601))
-- Reimplement finding open ports
-  ([#2629](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2629))
 - Make muzzle reference creation package(s) configurable
   ([#2615](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2615))
+- Instrumentations now can skip defining context store manually
+  ([#2775](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2775))
 - New Instrumenter API
   ([#2596](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2596))
-- Added Concurrent server test
-  ([#2680](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2680),
-   [#2750](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2750),
-   [#2749](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2749))
-- Added smoke tests for Tomcat 10 and Jetty 11 (Servlet API 5)
-  ([#2703](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2703),
-   [#2723](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2723))
-- Add -Werror flag to the build
-  ([#2712](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2712))
-- Reduce test flakiness
-  ([#2738](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2738),
-   [#2728](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2728),
-   [#2754](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2754),
-   [#2753](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2753),
-   [#2759](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2759))
-- Split HttpClientTest execution methods for sync and callback
-  ([#2675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2675))
