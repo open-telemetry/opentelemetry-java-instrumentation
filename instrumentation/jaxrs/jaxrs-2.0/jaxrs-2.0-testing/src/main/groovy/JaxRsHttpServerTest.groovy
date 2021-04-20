@@ -24,6 +24,7 @@ import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.Response
 import spock.lang.Unroll
+import test.JaxRsTestResource
 
 abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements AgentTestTrait {
   @Unroll
@@ -225,7 +226,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
       }
       childOf((SpanData) parent)
       attributes {
-        "${SemanticAttributes.CODE_NAMESPACE.key}" "JaxRsTestResource"
+        "${SemanticAttributes.CODE_NAMESPACE.key}" "test.JaxRsTestResource"
         "${SemanticAttributes.CODE_FUNCTION.key}" methodName
         if (isCancelled) {
           "jaxrs.canceled" true

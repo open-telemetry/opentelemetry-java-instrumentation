@@ -6,6 +6,7 @@
 import javax.servlet.ServletContextEvent
 import javax.servlet.ServletContextListener
 import org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer
+import test.JaxRsApplicationPathTestApplication
 
 // ServletContainerInitializer isn't automatically called due to the way this test is set up
 // so we call it ourself
