@@ -48,10 +48,14 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   }
 
   // compilation fails with @Override annotation on this method (groovy quirk?)
-  void sendRequestWithCallback(T request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    executeRequestWithCallback(request, uri) {
-      it.entity?.content?.close() // Make sure the connection is closed.
-      callback.accept(it.statusLine.statusCode)
+  void sendRequestWithCallback(T request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+    try {
+      executeRequestWithCallback(request, uri) {
+        it.entity?.content?.close() // Make sure the connection is closed.
+        requestResult.complete(it.statusLine.statusCode)
+      }
+    } catch (Throwable throwable) {
+      requestResult.complete(throwable)
     }
   }
 

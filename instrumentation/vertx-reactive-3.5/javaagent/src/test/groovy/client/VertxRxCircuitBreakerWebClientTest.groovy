@@ -8,6 +8,7 @@ package client
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.vertx.circuitbreaker.CircuitBreakerOptions
+import io.vertx.core.AsyncResult
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.client.WebClientOptions
@@ -45,14 +46,17 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
     // VertxRx doesn't seem to provide a synchronous API at all for circuit breaker. Bridge through
     // a callback.
     CompletableFuture<Integer> future = new CompletableFuture<>()
-    sendRequestWithCallback(request, method, uri, headers) {
-      future.complete(it)
+    sendRequestWithCallback(request) {
+      if (it.succeeded()) {
+        future.complete(it.result().statusCode())
+      } else {
+        future.completeExceptionally(it.cause())
+      }
     }
     return future.get()
   }
 
-  @Override
-  void sendRequestWithCallback(HttpRequest<?> request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(HttpRequest<?> request, Consumer<AsyncResult> consumer) {
     breaker.executeCommand({ command ->
       request.rxSend().doOnSuccess {
         command.complete(it)
@@ -60,8 +64,19 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
         command.fail(it)
       }.subscribe()
     }, {
-      callback.accept(it.result().statusCode())
+      consumer.accept(it)
     })
+  }
+
+  @Override
+  void sendRequestWithCallback(HttpRequest<?> request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+    sendRequestWithCallback(request) {
+      if (it.succeeded()) {
+        requestResult.complete(it.result().statusCode())
+      } else {
+        requestResult.complete(it.cause())
+      }
+    }
   }
 
   @Override

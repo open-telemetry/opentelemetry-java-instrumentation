@@ -27,7 +27,7 @@ public class HttpHandlerInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(named("org.glassfish.grizzly.http.server.HttpHandler"));
   }
 

@@ -18,7 +18,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
-import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
+import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

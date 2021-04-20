@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RequestInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.ning.http.client.AsyncHttpClient");
   }
 

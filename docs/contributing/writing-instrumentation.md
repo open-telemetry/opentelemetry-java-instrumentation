@@ -106,6 +106,8 @@ can inject byte code to be run after the constructor returns, which would invoke
 `registerInterceptor` and initialize the instrumentation. Often, the code inside the byte code
 decorator will be identical to the one in the test you wrote above - the agent does the work for
 initializing the instrumentation library, so a user doesn't have to.
+You can find a detailed explanation of how to implement a javaagent instrumentation
+[here](writing-instrumentation-module.md).
 
 With that written, let's add tests for the agent instrumentation. We basically want to ensure that
 the instrumentation works without the user knowing about the instrumentation. Add a test that extends
@@ -128,7 +130,7 @@ Ideally javaagent instrumentation is just a thin wrapper over library instrument
 is no need to write unit tests that directly access the javaagent instrumentation classes.
 
 If you still want to write a unit test against javaagent instrumentation, add another module
-named `javaagent-unittests`. Continuing with the example above:
+named `javaagent-unit-tests`. Continuing with the example above:
 
 ```
 instrumentation ->
@@ -136,46 +138,12 @@ instrumentation ->
     yarpc-1.0 ->
         javaagent
             yarpc-1.0-javaagent.gradle
-        javaagent-unittest
-            yarpc-1.0-javaagent-unittest.gradle
+        javaagent-unit-tests
+            yarpc-1.0-javaagent-unit-tests.gradle
         ...
 ```
 
-## Java agent instrumentation gotchas
-
-### Calling Java 8 default methods from advice
-
-If you are instrumenting a pre-Java 8 library, then inlining Java 8 default method calls into that
-library will result in a `java.lang.VerifyError` at runtime, since Java 8 default method invocations
-are not legal in Java 7 (and prior) bytecode.
-
-Because OpenTelemetry API has many common default methods (e.g. `Span.current()`),
-the `javaagent-api` artifact has a class `Java8BytecodeBridge` which provides static methods
-for accessing these default methods from advice.
-
-### Why hard code advice class names?
-
-Implementations of `TypeInstrumentation` will often implement advice classes as static inner classes.
-These classes are referred to by name in the mappings from method descriptor to advice class,
-typically in the `transform()` method.
-
-For instance, this `MyInstrumentationModule` defines a single advice that matches
-on a single `execute` method:
-
-```
-transformers.put(
-  isMethod().and(named("execute")),
-  MyInstrumentationModule.class.getName() + "$WonderfulAdvice");
-```
-
-Simply referring to the inner class and
-calling `getName()` would be easier to read and understand than
-this odd mix of string concatenation...but please NOTE:  **this is intentional**
-and should be maintained.
-
-Instrumentation modules are loaded by the agent's classloader, and this
-string concatenation is an optimization that prevents the actual advice class
-from being loaded.
+## Various instrumentation gotchas
 
 ### Instrumenting code that is not available as a maven dependency
 

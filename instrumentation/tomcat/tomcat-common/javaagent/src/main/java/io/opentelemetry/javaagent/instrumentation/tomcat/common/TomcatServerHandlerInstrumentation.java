@@ -20,16 +20,16 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
   private final String adviceClassName;
-  private final ElementMatcher<? super TypeDescription> requestMatcher;
+  private final ElementMatcher<TypeDescription> requestMatcher;
 
   public TomcatServerHandlerInstrumentation(
-      String adviceClassName, ElementMatcher<? super TypeDescription> requestMatcher) {
+      String adviceClassName, ElementMatcher<TypeDescription> requestMatcher) {
     this.adviceClassName = adviceClassName;
     this.requestMatcher = requestMatcher;
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("org.apache.coyote.Adapter"));
   }
 

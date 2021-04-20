@@ -28,7 +28,7 @@ public class ContinuationInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("ratpack.exec.")
         .<TypeDescription>and(implementsInterface(named("ratpack.exec.internal.Continuation")));
   }

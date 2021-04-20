@@ -21,6 +21,8 @@ public class GrpcInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new GrpcClientBuilderBuildInstrumentation(), new GrpcServerBuilderInstrumentation());
+        new GrpcClientBuilderBuildInstrumentation(),
+        new GrpcContextInstrumentation(),
+        new GrpcServerBuilderInstrumentation());
   }
 }

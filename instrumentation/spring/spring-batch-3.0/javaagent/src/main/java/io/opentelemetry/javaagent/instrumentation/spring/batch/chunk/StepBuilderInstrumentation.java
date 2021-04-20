@@ -24,7 +24,7 @@ import org.springframework.batch.core.step.builder.AbstractTaskletStepBuilder;
 
 public class StepBuilderInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     // Spring Batch Java DSL and XML config
     return named("org.springframework.batch.core.step.builder.AbstractTaskletStepBuilder")
         // JSR-352 XML config

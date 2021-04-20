@@ -14,7 +14,6 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CompletionException
-import java.util.function.Consumer
 import spock.lang.Shared
 
 abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest> {
@@ -46,9 +45,9 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest>
   }
 
   @Override
-  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    client.execute(request).aggregate().thenAccept {
-      callback.accept(it.status().code())
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+    client.execute(request).aggregate().whenComplete {response, throwable ->
+      requestResult.complete({ response.status().code() }, throwable)
     }
   }
 
@@ -68,6 +67,12 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest>
   @Override
   boolean testRemoteConnection() {
     false
+  }
+
+  // TODO: context not propagated to callback
+  @Override
+  boolean testErrorWithCallback() {
+    return false
   }
 
   @Override

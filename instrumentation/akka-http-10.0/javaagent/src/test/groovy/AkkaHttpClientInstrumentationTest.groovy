@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import akka.actor.ActorSystem
 import akka.http.javadsl.Http
@@ -13,7 +14,6 @@ import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.function.Consumer
 import spock.lang.Shared
 
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
@@ -41,9 +41,9 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
   }
 
   @Override
-  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    Http.get(system).singleRequest(request, materializer).thenAccept {
-      callback.accept(it.status().intValue())
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+    Http.get(system).singleRequest(request, materializer).whenComplete {response, throwable ->
+      requestResult.complete({ response.status().intValue() }, throwable)
     }
   }
 
@@ -84,7 +84,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
           hasNoParent()
           name "HTTP request"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent(NullPointerException, e.getMessage())
         }
       }

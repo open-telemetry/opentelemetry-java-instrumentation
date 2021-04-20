@@ -110,6 +110,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return newInstrumenter(InstrumenterConstructor.internal(), SpanKindExtractor.alwaysInternal());
   }
 
+  /**
+   * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
+   * {@code spanKindExtractor} and do no context propagation.
+   */
+  public Instrumenter<REQUEST, RESPONSE> newInstrumenter(
+      SpanKindExtractor<? super REQUEST> spanKindExtractor) {
+    return newInstrumenter(InstrumenterConstructor.internal(), spanKindExtractor);
+  }
+
   private Instrumenter<REQUEST, RESPONSE> newInstrumenter(
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {

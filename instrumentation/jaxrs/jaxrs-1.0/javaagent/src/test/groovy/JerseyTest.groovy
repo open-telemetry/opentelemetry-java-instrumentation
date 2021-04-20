@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderSer
 
 import io.dropwizard.testing.junit.ResourceTestRule
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.junit.ClassRule
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -47,6 +48,8 @@ class JerseyTest extends AgentInstrumentationSpecification {
           childOf span(0)
           name controllerName
           attributes {
+            "${SemanticAttributes.CODE_NAMESPACE.key}" ~/Resource[$]Test*/
+            "${SemanticAttributes.CODE_FUNCTION.key}" "hello"
           }
         }
       }
@@ -83,6 +86,8 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name controller1Name
           kind INTERNAL
           attributes {
+            "${SemanticAttributes.CODE_NAMESPACE.key}" ~/Resource[$]Test*/
+            "${SemanticAttributes.CODE_FUNCTION.key}" "nested"
           }
         }
       }

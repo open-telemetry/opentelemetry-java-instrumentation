@@ -1,0 +1,19 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "io.reactivex.rxjava3"
+    module = "rxjava"
+    versions = "[3.0.0,)"
+    assertInverse true
+  }
+}
+
+dependencies {
+  library group: 'io.reactivex.rxjava3', name: 'rxjava', version: "3.0.0"
+
+  implementation project(":instrumentation:rxjava:rxjava-3.0:library")
+
+  testImplementation deps.opentelemetryExtAnnotations
+  testImplementation project(':instrumentation:rxjava:rxjava-3.0:testing')
+}

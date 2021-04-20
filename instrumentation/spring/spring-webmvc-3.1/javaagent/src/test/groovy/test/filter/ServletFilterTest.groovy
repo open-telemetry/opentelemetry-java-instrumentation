@@ -8,6 +8,7 @@ package test.filter
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
@@ -36,13 +37,13 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
   }
 
   @Override
-  boolean hasHandlerSpan() {
-    false
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
+    endpoint == NOT_FOUND
   }
 
   @Override
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
-    endpoint == ERROR || endpoint == EXCEPTION
+    endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
   }
 
   @Override
@@ -52,7 +53,7 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
 
   @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
-    endpoint == REDIRECT || endpoint == ERROR
+    endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND
   }
 
   @Override
@@ -62,6 +63,7 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
         redirectSpan(trace, index, parent)
         break
       case ERROR:
+      case NOT_FOUND:
         sendErrorSpan(trace, index, parent)
         break
     }
@@ -73,22 +75,11 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
   }
 
   @Override
-  boolean testNotFound() {
-    // FIXME: the instrumentation adds an extra controller span which is not consistent.
-    // Fix tests or remove extra span.
-    false
-  }
-
-  @Override
-  void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint) {
     trace.span(index) {
-      name "TestController.${endpoint.name().toLowerCase()}"
+      name "ResourceHttpRequestHandler.handleRequest"
       kind INTERNAL
-      errored endpoint == EXCEPTION
       childOf((SpanData) parent)
-      if (endpoint == EXCEPTION) {
-        errorEvent(Exception, EXCEPTION.body)
-      }
     }
   }
 
@@ -96,7 +87,7 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
   String expectedServerSpanName(ServerEndpoint endpoint) {
     if (endpoint == PATH_PARAM) {
       return "/path/{id}/param"
-    } else if (endpoint == ERROR || endpoint == EXCEPTION) {
+    } else if (endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND) {
       return "/error"
     }
     return endpoint.resolvePath(address).path
@@ -107,7 +98,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
     trace.span(index) {
       name "ApplicationDispatcher.forward"
       kind INTERNAL
-      errored false
       childOf((SpanData) parent)
       attributes {
       }
@@ -115,7 +105,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
     trace.span(index + 1) {
       name "BasicErrorController.error"
       kind INTERNAL
-      errored false
       childOf(trace.span(index))
       attributes {
       }

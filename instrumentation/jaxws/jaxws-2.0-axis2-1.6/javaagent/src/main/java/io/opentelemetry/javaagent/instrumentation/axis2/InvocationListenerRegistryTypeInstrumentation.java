@@ -20,7 +20,7 @@ import org.apache.axis2.jaxws.registry.InvocationListenerRegistry;
 
 public class InvocationListenerRegistryTypeInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.axis2.jaxws.registry.InvocationListenerRegistry");
   }
 

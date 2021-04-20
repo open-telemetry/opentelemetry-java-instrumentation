@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -49,12 +50,12 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   }
 
   @Override
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
 
   @Override
-  boolean hasExceptionOnServerSpan() {
+  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
     true
   }
 
@@ -73,24 +74,29 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     true
   }
 
+  @Override
   boolean hasErrorPageSpans(ServerEndpoint endpoint) {
     endpoint == NOT_FOUND
   }
 
+  @Override
   int getErrorPageSpansCount(ServerEndpoint endpoint) {
     2
   }
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    if (endpoint == PATH_PARAM) {
-      return getContextPath() + "/path/{id}/param"
-    } else if (endpoint == AUTH_ERROR || endpoint == NOT_FOUND) {
-      return getContextPath() + "/error"
-    } else if (endpoint == LOGIN) {
-      return "HTTP POST"
+    switch (endpoint) {
+      case PATH_PARAM:
+        return getContextPath() + "/path/{id}/param"
+      case AUTH_ERROR:
+      case NOT_FOUND:
+        return getContextPath() + "/error"
+      case LOGIN:
+        return "HTTP POST"
+      default:
+        return super.expectedServerSpanName(endpoint)
     }
-    return super.expectedServerSpanName(endpoint)
   }
 
   def "test spans with auth error"() {
@@ -155,7 +161,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     trace.span(index) {
       name "BasicErrorController.error"
       kind INTERNAL
-      errored false
       attributes {
       }
     }
@@ -167,7 +172,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     trace.span(index) {
       name responseSpanName
       kind INTERNAL
-      errored false
       attributes {
       }
     }
@@ -178,7 +182,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     trace.span(index) {
       name "Render RedirectView"
       kind INTERNAL
-      errored false
       attributes {
         "spring-webmvc.view.type" RedirectView.simpleName
       }
@@ -194,8 +197,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     trace.span(index) {
       name handlerSpanName
       kind INTERNAL
-      errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
+        status StatusCode.ERROR
         errorEvent(Exception, EXCEPTION.body)
       }
       childOf((SpanData) parent)

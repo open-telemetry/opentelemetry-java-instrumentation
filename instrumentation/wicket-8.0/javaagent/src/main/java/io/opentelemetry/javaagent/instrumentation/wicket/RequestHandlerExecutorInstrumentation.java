@@ -28,7 +28,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 public class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.wicket.request.RequestHandlerExecutor");
   }
 

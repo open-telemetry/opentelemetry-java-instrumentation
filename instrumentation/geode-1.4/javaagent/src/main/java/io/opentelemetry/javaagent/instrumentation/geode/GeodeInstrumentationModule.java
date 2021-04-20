@@ -48,7 +48,7 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return hasInterface(named("org.apache.geode.cache.Region"));
     }
 

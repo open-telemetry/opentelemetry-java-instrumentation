@@ -25,7 +25,7 @@ import org.springframework.batch.core.step.builder.StepBuilderHelper;
 
 public class StepBuilderHelperInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.batch.core.step.builder.StepBuilderHelper");
   }
 

@@ -12,17 +12,16 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // TODO: add javadoc
-class SafeExtendsClassMatcher<T extends TypeDescription>
-    extends ElementMatcher.Junction.AbstractBase<T> {
+class SafeExtendsClassMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
 
-  private final ElementMatcher<? super TypeDescription.Generic> matcher;
+  private final ElementMatcher<TypeDescription.Generic> matcher;
 
-  public SafeExtendsClassMatcher(ElementMatcher<? super TypeDescription.Generic> matcher) {
+  public SafeExtendsClassMatcher(ElementMatcher<TypeDescription.Generic> matcher) {
     this.matcher = matcher;
   }
 
   @Override
-  public boolean matches(T target) {
+  public boolean matches(TypeDescription target) {
     // We do not use foreach loop and iterator interface here because we need to catch exceptions
     // in {@code getSuperClass} calls
     TypeDefinition typeDefinition = target;
@@ -48,7 +47,7 @@ class SafeExtendsClassMatcher<T extends TypeDescription>
     if (!(obj instanceof SafeExtendsClassMatcher)) {
       return false;
     }
-    SafeExtendsClassMatcher<?> other = (SafeExtendsClassMatcher<?>) obj;
+    SafeExtendsClassMatcher other = (SafeExtendsClassMatcher) obj;
     return matcher.equals(other.matcher);
   }
 

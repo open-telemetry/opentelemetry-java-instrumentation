@@ -19,11 +19,8 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] additionalHelperClassNames() {
-    return new String[] {
-      "io.opentelemetry.extension.aws.AwsXrayPropagator",
-      "io.opentelemetry.extension.aws.AwsXrayPropagator$1"
-    };
+  public boolean isHelperClass(String className) {
+    return className.startsWith("io.opentelemetry.extension.aws.");
   }
 
   @Override

@@ -31,9 +31,8 @@ public final class MuzzleGradlePluginUtil {
    *   <li>{@code userClassLoader} is not matched by the {@link
    *       InstrumentationModule#classLoaderMatcher()} method
    *   <li>{@link ReferenceMatcher} of any instrumentation module finds any mismatch
-   *   <li>any helper class defined in {@link InstrumentationModule#getMuzzleHelperClassNames()} or
-   *       {@link InstrumentationModule#additionalHelperClassNames()} fails to be injected into
-   *       {@code userClassLoader}
+   *   <li>any helper class defined in {@link InstrumentationModule#getMuzzleHelperClassNames()}
+   *       fails to be injected into {@code userClassLoader}
    * </ol>
    *
    * <p>When {@code assertPass = false} this method behaves in an opposite way: failure in any of

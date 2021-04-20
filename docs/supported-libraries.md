@@ -67,7 +67,7 @@ These are the supported libraries and frameworks:
 | [MyFaces](https://myfaces.apache.org/)                                                                                                | 1.2+ (not including 3.x yet)   |
 | [Netty](https://github.com/netty/netty)                                                                                               | 3.8+                           |
 | [OkHttp](https://github.com/square/okhttp/)                                                                                           | 3.0+                           |
-| [Play](https://github.com/playframework/playframework)                                                                                | 2.3+ (not including 2.8.x yet) |
+| [Play](https://github.com/playframework/playframework)                                                                                | 2.4+ (not including 2.8.x yet) |
 | [Play WS](https://github.com/playframework/play-ws)                                                                                   | 1.0+                           |
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |

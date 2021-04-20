@@ -148,7 +148,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
         span(0) {
           name "SET"
           kind CLIENT
-          errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -191,7 +190,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
         span(0) {
           name "GET"
           kind CLIENT
-          errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -248,7 +246,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
         span(0) {
           name "GET"
           kind CLIENT
-          errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -291,7 +288,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
         span(0) {
           name "RANDOMKEY"
           kind CLIENT
-          errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -352,7 +348,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
         span(0) {
           name "HMSET"
           kind CLIENT
-          errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -373,7 +368,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
         span(0) {
           name "HGETALL"
           kind CLIENT
-          errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"

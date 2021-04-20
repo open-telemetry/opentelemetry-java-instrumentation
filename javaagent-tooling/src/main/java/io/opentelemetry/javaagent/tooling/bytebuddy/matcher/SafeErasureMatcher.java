@@ -28,14 +28,14 @@ class SafeErasureMatcher<T extends TypeDefinition> extends ElementMatcher.Juncti
   private static final Logger log = LoggerFactory.getLogger(SafeErasureMatcher.class);
 
   /** The matcher to apply to the raw type of the matched element. */
-  private final ElementMatcher<? super TypeDescription> matcher;
+  private final ElementMatcher<TypeDescription> matcher;
 
   /**
    * Creates a new erasure matcher.
    *
    * @param matcher The matcher to apply to the raw type.
    */
-  public SafeErasureMatcher(ElementMatcher<? super TypeDescription> matcher) {
+  public SafeErasureMatcher(ElementMatcher<TypeDescription> matcher) {
     this.matcher = matcher;
   }
 

@@ -35,7 +35,7 @@ public class OkHttp2InstrumentationModule extends InstrumentationModule {
 
   public static class OkHttpClientInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("com.squareup.okhttp.OkHttpClient");
     }
 

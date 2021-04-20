@@ -13,7 +13,6 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import java.util.function.Consumer
 import spock.lang.Requires
 import spock.lang.Shared
 
@@ -40,10 +39,10 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
   }
 
   @Override
-  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-      .thenAccept {
-        callback.accept(it.statusCode())
+      .whenComplete {response, throwable ->
+        requestResult.complete({ response.statusCode() }, throwable?.getCause())
       }
   }
 
@@ -65,23 +64,28 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
     false
   }
 
+  // TODO: context not propagated to callback
+  @Override
+  boolean testErrorWithCallback() {
+    return false
+  }
+
   @Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
   def "test https request"() {
     given:
     def uri = new URI("https://www.google.com/")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 200
+    responseCode == 200
     assertTraces(1) {
       trace(0, 1 + extraClientSpans()) {
         span(0) {
           hasNoParent()
           name expectedOperationName(method)
           kind CLIENT
-          errored false
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
@@ -91,7 +95,7 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
             "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
             "${SemanticAttributes.HTTP_METHOD.key}" method
             "${SemanticAttributes.HTTP_FLAVOR.key}" "2.0"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" status
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" responseCode
           }
         }
       }

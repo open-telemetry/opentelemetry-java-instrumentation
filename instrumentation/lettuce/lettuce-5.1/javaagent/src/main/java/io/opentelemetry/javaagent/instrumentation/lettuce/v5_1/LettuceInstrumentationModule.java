@@ -43,7 +43,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
 
   public static class DefaultClientResourcesInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("io.lettuce.core.resource.DefaultClientResources");
     }
 

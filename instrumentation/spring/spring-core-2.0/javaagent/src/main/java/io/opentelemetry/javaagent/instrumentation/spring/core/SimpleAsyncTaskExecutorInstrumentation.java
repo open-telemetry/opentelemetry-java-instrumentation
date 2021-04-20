@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.core.task.SimpleAsyncTaskExecutor");
   }
 
