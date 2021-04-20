@@ -26,7 +26,7 @@ import test.RestApplication
 
 @RunWith(ArquillianSputnik)
 @RunAsClient
-class ArquillianRestTest extends AgentInstrumentationSpecification {
+abstract class ArquillianRestTest extends AgentInstrumentationSpecification {
 
   static OkHttpClient client = OkHttpUtils.client()
 

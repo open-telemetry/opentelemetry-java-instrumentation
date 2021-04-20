@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.jaxrs;
+package io.opentelemetry.javaagent.instrumentation.api.jaxrs;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Helper container for storing context path for jax-rs requests. Jax-rs context path is the path
@@ -15,12 +16,13 @@ import io.opentelemetry.context.ContextKey;
  * io.opentelemetry.instrumentation.api.servlet.ServletContextPath} jax-rs context path and the Path
  * annotation from called method or class.
  */
-public class JaxrsContextPath {
-
-  public static final ContextKey<String> CONTEXT_KEY =
+public final class JaxrsContextPath {
+  private static final ContextKey<String> CONTEXT_KEY =
       ContextKey.named("opentelemetry-jaxrs-context-path-key");
 
-  public static Context init(Context context, String path) {
+  private JaxrsContextPath() {}
+
+  public static @Nullable Context init(Context context, String path) {
     if (path == null || path.isEmpty() || "/".equals(path)) {
       return null;
     }

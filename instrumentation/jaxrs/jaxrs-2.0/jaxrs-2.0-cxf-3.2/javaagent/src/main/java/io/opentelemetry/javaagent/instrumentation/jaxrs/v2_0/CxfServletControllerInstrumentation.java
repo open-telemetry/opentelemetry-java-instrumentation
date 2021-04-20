@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.jaxrs.JaxrsContextPath;
+import io.opentelemetry.javaagent.instrumentation.api.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
@@ -23,7 +23,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CfxServletControllerInstrumentation implements TypeInstrumentation {
+public class CxfServletControllerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -37,7 +37,7 @@ public class CfxServletControllerInstrumentation implements TypeInstrumentation 
             .and(isPublic())
             .and(named("invokeDestination"))
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest"))),
-        CfxServletControllerInstrumentation.class.getName() + "$InvokeAdvice");
+        CxfServletControllerInstrumentation.class.getName() + "$InvokeAdvice");
   }
 
   public static class InvokeAdvice {

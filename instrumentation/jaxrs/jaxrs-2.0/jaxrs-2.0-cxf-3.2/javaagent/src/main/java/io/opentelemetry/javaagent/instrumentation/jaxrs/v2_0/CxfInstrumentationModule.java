@@ -22,7 +22,7 @@ public class CxfInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new CxfRequestContextInstrumentation(),
-        new CfxServletControllerInstrumentation(),
+        new CxfServletControllerInstrumentation(),
         new CxfRsHttpListenerInstrumentation());
   }
 }
