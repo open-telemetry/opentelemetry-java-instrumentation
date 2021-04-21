@@ -11,9 +11,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.util.function.Supplier;
 
-/**
- * Helper container for tracking whether servlet integration should update server span name or not.
- */
+/** Helper container for tracking whether instrumentation should update server span name or not. */
 public final class ServerSpanNaming {
 
   private static final ContextKey<ServerSpanNaming> CONTEXT_KEY =
@@ -23,7 +21,7 @@ public final class ServerSpanNaming {
     if (context.get(CONTEXT_KEY) != null) {
       return context;
     }
-    return context.with(CONTEXT_KEY, new ServerSpanNaming(null));
+    return context.with(CONTEXT_KEY, new ServerSpanNaming(initialSource));
   }
 
   private volatile Source updatedBySource;
@@ -32,6 +30,16 @@ public final class ServerSpanNaming {
     this.updatedBySource = initialSource;
   }
 
+  /**
+   * If there is a server span in the context, and {@link #init(Context, Source)} has been called to
+   * populate a {@code ServerSpanName} into the context, then this method will update the server
+   * span name using the provided {@link Supplier} if and only if the last {@link Source} to update
+   * the span name using this method has strictly lower priority than the provided {@link Source}.
+   *
+   * <p>If there is a server span in the context, and {@link #init(Context, Source)} has NOT been
+   * called to populate a {@code ServerSpanName} into the context, then this method will update the
+   * server span name using the provided {@link Supplier}.
+   */
   public static void updateServerSpanName(
       Context context, Source source, Supplier<String> serverSpanName) {
     Span serverSpan = ServerSpan.fromContextOrNull(context);
@@ -40,14 +48,13 @@ public final class ServerSpanNaming {
     }
     ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
     if (serverSpanNaming == null) {
+      serverSpan.updateName(serverSpanName.get());
       return;
     }
-    Source updatedBySource = serverSpanNaming.updatedBySource;
-    if (updatedBySource != null && updatedBySource.level >= source.level) {
-      return;
+    if (source.order > serverSpanNaming.updatedBySource.order) {
+      serverSpan.updateName(serverSpanName.get());
+      serverSpanNaming.updatedBySource = source;
     }
-    serverSpan.updateName(serverSpanName.get());
-    serverSpanNaming.updatedBySource = source;
   }
 
   public enum Source {
@@ -55,10 +62,10 @@ public final class ServerSpanNaming {
     SERVLET(2),
     CONTROLLER(3);
 
-    private final int level;
+    private final int order;
 
-    Source(int level) {
-      this.level = level;
+    Source(int order) {
+      this.order = order;
     }
   }
 }

@@ -51,9 +51,9 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     // add context for tracking whether servlet instrumentation has updated the server span name
     if (servlet) {
       // server span name shouldn't be updated when server span was created from a call to Servlet
-      // (if created from a call to Filter then name may be updated from updateContext)
       context = ServerSpanNaming.init(context, SERVLET);
     } else {
+      // if created from a call to Filter then name may be updated from updateContext
       context = ServerSpanNaming.init(context, CONTAINER);
     }
     // add context for current request's context path
