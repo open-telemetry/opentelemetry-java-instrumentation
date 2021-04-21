@@ -101,7 +101,7 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
   private static MethodHandle getQueueDisposableGetter() {
     MethodHandle getter = getGetterHandle("qd");
     if (getter == null) {
-      // in versions before 2.2.21 field was named "qs"
+      // in versions before 2.2.1 field was named "qs"
       getter = getGetterHandle("qs");
     }
     return getter;
