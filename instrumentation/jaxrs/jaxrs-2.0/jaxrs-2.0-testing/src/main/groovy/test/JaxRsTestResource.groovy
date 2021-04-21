@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package test
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
@@ -15,6 +17,7 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.CyclicBarrier
+import javax.ws.rs.ApplicationPath
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -148,4 +151,8 @@ class JaxRsTestApplication extends Application {
     classes.add(JaxRsTestExceptionMapper)
     return classes
   }
+}
+
+@ApplicationPath("/rest-app")
+class JaxRsApplicationPathTestApplication extends JaxRsTestApplication {
 }

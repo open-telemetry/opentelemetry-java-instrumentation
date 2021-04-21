@@ -1,0 +1,15 @@
+<arquillian xmlns="http://jboss.org/schema/arquillian"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+        http://jboss.org/schema/arquillian
+        http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
+
+  <defaultProtocol type="Servlet 3.0" />
+
+  <container qualifier="wildfly-embedded" default="true">
+    <configuration>
+      <property name="jbossHome">build/server/wildfly-18.0.0.Final</property>
+      <property name="modulePath">build/server/wildfly-18.0.0.Final/modules</property>
+    </configuration>
+  </container>
+</arquillian>

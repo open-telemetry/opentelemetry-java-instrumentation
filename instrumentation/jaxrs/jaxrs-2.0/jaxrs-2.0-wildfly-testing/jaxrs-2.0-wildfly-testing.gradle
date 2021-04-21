@@ -3,6 +3,8 @@ ext {
 }
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
+// add repo for org.gradle:gradle-tooling-api which org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain
+// which is used by jaxrs-2.0-arquillian-testing depends on
 repositories {
   maven { url 'https://repo.gradle.org/gradle/libs-releases' }
 }
@@ -14,16 +16,12 @@ configurations {
 dependencies {
   testImplementation "javax:javaee-api:7.0"
 
-  def arquillianVersion = '1.4.0.Final'
-  testImplementation "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}"
-  testImplementation "org.jboss.arquillian.protocol:arquillian-protocol-servlet:${arquillianVersion}"
+  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-arquillian-testing')
   testImplementation "org.wildfly.arquillian:wildfly-arquillian-container-embedded:2.2.0.Final"
-  testImplementation 'org.jboss.arquillian.spock:arquillian-spock-container:1.0.0.CR1'
-  testImplementation "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain:3.1.3"
-  testImplementation "org.glassfish.jersey.core:jersey-client:2.8"
 
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
+  testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0:javaagent')
 
   // wildfly version used to run tests
   testServer "org.wildfly:wildfly-dist:18.0.0.Final@zip"

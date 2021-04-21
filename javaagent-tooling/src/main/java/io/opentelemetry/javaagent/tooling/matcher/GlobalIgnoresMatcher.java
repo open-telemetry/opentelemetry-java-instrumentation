@@ -190,6 +190,12 @@ public class GlobalIgnoresMatcher extends ElementMatcher.Junction.AbstractBase<T
         || name.contains(".asm.")
         || name.contains("$__sisu")
         || name.contains("$$EnhancerByProxool$$")
+        // glassfish ejb proxy
+        // We skip instrumenting these because some instrumentations e.g. jax-rs instrument methods
+        // that are annotated with @Path in an interface implemented by the class. We don't really
+        // want to instrument these methods in generated classes as this would create spans that
+        // have the generated class name in them instead of the actual class that handles the call.
+        || name.contains("__EJB31_Generated__")
         || name.startsWith("org.springframework.core.$Proxy")) {
       return true;
     }

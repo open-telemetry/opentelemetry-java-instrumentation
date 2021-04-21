@@ -30,11 +30,13 @@ dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
 
   testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing')
+  testImplementation group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '8.0.0.v20110901'
 
   testLibrary(group: 'org.jboss.resteasy', name: 'resteasy-undertow', version: '3.0.4.Final') {
     exclude group: 'org.jboss.resteasy', module: 'resteasy-client'
   }
   testLibrary group: 'io.undertow', name: 'undertow-servlet', version: '1.0.0.Final'
+  testLibrary group: 'org.jboss.resteasy', name: 'resteasy-servlet-initializer', version: '3.0.4.Final'
 
   latestDepTestLibrary group: 'org.jboss.resteasy', name: 'resteasy-jaxrs', version: '3.+'
   latestDepTestLibrary(group: 'org.jboss.resteasy', name: 'resteasy-undertow', version: '3.+') {

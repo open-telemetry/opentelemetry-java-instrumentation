@@ -5,6 +5,7 @@
 
 import io.undertow.Undertow
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer
+import test.JaxRsTestApplication
 
 class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
 
