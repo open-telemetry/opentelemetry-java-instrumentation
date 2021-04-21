@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.servlet.v3_0;
 
-import io.opentelemetry.api.trace.Span;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.instrumentation.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.javax.JavaxServletHttpServerTracer;
 import java.util.Collection;
@@ -111,23 +111,9 @@ public class Servlet3HttpServerTracer extends JavaxServletHttpServerTracer<HttpS
 
   public Context updateContext(
       Context context, Object servletOrFilter, HttpServletRequest request) {
-    updateServerSpanName(context, servletOrFilter, request);
+    ServerSpanNaming.updateServerSpanName(
+        context, SERVLET, () -> getSpanNameFromPath(servletOrFilter, request));
     return updateContext(context, request);
-  }
-
-  private static void updateServerSpanName(
-      Context context, Object servletOrFilter, HttpServletRequest request) {
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
-    if (serverSpan != null) {
-      ServerSpanNaming serverSpanNaming = ServerSpanNaming.from(context);
-      if (serverSpanNaming.shouldServletUpdateServerSpanName()) {
-        String spanName = getSpanNameFromPath(servletOrFilter, request);
-        if (spanName != null) {
-          serverSpan.updateName(spanName);
-          serverSpanNaming.setServletUpdatedServerSpanName();
-        }
-      }
-    }
   }
 
   @Override

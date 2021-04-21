@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.servlet.v2_2;
 
-import io.opentelemetry.api.trace.Span;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.instrumentation.servlet.javax.JavaxServletHttpServerTracer;
 import javax.servlet.http.HttpServletRequest;
 
@@ -29,19 +29,8 @@ public class Servlet2HttpServerTracer extends JavaxServletHttpServerTracer<Respo
 
   @Override
   public Context updateContext(Context context, HttpServletRequest request) {
-    updateServerSpanName(context, request);
+    ServerSpanNaming.updateServerSpanName(context, SERVLET, () -> getSpanName(request));
     return super.updateContext(context, request);
-  }
-
-  private void updateServerSpanName(Context context, HttpServletRequest request) {
-    Span span = ServerSpan.fromContextOrNull(context);
-    if (span != null) {
-      ServerSpanNaming serverSpanNaming = ServerSpanNaming.from(context);
-      if (serverSpanNaming.shouldServletUpdateServerSpanName()) {
-        span.updateName(getSpanName(request));
-        serverSpanNaming.setServletUpdatedServerSpanName();
-      }
-    }
   }
 
   @Override

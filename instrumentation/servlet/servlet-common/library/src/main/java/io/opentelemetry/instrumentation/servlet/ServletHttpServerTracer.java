@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.servlet;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
@@ -48,7 +51,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     if (servlet) {
       // server span name shouldn't be updated when server span was created from a call to Servlet
       // (if created from a call to Filter then name may be updated from updateContext)
-      ServerSpanNaming.from(context).setServletUpdatedServerSpanName();
+      ServerSpanNaming.setUpdatedServerSpanName(SERVLET);
     }
     return addServletContextPath(context, request);
   }
@@ -56,7 +59,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   @Override
   protected Context customizeContext(Context context, REQUEST request) {
     // add context for tracking whether servlet instrumentation has updated the server span name
-    context = ServerSpanNaming.init(context);
+    context = ServerSpanNaming.init(context, CONTAINER);
     // add context for current request's context path
     return addServletContextPath(context, request);
   }

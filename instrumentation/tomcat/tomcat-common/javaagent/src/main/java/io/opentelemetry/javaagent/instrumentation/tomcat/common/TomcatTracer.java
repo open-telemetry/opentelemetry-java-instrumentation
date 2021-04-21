@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
@@ -35,7 +37,7 @@ public abstract class TomcatTracer extends HttpServerTracer<Request, Response, R
 
   @Override
   protected Context customizeContext(Context context, Request request) {
-    context = ServerSpanNaming.init(context);
+    context = ServerSpanNaming.init(context, CONTAINER);
     return AppServerBridge.init(context);
   }
 

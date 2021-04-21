@@ -6,16 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.struts2;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.ActionProxy;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 public class Struts2Tracer extends BaseTracer {
@@ -45,36 +44,29 @@ public class Struts2Tracer extends BaseTracer {
 
   // Handle cases where action parameters are encoded into URL path
   public void updateServerSpanName(Context context, ActionProxy actionProxy) {
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
-    if (serverSpan == null) {
-      return;
-    }
+    ServerSpanNaming.updateServerSpanName(
+        context,
+        CONTROLLER,
+        () -> {
+          // We take name from the config, because it contains the path pattern from the
+          // configuration.
+          String result = actionProxy.getConfig().getName();
 
-    ServerSpanNaming serverSpanNaming = ServerSpanNaming.from(context);
-    if (!serverSpanNaming.shouldControllerUpdateServerSpanName()) {
-      return;
-    }
+          String actionNamespace = actionProxy.getNamespace();
+          if (actionNamespace != null && !actionNamespace.isEmpty()) {
+            if (actionNamespace.endsWith("/") || result.startsWith("/")) {
+              result = actionNamespace + result;
+            } else {
+              result = actionNamespace + "/" + result;
+            }
+          }
 
-    // We take name from the config, because it contains the path pattern from the
-    // configuration.
-    String result = actionProxy.getConfig().getName();
+          if (!result.startsWith("/")) {
+            result = "/" + result;
+          }
 
-    String actionNamespace = actionProxy.getNamespace();
-    if (actionNamespace != null && !actionNamespace.isEmpty()) {
-      if (actionNamespace.endsWith("/") || result.startsWith("/")) {
-        result = actionNamespace + result;
-      } else {
-        result = actionNamespace + "/" + result;
-      }
-    }
-
-    if (!result.startsWith("/")) {
-      result = "/" + result;
-    }
-
-    serverSpan.updateName(ServletContextPath.prepend(context, result));
-    // prevent servlet integration from doing further updates to server span name
-    serverSpanNaming.setControllerUpdatedServerSpanName();
+          return ServletContextPath.prepend(context, result);
+        });
   }
 
   @Override

@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.servlet.jakarta.v5_0;
 
-import io.opentelemetry.api.trace.Span;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.instrumentation.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import jakarta.servlet.RequestDispatcher;
@@ -114,23 +114,9 @@ public class JakartaServletHttpServerTracer
 
   public Context updateContext(
       Context context, Object servletOrFilter, HttpServletRequest request) {
-    updateServerSpanName(context, servletOrFilter, request);
+    ServerSpanNaming.updateServerSpanName(
+        context, SERVLET, () -> getSpanNameFromPath(servletOrFilter, request));
     return updateContext(context, request);
-  }
-
-  private void updateServerSpanName(
-      Context context, Object servletOrFilter, HttpServletRequest request) {
-    Span span = ServerSpan.fromContextOrNull(context);
-    if (span != null) {
-      ServerSpanNaming serverSpanNaming = ServerSpanNaming.from(context);
-      if (serverSpanNaming.shouldServletUpdateServerSpanName()) {
-        String spanName = getSpanNameFromPath(servletOrFilter, request);
-        if (spanName != null) {
-          span.updateName(spanName);
-          serverSpanNaming.setServletUpdatedServerSpanName();
-        }
-      }
-    }
   }
 
   @Override

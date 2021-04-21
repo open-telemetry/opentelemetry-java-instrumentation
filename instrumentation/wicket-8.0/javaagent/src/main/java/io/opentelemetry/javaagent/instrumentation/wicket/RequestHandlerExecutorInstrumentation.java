@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.wicket;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -49,16 +50,17 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         return;
       }
       if (handler instanceof IPageClassRequestHandler) {
-        ServerSpanNaming serverSpanNaming = ServerSpanNaming.from(context);
-        if (serverSpanNaming.shouldControllerUpdateServerSpanName()) {
-          // using class name as page name
-          String pageName = ((IPageClassRequestHandler) handler).getPageClass().getName();
-          // wicket filter mapping without wildcard, if wicket filter is mapped to /*
-          // this will be an empty string
-          String filterPath = RequestCycle.get().getRequest().getFilterPath();
-          serverSpan.updateName(ServletContextPath.prepend(context, filterPath + "/" + pageName));
-          serverSpanNaming.setControllerUpdatedServerSpanName();
-        }
+        ServerSpanNaming.updateServerSpanName(
+            context,
+            CONTROLLER,
+            () -> {
+              // using class name as page name
+              String pageName = ((IPageClassRequestHandler) handler).getPageClass().getName();
+              // wicket filter mapping without wildcard, if wicket filter is mapped to /*
+              // this will be an empty string
+              String filterPath = RequestCycle.get().getRequest().getFilterPath();
+              return ServletContextPath.prepend(context, filterPath + "/" + pageName);
+            });
       }
     }
   }

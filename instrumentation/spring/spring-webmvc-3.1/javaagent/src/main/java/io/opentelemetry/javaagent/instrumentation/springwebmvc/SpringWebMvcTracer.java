@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
@@ -53,17 +53,15 @@ public class SpringWebMvcTracer extends BaseTracer {
     return parentContext.with(span.startSpan());
   }
 
-  public void updateServerSpanName(Context context, Span serverSpan, HttpServletRequest request) {
+  public void updateServerSpanName(Context context, HttpServletRequest request) {
     if (request != null) {
       Object bestMatchingPattern =
           request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (bestMatchingPattern != null) {
-        ServerSpanNaming serverSpanNaming = ServerSpanNaming.from(context);
-        if (serverSpanNaming.shouldControllerUpdateServerSpanName()) {
-          serverSpan.updateName(
-              ServletContextPath.prepend(context, bestMatchingPattern.toString()));
-          serverSpanNaming.setControllerUpdatedServerSpanName();
-        }
+        ServerSpanNaming.updateServerSpanName(
+            context,
+            CONTROLLER,
+            () -> ServletContextPath.prepend(context, bestMatchingPattern.toString()));
       }
     }
   }
