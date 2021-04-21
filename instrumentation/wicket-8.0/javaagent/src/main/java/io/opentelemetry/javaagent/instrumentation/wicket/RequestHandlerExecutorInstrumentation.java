@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -24,7 +23,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.wicket.core.request.handler.IPageClassRequestHandler;
 import org.apache.wicket.request.IRequestHandler;
-import org.apache.wicket.request.cycle.RequestCycle;
 
 public class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
 
@@ -53,14 +51,7 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         ServerSpanNaming.updateServerSpanName(
             context,
             CONTROLLER,
-            () -> {
-              // using class name as page name
-              String pageName = ((IPageClassRequestHandler) handler).getPageClass().getName();
-              // wicket filter mapping without wildcard, if wicket filter is mapped to /*
-              // this will be an empty string
-              String filterPath = RequestCycle.get().getRequest().getFilterPath();
-              return ServletContextPath.prepend(context, filterPath + "/" + pageName);
-            });
+            new ServerSpanNameSupplier(context, (IPageClassRequestHandler) handler));
       }
     }
   }
