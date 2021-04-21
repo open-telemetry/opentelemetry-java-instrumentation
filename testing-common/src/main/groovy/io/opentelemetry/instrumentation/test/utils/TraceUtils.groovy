@@ -89,8 +89,8 @@ class TraceUtils {
       }
       name operation
       kind spanKind
-      errored exception != null
       if (exception) {
+        status StatusCode.ERROR
         errorEvent(exception.class, exception.message)
       }
 

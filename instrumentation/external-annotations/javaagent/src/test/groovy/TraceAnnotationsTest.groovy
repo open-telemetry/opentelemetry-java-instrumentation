@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.test.annotation.SayTracedHello
 import io.opentracing.contrib.dropwizard.Trace
@@ -21,7 +23,6 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SayTracedHello.sayHello"
           hasNoParent()
-          errored false
           attributes {
             "myattr" "test"
           }
@@ -41,7 +42,6 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SayTracedHello.sayHelloSayHa"
           hasNoParent()
-          errored false
           attributes {
             "myattr" "test2"
           }
@@ -49,7 +49,6 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(1) {
           name "SayTracedHello.sayHello"
           childOf span(0)
-          errored false
           attributes {
             "myattr" "test"
           }
@@ -57,7 +56,6 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
         span(2) {
           name "SayTracedHello.sayHello"
           childOf span(0)
-          errored false
           attributes {
             "myattr" "test"
           }
@@ -80,7 +78,7 @@ class TraceAnnotationsTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "SayTracedHello.sayError"
-          errored true
+          status ERROR
           errorEvent(error.class)
         }
       }

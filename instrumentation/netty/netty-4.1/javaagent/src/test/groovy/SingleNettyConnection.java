@@ -73,7 +73,7 @@ public class SingleNettyConnection implements SingleConnection {
       throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Integer> result = new CompletableFuture<>();
 
-    channel.pipeline().addLast(new ClientHandler(null, result));
+    channel.pipeline().addLast(new ClientHandler(result));
 
     String url;
     try {

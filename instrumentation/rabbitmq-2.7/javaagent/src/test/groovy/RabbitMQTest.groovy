@@ -6,6 +6,7 @@
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import com.rabbitmq.client.AMQP
@@ -113,6 +114,7 @@ class RabbitMQTest extends AgentInstrumentationSpecification {
 
     and:
     assertTraces(3) {
+      traces.subList(1, 3).sort(orderByRootSpanKind(PRODUCER, CLIENT))
       trace(0, 1) {
         rabbitSpan(it, 0, null, null, null, "queue.declare")
       }
@@ -277,6 +279,7 @@ class RabbitMQTest extends AgentInstrumentationSpecification {
 
     and:
     assertTraces(3) {
+      traces.subList(1, 3).sort(orderByRootSpanKind(PRODUCER, CLIENT))
       trace(0, 1) {
         rabbitSpan(it, null, null, null, "queue.declare")
       }
@@ -350,8 +353,8 @@ class RabbitMQTest extends AgentInstrumentationSpecification {
         hasLink((SpanData) linkSpan)
       }
 
-      errored exception != null
       if (exception) {
+        status ERROR
         errorEvent(exception.class, errorMsg)
       }
 

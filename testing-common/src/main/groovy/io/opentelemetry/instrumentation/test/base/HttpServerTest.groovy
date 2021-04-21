@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.test.base
 
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
@@ -21,6 +22,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -46,12 +48,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     return ""
   }
 
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     false
   }
 
-  boolean hasExceptionOnServerSpan() {
-    !hasHandlerSpan()
+  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
+    !hasHandlerSpan(endpoint)
   }
 
   boolean hasRenderSpan(ServerEndpoint endpoint) {
@@ -441,10 +443,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null, Response response = null) {
     def spanCount = 1 // server span
-    if (hasHandlerSpan()) {
+    if (hasResponseSpan(endpoint)) {
       spanCount++
     }
-    if (hasResponseSpan(endpoint)) {
+    if (hasHandlerSpan(endpoint)) {
       spanCount++
     }
     if (endpoint != NOT_FOUND) {
@@ -461,12 +463,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         trace(it, spanCount) {
           def spanIndex = 0
           serverSpan(it, spanIndex++, traceID, parentID, method, response?.body()?.contentLength(), endpoint)
-          if (hasHandlerSpan()) {
+          if (hasHandlerSpan(endpoint)) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
           if (endpoint != NOT_FOUND) {
             def controllerSpanIndex = 0
-            if (hasHandlerSpan()) {
+            if (hasHandlerSpan(endpoint)) {
               controllerSpanIndex++
             }
             controllerSpan(it, spanIndex++, span(controllerSpanIndex), errorMessage, expectedExceptionClass())
@@ -489,8 +491,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
     trace.span(index) {
       name "controller"
-      errored errorMessage != null
       if (errorMessage) {
+        status StatusCode.ERROR
         errorEvent(exceptionClass, errorMessage)
       }
       childOf((SpanData) parent)
@@ -539,14 +541,16 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     trace.span(index) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
-      errored endpoint.errored
+      if (endpoint.errored) {
+        status StatusCode.ERROR
+      }
       if (parentID != null) {
         traceId traceID
         parentSpanId parentID
       } else {
         hasNoParent()
       }
-      if (endpoint == EXCEPTION && hasExceptionOnServerSpan()) {
+      if (endpoint == EXCEPTION && hasExceptionOnServerSpan(endpoint)) {
         event(0) {
           eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
           attributes {
@@ -604,7 +608,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     trace.span(1) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
-      errored false
       childOf((SpanData) parent)
       attributes {
         "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
@@ -622,7 +625,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   void indexedControllerSpan(TraceAssert trace, int index, Object parent, int requestId) {
     trace.span(index) {
       name "controller"
-      errored false
       childOf((SpanData) parent)
       attributes {
         it."test.request.id" requestId

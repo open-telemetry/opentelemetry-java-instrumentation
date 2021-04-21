@@ -6,7 +6,6 @@
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CancellationException
-import java.util.function.Consumer
 import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.concurrent.FutureCallback
@@ -45,16 +44,16 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implement
   }
 
   @Override
-  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(HttpUriRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     client.execute(request, new FutureCallback<HttpResponse>() {
       @Override
       void completed(HttpResponse httpResponse) {
-        callback.accept(httpResponse.statusLine.statusCode)
+        requestResult.complete(httpResponse.statusLine.statusCode)
       }
 
       @Override
       void failed(Exception e) {
-        throw e
+        requestResult.complete(e)
       }
 
       @Override
@@ -65,7 +64,7 @@ class ApacheHttpAsyncClientTest extends HttpClientTest<HttpUriRequest> implement
   }
 
   @Override
-  Integer statusOnRedirectError() {
+  Integer responseCodeOnRedirectError() {
     return 302
   }
 

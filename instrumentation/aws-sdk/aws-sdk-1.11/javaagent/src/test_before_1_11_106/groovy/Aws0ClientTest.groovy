@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 
@@ -101,7 +102,6 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind CLIENT
-          errored false
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -160,7 +160,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
@@ -208,7 +208,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "S3.GetObject"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent RuntimeException, "bad handler"
           hasNoParent()
           attributes {
@@ -254,7 +254,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "S3.GetObject"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {

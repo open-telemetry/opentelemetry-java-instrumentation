@@ -14,7 +14,6 @@ import io.vertx.core.http.HttpClientOptions
 import io.vertx.core.http.HttpClientRequest
 import io.vertx.core.http.HttpMethod
 import java.util.concurrent.CompletableFuture
-import java.util.function.Consumer
 import spock.lang.Shared
 
 class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements AgentTestTrait {
@@ -33,22 +32,30 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
     return request
   }
 
-  @Override
-  int sendRequest(HttpClientRequest request, String method, URI uri, Map<String, String> headers) {
-    // Vertx doesn't seem to provide any synchronous API so bridge through a callback
+  CompletableFuture<Integer> sendRequest(HttpClientRequest request) {
     CompletableFuture<Integer> future = new CompletableFuture<>()
-    sendRequestWithCallback(request, method, uri, headers) {
-      future.complete(it)
+
+    request.handler { response ->
+      future.complete(response.statusCode())
+    }.exceptionHandler {throwable ->
+      future.completeExceptionally(throwable)
     }
-    return future.get()
+    request.end()
+
+    return future
   }
 
   @Override
-  void sendRequestWithCallback(HttpClientRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
-    request.handler { response ->
-      callback.accept(response.statusCode())
+  int sendRequest(HttpClientRequest request, String method, URI uri, Map<String, String> headers) {
+    // Vertx doesn't seem to provide any synchronous API so bridge through a callback
+    return sendRequest(request).get()
+  }
+
+  @Override
+  void sendRequestWithCallback(HttpClientRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+    sendRequest(request).whenComplete { status, throwable ->
+      requestResult.complete({ status }, throwable)
     }
-    request.end()
   }
 
   @Override

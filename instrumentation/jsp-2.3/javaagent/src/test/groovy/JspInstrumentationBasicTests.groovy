@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
@@ -87,7 +88,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/$jspFileName"
           kind SERVER
-          errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -102,7 +102,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /$jspFileName"
-          errored false
           attributes {
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -111,7 +110,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /$jspFileName"
-          errored false
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -146,7 +144,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/getQuery.jsp"
           kind SERVER
-          errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -161,7 +158,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /getQuery.jsp"
-          errored false
           attributes {
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -170,7 +166,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /getQuery.jsp"
-          errored false
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -202,7 +197,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/post.jsp"
           kind SERVER
-          errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -217,7 +211,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /post.jsp"
-          errored false
           attributes {
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -226,7 +219,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /post.jsp"
-          errored false
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -255,7 +247,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/$jspFileName"
           kind SERVER
-          errored true
+          status ERROR
           event(0) {
             eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
             attributes {
@@ -282,7 +274,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /$jspFileName"
-          errored false
           attributes {
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -291,7 +282,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /$jspFileName"
-          errored true
+          status ERROR
           event(0) {
             eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
             attributes {
@@ -337,7 +328,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/includes/includeHtml.jsp"
           kind SERVER
-          errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -352,7 +342,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /includes/includeHtml.jsp"
-          errored false
           attributes {
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -361,7 +350,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /includes/includeHtml.jsp"
-          errored false
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -389,7 +377,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/includes/includeMulti.jsp"
           kind SERVER
-          errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -404,7 +391,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /includes/includeMulti.jsp"
-          errored false
           attributes {
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -413,7 +399,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(2) {
           childOf span(0)
           name "Render /includes/includeMulti.jsp"
-          errored false
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -421,7 +406,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(3) {
           childOf span(2)
           name "Compile /common/javaLoopH2.jsp"
-          errored false
           attributes {
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -430,7 +414,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(4) {
           childOf span(2)
           name "Render /common/javaLoopH2.jsp"
-          errored false
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -438,7 +421,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(5) {
           childOf span(2)
           name "Compile /common/javaLoopH2.jsp"
-          errored false
           attributes {
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -447,7 +429,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(6) {
           childOf span(2)
           name "Render /common/javaLoopH2.jsp"
-          errored false
           attributes {
             "jsp.requestURL" reqUrl
           }
@@ -475,7 +456,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/$jspFileName"
           kind SERVER
-          errored true
+          status ERROR
           errorEvent(JasperException, String)
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -491,7 +472,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         span(1) {
           childOf span(0)
           name "Compile /$jspFileName"
-          errored true
+          status ERROR
           errorEvent(JasperException, String)
           attributes {
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
@@ -527,7 +508,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           hasNoParent()
           name "/$jspWebappContext/*"
           kind SERVER
-          errored false
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long

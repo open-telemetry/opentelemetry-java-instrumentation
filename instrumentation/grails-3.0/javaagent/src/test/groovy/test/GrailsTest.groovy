@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import grails.boot.GrailsApp
 import grails.boot.config.GrailsAutoConfiguration
 import groovy.transform.CompileStatic
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -81,12 +82,12 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
   }
 
   @Override
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
 
   @Override
-  boolean hasExceptionOnServerSpan() {
+  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
     true
   }
 
@@ -102,7 +103,7 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
 
   @Override
   int getErrorPageSpansCount(ServerEndpoint endpoint) {
-    endpoint == NOT_FOUND ? 2 : 1
+    endpoint == NOT_FOUND ? 0 : 1
   }
 
   @Override
@@ -112,19 +113,10 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
 
   @Override
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint) {
-    def errorSpanName = endpoint == NOT_FOUND ? "ErrorController.notFound" : "ErrorController.index"
-    trace.span(index) {
-      name errorSpanName
-      kind INTERNAL
-      errored false
-      attributes {
-      }
-    }
-    if (endpoint == NOT_FOUND) {
-      trace.span(index + 1) {
-        name ~/\.sendError$/
+    if (endpoint != NOT_FOUND) {
+      trace.span(index) {
+        name "ErrorController.index"
         kind INTERNAL
-        errored false
         attributes {
         }
       }
@@ -136,7 +128,6 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
     trace.span(index) {
       name endpoint == REDIRECT ? ~/\.sendRedirect$/ : ~/\.sendError$/
       kind INTERNAL
-      errored false
       attributes {
       }
     }
@@ -155,8 +146,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
         name "TestController.${endpoint.name().toLowerCase()}"
       }
       kind INTERNAL
-      errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
+        status StatusCode.ERROR
         errorEvent(Exception, EXCEPTION.body)
       }
       childOf((SpanData) parent)

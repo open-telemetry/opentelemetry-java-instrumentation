@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
@@ -56,7 +58,9 @@ abstract class AbstractServletMappingTest<SERVER, CONTEXT> extends AgentInstrume
         span(0) {
           name getContextPath() + spanName
           kind SpanKind.SERVER
-          errored !success
+          if (!success) {
+            status ERROR
+          }
         }
         if (!success) {
           span(1) {
@@ -66,13 +70,13 @@ abstract class AbstractServletMappingTest<SERVER, CONTEXT> extends AgentInstrume
     }
 
     where:
-    path        | spanName    | success
-    'prefix'    | '/prefix/*' | true
-    'prefix/'   | '/prefix/*' | true
-    'prefix/a'  | '/prefix/*' | true
-    'prefixa'   | '/*'        | false
-    'a.suffix'  | '/*.suffix' | true
-    '.suffix'   | '/*.suffix' | true
-    'suffix'    | '/*'        | false
+    path       | spanName    | success
+    'prefix'   | '/prefix/*' | true
+    'prefix/'  | '/prefix/*' | true
+    'prefix/a' | '/prefix/*' | true
+    'prefixa'  | '/*'        | false
+    'a.suffix' | '/*.suffix' | true
+    '.suffix'  | '/*.suffix' | true
+    'suffix'   | '/*'        | false
   }
 }

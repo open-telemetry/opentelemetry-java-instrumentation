@@ -48,7 +48,6 @@ class SparkJavaBasedTest extends AgentInstrumentationSpecification {
         span(0) {
           name "/param/:param"
           kind SERVER
-          errored false
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_5
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -31,10 +32,9 @@ import io.grpc.ServerInterceptor
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -86,7 +86,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           childOf span(0)
-          errored false
           event(0) {
             eventName "message"
             attributes {
@@ -104,7 +103,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(1)
-          errored false
           event(0) {
             eventName "message"
             attributes {
@@ -168,8 +166,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           hasNoParent()
-          errored true
-          status(StatusCode.ERROR)
+          status ERROR
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -180,8 +177,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(0)
-          errored true
-          status(StatusCode.ERROR)
+          status ERROR
           event(0) {
             eventName "message"
             attributes {
@@ -255,7 +251,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           hasNoParent()
-          errored true
+          status ERROR
           // NB: Exceptions thrown on the server don't appear to be propagated to the client, at
           // least for the version we test against.
           attributes {
@@ -268,8 +264,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(0)
-          errored true
-          status(StatusCode.ERROR)
+          status ERROR
           event(0) {
             eventName "message"
             attributes {
@@ -413,7 +408,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           childOf span(0)
-          errored false
           event(0) {
             eventName "message"
             attributes {
@@ -431,7 +425,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(1)
-          errored false
           event(0) {
             eventName "message"
             attributes {

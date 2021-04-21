@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.ConnectionFuture
@@ -120,7 +121,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "CONNECT"
           kind CLIENT
-          errored false
           attributes {
             "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
             "$SemanticAttributes.NET_PEER_IP.key" PEER_IP
@@ -154,7 +154,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "CONNECT"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent AbstractChannel.AnnotatedConnectException, String
           attributes {
             "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
@@ -180,7 +180,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SET"
           kind CLIENT
-          errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SET TESTSETKEY ?"
@@ -213,7 +212,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "GET"
           kind CLIENT
-          errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "GET TESTKEY"
@@ -260,7 +258,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "GET"
           kind CLIENT
-          errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "GET NON_EXISTENT_KEY"
@@ -293,7 +290,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "RANDOMKEY"
           kind CLIENT
-          errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
@@ -344,7 +340,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "HMSET"
           kind CLIENT
-          errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "HMSET TESTHM firstname ? lastname ? age ?"
@@ -355,7 +350,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "HGETALL"
           kind CLIENT
-          errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "HGETALL TESTHM"
@@ -396,7 +390,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "DEL"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent(IllegalStateException, "TestException")
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -432,7 +426,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SADD"
           kind CLIENT
-          errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SADD SKEY ? ?"
@@ -453,7 +446,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "DEBUG"
           kind CLIENT
-          errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "DEBUG SEGFAULT"
@@ -474,7 +466,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SHUTDOWN"
           kind CLIENT
-          errored false
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SHUTDOWN NOSAVE"
