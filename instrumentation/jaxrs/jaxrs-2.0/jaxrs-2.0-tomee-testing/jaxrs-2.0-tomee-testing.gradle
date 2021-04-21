@@ -3,6 +3,8 @@ ext {
 }
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
+// add repo for org.gradle:gradle-tooling-api which org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain
+// which is used by jaxrs-2.0-arquillian-testing depends on
 repositories {
   maven { url 'https://repo.gradle.org/gradle/libs-releases' }
 }
