@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer.CommandSani
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -316,7 +317,9 @@ public final class RedisCommandSanitizer {
     if (!StatementSanitizationConfig.isStatementSanitizationEnabled()) {
       return KeepAllArgs.INSTANCE.sanitize(command, args);
     }
-    return SANITIZERS.getOrDefault(command.toUpperCase(), DEFAULT).sanitize(command, args);
+    return SANITIZERS
+        .getOrDefault(command.toUpperCase(Locale.ROOT), DEFAULT)
+        .sanitize(command, args);
   }
 
   public interface CommandSanitizer {
