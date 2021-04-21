@@ -34,11 +34,12 @@ public final class ServerSpanNaming {
    * If there is a server span in the context, and {@link #init(Context, Source)} has been called to
    * populate a {@code ServerSpanName} into the context, then this method will update the server
    * span name using the provided {@link Supplier} if and only if the last {@link Source} to update
-   * the span name using this method has strictly lower priority than the provided {@link Source}.
+   * the span name using this method has strictly lower priority than the provided {@link Source},
+   * and the value returned from the {@link Supplier} is non-null.
    *
    * <p>If there is a server span in the context, and {@link #init(Context, Source)} has NOT been
    * called to populate a {@code ServerSpanName} into the context, then this method will update the
-   * server span name using the provided {@link Supplier}.
+   * server span name using the provided {@link Supplier} if the value returned from it is non-null.
    */
   public static void updateServerSpanName(
       Context context, Source source, Supplier<String> serverSpanName) {
@@ -48,12 +49,18 @@ public final class ServerSpanNaming {
     }
     ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
     if (serverSpanNaming == null) {
-      serverSpan.updateName(serverSpanName.get());
+      String name = serverSpanName.get();
+      if (name != null) {
+        serverSpan.updateName(name);
+      }
       return;
     }
     if (source.order > serverSpanNaming.updatedBySource.order) {
-      serverSpan.updateName(serverSpanName.get());
-      serverSpanNaming.updatedBySource = source;
+      String name = serverSpanName.get();
+      if (name != null) {
+        serverSpan.updateName(name);
+        serverSpanNaming.updatedBySource = source;
+      }
     }
   }
 
