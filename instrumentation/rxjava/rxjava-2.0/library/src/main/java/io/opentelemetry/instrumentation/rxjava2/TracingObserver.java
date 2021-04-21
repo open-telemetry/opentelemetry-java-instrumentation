@@ -27,8 +27,11 @@ import io.opentelemetry.context.Scope;
 import io.reactivex.Observer;
 import io.reactivex.internal.fuseable.QueueDisposable;
 import io.reactivex.internal.observers.BasicFuseableObserver;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 
 class TracingObserver<T> extends BasicFuseableObserver<T, T> {
+  private static final MethodHandle queueDisposableGetter = getQueueDisposableGetter();
 
   // BasicFuseableObserver#actual has been renamed to downstream in newer versions, we can't use it
   // in this class
@@ -64,7 +67,7 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
 
   @Override
   public int requestFusion(int mode) {
-    final QueueDisposable<T> qd = this.qs;
+    final QueueDisposable<T> qd = getQueueDisposable();
     if (qd != null) {
       final int m = qd.requestFusion(mode);
       sourceMode = m;
@@ -75,6 +78,36 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
 
   @Override
   public T poll() throws Exception {
-    return qs.poll();
+    return getQueueDisposable().poll();
+  }
+
+  private QueueDisposable<T> getQueueDisposable() {
+    try {
+      return (QueueDisposable<T>) queueDisposableGetter.invoke(this);
+    } catch (Throwable throwable) {
+      throw new IllegalStateException(throwable);
+    }
+  }
+
+  private static MethodHandle getGetterHandle(String fieldName) {
+    try {
+      return MethodHandles.lookup()
+          .findGetter(BasicFuseableObserver.class, fieldName, QueueDisposable.class);
+    } catch (NoSuchFieldException | IllegalAccessException ignored) {
+    }
+    return null;
+  }
+
+  private static MethodHandle getQueueDisposableGetter() {
+    MethodHandle getter = getGetterHandle("qd");
+    if (getter == null) {
+      // in versions before 2.2.21 field was named "qs"
+      getter = getGetterHandle("qs");
+    }
+    return getter;
+  }
+
+  public static boolean canEnable() {
+    return queueDisposableGetter != null;
   }
 }
