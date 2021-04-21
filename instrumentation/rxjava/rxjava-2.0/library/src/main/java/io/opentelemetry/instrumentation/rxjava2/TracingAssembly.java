@@ -178,16 +178,18 @@ public final class TracingAssembly {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static void enableObservable() {
-    oldOnObservableSubscribe = RxJavaPlugins.getOnObservableSubscribe();
-    RxJavaPlugins.setOnObservableSubscribe(
-        biCompose(
-            oldOnObservableSubscribe,
-            (observable, observer) -> {
-              final Context context = Context.current();
-              try (Scope ignored = context.makeCurrent()) {
-                return new TracingObserver(observer, context);
-              }
-            }));
+    if (TracingObserver.canEnable()) {
+      oldOnObservableSubscribe = RxJavaPlugins.getOnObservableSubscribe();
+      RxJavaPlugins.setOnObservableSubscribe(
+          biCompose(
+              oldOnObservableSubscribe,
+              (observable, observer) -> {
+                final Context context = Context.current();
+                try (Scope ignored = context.makeCurrent()) {
+                  return new TracingObserver(observer, context);
+                }
+              }));
+    }
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
