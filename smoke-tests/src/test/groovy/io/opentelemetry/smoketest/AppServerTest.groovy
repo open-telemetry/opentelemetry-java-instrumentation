@@ -30,7 +30,8 @@ abstract class AppServerTest extends SmokeTest {
     serverVersion = appServer.version()
     jdk = appServer.jdk()
 
-    isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
+    isWindows = System.getProperty("os.name").toLowerCase().contains("windows") &&
+      "1" != System.getenv("USE_LINUX_CONTAINERS")
     startTarget(jdk, serverVersion, isWindows)
   }
 
