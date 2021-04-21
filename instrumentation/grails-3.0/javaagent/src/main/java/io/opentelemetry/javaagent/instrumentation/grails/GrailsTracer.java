@@ -27,15 +27,15 @@ public class GrailsTracer extends BaseTracer {
 
   public void updateServerSpanName(Context context, GrailsControllerUrlMappingInfo info) {
     ServerSpanNaming.updateServerSpanName(
-        context,
-        CONTROLLER,
-        () -> {
-          String action =
-              info.getActionName() != null
-                  ? info.getActionName()
-                  : info.getControllerClass().getDefaultAction();
-          return ServletContextPath.prepend(context, "/" + info.getControllerName() + "/" + action);
-        });
+        context, CONTROLLER, () -> getServerSpanName(context, info));
+  }
+
+  private static String getServerSpanName(Context context, GrailsControllerUrlMappingInfo info) {
+    String action =
+        info.getActionName() != null
+            ? info.getActionName()
+            : info.getControllerClass().getDefaultAction();
+    return ServletContextPath.prepend(context, "/" + info.getControllerName() + "/" + action);
   }
 
   @Override

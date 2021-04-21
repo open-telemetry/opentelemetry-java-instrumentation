@@ -45,28 +45,28 @@ public class Struts2Tracer extends BaseTracer {
   // Handle cases where action parameters are encoded into URL path
   public void updateServerSpanName(Context context, ActionProxy actionProxy) {
     ServerSpanNaming.updateServerSpanName(
-        context,
-        CONTROLLER,
-        () -> {
-          // We take name from the config, because it contains the path pattern from the
-          // configuration.
-          String result = actionProxy.getConfig().getName();
+        context, CONTROLLER, () -> getServerSpanName(context, actionProxy));
+  }
 
-          String actionNamespace = actionProxy.getNamespace();
-          if (actionNamespace != null && !actionNamespace.isEmpty()) {
-            if (actionNamespace.endsWith("/") || result.startsWith("/")) {
-              result = actionNamespace + result;
-            } else {
-              result = actionNamespace + "/" + result;
-            }
-          }
+  private static String getServerSpanName(Context context, ActionProxy actionProxy) {
+    // We take name from the config, because it contains the path pattern from the
+    // configuration.
+    String result = actionProxy.getConfig().getName();
 
-          if (!result.startsWith("/")) {
-            result = "/" + result;
-          }
+    String actionNamespace = actionProxy.getNamespace();
+    if (actionNamespace != null && !actionNamespace.isEmpty()) {
+      if (actionNamespace.endsWith("/") || result.startsWith("/")) {
+        result = actionNamespace + result;
+      } else {
+        result = actionNamespace + "/" + result;
+      }
+    }
 
-          return ServletContextPath.prepend(context, result);
-        });
+    if (!result.startsWith("/")) {
+      result = "/" + result;
+    }
+
+    return ServletContextPath.prepend(context, result);
   }
 
   @Override
