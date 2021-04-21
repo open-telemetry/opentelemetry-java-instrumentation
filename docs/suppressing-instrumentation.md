@@ -10,77 +10,79 @@ You can suppress agent instrumentation of specific libraries by using
 
 | Library/Framework | Instrumentation name |
 |-------------------|----------------------|
+| Additional methods tracing | methods |
+| Additional tracing annotations | external-annotations |
 | Akka Actor | akka-actor|
 | Akka HTTP | akka-http|
+| Apache Axis2 | axis2|
 | Apache Camel | apache-camel|
+| Apache Cassandra | cassandra|
+| Apache CXF | cxf|
 | Apache Dubbo | apache-dubbo|
+| Apache Geode | geode|
 | Apache HttpAsyncClient | apache-httpasyncclient|
 | Apache HttpClient | apache-httpclient|
+| Apache Kafka | kafka |
+| Apache RocketMQ | rocketmq-client|
+| Apache Tapestry | tapestry|
+| Apache Tomcat | tomcat|
+| Apache Wicket | wicket|
 | Armeria | armeria|
 | AsyncHttpClient (AHC) | async-http-client|
 | AWS Lambda | aws-lambda|
 | AWS SDK | aws-sdk|
-| Apache Axis2 | axis2|
-| Apache Cassandra | cassandra|
 | Couchbase | couchbase|
-| Apache CXF | cxf|
 | Dropwizard Views | dropwizard-views |
 | Eclipse OSGi | eclipse-osgi |
-| Elasticsearch REST client | elasticsearch-rest|
 | Elasticsearch client | elasticsearch-transport|
-| java.util.concurrent | executor |
-| Additional tracing annotations | external-annotations |
-| Twitter Finatra | finatra|
-| Apache Geode | geode|
-| Google HTTP client | google-http-client|
-| Grails | grails|
-| Java EE Grizzly | grizzly|
-| GRPC | grpc|
+| Elasticsearch REST client | elasticsearch-rest|
 | Google Guava | guava|
+| Google HTTP client | google-http-client|
 | Google Web Toolkit | gwt|
+| Grails | grails|
+| GRPC | grpc|
 | Hibernate | hibernate|
-| Java HTTP URL connection | http-url-connection |
+| Java EE Grizzly | grizzly|
 | Java HTTP Client | httpclient |
-| Netflix Hystrix | hystrix|
-| JAX-RS Clieny | jaxrs-client|
-| JAX-RS | jaxrs|
-| JAX-WS | jaxws|
+| Java `HttpURLConnection` | http-url-connection |
 | Java JDBC | jdbc |
-| Java JDBC data source | jdbc-datasource |
-| Redis Jedis | jedis|
+| Java JDBC `DataSource` | jdbc-datasource |
+| Java RMI | rmi|
+| Java Servlet | servlet|
+| java.util.concurrent | executor |
+| JAX-RS | jaxrs|
+| JAX-RS Client | jaxrs-client|
+| JAX-WS | jaxws|
+| JAX-WS Metro | metro|
 | Jetty | jetty|
 | JMS | jms|
+| JSF Mojarra | mojarra|
+| JSF MyFaces | myfaces|
 | JSP | jsp |
-| Apache Kafka | kafka |
+| K8s Client | kubernetes-client|
 | Kotlin HTTP (kHttp) | khttp |
 | kotlinx.coroutines | kotlinx-coroutines |
-| K8s Client | kubernetes-client|
-| Lettuce (Redis) | lettuce|
-| OpenLiberty | liberty |
 | Log4j | log4j|
 | Logback | logback|
-| Additional methods tracing | methods |
-| JAX-WS Metro | metro|
-| JSF Mojarra | mojarra|
 | MongoDB | mongo |
-| JSF MyFaces | myfaces|
+| Netflix Hystrix | hystrix|
 | Netty | netty|
 | OkHttp | okhttp|
+| OpenLiberty | liberty |
 | OpenTelemetry Trace annotations | opentelemetry-annotations |
 | OSHI (Operating System and Hardware Information) | oshi |
-| Play WS HTTP Client | play-ws|
 | Play Framework | play|
+| Play WS HTTP Client | play-ws|
 | RabbitMQ Client | rabbitmq|
 | Ratpack | ratpack|
-| Reactor Netty | reactor-netty|
-| Reactor | reactor|
-| Rediscala | rediscala|
-| Java RMI | rmi|
-| Apache RocketMQ | rocketmq-client|
 | ReactiveX RxJava | rxjava2 |
+| Reactor | reactor|
+| Reactor Netty | reactor-netty|
+| Redis Jedis | jedis|
+| Redis Lettuce | lettuce|
+| Rediscala | rediscala|
 | Scala executors | scala-executors |
-| Java Servlet | servlet|
-| Apache Spark | spark|
+| Spark Web Framework | spark|
 | Spring Core | spring-core|
 | Spring Data | spring-data|
 | Spring Scheduling | spring-scheduling|
@@ -89,13 +91,11 @@ You can suppress agent instrumentation of specific libraries by using
 | Spring WS | spring-ws|
 | Spymemcached | spymemcached|
 | Struts | struts|
-| Apache Tapestry | tapestry|
-| Apache Tomcat | tomcat|
 | Twilio SDK | twilio|
+| Twitter Finatra | finatra|
 | Undertow | undertow|
 | Vaadin | vaadin|
 | Vert.x RxJava2 | vertx |
-| Apache Wicket | wicket|
 
 ### Even more fine-grained control
 
