@@ -75,7 +75,7 @@ You can suppress agent instrumentation of specific libraries by using
 | Play WS HTTP Client | play-ws|
 | RabbitMQ Client | rabbitmq|
 | Ratpack | ratpack|
-| ReactiveX RxJava | rxjava2 |
+| ReactiveX RxJava | rxjava2, rxjava3 |
 | Reactor | reactor|
 | Reactor Netty | reactor-netty|
 | Redis Jedis | jedis|
