@@ -15,9 +15,9 @@ public final class InClassLoaderMatcher {
   /**
    * Returns whether the ClassLoaderMatcher is currently executing.
    *
-   * <p>This is used (at least) by the {@code eclipse-osgi} instrumentation in order to suppress a
-   * side effect in the Eclipse OSGi class loader that occurs when ClassLoaderMatcher calls
-   * ClassLoader.getResource(). See {@code EclipseOsgiInstrumentationModule} for more details.
+   * <p>This is used (at least) by the {@code internal-eclipse-osgi} instrumentation in order to
+   * suppress a side effect in the Eclipse OSGi class loader that occurs when ClassLoaderMatcher
+   * calls ClassLoader.getResource(). See {@code EclipseOsgiInstrumentationModule} for more details.
    */
   public static boolean get() {
     return inClassLoaderMatcher.get().value;
