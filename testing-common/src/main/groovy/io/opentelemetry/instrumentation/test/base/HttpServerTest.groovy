@@ -290,7 +290,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     response.withCloseable {
       assert response.code() == REDIRECT.status
       assert response.header("location") == REDIRECT.body ||
-        response.header("location") == "${address.resolve(REDIRECT.body)}"
+        new URI(response.header("location")).normalize().toString() == "${address.resolve(REDIRECT.body)}"
       true
     }
 
