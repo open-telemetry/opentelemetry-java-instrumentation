@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Shared
+import spock.lang.Unroll
 
 /**
  * <p>Tests in this class may seem not exhaustive due to the fact that some classes are converted
@@ -32,6 +33,7 @@ import spock.lang.Shared
  * {@link io.reactivex.rxjava3.internal.operators.maybe.MaybeFromCompletable} and as a result we
  * can test subscriptions and cancellations correctly.
  */
+@Unroll
 abstract class AbstractRxJava3Test extends InstrumentationSpecification {
 
   public static final String EXCEPTION_MESSAGE = "test exception"

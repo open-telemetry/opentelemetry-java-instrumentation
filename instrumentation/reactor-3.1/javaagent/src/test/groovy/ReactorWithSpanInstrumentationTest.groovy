@@ -4,8 +4,9 @@
  */
 
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.reactor.TracedWithSpan
+import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.UnicastProcessor
@@ -30,7 +31,6 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.mono"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -63,7 +63,6 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.mono"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -88,7 +87,7 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.mono"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status StatusCode.ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -122,7 +121,7 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.mono"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status StatusCode.ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -148,7 +147,6 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.flux"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -180,7 +178,6 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.flux"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -205,7 +202,7 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.flux"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status StatusCode.ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -237,7 +234,7 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           name "TracedWithSpan.flux"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status StatusCode.ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
