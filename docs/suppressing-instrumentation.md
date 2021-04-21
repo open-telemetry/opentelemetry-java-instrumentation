@@ -50,8 +50,8 @@ You can suppress agent instrumentation of specific libraries by using
 | Java RMI | rmi|
 | Java Servlet | servlet|
 | java.util.concurrent | executor |
-| JAX-RS | jaxrs|
-| JAX-RS Client | jaxrs-client|
+| JAX-RS (Client) | jaxrs-client|
+| JAX-RS (Server) | jaxrs|
 | JAX-WS | jaxws|
 | JAX-WS Metro | metro|
 | Jetty | jetty|
