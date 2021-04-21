@@ -39,5 +39,5 @@ dependencies {
   myfaces2TestImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.11'
   myfaces2TestImplementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.2.11'
 
-  latestDepTestImplementation group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '2+'
+  latestDepTestImplementation group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '2.+'
 }
