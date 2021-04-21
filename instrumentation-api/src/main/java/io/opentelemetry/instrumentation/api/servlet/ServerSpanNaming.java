@@ -67,6 +67,19 @@ public final class ServerSpanNaming {
     }
   }
 
+  // TODO (trask) migrate the one usage (ServletHttpServerTracer) to ServerSpanNaming.init() once we
+  // migrate to new Instrumenters (see
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2814#discussion_r617351334
+  // for the challenge with doing this now in the current Tracer structure, at least without some
+  // bigger changes, which we want to avoid in the Tracers as they are already deprecated)
+  @Deprecated
+  public static void updateSource(Context context, Source source) {
+    ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
+    if (serverSpanNaming != null && source.order > serverSpanNaming.updatedBySource.order) {
+      serverSpanNaming.updatedBySource = source;
+    }
+  }
+
   public enum Source {
     CONTAINER(1),
     SERVLET(2),
