@@ -32,11 +32,7 @@ public abstract class TomcatTracer extends HttpServerTracer<Request, Response, R
   private static final Logger log = LoggerFactory.getLogger(TomcatTracer.class);
 
   public Context startServerSpan(Request request) {
-    return startSpan(request, request, request, "HTTP " + request.method().toString());
-  }
-
-  @Override
-  protected Context customizeContext(Context context, Request request) {
+    Context context = startSpan(request, request, request, "HTTP " + request.method().toString());
     context = ServerSpanNaming.init(context, CONTAINER);
     return AppServerBridge.init(context);
   }

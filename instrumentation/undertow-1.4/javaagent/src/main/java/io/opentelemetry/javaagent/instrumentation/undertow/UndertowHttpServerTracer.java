@@ -35,12 +35,8 @@ public class UndertowHttpServerTracer
   }
 
   public Context startServerSpan(HttpServerExchange exchange) {
-    return startSpan(
-        exchange, exchange, exchange, "HTTP " + exchange.getRequestMethod().toString());
-  }
-
-  @Override
-  protected Context customizeContext(Context context, HttpServerExchange exchange) {
+    Context context =
+        startSpan(exchange, exchange, exchange, "HTTP " + exchange.getRequestMethod().toString());
     context = ServerSpanNaming.init(context, CONTAINER);
     // span is ended when counter reaches 0, we start from 2 which accounts for the
     // handler that started the span and exchange completion listener
