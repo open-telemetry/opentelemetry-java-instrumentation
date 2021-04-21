@@ -18,7 +18,10 @@ public final class ServerSpanNaming {
       ContextKey.named("opentelemetry-servlet-span-naming-key");
 
   public static Context init(Context context, Source initialSource) {
-    if (context.get(CONTEXT_KEY) != null) {
+    ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
+    if (serverSpanNaming != null) {
+      // TODO (trask) does this ever happen?
+      serverSpanNaming.updatedBySource = initialSource;
       return context;
     }
     return context.with(CONTEXT_KEY, new ServerSpanNaming(initialSource));
