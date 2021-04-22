@@ -15,6 +15,7 @@ import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -815,7 +816,7 @@ public enum JdbcConnectionUrlParser {
       return DEFAULT;
     }
     // Make this easier and ignore case.
-    connectionUrl = connectionUrl.toLowerCase();
+    connectionUrl = connectionUrl.toLowerCase(Locale.ROOT);
 
     if (!connectionUrl.startsWith("jdbc:")) {
       return DEFAULT;

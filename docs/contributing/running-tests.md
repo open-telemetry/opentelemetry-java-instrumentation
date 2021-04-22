@@ -1,6 +1,6 @@
-### Running the tests
+## Running the tests
 
-#### Java versions
+### Java versions
 
 Open Telemetry Auto Instrumentation's minimal supported version is java 8.
 All jar files that we produce, unless noted otherwise, have bytecode
@@ -13,7 +13,7 @@ higher java version as required by library. The resulting classes will have
 higher bytecode level, but as it matches library's java version, no runtime
 problem arise.
 
-#### Instrumentation tests
+### Instrumentation tests
 
 Executing `./gradlew instrumentation:test` will run tests for all supported
 auto-instrumentations using that java version which runs the Gradle build
@@ -37,3 +37,19 @@ To run these tests locally, add `-PtestLatestDeps=true` to your existing `gradle
 #### Executing single test
 
 Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <GROOVY TEST FILE NAME>` will run only the selected test.
+
+### Smoke tests
+
+The smoke tests are not run by default since they take a long time and are not relevant for most
+contributions.
+If you need to run a specific smoke test:
+
+```
+./gradlew :smoke-tests:test -PsmokeTestSuite=glassfish -PrunSmokeTests=true
+```
+
+If you are on Windows and you want to run the tests using linux containers:
+
+```
+USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=glassfish -PrunSmokeTests=true
+```

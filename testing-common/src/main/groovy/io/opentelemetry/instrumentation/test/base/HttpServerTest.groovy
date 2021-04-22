@@ -71,14 +71,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
-  boolean hasForwardSpan() {
-    false
-  }
-
-  boolean hasIncludeSpan() {
-    false
-  }
-
   int getErrorPageSpansCount(ServerEndpoint endpoint) {
     1
   }
@@ -469,12 +461,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       if (hasRenderSpan(endpoint)) {
         spanCount++
       }
-      if (hasForwardSpan()) {
-        spanCount++
-      }
-      if (hasIncludeSpan()) {
-        spanCount++
-      }
     }
     if (hasErrorPageSpans(endpoint)) {
       spanCount += getErrorPageSpansCount(endpoint)
@@ -490,14 +476,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           if (endpoint != NOT_FOUND) {
             def controllerSpanIndex = 0
             if (hasHandlerSpan(endpoint)) {
-              controllerSpanIndex++
-            }
-            if (hasForwardSpan()) {
-              forwardSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
-              controllerSpanIndex++
-            }
-            if (hasIncludeSpan()) {
-              includeSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
               controllerSpanIndex++
             }
             controllerSpan(it, spanIndex++, span(controllerSpanIndex), errorMessage, expectedExceptionClass())
@@ -564,30 +542,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  void forwardSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
-    trace.span(index) {
-      name ~/\.forward$/
-      kind SpanKind.INTERNAL
-      if (errorMessage) {
-        status StatusCode.ERROR
-        errorEvent(exceptionClass, errorMessage)
-      }
-      childOf((SpanData) parent)
-    }
-  }
-
-  void includeSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
-    trace.span(index) {
-      name ~/\.include$/
-      kind SpanKind.INTERNAL
-      if (errorMessage) {
-        status StatusCode.ERROR
-        errorEvent(exceptionClass, errorMessage)
-      }
-      childOf((SpanData) parent)
-    }
-  }
-
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     def extraAttributes = extraAttributes()
@@ -603,7 +557,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       } else {
         hasNoParent()
       }
-      if (endpoint == EXCEPTION && hasExceptionOnServerSpan()) {
+      if (endpoint == EXCEPTION && hasExceptionOnServerSpan(endpoint)) {
         event(0) {
           eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
           attributes {

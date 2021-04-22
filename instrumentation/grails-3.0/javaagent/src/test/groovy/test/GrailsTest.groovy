@@ -102,21 +102,14 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
   }
 
   @Override
-  int getErrorPageSpansCount(ServerEndpoint endpoint) {
-    2
-  }
-
-  @Override
   boolean testPathParam() {
     true
   }
 
   @Override
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint) {
-    forwardSpan(trace, index, trace.span(0))
-    def errorSpanName = endpoint == NOT_FOUND ? "BasicErrorController.error" : "ErrorController.index"
-    trace.span(index + 1) {
-      name errorSpanName
+    trace.span(index) {
+      name endpoint == NOT_FOUND ? "BasicErrorController.error" : "ErrorController.index"
       kind INTERNAL
       attributes {
       }

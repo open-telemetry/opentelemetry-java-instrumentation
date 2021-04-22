@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import java.util.Locale;
+
 class LoggingConfigurer {
 
   private static final String SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY =
@@ -57,7 +59,7 @@ class LoggingConfigurer {
     }
 
     String tracerDebugLevelEnv =
-        System.getenv(tracerDebugLevelSysprop.replace('.', '_').toUpperCase());
+        System.getenv(tracerDebugLevelSysprop.replace('.', '_').toUpperCase(Locale.ROOT));
 
     if (tracerDebugLevelEnv != null) {
       return Boolean.parseBoolean(tracerDebugLevelEnv);
