@@ -82,6 +82,17 @@ public class AgentClassLoader extends URLClassLoader {
   }
 
   @Override
+  public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    // ContextStorageOverride is meant for library instrumentation we don't want it to apply to our
+    // bundled grpc
+    if ("io.grpc.override.ContextStorageOverride".equals(name)) {
+      throw new ClassNotFoundException(name);
+    }
+
+    return super.loadClass(name, resolve);
+  }
+
+  @Override
   public URL getResource(String resourceName) {
     URL bootstrapResource = bootstrapProxy.getResource(resourceName);
     if (null == bootstrapResource) {
