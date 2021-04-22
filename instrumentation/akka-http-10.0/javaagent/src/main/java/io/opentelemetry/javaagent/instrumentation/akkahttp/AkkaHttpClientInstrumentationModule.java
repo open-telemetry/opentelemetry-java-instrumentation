@@ -154,7 +154,8 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
       HttpRequest request = carrier.getRequest();
       if (request != null) {
         // It looks like this cast is only needed in Java, Scala would have figured it out
-        carrier.setRequest((HttpRequest) request.addHeader(RawHeader.create(key, value)));
+        carrier.setRequest(
+            (HttpRequest) request.removeHeader(key).addHeader(RawHeader.create(key, value)));
       }
     }
   }
