@@ -84,9 +84,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
     switch (endpoint) {
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
-      case AUTH_ERROR:
       case NOT_FOUND:
-        return getContextPath() + "/error"
+        return getContextPath() + "/**"
       case LOGIN:
         return "HTTP POST"
       default:

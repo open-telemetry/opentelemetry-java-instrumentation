@@ -82,7 +82,7 @@ class WicketTest extends AgentInstrumentationSpecification implements HttpServer
 
     assertTraces(1) {
       trace(0, 1) {
-        basicServerSpan(it, 0, getContextPath() + "/wicket-test/org.apache.wicket.markup.html.pages.InternalErrorPage", null, new Exception("test exception"))
+        basicServerSpan(it, 0, getContextPath() + "/wicket-test/hello.ExceptionPage", null, new Exception("test exception"))
       }
     }
   }

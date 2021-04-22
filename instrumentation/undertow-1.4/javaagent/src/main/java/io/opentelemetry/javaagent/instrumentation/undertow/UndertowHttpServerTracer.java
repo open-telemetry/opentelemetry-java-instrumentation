@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
-import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.api.undertow.KeyHolder;
 import io.opentelemetry.javaagent.instrumentation.api.undertow.UndertowActiveHandlers;
@@ -39,7 +41,7 @@ public class UndertowHttpServerTracer
 
   @Override
   protected Context customizeContext(Context context, HttpServerExchange exchange) {
-    context = ServletSpanNaming.init(context);
+    context = ServerSpanNaming.init(context, CONTAINER);
     // span is ended when counter reaches 0, we start from 2 which accounts for the
     // handler that started the span and exchange completion listener
     context = UndertowActiveHandlers.init(context, 2);

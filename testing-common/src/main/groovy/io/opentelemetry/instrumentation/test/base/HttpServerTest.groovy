@@ -41,7 +41,14 @@ import spock.lang.Unroll
 abstract class HttpServerTest<SERVER> extends InstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return endpoint == PATH_PARAM ? getContextPath() + "/path/:id/param" : endpoint.resolvePath(address).path
+    switch (endpoint) {
+      case PATH_PARAM:
+        return getContextPath() + "/path/:id/param"
+      case NOT_FOUND:
+        return getContextPath() + "/*"
+      default:
+        return endpoint.resolvePath(address).path
+    }
   }
 
   String getContextPath() {
