@@ -33,8 +33,12 @@ public final class DecoratorFunctions {
     @Override
     public void accept(M message, Connection connection) {
       Context context = getChannelContext(message.currentContextView(), connection.channel());
-      try (Scope ignored = context.makeCurrent()) {
+      if (context == null) {
         delegate.accept(message, connection);
+      } else {
+        try (Scope ignored = context.makeCurrent()) {
+          delegate.accept(message, connection);
+        }
       }
     }
   }
@@ -50,23 +54,28 @@ public final class DecoratorFunctions {
     @Override
     public void accept(M message, Throwable throwable) {
       Context context = getChannelContext(message.currentContextView(), null);
-      try (Scope ignored = context.makeCurrent()) {
+      if (context == null) {
         delegate.accept(message, throwable);
+      } else {
+        try (Scope ignored = context.makeCurrent()) {
+          delegate.accept(message, throwable);
+        }
       }
     }
   }
 
+  @Nullable
   private static Context getChannelContext(ContextView contextView, @Nullable Channel channel) {
-    Context context = null;
     // try to get the client span context from the channel if it's available
     if (channel != null) {
-      context = channel.attr(AttributeKeys.CLIENT_CONTEXT).get();
+      Context context = channel.attr(AttributeKeys.CLIENT_CONTEXT).get();
+      if (context != null) {
+        return context;
+      }
     }
     // otherwise use the parent span context
-    if (context == null) {
-      context = contextView.get(ReactorNettyInstrumentationModule.MapConnect.CONTEXT_ATTRIBUTE);
-    }
-    return context;
+    return contextView.getOrDefault(
+        ReactorNettyInstrumentationModule.MapConnect.CONTEXT_ATTRIBUTE, null);
   }
 
   private DecoratorFunctions() {}
