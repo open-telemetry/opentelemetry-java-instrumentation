@@ -68,6 +68,7 @@ class AkkaExecutorInstrumentationTest extends AgentInstrumentationSpecification 
 
     cleanup:
     pool?.shutdown()
+    pool?.awaitTermination(10, TimeUnit.SECONDS)
 
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
     where:
@@ -129,6 +130,10 @@ class AkkaExecutorInstrumentationTest extends AgentInstrumentationSpecification 
 
     expect:
     waitForTraces(1).size() == 1
+
+    cleanup:
+    pool?.shutdown()
+    pool?.awaitTermination(10, TimeUnit.SECONDS)
 
     where:
     name              | method         | poolImpl

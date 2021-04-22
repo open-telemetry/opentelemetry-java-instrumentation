@@ -80,11 +80,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
   }
 
   @Override
-  int getErrorPageSpansCount(ServerEndpoint endpoint) {
-    2
-  }
-
-  @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     switch (endpoint) {
       case PATH_PARAM:
@@ -113,11 +108,10 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
     and:
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 3) {
         serverSpan(it, 0, null, null, "GET", null, AUTH_ERROR)
         sendErrorSpan(it, 1, span(0))
-        forwardSpan(it, 2, span(0))
-        errorPageSpans(it, 3, null)
+        errorPageSpans(it, 2, null)
       }
     }
   }
@@ -154,10 +148,6 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
 
   @Override
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
-    if (endpoint == NOT_FOUND) {
-      forwardSpan(trace, index, trace.span(0))
-      index++
-    }
     trace.span(index) {
       name "BasicErrorController.error"
       kind INTERNAL

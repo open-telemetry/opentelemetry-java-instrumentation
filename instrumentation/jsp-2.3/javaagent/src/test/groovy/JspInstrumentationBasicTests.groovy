@@ -323,7 +323,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 3) {
         span(0) {
           hasNoParent()
           name "/$jspWebappContext/includes/includeHtml.jsp"
@@ -354,10 +354,6 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "jsp.requestURL" reqUrl
           }
         }
-        span(3) {
-          childOf span(2)
-          name "ApplicationDispatcher.include"
-        }
       }
     }
     res.code() == 200
@@ -376,7 +372,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 9) {
+      trace(0, 7) {
         span(0) {
           hasNoParent()
           name "/$jspWebappContext/includes/includeMulti.jsp"
@@ -409,37 +405,29 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
         }
         span(3) {
           childOf span(2)
-          name "ApplicationDispatcher.include"
-        }
-        span(4) {
-          childOf span(3)
           name "Compile /common/javaLoopH2.jsp"
           attributes {
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(5) {
-          childOf span(3)
+        span(4) {
+          childOf span(2)
           name "Render /common/javaLoopH2.jsp"
           attributes {
             "jsp.requestURL" reqUrl
           }
         }
-        span(6) {
+        span(5) {
           childOf span(2)
-          name "ApplicationDispatcher.include"
-        }
-        span(7) {
-          childOf span(6)
           name "Compile /common/javaLoopH2.jsp"
           attributes {
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
           }
         }
-        span(8) {
-          childOf span(6)
+        span(6) {
+          childOf span(2)
           name "Render /common/javaLoopH2.jsp"
           attributes {
             "jsp.requestURL" reqUrl
