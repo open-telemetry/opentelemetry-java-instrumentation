@@ -35,6 +35,9 @@ dependencies {
   testLibrary group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
   testImplementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
+
+  latestDepTestLibrary group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.+'
+  latestDepTestLibrary group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '2.+'
 }
 
 test {
