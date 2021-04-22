@@ -345,10 +345,10 @@ public class AgentInstaller {
         Throwable throwable) {
       if (log.isDebugEnabled()) {
         log.debug(
-            "Failed to handle {} for transformation on classloader {}: {}",
+            "Failed to handle {} for transformation on classloader {}",
             typeName,
             classLoader,
-            throwable.getMessage());
+            throwable);
       }
     }
 
