@@ -15,7 +15,7 @@ enum ClientRequestContextSetter implements TextMapSetter<ClientRequestContext> {
   @Override
   public void set(@Nullable ClientRequestContext carrier, String key, String value) {
     if (carrier != null) {
-      carrier.addAdditionalRequestHeader(key, value);
+      carrier.setAdditionalRequestHeader(key, value);
     }
   }
 }
