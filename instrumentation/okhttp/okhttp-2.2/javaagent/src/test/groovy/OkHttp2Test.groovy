@@ -4,7 +4,6 @@
  */
 
 import com.squareup.okhttp.Callback
-import com.squareup.okhttp.Headers
 import com.squareup.okhttp.MediaType
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
@@ -27,11 +26,11 @@ class OkHttp2Test extends HttpClientTest<Request> implements AgentTestTrait {
   @Override
   Request buildRequest(String method, URI uri, Map<String, String> headers) {
     def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
-    return new Request.Builder()
+    def request = new Request.Builder()
       .url(uri.toURL())
       .method(method, body)
-      .headers(Headers.of(HeadersUtil.headersToArray(headers)))
-      .build()
+    headers.forEach({ key, value -> request.header(key, value) })
+    return request.build()
   }
 
   @Override
