@@ -7,14 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.isArray;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -35,18 +38,74 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
+    Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
+    transformers.put(
         isMethod()
             .and(named("addListener"))
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener"))),
         ChannelFutureInstrumentation.class.getName() + "$AddListenerAdvice");
+    transformers.put(
+        isMethod().and(named("addListeners")).and(takesArgument(0, isArray())),
+        ChannelFutureInstrumentation.class.getName() + "$AddListenersAdvice");
+    transformers.put(
+        isMethod()
+            .and(named("removeListener"))
+            .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener"))),
+        ChannelFutureInstrumentation.class.getName() + "$RemoveListenerAdvice");
+    transformers.put(
+        isMethod().and(named("removeListeners")).and(takesArgument(0, isArray())),
+        ChannelFutureInstrumentation.class.getName() + "$RemoveListenersAdvice");
+    return transformers;
   }
 
   public static class AddListenerAdvice {
     @Advice.OnMethodEnter
     public static void wrapListener(
-        @Advice.Argument(value = 0, readOnly = false) GenericFutureListener listener) {
-      listener = new WrappedFutureListener(Java8BytecodeBridge.currentContext(), listener);
+        @Advice.Argument(value = 0, readOnly = false)
+            GenericFutureListener<? extends Future<? super Void>> listener) {
+      listener = WrappedFutureListener.wrap(Java8BytecodeBridge.currentContext(), listener);
+    }
+  }
+
+  public static class AddListenersAdvice {
+    @Advice.OnMethodEnter
+    public static void wrapListener(
+        @Advice.Argument(value = 0, readOnly = false)
+            GenericFutureListener<? extends Future<? super Void>>[] listeners) {
+
+      Context context = Java8BytecodeBridge.currentContext();
+      @SuppressWarnings("unchecked")
+      GenericFutureListener<? extends Future<? super Void>>[] wrappedListeners =
+          new GenericFutureListener[listeners.length];
+      for (int i = 0; i < listeners.length; ++i) {
+        wrappedListeners[i] = WrappedFutureListener.wrap(context, listeners[i]);
+      }
+      listeners = wrappedListeners;
+    }
+  }
+
+  public static class RemoveListenerAdvice {
+    @Advice.OnMethodEnter
+    public static void wrapListener(
+        @Advice.Argument(value = 0, readOnly = false)
+            GenericFutureListener<? extends Future<? super Void>> listener) {
+      listener = WrappedFutureListener.getWrapper(listener);
+    }
+  }
+
+  public static class RemoveListenersAdvice {
+    @Advice.OnMethodEnter
+    public static void wrapListener(
+        @Advice.Argument(value = 0, readOnly = false)
+            GenericFutureListener<? extends Future<? super Void>>[] listeners) {
+
+      @SuppressWarnings("unchecked")
+      GenericFutureListener<? extends Future<? super Void>>[] wrappedListeners =
+          new GenericFutureListener[listeners.length];
+      for (int i = 0; i < listeners.length; ++i) {
+        wrappedListeners[i] = WrappedFutureListener.getWrapper(listeners[i]);
+      }
+      listeners = wrappedListeners;
     }
   }
 }

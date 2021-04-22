@@ -9,18 +9,41 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.caching.Cache;
 
-public class WrappedFutureListener implements GenericFutureListener {
+public final class WrappedFutureListener<F extends Future<? super Void>>
+    implements GenericFutureListener<F> {
+
+  private static final Cache<GenericFutureListener<?>, WrappedFutureListener<?>> wrappers =
+      Cache.newBuilder().setWeakKeys().build();
+
+  @SuppressWarnings("unchecked")
+  public static <F extends Future<? super Void>> GenericFutureListener<F> wrap(
+      Context context, GenericFutureListener<F> delegate) {
+    if (delegate instanceof WrappedFutureListener) {
+      return delegate;
+    }
+    return (GenericFutureListener<F>)
+        wrappers.computeIfAbsent(delegate, k -> new WrappedFutureListener<>(context, delegate));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <F extends Future<? super Void>> GenericFutureListener<F> getWrapper(
+      GenericFutureListener<F> delegate) {
+    WrappedFutureListener<F> wrapper = (WrappedFutureListener<F>) wrappers.get(delegate);
+    return wrapper == null ? delegate : wrapper;
+  }
+
   private final Context context;
-  private final GenericFutureListener delegate;
+  private final GenericFutureListener<F> delegate;
 
-  public WrappedFutureListener(Context context, GenericFutureListener delegate) {
+  private WrappedFutureListener(Context context, GenericFutureListener<F> delegate) {
     this.context = context;
     this.delegate = delegate;
   }
 
   @Override
-  public void operationComplete(Future future) throws Exception {
+  public void operationComplete(F future) throws Exception {
     try (Scope ignored = context.makeCurrent()) {
       delegate.operationComplete(future);
     }
