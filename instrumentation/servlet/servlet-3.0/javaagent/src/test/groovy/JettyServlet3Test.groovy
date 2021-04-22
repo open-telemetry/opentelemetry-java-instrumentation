@@ -169,11 +169,6 @@ class JettyServlet3TestForward extends JettyDispatchTest {
   }
 
   @Override
-  boolean hasForwardSpan() {
-    true
-  }
-
-  @Override
   protected void setupServlets(ServletContextHandler context) {
     super.setupServlets(context)
 
@@ -200,11 +195,6 @@ class JettyServlet3TestInclude extends JettyDispatchTest {
   @Override
   boolean testError() {
     false
-  }
-
-  @Override
-  boolean hasIncludeSpan() {
-    true
   }
 
   @Override
