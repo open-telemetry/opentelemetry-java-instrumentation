@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.Map;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -28,20 +29,20 @@ class HttpSpanNameExtractorTest {
   void routeAndMethod() {
     when(extractor.route(anyMap())).thenReturn("/cats/{id}");
     when(extractor.method(anyMap())).thenReturn("GET");
-    assertThat(SpanNameExtractor.http(extractor).extract(Collections.emptyMap()))
+    Assertions.assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
         .isEqualTo("/cats/{id}");
   }
 
   @Test
   void method() {
     when(extractor.method(anyMap())).thenReturn("GET");
-    assertThat(SpanNameExtractor.http(extractor).extract(Collections.emptyMap()))
+    assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
         .isEqualTo("HTTP GET");
   }
 
   @Test
   void nothing() {
-    assertThat(SpanNameExtractor.http(extractor).extract(Collections.emptyMap()))
+    assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
         .isEqualTo("HTTP request");
   }
 }

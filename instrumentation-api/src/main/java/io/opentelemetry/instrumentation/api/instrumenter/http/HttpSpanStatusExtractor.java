@@ -3,18 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 
-final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
+public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
     implements SpanStatusExtractor<REQUEST, RESPONSE> {
+
+  /**
+   * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
+   * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
+   * default status} otherwise.
+   */
+  public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
+      HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
+    return new HttpSpanStatusExtractor<>(attributesExtractor);
+  }
 
   private final HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor;
 
-  protected HttpSpanStatusExtractor(
-      HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
+  private HttpSpanStatusExtractor(HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
     this.attributesExtractor = attributesExtractor;
   }
 

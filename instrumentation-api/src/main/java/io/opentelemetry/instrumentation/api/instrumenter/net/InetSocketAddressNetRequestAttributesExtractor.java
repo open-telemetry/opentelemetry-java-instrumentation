@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -13,19 +13,24 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Extractor of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes">Network
  * attributes</a> from a {@link InetSocketAddress}. Most network libraries will provide access to a
- * {@link InetSocketAddress} so this is a convenient alternative to {@link NetAttributesExtractor}.
- * There is no meaning to implement both in the same instrumentation.
+ * {@link InetSocketAddress} so this is a convenient alternative to {@link
+ * NetRequestAttributesExtractor}. There is no meaning to implement both in the same
+ * instrumentation.
+ *
+ * <p>This extractor implementation uses both {@code request} and {@code response} to extract
+ * network peer information. If those attributes are available in the request, it is recommended to
+ * use {@link InetSocketAddressNetAttributesExtractor} instead.
  */
-public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
-    extends NetAttributesExtractor<REQUEST, RESPONSE> {
+public abstract class InetSocketAddressNetRequestAttributesExtractor<REQUEST, RESPONSE>
+    extends NetRequestAttributesExtractor<REQUEST, RESPONSE> {
 
   @Nullable
-  protected abstract InetSocketAddress getAddress(REQUEST request, RESPONSE response);
+  protected abstract InetSocketAddress getAddress(REQUEST request);
 
   @Override
   @Nullable
-  protected final String peerName(REQUEST request, RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  protected final String peerName(REQUEST request) {
+    InetSocketAddress address = getAddress(request);
     if (address == null) {
       return null;
     }
@@ -37,8 +42,8 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  protected final Long peerPort(REQUEST request, RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  protected final Long peerPort(REQUEST request) {
+    InetSocketAddress address = getAddress(request);
     if (address == null) {
       return null;
     }
@@ -47,8 +52,8 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  protected final String peerIp(REQUEST request, RESPONSE response) {
-    InetSocketAddress address = getAddress(request, response);
+  protected final String peerIp(REQUEST request) {
+    InetSocketAddress address = getAddress(request);
     if (address == null) {
       return null;
     }
