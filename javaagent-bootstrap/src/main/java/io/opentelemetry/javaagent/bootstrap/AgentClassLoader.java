@@ -104,15 +104,6 @@ public class AgentClassLoader extends URLClassLoader {
     }
   }
 
-  @Override
-  public InputStream getResourceAsStream(String name) {
-//    System.out.println("Agent.getResourceAsStream " + name);
-//    if(name.contains("DemoServlet3Advice")){
-//      Thread.dumpStack();
-//    }
-    return super.getResourceAsStream(name);
-  }
-
   public BootstrapClassLoaderProxy getBootstrapProxy() {
     return bootstrapProxy;
   }

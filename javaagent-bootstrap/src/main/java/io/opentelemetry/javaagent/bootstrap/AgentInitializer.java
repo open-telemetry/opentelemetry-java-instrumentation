@@ -34,6 +34,8 @@ public class AgentInitializer {
       throws Exception {
     if (AGENT_CLASSLOADER == null) {
       ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapUrl);
+      AGENT_CLASSLOADER = agentClassLoader;
+
       Class<?> agentInstallerClass =
           agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller");
       Method agentInstallerMethod =
@@ -45,7 +47,6 @@ public class AgentInitializer {
       } finally {
         Thread.currentThread().setContextClassLoader(savedContextClassLoader);
       }
-      AGENT_CLASSLOADER = agentClassLoader;
     }
   }
 

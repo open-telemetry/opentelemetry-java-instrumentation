@@ -77,7 +77,6 @@ public class ExtensionClassLoader extends URLClassLoader {
 
   @Override
   protected Class<?> findClass(String name) throws ClassNotFoundException {
-    System.out.println("findClass " + name);
     // Use resource loading to get the class as a stream of bytes, then use ASM to transform it.
     InputStream in = super.getResourceAsStream(name.replace('.', '/') + ".class");
     if (in == null) {
@@ -100,24 +99,11 @@ public class ExtensionClassLoader extends URLClassLoader {
   }
 
   @Override
-  public URL findResource(String name) {
-    System.out.println("findResource " + name);
-    if(name.contains("DemoServlet3Advice")){
-      Thread.dumpStack();
-    }
-    URL resource = super.findResource(name);
-    System.out.println("Found " + resource);
-    return resource;
-  }
-
-  @Override
   public InputStream getResourceAsStream(String name) {
-    System.out.println("getResourceAsStream " + name);
     InputStream originalStream = super.getResourceAsStream(name);
     if (name.endsWith(".class")) {
       try {
         byte[] remappedClass = remapClassBytes(originalStream);
-        System.out.println("Returning remapped resource, length " + remappedClass.length);
         return new ByteArrayInputStream(remappedClass);
       } catch (IOException e) {
         e.printStackTrace();
