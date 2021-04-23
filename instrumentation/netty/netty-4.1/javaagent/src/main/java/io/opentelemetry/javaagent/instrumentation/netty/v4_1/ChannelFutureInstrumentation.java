@@ -63,7 +63,7 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
             GenericFutureListener<? extends Future<? super Void>> listener) {
-      listener = WrappedFutureListener.wrap(Java8BytecodeBridge.currentContext(), listener);
+      listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
     }
   }
 
@@ -78,7 +78,7 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
       GenericFutureListener<? extends Future<? super Void>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];
       for (int i = 0; i < listeners.length; ++i) {
-        wrappedListeners[i] = WrappedFutureListener.wrap(context, listeners[i]);
+        wrappedListeners[i] = FutureListenerWrappers.wrap(context, listeners[i]);
       }
       listeners = wrappedListeners;
     }
@@ -89,7 +89,7 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
             GenericFutureListener<? extends Future<? super Void>> listener) {
-      listener = WrappedFutureListener.getWrapper(listener);
+      listener = FutureListenerWrappers.getWrapper(listener);
     }
   }
 
@@ -103,7 +103,7 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
       GenericFutureListener<? extends Future<? super Void>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];
       for (int i = 0; i < listeners.length; ++i) {
-        wrappedListeners[i] = WrappedFutureListener.getWrapper(listeners[i]);
+        wrappedListeners[i] = FutureListenerWrappers.getWrapper(listeners[i]);
       }
       listeners = wrappedListeners;
     }
