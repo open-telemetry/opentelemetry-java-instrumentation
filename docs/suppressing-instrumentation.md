@@ -43,7 +43,7 @@ You can suppress agent instrumentation of specific libraries by using
 | GRPC | grpc|
 | Hibernate | hibernate|
 | Java EE Grizzly | grizzly|
-| Java HTTP Client | httpclient |
+| Java HTTP Client | java-http-client |
 | Java `HttpURLConnection` | http-url-connection |
 | Java JDBC | jdbc |
 | Java JDBC `DataSource` | jdbc-datasource |
