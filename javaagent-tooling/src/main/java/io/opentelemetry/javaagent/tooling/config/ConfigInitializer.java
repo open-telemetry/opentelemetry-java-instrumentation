@@ -42,8 +42,7 @@ public final class ConfigInitializer {
   /** Retrieves all default configuration overloads using SPI and initializes Config. */
   private static Properties loadSpiConfiguration() {
     Properties propertiesFromSpi = new Properties();
-    for (PropertySource propertySource :
-        ServiceLoader.load(PropertySource.class, Thread.currentThread().getContextClassLoader())) {
+    for (PropertySource propertySource : ServiceLoader.load(PropertySource.class)) {
       propertiesFromSpi.putAll(propertySource.getProperties());
     }
     return propertiesFromSpi;
