@@ -16,5 +16,6 @@ class UrlMappings {
     "/path/$id/param"(controller: 'test', action: 'path')
 
     "500"(controller: 'error')
+    "404"(controller: 'error', action: 'notFound')
   }
 }

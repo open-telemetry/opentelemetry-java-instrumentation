@@ -16,4 +16,9 @@ class ErrorController implements Controller {
   def index() {
     render ERROR.body
   }
+
+  @Action
+  def notFound() {
+    response.sendError(404, "Not Found")
+  }
 }
