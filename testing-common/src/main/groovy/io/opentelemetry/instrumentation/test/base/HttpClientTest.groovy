@@ -18,6 +18,7 @@ import static org.junit.Assume.assumeTrue
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -95,10 +96,18 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     return sendRequest(request, method, uri, headers)
   }
 
-  // ideally private, but then groovy closures in this class cannot find them
-  final int doReusedRequest(String method, URI uri, Map<String, String> headers = [:]) {
+  private int doReusedRequest(String method, URI uri) {
+    def request = buildRequest(method, uri, [:])
+    sendRequest(request, method, uri, [:])
+    return sendRequest(request, method, uri, [:])
+  }
+
+  private int doRequestWithExistingTracingHeaders(String method, URI uri) {
+    def headers = new HashMap()
+    for (String field : GlobalOpenTelemetry.getPropagators().getTextMapPropagator().fields()) {
+      headers.put(field, "12345789")
+    }
     def request = buildRequest(method, uri, headers)
-    sendRequest(request, method, uri, headers)
     return sendRequest(request, method, uri, headers)
   }
 
@@ -498,6 +507,31 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
       }
       trace(1, 2 + extraClientSpans()) {
+        clientSpan(it, 0, null, method, url)
+        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+      }
+    }
+
+    where:
+    path = "/success"
+    method = "GET"
+    url = server.address.resolve(path)
+  }
+
+  // this test verifies two things:
+  // * the javaagent doesn't cause multiples of tracing headers to be added
+  //   (TestHttpServer throws exception if there are multiples)
+  // * the javaagent overwrites the existing tracing headers
+  //   (so that it propagates the same trace id / span id that it reports to the backend
+  //   and the trace is not broken)
+  def "request with existing tracing headers"() {
+    when:
+    def responseCode = doRequestWithExistingTracingHeaders(method, url)
+
+    then:
+    responseCode == 200
+    assertTraces(1) {
+      trace(0, 2 + extraClientSpans()) {
         clientSpan(it, 0, null, method, url)
         serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
       }

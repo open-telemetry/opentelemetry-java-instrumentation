@@ -80,13 +80,12 @@ public class JdkHttpClientTracer
   }
 
   public HttpHeaders inject(HttpHeaders original) {
-    Map<String, List<String>> headerMap = new HashMap<>();
+    Map<String, List<String>> headerMap = new HashMap<>(original.map());
 
     inject(
         Context.current(),
         headerMap,
         (carrier, key, value) -> carrier.put(key, Collections.singletonList(value)));
-    headerMap.putAll(original.map());
 
     return HttpHeaders.of(headerMap, (s, s2) -> true);
   }
