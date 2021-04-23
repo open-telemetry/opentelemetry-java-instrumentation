@@ -7,15 +7,15 @@ package test
 
 class UrlMappings {
 
-    static mappings = {
-      "/success"(controller: 'test', action: 'success')
-      "/query"(controller: 'test', action: 'query')
-      "/redirect"(controller: 'test', action: 'redirect')
-      "/error-status"(controller: 'test', action: 'error')
-      "/exception"(controller: 'test', action: 'exception')
-      "/path/$id/param"(controller: 'test', action: 'path')
+  static mappings = {
+    "/success"(controller: 'test', action: 'success')
+    "/query"(controller: 'test', action: 'query')
+    "/redirect"(controller: 'test', action: 'redirect')
+    "/error-status"(controller: 'test', action: 'error')
+    "/exception"(controller: 'test', action: 'exception')
+    "/path/$id/param"(controller: 'test', action: 'path')
 
-      "500"(controller: 'error')
-      "404"(controller: 'error', action: 'notFound')
-    }
+    "500"(controller: 'error')
+    "404"(controller: 'error', action: 'notFound')
+  }
 }

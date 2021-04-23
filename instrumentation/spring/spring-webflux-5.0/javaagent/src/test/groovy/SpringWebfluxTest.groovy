@@ -23,6 +23,7 @@ import server.EchoHandlerFunction
 import server.FooModel
 import server.SpringWebFluxTestApplication
 import server.TestController
+import spock.lang.Unroll
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentInstrumentationSpecification {
@@ -43,6 +44,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
 
   OkHttpClient client = OkHttpUtils.client(true)
 
+  @Unroll
   def "Basic GET test #testName"() {
     setup:
     String url = "http://localhost:$port$urlPath"
@@ -109,6 +111,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
     "annotation API delayed response"    | "/foo-delayed"       | "/foo-delayed"         | "getFooDelayed" | new FooModel(3L, "delayed").toString()
   }
 
+  @Unroll
   def "GET test with async response #testName"() {
     setup:
     String url = "http://localhost:$port$urlPath"
@@ -195,7 +198,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
   merely wraps handler call into Mono and thus actual invocation of handler function happens later,
   when INTERNAL handler span has already finished. Thus, "tracedMethod" has SERVER Netty span as its parent.
    */
-
   def "Create span during handler function"() {
     setup:
     String url = "http://localhost:$port$urlPath"
@@ -354,6 +356,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
     }
   }
 
+  @Unroll
   def "GET to bad endpoint #testName"() {
     setup:
     String url = "http://localhost:$port$urlPath"
@@ -492,6 +495,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
     }
   }
 
+  @Unroll
   def "Multiple GETs to delaying route #testName"() {
     setup:
     def requestsCount = 50 // Should be more than 2x CPUs to fish out some bugs

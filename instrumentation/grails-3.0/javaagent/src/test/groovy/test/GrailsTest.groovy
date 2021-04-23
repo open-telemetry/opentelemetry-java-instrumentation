@@ -58,8 +58,8 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
       return getContextPath() + "/test/path"
     } else if (endpoint == QUERY_PARAM) {
       return getContextPath() + "/test/query"
-    } else if (endpoint == ERROR || endpoint == EXCEPTION) {
-      return getContextPath() + "/error/index"
+    } else if (endpoint == ERROR) {
+      return getContextPath() + "/test/error"
     } else if (endpoint == NOT_FOUND) {
       return getContextPath() + "/**"
     }
@@ -103,7 +103,7 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
 
   @Override
   int getErrorPageSpansCount(ServerEndpoint endpoint) {
-    endpoint == NOT_FOUND ? 1 : 2
+    endpoint == NOT_FOUND ? 2 : 1
   }
 
   @Override
@@ -113,10 +113,15 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
 
   @Override
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint) {
-    forwardSpan(trace, index, trace.span(0))
-    if (endpoint != NOT_FOUND) {
+    trace.span(index) {
+      name endpoint == NOT_FOUND ? "ErrorController.notFound" : "ErrorController.index"
+      kind INTERNAL
+      attributes {
+      }
+    }
+    if (endpoint == NOT_FOUND) {
       trace.span(index + 1) {
-        name "ErrorController.index"
+        name ~/\.sendError$/
         kind INTERNAL
         attributes {
         }

@@ -47,11 +47,6 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
   }
 
   @Override
-  int getErrorPageSpansCount(ServerEndpoint endpoint) {
-    2
-  }
-
-  @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
     endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND
   }
@@ -85,27 +80,22 @@ class ServletFilterTest extends HttpServerTest<ConfigurableApplicationContext> i
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    if (endpoint == PATH_PARAM) {
-      return "/path/{id}/param"
-    } else if (endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND) {
-      return "/error"
+    switch (endpoint) {
+      case PATH_PARAM:
+        return getContextPath() + "/path/{id}/param"
+      case NOT_FOUND:
+        return getContextPath() + "/**"
+      default:
+        return super.expectedServerSpanName(endpoint)
     }
-    return endpoint.resolvePath(address).path
   }
 
   @Override
   void errorPageSpans(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      name "ApplicationDispatcher.forward"
-      kind INTERNAL
-      childOf((SpanData) parent)
-      attributes {
-      }
-    }
-    trace.span(index + 1) {
       name "BasicErrorController.error"
       kind INTERNAL
-      childOf(trace.span(index))
+      childOf((SpanData) parent)
       attributes {
       }
     }

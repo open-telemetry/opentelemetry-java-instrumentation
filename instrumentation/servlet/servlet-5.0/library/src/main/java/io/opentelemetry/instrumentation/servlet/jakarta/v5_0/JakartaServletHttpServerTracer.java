@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.servlet.jakarta.v5_0;
 
-import io.opentelemetry.api.trace.Span;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import jakarta.servlet.RequestDispatcher;
@@ -34,13 +34,8 @@ public class JakartaServletHttpServerTracer
   }
 
   public Context startSpan(Object servletOrFilter, HttpServletRequest request) {
-    Context context = startSpan(request, getSpanName(servletOrFilter, request));
-    // server span name shouldn't be update when server span was created from a call to Servlet
-    // if server span was created from a call to Filter then name may be updated from updateContext.
-    if (servletOrFilter instanceof Servlet) {
-      ServletSpanNaming.setServletUpdatedServerSpanName(context);
-    }
-    return context;
+    return startSpan(
+        request, getSpanName(servletOrFilter, request), servletOrFilter instanceof Servlet);
   }
 
   private String getSpanName(Object servletOrFilter, HttpServletRequest request) {
@@ -119,15 +114,8 @@ public class JakartaServletHttpServerTracer
 
   public Context updateContext(
       Context context, Object servletOrFilter, HttpServletRequest request) {
-    Span span = ServerSpan.fromContextOrNull(context);
-    if (span != null && ServletSpanNaming.shouldUpdateServerSpanName(context)) {
-      String spanName = getSpanNameFromPath(servletOrFilter, request);
-      if (spanName != null) {
-        span.updateName(spanName);
-        ServletSpanNaming.setServletUpdatedServerSpanName(context);
-      }
-    }
-
+    ServerSpanNaming.updateServerSpanName(
+        context, SERVLET, () -> getSpanNameFromPath(servletOrFilter, request));
     return updateContext(context, request);
   }
 

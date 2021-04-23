@@ -141,9 +141,6 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
           break
         case "/exception":
           throw new Exception(EXCEPTION.body)
-        case "/notFound":
-          endpoint = NOT_FOUND
-          break
         case "/query?some=query":
           endpoint = QUERY_PARAM
           break
