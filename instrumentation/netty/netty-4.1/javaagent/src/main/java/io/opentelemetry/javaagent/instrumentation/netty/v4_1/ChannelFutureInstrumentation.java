@@ -15,6 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
@@ -63,7 +65,10 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
             GenericFutureListener<? extends Future<? super Void>> listener) {
-      listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
+      ContextStore<GenericFutureListener, GenericFutureListener> contextStore =
+          InstrumentationContext.get(GenericFutureListener.class, GenericFutureListener.class);
+      listener =
+          FutureListenerWrappers.wrap(contextStore, Java8BytecodeBridge.currentContext(), listener);
     }
   }
 
@@ -73,12 +78,14 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0, readOnly = false)
             GenericFutureListener<? extends Future<? super Void>>[] listeners) {
 
+      ContextStore<GenericFutureListener, GenericFutureListener> contextStore =
+          InstrumentationContext.get(GenericFutureListener.class, GenericFutureListener.class);
       Context context = Java8BytecodeBridge.currentContext();
       @SuppressWarnings("unchecked")
       GenericFutureListener<? extends Future<? super Void>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];
       for (int i = 0; i < listeners.length; ++i) {
-        wrappedListeners[i] = FutureListenerWrappers.wrap(context, listeners[i]);
+        wrappedListeners[i] = FutureListenerWrappers.wrap(contextStore, context, listeners[i]);
       }
       listeners = wrappedListeners;
     }
@@ -89,7 +96,9 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
             GenericFutureListener<? extends Future<? super Void>> listener) {
-      listener = FutureListenerWrappers.getWrapper(listener);
+      ContextStore<GenericFutureListener, GenericFutureListener> contextStore =
+          InstrumentationContext.get(GenericFutureListener.class, GenericFutureListener.class);
+      listener = FutureListenerWrappers.getWrapper(contextStore, listener);
     }
   }
 
@@ -99,11 +108,13 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0, readOnly = false)
             GenericFutureListener<? extends Future<? super Void>>[] listeners) {
 
+      ContextStore<GenericFutureListener, GenericFutureListener> contextStore =
+          InstrumentationContext.get(GenericFutureListener.class, GenericFutureListener.class);
       @SuppressWarnings("unchecked")
       GenericFutureListener<? extends Future<? super Void>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];
       for (int i = 0; i < listeners.length; ++i) {
-        wrappedListeners[i] = FutureListenerWrappers.getWrapper(listeners[i]);
+        wrappedListeners[i] = FutureListenerWrappers.getWrapper(contextStore, listeners[i]);
       }
       listeners = wrappedListeners;
     }

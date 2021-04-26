@@ -11,23 +11,22 @@ import io.netty.util.concurrent.GenericProgressiveFutureListener;
 import io.netty.util.concurrent.ProgressiveFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 
 public final class FutureListenerWrappers {
-  private static final Cache<GenericFutureListener<?>, GenericFutureListener<?>> wrappers =
-      Cache.newBuilder().setWeakKeys().build();
-
   @SuppressWarnings("unchecked")
   public static GenericFutureListener<? extends Future<? super Void>> wrap(
-      Context context, GenericFutureListener<? extends Future<? super Void>> delegate) {
+      ContextStore<GenericFutureListener, GenericFutureListener> contextStore,
+      Context context,
+      GenericFutureListener<? extends Future<? super Void>> delegate) {
     if (delegate instanceof WrappedFutureListener
         || delegate instanceof WrappedProgressiveFutureListener) {
       return delegate;
     }
     return (GenericFutureListener<? extends Future<? super Void>>)
-        wrappers.computeIfAbsent(
+        contextStore.putIfAbsent(
             delegate,
-            k -> {
+            () -> {
               if (delegate instanceof GenericProgressiveFutureListener) {
                 return new WrappedProgressiveFutureListener(
                     context,
@@ -40,9 +39,10 @@ public final class FutureListenerWrappers {
   }
 
   public static GenericFutureListener<? extends Future<? super Void>> getWrapper(
+      ContextStore<GenericFutureListener, GenericFutureListener> contextStore,
       GenericFutureListener<? extends Future<? super Void>> delegate) {
     GenericFutureListener<? extends Future<? super Void>> wrapper =
-        (GenericFutureListener<? extends Future<? super Void>>) wrappers.get(delegate);
+        (GenericFutureListener<? extends Future<? super Void>>) contextStore.get(delegate);
     return wrapper == null ? delegate : wrapper;
   }
 
