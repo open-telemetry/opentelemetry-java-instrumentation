@@ -28,7 +28,7 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
     environment.put("OTEL_EXPORTER_OTLP_ENDPOINT", "http://" + COLLECTOR_ALIAS + ":55680");
     environment.put("OTEL_RESOURCE_ATTRIBUTES", "service.name=smoke-test");
     environment.put("OTEL_JAVAAGENT_DEBUG", "true");
-    environment.put("RANDOM_CHANGE_TO_TRIGGER_RERUN_OF_ALL_TESTS", "1");
+    environment.put("RANDOM_CHANGE_TO_TRIGGER_RERUN_OF_ALL_TESTS", "2");
     return environment;
   }
 
