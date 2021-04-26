@@ -20,6 +20,7 @@ public interface TestContainerManager {
   Consumer<OutputFrame> startTarget(
       String targetImageName,
       String agentPath,
+      String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       Map<String, String> extraResources,
       TargetWaitStrategy waitStrategy);
