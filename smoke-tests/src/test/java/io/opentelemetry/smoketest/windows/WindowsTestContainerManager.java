@@ -176,7 +176,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     }
 
     List<String> environment = new ArrayList<>();
-    getAgentEnvironment(jvmArgsEnvVarName).forEach((key, value) -> environment.add(key + "=" + value));
+    getAgentEnvironment(jvmArgsEnvVarName)
+        .forEach((key, value) -> environment.add(key + "=" + value));
     extraEnv.forEach((key, value) -> environment.add(key + "=" + value));
 
     target =
