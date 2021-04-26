@@ -13,5 +13,10 @@
 
   <logger name="io.opentelemetry" level="debug"/>
   <logger name="com.example.javaagent" level="debug"/>
+  <logger name="org.testcontainers" level="debug"/>
+  <logger name="org.testcontainers.shaded" level="warn"/>
+  <logger name="org.testcontainers.containers.output.WaitingConsumer" level="warn"/>
+  <logger name="Collector" level="debug"/>
+  <logger name="Backend" level="debug"/>
 
 </configuration>
