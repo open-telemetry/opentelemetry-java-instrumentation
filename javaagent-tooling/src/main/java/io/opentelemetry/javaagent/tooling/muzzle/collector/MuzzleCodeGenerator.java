@@ -399,6 +399,9 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                   false);
             }
 
+            // declared flag
+            mv.visitLdcInsn(field.isDeclared());
+
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
                 "io/opentelemetry/javaagent/tooling/muzzle/Reference$Builder",
@@ -409,7 +412,8 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                         Reference.Source[].class,
                         Reference.Flag[].class,
                         String.class,
-                        Type.class)),
+                        Type.class,
+                        boolean.class)),
                 false);
           }
           for (Reference.Method method : references[i].getMethods()) {
