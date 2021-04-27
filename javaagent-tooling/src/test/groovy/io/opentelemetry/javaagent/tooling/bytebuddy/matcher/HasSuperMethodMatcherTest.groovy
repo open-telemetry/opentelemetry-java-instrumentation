@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod
+import static AgentElementMatchers.hasSuperMethod
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith
 import static net.bytebuddy.matcher.ElementMatchers.none
 

@@ -157,7 +157,7 @@ class ReferenceCollectorTest extends Specification {
     then:
     println references
 
-    with(references[DeclaredFieldTestClass.Helper.name]) {helperClass ->
+    with(references[DeclaredFieldTestClass.Helper.name]) { helperClass ->
       def superField = findField(helperClass, 'superField')
       !superField.declared
 
@@ -165,7 +165,7 @@ class ReferenceCollectorTest extends Specification {
       field.declared
     }
 
-    with(references[DeclaredFieldTestClass.LibraryBaseClass.name]) {libraryBaseClass ->
+    with(references[DeclaredFieldTestClass.LibraryBaseClass.name]) { libraryBaseClass ->
       libraryBaseClass.fields.empty
     }
   }

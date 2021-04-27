@@ -15,12 +15,12 @@ import net.bytebuddy.matcher.ElementMatcher;
  *
  * @param <T> Type of the matched object
  */
-public class MethodDeclaringTypeMatcher<T extends MethodDescription>
+class MethodDeclaringTypeMatcher<T extends MethodDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
   private final ElementMatcher<TypeDescription> matcher;
 
-  public MethodDeclaringTypeMatcher(ElementMatcher<TypeDescription> matcher) {
+  MethodDeclaringTypeMatcher(ElementMatcher<TypeDescription> matcher) {
     this.matcher = matcher;
   }
 

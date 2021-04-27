@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle
+package io.opentelemetry.javaagent.extension.muzzle
 
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate
 import spock.lang.Specification
 import spock.lang.Unroll
 

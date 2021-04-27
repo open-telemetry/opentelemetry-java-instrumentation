@@ -15,8 +15,12 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
+import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
+import io.opentelemetry.javaagent.extension.log.TransformSafeLogger;
+import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
+import io.opentelemetry.javaagent.internal.extension.AgentExtensionToolingImpl;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
 import io.opentelemetry.javaagent.spi.ComponentInstaller;
@@ -158,14 +162,16 @@ public class AgentInstaller {
 
     int numInstrumenters = 0;
 
-    for (InstrumentationModule instrumentationModule : loadInstrumentationModules()) {
-      log.debug("Loading instrumentation {}", instrumentationModule.getClass().getName());
+    for (AgentExtension agentExtension : loadAgentExtensions()) {
+      log.debug("Loading extension {}", agentExtension.getClass().getName());
       try {
-        agentBuilder = instrumentationModule.instrument(agentBuilder);
+        AgentExtensionTooling components =
+            new AgentExtensionToolingImpl(
+                agentExtension.getClass(), agentExtension.extensionName());
+        agentBuilder = agentExtension.extend(agentBuilder, components);
         numInstrumenters++;
       } catch (Exception | LinkageError e) {
-        log.error(
-            "Unable to load instrumentation {}", instrumentationModule.getClass().getName(), e);
+        log.error("Unable to load extension {}", agentExtension.getClass().getName(), e);
       }
     }
 
@@ -249,11 +255,17 @@ public class AgentInstaller {
         ByteBuddyAgentCustomizer.class, AgentInstaller.class.getClassLoader());
   }
 
-  private static List<InstrumentationModule> loadInstrumentationModules() {
-    return SafeServiceLoader.load(
-            InstrumentationModule.class, AgentInstaller.class.getClassLoader())
-        .stream()
-        .sorted(Comparator.comparingInt(InstrumentationModule::getOrder))
+  private static List<? extends AgentExtension> loadAgentExtensions() {
+    // TODO: InstrumentationModule should no longer be an SPI
+    Stream<? extends AgentExtension> extensions =
+        Stream.concat(
+            SafeServiceLoader.load(
+                InstrumentationModule.class, AgentInstaller.class.getClassLoader())
+                .stream(),
+            SafeServiceLoader.load(AgentExtension.class, AgentInstaller.class.getClassLoader())
+                .stream());
+    return extensions
+        .sorted(Comparator.comparingInt(AgentExtension::order))
         .collect(Collectors.toList());
   }
 

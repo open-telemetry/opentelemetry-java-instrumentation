@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.failSafe
+import static AgentElementMatchers.failSafe
 
 import net.bytebuddy.matcher.ElementMatcher
 import spock.lang.Specification

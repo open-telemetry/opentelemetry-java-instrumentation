@@ -22,7 +22,7 @@ the javaagent jar. The easiest way to do it is using `@AutoService`:
 
 ```java
 
-@AutoService(InstrumentationModule.class)
+@AutoService(AgentExtension.class)
 class MyLibraryInstrumentationModule extends InstrumentationModule {
   // ...
 }

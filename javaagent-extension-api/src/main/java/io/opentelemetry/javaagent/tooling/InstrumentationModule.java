@@ -13,11 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.tooling.bytebuddy.AgentTransformers;
-import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
-import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
-import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
-import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
+import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
+import io.opentelemetry.javaagent.extension.ConstantAdjuster;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationContextProvider;
+import io.opentelemetry.javaagent.extension.log.TransformSafeLogger;
+import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher;
@@ -45,8 +45,11 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Classes extending {@link InstrumentationModule} should be public and non-final so that it's
  * possible to extend and reuse them in vendor distributions.
+ *
+ * <p>WARNING: using {@link InstrumentationModule} as SPI is now deprecated; please use {@link
+ * AgentExtension} instead.
  */
-public abstract class InstrumentationModule {
+public abstract class InstrumentationModule implements AgentExtension {
   private static final TransformSafeLogger log =
       TransformSafeLogger.getLogger(InstrumentationModule.class);
   private static final Logger muzzleLog = LoggerFactory.getLogger("muzzleMatcher");
@@ -112,9 +115,9 @@ public abstract class InstrumentationModule {
    * @param parentAgentBuilder AgentBuilder to base instrumentation config off of.
    * @return the original agentBuilder and this instrumentation
    */
-  public final AgentBuilder instrument(AgentBuilder parentAgentBuilder) {
+  public final AgentBuilder extend(AgentBuilder parentAgentBuilder, AgentExtensionTooling tooling) {
     if (!enabled) {
-      log.debug("Instrumentation {} is disabled", mainInstrumentationName());
+      log.debug("Instrumentation {} is disabled", extensionName());
       return parentAgentBuilder;
     }
 
@@ -125,17 +128,18 @@ public abstract class InstrumentationModule {
       if (!helperClassNames.isEmpty() || !helperResourceNames.isEmpty()) {
         log.warn(
             "Helper classes and resources won't be injected if no types are instrumented: {}",
-            mainInstrumentationName());
+            extensionName());
       }
 
       return parentAgentBuilder;
     }
 
     ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher = classLoaderMatcher();
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher();
-    HelperInjector helperInjector =
-        new HelperInjector(mainInstrumentationName(), helperClassNames, helperResourceNames);
-    InstrumentationContextProvider contextProvider = getContextProvider();
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(tooling);
+    AgentBuilder.Transformer helperInjector =
+        tooling.createHelperInjector(helperClassNames, helperResourceNames);
+    InstrumentationContextProvider contextProvider =
+        tooling.createInstrumentationContextProvider(getMuzzleContextStoreClasses());
 
     AgentBuilder agentBuilder = parentAgentBuilder;
     for (TypeInstrumentation typeInstrumentation : typeInstrumentations) {
@@ -151,12 +155,12 @@ public abstract class InstrumentationModule {
                           + getClass().getName()))
               .and(NOT_DECORATOR_MATCHER)
               .and(muzzleMatcher)
-              .transform(AgentTransformers.defaultTransformers())
+              .transform(ConstantAdjuster.instance())
               .transform(helperInjector);
       extendableAgentBuilder = contextProvider.instrumentationTransformer(extendableAgentBuilder);
       extendableAgentBuilder =
           applyInstrumentationTransformers(
-              typeInstrumentation.transformers(), extendableAgentBuilder);
+              typeInstrumentation.transformers(), extendableAgentBuilder, tooling);
       extendableAgentBuilder = contextProvider.additionalInstrumentation(extendableAgentBuilder);
 
       agentBuilder = extendableAgentBuilder;
@@ -178,26 +182,20 @@ public abstract class InstrumentationModule {
 
   private AgentBuilder.Identified.Extendable applyInstrumentationTransformers(
       Map<? extends ElementMatcher<? super MethodDescription>, String> transformers,
-      AgentBuilder.Identified.Extendable agentBuilder) {
+      AgentBuilder.Identified.Extendable agentBuilder,
+      AgentExtensionTooling tooling) {
     for (Map.Entry<? extends ElementMatcher<? super MethodDescription>, String> entry :
         transformers.entrySet()) {
       agentBuilder =
           agentBuilder.transform(
               new AgentBuilder.Transformer.ForAdvice()
-                  .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
-                  .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
+                  .include(
+                      tooling.classLoaders().bootstrapProxyClassLoader(),
+                      tooling.classLoaders().agentClassLoader())
+                  .withExceptionHandler(tooling.adviceExceptionHandler())
                   .advice(entry.getKey(), entry.getValue()));
     }
     return agentBuilder;
-  }
-
-  private InstrumentationContextProvider getContextProvider() {
-    Map<String, String> contextStore = getMuzzleContextStoreClasses();
-    if (!contextStore.isEmpty()) {
-      return new FieldBackedProvider(getClass(), contextStore);
-    } else {
-      return NoopContextProvider.INSTANCE;
-    }
   }
 
   /**
@@ -206,6 +204,12 @@ public abstract class InstrumentationModule {
    * found this instrumentation is skipped.
    */
   private class MuzzleMatcher implements AgentBuilder.RawMatcher {
+    private final AgentExtensionTooling tooling;
+
+    private MuzzleMatcher(AgentExtensionTooling tooling) {
+      this.tooling = tooling;
+    }
+
     @Override
     public boolean matches(
         TypeDescription typeDescription,
@@ -219,16 +223,16 @@ public abstract class InstrumentationModule {
        */
       ReferenceMatcher muzzle = getMuzzleReferenceMatcher();
       if (muzzle != null) {
-        boolean isMatch = muzzle.matches(classLoader);
+        boolean isMatch = muzzle.matches(tooling, classLoader);
 
         if (!isMatch) {
           if (muzzleLog.isWarnEnabled()) {
             muzzleLog.warn(
                 "Instrumentation skipped, mismatched references were found: {} -- {} on {}",
-                mainInstrumentationName(),
+                extensionName(),
                 InstrumentationModule.this.getClass().getName(),
                 classLoader);
-            List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
+            List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(tooling, classLoader);
             for (Mismatch mismatch : mismatches) {
               muzzleLog.warn("-- {}", mismatch);
             }
@@ -237,7 +241,7 @@ public abstract class InstrumentationModule {
           if (log.isDebugEnabled()) {
             log.debug(
                 "Applying instrumentation: {} -- {} on {}",
-                mainInstrumentationName(),
+                extensionName(),
                 InstrumentationModule.this.getClass().getName(),
                 classLoader);
           }
@@ -249,7 +253,7 @@ public abstract class InstrumentationModule {
     }
   }
 
-  private String mainInstrumentationName() {
+  public final String extensionName() {
     return instrumentationNames.iterator().next();
   }
 
@@ -337,13 +341,18 @@ public abstract class InstrumentationModule {
   }
 
   /**
-   * Order of adding instrumentation to ByteBuddy. For example instrumentation with order 1 runs
-   * after an instrumentation with order 0 (default) matched on the same API.
+   * Same as {@link #order()}.
    *
-   * @return the order of adding an instrumentation to ByteBuddy. Default value is 0 - no order.
+   * @deprecated use {@link #order()} instead.
    */
+  @Deprecated
   public int getOrder() {
     return 0;
+  }
+
+  /** {@inheritDoc} */
+  public int order() {
+    return getOrder();
   }
 
   /** Returns resource names to inject into the user's classloader. */

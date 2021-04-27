@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import io.opentelemetry.javaagent.tooling.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,11 +40,15 @@ public final class Reference {
       Set<Method> methods) {
     this.sources = sources;
     this.flags = flags;
-    this.className = Utils.getClassName(className);
-    this.superName = null == superName ? null : Utils.getClassName(superName);
+    this.className = toClassName(className);
+    this.superName = null == superName ? null : toClassName(superName);
     this.interfaces = interfaces;
     this.methods = methods;
     this.fields = fields;
+  }
+
+  private static String toClassName(String internalName) {
+    return internalName.replace('/', '.');
   }
 
   public String getClassName() {

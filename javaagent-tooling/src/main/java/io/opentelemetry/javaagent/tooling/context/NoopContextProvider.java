@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.context;
 
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationContextProvider;
 import net.bytebuddy.agent.builder.AgentBuilder.Identified.Extendable;
 
 public class NoopContextProvider implements InstrumentationContextProvider {

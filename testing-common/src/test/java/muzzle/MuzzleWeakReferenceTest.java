@@ -28,7 +28,7 @@ public class MuzzleWeakReferenceTest {
     Reference[] refs = collector.getReferences().values().toArray(new Reference[0]);
     ReferenceMatcher refMatcher =
         new ReferenceMatcher(Collections.emptyList(), refs, className -> false);
-    refMatcher.getMismatchedReferenceSources(loader);
+    refMatcher.getMismatchedReferenceSources(MuzzleTooling.instance(), loader);
     loader = null;
     GcUtils.awaitGc(clRef);
     return clRef.get() == null;

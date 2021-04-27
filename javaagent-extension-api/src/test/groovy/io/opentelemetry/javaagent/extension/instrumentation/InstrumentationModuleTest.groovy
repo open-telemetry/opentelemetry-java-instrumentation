@@ -3,22 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling
+package io.opentelemetry.javaagent.extension.instrumentation
 
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
+import io.opentelemetry.javaagent.extension.AgentExtensionTooling
+import io.opentelemetry.javaagent.tooling.InstrumentationModule
+import io.opentelemetry.javaagent.tooling.TypeInstrumentation
 import net.bytebuddy.agent.builder.AgentBuilder
-import org.junit.Rule
-import org.junit.contrib.java.lang.system.EnvironmentVariables
-import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 
 class InstrumentationModuleTest extends Specification {
-
-  @Rule
-  public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
-  @Rule
-  public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
   def setup() {
     assert System.getenv().findAll { it.key.startsWith("OTEL_") }.isEmpty()
@@ -28,7 +23,7 @@ class InstrumentationModuleTest extends Specification {
   def "default enabled"() {
     setup:
     def target = new TestInstrumentationModule(["test"])
-    target.instrument(new AgentBuilder.Default())
+    target.extend(new AgentBuilder.Default(), Mock(AgentExtensionTooling))
 
     expect:
     target.enabled
@@ -37,7 +32,7 @@ class InstrumentationModuleTest extends Specification {
 
   def "default enabled override"() {
     setup:
-    target.instrument(new AgentBuilder.Default())
+    target.extend(new AgentBuilder.Default(), Mock(AgentExtensionTooling))
 
     expect:
     target.enabled == enabled
@@ -70,7 +65,7 @@ class InstrumentationModuleTest extends Specification {
         return false
       }
     }
-    target.instrument(new AgentBuilder.Default())
+    target.extend(new AgentBuilder.Default(), Mock(AgentExtensionTooling))
 
     expect:
     target.enabled == enabled
@@ -89,7 +84,7 @@ class InstrumentationModuleTest extends Specification {
       "otel.instrumentation.common.default-enabled": String.valueOf(value)
     ]).build()
     def target = new TestInstrumentationModule(["test"])
-    target.instrument(new AgentBuilder.Default())
+    target.extend(new AgentBuilder.Default(), Mock(AgentExtensionTooling))
 
     expect:
     target.enabled == enabled
@@ -113,7 +108,7 @@ class InstrumentationModuleTest extends Specification {
     ]).build()
 
     def target = new TestInstrumentationModule([name, altName])
-    target.instrument(new AgentBuilder.Default())
+    target.extend(new AgentBuilder.Default(), Mock(AgentExtensionTooling))
 
     expect:
     target.enabled == enabled
