@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.GlobalMeterProvider;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -23,11 +26,14 @@ import java.util.List;
  */
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   private final OpenTelemetry openTelemetry;
+  private final MeterProvider meterProvider;
   private final String instrumentationName;
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
+
+  private final List<RequestMetricsFactory> requestMetricsFactories = new ArrayList<>();
 
   private SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
@@ -38,6 +44,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
     this.openTelemetry = openTelemetry;
+    // TODO(anuraaga): Retrieve from openTelemetry when not alpha anymore.
+    this.meterProvider = GlobalMeterProvider.get();
     this.instrumentationName = instrumentationName;
     this.spanNameExtractor = spanNameExtractor;
   }
@@ -70,6 +78,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
       AttributesExtractor<? super REQUEST, ? super RESPONSE>... attributesExtractors) {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
+  }
+
+  /**
+   * Adds a {@link RequestMetricsFactory} whose metrics will be recorded for request start and stop.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetricsFactory(
+      RequestMetricsFactory factory) {
+    requestMetricsFactories.add(factory);
+    return this;
   }
 
   /**
@@ -125,10 +142,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return constructor.create(
         instrumentationName,
         openTelemetry.getTracer(instrumentationName, InstrumentationVersion.VERSION),
+        meterProvider.get(instrumentationName, InstrumentationVersion.VERSION),
         spanNameExtractor,
         spanKindExtractor,
         spanStatusExtractor,
         new ArrayList<>(attributesExtractors),
+        new ArrayList<>(requestMetricsFactories),
         errorCauseExtractor);
   }
 
@@ -136,10 +155,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     Instrumenter<RQ, RS> create(
         String instrumentationName,
         Tracer tracer,
+        Meter meter,
         SpanNameExtractor<? super RQ> spanNameExtractor,
         SpanKindExtractor<? super RQ> spanKindExtractor,
         SpanStatusExtractor<? super RQ, ? super RS> spanStatusExtractor,
         List<? extends AttributesExtractor<? super RQ, ? super RS>> extractors,
+        List<? extends RequestMetricsFactory> requestMetricsFactories,
         ErrorCauseExtractor errorCauseExtractor);
 
     static <RQ, RS> InstrumenterConstructor<RQ, RS> internal() {
@@ -150,18 +171,22 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         ContextPropagators propagators, TextMapSetter<RQ> setter) {
       return (instrumentationName,
           tracer,
+          meter,
           spanName,
           spanKind,
           spanStatus,
           attributes,
+          requestMetricFactories,
           errorCauseExtractor) ->
           new ClientInstrumenter<>(
               instrumentationName,
               tracer,
+              meter,
               spanName,
               spanKind,
               spanStatus,
               attributes,
+              requestMetricFactories,
               errorCauseExtractor,
               propagators,
               setter);
@@ -171,18 +196,22 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         ContextPropagators propagators, TextMapGetter<RQ> getter) {
       return (instrumentationName,
           tracer,
+          meter,
           spanName,
           spanKind,
           spanStatus,
           attributes,
+          requestMetricFactories,
           errorCauseExtractor) ->
           new ServerInstrumenter<>(
               instrumentationName,
               tracer,
+              meter,
               spanName,
               spanKind,
               spanStatus,
               attributes,
+              requestMetricFactories,
               errorCauseExtractor,
               propagators,
               getter);

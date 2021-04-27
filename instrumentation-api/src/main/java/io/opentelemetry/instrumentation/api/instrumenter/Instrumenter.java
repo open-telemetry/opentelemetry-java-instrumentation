@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -18,6 +19,7 @@ import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO(anuraaga): Need to define what are actually useful knobs, perhaps even providing a
@@ -55,15 +57,18 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
   private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
   private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors;
+  private final List<? extends RequestMetrics> requestMetrics;
   private final ErrorCauseExtractor errorCauseExtractor;
 
   Instrumenter(
       String instrumentationName,
       Tracer tracer,
+      Meter meter,
       SpanNameExtractor<? super REQUEST> spanNameExtractor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor,
       SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor,
       List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors,
+      List<? extends RequestMetricsFactory> requestMetricsFactories,
       ErrorCauseExtractor errorCauseExtractor) {
     this.instrumentationName = instrumentationName;
     this.tracer = tracer;
@@ -71,6 +76,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.spanKindExtractor = spanKindExtractor;
     this.spanStatusExtractor = spanStatusExtractor;
     this.extractors = extractors;
+    this.requestMetrics =
+        requestMetricsFactories.stream()
+            .map(factory -> factory.create(meter))
+            .collect(Collectors.toList());
     this.errorCauseExtractor = errorCauseExtractor;
   }
 
@@ -114,14 +123,21 @@ public class Instrumenter<REQUEST, RESPONSE> {
             .setSpanKind(spanKind)
             .setParent(parentContext);
 
-    AttributesBuilder attributes = Attributes.builder();
+    AttributesBuilder attributesBuilder = Attributes.builder();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
-      extractor.onStart(attributes, request);
+      extractor.onStart(attributesBuilder, request);
     }
-    attributes.build().forEach((key, value) -> spanBuilder.setAttribute((AttributeKey) key, value));
+    Attributes attributes = attributesBuilder.build();
 
+    Context context = parentContext;
+
+    for (RequestMetrics metrics : requestMetrics) {
+      context = metrics.start(context, attributes);
+    }
+
+    attributes.forEach((key, value) -> spanBuilder.setAttribute((AttributeKey) key, value));
     Span span = spanBuilder.startSpan();
-    Context context = parentContext.with(span);
+    context = parentContext.with(span);
     switch (spanKind) {
       case SERVER:
         return ServerSpan.with(context, span);
@@ -146,6 +162,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       extractor.onEnd(attributes, request, response);
     }
     attributes.build().forEach((key, value) -> span.setAttribute((AttributeKey) key, value));
+
+    for (RequestMetrics metrics : requestMetrics) {
+      metrics.end(context);
+    }
 
     if (error != null) {
       error = errorCauseExtractor.extractCause(error);
