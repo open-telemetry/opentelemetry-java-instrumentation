@@ -157,15 +157,17 @@ public class Instrumenter<REQUEST, RESPONSE> {
   public void end(Context context, REQUEST request, RESPONSE response, @Nullable Throwable error) {
     Span span = Span.fromContext(context);
 
-    AttributesBuilder attributes = Attributes.builder();
+    AttributesBuilder attributesBuilder = Attributes.builder();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
-      extractor.onEnd(attributes, request, response);
+      extractor.onEnd(attributesBuilder, request, response);
     }
-    attributes.build().forEach((key, value) -> span.setAttribute((AttributeKey) key, value));
+    Attributes attributes = attributesBuilder.build();
 
     for (RequestMetrics metrics : requestMetrics) {
-      metrics.end(context);
+      metrics.end(context, attributes);
     }
+
+    attributes.forEach((key, value) -> span.setAttribute((AttributeKey) key, value));
 
     if (error != null) {
       error = errorCauseExtractor.extractCause(error);

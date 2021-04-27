@@ -49,10 +49,10 @@ public final class HttpServerRequestMetrics implements RequestMetrics {
   }
 
   @Override
-  public Context start(Context context, Attributes attributes) {
+  public Context start(Context context, Attributes requestAttributes) {
     long startTimeNanos = System.nanoTime();
-    Labels activeRequestLabels = activeRequestLabels(attributes);
-    Labels durationLabels = durationLabels(attributes);
+    Labels activeRequestLabels = activeRequestLabels(requestAttributes);
+    Labels durationLabels = durationLabels(requestAttributes);
     activeRequests.add(1, activeRequestLabels);
 
     return context.with(
@@ -62,7 +62,7 @@ public final class HttpServerRequestMetrics implements RequestMetrics {
   }
 
   @Override
-  public void end(Context context) {
+  public void end(Context context, Attributes responseAttributes) {
     State state = context.get(HTTP_SERVER_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(

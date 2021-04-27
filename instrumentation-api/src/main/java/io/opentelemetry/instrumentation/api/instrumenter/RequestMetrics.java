@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 
 public interface RequestMetrics {
 
-  Context start(Context context, Attributes attributes);
+  Context start(Context context, Attributes requestAttributes);
 
-  void end(Context context);
+  void end(Context context, Attributes responseAttributes);
 }
