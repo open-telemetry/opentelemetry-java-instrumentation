@@ -69,9 +69,8 @@ public final class HttpServerRequestMetrics implements RequestMetrics {
           "No state present when ending context {}. Cannot reset HTTP request metrics.", context);
       return;
     }
-    Labels labels = state.activeRequestLabels();
-    activeRequests.add(-1, labels);
-    duration.record(System.nanoTime() - state.startTimeNanos(), labels);
+    activeRequests.add(-1, state.activeRequestLabels());
+    duration.record(System.nanoTime() - state.startTimeNanos(), state.durationLabels());
   }
 
   private static Labels activeRequestLabels(Attributes attributes) {
