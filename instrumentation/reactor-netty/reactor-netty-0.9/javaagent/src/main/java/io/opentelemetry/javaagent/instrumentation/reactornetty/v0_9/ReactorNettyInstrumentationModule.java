@@ -171,9 +171,12 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
-            BiConsumer<? super HttpClientResponse, ? super Connection> callback) {
+            BiConsumer<? super HttpClientResponse, ? super Connection> callback,
+        @Advice.Origin("#m") String methodName) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        callback = new DecoratorFunctions.OnResponseDecorator(callback);
+        boolean forceParentContext = methodName.equals("doAfterResponse");
+        callback = new DecoratorFunctions.OnResponseDecorator(callback,
+            forceParentContext);
       }
     }
   }

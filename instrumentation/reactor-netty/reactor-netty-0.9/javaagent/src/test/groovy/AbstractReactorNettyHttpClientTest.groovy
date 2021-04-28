@@ -3,10 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -94,10 +98,47 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
         assertSameSpan(parentSpan, onRequestSpan)
         assertSameSpan(nettyClientSpan, afterRequestSpan)
         assertSameSpan(nettyClientSpan, onResponseSpan)
-        assertSameSpan(nettyClientSpan, afterResponseSpan)
+        assertSameSpan(parentSpan, afterResponseSpan)
       }
     }
   }
+
+  def "should expose context to http request error callback"() {
+    given:
+    def onRequestErrorSpan = new AtomicReference<Span>()
+
+    def httpClient = createHttpClient()
+      .doOnRequestError({ rq, err -> onRequestErrorSpan.set(Span.current()) })
+
+    when:
+    runUnderTrace("parent") {
+      httpClient.get()
+        .uri("http://localhost:$UNUSABLE_PORT/")
+        .response()
+        .block()
+    }
+
+    then:
+    def ex = thrown(Exception)
+
+    assertTraces(1) {
+      trace(0, 2) {
+        def parentSpan = span(0)
+
+        basicSpan(it, 0, "parent", null, ex)
+        span(1) {
+          def actualException = ex.cause
+          kind SpanKind.CLIENT
+          childOf parentSpan
+          status StatusCode.ERROR
+          errorEvent(actualException.class, actualException.message)
+        }
+
+        assertSameSpan(parentSpan, onRequestErrorSpan)
+      }
+    }
+  }
+
 
   private static void assertSameSpan(SpanData expected, AtomicReference<Span> actual) {
     def expectedSpanContext = expected.spanContext

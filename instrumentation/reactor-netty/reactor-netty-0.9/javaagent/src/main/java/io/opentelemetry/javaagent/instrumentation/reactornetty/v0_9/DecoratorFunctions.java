@@ -24,14 +24,23 @@ public final class DecoratorFunctions {
 
   private abstract static class OnMessageDecorator<M> implements BiConsumer<M, Connection> {
     private final BiConsumer<? super M, ? super Connection> delegate;
+    private final boolean forceParentContext;
 
-    public OnMessageDecorator(BiConsumer<? super M, ? super Connection> delegate) {
+    public OnMessageDecorator(BiConsumer<? super M, ? super Connection> delegate,
+        boolean forceParentContext) {
       this.delegate = delegate;
+      this.forceParentContext = forceParentContext;
     }
 
     @Override
     public final void accept(M message, Connection connection) {
-      Context context = getChannelContext(currentContext(message), connection.channel());
+      Channel channel = connection.channel();
+      // don't try to get the client span from the netty channel when forceParentSpan is true
+      // this way the parent context will always be propagated
+      if (forceParentContext) {
+        channel = null;
+      }
+      Context context = getChannelContext(currentContext(message), channel);
       if (context == null) {
         delegate.accept(message, connection);
       } else {
@@ -46,7 +55,7 @@ public final class DecoratorFunctions {
 
   public static final class OnRequestDecorator extends OnMessageDecorator<HttpClientRequest> {
     public OnRequestDecorator(BiConsumer<? super HttpClientRequest, ? super Connection> delegate) {
-      super(delegate);
+      super(delegate, false);
     }
 
     @Override
@@ -57,8 +66,9 @@ public final class DecoratorFunctions {
 
   public static final class OnResponseDecorator extends OnMessageDecorator<HttpClientResponse> {
     public OnResponseDecorator(
-        BiConsumer<? super HttpClientResponse, ? super Connection> delegate) {
-      super(delegate);
+        BiConsumer<? super HttpClientResponse, ? super Connection> delegate,
+        boolean forceParentContext) {
+      super(delegate, forceParentContext);
     }
 
     @Override
