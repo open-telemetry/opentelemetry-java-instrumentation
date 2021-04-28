@@ -15,16 +15,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * attributes</a> from a {@link InetSocketAddress}. Most network libraries will provide access to a
  * {@link InetSocketAddress} so this is a convenient alternative to {@link NetAttributesExtractor}.
  * There is no meaning to implement both in the same instrumentation.
- *
- * <p>This extractor implementation uses both {@code request} and {@code response} to extract
- * network peer information. If those attributes are available in the request, it is recommended to
- * use {@link InetSocketAddressNetRequestAttributesExtractor} instead.
  */
 public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
     extends NetAttributesExtractor<REQUEST, RESPONSE> {
 
+  /**
+   * This method will be called twice: both when the request starts ({@code response} is always null
+   * then) and when the response ends. This way it is possible to capture net attributes in both
+   * phases of processing.
+   */
   @Nullable
-  protected abstract InetSocketAddress getAddress(REQUEST request, RESPONSE response);
+  protected abstract InetSocketAddress getAddress(REQUEST request, @Nullable RESPONSE response);
 
   @Override
   @Nullable

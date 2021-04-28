@@ -15,10 +15,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes">Network
  * attributes</a>. It is common to have access to {@link java.net.InetSocketAddress}, in which case
  * it is more convenient to use {@link InetSocketAddressNetAttributesExtractor}.
- *
- * <p>This extractor implementation uses both {@code request} and {@code response} to extract
- * network peer information. If those attributes are available in the request, it is recommended to
- * use {@link NetRequestAttributesExtractor} instead.
  */
 public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
     extends AttributesExtractor<REQUEST, RESPONSE> {
@@ -26,6 +22,9 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
   @Override
   protected final void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.NET_TRANSPORT, transport(request));
+    set(attributes, SemanticAttributes.NET_PEER_IP, peerIp(request, null));
+    set(attributes, SemanticAttributes.NET_PEER_NAME, peerName(request, null));
+    set(attributes, SemanticAttributes.NET_PEER_PORT, peerPort(request, null));
   }
 
   @Override
@@ -38,12 +37,27 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   protected abstract String transport(REQUEST request);
 
+  /**
+   * This method will be called twice: both when the request starts ({@code response} is always null
+   * then) and when the response ends. This way it is possible to capture net attributes in both
+   * phases of processing.
+   */
   @Nullable
-  protected abstract String peerName(REQUEST request, RESPONSE response);
+  protected abstract String peerName(REQUEST request, @Nullable RESPONSE response);
 
+  /**
+   * This method will be called twice: both when the request starts ({@code response} is always null
+   * then) and when the response ends. This way it is possible to capture net attributes in both
+   * phases of processing.
+   */
   @Nullable
-  protected abstract Long peerPort(REQUEST request, RESPONSE response);
+  protected abstract Long peerPort(REQUEST request, @Nullable RESPONSE response);
 
+  /**
+   * This method will be called twice: both when the request starts ({@code response} is always null
+   * then) and when the response ends. This way it is possible to capture net attributes in both
+   * phases of processing.
+   */
   @Nullable
-  protected abstract String peerIp(REQUEST request, RESPONSE response);
+  protected abstract String peerIp(REQUEST request, @Nullable RESPONSE response);
 }

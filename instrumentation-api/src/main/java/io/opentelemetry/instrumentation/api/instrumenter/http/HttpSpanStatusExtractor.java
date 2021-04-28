@@ -9,6 +9,12 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
 
+/**
+ * Extractor of the <a
+ * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#status">HTTP
+ * span status</a>. Instrumentation of HTTP server or client frameworks should use this class to
+ * comply with OpenTelemetry HTTP semantic conventions.
+ */
 public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
     implements SpanStatusExtractor<REQUEST, RESPONSE> {
 

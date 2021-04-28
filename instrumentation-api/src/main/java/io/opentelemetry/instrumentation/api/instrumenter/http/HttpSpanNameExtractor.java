@@ -7,6 +7,12 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
+/**
+ * Extractor of the <a
+ * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#name">HTTP
+ * span name</a>. Instrumentation of HTTP server or client frameworks should use this class to
+ * comply with OpenTelemetry HTTP semantic conventions.
+ */
 public final class HttpSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
 
   /**

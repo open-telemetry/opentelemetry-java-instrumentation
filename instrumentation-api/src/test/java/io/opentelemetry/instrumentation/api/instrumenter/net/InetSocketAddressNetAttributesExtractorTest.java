@@ -19,18 +19,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class InetSocketAddressNetAttributesExtractorTest {
 
-  private final InetSocketAddressNetAttributesExtractor<InetSocketAddress, Void> extractor =
-      new InetSocketAddressNetAttributesExtractor<InetSocketAddress, Void>() {
-        @Override
-        protected InetSocketAddress getAddress(InetSocketAddress inetSocketAddress, Void unused) {
-          return inetSocketAddress;
-        }
+  private final InetSocketAddressNetAttributesExtractor<InetSocketAddress, InetSocketAddress>
+      extractor =
+          new InetSocketAddressNetAttributesExtractor<InetSocketAddress, InetSocketAddress>() {
+            @Override
+            protected InetSocketAddress getAddress(
+                InetSocketAddress request, InetSocketAddress response) {
+              return response != null ? response : request;
+            }
 
-        @Override
-        protected String transport(InetSocketAddress inetSocketAddress) {
-          return SemanticAttributes.NetTransportValues.IP_TCP.getValue();
-        }
-      };
+            @Override
+            protected String transport(InetSocketAddress inetSocketAddress) {
+              return SemanticAttributes.NetTransportValues.IP_TCP.getValue();
+            }
+          };
 
   @Test
   void noInetSocketAddress() {
@@ -46,19 +48,19 @@ class InetSocketAddressNetAttributesExtractorTest {
 
   @Test
   void fullAddress() {
+    // given
     InetSocketAddress address = new InetSocketAddress("github.com", 123);
     assertThat(address.getAddress().getHostAddress()).isNotNull();
 
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, address);
-    assertThat(attributes.build())
-        .containsOnly(
-            entry(
-                SemanticAttributes.NET_TRANSPORT,
-                SemanticAttributes.NetTransportValues.IP_TCP.getValue()));
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, address);
 
-    extractor.onEnd(attributes, address, null);
-    assertThat(attributes.build())
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, null, address);
+
+    // then
+    assertThat(startAttributes.build())
         .containsOnly(
             entry(
                 SemanticAttributes.NET_TRANSPORT,
@@ -66,27 +68,38 @@ class InetSocketAddressNetAttributesExtractorTest {
             entry(SemanticAttributes.NET_PEER_IP, address.getAddress().getHostAddress()),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L));
+
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(SemanticAttributes.NET_PEER_IP, address.getAddress().getHostAddress()),
+            entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
+            entry(SemanticAttributes.NET_PEER_PORT, 123L));
   }
 
   @Test
   void unresolved() {
+    // given
     InetSocketAddress address = InetSocketAddress.createUnresolved("github.com", 123);
     assertThat(address.getAddress()).isNull();
 
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, address);
-    assertThat(attributes.build())
-        .containsOnly(
-            entry(
-                SemanticAttributes.NET_TRANSPORT,
-                SemanticAttributes.NetTransportValues.IP_TCP.getValue()));
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, address);
 
-    extractor.onEnd(attributes, address, null);
-    assertThat(attributes.build())
+    AttributesBuilder endAttributes = Attributes.builder();
+    extractor.onEnd(endAttributes, null, address);
+
+    // then
+    assertThat(startAttributes.build())
         .containsOnly(
             entry(
                 SemanticAttributes.NET_TRANSPORT,
                 SemanticAttributes.NetTransportValues.IP_TCP.getValue()),
+            entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
+            entry(SemanticAttributes.NET_PEER_PORT, 123L));
+
+    assertThat(endAttributes.build())
+        .containsOnly(
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L));
   }
