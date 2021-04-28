@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.tooling.ShadingRemapper.rule;
@@ -17,10 +22,7 @@ import net.bytebuddy.jar.asm.ClassReader;
 import net.bytebuddy.jar.asm.ClassWriter;
 import net.bytebuddy.jar.asm.commons.ClassRemapper;
 
-/**
- * A stream handler that returns the given binary representation.
- */
-class RemappingURLStreamHandler extends URLStreamHandler {
+class RemappingUrlStreamHandler extends URLStreamHandler {
 
   // We need to prefix the names to prevent the gradle shadowJar relocation rules from touching
   // them. It's possible to do this by excluding this class from shading, but it may cause issue
@@ -39,22 +41,17 @@ class RemappingURLStreamHandler extends URLStreamHandler {
 
   private final JarFile delegateJarFile;
 
-  public RemappingURLStreamHandler(URL delegateJarFileLocation) {
-    JarFile jarFile;
+  public RemappingUrlStreamHandler(URL delegateJarFileLocation) {
     try {
-      jarFile = new JarFile(new File(delegateJarFileLocation.toURI()), false);
+      delegateJarFile = new JarFile(new File(delegateJarFileLocation.toURI()), false);
     } catch (URISyntaxException | IOException e) {
       throw new IllegalStateException("Unable to read internal jar", e);
     }
 
-    delegateJarFile = jarFile;
-
-    System.out.println("Delegate jar file is "+delegateJarFile.getName());
+    System.out.println("Delegate jar file is " + delegateJarFile.getName());
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   protected URLConnection openConnection(URL url) {
     System.out.println("Open connection to " + url);
     try {
@@ -67,23 +64,23 @@ class RemappingURLStreamHandler extends URLStreamHandler {
         return new InternalJarUrlConnection(url, new ByteArrayInputStream(new byte[0]), 0);
       }
 
-      if(file.startsWith("/")){
+      if (file.startsWith("/")) {
         file = file.substring(1);
       }
       System.out.println("Looking for file " + file);
       JarEntry entry = delegateJarFile.getJarEntry(file);
-      if(entry == null){
+      if (entry == null) {
         return null;
       }
 
       System.out.println("Found " + entry);
 
       InputStream is = delegateJarFile.getInputStream(entry);
-      if(file.endsWith(".class")){
+      if (file.endsWith(".class")) {
         System.out.println("Remapping... ");
         byte[] remappedClass = remapClassBytes(is);
-        return new InternalJarUrlConnection(url, new ByteArrayInputStream(remappedClass),
-            remappedClass.length);
+        return new InternalJarUrlConnection(
+            url, new ByteArrayInputStream(remappedClass), remappedClass.length);
       } else {
         System.out.println("Return as is");
         return new InternalJarUrlConnection(url, is, entry.getSize());

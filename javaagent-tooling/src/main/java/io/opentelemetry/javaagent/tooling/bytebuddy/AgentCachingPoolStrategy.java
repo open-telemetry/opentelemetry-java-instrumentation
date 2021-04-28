@@ -98,7 +98,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
     }
 
     int loaderHash = classLoader.hashCode();
-//    System.out.printf("Classloader %s, hash %d%n", classLoader, loaderHash);
+    //    System.out.printf("Classloader %s, hash %d%n", classLoader, loaderHash);
     return createCachingTypePool(loaderHash, loaderRef, classFileLocator);
   }
 
@@ -225,10 +225,12 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
     public TypePool.Resolution find(String className) {
       TypePool.Resolution existingResolution =
           sharedResolutionCache.getIfPresent(new TypeCacheKey(loaderHash, loaderRef, className));
-      if(className.contains("Advice")) {
-        System.out.printf("Found resolution for %s from loader %s: %s%n", className, loaderHash, existingResolution);
+      if (className.contains("Advice")) {
+        System.out.printf(
+            "Found resolution for %s from loader %s: %s%n",
+            className, loaderHash, existingResolution);
       }
-        if (existingResolution != null) {
+      if (existingResolution != null) {
         return existingResolution;
       }
 
@@ -245,8 +247,9 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
         return resolution;
       }
 
-      if(className.contains("AdviceUtils")|| className.contains("DemoServlet3Advice")){
-        System.out.printf("Register resolution for %s from loader %s: %s%n", className, loaderHash, resolution);
+      if (className.contains("AdviceUtils") || className.contains("DemoServlet3Advice")) {
+        System.out.printf(
+            "Register resolution for %s from loader %s: %s%n", className, loaderHash, resolution);
         Thread.dumpStack();
       }
       resolution = new CachingResolution(resolution);
