@@ -7,6 +7,7 @@ dependencies {
 
   testLibrary group: 'io.grpc', name: 'grpc-netty', version: grpcVersion
   testLibrary group: 'io.grpc', name: 'grpc-protobuf', version: grpcVersion
+  testLibrary group: 'io.grpc', name: 'grpc-services', version: grpcVersion
   testLibrary group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
 
   testImplementation deps.assertj

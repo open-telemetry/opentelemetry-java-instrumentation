@@ -25,6 +25,7 @@ dependencies {
 
   api group: 'io.grpc', name: 'grpc-core', version: grpcVersion
   api group: 'io.grpc', name: 'grpc-protobuf', version: grpcVersion
+  api group: 'io.grpc', name: 'grpc-services', version: grpcVersion
   api group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
 
   implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
