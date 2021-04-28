@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.matcher;
+package io.opentelemetry.javaagent.extension.muzzle;
 
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 

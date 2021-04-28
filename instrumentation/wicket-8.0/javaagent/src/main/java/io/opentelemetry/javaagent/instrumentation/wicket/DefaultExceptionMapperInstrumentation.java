@@ -10,8 +10,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.Map;

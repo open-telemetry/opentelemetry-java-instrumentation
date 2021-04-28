@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.muzzle.Mismatch;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.ReferenceMatcher;
 import io.opentelemetry.javaagent.internal.extension.AgentExtensionToolingImpl;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.javaagent.internal.extension.AgentExtensionToolingImpl;
-import io.opentelemetry.javaagent.tooling.HelperInjector;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Collection;

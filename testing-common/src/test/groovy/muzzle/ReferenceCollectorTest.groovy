@@ -5,20 +5,15 @@
 
 package muzzle
 
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.MinimumVisibilityFlag
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.VisibilityFlag
-import static muzzle.TestClasses.HelperAdvice
-import static muzzle.TestClasses.LdcAdvice
-import static muzzle.TestClasses.MethodBodyAdvice
+import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.*
+import static muzzle.TestClasses.*
 
 import external.instrumentation.ExternalHelper
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.InstrumentationContextTestClasses
 import io.opentelemetry.instrumentation.OtherTestHelperClasses
 import io.opentelemetry.instrumentation.TestHelperClasses
-import io.opentelemetry.javaagent.tooling.muzzle.Reference
+import io.opentelemetry.javaagent.extension.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCompilationException
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
 import spock.lang.Specification
@@ -157,7 +152,7 @@ class ReferenceCollectorTest extends Specification {
     then:
     println references
 
-    with(references[DeclaredFieldTestClass.Helper.name]) { helperClass ->
+    with(references[DeclaredFieldTestClass.Helper.name]) {helperClass ->
       def superField = findField(helperClass, 'superField')
       !superField.declared
 
@@ -165,7 +160,7 @@ class ReferenceCollectorTest extends Specification {
       field.declared
     }
 
-    with(references[DeclaredFieldTestClass.LibraryBaseClass.name]) { libraryBaseClass ->
+    with(references[DeclaredFieldTestClass.LibraryBaseClass.name]) {libraryBaseClass ->
       libraryBaseClass.fields.empty
     }
   }

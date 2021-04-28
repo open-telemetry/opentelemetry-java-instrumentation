@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling;
+package io.opentelemetry.javaagent.extension.instrumentation;
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.failSafe;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.failSafe;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -15,12 +15,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
 import io.opentelemetry.javaagent.extension.ConstantAdjuster;
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationContextProvider;
 import io.opentelemetry.javaagent.extension.log.TransformSafeLogger;
+import io.opentelemetry.javaagent.extension.muzzle.InstrumentationClassPredicate;
+import io.opentelemetry.javaagent.extension.muzzle.Mismatch;
+import io.opentelemetry.javaagent.extension.muzzle.ReferenceMatcher;
 import io.opentelemetry.javaagent.extension.spi.AgentExtension;
-import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch;
-import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collections;

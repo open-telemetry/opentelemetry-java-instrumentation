@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.extension.spi;
 
 import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 /**

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import net.bytebuddy.build.Plugin;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;

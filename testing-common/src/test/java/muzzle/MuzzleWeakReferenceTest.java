@@ -6,9 +6,9 @@
 package muzzle;
 
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.ReferenceMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector;
-import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;

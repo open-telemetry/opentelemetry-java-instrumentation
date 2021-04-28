@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.extension.instrumentation
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
 import io.opentelemetry.javaagent.extension.AgentExtensionTooling
-import io.opentelemetry.javaagent.tooling.InstrumentationModule
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation
 import net.bytebuddy.agent.builder.AgentBuilder
 import spock.lang.Specification
 

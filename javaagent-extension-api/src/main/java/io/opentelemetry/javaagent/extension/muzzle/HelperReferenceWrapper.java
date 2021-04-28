@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.matcher;
+package io.opentelemetry.javaagent.extension.muzzle;
 
 import static net.bytebuddy.description.method.MethodDescription.CONSTRUCTOR_INTERNAL_NAME;
 
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.VisibilityFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.OwnershipFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.VisibilityFlag;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;

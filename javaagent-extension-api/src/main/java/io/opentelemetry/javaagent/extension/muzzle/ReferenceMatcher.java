@@ -3,18 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.muzzle.matcher;
+package io.opentelemetry.javaagent.extension.muzzle;
 
 import static java.util.Collections.emptyList;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
-import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source;
-import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Factory;
-import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Method;
+import io.opentelemetry.javaagent.extension.muzzle.HelperReferenceWrapper.Factory;
+import io.opentelemetry.javaagent.extension.muzzle.HelperReferenceWrapper.Method;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Source;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
