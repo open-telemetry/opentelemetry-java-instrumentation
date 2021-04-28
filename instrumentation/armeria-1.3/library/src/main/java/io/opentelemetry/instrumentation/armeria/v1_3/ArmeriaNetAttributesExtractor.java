@@ -23,7 +23,8 @@ final class ArmeriaNetAttributesExtractor
 
   @Override
   @Nullable
-  protected InetSocketAddress getAddress(RequestContext requestContext, RequestLog requestLog) {
+  protected InetSocketAddress getAddress(
+      RequestContext requestContext, @Nullable RequestLog requestLog) {
     SocketAddress address = requestContext.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

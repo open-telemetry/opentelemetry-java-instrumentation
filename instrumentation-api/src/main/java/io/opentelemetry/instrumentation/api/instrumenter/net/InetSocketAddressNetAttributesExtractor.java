@@ -29,7 +29,7 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  protected final String peerName(REQUEST request, RESPONSE response) {
+  protected final String peerName(REQUEST request, @Nullable RESPONSE response) {
     InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
@@ -42,7 +42,7 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  protected final Long peerPort(REQUEST request, RESPONSE response) {
+  protected final Long peerPort(REQUEST request, @Nullable RESPONSE response) {
     InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
@@ -52,7 +52,7 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  protected final String peerIp(REQUEST request, RESPONSE response) {
+  protected final String peerIp(REQUEST request, @Nullable RESPONSE response) {
     InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
