@@ -209,8 +209,15 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     // Additional references we could check
     // - annotations on field
 
-    // intentionally not creating refs to fields here.
-    // Will create refs in method instructions to include line numbers.
+    Type fieldType = Type.getType(descriptor);
+
+    // remember that this field was declared in the currently visited helper class
+    addReference(
+        new Reference.Builder(refSourceClassName)
+            .withSource(refSourceClassName)
+            .withField(new Source[0], new Flag[0], name, fieldType, true)
+            .build());
+
     return super.visitField(access, name, descriptor, signature, value);
   }
 
@@ -328,7 +335,8 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
                   },
                   fieldFlags.toArray(new Reference.Flag[0]),
                   name,
-                  fieldType)
+                  fieldType,
+                  false)
               .build());
 
       Type underlyingFieldType = underlyingType(fieldType);

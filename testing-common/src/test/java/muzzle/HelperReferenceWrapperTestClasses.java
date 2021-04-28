@@ -15,6 +15,9 @@ public class HelperReferenceWrapperTestClasses {
   }
 
   abstract static class AbstractClasspathType implements Interface1 {
+    private Object privateFieldsAreIgnored;
+    protected Object field;
+
     static void staticMethodsAreIgnored() {}
 
     private void privateMethodsToo() {}

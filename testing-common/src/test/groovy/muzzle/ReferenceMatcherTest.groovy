@@ -18,6 +18,7 @@ import static io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch.Missing
 import static io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch.MissingMethod
 import static muzzle.TestClasses.MethodBodyAdvice
 
+import external.LibraryBaseClass
 import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
 import io.opentelemetry.javaagent.tooling.muzzle.Reference
@@ -146,7 +147,7 @@ class ReferenceMatcherTest extends Specification {
   def "field match #fieldTestDesc"() {
     setup:
     def reference = new Reference.Builder(classToCheck.name)
-      .withField(new Source[0], fieldFlags as Reference.Flag[], fieldName, Type.getType(fieldType))
+      .withField(new Source[0], fieldFlags as Reference.Flag[], fieldName, Type.getType(fieldType), false)
       .build()
 
     when:
@@ -182,7 +183,7 @@ class ReferenceMatcherTest extends Specification {
 
   def "should not check abstract #desc helper classes"() {
     given:
-    def reference = new Reference.Builder("io.opentelemetry.instrumentation.Helper")
+    def reference = new Reference.Builder(className)
       .withSuperName(TestHelperClasses.HelperSuperClass.name)
       .withFlag(ABSTRACT)
       .withMethod(new Source[0], [ABSTRACT] as Reference.Flag[], "unimplemented", Type.VOID_TYPE)
@@ -197,7 +198,7 @@ class ReferenceMatcherTest extends Specification {
 
     where:
     desc       | className
-    "internal" | "com.external.otel.instrumentation.Helper"
+    "internal" | "io.opentelemetry.instrumentation.Helper"
     "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
   }
 
@@ -217,7 +218,7 @@ class ReferenceMatcherTest extends Specification {
 
     where:
     desc       | className
-    "internal" | "com.external.otel.instrumentation.Helper"
+    "internal" | "io.opentelemetry.instrumentation.Helper"
     "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
   }
 
@@ -237,7 +238,7 @@ class ReferenceMatcherTest extends Specification {
 
     where:
     desc       | className
-    "internal" | "com.external.otel.instrumentation.Helper"
+    "internal" | "io.opentelemetry.instrumentation.Helper"
     "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
   }
 
@@ -259,7 +260,7 @@ class ReferenceMatcherTest extends Specification {
 
     where:
     desc       | className
-    "internal" | "com.external.otel.instrumentation.Helper"
+    "internal" | "io.opentelemetry.instrumentation.Helper"
     "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
   }
 
@@ -286,8 +287,50 @@ class ReferenceMatcherTest extends Specification {
 
     where:
     desc       | className
-    "internal" | "com.external.otel.instrumentation.Helper"
+    "internal" | "io.opentelemetry.instrumentation.Helper"
     "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
+  }
+
+  def "should check #desc helper class whether used fields are declared in the super class"() {
+    given:
+    def helper = new Reference.Builder(className)
+      .withSuperName(LibraryBaseClass.name)
+      .withField(new Source[0], new Reference.Flag[0], "field", Type.getType("Ljava/lang/Integer;"), false)
+      .build()
+
+    when:
+    def mismatches = createMatcher([helper], [helper.className])
+      .getMismatchedReferenceSources(this.class.classLoader)
+
+    then:
+    mismatches.empty
+
+    where:
+    desc       | className
+    "internal" | "io.opentelemetry.instrumentation.Helper"
+    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
+  }
+
+  def "should fail helper class when it uses fields undeclared in the super class: #desc"() {
+    given:
+    def helper = new Reference.Builder(className)
+      .withSuperName(LibraryBaseClass.name)
+      .withField(new Source[0], new Reference.Flag[0], fieldName, Type.getType(fieldType), false)
+      .build()
+
+    when:
+    def mismatches = createMatcher([helper], [helper.className])
+      .getMismatchedReferenceSources(this.class.classLoader)
+
+    then:
+    getMismatchClassSet(mismatches) == [MissingField] as Set
+
+    where:
+    desc                                    | className                                         | fieldName        | fieldType
+    "internal helper, different field name" | "io.opentelemetry.instrumentation.Helper"         | "differentField" | "Ljava/lang/Integer;"
+    "internal helper, different field type" | "io.opentelemetry.instrumentation.Helper"         | "field"          | "Lcom/external/DifferentType;"
+    "external helper, different field name" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper" | "differentField" | "Ljava/lang/Integer;"
+    "external helper, different field type" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper" | "field"          | "Lcom/external/DifferentType;"
   }
 
   private static ReferenceMatcher createMatcher(Collection<Reference> references = [],
