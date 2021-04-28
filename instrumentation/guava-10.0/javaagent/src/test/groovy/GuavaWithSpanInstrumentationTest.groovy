@@ -6,6 +6,7 @@
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.SettableFuture
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.guava.TracedWithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 
@@ -22,7 +23,6 @@ class GuavaWithSpanInstrumentationTest extends AgentInstrumentationSpecification
           name "TracedWithSpan.listenableFuture"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -42,7 +42,7 @@ class GuavaWithSpanInstrumentationTest extends AgentInstrumentationSpecification
           name "TracedWithSpan.listenableFuture"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status StatusCode.ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
@@ -68,7 +68,6 @@ class GuavaWithSpanInstrumentationTest extends AgentInstrumentationSpecification
           name "TracedWithSpan.listenableFuture"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored false
           attributes {
           }
         }
@@ -94,7 +93,7 @@ class GuavaWithSpanInstrumentationTest extends AgentInstrumentationSpecification
           name "TracedWithSpan.listenableFuture"
           kind SpanKind.INTERNAL
           hasNoParent()
-          errored true
+          status StatusCode.ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
           }
