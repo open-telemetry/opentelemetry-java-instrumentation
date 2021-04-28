@@ -47,8 +47,6 @@ public class InternalJarUrlHandler extends URLStreamHandler {
 
   @Override
   protected URLConnection openConnection(URL url) throws IOException {
-    //    System.out.println("InternalJarUrlHandler openConnection " + url);
-    //    Thread.dumpStack();
     String filename = url.getFile();
     if ("/".equals(filename)) {
       // "/" is used as the default url of the jar
