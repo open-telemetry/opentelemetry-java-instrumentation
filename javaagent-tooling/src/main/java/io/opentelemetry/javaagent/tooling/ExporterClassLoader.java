@@ -21,7 +21,6 @@ import net.bytebuddy.jar.asm.commons.ClassRemapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @deprecated in favor of {@link ExtensionClassLoader} */
 @Deprecated
 public class ExporterClassLoader extends URLClassLoader {
 
