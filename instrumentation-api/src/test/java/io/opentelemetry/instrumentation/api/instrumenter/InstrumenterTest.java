@@ -319,16 +319,20 @@ class InstrumenterTest {
 
   @Test
   void shouldStartSpanWithGivenStartTime() {
-    Instrumenter<String, Void> instrumenter =
-        Instrumenter.<String, Void>newBuilder(
-                otelTesting.getOpenTelemetry(), "test", request -> request)
+    // given
+    Instrumenter<Instant, Instant> instrumenter =
+        Instrumenter.<Instant, Instant>newBuilder(
+                otelTesting.getOpenTelemetry(), "test", request -> "test span")
+            .setStartTimeExtractor(request -> request)
+            .setEndTimeExtractor(response -> response)
             .newInstrumenter();
 
     Instant startTime = Instant.ofEpochSecond(100);
+    Instant endTime = Instant.ofEpochSecond(123);
 
     // when
-    Context context = instrumenter.start(Context.root(), "test span", startTime);
-    instrumenter.end(context, "test span", null, null);
+    Context context = instrumenter.start(Context.root(), startTime);
+    instrumenter.end(context, startTime, endTime, null);
 
     // then
     otelTesting
@@ -336,6 +340,6 @@ class InstrumenterTest {
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("test span").startsAt(startTime)));
+                    span -> span.hasName("test span").startsAt(startTime).endsAt(endTime)));
   }
 }

@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.BDDMockito.given;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import java.time.Instant;
 import java.util.stream.Stream;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -29,6 +30,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class MessageWithDestinationTest {
+  private static final Instant START_TIME = Instant.ofEpochSecond(42);
+
   @Mock Message message;
   @Mock Topic topic;
   @Mock TemporaryTopic temporaryTopic;
@@ -43,10 +46,10 @@ class MessageWithDestinationTest {
 
     // when
     MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.send, null);
+        MessageWithDestination.create(message, MessageOperation.send, null, START_TIME);
 
     // then
-    assertMessage(MessageOperation.send, "unknown", "unknown", false, result);
+    assertMessage(MessageOperation.send, "unknown", "unknown", false, START_TIME, result);
   }
 
   @Test
@@ -56,10 +59,10 @@ class MessageWithDestinationTest {
 
     // when
     MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.send, destination);
+        MessageWithDestination.create(message, MessageOperation.send, destination, START_TIME);
 
     // then
-    assertMessage(MessageOperation.send, "unknown", "unknown", false, result);
+    assertMessage(MessageOperation.send, "unknown", "unknown", false, START_TIME, result);
   }
 
   @ParameterizedTest
@@ -86,7 +89,12 @@ class MessageWithDestinationTest {
 
     // then
     assertMessage(
-        MessageOperation.receive, "queue", expectedDestinationName, expectedTemporary, result);
+        MessageOperation.receive,
+        "queue",
+        expectedDestinationName,
+        expectedTemporary,
+        null,
+        result);
   }
 
   @ParameterizedTest
@@ -113,7 +121,12 @@ class MessageWithDestinationTest {
 
     // then
     assertMessage(
-        MessageOperation.receive, "topic", expectedDestinationName, expectedTemporary, result);
+        MessageOperation.receive,
+        "topic",
+        expectedDestinationName,
+        expectedTemporary,
+        null,
+        result);
   }
 
   static Stream<Arguments> destinations() {
@@ -129,6 +142,7 @@ class MessageWithDestinationTest {
       String expectedDestinationKind,
       String expectedDestinationName,
       boolean expectedTemporary,
+      Instant expectedStartTime,
       MessageWithDestination actual) {
 
     assertSame(message, actual.getMessage());
@@ -136,5 +150,6 @@ class MessageWithDestinationTest {
     assertEquals(expectedDestinationKind, actual.getDestinationKind());
     assertEquals(expectedDestinationName, actual.getDestinationName());
     assertEquals(expectedTemporary, actual.isTemporaryDestination());
+    assertEquals(expectedStartTime, actual.getStartTime());
   }
 }

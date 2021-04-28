@@ -7,11 +7,8 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,16 +19,19 @@ import java.util.List;
  * {@link Instrumenter}.
  */
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
-  private final OpenTelemetry openTelemetry;
-  private final String instrumentationName;
-  private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
+  final OpenTelemetry openTelemetry;
+  final String instrumentationName;
+  final SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
-  private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
+  final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
 
-  private SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
+  SpanKindExtractor<? super REQUEST> spanKindExtractor;
+  SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
-  private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
+  ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
+  StartTimeExtractor<REQUEST> startTimeExtractor = StartTimeExtractor.getDefault();
+  EndTimeExtractor<RESPONSE> endTimeExtractor = EndTimeExtractor.getDefault();
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
@@ -83,13 +83,32 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Sets the {@link StartTimeExtractor} to extract the timestamp marking the start of the request
+   * processing.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> setStartTimeExtractor(
+      StartTimeExtractor<REQUEST> startTimeExtractor) {
+    this.startTimeExtractor = startTimeExtractor;
+    return this;
+  }
+
+  /**
+   * Sets the {@link StartTimeExtractor} to extract the timestamp marking the end of the response
+   * processing.
+   */
+  public InstrumenterBuilder<REQUEST, RESPONSE> setEndTimeExtractor(
+      EndTimeExtractor<RESPONSE> endTimeExtractor) {
+    this.endTimeExtractor = endTimeExtractor;
+    return this;
+  }
+
+  /**
    * Returns a new {@link Instrumenter} which will create client spans and inject context into
    * requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newClientInstrumenter(TextMapSetter<REQUEST> setter) {
     return newInstrumenter(
-        InstrumenterConstructor.propagatingToDownstream(openTelemetry.getPropagators(), setter),
-        SpanKindExtractor.alwaysClient());
+        InstrumenterConstructor.propagatingToDownstream(setter), SpanKindExtractor.alwaysClient());
   }
 
   /**
@@ -98,8 +117,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    */
   public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(TextMapGetter<REQUEST> getter) {
     return newInstrumenter(
-        InstrumenterConstructor.propagatingFromUpstream(openTelemetry.getPropagators(), getter),
-        SpanKindExtractor.alwaysServer());
+        InstrumenterConstructor.propagatingFromUpstream(getter), SpanKindExtractor.alwaysServer());
   }
 
   /**
@@ -108,7 +126,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    */
   public Instrumenter<REQUEST, RESPONSE> newProducerInstrumenter(TextMapSetter<REQUEST> setter) {
     return newInstrumenter(
-        InstrumenterConstructor.propagatingToDownstream(openTelemetry.getPropagators(), setter),
+        InstrumenterConstructor.propagatingToDownstream(setter),
         SpanKindExtractor.alwaysProducer());
   }
 
@@ -118,7 +136,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    */
   public Instrumenter<REQUEST, RESPONSE> newConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
     return newInstrumenter(
-        InstrumenterConstructor.propagatingFromUpstream(openTelemetry.getPropagators(), getter),
+        InstrumenterConstructor.propagatingFromUpstream(getter),
         SpanKindExtractor.alwaysConsumer());
   }
 
@@ -142,70 +160,25 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   private Instrumenter<REQUEST, RESPONSE> newInstrumenter(
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
-    return constructor.create(
-        instrumentationName,
-        openTelemetry.getTracer(instrumentationName, InstrumentationVersion.VERSION),
-        spanNameExtractor,
-        spanKindExtractor,
-        spanStatusExtractor,
-        new ArrayList<>(attributesExtractors),
-        errorCauseExtractor);
+    this.spanKindExtractor = spanKindExtractor;
+    return constructor.create(this);
   }
 
   private interface InstrumenterConstructor<RQ, RS> {
-    Instrumenter<RQ, RS> create(
-        String instrumentationName,
-        Tracer tracer,
-        SpanNameExtractor<? super RQ> spanNameExtractor,
-        SpanKindExtractor<? super RQ> spanKindExtractor,
-        SpanStatusExtractor<? super RQ, ? super RS> spanStatusExtractor,
-        List<? extends AttributesExtractor<? super RQ, ? super RS>> extractors,
-        ErrorCauseExtractor errorCauseExtractor);
+    Instrumenter<RQ, RS> create(InstrumenterBuilder<RQ, RS> builder);
 
     static <RQ, RS> InstrumenterConstructor<RQ, RS> internal() {
       return Instrumenter::new;
     }
 
     static <RQ, RS> InstrumenterConstructor<RQ, RS> propagatingToDownstream(
-        ContextPropagators propagators, TextMapSetter<RQ> setter) {
-      return (instrumentationName,
-          tracer,
-          spanName,
-          spanKind,
-          spanStatus,
-          attributes,
-          errorCauseExtractor) ->
-          new ClientInstrumenter<>(
-              instrumentationName,
-              tracer,
-              spanName,
-              spanKind,
-              spanStatus,
-              attributes,
-              errorCauseExtractor,
-              propagators,
-              setter);
+        TextMapSetter<RQ> setter) {
+      return builder -> new ClientInstrumenter<>(builder, setter);
     }
 
     static <RQ, RS> InstrumenterConstructor<RQ, RS> propagatingFromUpstream(
-        ContextPropagators propagators, TextMapGetter<RQ> getter) {
-      return (instrumentationName,
-          tracer,
-          spanName,
-          spanKind,
-          spanStatus,
-          attributes,
-          errorCauseExtractor) ->
-          new ServerInstrumenter<>(
-              instrumentationName,
-              tracer,
-              spanName,
-              spanKind,
-              spanStatus,
-              attributes,
-              errorCauseExtractor,
-              propagators,
-              getter);
+        TextMapGetter<RQ> getter) {
+      return builder -> new ServerInstrumenter<>(builder, getter);
     }
   }
 }

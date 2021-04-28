@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.CurrentNanoTime;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
@@ -53,7 +54,7 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     public static Instant onEnter() {
-      return Instant.now();
+      return CurrentNanoTime.get();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -68,10 +69,10 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       MessageWithDestination request =
-          MessageWithDestination.create(message, MessageOperation.receive, null);
+          MessageWithDestination.create(message, MessageOperation.receive, null, startTime);
 
       if (consumerInstrumenter().shouldStart(parentContext, request)) {
-        Context context = consumerInstrumenter().start(parentContext, request, startTime);
+        Context context = consumerInstrumenter().start(parentContext, request);
         consumerInstrumenter().end(context, request, null, throwable);
       }
     }

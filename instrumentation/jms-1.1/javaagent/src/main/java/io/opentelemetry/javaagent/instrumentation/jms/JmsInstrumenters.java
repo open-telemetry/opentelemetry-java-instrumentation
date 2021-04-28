@@ -35,6 +35,7 @@ public final class JmsInstrumenters {
         Instrumenter.<MessageWithDestination, Void>newBuilder(
                 otel, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(attributesExtractor)
+            .setStartTimeExtractor(new JmsStartTimeExtractor())
             .newInstrumenter(SpanKindExtractor.alwaysConsumer());
     LISTENER_INSTRUMENTER =
         Instrumenter.<MessageWithDestination, Void>newBuilder(
