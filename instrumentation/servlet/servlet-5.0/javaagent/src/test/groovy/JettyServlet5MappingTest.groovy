@@ -10,11 +10,13 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
+import spock.lang.IgnoreIf
 
-class JettyServlet5MappingTest extends AbstractServlet5MappingTest<Server, ServletContextHandler> {
+@IgnoreIf({ !jvm.java11Compatible })
+class JettyServlet5MappingTest extends AbstractServlet5MappingTest<Object, Object> {
 
   @Override
-  Server startServer(int port) {
+  Object startServer(int port) {
     Server server = new Server(port)
     ServletContextHandler handler = new ServletContextHandler(null, contextPath)
     setupServlets(handler)
@@ -24,20 +26,23 @@ class JettyServlet5MappingTest extends AbstractServlet5MappingTest<Server, Servl
   }
 
   @Override
-  void stopServer(Server server) {
+  void stopServer(Object serverObject) {
+    Server server = (Server) serverObject
     server.stop()
     server.destroy()
   }
 
   @Override
-  protected void setupServlets(ServletContextHandler handler) {
+  protected void setupServlets(Object handlerObject) {
+    ServletContextHandler handler = (ServletContextHandler) handlerObject
     super.setupServlets(handler)
 
     addServlet(handler, "/", DefaultServlet)
   }
 
   @Override
-  void addServlet(ServletContextHandler handler, String path, Class<Servlet> servlet) {
+  void addServlet(Object handlerObject, String path, Class<Servlet> servlet) {
+    ServletContextHandler handler = (ServletContextHandler) handlerObject
     handler.addServlet(servlet, path)
   }
 
