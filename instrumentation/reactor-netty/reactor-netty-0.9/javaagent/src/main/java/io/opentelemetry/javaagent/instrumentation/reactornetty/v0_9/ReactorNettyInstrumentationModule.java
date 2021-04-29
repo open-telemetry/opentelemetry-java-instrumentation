@@ -175,8 +175,7 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
         @Advice.Origin("#m") String methodName) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         boolean forceParentContext = methodName.equals("doAfterResponse");
-        callback = new DecoratorFunctions.OnResponseDecorator(callback,
-            forceParentContext);
+        callback = new DecoratorFunctions.OnResponseDecorator(callback, forceParentContext);
       }
     }
   }

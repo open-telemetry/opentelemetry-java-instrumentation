@@ -26,8 +26,8 @@ public final class DecoratorFunctions {
     private final BiConsumer<? super M, ? super Connection> delegate;
     private final boolean forceParentContext;
 
-    public OnMessageDecorator(BiConsumer<? super M, ? super Connection> delegate,
-        boolean forceParentContext) {
+    public OnMessageDecorator(
+        BiConsumer<? super M, ? super Connection> delegate, boolean forceParentContext) {
       this.delegate = delegate;
       this.forceParentContext = forceParentContext;
     }
