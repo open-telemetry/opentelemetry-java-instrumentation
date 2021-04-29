@@ -71,7 +71,7 @@ public abstract class ServletSpanNameProvider<SERVLETCONTEXT, REQUEST> {
     }
 
     Collection<String> mappings = mappingProvider.getMappings();
-    if (mappings == null || mappings.isEmpty()) {
+    if (mappings == null) {
       return null;
     }
 
