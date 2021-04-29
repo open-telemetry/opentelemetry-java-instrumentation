@@ -14,6 +14,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
@@ -62,7 +63,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
-    this.tracer = builder.openTelemetry.getTracer(builder.instrumentationName);
+    this.tracer =
+        builder.openTelemetry.getTracer(instrumentationName, InstrumentationVersion.VERSION);
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
