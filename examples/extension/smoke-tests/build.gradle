@@ -1,0 +1,26 @@
+plugins {
+  id "java"
+}
+
+dependencies {
+  testImplementation("org.testcontainers:testcontainers:1.15.2")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.11.2")
+  testImplementation("com.google.protobuf:protobuf-java-util:3.12.4")
+  testImplementation("com.squareup.okhttp3:okhttp:3.12.12")
+  testImplementation("io.opentelemetry:opentelemetry-proto:1.0.0-alpha")
+  testImplementation("io.opentelemetry:opentelemetry-api:1.0.0")
+
+  testImplementation("ch.qos.logback:logback-classic:1.2.3")
+}
+
+tasks.test {
+  useJUnitPlatform()
+
+  def shadowTask = project(":custom").tasks.jar
+  inputs.files(layout.files(shadowTask))
+
+  doFirst {
+    jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=/Users/nsalnikovtarnovski/Documents/workspace/opentelemetry-java-instrumentation/javaagent/build/libs/opentelemetry-javaagent-1.2.0-SNAPSHOT-all.jar")
+    jvmArgs("-Dio.opentelemetry.smoketest.agent.extensionPath=${shadowTask.archiveFile.get()}")
+  }
+}
