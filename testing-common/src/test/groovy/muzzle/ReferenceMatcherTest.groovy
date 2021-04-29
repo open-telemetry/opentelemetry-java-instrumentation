@@ -281,7 +281,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([helper], [helper.className])
-      .getMismatchedReferenceSources(this.class.classLoader)
+      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
 
     then:
     mismatches.empty
@@ -301,7 +301,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([helper], [helper.className])
-      .getMismatchedReferenceSources(this.class.classLoader)
+      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == [MissingField] as Set
