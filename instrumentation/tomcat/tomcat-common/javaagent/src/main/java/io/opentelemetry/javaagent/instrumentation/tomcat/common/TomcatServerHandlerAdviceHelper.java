@@ -27,7 +27,7 @@ public class TomcatServerHandlerAdviceHelper {
    */
   public static <REQUEST, RESPONSE> void stopSpan(
       TomcatTracer tracer,
-      ServletHttpServerTracer<REQUEST, RESPONSE> servletTracer,
+      ServletHttpServerTracer<?, REQUEST, RESPONSE> servletTracer,
       Request request,
       Response response,
       @Advice.Thrown Throwable throwable,

@@ -26,7 +26,10 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AsyncContextInstrumentation(BASE_PACKAGE, adviceClassName(".AsyncDispatchAdvice")),
-        new ServletAndFilterInstrumentation(BASE_PACKAGE, adviceClassName(".Servlet3Advice")));
+        new ServletAndFilterInstrumentation(
+            BASE_PACKAGE,
+            adviceClassName(".Servlet3Advice"),
+            adviceClassName(".Servlet3FilterInitAdvice")));
   }
 
   private static String adviceClassName(String suffix) {

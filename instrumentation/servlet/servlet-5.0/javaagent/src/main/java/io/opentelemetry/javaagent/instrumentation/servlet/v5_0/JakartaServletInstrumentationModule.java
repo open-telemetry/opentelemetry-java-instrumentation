@@ -29,7 +29,9 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
         new AsyncContextInstrumentation(
             BASE_PACKAGE, adviceClassName(".async.AsyncDispatchAdvice")),
         new ServletAndFilterInstrumentation(
-            BASE_PACKAGE, adviceClassName(".service.JakartaServletServiceAdvice")),
+            BASE_PACKAGE,
+            adviceClassName(".service.JakartaServletServiceAdvice"),
+            adviceClassName(".service.JakartaServletFilterInitAdvice")),
         new HttpServletResponseInstrumentation(
             BASE_PACKAGE, adviceClassName(".response.ResponseSendAdvice")),
         new RequestDispatcherInstrumentation(

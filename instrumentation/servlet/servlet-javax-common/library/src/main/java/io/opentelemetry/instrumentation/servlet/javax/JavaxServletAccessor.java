@@ -7,10 +7,23 @@ package io.opentelemetry.instrumentation.servlet.javax;
 
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import java.security.Principal;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpServletRequest, R> {
+public abstract class JavaxServletAccessor<R>
+    implements ServletAccessor<ServletContext, HttpServletRequest, R> {
+  @Override
+  public Object getServletContextAttribute(ServletContext servletContext, String name) {
+    return servletContext.getAttribute(name);
+  }
+
+  @Override
+  public void setServletContextAttribute(
+      ServletContext servletContext, String name, Object object) {
+    servletContext.setAttribute(name, object);
+  }
+
   @Override
   public String getRequestContextPath(HttpServletRequest request) {
     return request.getContextPath();
@@ -74,6 +87,11 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   @Override
   public String getRequestServletPath(HttpServletRequest request) {
     return request.getServletPath();
+  }
+
+  @Override
+  public String getRequestPathInfo(HttpServletRequest request) {
+    return request.getPathInfo();
   }
 
   @Override

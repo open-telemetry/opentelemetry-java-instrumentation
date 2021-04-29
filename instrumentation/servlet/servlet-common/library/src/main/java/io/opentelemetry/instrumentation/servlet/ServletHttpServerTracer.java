@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.servlet;
 
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.FILTER;
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
 
 import io.opentelemetry.api.trace.Span;
@@ -25,7 +26,7 @@ import java.security.Principal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
+public abstract class ServletHttpServerTracer<SERVLETCONTEXT, REQUEST, RESPONSE>
     extends HttpServerTracer<REQUEST, RESPONSE, REQUEST, REQUEST> {
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
@@ -34,9 +35,9 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
       Config.get()
           .getBooleanProperty("otel.instrumentation.servlet.experimental-span-attributes", false);
 
-  private final ServletAccessor<REQUEST, RESPONSE> accessor;
+  private final ServletAccessor<SERVLETCONTEXT, REQUEST, RESPONSE> accessor;
 
-  public ServletHttpServerTracer(ServletAccessor<REQUEST, RESPONSE> accessor) {
+  public ServletHttpServerTracer(ServletAccessor<SERVLETCONTEXT, REQUEST, RESPONSE> accessor) {
     this.accessor = accessor;
   }
 
@@ -48,11 +49,10 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
     accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
 
-    if (servlet) {
-      // server span name shouldn't be updated when server span was created from a call to Servlet
-      // (if created from a call to Filter then name may be updated from updateContext)
-      ServerSpanNaming.updateSource(context, SERVLET);
-    }
+    // server span name shouldn't be updated when server span was created from a call to Servlet
+    // (if created from a call to Filter then name may be updated from updateContext)
+    ServerSpanNaming.updateSource(context, servlet ? SERVLET : FILTER);
+
     return addServletContextPath(context, request);
   }
 
@@ -138,7 +138,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   @Override
   protected abstract TextMapGetter<REQUEST> getGetter();
 
-  public ServletAccessor<REQUEST, RESPONSE> getServletAccessor() {
+  public ServletAccessor<SERVLETCONTEXT, REQUEST, RESPONSE> getServletAccessor() {
     return accessor;
   }
 

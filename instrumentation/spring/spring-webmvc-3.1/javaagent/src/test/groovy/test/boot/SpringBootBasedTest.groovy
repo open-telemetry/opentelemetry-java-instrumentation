@@ -87,7 +87,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext>
       case NOT_FOUND:
         return getContextPath() + "/**"
       case LOGIN:
-        return "HTTP POST"
+        return getContextPath() + "/*"
       default:
         return super.expectedServerSpanName(endpoint)
     }

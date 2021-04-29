@@ -9,12 +9,12 @@ import io.opentelemetry.context.Context;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TagSettingAsyncListener<REQUEST, RESPONSE> implements ServletAsyncListener<RESPONSE> {
-  private final ServletHttpServerTracer<REQUEST, RESPONSE> tracer;
+  private final ServletHttpServerTracer<?, REQUEST, RESPONSE> tracer;
   private final AtomicBoolean responseHandled;
   private final Context context;
 
   public TagSettingAsyncListener(
-      ServletHttpServerTracer<REQUEST, RESPONSE> tracer,
+      ServletHttpServerTracer<?, REQUEST, RESPONSE> tracer,
       AtomicBoolean responseHandled,
       Context context) {
     this.tracer = tracer;

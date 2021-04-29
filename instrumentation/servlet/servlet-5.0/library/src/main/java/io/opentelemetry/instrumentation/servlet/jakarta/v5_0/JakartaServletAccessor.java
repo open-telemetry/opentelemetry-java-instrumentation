@@ -9,16 +9,28 @@ import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.ServletAsyncListener;
 import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
 
 public class JakartaServletAccessor
-    implements ServletAccessor<HttpServletRequest, HttpServletResponse> {
+    implements ServletAccessor<ServletContext, HttpServletRequest, HttpServletResponse> {
   public static final JakartaServletAccessor INSTANCE = new JakartaServletAccessor();
 
   private JakartaServletAccessor() {}
+
+  @Override
+  public Object getServletContextAttribute(ServletContext servletContext, String name) {
+    return servletContext.getAttribute(name);
+  }
+
+  @Override
+  public void setServletContextAttribute(
+      ServletContext servletContext, String name, Object object) {
+    servletContext.setAttribute(name, object);
+  }
 
   @Override
   public String getRequestContextPath(HttpServletRequest request) {
@@ -83,6 +95,11 @@ public class JakartaServletAccessor
   @Override
   public String getRequestServletPath(HttpServletRequest request) {
     return request.getServletPath();
+  }
+
+  @Override
+  public String getRequestPathInfo(HttpServletRequest request) {
+    return request.getPathInfo();
   }
 
   @Override

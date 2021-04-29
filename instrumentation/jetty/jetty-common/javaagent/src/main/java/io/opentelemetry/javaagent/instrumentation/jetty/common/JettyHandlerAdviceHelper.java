@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class JettyHandlerAdviceHelper {
   /** Shared method exit implementation for Jetty handler advices. */
-  public static <REQUEST, RESPONSE> void stopSpan(
-      ServletHttpServerTracer<REQUEST, RESPONSE> tracer,
+  public static <SERVLETCONTEXT, REQUEST, RESPONSE> void stopSpan(
+      ServletHttpServerTracer<SERVLETCONTEXT, REQUEST, RESPONSE> tracer,
       REQUEST request,
       RESPONSE response,
       Throwable throwable,
@@ -46,7 +46,8 @@ public class JettyHandlerAdviceHelper {
     }
 
     AtomicBoolean responseHandled = new AtomicBoolean(false);
-    ServletAccessor<REQUEST, RESPONSE> servletAccessor = tracer.getServletAccessor();
+    ServletAccessor<SERVLETCONTEXT, REQUEST, RESPONSE> servletAccessor =
+        tracer.getServletAccessor();
 
     // In case of async servlets wait for the actual response to be ready
     if (servletAccessor.isRequestAsyncStarted(request)) {
