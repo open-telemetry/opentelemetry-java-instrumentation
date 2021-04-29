@@ -25,6 +25,7 @@ import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatcher;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -82,6 +83,13 @@ public class AgentInstaller {
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(loadBootstrapPackagePrefixes());
     // this needs to be done as early as possible - before the first Config.get() call
     ConfigInitializer.initialize();
+    // ensure java.lang.reflect.Proxy is loaded, as transformation code uses it internally
+    // loading java.lang.reflect.Proxy after the bytebuddy transformer is set up causes
+    // the internal-proxy instrumentation module to transform it, and then the bytebuddy
+    // transformation code also tries to load it, which leads to a ClassCircularityError
+    // loading java.lang.reflect.Proxy early here still allows it to be retransformed by the
+    // internal-proxy instrumentation module after the bytebuddy transformer is set up
+    Proxy.class.getName();
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
