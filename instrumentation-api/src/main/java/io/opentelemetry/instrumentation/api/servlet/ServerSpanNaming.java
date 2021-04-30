@@ -63,11 +63,11 @@ public final class ServerSpanNaming {
     }
     // special case for servlet filters, even when we have a name from previous filter see whether
     // the new name is better and if so use it instead
-    boolean tryToFindBetterName =
+    boolean onlyIfBetterName =
         !source.useFirst && source.order == serverSpanNaming.updatedBySource.order;
-    if (source.order > serverSpanNaming.updatedBySource.order || tryToFindBetterName) {
+    if (source.order > serverSpanNaming.updatedBySource.order || onlyIfBetterName) {
       String name = serverSpanName.get();
-      if (name != null && (!tryToFindBetterName || serverSpanNaming.isBetterName(name))) {
+      if (name != null && (!onlyIfBetterName || serverSpanNaming.isBetterName(name))) {
         serverSpan.updateName(name);
         serverSpanNaming.updatedBySource = source;
         serverSpanNaming.nameLength = name.length();
