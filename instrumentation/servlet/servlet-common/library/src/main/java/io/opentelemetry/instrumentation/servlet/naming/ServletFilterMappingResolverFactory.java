@@ -12,36 +12,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class ServletFilterMappingProvider<SERVLETCONTEXT, FILTERREGISTRATION>
-    implements MappingProvider<SERVLETCONTEXT> {
-  protected final SERVLETCONTEXT servletContext;
-  protected final String filterName;
+public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION> {
 
-  public ServletFilterMappingProvider(SERVLETCONTEXT servletContext, String filterName) {
-    this.servletContext = servletContext;
-    this.filterName = filterName;
-  }
+  protected abstract FILTERREGISTRATION getFilterRegistration();
 
-  @Override
-  public SERVLETCONTEXT getServletContext() {
-    return servletContext;
-  }
+  protected abstract Collection<String> getUrlPatternMappings(
+      FILTERREGISTRATION filterRegistration);
 
-  @Override
-  public String getMappingKey() {
-    return "filter." + filterName;
-  }
+  protected abstract Collection<String> getServletNameMappings(
+      FILTERREGISTRATION filterRegistration);
 
-  public abstract FILTERREGISTRATION getFilterRegistration();
+  protected abstract Collection<String> getServletMappings(String servletName);
 
-  public abstract Collection<String> getUrlPatternMappings(FILTERREGISTRATION filterRegistration);
-
-  public abstract Collection<String> getServletNameMappings(FILTERREGISTRATION filterRegistration);
-
-  public abstract Collection<String> getServletMappings(String servletName);
-
-  @Override
-  public Collection<String> getMappings() {
+  private Collection<String> getMappings() {
     FILTERREGISTRATION filterRegistration = getFilterRegistration();
     if (filterRegistration == null) {
       return null;
@@ -70,5 +53,14 @@ public abstract class ServletFilterMappingProvider<SERVLETCONTEXT, FILTERREGISTR
     Collections.sort(mappingsList, (s1, s2) -> s2.length() - s1.length());
 
     return mappingsList;
+  }
+
+  public final MappingResolver create() {
+    Collection<String> mappings = getMappings();
+    if (mappings == null) {
+      return null;
+    }
+
+    return MappingResolver.build(mappings);
   }
 }

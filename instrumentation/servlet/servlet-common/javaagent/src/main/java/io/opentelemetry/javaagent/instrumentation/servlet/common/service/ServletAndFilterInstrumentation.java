@@ -22,17 +22,22 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ServletAndFilterInstrumentation implements TypeInstrumentation {
   private final String basePackageName;
   private final String adviceClassName;
+  private final String servletInitAdviceClassName;
   private final String filterInitAdviceClassName;
 
   public ServletAndFilterInstrumentation(
-      String basePackageName, String adviceClassName, String filterInitAdviceClassName) {
+      String basePackageName,
+      String adviceClassName,
+      String servletInitAdviceClassName,
+      String filterInitAdviceClassName) {
     this.basePackageName = basePackageName;
     this.adviceClassName = adviceClassName;
+    this.servletInitAdviceClassName = servletInitAdviceClassName;
     this.filterInitAdviceClassName = filterInitAdviceClassName;
   }
 
   public ServletAndFilterInstrumentation(String basePackageName, String adviceClassName) {
-    this(basePackageName, adviceClassName, null);
+    this(basePackageName, adviceClassName, null, null);
   }
 
   @Override
@@ -54,6 +59,11 @@ public class ServletAndFilterInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named(basePackageName + ".ServletResponse")))
             .and(isPublic()),
         adviceClassName);
+    if (servletInitAdviceClassName != null) {
+      transformers.put(
+          named("init").and(takesArgument(0, named(basePackageName + ".ServletConfig"))),
+          servletInitAdviceClassName);
+    }
     if (filterInitAdviceClassName != null) {
       transformers.put(
           named("init").and(takesArgument(0, named(basePackageName + ".FilterConfig"))),

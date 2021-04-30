@@ -7,19 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
 import io.opentelemetry.instrumentation.servlet.naming.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterConfig;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
 import net.bytebuddy.asm.Advice;
 
-public class JakartaServletFilterInitAdvice {
+public class JakartaServletInitAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void filterInit(
-      @Advice.This Filter filter, @Advice.Argument(0) FilterConfig filterConfig) {
-    if (filterConfig == null) {
+  public static void servletInit(
+      @Advice.This Servlet servlet, @Advice.Argument(0) ServletConfig servletConfig) {
+    if (servletConfig == null) {
       return;
     }
-    InstrumentationContext.get(Filter.class, MappingResolver.class)
-        .putIfAbsent(filter, new JakartaServletFilterMappingResolverFactory(filterConfig));
+    InstrumentationContext.get(Servlet.class, MappingResolver.class)
+        .putIfAbsent(servlet, new JakartaServletMappingResolverFactory(servletConfig));
   }
 }

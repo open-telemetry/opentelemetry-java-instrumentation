@@ -31,6 +31,7 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
         new ServletAndFilterInstrumentation(
             BASE_PACKAGE,
             adviceClassName(".service.JakartaServletServiceAdvice"),
+            adviceClassName(".service.JakartaServletInitAdvice"),
             adviceClassName(".service.JakartaServletFilterInitAdvice")),
         new HttpServletResponseInstrumentation(
             BASE_PACKAGE, adviceClassName(".response.ResponseSendAdvice")),

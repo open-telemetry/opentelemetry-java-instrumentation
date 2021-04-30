@@ -16,8 +16,8 @@ import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServletAndFilterAdviceHelper {
-  public static <SERVLETCONTEXT, REQUEST, RESPONSE> void stopSpan(
-      ServletHttpServerTracer<SERVLETCONTEXT, REQUEST, RESPONSE> tracer,
+  public static <REQUEST, RESPONSE> void stopSpan(
+      ServletHttpServerTracer<REQUEST, RESPONSE> tracer,
       REQUEST request,
       RESPONSE response,
       Throwable throwable,
@@ -50,7 +50,7 @@ public class ServletAndFilterAdviceHelper {
     }
 
     AtomicBoolean responseHandled = new AtomicBoolean(false);
-    ServletAccessor<SERVLETCONTEXT, REQUEST, RESPONSE> accessor = tracer.getServletAccessor();
+    ServletAccessor<REQUEST, RESPONSE> accessor = tracer.getServletAccessor();
 
     // In case of async servlets wait for the actual response to be ready
     if (accessor.isRequestAsyncStarted(request)) {

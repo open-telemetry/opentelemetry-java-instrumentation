@@ -26,7 +26,7 @@ import java.security.Principal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class ServletHttpServerTracer<SERVLETCONTEXT, REQUEST, RESPONSE>
+public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     extends HttpServerTracer<REQUEST, RESPONSE, REQUEST, REQUEST> {
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
@@ -35,9 +35,9 @@ public abstract class ServletHttpServerTracer<SERVLETCONTEXT, REQUEST, RESPONSE>
       Config.get()
           .getBooleanProperty("otel.instrumentation.servlet.experimental-span-attributes", false);
 
-  private final ServletAccessor<SERVLETCONTEXT, REQUEST, RESPONSE> accessor;
+  private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
-  public ServletHttpServerTracer(ServletAccessor<SERVLETCONTEXT, REQUEST, RESPONSE> accessor) {
+  public ServletHttpServerTracer(ServletAccessor<REQUEST, RESPONSE> accessor) {
     this.accessor = accessor;
   }
 
@@ -138,7 +138,7 @@ public abstract class ServletHttpServerTracer<SERVLETCONTEXT, REQUEST, RESPONSE>
   @Override
   protected abstract TextMapGetter<REQUEST> getGetter();
 
-  public ServletAccessor<SERVLETCONTEXT, REQUEST, RESPONSE> getServletAccessor() {
+  public ServletAccessor<REQUEST, RESPONSE> getServletAccessor() {
     return accessor;
   }
 

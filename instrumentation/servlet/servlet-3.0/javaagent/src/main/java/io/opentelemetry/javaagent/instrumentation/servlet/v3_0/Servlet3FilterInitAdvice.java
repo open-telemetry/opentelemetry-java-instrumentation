@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import io.opentelemetry.instrumentation.servlet.v3_0.Servlet3FilterConfigHolder;
+import io.opentelemetry.instrumentation.servlet.naming.MappingResolver;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import net.bytebuddy.asm.Advice;
@@ -18,6 +19,7 @@ public class Servlet3FilterInitAdvice {
     if (filterConfig == null) {
       return;
     }
-    Servlet3FilterConfigHolder.setFilterConfig(filter, filterConfig);
+    InstrumentationContext.get(Filter.class, MappingResolver.class)
+        .putIfAbsent(filter, new Servlet3FilterMappingResolverFactory(filterConfig));
   }
 }

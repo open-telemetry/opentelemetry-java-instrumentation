@@ -29,6 +29,7 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
         new ServletAndFilterInstrumentation(
             BASE_PACKAGE,
             adviceClassName(".Servlet3Advice"),
+            adviceClassName(".Servlet3InitAdvice"),
             adviceClassName(".Servlet3FilterInitAdvice")));
   }
 

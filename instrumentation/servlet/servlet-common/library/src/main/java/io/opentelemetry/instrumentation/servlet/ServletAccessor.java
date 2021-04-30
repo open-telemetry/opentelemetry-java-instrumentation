@@ -14,15 +14,10 @@ import java.security.Principal;
  * used as well in cases where the class itself does not provide some field (such as response status
  * for Servlet API 2.2).
  *
- * @param <SERVLETCONTEXT> ServletContext class (or a wrapper)
  * @param <REQUEST> HttpServletRequest class (or a wrapper)
  * @param <RESPONSE> HttpServletResponse class (or a wrapper)
  */
-public interface ServletAccessor<SERVLETCONTEXT, REQUEST, RESPONSE> {
-  Object getServletContextAttribute(SERVLETCONTEXT servletContext, String name);
-
-  void setServletContextAttribute(SERVLETCONTEXT servletContext, String name, Object object);
-
+public interface ServletAccessor<REQUEST, RESPONSE> {
   String getRequestContextPath(REQUEST request);
 
   String getRequestScheme(REQUEST request);

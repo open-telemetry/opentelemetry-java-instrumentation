@@ -15,7 +15,7 @@ import java.util.Set;
 /**
  * Helper class for finding a mapping that matches current request from a collection of mappings.
  */
-class MappingResolver {
+public class MappingResolver {
   private final Set<String> exactMatches;
   private final List<WildcardMatcher> wildcardMatchers;
   private final boolean hasDefault;
