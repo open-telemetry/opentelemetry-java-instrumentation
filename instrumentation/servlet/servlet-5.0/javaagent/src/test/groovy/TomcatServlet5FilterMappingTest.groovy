@@ -118,7 +118,7 @@ class TomcatServlet5FilterUrlPatternMappingTest extends TomcatServlet5FilterMapp
   }
 }
 
-class TomcatServlet3FilterServletNameMappingTest extends TomcatServlet5FilterMappingTest {
+class TomcatServlet5FilterServletNameMappingTest extends TomcatServlet5FilterMappingTest {
   @Override
   protected void setupServlets(Context context) {
     Tomcat.addServlet(context, "prefix-servlet", DefaultServlet.newInstance())
