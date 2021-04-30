@@ -87,7 +87,7 @@ class OkHttp3Test extends AbstractOkHttp3Test implements AgentTestTrait {
       .addInterceptor(client.interceptors().get(1))
       .addInterceptor(client.interceptors().get(1))
       .addInterceptor(otherInterceptor)
-    def originalNewInterceptors = newClientBuilder.interceptors();
+    def originalNewInterceptors = newClientBuilder.interceptors()
     def newClient = newClientBuilder.build()
 
     then:
