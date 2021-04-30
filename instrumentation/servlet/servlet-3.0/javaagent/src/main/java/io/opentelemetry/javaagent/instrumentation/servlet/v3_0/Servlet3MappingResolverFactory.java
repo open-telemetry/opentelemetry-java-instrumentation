@@ -18,20 +18,16 @@ public class Servlet3MappingResolverFactory extends ServletMappingResolverFactor
   private final ServletConfig servletConfig;
 
   public Servlet3MappingResolverFactory(ServletConfig servletConfig) {
-    System.err.println("aaaaaaaa " + servletConfig);
-    new Exception().printStackTrace();
     this.servletConfig = servletConfig;
   }
 
   public Collection<String> getMappings() {
-    System.err.println("--------- " + servletConfig);
     if (servletConfig == null) {
       return null;
     }
 
     String servletName = servletConfig.getServletName();
     ServletContext servletContext = servletConfig.getServletContext();
-    System.err.println("--------- " + servletName + " " + servletContext);
     if (servletName == null || servletContext == null) {
       return null;
     }
