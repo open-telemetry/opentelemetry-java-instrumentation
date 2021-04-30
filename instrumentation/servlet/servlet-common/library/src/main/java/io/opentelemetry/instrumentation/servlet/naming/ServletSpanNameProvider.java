@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.naming;
 
+import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 
 /** Helper class for constructing span name for given servlet/filter mapping and request. */

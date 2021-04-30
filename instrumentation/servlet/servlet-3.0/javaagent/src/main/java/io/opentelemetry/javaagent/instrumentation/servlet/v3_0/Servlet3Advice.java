@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.servlet.v3_0.Servlet3HttpServerTr
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
-import io.opentelemetry.instrumentation.servlet.naming.MappingResolver;
+import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;

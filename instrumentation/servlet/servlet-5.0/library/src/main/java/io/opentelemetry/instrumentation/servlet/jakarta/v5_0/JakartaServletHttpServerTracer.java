@@ -10,9 +10,9 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
-import io.opentelemetry.instrumentation.servlet.naming.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.naming.ServletSpanNameProvider;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;

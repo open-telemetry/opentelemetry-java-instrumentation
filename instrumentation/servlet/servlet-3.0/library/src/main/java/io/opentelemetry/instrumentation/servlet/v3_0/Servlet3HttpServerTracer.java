@@ -9,9 +9,9 @@ import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Sour
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.servlet.javax.JavaxServletHttpServerTracer;
-import io.opentelemetry.instrumentation.servlet.naming.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.naming.ServletSpanNameProvider;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
