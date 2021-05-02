@@ -30,16 +30,10 @@ class OkHttp3Test extends AbstractOkHttp3Test implements AgentTestTrait {
     def originalInterceptors = new ArrayList<>(clientBuilder.interceptors())
 
     when:
-    def client = clientBuilder.build()
+    clientBuilder.build()
 
     then:
     clientBuilder.interceptors() == originalInterceptors
-
-    when:
-    def builderFromClient = client.newBuilder()
-
-    then:
-    builderFromClient.interceptors() == originalInterceptors
   }
 
   /**
@@ -79,6 +73,7 @@ class OkHttp3Test extends AbstractOkHttp3Test implements AgentTestTrait {
     clientBuilder.interceptors().get(0).is(customInterceptor)
     client.interceptors().size() == 2
     client.interceptors().get(0).is(customInterceptor)
+    client.interceptors().get(1).is(OkHttp3Interceptors.TRACING_INTERCEPTOR)
 
     when:
     def otherInterceptor = new TestInterceptor()
@@ -95,7 +90,7 @@ class OkHttp3Test extends AbstractOkHttp3Test implements AgentTestTrait {
     newClient.interceptors().size() == 3
     newClient.interceptors().get(0).is(customInterceptor)
     newClient.interceptors().get(1).is(otherInterceptor)
-    newClient.interceptors().get(2)
+    newClient.interceptors().get(2).is(OkHttp3Interceptors.TRACING_INTERCEPTOR)
   }
 
   private static class TestInterceptor implements Interceptor {
