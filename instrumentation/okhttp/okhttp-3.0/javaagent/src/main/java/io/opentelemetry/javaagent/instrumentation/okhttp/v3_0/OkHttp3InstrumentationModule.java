@@ -75,11 +75,7 @@ public class OkHttp3InstrumentationModule extends InstrumentationModule {
         // then remove all tracing interceptors before adding one as the last.
         originalInterceptors = new ArrayList<>(builder.interceptors());
 
-        while (true) {
-          if (!builder.interceptors().remove(OkHttp3Interceptors.TRACING_INTERCEPTOR)) {
-            break;
-          }
-        }
+        while (builder.interceptors().remove(OkHttp3Interceptors.TRACING_INTERCEPTOR)) {}
       }
 
       builder.addInterceptor(OkHttp3Interceptors.TRACING_INTERCEPTOR);
