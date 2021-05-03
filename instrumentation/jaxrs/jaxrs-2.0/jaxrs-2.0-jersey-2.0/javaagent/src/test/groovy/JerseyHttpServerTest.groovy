@@ -36,4 +36,9 @@ class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
   boolean asyncCancelHasSendError() {
     true
   }
+
+  @Override
+  boolean hasFrameworkInstrumentation() {
+    false
+  }
 }

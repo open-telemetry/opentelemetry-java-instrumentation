@@ -56,7 +56,7 @@ public final class ServerSpanNaming {
     ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
     if (serverSpanNaming == null) {
       String name = serverSpanName.get();
-      if (name != null) {
+      if (name != null && !name.isEmpty()) {
         serverSpan.updateName(name);
       }
       return;
@@ -67,7 +67,7 @@ public final class ServerSpanNaming {
         !source.useFirst && source.order == serverSpanNaming.updatedBySource.order;
     if (source.order > serverSpanNaming.updatedBySource.order || onlyIfBetterName) {
       String name = serverSpanName.get();
-      if (name != null && (!onlyIfBetterName || serverSpanNaming.isBetterName(name))) {
+      if (name != null && !name.isEmpty() && (!onlyIfBetterName || serverSpanNaming.isBetterName(name))) {
         serverSpan.updateName(name);
         serverSpanNaming.updatedBySource = source;
         serverSpanNaming.nameLength = name.length();

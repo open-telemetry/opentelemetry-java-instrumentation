@@ -147,6 +147,58 @@ class JaxRsTestResource {
   }
 }
 
+@Path("test-resource-super")
+class JaxRsSuperClassTestResource extends JaxRsSuperClassTestResourceSuper {
+}
+
+class JaxRsSuperClassTestResourceSuper {
+  @GET
+  Object call() {
+    HttpServerTest.controller(SUCCESS) {
+      SUCCESS.body
+    }
+  }
+}
+
+class JaxRsInterfaceClassTestResource extends JaxRsInterfaceClassTestResourceSuper implements JaxRsInterface {
+}
+
+@Path("test-resource-interface")
+interface JaxRsInterface {
+  @Path("call")
+  @GET
+  Object call()
+}
+
+class JaxRsInterfaceClassTestResourceSuper {
+  Object call() {
+    HttpServerTest.controller(SUCCESS) {
+      SUCCESS.body
+    }
+  }
+}
+
+@Path("test-sub-resource-locator")
+class JaxRsSubResourceLocatorTestResource {
+  @Path("call")
+  Object call() {
+    HttpServerTest.controller(SUCCESS) {
+      return new SubResource()
+    }
+  }
+}
+
+class SubResource {
+  @Path("sub")
+  @GET
+  String call() {
+    HttpServerTest.controller(SUCCESS) {
+      new Exception().printStackTrace()
+      SUCCESS.body
+    }
+  }
+}
+
 class JaxRsTestExceptionMapper implements ExceptionMapper<Exception> {
   @Override
   Response toResponse(Exception exception) {
@@ -161,6 +213,9 @@ class JaxRsTestApplication extends Application {
   Set<Class<?>> getClasses() {
     def classes = new HashSet()
     classes.add(JaxRsTestResource)
+    classes.add(JaxRsSuperClassTestResource)
+    classes.add(JaxRsInterfaceClassTestResource)
+    classes.add(JaxRsSubResourceLocatorTestResource)
     classes.add(JaxRsTestExceptionMapper)
     return classes
   }
