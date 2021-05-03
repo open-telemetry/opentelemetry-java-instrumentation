@@ -26,6 +26,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +36,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import net.bytebuddy.jar.asm.ClassReader;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * {@link LinkedHashMap} is used for reference map to guarantee a deterministic order of iteration,
@@ -199,6 +201,73 @@ public class ReferenceCollector {
 
   public Map<String, Reference> getReferences() {
     return references;
+  }
+
+  public void prune() {
+    Set<Reference> helperClassesWithLibrarySuperType = getHelperClassesWithLibrarySuperType();
+
+    Set<Reference> needToKeepFieldsAndMethods = new HashSet<>();
+    for (Reference reference : helperClassesWithLibrarySuperType) {
+      addSuperClasses(reference.getClassName(), needToKeepFieldsAndMethods);
+    }
+
+    for (Iterator<Map.Entry<String, Reference>> i = references.entrySet().iterator();
+        i.hasNext(); ) {
+      Reference reference = i.next().getValue();
+      if (instrumentationClassPredicate.isProvidedByLibrary(reference.getClassName())) {
+        // these are the references to library classes which need to be checked at runtime
+        continue;
+      }
+      if (needToKeepFieldsAndMethods.contains(reference)) {
+        // these need to be kept in order to check abstract methods are implemented and declared
+        // super class fields are present
+        // TODO (trask) if this is provided by javaagent then can remove methods since the whole
+        //  class will be resolved at runtime
+        //  or another option is to resolve from helper classes first, see
+        //  HelperReferenceWrapper.Factory.create(String)
+        continue;
+      }
+      i.remove();
+    }
+  }
+
+  private Set<Reference> getHelperClassesWithLibrarySuperType() {
+    Set<Reference> helperClassesWithLibrarySuperType = new HashSet<>();
+    for (Map.Entry<String, Reference> entry : references.entrySet()) {
+      Reference reference = entry.getValue();
+      if (instrumentationClassPredicate.isInstrumentationClass(reference.getClassName())
+          && hasLibrarySuperType(reference.getClassName())) {
+        helperClassesWithLibrarySuperType.add(reference);
+      }
+    }
+    return helperClassesWithLibrarySuperType;
+  }
+
+  private void addSuperClasses(@Nullable String className, Set<Reference> superClasses) {
+    if (className != null && !className.startsWith("java.")) {
+      Reference reference = references.get(className);
+      superClasses.add(reference);
+      addSuperClasses(reference.getSuperName(), superClasses);
+    }
+  }
+
+  private boolean hasLibrarySuperType(@Nullable String typeName) {
+    if (typeName == null || typeName.startsWith("java.")) {
+      return false;
+    }
+    if (instrumentationClassPredicate.isProvidedByLibrary(typeName)) {
+      return true;
+    }
+    Reference reference = references.get(typeName);
+    if (hasLibrarySuperType(reference.getSuperName())) {
+      return true;
+    }
+    for (String type : reference.getInterfaces()) {
+      if (hasLibrarySuperType(type)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // see https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm

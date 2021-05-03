@@ -42,6 +42,20 @@ public final class InstrumentationClassPredicate {
         || additionalLibraryInstrumentationPredicate.test(className);
   }
 
+  public boolean isProvidedByLibrary(String className) {
+    return !isInstrumentationClass(className) && !isProvidedByJavaagent(className);
+  }
+
+  private boolean isProvidedByJavaagent(String className) {
+    return className.startsWith(JAVAAGENT_API_PACKAGE)
+        || className.startsWith(INSTRUMENTATION_API_PACKAGE)
+        || className.startsWith("io.opentelemetry.javaagent.bootstrap.")
+        || className.startsWith("io.opentelemetry.api.")
+        || className.startsWith("io.opentelemetry.context.")
+        || className.startsWith("io.opentelemetry.semconv.")
+        || className.startsWith("org.slf4j.");
+  }
+
   private static boolean isJavaagentInstrumentationClass(String className) {
     return className.startsWith(JAVAAGENT_INSTRUMENTATION_PACKAGE)
         && !className.startsWith(JAVAAGENT_API_PACKAGE);
