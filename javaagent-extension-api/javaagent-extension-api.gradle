@@ -18,7 +18,8 @@ configurations {
 
 dependencies {
   api deps.opentelemetrySdk
-  api deps.opentelemetrySdkMetrics
+  // metrics are unstable, do not expose as api
+  implementation deps.opentelemetrySdkMetrics
   api deps.bytebuddy
   api deps.slf4j
 

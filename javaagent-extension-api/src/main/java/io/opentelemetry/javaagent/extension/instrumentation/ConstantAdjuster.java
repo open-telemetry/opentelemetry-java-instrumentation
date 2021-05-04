@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension;
+package io.opentelemetry.javaagent.extension.instrumentation;
 
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.TypeConstantAdjustment;
@@ -17,10 +17,10 @@ import net.bytebuddy.utility.JavaModule;
  *
  * @see ConstantAdjuster The ASM visitor that does the actual work.
  */
-public final class ConstantAdjuster implements AgentBuilder.Transformer {
+final class ConstantAdjuster implements AgentBuilder.Transformer {
   private static final ConstantAdjuster INSTANCE = new ConstantAdjuster();
 
-  public static AgentBuilder.Transformer instance() {
+  static AgentBuilder.Transformer instance() {
     return INSTANCE;
   }
 

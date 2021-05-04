@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
-import io.opentelemetry.javaagent.extension.ConstantAdjuster;
 import io.opentelemetry.javaagent.extension.log.TransformSafeLogger;
 import io.opentelemetry.javaagent.extension.muzzle.InstrumentationClassPredicate;
 import io.opentelemetry.javaagent.extension.muzzle.Mismatch;
