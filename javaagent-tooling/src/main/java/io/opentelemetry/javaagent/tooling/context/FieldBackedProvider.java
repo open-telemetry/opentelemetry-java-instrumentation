@@ -12,8 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.FieldBackedContextStoreAppliedMarker;
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationContextProvider;
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.ActualInstrumentationExtensionImplementation;
 import io.opentelemetry.javaagent.extension.log.TransformSafeLogger;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
@@ -388,7 +387,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               builder
                   .type(safeHasSuperType(named(entry.getKey())))
                   .and(safeToInjectFieldsMatcher())
-                  .and(InstrumentationModule.NOT_DECORATOR_MATCHER)
+                  .and(ActualInstrumentationExtensionImplementation.NOT_DECORATOR_MATCHER)
                   .transform(NoOpTransformer.INSTANCE);
 
           /*

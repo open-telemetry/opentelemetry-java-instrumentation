@@ -18,7 +18,7 @@ public abstract class Mismatch {
   /** Instrumentation sources which caused the mismatch. */
   private final Reference.Source[] mismatchSources;
 
-  Mismatch(Reference.Source[] mismatchSources) {
+  private Mismatch(Reference.Source[] mismatchSources) {
     this.mismatchSources = mismatchSources;
   }
 

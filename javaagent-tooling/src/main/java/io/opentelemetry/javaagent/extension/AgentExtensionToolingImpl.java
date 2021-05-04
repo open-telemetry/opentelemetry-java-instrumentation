@@ -3,23 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package muzzle;
+package io.opentelemetry.javaagent.extension;
 
-import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
 import net.bytebuddy.pool.TypePool;
 
-public final class MuzzleTooling
+public final class AgentExtensionToolingImpl
     implements AgentExtensionTooling, AgentExtensionTooling.ClassLoaders {
-
-  private static final AgentExtensionTooling INSTANCE = new MuzzleTooling();
-
-  public static AgentExtensionTooling instance() {
-    return INSTANCE;
-  }
-
-  private MuzzleTooling() {}
 
   @Override
   public TypePool createTypePool(ClassLoader classLoader) {
@@ -39,6 +30,6 @@ public final class MuzzleTooling
 
   @Override
   public ClassLoader agentClassLoader() {
-    throw new UnsupportedOperationException("not used by muzzle");
+    return Utils.getAgentClassLoader();
   }
 }

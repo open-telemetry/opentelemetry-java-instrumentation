@@ -23,7 +23,7 @@ import org.slf4j.event.Level;
  * <li>(Because gradle hijacks System.out), gradle is called from inside of the class file transform
  * <li>Gradle tries to grab a different lock during it's implementation of System.out
  */
-public class TransformSafeLogger {
+public final class TransformSafeLogger {
 
   private static final boolean ENABLE_TRANSFORM_SAFE_LOGGING =
       Boolean.getBoolean("otel.javaagent.testing.transform-safe-logging.enabled");

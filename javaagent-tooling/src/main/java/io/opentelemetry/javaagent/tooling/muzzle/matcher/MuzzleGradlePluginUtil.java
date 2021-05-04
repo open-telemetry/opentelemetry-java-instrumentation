@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
+import io.opentelemetry.javaagent.extension.AgentExtensionToolingImpl;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.muzzle.Mismatch;
 import io.opentelemetry.javaagent.extension.muzzle.Reference;
 import io.opentelemetry.javaagent.extension.muzzle.ReferenceMatcher;
-import io.opentelemetry.javaagent.internal.extension.AgentExtensionToolingImpl;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -59,10 +59,7 @@ public final class MuzzleGradlePluginUtil {
         ReferenceMatcher muzzle =
             (ReferenceMatcher) getMuzzleReferenceMatcher.invoke(instrumentationModule);
         List<Mismatch> mismatches =
-            muzzle.getMismatchedReferenceSources(
-                new AgentExtensionToolingImpl(
-                    instrumentationModule.getClass(), instrumentationModule.extensionName()),
-                userClassLoader);
+            muzzle.getMismatchedReferenceSources(new AgentExtensionToolingImpl(), userClassLoader);
 
         boolean classLoaderMatch =
             instrumentationModule.classLoaderMatcher().matches(userClassLoader);

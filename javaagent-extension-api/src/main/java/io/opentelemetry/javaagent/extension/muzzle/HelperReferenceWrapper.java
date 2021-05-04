@@ -20,7 +20,7 @@ import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.pool.TypePool.Resolution;
 
 /** This class provides a common interface for {@link Reference} and {@link TypeDescription}. */
-public interface HelperReferenceWrapper {
+interface HelperReferenceWrapper {
   boolean isAbstract();
 
   /**

@@ -133,13 +133,8 @@ class InstrumentationModuleTest extends Specification {
       super(instrumentationNames)
     }
 
-    def getEnabled() {
-      return super.enabled
-    }
-
     @Override
     List<TypeInstrumentation> typeInstrumentations() {
-      applyCalled = true
       return []
     }
   }

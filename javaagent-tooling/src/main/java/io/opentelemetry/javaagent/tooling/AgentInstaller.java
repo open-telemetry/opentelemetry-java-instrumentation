@@ -16,12 +16,12 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
+import io.opentelemetry.javaagent.extension.AgentExtensionToolingImpl;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.log.TransformSafeLogger;
 import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
-import io.opentelemetry.javaagent.internal.extension.AgentExtensionToolingImpl;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
 import io.opentelemetry.javaagent.spi.ComponentInstaller;
@@ -163,13 +163,11 @@ public class AgentInstaller {
 
     int numInstrumenters = 0;
 
+    AgentExtensionTooling tooling = new AgentExtensionToolingImpl();
     for (AgentExtension agentExtension : loadAgentExtensions()) {
       log.debug("Loading extension {}", agentExtension.getClass().getName());
       try {
-        AgentExtensionTooling components =
-            new AgentExtensionToolingImpl(
-                agentExtension.getClass(), agentExtension.extensionName());
-        agentBuilder = agentExtension.extend(agentBuilder, components);
+        agentBuilder = agentExtension.extend(agentBuilder, tooling);
         numInstrumenters++;
       } catch (Exception | LinkageError e) {
         log.error("Unable to load extension {}", agentExtension.getClass().getName(), e);
