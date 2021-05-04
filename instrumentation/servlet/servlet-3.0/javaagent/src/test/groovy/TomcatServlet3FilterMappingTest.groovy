@@ -121,9 +121,9 @@ class TomcatServlet3FilterUrlPatternMappingTest extends TomcatServlet3FilterMapp
 class TomcatServlet3FilterServletNameMappingTest extends TomcatServlet3FilterMappingTest {
   @Override
   protected void setupServlets(Context context) {
-    Tomcat.addServlet(context, "prefix-servlet", DefaultServlet.newInstance())
+    Tomcat.addServlet(context, "prefix-servlet", new DefaultServlet())
     context.addServletMappingDecoded("/prefix/*", "prefix-servlet")
-    Tomcat.addServlet(context, "suffix-servlet", DefaultServlet.newInstance())
+    Tomcat.addServlet(context, "suffix-servlet", new DefaultServlet())
     context.addServletMappingDecoded("*.suffix", "suffix-servlet")
 
     addFilter(context, "/*", FirstFilter)
