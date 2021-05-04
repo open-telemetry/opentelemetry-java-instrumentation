@@ -46,10 +46,10 @@ class MessageWithDestinationTest {
 
     // when
     MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.send, null, START_TIME);
+        MessageWithDestination.create(message, MessageOperation.SEND, null, START_TIME);
 
     // then
-    assertMessage(MessageOperation.send, "unknown", "unknown", false, START_TIME, result);
+    assertMessage(MessageOperation.SEND, "unknown", "unknown", false, START_TIME, result);
   }
 
   @Test
@@ -59,10 +59,10 @@ class MessageWithDestinationTest {
 
     // when
     MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.send, destination, START_TIME);
+        MessageWithDestination.create(message, MessageOperation.SEND, destination, START_TIME);
 
     // then
-    assertMessage(MessageOperation.send, "unknown", "unknown", false, START_TIME, result);
+    assertMessage(MessageOperation.SEND, "unknown", "unknown", false, START_TIME, result);
   }
 
   @ParameterizedTest
@@ -85,11 +85,11 @@ class MessageWithDestinationTest {
 
     // when
     MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.receive, null);
+        MessageWithDestination.create(message, MessageOperation.RECEIVE, null);
 
     // then
     assertMessage(
-        MessageOperation.receive,
+        MessageOperation.RECEIVE,
         "queue",
         expectedDestinationName,
         expectedTemporary,
@@ -117,11 +117,11 @@ class MessageWithDestinationTest {
 
     // when
     MessageWithDestination result =
-        MessageWithDestination.create(message, MessageOperation.receive, null);
+        MessageWithDestination.create(message, MessageOperation.RECEIVE, null);
 
     // then
     assertMessage(
-        MessageOperation.receive,
+        MessageOperation.RECEIVE,
         "topic",
         expectedDestinationName,
         expectedTemporary,

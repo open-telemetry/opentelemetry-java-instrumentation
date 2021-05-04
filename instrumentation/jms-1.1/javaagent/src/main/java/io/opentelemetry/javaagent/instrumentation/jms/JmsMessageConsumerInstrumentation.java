@@ -16,7 +16,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
-import java.time.Clock;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,7 +53,7 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     public static Instant onEnter() {
-      return Clock.systemUTC().instant();
+      return Instant.now();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

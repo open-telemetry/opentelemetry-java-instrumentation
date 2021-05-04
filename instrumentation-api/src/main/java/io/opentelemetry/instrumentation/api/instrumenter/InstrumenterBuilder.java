@@ -32,8 +32,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
-  StartTimeExtractor<REQUEST> startTimeExtractor = StartTimeExtractor.getDefault();
-  EndTimeExtractor<RESPONSE> endTimeExtractor = EndTimeExtractor.getDefault();
+  StartTimeExtractor<REQUEST> startTimeExtractor = null;
+  EndTimeExtractor<RESPONSE> endTimeExtractor = null;
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
@@ -86,7 +86,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   /**
    * Sets the {@link StartTimeExtractor} and the {@link EndTimeExtractor} to extract the timestamp
-   * marking the start and end of processing.
+   * marking the start and end of processing. If unset, the constructed instrumenter will defer
+   * determining start and end timestamps to the OpenTelemetry SDK.
    */
   public InstrumenterBuilder<REQUEST, RESPONSE> setTimeExtractors(
       StartTimeExtractor<REQUEST> startTimeExtractor, EndTimeExtractor<RESPONSE> endTimeExtractor) {
