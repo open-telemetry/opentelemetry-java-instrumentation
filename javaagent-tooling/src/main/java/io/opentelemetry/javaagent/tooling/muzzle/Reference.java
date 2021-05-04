@@ -23,6 +23,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * bytecode generated based on them would also be deterministic.
  */
 public final class Reference {
+
+  private static final boolean COLLECT_SOURCES = true;
+
   private final Set<Source> sources;
   private final String className;
   private final String superName;
@@ -348,7 +351,7 @@ public final class Reference {
     public Method(
         Source[] sources, Flag[] flags, String name, Type returnType, Type[] parameterTypes) {
       this(
-          new LinkedHashSet<>(Arrays.asList(sources)),
+          COLLECT_SOURCES ? new LinkedHashSet<>(Arrays.asList(sources)) : new LinkedHashSet<>(),
           new LinkedHashSet<>(Arrays.asList(flags)),
           name,
           returnType,
@@ -439,7 +442,8 @@ public final class Reference {
     private final boolean declared;
 
     public Field(Source[] sources, Flag[] flags, String name, Type fieldType, boolean declared) {
-      this.sources = new LinkedHashSet<>(Arrays.asList(sources));
+      this.sources =
+          COLLECT_SOURCES ? new LinkedHashSet<>(Arrays.asList(sources)) : new LinkedHashSet<>();
       this.flags = new LinkedHashSet<>(Arrays.asList(flags));
       this.name = name;
       this.type = fieldType;
@@ -538,7 +542,9 @@ public final class Reference {
     }
 
     public Builder withSource(String sourceName, int line) {
-      sources.add(new Source(sourceName, line));
+      if (COLLECT_SOURCES) {
+        sources.add(new Source(sourceName, line));
+      }
       return this;
     }
 
