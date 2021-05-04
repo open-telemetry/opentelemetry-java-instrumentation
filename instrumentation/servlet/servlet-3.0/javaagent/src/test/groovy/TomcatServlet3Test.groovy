@@ -311,6 +311,11 @@ class TomcatServlet3TestAsync extends TomcatServlet3Test {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
   }
+
+  @Override
+  boolean testConcurrency() {
+    return true
+  }
 }
 
 class TomcatServlet3TestFakeAsync extends TomcatServlet3Test {
@@ -324,6 +329,11 @@ class TomcatServlet3TestFakeAsync extends TomcatServlet3Test {
   boolean testException() {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
+  }
+
+  @Override
+  boolean testConcurrency() {
+    return true
   }
 }
 
