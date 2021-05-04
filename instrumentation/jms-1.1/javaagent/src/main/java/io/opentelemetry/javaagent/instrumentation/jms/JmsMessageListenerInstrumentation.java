@@ -54,7 +54,7 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = MessageWithDestination.create(message, MessageOperation.process, null);
+      request = MessageWithDestination.create(message, MessageOperation.PROCESS, null);
 
       if (!listenerInstrumenter().shouldStart(parentContext, request)) {
         return;

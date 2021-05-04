@@ -47,8 +47,8 @@ public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
         SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
         messagePayloadCompressedSize(request));
     MessageOperation operation = operation(request);
-    if (operation == MessageOperation.receive || operation == MessageOperation.process) {
-      set(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.name());
+    if (operation == MessageOperation.RECEIVE || operation == MessageOperation.PROCESS) {
+      set(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.operationName());
     }
   }
 

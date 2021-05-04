@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -112,8 +113,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
         tracer
             .spanBuilder(spanNameExtractor.extract(request))
             .setSpanKind(spanKind)
-            .setParent(parentContext)
-            .setStartTimestamp(startTimeExtractor.extract(request));
+            .setParent(parentContext);
+
+    Instant startTime = startTimeExtractor.extract(request);
+    if (startTime != null) {
+      spanBuilder.setStartTimestamp(startTime);
+    }
 
     AttributesBuilder attributes = Attributes.builder();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
@@ -155,6 +160,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     span.setStatus(spanStatusExtractor.extract(request, response, error));
 
-    span.end(endTimeExtractor.extract(response));
+    Instant endTime = endTimeExtractor.extract(response);
+    if (endTime != null) {
+      span.end(endTime);
+    } else {
+      span.end();
+    }
   }
 }

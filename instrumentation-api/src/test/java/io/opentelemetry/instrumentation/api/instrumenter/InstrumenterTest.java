@@ -323,8 +323,7 @@ class InstrumenterTest {
     Instrumenter<Instant, Instant> instrumenter =
         Instrumenter.<Instant, Instant>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
-            .setStartTimeExtractor(request -> request)
-            .setEndTimeExtractor(response -> response)
+            .setTimeExtractors(request -> request, response -> response)
             .newInstrumenter();
 
     Instant startTime = Instant.ofEpochSecond(100);

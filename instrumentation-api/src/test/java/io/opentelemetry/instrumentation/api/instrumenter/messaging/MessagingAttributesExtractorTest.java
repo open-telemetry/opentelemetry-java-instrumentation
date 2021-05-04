@@ -137,7 +137,7 @@ class MessagingAttributesExtractorTest {
     expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 100L));
     expectedEntries.add(
         entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES, 10L));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_OPERATION, operation.name()));
+    expectedEntries.add(entry(SemanticAttributes.MESSAGING_OPERATION, operation.operationName()));
 
     assertThat(startAttributes.build()).containsOnly(expectedEntries.toArray(new MapEntry[0]));
 
@@ -147,15 +147,15 @@ class MessagingAttributesExtractorTest {
 
   static Stream<Arguments> destinations() {
     return Stream.of(
-        Arguments.of(false, "destination", MessageOperation.receive, "destination"),
-        Arguments.of(true, null, MessageOperation.process, "(temporary)"));
+        Arguments.of(false, "destination", MessageOperation.RECEIVE, "destination"),
+        Arguments.of(true, null, MessageOperation.PROCESS, "(temporary)"));
   }
 
   @Test
   void shouldNotSetSendOperation() {
     // when
     AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, singletonMap("operation", MessageOperation.send.name()));
+    underTest.onStart(attributes, singletonMap("operation", MessageOperation.SEND.name()));
 
     // then
     assertThat(attributes.build().isEmpty()).isTrue();

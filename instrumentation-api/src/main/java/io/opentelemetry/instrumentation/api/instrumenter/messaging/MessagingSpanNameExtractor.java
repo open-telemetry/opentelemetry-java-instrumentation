@@ -40,6 +40,6 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
     }
 
     MessageOperation operation = attributesExtractor.operation(request);
-    return operation == null ? destinationName : destinationName + " " + operation.name();
+    return operation == null ? destinationName : destinationName + " " + operation.operationName();
   }
 }

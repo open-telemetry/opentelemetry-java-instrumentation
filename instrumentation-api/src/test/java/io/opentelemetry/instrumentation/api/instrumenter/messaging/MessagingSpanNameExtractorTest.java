@@ -49,9 +49,9 @@ class MessagingSpanNameExtractorTest {
 
   static Stream<Arguments> spanNameParams() {
     return Stream.of(
-        Arguments.of(false, "destination", MessageOperation.send, "destination send"),
-        Arguments.of(true, null, MessageOperation.process, "(temporary) process"),
-        Arguments.of(false, null, MessageOperation.receive, "unknown receive"),
+        Arguments.of(false, "destination", MessageOperation.SEND, "destination send"),
+        Arguments.of(true, null, MessageOperation.PROCESS, "(temporary) process"),
+        Arguments.of(false, null, MessageOperation.RECEIVE, "unknown receive"),
         Arguments.of(false, "destination", null, "destination"));
   }
 

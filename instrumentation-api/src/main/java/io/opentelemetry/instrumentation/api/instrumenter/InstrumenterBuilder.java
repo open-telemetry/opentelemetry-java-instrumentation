@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.propagation.TextMapGetter;
@@ -83,22 +85,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Sets the {@link StartTimeExtractor} to extract the timestamp marking the start of the request
-   * processing.
+   * Sets the {@link StartTimeExtractor} and the {@link EndTimeExtractor} to extract the timestamp
+   * marking the start and end of processing.
    */
-  public InstrumenterBuilder<REQUEST, RESPONSE> setStartTimeExtractor(
-      StartTimeExtractor<REQUEST> startTimeExtractor) {
-    this.startTimeExtractor = startTimeExtractor;
-    return this;
-  }
-
-  /**
-   * Sets the {@link StartTimeExtractor} to extract the timestamp marking the end of the response
-   * processing.
-   */
-  public InstrumenterBuilder<REQUEST, RESPONSE> setEndTimeExtractor(
-      EndTimeExtractor<RESPONSE> endTimeExtractor) {
-    this.endTimeExtractor = endTimeExtractor;
+  public InstrumenterBuilder<REQUEST, RESPONSE> setTimeExtractors(
+      StartTimeExtractor<REQUEST> startTimeExtractor, EndTimeExtractor<RESPONSE> endTimeExtractor) {
+    this.startTimeExtractor = requireNonNull(startTimeExtractor);
+    this.endTimeExtractor = requireNonNull(endTimeExtractor);
     return this;
   }
 

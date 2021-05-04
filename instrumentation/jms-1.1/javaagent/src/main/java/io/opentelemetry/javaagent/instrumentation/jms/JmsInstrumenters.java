@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
+import java.time.Instant;
 
 public final class JmsInstrumenters {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jms-1.1";
@@ -35,7 +36,7 @@ public final class JmsInstrumenters {
         Instrumenter.<MessageWithDestination, Void>newBuilder(
                 otel, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(attributesExtractor)
-            .setStartTimeExtractor(new JmsStartTimeExtractor())
+            .setTimeExtractors(MessageWithDestination::getStartTime, response -> Instant.now())
             .newInstrumenter(SpanKindExtractor.alwaysConsumer());
     LISTENER_INSTRUMENTER =
         Instrumenter.<MessageWithDestination, Void>newBuilder(
