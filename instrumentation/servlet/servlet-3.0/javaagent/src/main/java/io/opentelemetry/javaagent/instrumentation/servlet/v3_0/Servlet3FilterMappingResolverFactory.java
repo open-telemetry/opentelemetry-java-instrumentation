@@ -25,10 +25,6 @@ public class Servlet3FilterMappingResolverFactory
 
   @Override
   protected FilterRegistration getFilterRegistration() {
-    if (filterConfig == null) {
-      return null;
-    }
-
     String filterName = filterConfig.getFilterName();
     ServletContext servletContext = filterConfig.getServletContext();
     if (filterName == null || servletContext == null) {

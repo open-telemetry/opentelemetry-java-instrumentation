@@ -22,10 +22,6 @@ public class JakartaServletMappingResolverFactory extends ServletMappingResolver
   }
 
   public Collection<String> getMappings() {
-    if (servletConfig == null) {
-      return null;
-    }
-
     String servletName = servletConfig.getServletName();
     ServletContext servletContext = servletConfig.getServletContext();
     if (servletName == null || servletContext == null) {
