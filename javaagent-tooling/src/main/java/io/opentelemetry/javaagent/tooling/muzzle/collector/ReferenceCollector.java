@@ -208,7 +208,7 @@ public class ReferenceCollector {
 
     Set<Reference> needToKeepFieldsAndMethods = new HashSet<>();
     for (Reference reference : helperClassesWithLibrarySuperType) {
-      addSuperClasses(reference.getClassName(), needToKeepFieldsAndMethods);
+      addSuperTypes(reference.getClassName(), needToKeepFieldsAndMethods);
     }
 
     for (Iterator<Map.Entry<String, Reference>> i = references.entrySet().iterator();
@@ -243,11 +243,16 @@ public class ReferenceCollector {
     return helperClassesWithLibrarySuperType;
   }
 
-  private void addSuperClasses(@Nullable String className, Set<Reference> superClasses) {
+  private void addSuperTypes(@Nullable String className, Set<Reference> superTypes) {
     if (className != null && !className.startsWith("java.")) {
       Reference reference = references.get(className);
-      superClasses.add(reference);
-      addSuperClasses(reference.getSuperName(), superClasses);
+      superTypes.add(reference);
+
+      addSuperTypes(reference.getSuperName(), superTypes);
+      // need to keep interfaces too since they may have default methods
+      for (String superType : reference.getInterfaces()) {
+        addSuperTypes(superType, superTypes);
+      }
     }
   }
 
