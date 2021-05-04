@@ -29,7 +29,7 @@ class HttpSpanNameExtractorTest {
   void routeAndMethod() {
     when(extractor.route(anyMap())).thenReturn("/cats/{id}");
     when(extractor.method(anyMap())).thenReturn("GET");
-    Assertions.assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
+    assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
         .isEqualTo("/cats/{id}");
   }
 

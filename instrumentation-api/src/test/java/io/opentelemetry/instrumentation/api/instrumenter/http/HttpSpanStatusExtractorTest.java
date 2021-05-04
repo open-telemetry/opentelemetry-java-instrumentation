@@ -30,7 +30,7 @@ class HttpSpanStatusExtractorTest {
   void hasStatus(long statusCode) {
     when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
 
-    Assertions.assertThat(
+    assertThat(
             HttpSpanStatusExtractor.create(extractor)
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
         .isEqualTo(HttpStatusConverter.statusFromHttpStatus((int) statusCode));
