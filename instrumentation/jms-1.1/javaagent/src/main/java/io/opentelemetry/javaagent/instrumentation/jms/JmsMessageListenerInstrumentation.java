@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import static io.opentelemetry.javaagent.instrumentation.jms.JmsTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenters.listenerInstrumenter;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;
@@ -15,6 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import javax.jms.Message;
@@ -47,27 +49,32 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Message message,
+        @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      MessageDestination destination = tracer().extractDestination(message, null);
-      context =
-          tracer().startConsumerSpan(destination, "process", message, System.currentTimeMillis());
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      request = MessageWithDestination.create(message, MessageOperation.PROCESS, null);
+
+      if (!listenerInstrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = listenerInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
-      scope.close();
-
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
+      if (scope == null) {
+        return;
       }
+      scope.close();
+      listenerInstrumenter().end(context, request, null, throwable);
     }
   }
 }

@@ -8,27 +8,24 @@ package io.opentelemetry.javaagent.instrumentation.jms;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import javax.jms.JMSException;
-import javax.jms.Message;
 
-public class MessageExtractAdapter implements TextMapGetter<Message> {
-
-  public static final MessageExtractAdapter GETTER = new MessageExtractAdapter();
+public final class MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
 
   @Override
-  public Iterable<String> keys(Message message) {
+  public Iterable<String> keys(MessageWithDestination message) {
     try {
-      return Collections.list(message.getPropertyNames());
+      return Collections.list(message.getMessage().getPropertyNames());
     } catch (JMSException e) {
       return Collections.emptyList();
     }
   }
 
   @Override
-  public String get(Message carrier, String key) {
-    String propName = key.replace("-", MessageInjectAdapter.DASH);
+  public String get(MessageWithDestination carrier, String key) {
+    String propName = key.replace("-", MessagePropertySetter.DASH);
     Object value;
     try {
-      value = carrier.getObjectProperty(propName);
+      value = carrier.getMessage().getObjectProperty(propName);
     } catch (JMSException e) {
       throw new RuntimeException(e);
     }
