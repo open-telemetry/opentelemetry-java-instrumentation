@@ -21,8 +21,7 @@ public class ExtensionClassLoader extends URLClassLoader {
 
   public static ClassLoader getInstance(ClassLoader parent) {
     // TODO add support for old deprecated properties, otel.exporter.jar and otel.initializer.jar
-    // TODO add support for system properties
-    URL extension = parseLocation(System.getenv("OTEL_JAVAAGENT_EXTENSIONS"));
+    URL extension = parseLocation(System.getProperty("otel.javaagent.extensions", System.getenv("OTEL_JAVAAGENT_EXTENSIONS")));
     if (extension != null) {
       try {
         URL wrappedUrl = new URL("otel", null, -1, "/", new RemappingUrlStreamHandler(extension));
