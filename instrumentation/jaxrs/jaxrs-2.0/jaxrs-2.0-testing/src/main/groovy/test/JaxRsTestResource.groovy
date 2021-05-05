@@ -7,12 +7,14 @@ package test
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static java.util.concurrent.TimeUnit.SECONDS
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
@@ -82,6 +84,17 @@ class JaxRsTestResource {
     HttpServerTest.controller(PATH_PARAM) {
       id
     }
+  }
+
+  @Path("/child")
+  @GET
+  void indexed_child(@Suspended AsyncResponse response, @QueryParam("id") long id) {
+    CompletableFuture.runAsync({
+      HttpServerTest.controller(INDEXED_CHILD) {
+        Span.current().setAttribute("test.request.id", id)
+        response.resume("")
+      }
+    })
   }
 
   static final BARRIER = new CyclicBarrier(2)
