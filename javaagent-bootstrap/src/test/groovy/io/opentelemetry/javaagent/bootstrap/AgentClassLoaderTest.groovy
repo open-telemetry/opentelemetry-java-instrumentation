@@ -5,15 +5,20 @@
 
 package io.opentelemetry.javaagent.bootstrap
 
+import io.opentelemetry.sdk.internal.JavaVersionSpecific
+import java.lang.reflect.Field
 import java.util.concurrent.Phaser
 import spock.lang.Specification
 
 class AgentClassLoaderTest extends Specification {
+
   def "agent classloader does not lock classloading around instance"() {
     setup:
     def className1 = 'some/class/Name1'
     def className2 = 'some/class/Name2'
-    AgentClassLoader loader = new AgentClassLoader(null, null, null)
+    // any jar would do, use opentelemety sdk
+    URL testJarLocation = JavaVersionSpecific.getProtectionDomain().getCodeSource().getLocation()
+    AgentClassLoader loader = new AgentClassLoader(testJarLocation, "", null)
     Phaser threadHoldLockPhase = new Phaser(2)
     Phaser acquireLockFromMainThreadPhase = new Phaser(2)
 
@@ -45,5 +50,37 @@ class AgentClassLoaderTest extends Specification {
 
     then:
     applicationDidNotDeadlock
+  }
+
+  def "multi release jar"() {
+    setup:
+    boolean jdk8 = "1.8" == System.getProperty("java.specification.version")
+    // sdk is a multi release jar
+    URL multiReleaseJar = JavaVersionSpecific.getProtectionDomain().getCodeSource().getLocation()
+    AgentClassLoader loader = new AgentClassLoader(multiReleaseJar, "", null) {
+      @Override
+      protected String getClassSuffix() {
+        return ""
+      }
+    }
+
+    when:
+    URL url = loader.getResource("io/opentelemetry/sdk/internal/CurrentJavaVersionSpecific.class")
+
+    then:
+    url != null
+    // versioned resource is found when not running on jdk 8
+    jdk8 != url.toString().contains("META-INF/versions/9/")
+
+    and:
+    Class<?> clazz = loader.loadClass(JavaVersionSpecific.getName())
+    // class was loaded by agent loader used in this test
+    clazz.getClassLoader() == loader
+    // extract value of private static field that gets a different class depending on java version
+    Field field = clazz.getDeclaredField("CURRENT")
+    field.setAccessible(true)
+    Object javaVersionSpecific = field.get(null)
+    // expect a versioned class on java 9+
+    jdk8 != javaVersionSpecific.getClass().getName().endsWith("Java9VersionSpecific")
   }
 }
