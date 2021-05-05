@@ -43,7 +43,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
     try {
       handler.handle(context);
     } catch (Throwable throwable) {
-      if (serverSpan != null && serverSpan.getSpanContext().isValid()) {
+      if (serverSpan != null) {
         serverSpan.recordException(unwrapThrowable(throwable));
       }
       throw throwable;
