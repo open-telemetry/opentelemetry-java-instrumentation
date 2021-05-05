@@ -66,8 +66,9 @@ class VertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrai
         return "/path/:id/param"
       case NOT_FOUND:
         return "HTTP GET"
+      default:
+        return endpoint.getPath()
     }
-    return endpoint.getPath()
   }
 
 }
