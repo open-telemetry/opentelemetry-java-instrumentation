@@ -75,12 +75,11 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     public static State enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
-        Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
-        task = newTask;
+        task = RunnableWrapper.wrapIfNeeded(task);
         ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
-            contextStore, newTask, Java8BytecodeBridge.currentContext());
+            contextStore, task, Java8BytecodeBridge.currentContext());
       }
       return null;
     }
@@ -119,12 +118,11 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     public static State enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
-        Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
-        task = newTask;
+        task = RunnableWrapper.wrapIfNeeded(task);
         ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
-            contextStore, newTask, Java8BytecodeBridge.currentContext());
+            contextStore, task, Java8BytecodeBridge.currentContext());
       }
       return null;
     }
@@ -149,12 +147,11 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     public static State enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
-        Callable newTask = CallableWrapper.wrapIfNeeded(task);
-        task = newTask;
+        task = CallableWrapper.wrapIfNeeded(task);
         ContextStore<Callable, State> contextStore =
             InstrumentationContext.get(Callable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
-            contextStore, newTask, Java8BytecodeBridge.currentContext());
+            contextStore, task, Java8BytecodeBridge.currentContext());
       }
       return null;
     }
