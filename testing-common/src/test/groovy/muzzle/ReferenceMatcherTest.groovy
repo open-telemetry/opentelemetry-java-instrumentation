@@ -167,20 +167,6 @@ class ReferenceMatcherTest extends Specification {
     "staticB"        | Type.getType(MethodBodyAdvice.B).getDescriptor() | [STATIC, PROTECTED_OR_HIGHER] | MethodBodyAdvice.A  | []                 | "match static field"
   }
 
-  def "should ignore helper classes from third-party packages"() {
-    given:
-    def emptyClassLoader = new URLClassLoader(new URL[0], (ClassLoader) null)
-    def reference = new Reference.Builder("com.google.common.base.Strings")
-      .build()
-
-    when:
-    def mismatches = createMatcher([reference], [reference.className])
-      .getMismatchedReferenceSources(emptyClassLoader)
-
-    then:
-    mismatches.empty
-  }
-
   def "should not check abstract #desc helper classes"() {
     given:
     def reference = new Reference.Builder(className)
