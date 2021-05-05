@@ -8,11 +8,13 @@ package server
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -40,6 +42,14 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> implements Agent
           all {
             controller(SUCCESS) {
               context.response.status(SUCCESS.status).send(SUCCESS.body)
+            }
+          }
+        }
+        prefix(INDEXED_CHILD.rawPath()) {
+          all {
+            controller(INDEXED_CHILD) {
+              Span.current().setAttribute("test.request.id", request.queryParams.get("id") as long)
+              context.response.status(INDEXED_CHILD.status).send()
             }
           }
         }
@@ -105,6 +115,11 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> implements Agent
 
   @Override
   boolean testPathParam() {
+    true
+  }
+
+  @Override
+  boolean testConcurrency() {
     true
   }
 

@@ -11,6 +11,7 @@ import io.netty.util.Attribute;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
 
@@ -23,9 +24,14 @@ public final class TracingHandler implements Handler {
         ctx.getDirectChannelAccess().getChannel().attr(AttributeKeys.SERVER_SPAN);
     io.opentelemetry.context.Context serverSpanContext = spanAttribute.get();
 
-    // Relying on executor instrumentation to assume the netty span is in context as the parent.
+    // Must use context from channel, as executor instrumentation is not accurate - Ratpack
+    // internally queues events and then drains them in batches, causing executor instrumentation to
+    // attach the same context to a batch of events from different requests.
+    io.opentelemetry.context.Context parentContext =
+        serverSpanContext != null ? serverSpanContext : Java8BytecodeBridge.currentContext();
+
     io.opentelemetry.context.Context ratpackContext =
-        tracer().startSpan("ratpack.handler", SpanKind.INTERNAL);
+        tracer().startSpan(parentContext, "ratpack.handler", SpanKind.INTERNAL);
     ctx.getExecution().add(ratpackContext);
 
     ctx.getResponse()

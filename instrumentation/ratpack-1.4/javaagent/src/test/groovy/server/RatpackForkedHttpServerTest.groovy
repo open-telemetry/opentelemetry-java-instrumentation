@@ -7,11 +7,13 @@ package server
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.api.trace.Span
 import ratpack.exec.Promise
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.test.embed.EmbeddedApp
@@ -36,6 +38,18 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
             }.fork().then { endpoint ->
               controller(endpoint) {
                 context.response.status(endpoint.status).send(endpoint.body)
+              }
+            }
+          }
+        }
+        prefix(INDEXED_CHILD.rawPath()) {
+          all {
+            Promise.sync {
+              INDEXED_CHILD
+            }.fork().then {
+              controller(INDEXED_CHILD) {
+                Span.current().setAttribute("test.request.id", request.queryParams.get("id") as long)
+                context.response.status(INDEXED_CHILD.status).send()
               }
             }
           }

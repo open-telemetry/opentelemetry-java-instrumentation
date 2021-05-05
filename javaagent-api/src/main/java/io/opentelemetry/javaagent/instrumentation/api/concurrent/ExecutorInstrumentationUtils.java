@@ -92,6 +92,15 @@ public class ExecutorInstrumentationUtils {
             return false;
           }
 
+          if (taskClass.getName().startsWith("ratpack.exec.internal.")) {
+            // Context is passed through Netty channels in Ratpack as executor instrumentation is
+            // not suitable. As the context that would be propagated via executor would be
+            // incorrect, skip the propagation. Not checking for concrete class names as this covers
+            // anonymous classes from ratpack.exec.internal.DefaultExecution and
+            // ratpack.exec.internal.DefaultExecController.
+            return false;
+          }
+
           return true;
         }
       };

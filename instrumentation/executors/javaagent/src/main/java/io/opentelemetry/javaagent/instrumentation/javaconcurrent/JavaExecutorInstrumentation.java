@@ -74,8 +74,8 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
+        Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
         task = newTask;
         ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
@@ -118,8 +118,8 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
+        Runnable newTask = RunnableWrapper.wrapIfNeeded(task);
         task = newTask;
         ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
@@ -148,8 +148,8 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
-      Callable newTask = CallableWrapper.wrapIfNeeded(task);
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(newTask)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
+        Callable newTask = CallableWrapper.wrapIfNeeded(task);
         task = newTask;
         ContextStore<Callable, State> contextStore =
             InstrumentationContext.get(Callable.class, State.class);
