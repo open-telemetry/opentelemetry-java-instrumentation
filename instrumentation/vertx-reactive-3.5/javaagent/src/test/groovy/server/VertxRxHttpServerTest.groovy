@@ -66,8 +66,9 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
         return "/path/:id/param"
       case NOT_FOUND:
         return "HTTP GET"
+      default:
+        return endpoint.getPath()
     }
-    return endpoint.getPath()
   }
 
   protected Class<AbstractVerticle> verticle() {
