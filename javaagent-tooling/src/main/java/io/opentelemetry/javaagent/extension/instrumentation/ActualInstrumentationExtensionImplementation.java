@@ -149,42 +149,38 @@ public final class ActualInstrumentationExtensionImplementation
         JavaModule module,
         Class<?> classBeingRedefined,
         ProtectionDomain protectionDomain) {
-      // TODO: fix comment
-      /* Optimization: calling getMuzzleReferenceMatcher() inside this method
-       * prevents unnecessary loading of muzzle references during agentBuilder
-       * setup.
-       */
       ReferenceMatcher muzzle = getReferenceMatcher();
-      if (muzzle != null) {
-        boolean isMatch = muzzle.matches(classLoader);
+      boolean isMatch = muzzle.matches(classLoader);
 
-        if (!isMatch) {
-          if (muzzleLog.isWarnEnabled()) {
-            muzzleLog.warn(
-                "Instrumentation skipped, mismatched references were found: {} -- {} on {}",
-                instrumentationModule.extensionName(),
-                instrumentationModule.getClass().getName(),
-                classLoader);
-            List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
-            for (Mismatch mismatch : mismatches) {
-              muzzleLog.warn("-- {}", mismatch);
-            }
-          }
-        } else {
-          if (log.isDebugEnabled()) {
-            log.debug(
-                "Applying instrumentation: {} -- {} on {}",
-                instrumentationModule.extensionName(),
-                instrumentationModule.getClass().getName(),
-                classLoader);
+      if (!isMatch) {
+        if (muzzleLog.isWarnEnabled()) {
+          muzzleLog.warn(
+              "Instrumentation skipped, mismatched references were found: {} -- {} on {}",
+              instrumentationModule.extensionName(),
+              instrumentationModule.getClass().getName(),
+              classLoader);
+          List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
+          for (Mismatch mismatch : mismatches) {
+            muzzleLog.warn("-- {}", mismatch);
           }
         }
-
-        return isMatch;
+      } else {
+        if (log.isDebugEnabled()) {
+          log.debug(
+              "Applying instrumentation: {} -- {} on {}",
+              instrumentationModule.extensionName(),
+              instrumentationModule.getClass().getName(),
+              classLoader);
+        }
       }
-      return true;
+
+      return isMatch;
     }
 
+    // ReferenceMatcher internally caches the muzzle check results per classloader, that's why we
+    // keep its instance in a field
+    // it is lazily created to avoid unnecessarily loading the muzzle references from the module
+    // during the agent setup
     private ReferenceMatcher getReferenceMatcher() {
       if (initialized.compareAndSet(false, true)) {
         referenceMatcher =
