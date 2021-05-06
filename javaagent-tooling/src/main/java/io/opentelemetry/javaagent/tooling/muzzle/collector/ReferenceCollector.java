@@ -211,20 +211,15 @@ public class ReferenceCollector {
       addSuperTypes(reference.getClassName(), needToKeepFieldsAndMethods);
     }
 
-    for (Iterator<Map.Entry<String, Reference>> i = references.entrySet().iterator();
-        i.hasNext(); ) {
-      Reference reference = i.next().getValue();
+    for (Iterator<Reference> i = references.values().iterator(); i.hasNext(); ) {
+      Reference reference = i.next();
       if (instrumentationClassPredicate.isProvidedByLibrary(reference.getClassName())) {
         // these are the references to library classes which need to be checked at runtime
         continue;
       }
       if (needToKeepFieldsAndMethods.contains(reference)) {
-        // these need to be kept in order to check abstract methods are implemented and declared
-        // super class fields are present
-        // TODO (trask) if this is provided by javaagent then can remove methods since the whole
-        //  class will be resolved at runtime
-        //  or another option is to resolve from helper classes first, see
-        //  HelperReferenceWrapper.Factory.create(String)
+        // these need to be kept in order to check that abstract methods are implemented,
+        // and to check that declared super class fields are present
         continue;
       }
       i.remove();
@@ -233,8 +228,7 @@ public class ReferenceCollector {
 
   private Set<Reference> getHelperClassesWithLibrarySuperType() {
     Set<Reference> helperClassesWithLibrarySuperType = new HashSet<>();
-    for (Map.Entry<String, Reference> entry : references.entrySet()) {
-      Reference reference = entry.getValue();
+    for (Reference reference : references.values()) {
       if (instrumentationClassPredicate.isInstrumentationClass(reference.getClassName())
           && hasLibrarySuperType(reference.getClassName())) {
         helperClassesWithLibrarySuperType.add(reference);
