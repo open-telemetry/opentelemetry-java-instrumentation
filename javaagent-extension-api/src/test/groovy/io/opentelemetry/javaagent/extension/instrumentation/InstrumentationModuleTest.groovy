@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.extension.instrumentation
 
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
-import io.opentelemetry.javaagent.extension.AgentExtensionTooling
 import net.bytebuddy.agent.builder.AgentBuilder
 import spock.lang.Specification
 
@@ -21,7 +20,7 @@ class InstrumentationModuleTest extends Specification {
   def "default enabled"() {
     setup:
     def target = new TestInstrumentationModule(["test"])
-    target.extend(new AgentBuilder.Default(), Mock(AgentExtensionTooling))
+    target.extend(new AgentBuilder.Default())
 
     expect:
     target.enabled
@@ -30,7 +29,7 @@ class InstrumentationModuleTest extends Specification {
 
   def "default enabled override"() {
     setup:
-    target.extend(new AgentBuilder.Default(), Mock(AgentExtensionTooling))
+    target.extend(new AgentBuilder.Default())
 
     expect:
     target.enabled == enabled
@@ -63,7 +62,7 @@ class InstrumentationModuleTest extends Specification {
         return false
       }
     }
-    target.extend(new AgentBuilder.Default(), Mock(AgentExtensionTooling))
+    target.extend(new AgentBuilder.Default())
 
     expect:
     target.enabled == enabled
@@ -82,7 +81,7 @@ class InstrumentationModuleTest extends Specification {
       "otel.instrumentation.common.default-enabled": String.valueOf(value)
     ]).build()
     def target = new TestInstrumentationModule(["test"])
-    target.extend(new AgentBuilder.Default(), Mock(AgentExtensionTooling))
+    target.extend(new AgentBuilder.Default())
 
     expect:
     target.enabled == enabled
@@ -106,7 +105,7 @@ class InstrumentationModuleTest extends Specification {
     ]).build()
 
     def target = new TestInstrumentationModule([name, altName])
-    target.extend(new AgentBuilder.Default(), Mock(AgentExtensionTooling))
+    target.extend(new AgentBuilder.Default())
 
     expect:
     target.enabled == enabled

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation;
 
-import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -27,7 +26,5 @@ abstract class InstrumentationExtensionImplementation {
   }
 
   abstract AgentBuilder extend(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      AgentExtensionTooling tooling);
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder);
 }

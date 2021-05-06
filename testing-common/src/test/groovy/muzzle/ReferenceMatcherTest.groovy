@@ -5,7 +5,7 @@
 
 package muzzle
 
-import static io.opentelemetry.javaagent.extension.muzzle.Mismatch.*
+import static io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch.*
 import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag.*
 import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.MinimumVisibilityFlag.PRIVATE_OR_HIGHER
 import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER
@@ -16,10 +16,10 @@ import static muzzle.TestClasses.MethodBodyAdvice
 import external.LibraryBaseClass
 import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
-import io.opentelemetry.javaagent.extension.muzzle.Mismatch
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch
 import io.opentelemetry.javaagent.extension.muzzle.Reference
 import io.opentelemetry.javaagent.extension.muzzle.Reference.Source
-import io.opentelemetry.javaagent.extension.muzzle.ReferenceMatcher
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
 import net.bytebuddy.jar.asm.Type
 import spock.lang.Shared
@@ -50,8 +50,8 @@ class ReferenceMatcherTest extends Specification {
     def refMatcher = createMatcher(collector.getReferences().values())
 
     expect:
-    getMismatchClassSet(refMatcher.getMismatchedReferenceSources(MuzzleTooling.instance(), safeClasspath)).empty
-    getMismatchClassSet(refMatcher.getMismatchedReferenceSources(MuzzleTooling.instance(), unsafeClasspath)) == [MissingClass] as Set
+    getMismatchClassSet(refMatcher.getMismatchedReferenceSources(safeClasspath)).empty
+    getMismatchClassSet(refMatcher.getMismatchedReferenceSources(unsafeClasspath)) == [MissingClass] as Set
   }
 
   def "matching does not hold a strong reference to classloaders"() {
@@ -87,10 +87,10 @@ class ReferenceMatcherTest extends Specification {
 
     def refMatcher1 = createMatcher(collector.getReferences().values())
     def refMatcher2 = createMatcher(collector.getReferences().values())
-    assert getMismatchClassSet(refMatcher1.getMismatchedReferenceSources(MuzzleTooling.instance(), cl)).empty
+    assert getMismatchClassSet(refMatcher1.getMismatchedReferenceSources(cl)).empty
     int countAfterFirstMatch = cl.count
     // the second matcher should be able to used cached type descriptions from the first
-    assert getMismatchClassSet(refMatcher2.getMismatchedReferenceSources(MuzzleTooling.instance(), cl)).empty
+    assert getMismatchClassSet(refMatcher2.getMismatchedReferenceSources(cl)).empty
 
     expect:
     cl.count == countAfterFirstMatch
@@ -103,7 +103,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([ref]).getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
+    def mismatches = createMatcher([ref]).getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == expectedMismatches as Set
@@ -123,7 +123,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([reference])
-      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
+      .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == expectedMismatches as Set
@@ -147,7 +147,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([reference])
-      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
+      .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == expectedMismatches as Set
@@ -172,7 +172,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([reference], [reference.className])
-      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
+      .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     mismatches.empty
@@ -192,7 +192,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([reference], [reference.className])
-      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
+      .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     mismatches.empty
@@ -212,7 +212,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([reference], [reference.className])
-      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
+      .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == [MissingMethod] as Set
@@ -234,7 +234,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([reference, emptySuperClassRef], [reference.className, emptySuperClassRef.className])
-      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
+      .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == [MissingMethod] as Set
@@ -261,7 +261,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([helper, baseHelper], [helper.className, baseHelper.className])
-      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
+      .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     mismatches.empty
@@ -281,7 +281,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([helper], [helper.className])
-      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
+      .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     mismatches.empty
@@ -301,7 +301,7 @@ class ReferenceMatcherTest extends Specification {
 
     when:
     def mismatches = createMatcher([helper], [helper.className])
-      .getMismatchedReferenceSources(MuzzleTooling.instance(), this.class.classLoader)
+      .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == [MissingField] as Set

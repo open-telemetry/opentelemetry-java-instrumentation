@@ -15,10 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
-import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
-import io.opentelemetry.javaagent.extension.AgentExtensionToolingImpl;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.log.TransformSafeLogger;
 import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
@@ -163,11 +160,10 @@ public class AgentInstaller {
 
     int numInstrumenters = 0;
 
-    AgentExtensionTooling tooling = new AgentExtensionToolingImpl();
     for (AgentExtension agentExtension : loadAgentExtensions()) {
       log.debug("Loading extension {}", agentExtension.getClass().getName());
       try {
-        agentBuilder = agentExtension.extend(agentBuilder, tooling);
+        agentBuilder = agentExtension.extend(agentBuilder);
         numInstrumenters++;
       } catch (Exception | LinkageError e) {
         log.error("Unable to load extension {}", agentExtension.getClass().getName(), e);

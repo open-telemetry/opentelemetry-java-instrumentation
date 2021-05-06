@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation
 
-import io.opentelemetry.javaagent.extension.AgentExtensionTooling
+
 import net.bytebuddy.agent.builder.AgentBuilder
 
 class TestInstrumentationExtensionImplementation extends InstrumentationExtensionImplementation {
   @Override
-  AgentBuilder extend(InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder, AgentExtensionTooling tooling) {
+  AgentBuilder extend(InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     if (instrumentationModule instanceof InstrumentationModuleTest.TestInstrumentationModule) {
       instrumentationModule.applyCalled = true
     }

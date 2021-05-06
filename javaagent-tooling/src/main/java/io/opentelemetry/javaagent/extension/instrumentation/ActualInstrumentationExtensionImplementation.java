@@ -12,18 +12,19 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
-import io.opentelemetry.javaagent.extension.log.TransformSafeLogger;
-import io.opentelemetry.javaagent.extension.muzzle.Mismatch;
-import io.opentelemetry.javaagent.extension.muzzle.ReferenceMatcher;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
+import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
+import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.Mismatch;
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher;
 import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
@@ -47,9 +48,11 @@ public final class ActualInstrumentationExtensionImplementation
 
   @Override
   AgentBuilder extend(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      AgentExtensionTooling tooling) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
+    if (!instrumentationModule.enabled) {
+      log.debug("Instrumentation {} is disabled", instrumentationModule.extensionName());
+      return parentAgentBuilder;
+    }
     List<String> helperClassNames = instrumentationModule.getAllHelperClassNames();
     List<String> helperResourceNames = asList(instrumentationModule.helperResourceNames());
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
@@ -65,7 +68,7 @@ public final class ActualInstrumentationExtensionImplementation
 
     ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher =
         instrumentationModule.classLoaderMatcher();
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule, tooling);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.extensionName(), helperClassNames, helperResourceNames);
@@ -91,7 +94,7 @@ public final class ActualInstrumentationExtensionImplementation
       extendableAgentBuilder = contextProvider.instrumentationTransformer(extendableAgentBuilder);
       extendableAgentBuilder =
           applyInstrumentationTransformers(
-              typeInstrumentation.transformers(), extendableAgentBuilder, tooling);
+              typeInstrumentation.transformers(), extendableAgentBuilder);
       extendableAgentBuilder = contextProvider.additionalInstrumentation(extendableAgentBuilder);
 
       agentBuilder = extendableAgentBuilder;
@@ -112,16 +115,13 @@ public final class ActualInstrumentationExtensionImplementation
 
   private AgentBuilder.Identified.Extendable applyInstrumentationTransformers(
       Map<? extends ElementMatcher<? super MethodDescription>, String> transformers,
-      AgentBuilder.Identified.Extendable agentBuilder,
-      AgentExtensionTooling tooling) {
+      AgentBuilder.Identified.Extendable agentBuilder) {
     for (Map.Entry<? extends ElementMatcher<? super MethodDescription>, String> entry :
         transformers.entrySet()) {
       agentBuilder =
           agentBuilder.transform(
               new AgentBuilder.Transformer.ForAdvice()
-                  .include(
-                      tooling.classLoaders().bootstrapProxyClassLoader(),
-                      tooling.classLoaders().agentClassLoader())
+                  .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
                   .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
                   .advice(entry.getKey(), entry.getValue()));
     }
@@ -135,12 +135,11 @@ public final class ActualInstrumentationExtensionImplementation
    */
   private static class MuzzleMatcher implements AgentBuilder.RawMatcher {
     private final InstrumentationModule instrumentationModule;
-    private final AgentExtensionTooling tooling;
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
+    private volatile ReferenceMatcher referenceMatcher;
 
-    private MuzzleMatcher(
-        InstrumentationModule instrumentationModule, AgentExtensionTooling tooling) {
+    private MuzzleMatcher(InstrumentationModule instrumentationModule) {
       this.instrumentationModule = instrumentationModule;
-      this.tooling = tooling;
     }
 
     @Override
@@ -150,13 +149,14 @@ public final class ActualInstrumentationExtensionImplementation
         JavaModule module,
         Class<?> classBeingRedefined,
         ProtectionDomain protectionDomain) {
+      // TODO: fix comment
       /* Optimization: calling getMuzzleReferenceMatcher() inside this method
        * prevents unnecessary loading of muzzle references during agentBuilder
        * setup.
        */
-      ReferenceMatcher muzzle = instrumentationModule.getMuzzleReferenceMatcher();
+      ReferenceMatcher muzzle = getReferenceMatcher();
       if (muzzle != null) {
-        boolean isMatch = muzzle.matches(tooling, classLoader);
+        boolean isMatch = muzzle.matches(classLoader);
 
         if (!isMatch) {
           if (muzzleLog.isWarnEnabled()) {
@@ -165,7 +165,7 @@ public final class ActualInstrumentationExtensionImplementation
                 instrumentationModule.extensionName(),
                 instrumentationModule.getClass().getName(),
                 classLoader);
-            List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(tooling, classLoader);
+            List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
             for (Mismatch mismatch : mismatches) {
               muzzleLog.warn("-- {}", mismatch);
             }
@@ -183,6 +183,17 @@ public final class ActualInstrumentationExtensionImplementation
         return isMatch;
       }
       return true;
+    }
+
+    private ReferenceMatcher getReferenceMatcher() {
+      if (initialized.compareAndSet(false, true)) {
+        referenceMatcher =
+            new ReferenceMatcher(
+                instrumentationModule.getAllHelperClassNames(),
+                instrumentationModule.getMuzzleReferences(),
+                instrumentationModule::isHelperClass);
+      }
+      return referenceMatcher;
     }
   }
 }

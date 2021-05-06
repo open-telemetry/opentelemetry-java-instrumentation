@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import com.google.common.collect.EvictingQueue;
-import io.opentelemetry.javaagent.extension.muzzle.InstrumentationClassPredicate;
 import io.opentelemetry.javaagent.extension.muzzle.Reference;
 import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag;
 import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag;
@@ -15,6 +14,7 @@ import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.OwnershipFlag;
 import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.VisibilityFlag;
 import io.opentelemetry.javaagent.extension.muzzle.Reference.Source;
 import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;

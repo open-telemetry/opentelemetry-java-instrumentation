@@ -9,10 +9,7 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
-import io.opentelemetry.javaagent.extension.log.TransformSafeLogger;
-import io.opentelemetry.javaagent.extension.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.extension.muzzle.ReferenceMatcher;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
 import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +17,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -36,9 +32,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  * AgentExtension} instead.
  */
 public abstract class InstrumentationModule implements AgentExtension {
-  private static final TransformSafeLogger log =
-      TransformSafeLogger.getLogger(InstrumentationModule.class);
-
   private static final String[] EMPTY = new String[0];
 
   private final Set<String> instrumentationNames;
@@ -96,12 +89,8 @@ public abstract class InstrumentationModule implements AgentExtension {
    * @return the original agentBuilder and this instrumentation
    */
   @Override
-  public final AgentBuilder extend(AgentBuilder parentAgentBuilder, AgentExtensionTooling tooling) {
-    if (!enabled) {
-      log.debug("Instrumentation {} is disabled", extensionName());
-      return parentAgentBuilder;
-    }
-    return InstrumentationExtensionImplementation.get().extend(this, parentAgentBuilder, tooling);
+  public final AgentBuilder extend(AgentBuilder parentAgentBuilder) {
+    return InstrumentationExtensionImplementation.get().extend(this, parentAgentBuilder);
   }
 
   @Override
@@ -121,23 +110,13 @@ public abstract class InstrumentationModule implements AgentExtension {
   }
 
   /**
-   * This is an internal helper method for muzzle code generation: generating {@code invokedynamic}
-   * instructions in ASM is so painful that it's much simpler and readable to just have a plain old
-   * Java helper function here.
-   */
-  @SuppressWarnings("unused")
-  protected final Predicate<String> additionalLibraryInstrumentationPackage() {
-    return this::isHelperClass;
-  }
-
-  /**
    * Instrumentation modules can override this method to specify additional packages (or classes)
    * that should be treated as "library instrumentation" packages. Classes from those packages will
    * be treated by muzzle as instrumentation helper classes: they will be scanned for references and
    * automatically injected into the application classloader if they're used in any type
    * instrumentation. The classes for which this predicate returns {@code true} will be treated as
-   * helper classes, in addition to the default ones defined in {@link
-   * InstrumentationClassPredicate}.
+   * helper classes, in addition to the default ones defined in the {@code
+   * InstrumentationClassPredicate} class.
    *
    * @param className The name of the class that may or may not be a helper class.
    */
@@ -146,15 +125,18 @@ public abstract class InstrumentationModule implements AgentExtension {
   }
 
   /**
-   * The actual implementation of this method is generated automatically during compilation by the
-   * {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * Returns a list of references to helper and library classes used in this module's type
+   * instrumentation advices.
+   *
+   * <p>The actual implementation of this method is generated automatically during compilation by
+   * the {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
    * will not generate a new implementation, it will leave the existing one.
    */
-  protected ReferenceMatcher getMuzzleReferenceMatcher() {
-    return null;
+  public Reference[] getMuzzleReferences() {
+    return new Reference[0];
   }
 
   /**

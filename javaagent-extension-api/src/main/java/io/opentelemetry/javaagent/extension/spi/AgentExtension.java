@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.extension.spi;
 
-import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
@@ -25,7 +24,7 @@ public interface AgentExtension {
    * @return The customized agent. Note that this method MUST return a non-null {@link AgentBuilder}
    *     instance that contains all customizations defined in this extension.
    */
-  AgentBuilder extend(AgentBuilder agentBuilder, AgentExtensionTooling agentExtensionTooling);
+  AgentBuilder extend(AgentBuilder agentBuilder);
 
   /**
    * Returns the name of the extension. It does not have to be unique, but it should be

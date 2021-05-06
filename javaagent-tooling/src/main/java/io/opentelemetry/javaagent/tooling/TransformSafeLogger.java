@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension.log;
+package io.opentelemetry.javaagent.tooling;
 
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.TRACE;

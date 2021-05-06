@@ -3,16 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension.muzzle;
+package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
 import static java.util.Collections.emptyList;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
-import io.opentelemetry.javaagent.extension.AgentExtensionTooling;
-import io.opentelemetry.javaagent.extension.muzzle.HelperReferenceWrapper.Factory;
-import io.opentelemetry.javaagent.extension.muzzle.HelperReferenceWrapper.Method;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
 import io.opentelemetry.javaagent.extension.muzzle.Reference.Source;
+import io.opentelemetry.javaagent.tooling.AgentTooling;
+import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Factory;
+import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -60,15 +63,15 @@ public final class ReferenceMatcher {
    * @param userClassLoader Classloader to validate against (or null for bootstrap)
    * @return true if all references match the classpath of loader
    */
-  public boolean matches(AgentExtensionTooling tooling, ClassLoader userClassLoader) {
+  public boolean matches(ClassLoader userClassLoader) {
     if (userClassLoader == BOOTSTRAP_LOADER) {
-      userClassLoader = tooling.classLoaders().bootstrapProxyClassLoader();
+      userClassLoader = Utils.getBootstrapProxy();
     }
-    return mismatchCache.computeIfAbsent(userClassLoader, cl -> doesMatch(tooling, cl));
+    return mismatchCache.computeIfAbsent(userClassLoader, this::doesMatch);
   }
 
-  private boolean doesMatch(AgentExtensionTooling tooling, ClassLoader loader) {
-    TypePool typePool = tooling.createTypePool(loader);
+  private boolean doesMatch(ClassLoader loader) {
+    TypePool typePool = createTypePool(loader);
     for (Reference reference : references.values()) {
       if (!checkMatch(reference, typePool, loader).isEmpty()) {
         return false;
@@ -83,12 +86,11 @@ public final class ReferenceMatcher {
    * @param loader Classloader to validate against (or null for bootstrap)
    * @return A list of all mismatches between this ReferenceMatcher and loader's classpath.
    */
-  public List<Mismatch> getMismatchedReferenceSources(
-      AgentExtensionTooling tooling, ClassLoader loader) {
+  public List<Mismatch> getMismatchedReferenceSources(ClassLoader loader) {
     if (loader == BOOTSTRAP_LOADER) {
-      loader = tooling.classLoaders().bootstrapProxyClassLoader();
+      loader = Utils.getBootstrapProxy();
     }
-    TypePool typePool = tooling.createTypePool(loader);
+    TypePool typePool = createTypePool(loader);
 
     List<Mismatch> mismatches = emptyList();
 
@@ -97,6 +99,11 @@ public final class ReferenceMatcher {
     }
 
     return mismatches;
+  }
+
+  private static TypePool createTypePool(ClassLoader loader) {
+    return AgentTooling.poolStrategy()
+        .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
   }
 
   /**
