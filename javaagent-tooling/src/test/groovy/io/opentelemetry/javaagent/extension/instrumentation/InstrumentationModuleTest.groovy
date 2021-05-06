@@ -134,6 +134,7 @@ class InstrumentationModuleTest extends Specification {
 
     @Override
     List<TypeInstrumentation> typeInstrumentations() {
+      applyCalled = true
       return []
     }
   }
