@@ -20,7 +20,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class Resteasy31ServletContainerDispatcherInstrumentation implements TypeInstrumentation {
+public class ResteasyServletContainerDispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,7 +31,7 @@ public class Resteasy31ServletContainerDispatcherInstrumentation implements Type
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
         isMethod().and(named("service")),
-        Resteasy31ServletContainerDispatcherInstrumentation.class.getName() + "$ServiceAdvice");
+        ResteasyServletContainerDispatcherInstrumentation.class.getName() + "$ServiceAdvice");
   }
 
   public static class ServiceAdvice {

@@ -22,6 +22,9 @@ public class Resteasy31InstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new Resteasy31RequestContextInstrumentation(),
-        new Resteasy31ServletContainerDispatcherInstrumentation());
+        new ResteasyServletContainerDispatcherInstrumentation(),
+        new ResteasyRootNodeTypeInstrumentation(),
+        new ResteasyResourceMethodInvokerInstrumentation(),
+        new ResteasyResourceLocatorInvokerInstrumentation());
   }
 }

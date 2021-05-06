@@ -9,4 +9,9 @@ class JerseyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
   boolean asyncCancelHasSendError() {
     true
   }
+
+  @Override
+  boolean hasFrameworkInstrumentation() {
+    false
+  }
 }
