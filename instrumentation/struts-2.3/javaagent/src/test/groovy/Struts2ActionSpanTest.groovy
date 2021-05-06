@@ -68,7 +68,7 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
       case NOT_FOUND:
-        return "HTTP GET"
+        return getContextPath() + "/*"
       default:
         return endpoint.resolvePath(address).path
     }

@@ -10,7 +10,7 @@ import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
 
-class TomcatServletMappingTest extends AbstractServletMappingTest<Tomcat, Context> {
+class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomcat, Context> {
 
   @Override
   Tomcat startServer(int port) {

@@ -77,6 +77,11 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
+  public String getRequestPathInfo(HttpServletRequest request) {
+    return request.getPathInfo();
+  }
+
+  @Override
   public Principal getRequestUserPrincipal(HttpServletRequest request) {
     return request.getUserPrincipal();
   }

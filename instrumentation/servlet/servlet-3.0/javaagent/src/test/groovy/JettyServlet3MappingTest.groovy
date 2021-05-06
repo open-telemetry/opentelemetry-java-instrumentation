@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 
-class JettyServletMappingTest extends AbstractServletMappingTest<Server, ServletContextHandler> {
+class JettyServlet3MappingTest extends AbstractServlet3MappingTest<Server, ServletContextHandler> {
 
   @Override
   Server startServer(int port) {

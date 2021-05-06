@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet;
+package io.opentelemetry.instrumentation.api.servlet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,7 +12,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class MappingResolver {
+/**
+ * Helper class for finding a mapping that matches current request from a collection of mappings.
+ */
+public final class MappingResolver {
   private final Set<String> exactMatches;
   private final List<WildcardMatcher> wildcardMatchers;
   private final boolean hasDefault;

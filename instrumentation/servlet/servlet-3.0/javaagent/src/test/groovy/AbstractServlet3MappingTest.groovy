@@ -19,7 +19,7 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import spock.lang.Unroll
 
-abstract class AbstractServletMappingTest<SERVER, CONTEXT> extends AgentInstrumentationSpecification implements HttpServerTestTrait<SERVER> {
+abstract class AbstractServlet3MappingTest<SERVER, CONTEXT> extends AgentInstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 
   abstract void addServlet(CONTEXT context, String path, Class<Servlet> servlet)
 
