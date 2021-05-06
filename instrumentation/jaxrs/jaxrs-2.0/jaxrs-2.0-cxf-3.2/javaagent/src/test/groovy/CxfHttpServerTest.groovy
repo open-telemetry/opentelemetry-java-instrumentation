@@ -39,9 +39,4 @@ class CxfHttpServerTest extends JaxRsHttpServerTest<Server> {
   void stopServer(Server httpServer) {
     httpServer.stop()
   }
-
-  @Override
-  boolean hasFrameworkInstrumentation() {
-    false
-  }
 }

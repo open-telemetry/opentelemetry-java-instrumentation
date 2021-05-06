@@ -11,7 +11,8 @@ class JerseyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
   }
 
   @Override
-  boolean hasFrameworkInstrumentation() {
+  boolean testInterfaceMethodWithPath() {
+    // disables a test that jersey deems invalid
     false
   }
 }
