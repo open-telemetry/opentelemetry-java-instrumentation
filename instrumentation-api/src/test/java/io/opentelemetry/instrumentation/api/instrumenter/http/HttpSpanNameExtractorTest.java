@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -28,20 +28,20 @@ class HttpSpanNameExtractorTest {
   void routeAndMethod() {
     when(extractor.route(anyMap())).thenReturn("/cats/{id}");
     when(extractor.method(anyMap())).thenReturn("GET");
-    assertThat(SpanNameExtractor.http(extractor).extract(Collections.emptyMap()))
+    assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
         .isEqualTo("/cats/{id}");
   }
 
   @Test
   void method() {
     when(extractor.method(anyMap())).thenReturn("GET");
-    assertThat(SpanNameExtractor.http(extractor).extract(Collections.emptyMap()))
+    assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
         .isEqualTo("HTTP GET");
   }
 
   @Test
   void nothing() {
-    assertThat(SpanNameExtractor.http(extractor).extract(Collections.emptyMap()))
+    assertThat(HttpSpanNameExtractor.create(extractor).extract(Collections.emptyMap()))
         .isEqualTo("HTTP request");
   }
 }

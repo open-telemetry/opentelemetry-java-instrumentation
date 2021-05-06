@@ -24,16 +24,6 @@ public interface SpanStatusExtractor<REQUEST, RESPONSE> {
     return (SpanStatusExtractor<REQUEST, RESPONSE>) DefaultSpanStatusExtractor.INSTANCE;
   }
 
-  /**
-   * Returns the {@link SpanStatusExtractor} for HTTP requests, which will use the HTTP status code
-   * to determine the {@link StatusCode} if available or fallback to {@linkplain #getDefault() the
-   * default status} otherwise.
-   */
-  static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> http(
-      HttpAttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
-    return new HttpSpanStatusExtractor<>(attributesExtractor);
-  }
-
   /** Returns the {@link StatusCode}. */
   StatusCode extract(REQUEST request, RESPONSE response, @Nullable Throwable error);
 }

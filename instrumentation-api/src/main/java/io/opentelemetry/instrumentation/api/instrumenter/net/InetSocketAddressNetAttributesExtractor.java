@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -19,12 +19,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
     extends NetAttributesExtractor<REQUEST, RESPONSE> {
 
+  /**
+   * This method will be called twice: both when the request starts ({@code response} is always null
+   * then) and when the response ends. This way it is possible to capture net attributes in both
+   * phases of processing.
+   */
   @Nullable
-  protected abstract InetSocketAddress getAddress(REQUEST request, RESPONSE response);
+  protected abstract InetSocketAddress getAddress(REQUEST request, @Nullable RESPONSE response);
 
   @Override
   @Nullable
-  protected final String peerName(REQUEST request, RESPONSE response) {
+  protected final String peerName(REQUEST request, @Nullable RESPONSE response) {
     InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
@@ -37,7 +42,7 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  protected final Long peerPort(REQUEST request, RESPONSE response) {
+  protected final Long peerPort(REQUEST request, @Nullable RESPONSE response) {
     InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
@@ -47,7 +52,7 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  protected final String peerIp(REQUEST request, RESPONSE response) {
+  protected final String peerIp(REQUEST request, @Nullable RESPONSE response) {
     InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;

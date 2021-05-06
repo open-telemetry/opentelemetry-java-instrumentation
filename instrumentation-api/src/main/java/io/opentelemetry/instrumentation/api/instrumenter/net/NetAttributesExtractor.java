@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -21,15 +22,14 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
   @Override
   protected final void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.NET_TRANSPORT, transport(request));
+    set(attributes, SemanticAttributes.NET_PEER_IP, peerIp(request, null));
+    set(attributes, SemanticAttributes.NET_PEER_NAME, peerName(request, null));
+    set(attributes, SemanticAttributes.NET_PEER_PORT, peerPort(request, null));
   }
 
   @Override
   protected final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp(request, response));
-
-    // TODO(anuraaga): Clients don't have peer information available during the request usually.
-    // By only resolving them after the response, we can simplify the code a lot but sacrifice
-    // having them available during sampling on the server side. Revisit if that seems important.
     set(attributes, SemanticAttributes.NET_PEER_NAME, peerName(request, response));
     set(attributes, SemanticAttributes.NET_PEER_PORT, peerPort(request, response));
   }
@@ -37,12 +37,27 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   protected abstract String transport(REQUEST request);
 
+  /**
+   * This method will be called twice: both when the request starts ({@code response} is always null
+   * then) and when the response ends. This way it is possible to capture net attributes in both
+   * phases of processing.
+   */
   @Nullable
-  protected abstract String peerName(REQUEST request, RESPONSE response);
+  protected abstract String peerName(REQUEST request, @Nullable RESPONSE response);
 
+  /**
+   * This method will be called twice: both when the request starts ({@code response} is always null
+   * then) and when the response ends. This way it is possible to capture net attributes in both
+   * phases of processing.
+   */
   @Nullable
-  protected abstract Long peerPort(REQUEST request, RESPONSE response);
+  protected abstract Long peerPort(REQUEST request, @Nullable RESPONSE response);
 
+  /**
+   * This method will be called twice: both when the request starts ({@code response} is always null
+   * then) and when the response ends. This way it is possible to capture net attributes in both
+   * phases of processing.
+   */
   @Nullable
-  protected abstract String peerIp(REQUEST request, RESPONSE response);
+  protected abstract String peerIp(REQUEST request, @Nullable RESPONSE response);
 }

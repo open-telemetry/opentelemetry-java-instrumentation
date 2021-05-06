@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 
 /**
  * Extractor of {@link io.opentelemetry.api.common.Attributes} for a given request and response.
@@ -16,6 +19,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
  * lifecycle. It is best to populate as much as possible in {@link #onStart(AttributesBuilder,
  * Object)} to have it available during sampling.
  *
+ * @see DbAttributesExtractor
  * @see HttpAttributesExtractor
  * @see NetAttributesExtractor
  */
