@@ -21,6 +21,8 @@ public class JerseyInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new JerseyRequestContextInstrumentation(), new JerseyServletContainerInstrumentation());
+        new JerseyRequestContextInstrumentation(),
+        new JerseyServletContainerInstrumentation(),
+        new JerseyResourceMethodDispatcherInstrumentation());
   }
 }

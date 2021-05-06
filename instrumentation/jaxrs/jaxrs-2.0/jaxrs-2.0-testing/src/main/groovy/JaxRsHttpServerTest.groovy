@@ -30,8 +30,6 @@ import test.JaxRsTestResource
 abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements AgentTestTrait {
 
   def "test super method without @Path"() {
-    assumeTrue(hasFrameworkInstrumentation())
-
     given:
     def url = HttpUrl.get(address.resolve("test-resource-super")).newBuilder()
       .build()
@@ -58,7 +56,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
   }
 
   def "test interface method with @Path"() {
-    assumeTrue(hasFrameworkInstrumentation())
+    assumeTrue(testInterfaceMethodWithPath())
 
     given:
     def url = HttpUrl.get(address.resolve("test-resource-interface/call")).newBuilder()
@@ -86,8 +84,6 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
   }
 
   def "test sub resource locator"() {
-    assumeTrue(hasFrameworkInstrumentation())
-
     given:
     def url = HttpUrl.get(address.resolve("test-sub-resource-locator/call/sub")).newBuilder()
       .build()
@@ -219,7 +215,7 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     true
   }
 
-  boolean hasFrameworkInstrumentation() {
+  boolean testInterfaceMethodWithPath() {
     true
   }
 

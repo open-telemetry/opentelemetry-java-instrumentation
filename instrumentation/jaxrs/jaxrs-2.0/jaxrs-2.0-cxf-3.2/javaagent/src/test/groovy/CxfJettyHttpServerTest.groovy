@@ -4,9 +4,4 @@
  */
 
 class CxfJettyHttpServerTest extends JaxRsJettyHttpServerTest {
-
-  @Override
-  boolean hasFrameworkInstrumentation() {
-    false
-  }
 }

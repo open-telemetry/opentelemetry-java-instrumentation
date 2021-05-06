@@ -16,21 +16,6 @@ public final class ResteasyTracingUtil {
 
   private ResteasyTracingUtil() {}
 
-  public static String normalizePath(String path) {
-    // ensure that non-empty path starts with /
-    if (path == null || "/".equals(path)) {
-      path = "";
-    } else if (!path.startsWith("/")) {
-      path = "/" + path;
-    }
-    // remove trailing /
-    if (path.endsWith("/")) {
-      path = path.substring(0, path.length() - 1);
-    }
-
-    return path;
-  }
-
   public static void updateServerSpanName(Context context, String name) {
     if (name == null || name.isEmpty()) {
       return;
