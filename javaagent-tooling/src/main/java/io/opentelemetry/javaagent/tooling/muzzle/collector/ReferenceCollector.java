@@ -204,12 +204,15 @@ public class ReferenceCollector {
   }
 
   public void prune() {
-    Set<Reference> helperClassesWithLibrarySuperType = getHelperClassesWithLibrarySuperType();
-
-    Set<Reference> needToKeepFieldsAndMethods = new HashSet<>();
-    for (Reference reference : helperClassesWithLibrarySuperType) {
-      addSuperTypes(reference.getClassName(), needToKeepFieldsAndMethods);
-    }
+    // helper classes that may help another helper class implement an abstract library method
+    // must be retained
+    // for example if helper class A extends helper class B, and A also implements a library
+    // interface L, then B needs to be retained so that it can be used at runtime to verify that A
+    // implements all of L's methods.
+    // Super types of A that are not also helper classes do not need to be retained because they can
+    // be looked up on the classpath at runtime, see HelperReferenceWrapper.create().
+    Set<Reference> helperClassesParticipatingInLibrarySuperType =
+        getHelperClassesParticipatingInLibrarySuperType();
 
     for (Iterator<Reference> i = references.values().iterator(); i.hasNext(); ) {
       Reference reference = i.next();
@@ -217,13 +220,26 @@ public class ReferenceCollector {
         // these are the references to library classes which need to be checked at runtime
         continue;
       }
-      if (needToKeepFieldsAndMethods.contains(reference)) {
+      if (helperClassesParticipatingInLibrarySuperType.contains(reference)) {
         // these need to be kept in order to check that abstract methods are implemented,
         // and to check that declared super class fields are present
+        //
+        // can at least prune the constructor, since that cannot be used to help implement an
+        // abstract library method
+        reference.getMethods().removeIf(method -> method.getName().equals("<init>"));
         continue;
       }
       i.remove();
     }
+  }
+
+  private Set<Reference> getHelperClassesParticipatingInLibrarySuperType() {
+    Set<Reference> helperClassesParticipatingInLibrarySuperType = new HashSet<>();
+    for (Reference reference : getHelperClassesWithLibrarySuperType()) {
+      addSuperTypesThatAreAlsoHelperClasses(
+          reference.getClassName(), helperClassesParticipatingInLibrarySuperType);
+    }
+    return helperClassesParticipatingInLibrarySuperType;
   }
 
   private Set<Reference> getHelperClassesWithLibrarySuperType() {
@@ -237,15 +253,16 @@ public class ReferenceCollector {
     return helperClassesWithLibrarySuperType;
   }
 
-  private void addSuperTypes(@Nullable String className, Set<Reference> superTypes) {
-    if (className != null && !className.startsWith("java.")) {
+  private void addSuperTypesThatAreAlsoHelperClasses(
+      @Nullable String className, Set<Reference> superTypes) {
+    if (className != null && instrumentationClassPredicate.isInstrumentationClass(className)) {
       Reference reference = references.get(className);
       superTypes.add(reference);
 
-      addSuperTypes(reference.getSuperName(), superTypes);
+      addSuperTypesThatAreAlsoHelperClasses(reference.getSuperName(), superTypes);
       // need to keep interfaces too since they may have default methods
       for (String superType : reference.getInterfaces()) {
-        addSuperTypes(superType, superTypes);
+        addSuperTypesThatAreAlsoHelperClasses(superType, superTypes);
       }
     }
   }

@@ -142,6 +142,10 @@ public interface HelperReferenceWrapper {
       if (resolution.isResolved()) {
         return new ClasspathType(resolution.resolve());
       }
+      // checking helper references is needed when one helper class A extends another helper class B
+      // and the subclass A also implements a library interface C
+      // B needs to be resolved as part of checking that A implements all required methods of C
+      // but B cannot be resolved on the classpath, so B needs to be resolved from helper references
       if (helperReferences.containsKey(className)) {
         return new ReferenceType(helperReferences.get(className));
       }
