@@ -33,8 +33,8 @@ if (applyCodeCoverage) {
   apply from: "$rootDir/gradle/jacoco.gradle"
 }
 
-if (project.hasProperty("minJavaVersionForTests")) {
-  project.ext.release = project.getProperty("minJavaVersionForTests")
+if (project.hasProperty("minJavaVersionSupported")) {
+  project.ext.release = project.getProperty("minJavaVersionSupported")
 } else {
   project.ext.release = JavaVersion.VERSION_1_8
 }
@@ -171,7 +171,7 @@ project.afterEvaluate {
 }
 
 def isJavaVersionAllowed(JavaVersion version) {
-  if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests').compareTo(version) > 0) {
+  if (project.hasProperty('minJavaVersionSupported') && project.getProperty('minJavaVersionSupported').compareTo(version) > 0) {
     return false
   }
   if (project.hasProperty('maxJavaVersionForTests') && project.getProperty('maxJavaVersionForTests').compareTo(version) < 0) {
