@@ -146,6 +146,11 @@ class JettyServlet3TestAsync extends JettyServlet3Test {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
   }
+
+  @Override
+  boolean testConcurrency() {
+    return true
+  }
 }
 
 class JettyServlet3TestFakeAsync extends JettyServlet3Test {
@@ -159,6 +164,11 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
   boolean testException() {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
+  }
+
+  @Override
+  boolean testConcurrency() {
+    return true
   }
 }
 

@@ -125,6 +125,11 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     true
   }
 
+  @Override
+  boolean testConcurrency() {
+    true
+  }
+
   boolean asyncCancelHasSendError() {
     false
   }
