@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import static io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenters.listenerInstrumenter;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenters.listenerInstrumenter;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,8 +16,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.Map;
 import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
