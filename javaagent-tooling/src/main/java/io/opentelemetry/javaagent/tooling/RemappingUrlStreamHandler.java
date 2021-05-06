@@ -47,13 +47,12 @@ class RemappingUrlStreamHandler extends URLStreamHandler {
     } catch (URISyntaxException | IOException e) {
       throw new IllegalStateException("Unable to read internal jar", e);
     }
-
-    System.out.println("Delegate jar file is " + delegateJarFile.getName());
   }
 
   /** {@inheritDoc} */
+  // TODO Usual classloading actually calls this method twice in a row for each url.
+  // Introduce some cache or any other optimisation.
   protected URLConnection openConnection(URL url) {
-    System.out.println("Open connection to " + url);
     try {
       String file = url.getFile();
       if ("/".equals(file)) {
@@ -67,33 +66,28 @@ class RemappingUrlStreamHandler extends URLStreamHandler {
       if (file.startsWith("/")) {
         file = file.substring(1);
       }
-      System.out.println("Looking for file " + file);
       JarEntry entry = delegateJarFile.getJarEntry(file);
       if (entry == null) {
         return null;
       }
 
-      System.out.println("Found " + entry);
-
       InputStream is = delegateJarFile.getInputStream(entry);
       if (file.endsWith(".class")) {
-        System.out.println("Remapping... ");
         byte[] remappedClass = remapClassBytes(is);
         return new InternalJarUrlConnection(
             url, new ByteArrayInputStream(remappedClass), remappedClass.length);
       } else {
-        System.out.println("Return as is");
         return new InternalJarUrlConnection(url, is, entry.getSize());
       }
     } catch (IOException e) {
-      e.printStackTrace();
+      System.err.printf("Failed to load and remap %s: %s%n", url, e.getMessage());
     }
     return new InternalJarUrlConnection(url, new ByteArrayInputStream(new byte[0]), 0);
   }
 
   private static byte[] remapClassBytes(InputStream in) throws IOException {
-    ClassWriter cw = new ClassWriter(0);
     ClassReader cr = new ClassReader(in);
+    ClassWriter cw = new ClassWriter(cr, 0);
     cr.accept(new ClassRemapper(cw, remapper), ClassReader.EXPAND_FRAMES);
     return cw.toByteArray();
   }

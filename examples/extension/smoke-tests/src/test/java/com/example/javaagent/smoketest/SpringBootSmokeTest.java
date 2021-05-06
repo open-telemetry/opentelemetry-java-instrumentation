@@ -31,7 +31,6 @@ class SpringBootSmokeTest extends SmokeTest {
             .get(Attributes.Name.IMPLEMENTATION_VERSION);
 
     Response response = client.newCall(request).execute();
-    System.out.println(response.headers().toString());
 
     Collection<ExportTraceServiceRequest> traces = waitForTraces();
 

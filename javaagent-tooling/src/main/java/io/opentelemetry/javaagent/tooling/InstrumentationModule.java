@@ -134,7 +134,11 @@ public abstract class InstrumentationModule {
     ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher = classLoaderMatcher();
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher();
     HelperInjector helperInjector =
-        new HelperInjector(mainInstrumentationName(), helperClassNames, helperResourceNames);
+        new HelperInjector(
+            mainInstrumentationName(),
+            helperClassNames,
+            helperResourceNames,
+            Utils.getExtensionsClassLoader());
     InstrumentationContextProvider contextProvider = getContextProvider();
 
     AgentBuilder agentBuilder = parentAgentBuilder;

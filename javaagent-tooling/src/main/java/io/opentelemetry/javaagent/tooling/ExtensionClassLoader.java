@@ -17,11 +17,35 @@ import java.net.URLClassLoader;
  * it compatible with shaded SDK used by the agent.
  */
 // TODO find a way to initialize logging before using this class
+// TODO support scanning a folder for several extension jars and keep them isolated from each other
+// Used by AgentInitializer
+@SuppressWarnings("unused")
 public class ExtensionClassLoader extends URLClassLoader {
+  // NOTE it's important not to use slf4j in this class, because this class is used before slf4j is
+  // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
+  // configure the logging levels
+
+  static {
+    ClassLoader.registerAsParallelCapable();
+  }
 
   public static ClassLoader getInstance(ClassLoader parent) {
-    // TODO add support for old deprecated properties, otel.exporter.jar and otel.initializer.jar
-    URL extension = parseLocation(System.getProperty("otel.javaagent.extensions", System.getenv("OTEL_JAVAAGENT_EXTENSIONS")));
+    // TODO add support for old deprecated property otel.javaagent.experimental.exporter.jar
+    URL extension =
+        parseLocation(
+            System.getProperty(
+                "otel.javaagent.experimental.extensions",
+                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS")));
+
+    if (extension == null) {
+      extension =
+          parseLocation(
+              System.getProperty(
+                  "otel.javaagent.experimental.initializer.jar",
+                  System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR")));
+      // TODO when logging is configured add warning about deprecated property
+    }
+
     if (extension != null) {
       try {
         URL wrappedUrl = new URL("otel", null, -1, "/", new RemappingUrlStreamHandler(extension));
@@ -41,8 +65,8 @@ public class ExtensionClassLoader extends URLClassLoader {
     try {
       return new File(name).toURI().toURL();
     } catch (MalformedURLException e) {
-      System.err.println("Filename could not be parsed: %s. Extension location is ignored");
-      e.printStackTrace();
+      System.err.printf(
+          "Filename could not be parsed: %s. Extension location is ignored%n", e.getMessage());
     }
     return null;
   }

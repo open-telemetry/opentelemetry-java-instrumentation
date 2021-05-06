@@ -90,7 +90,7 @@ abstract class SmokeTest {
             .withCopyFileToContainer(
                 MountableFile.forHostPath(extensionPath), "/opentelemetry-extensions.jar")
             .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true")
-            .withEnv("OTEL_JAVAAGENT_EXTENSIONS", "/opentelemetry-extensions.jar")
+            .withEnv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS", "/opentelemetry-extensions.jar")
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")

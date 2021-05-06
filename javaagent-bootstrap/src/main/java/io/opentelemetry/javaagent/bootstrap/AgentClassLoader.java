@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -25,10 +24,6 @@ public class AgentClassLoader extends URLClassLoader {
   static {
     ClassLoader.registerAsParallelCapable();
   }
-
-  // TODO remove in favor of ExtensionClassLoader
-  private static final String AGENT_INITIALIZER_JAR =
-      System.getProperty("otel.javaagent.experimental.initializer.jar", "");
 
   // Calling java.lang.instrument.Instrumentation#appendToBootstrapClassLoaderSearch
   // adds a jar to the bootstrap class lookup, but not to the resource lookup.
@@ -64,21 +59,6 @@ public class AgentClassLoader extends URLClassLoader {
     } catch (MalformedURLException e) {
       // This can't happen with current URL constructor
       throw new IllegalStateException("URL malformed.  Unsupported JDK?", e);
-    }
-
-    if (!AGENT_INITIALIZER_JAR.isEmpty()) {
-      URL url;
-      try {
-        url = new File(AGENT_INITIALIZER_JAR).toURI().toURL();
-      } catch (MalformedURLException e) {
-        throw new IllegalStateException(
-            "Filename could not be parsed: "
-                + AGENT_INITIALIZER_JAR
-                + ". Initializer is not installed",
-            e);
-      }
-
-      addURL(url);
     }
   }
 
