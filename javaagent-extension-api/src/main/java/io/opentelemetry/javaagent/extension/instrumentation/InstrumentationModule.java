@@ -129,7 +129,7 @@ public abstract class InstrumentationModule implements AgentExtension {
    * instrumentation advices.
    *
    * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
@@ -144,7 +144,7 @@ public abstract class InstrumentationModule implements AgentExtension {
    * compilation. Those helpers will be injected into the application classloader.
    *
    * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
@@ -159,7 +159,7 @@ public abstract class InstrumentationModule implements AgentExtension {
    * associated with a context class stored in the value.
    *
    * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
@@ -171,9 +171,9 @@ public abstract class InstrumentationModule implements AgentExtension {
 
   /**
    * Instrumentation modules can override this method to provide additional helper classes that are
-   * not located in instrumentation packages described in {@link InstrumentationClassPredicate} and
-   * {@link #isHelperClass(String)} (and not automatically detected by muzzle). These additional
-   * classes will be injected into the application classloader first.
+   * not located in instrumentation packages described in the {@code InstrumentationClassPredicate}
+   * class and {@link #isHelperClass(String)} (and not automatically detected by muzzle). These
+   * additional classes will be injected into the application classloader first.
    *
    * <p>Implementing {@link #isHelperClass(String)} is generally simpler and less error-prone
    * compared to implementing this method.
