@@ -21,6 +21,7 @@ public interface ContextStore<K, C> {
    *
    * @param <C> context type
    */
+  @FunctionalInterface
   interface Factory<C> {
 
     /** Returns a new context instance. */

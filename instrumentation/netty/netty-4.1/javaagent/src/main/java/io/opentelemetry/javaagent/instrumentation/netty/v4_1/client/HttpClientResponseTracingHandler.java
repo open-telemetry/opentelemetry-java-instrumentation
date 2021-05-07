@@ -25,26 +25,32 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) {
-    Context context = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT).get();
+    Attribute<Context> clientContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
+    Context context = clientContextAttr.get();
     if (context == null) {
       ctx.fireChannelRead(msg);
       return;
     }
 
+    Attribute<Context> parentContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
+    Context parentContext = parentContextAttr.get();
+
     if (msg instanceof FullHttpResponse) {
       tracer().end(context, (HttpResponse) msg);
+      clientContextAttr.remove();
+      parentContextAttr.remove();
     } else if (msg instanceof HttpResponse) {
       // Headers before body have been received, store them to use when finishing the span.
       ctx.channel().attr(HTTP_RESPONSE).set((HttpResponse) msg);
     } else if (msg instanceof LastHttpContent) {
       // Not a FullHttpResponse so this is content that has been received after headers. Finish the
       // span using what we stored in attrs.
-      tracer().end(context, ctx.channel().attr(HTTP_RESPONSE).get());
+      tracer().end(context, ctx.channel().attr(HTTP_RESPONSE).getAndRemove());
+      clientContextAttr.remove();
+      parentContextAttr.remove();
     }
 
     // We want the callback in the scope of the parent, not the client span
-    Attribute<Context> parentAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
-    Context parentContext = parentAttr.get();
     if (parentContext != null) {
       try (Scope ignored = parentContext.makeCurrent()) {
         ctx.fireChannelRead(msg);

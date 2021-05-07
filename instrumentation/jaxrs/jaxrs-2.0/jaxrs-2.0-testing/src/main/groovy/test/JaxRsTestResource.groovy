@@ -7,12 +7,14 @@ package test
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static java.util.concurrent.TimeUnit.SECONDS
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
@@ -84,6 +86,17 @@ class JaxRsTestResource {
     }
   }
 
+  @Path("/child")
+  @GET
+  void indexed_child(@Suspended AsyncResponse response, @QueryParam("id") long id) {
+    CompletableFuture.runAsync({
+      HttpServerTest.controller(INDEXED_CHILD) {
+        Span.current().setAttribute("test.request.id", id)
+        response.resume("")
+      }
+    })
+  }
+
   static final BARRIER = new CyclicBarrier(2)
 
   @Path("async")
@@ -134,6 +147,58 @@ class JaxRsTestResource {
   }
 }
 
+@Path("test-resource-super")
+class JaxRsSuperClassTestResource extends JaxRsSuperClassTestResourceSuper {
+}
+
+class JaxRsSuperClassTestResourceSuper {
+  @GET
+  Object call() {
+    HttpServerTest.controller(SUCCESS) {
+      SUCCESS.body
+    }
+  }
+}
+
+class JaxRsInterfaceClassTestResource extends JaxRsInterfaceClassTestResourceSuper implements JaxRsInterface {
+}
+
+@Path("test-resource-interface")
+interface JaxRsInterface {
+  @Path("call")
+  @GET
+  Object call()
+}
+
+class JaxRsInterfaceClassTestResourceSuper {
+  Object call() {
+    HttpServerTest.controller(SUCCESS) {
+      SUCCESS.body
+    }
+  }
+}
+
+@Path("test-sub-resource-locator")
+class JaxRsSubResourceLocatorTestResource {
+  @Path("call")
+  Object call() {
+    HttpServerTest.controller(SUCCESS) {
+      return new SubResource()
+    }
+  }
+}
+
+class SubResource {
+  @Path("sub")
+  @GET
+  String call() {
+    HttpServerTest.controller(SUCCESS) {
+      new Exception().printStackTrace()
+      SUCCESS.body
+    }
+  }
+}
+
 class JaxRsTestExceptionMapper implements ExceptionMapper<Exception> {
   @Override
   Response toResponse(Exception exception) {
@@ -148,6 +213,9 @@ class JaxRsTestApplication extends Application {
   Set<Class<?>> getClasses() {
     def classes = new HashSet()
     classes.add(JaxRsTestResource)
+    classes.add(JaxRsSuperClassTestResource)
+    classes.add(JaxRsInterfaceClassTestResource)
+    classes.add(JaxRsSubResourceLocatorTestResource)
     classes.add(JaxRsTestExceptionMapper)
     return classes
   }

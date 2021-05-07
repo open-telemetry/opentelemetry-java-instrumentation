@@ -29,35 +29,35 @@ public abstract class SqlAttributesExtractor<REQUEST> extends DbAttributesExtrac
     super.onStart(attributes, request);
     AttributeKey<String> dbTable = dbTableAttribute();
     if (dbTable != null) {
-      set(attributes, dbTable, dbTable(request));
+      set(attributes, dbTable, table(request));
     }
   }
 
   @Nullable
   @Override
-  protected final String dbStatement(REQUEST request) {
+  protected final String statement(REQUEST request) {
     return sanitize(request).getFullStatement();
   }
 
   @Nullable
   @Override
-  protected final String dbOperation(REQUEST request) {
+  protected final String operation(REQUEST request) {
     return sanitize(request).getOperation();
   }
 
   @Nullable
-  protected final String dbTable(REQUEST request) {
+  protected final String table(REQUEST request) {
     return sanitize(request).getTable();
   }
 
   private SqlStatementInfo sanitize(REQUEST request) {
     // sanitized statement is cached
-    return SqlStatementSanitizer.sanitize(rawDbStatement(request));
+    return SqlStatementSanitizer.sanitize(rawStatement(request));
   }
 
   @Nullable
   protected abstract AttributeKey<String> dbTableAttribute();
 
   @Nullable
-  protected abstract String rawDbStatement(REQUEST request);
+  protected abstract String rawStatement(REQUEST request);
 }

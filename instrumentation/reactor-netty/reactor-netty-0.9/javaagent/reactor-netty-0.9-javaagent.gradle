@@ -20,4 +20,6 @@ dependencies {
   testInstrumentation project(':instrumentation:reactor-netty:reactor-netty-1.0:javaagent')
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
   testInstrumentation project(':instrumentation:reactor-3.1:javaagent')
+
+  latestDepTestLibrary group: 'io.projectreactor.netty', name: 'reactor-netty', version: '(,1.0.0)'
 }

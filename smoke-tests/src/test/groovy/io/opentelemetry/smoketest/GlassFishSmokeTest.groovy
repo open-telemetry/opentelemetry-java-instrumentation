@@ -23,6 +23,11 @@ class GlassFishSmokeTest extends AppServerTest {
   }
 
   @Override
+  protected String getJvmArgsEnvVarName() {
+    return "JVM_ARGS"
+  }
+
+  @Override
   protected TargetWaitStrategy getWaitStrategy() {
     return new TargetWaitStrategy.Log(Duration.ofMinutes(3), ".*(app was successfully deployed|deployed with name app).*")
   }

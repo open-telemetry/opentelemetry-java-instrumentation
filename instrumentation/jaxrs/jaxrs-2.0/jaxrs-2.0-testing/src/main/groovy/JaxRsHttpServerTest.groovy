@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static java.util.concurrent.TimeUnit.SECONDS
 import static org.junit.Assume.assumeTrue
 
@@ -27,6 +28,90 @@ import spock.lang.Unroll
 import test.JaxRsTestResource
 
 abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements AgentTestTrait {
+
+  def "test super method without @Path"() {
+    given:
+    def url = HttpUrl.get(address.resolve("test-resource-super")).newBuilder()
+      .build()
+    def request = request(url, "GET", null).build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.withCloseable {
+      assert response.code() == SUCCESS.status
+      assert response.body().string() == SUCCESS.body
+      true
+    }
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          hasNoParent()
+          kind SERVER
+          name getContextPath() + "/test-resource-super"
+        }
+        basicSpan(it, 1, "controller", span(0))
+      }
+    }
+  }
+
+  def "test interface method with @Path"() {
+    assumeTrue(testInterfaceMethodWithPath())
+
+    given:
+    def url = HttpUrl.get(address.resolve("test-resource-interface/call")).newBuilder()
+      .build()
+    def request = request(url, "GET", null).build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.withCloseable {
+      assert response.code() == SUCCESS.status
+      assert response.body().string() == SUCCESS.body
+      true
+    }
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          hasNoParent()
+          kind SERVER
+          name getContextPath() + "/test-resource-interface/call"
+        }
+        basicSpan(it, 1, "controller", span(0))
+      }
+    }
+  }
+
+  def "test sub resource locator"() {
+    given:
+    def url = HttpUrl.get(address.resolve("test-sub-resource-locator/call/sub")).newBuilder()
+      .build()
+    def request = request(url, "GET", null).build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.withCloseable {
+      assert response.code() == SUCCESS.status
+      assert response.body().string() == SUCCESS.body
+      true
+    }
+
+    assertTraces(1) {
+      trace(0, 5) {
+        span(0) {
+          hasNoParent()
+          kind SERVER
+          name getContextPath() + "/test-sub-resource-locator/call/sub"
+        }
+        basicSpan(it, 1,"JaxRsSubResourceLocatorTestResource.call", span(0))
+        basicSpan(it, 2, "controller", span(1))
+        basicSpan(it, 3, "SubResource.call", span(0))
+        basicSpan(it, 4, "controller", span(3))
+      }
+    }
+  }
+
   @Unroll
   def "should handle #desc AsyncResponse"() {
     given:
@@ -122,6 +207,15 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
 
   @Override
   boolean testPathParam() {
+    true
+  }
+
+  @Override
+  boolean testConcurrency() {
+    true
+  }
+
+  boolean testInterfaceMethodWithPath() {
     true
   }
 

@@ -25,8 +25,8 @@ class DbSpanNameExtractorTest {
     DbRequest dbRequest = new DbRequest();
 
     // cannot stub dbOperation() and dbTable() because they're final
-    given(sqlAttributesExtractor.rawDbStatement(dbRequest)).willReturn("SELECT * FROM table");
-    given(sqlAttributesExtractor.dbName(dbRequest)).willReturn("database");
+    given(sqlAttributesExtractor.rawStatement(dbRequest)).willReturn("SELECT * FROM table");
+    given(sqlAttributesExtractor.name(dbRequest)).willReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(sqlAttributesExtractor);
 
@@ -43,7 +43,7 @@ class DbSpanNameExtractorTest {
     DbRequest dbRequest = new DbRequest();
 
     // cannot stub dbOperation() and dbTable() because they're final
-    given(sqlAttributesExtractor.rawDbStatement(dbRequest)).willReturn("SELECT * FROM table");
+    given(sqlAttributesExtractor.rawStatement(dbRequest)).willReturn("SELECT * FROM table");
 
     SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(sqlAttributesExtractor);
 
@@ -59,8 +59,8 @@ class DbSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    given(dbAttributesExtractor.dbOperation(dbRequest)).willReturn("SELECT");
-    given(dbAttributesExtractor.dbName(dbRequest)).willReturn("database");
+    given(dbAttributesExtractor.operation(dbRequest)).willReturn("SELECT");
+    given(dbAttributesExtractor.name(dbRequest)).willReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(dbAttributesExtractor);
 
@@ -76,7 +76,7 @@ class DbSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    given(dbAttributesExtractor.dbOperation(dbRequest)).willReturn("SELECT");
+    given(dbAttributesExtractor.operation(dbRequest)).willReturn("SELECT");
 
     SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(dbAttributesExtractor);
 
@@ -92,7 +92,7 @@ class DbSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    given(dbAttributesExtractor.dbName(dbRequest)).willReturn("database");
+    given(dbAttributesExtractor.name(dbRequest)).willReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(dbAttributesExtractor);
 

@@ -148,6 +148,28 @@ class ReferenceCollectorTest extends Specification {
     }
   }
 
+  def "should collect field declaration references"() {
+    when:
+    def collector = new ReferenceCollector({ it == DeclaredFieldTestClass.Helper.name })
+    collector.collectReferencesFromAdvice(DeclaredFieldTestClass.Advice.name)
+    def references = collector.references
+
+    then:
+    println references
+
+    with(references[DeclaredFieldTestClass.Helper.name]) {helperClass ->
+      def superField = findField(helperClass, 'superField')
+      !superField.declared
+
+      def field = findField(helperClass, 'helperField')
+      field.declared
+    }
+
+    with(references[DeclaredFieldTestClass.LibraryBaseClass.name]) {libraryBaseClass ->
+      libraryBaseClass.fields.empty
+    }
+  }
+
   def "should find all helper classes"() {
     when:
     def collector = new ReferenceCollector({ false })

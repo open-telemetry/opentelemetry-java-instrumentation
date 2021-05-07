@@ -5,12 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import java.util.List;
 
 final class ClientInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, RESPONSE> {
 
@@ -18,28 +15,9 @@ final class ClientInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
   private final TextMapSetter<REQUEST> setter;
 
   ClientInstrumenter(
-      String instrumentationName,
-      Tracer tracer,
-      Meter meter,
-      SpanNameExtractor<? super REQUEST> spanNameExtractor,
-      SpanKindExtractor<? super REQUEST> spanKindExtractor,
-      SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor,
-      List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors,
-      List<? extends RequestMetricsFactory> requestMetricsFactories,
-      ErrorCauseExtractor errorCauseExtractor,
-      ContextPropagators propagators,
-      TextMapSetter<REQUEST> setter) {
-    super(
-        instrumentationName,
-        tracer,
-        meter,
-        spanNameExtractor,
-        spanKindExtractor,
-        spanStatusExtractor,
-        attributesExtractors,
-        requestMetricsFactories,
-        errorCauseExtractor);
-    this.propagators = propagators;
+      InstrumenterBuilder<REQUEST, RESPONSE> builder, TextMapSetter<REQUEST> setter) {
+    super(builder);
+    this.propagators = builder.openTelemetry.getPropagators();
     this.setter = setter;
   }
 

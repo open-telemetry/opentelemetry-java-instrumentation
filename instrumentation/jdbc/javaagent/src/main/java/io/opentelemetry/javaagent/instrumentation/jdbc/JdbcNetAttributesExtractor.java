@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import io.opentelemetry.instrumentation.api.instrumenter.NetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class JdbcNetAttributesExtractor extends NetAttributesExtractor<DbRequest, Void> {
@@ -18,20 +18,20 @@ final class JdbcNetAttributesExtractor extends NetAttributesExtractor<DbRequest,
 
   @Nullable
   @Override
-  protected String peerName(DbRequest request, Void unused) {
+  protected String peerName(DbRequest request, @Nullable Void response) {
     return request.getDbInfo().getHost();
   }
 
   @Nullable
   @Override
-  protected Long peerPort(DbRequest request, Void unused) {
+  protected Long peerPort(DbRequest request, @Nullable Void response) {
     Integer port = request.getDbInfo().getPort();
     return port == null ? null : port.longValue();
   }
 
   @Nullable
   @Override
-  protected String peerIp(DbRequest request, Void unused) {
+  protected String peerIp(DbRequest request, @Nullable Void response) {
     return null;
   }
 }

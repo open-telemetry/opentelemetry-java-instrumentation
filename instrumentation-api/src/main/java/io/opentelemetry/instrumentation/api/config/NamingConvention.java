@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.config;
 
 import java.util.Locale;
 
-// config property names are normalized to underscore separated lowercase words
+// config property names are normalized to dot separated lowercase words
 enum NamingConvention {
   DOT {
     @Override

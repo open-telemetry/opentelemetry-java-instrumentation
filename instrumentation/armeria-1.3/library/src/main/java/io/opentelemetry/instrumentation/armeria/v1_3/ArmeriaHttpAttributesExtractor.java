@@ -12,7 +12,7 @@ import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
-import io.opentelemetry.instrumentation.api.instrumenter.HttpAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

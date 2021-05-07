@@ -9,4 +9,10 @@ class JerseyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
   boolean asyncCancelHasSendError() {
     true
   }
+
+  @Override
+  boolean testInterfaceMethodWithPath() {
+    // disables a test that jersey deems invalid
+    false
+  }
 }

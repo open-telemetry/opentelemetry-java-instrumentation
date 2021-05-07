@@ -5,6 +5,7 @@
 
 package server
 
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
@@ -49,19 +50,8 @@ class VertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrai
   }
 
   @Override
-  boolean testException() {
-    // TODO(anuraaga): https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
-    return false
-  }
-
-  @Override
   boolean testPathParam() {
     return true
-  }
-
-  @Override
-  boolean testNotFound() {
-    return false
   }
 
   @Override
@@ -71,7 +61,14 @@ class VertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrai
 
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.getPath()
+    switch (endpoint) {
+      case PATH_PARAM:
+        return "/path/:id/param"
+      case NOT_FOUND:
+        return "HTTP GET"
+      default:
+        return endpoint.getPath()
+    }
   }
 
 }

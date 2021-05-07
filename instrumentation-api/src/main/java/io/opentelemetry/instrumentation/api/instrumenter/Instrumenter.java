@@ -9,17 +9,17 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 // TODO(anuraaga): Need to define what are actually useful knobs, perhaps even providing a
@@ -59,28 +59,21 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors;
   private final List<? extends RequestMetrics> requestMetrics;
   private final ErrorCauseExtractor errorCauseExtractor;
+  private final StartTimeExtractor<REQUEST> startTimeExtractor;
+  private final EndTimeExtractor<RESPONSE> endTimeExtractor;
 
-  Instrumenter(
-      String instrumentationName,
-      Tracer tracer,
-      Meter meter,
-      SpanNameExtractor<? super REQUEST> spanNameExtractor,
-      SpanKindExtractor<? super REQUEST> spanKindExtractor,
-      SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor,
-      List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors,
-      List<? extends RequestMetricsFactory> requestMetricsFactories,
-      ErrorCauseExtractor errorCauseExtractor) {
-    this.instrumentationName = instrumentationName;
-    this.tracer = tracer;
-    this.spanNameExtractor = spanNameExtractor;
-    this.spanKindExtractor = spanKindExtractor;
-    this.spanStatusExtractor = spanStatusExtractor;
-    this.extractors = extractors;
-    this.requestMetrics =
-        requestMetricsFactories.stream()
-            .map(factory -> factory.create(meter))
-            .collect(Collectors.toList());
-    this.errorCauseExtractor = errorCauseExtractor;
+  Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
+    this.instrumentationName = builder.instrumentationName;
+    this.tracer =
+        builder.openTelemetry.getTracer(instrumentationName, InstrumentationVersion.VERSION);
+    this.spanNameExtractor = builder.spanNameExtractor;
+    this.spanKindExtractor = builder.spanKindExtractor;
+    this.spanStatusExtractor = builder.spanStatusExtractor;
+    this.extractors = new ArrayList<>(builder.attributesExtractors);
+    this.requestMetrics = new ArrayList<>(builder.requestMetrics);
+    this.errorCauseExtractor = builder.errorCauseExtractor;
+    this.startTimeExtractor = builder.startTimeExtractor;
+    this.endTimeExtractor = builder.endTimeExtractor;
   }
 
   /**
@@ -122,6 +115,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
             .spanBuilder(spanNameExtractor.extract(request))
             .setSpanKind(spanKind)
             .setParent(parentContext);
+
+    if (startTimeExtractor != null) {
+      spanBuilder.setStartTimestamp(startTimeExtractor.extract(request));
+    }
 
     AttributesBuilder attributesBuilder = Attributes.builder();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
@@ -176,6 +173,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     span.setStatus(spanStatusExtractor.extract(request, response, error));
 
-    span.end();
+    if (endTimeExtractor != null) {
+      span.end(endTimeExtractor.extract(response));
+    } else {
+      span.end();
+    }
   }
 }

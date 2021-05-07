@@ -31,6 +31,10 @@ import io.grpc.ServerCallHandler
 import io.grpc.ServerInterceptor
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import io.grpc.protobuf.services.ProtoReflectionService
+import io.grpc.reflection.v1alpha.ServerReflectionGrpc
+import io.grpc.reflection.v1alpha.ServerReflectionRequest
+import io.grpc.reflection.v1alpha.ServerReflectionResponse
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -503,6 +507,101 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
 
     then:
     error.get() != null
+
+    cleanup:
+    channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)
+    server?.shutdownNow()?.awaitTermination()
+  }
+
+  def "test reflection service"() {
+    setup:
+    def service = ProtoReflectionService.newInstance()
+    def port = PortUtils.findOpenPort()
+    Server server = configureServer(ServerBuilder.forPort(port).addService(service)).build().start()
+    ManagedChannelBuilder channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
+
+    // Depending on the version of gRPC usePlainText may or may not take an argument.
+    try {
+      channelBuilder.usePlaintext()
+    } catch (MissingMethodException e) {
+      channelBuilder.usePlaintext(true)
+    }
+    ManagedChannel channel = channelBuilder.build()
+    ServerReflectionGrpc.ServerReflectionStub client = ServerReflectionGrpc.newStub(channel)
+
+    when:
+    AtomicReference<Throwable> error = new AtomicReference<>()
+    AtomicReference<ServerReflectionResponse> response = new AtomicReference<>()
+    CountDownLatch latch = new CountDownLatch(1)
+    def request = client.serverReflectionInfo(new StreamObserver<ServerReflectionResponse>() {
+      @Override
+      void onNext(ServerReflectionResponse serverReflectionResponse) {
+        response.set(serverReflectionResponse)
+      }
+
+      @Override
+      void onError(Throwable throwable) {
+        error.set(throwable)
+        latch.countDown()
+      }
+
+      @Override
+      void onCompleted() {
+        latch.countDown()
+      }
+    })
+
+    request.onNext(ServerReflectionRequest.newBuilder()
+      .setListServices("The content will not be checked?")
+      .build())
+    request.onCompleted()
+
+    latch.await(10, TimeUnit.SECONDS)
+
+    then:
+    error.get() == null
+    response.get().listServicesResponse.getService(0).name == "grpc.reflection.v1alpha.ServerReflection"
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo"
+          kind CLIENT
+          hasNoParent()
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "grpc.reflection.v1alpha.ServerReflection"
+            "${SemanticAttributes.RPC_METHOD.key}" "ServerReflectionInfo"
+          }
+        }
+        span(1) {
+          name "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo"
+          kind SERVER
+          childOf span(0)
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 1
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "grpc.reflection.v1alpha.ServerReflection"
+            "${SemanticAttributes.RPC_METHOD.key}" "ServerReflectionInfo"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+          }
+        }
+      }
+    }
 
     cleanup:
     channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)

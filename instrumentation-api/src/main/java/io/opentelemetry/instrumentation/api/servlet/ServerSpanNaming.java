@@ -28,6 +28,9 @@ public final class ServerSpanNaming {
   }
 
   private volatile Source updatedBySource;
+  // Length of the currently set name. This is used when setting name from a servlet filter
+  // to pick the most descriptive (longest) name.
+  private volatile int nameLength;
 
   private ServerSpanNaming(Source initialSource) {
     this.updatedBySource = initialSource;
@@ -53,18 +56,29 @@ public final class ServerSpanNaming {
     ServerSpanNaming serverSpanNaming = context.get(CONTEXT_KEY);
     if (serverSpanNaming == null) {
       String name = serverSpanName.get();
-      if (name != null) {
+      if (name != null && !name.isEmpty()) {
         serverSpan.updateName(name);
       }
       return;
     }
-    if (source.order > serverSpanNaming.updatedBySource.order) {
+    // special case for servlet filters, even when we have a name from previous filter see whether
+    // the new name is better and if so use it instead
+    boolean onlyIfBetterName =
+        !source.useFirst && source.order == serverSpanNaming.updatedBySource.order;
+    if (source.order > serverSpanNaming.updatedBySource.order || onlyIfBetterName) {
       String name = serverSpanName.get();
-      if (name != null) {
+      if (name != null
+          && !name.isEmpty()
+          && (!onlyIfBetterName || serverSpanNaming.isBetterName(name))) {
         serverSpan.updateName(name);
         serverSpanNaming.updatedBySource = source;
+        serverSpanNaming.nameLength = name.length();
       }
     }
+  }
+
+  private boolean isBetterName(String name) {
+    return name.length() > nameLength;
   }
 
   // TODO (trask) migrate the one usage (ServletHttpServerTracer) to ServerSpanNaming.init() once we
@@ -82,13 +96,22 @@ public final class ServerSpanNaming {
 
   public enum Source {
     CONTAINER(1),
-    SERVLET(2),
-    CONTROLLER(3);
+    // for servlet filters we try to find the best name which isn't necessarily from the first
+    // filter that is called
+    FILTER(2, false),
+    SERVLET(3),
+    CONTROLLER(4);
 
     private final int order;
+    private final boolean useFirst;
 
     Source(int order) {
+      this(order, true);
+    }
+
+    Source(int order, boolean useFirst) {
       this.order = order;
+      this.useFirst = useFirst;
     }
   }
 }

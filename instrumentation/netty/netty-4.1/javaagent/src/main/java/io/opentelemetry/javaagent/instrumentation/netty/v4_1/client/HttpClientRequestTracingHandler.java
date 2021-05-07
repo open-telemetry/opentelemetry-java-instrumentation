@@ -11,6 +11,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
@@ -35,14 +36,19 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     }
 
     Context context = tracer().startSpan(parentContext, ctx, (HttpRequest) msg);
-    ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT).set(context);
-    ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(parentContext);
+
+    Attribute<Context> clientContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
+    Attribute<Context> parentContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
+    clientContextAttr.set(context);
+    parentContextAttr.set(parentContext);
 
     try (Scope ignored = context.makeCurrent()) {
       ctx.write(msg, prm);
       // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
       tracer().endExceptionally(context, throwable);
+      clientContextAttr.remove();
+      parentContextAttr.remove();
       throw throwable;
     }
   }
