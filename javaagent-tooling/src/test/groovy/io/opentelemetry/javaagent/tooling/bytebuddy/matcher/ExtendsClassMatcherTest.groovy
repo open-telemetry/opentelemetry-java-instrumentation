@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass
 import static net.bytebuddy.matcher.ElementMatchers.named
 
 import io.opentelemetry.javaagent.tooling.AgentTooling

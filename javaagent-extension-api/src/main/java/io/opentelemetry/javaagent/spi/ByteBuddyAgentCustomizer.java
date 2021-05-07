@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.spi;
 
+import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import java.lang.instrument.Instrumentation;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
@@ -16,7 +17,10 @@ import net.bytebuddy.agent.builder.AgentBuilder;
  *
  * <p>This is a service provider interface that requires implementations to be registered in {@code
  * META-INF/services} folder.
+ *
+ * @deprecated Use {@link AgentExtension} with correct {@link AgentExtension#order()} instead.
  */
+@Deprecated
 public interface ByteBuddyAgentCustomizer {
 
   /**

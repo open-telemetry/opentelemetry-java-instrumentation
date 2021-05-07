@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
+package io.opentelemetry.javaagent.extension.matcher;
 
 import java.util.Objects;
 import net.bytebuddy.description.method.MethodDescription;
@@ -15,12 +15,12 @@ import net.bytebuddy.matcher.ElementMatcher;
  *
  * @param <T> Type of the matched object
  */
-public class MethodDeclaringTypeMatcher<T extends MethodDescription>
+class MethodDeclaringTypeMatcher<T extends MethodDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
   private final ElementMatcher<TypeDescription> matcher;
 
-  public MethodDeclaringTypeMatcher(ElementMatcher<TypeDescription> matcher) {
+  MethodDeclaringTypeMatcher(ElementMatcher<TypeDescription> matcher) {
     this.matcher = matcher;
   }
 

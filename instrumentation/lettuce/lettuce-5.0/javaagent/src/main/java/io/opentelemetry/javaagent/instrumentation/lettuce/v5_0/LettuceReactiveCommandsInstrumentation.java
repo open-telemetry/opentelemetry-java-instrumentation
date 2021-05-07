@@ -13,9 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx.LettuceFluxCreationAdvice;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx.LettuceMonoCreationAdvice;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;

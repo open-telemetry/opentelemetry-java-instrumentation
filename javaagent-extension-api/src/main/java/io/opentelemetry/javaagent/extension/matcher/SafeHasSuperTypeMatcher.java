@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
+package io.opentelemetry.javaagent.extension.matcher;
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.safeTypeDefinitionName;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.SafeErasureMatcher.safeAsErasure;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeTypeDefinitionName;
+import static io.opentelemetry.javaagent.extension.matcher.SafeErasureMatcher.safeAsErasure;
 
 import java.util.HashSet;
 import java.util.Iterator;

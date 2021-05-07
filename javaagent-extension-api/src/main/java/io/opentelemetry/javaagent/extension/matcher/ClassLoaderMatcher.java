@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
+package io.opentelemetry.javaagent.extension.matcher;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.ClassLoaderMatcherCacheHolder;

@@ -14,9 +14,9 @@ import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,7 +62,7 @@ public class ReferenceCollector {
    * (external) class is encountered.
    *
    * @param resource path to the resource file, same as in {@link ClassLoader#getResource(String)}
-   * @see io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate
+   * @see InstrumentationClassPredicate
    */
   public void collectReferencesFromResource(String resource) {
     if (!isSpiFile(resource)) {
@@ -107,7 +107,7 @@ public class ReferenceCollector {
    * encountered.
    *
    * @param adviceClassName Starting point for generating references.
-   * @see io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate
+   * @see InstrumentationClassPredicate
    */
   public void collectReferencesFromAdvice(String adviceClassName) {
     visitClassesAndCollectReferences(singleton(adviceClassName), true);

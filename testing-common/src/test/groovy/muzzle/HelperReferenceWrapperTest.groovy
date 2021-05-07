@@ -5,10 +5,10 @@
 
 package muzzle
 
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag
+import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag
 import static java.util.stream.Collectors.toList
 
-import io.opentelemetry.javaagent.tooling.muzzle.Reference
+import io.opentelemetry.javaagent.extension.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper
 import net.bytebuddy.jar.asm.Type
 import net.bytebuddy.pool.TypePool
