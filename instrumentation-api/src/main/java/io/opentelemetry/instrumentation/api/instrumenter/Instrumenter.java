@@ -57,7 +57,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
   private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
   private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors;
-  private final List<? extends RequestMetrics> requestMetrics;
+  private final List<? extends RequestListener> requestListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   private final StartTimeExtractor<REQUEST> startTimeExtractor;
   private final EndTimeExtractor<RESPONSE> endTimeExtractor;
@@ -70,7 +70,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
     this.extractors = new ArrayList<>(builder.attributesExtractors);
-    this.requestMetrics = new ArrayList<>(builder.requestMetrics);
+    this.requestListeners = new ArrayList<>(builder.requestListeners);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.startTimeExtractor = builder.startTimeExtractor;
     this.endTimeExtractor = builder.endTimeExtractor;
@@ -128,7 +128,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     Context context = parentContext;
 
-    for (RequestMetrics metrics : requestMetrics) {
+    for (RequestListener metrics : requestListeners) {
       context = metrics.start(context, attributes);
     }
 
@@ -160,7 +160,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
     Attributes attributes = attributesBuilder.build();
 
-    for (RequestMetrics metrics : requestMetrics) {
+    for (RequestListener metrics : requestListeners) {
       metrics.end(context, attributes);
     }
 

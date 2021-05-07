@@ -31,7 +31,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
-  final List<RequestMetrics> requestMetrics = new ArrayList<>();
+  final List<RequestListener> requestListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = null;
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
@@ -81,12 +81,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
   }
 
-  /**
-   * Adds a {@link RequestMetricsFactory} whose metrics will be recorded for request start and stop.
-   */
-  public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetricsFactory(
-      RequestMetricsFactory factory) {
-    requestMetrics.add(factory.create(meter));
+  /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and stop. */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
+    requestListeners.add(factory.create(meter));
     return this;
   }
 

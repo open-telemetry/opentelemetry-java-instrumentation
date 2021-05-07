@@ -15,29 +15,29 @@ import io.opentelemetry.api.metrics.common.Labels;
 import io.opentelemetry.api.metrics.common.LabelsBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.RequestMetricsFactory;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class HttpServerRequestMetrics implements RequestMetrics {
+public final class HttpServerMetrics implements RequestListener {
 
   private static final double NANOS_IN_MS = TimeUnit.MILLISECONDS.toNanos(1);
 
   private static final ContextKey<State> HTTP_SERVER_REQUEST_METRICS_STATE =
       ContextKey.named("http-server-request-metrics-state");
 
-  private static final Logger logger = LoggerFactory.getLogger(HttpServerRequestMetrics.class);
+  private static final Logger logger = LoggerFactory.getLogger(HttpServerMetrics.class);
 
-  public static RequestMetricsFactory factory() {
-    return HttpServerRequestMetrics::new;
+  public static RequestMetrics get() {
+    return HttpServerMetrics::new;
   }
 
   private final LongUpDownCounter activeRequests;
   private final DoubleValueRecorder duration;
 
-  private HttpServerRequestMetrics(Meter meter) {
+  private HttpServerMetrics(Meter meter) {
     activeRequests =
         meter
             .longUpDownCounterBuilder("http.server.active_requests")
@@ -54,10 +54,10 @@ public final class HttpServerRequestMetrics implements RequestMetrics {
   }
 
   @Override
-  public Context start(Context context, Attributes requestAttributes) {
+  public Context start(Context context, Attributes attributes) {
     long startTimeNanos = System.nanoTime();
-    Labels activeRequestLabels = activeRequestLabels(requestAttributes);
-    Labels durationLabels = durationLabels(requestAttributes);
+    Labels activeRequestLabels = activeRequestLabels(attributes);
+    Labels durationLabels = durationLabels(attributes);
     activeRequests.add(1, activeRequestLabels);
 
     return context.with(
@@ -67,7 +67,7 @@ public final class HttpServerRequestMetrics implements RequestMetrics {
   }
 
   @Override
-  public void end(Context context, Attributes responseAttributes) {
+  public void end(Context context, Attributes attributes) {
     State state = context.get(HTTP_SERVER_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(
