@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.AttributeType;
@@ -15,10 +15,15 @@ import io.opentelemetry.api.metrics.common.Labels;
 import io.opentelemetry.api.metrics.common.LabelsBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.RequestMetricsFactory;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class HttpServerRequestMetrics implements RequestMetrics {
+
+  private static final double NANOS_IN_MS = TimeUnit.MILLISECONDS.toNanos(1);
 
   private static final ContextKey<State> HTTP_SERVER_REQUEST_METRICS_STATE =
       ContextKey.named("http-server-request-metrics-state");
@@ -70,7 +75,8 @@ public final class HttpServerRequestMetrics implements RequestMetrics {
       return;
     }
     activeRequests.add(-1, state.activeRequestLabels());
-    duration.record(System.nanoTime() - state.startTimeNanos(), state.durationLabels());
+    duration.record(
+        (System.nanoTime() - state.startTimeNanos()) / NANOS_IN_MS, state.durationLabels());
   }
 
   private static Labels activeRequestLabels(Attributes attributes) {
@@ -106,12 +112,14 @@ public final class HttpServerRequestMetrics implements RequestMetrics {
             case "http.method":
             case "http.host":
             case "http.scheme":
-            case "http.status_code":
             case "http.flavor":
             case "http.server_name":
             case "net.host.name":
-            case "net.host.port":
               labels.put(key.getKey(), (String) value);
+              break;
+            case "http.status_code":
+            case "net.host.port":
+              labels.put(key.getKey(), Long.toString((long) value));
               break;
             default:
               // fall through
