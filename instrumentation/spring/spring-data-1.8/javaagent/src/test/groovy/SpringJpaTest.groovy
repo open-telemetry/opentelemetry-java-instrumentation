@@ -102,7 +102,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         // hibernate5 has extra span
         if (!isHibernate4) {
           offset = 1
-          span(1) { // insert
+          span(1) {
             name "test"
             kind CLIENT
             childOf span(0)
