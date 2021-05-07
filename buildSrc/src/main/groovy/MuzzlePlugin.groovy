@@ -51,6 +51,7 @@ class MuzzlePlugin implements Plugin<Project> {
     def compileMuzzle = project.task('compileMuzzle') {
       dependsOn(':javaagent-bootstrap:classes')
       dependsOn(':javaagent-tooling:classes')
+      dependsOn(':javaagent-extension-api:classes')
       dependsOn(project.tasks.classes)
     }
 
