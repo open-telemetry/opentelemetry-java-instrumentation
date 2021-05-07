@@ -82,7 +82,7 @@ public final class MuzzleGradlePluginUtil {
 
       validatedModulesCount++;
     }
-    // run helper injector on all instrumenters
+    // run helper injector on all instrumentation modules
     if (assertPass) {
       for (InstrumentationModule instrumentationModule :
           ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
