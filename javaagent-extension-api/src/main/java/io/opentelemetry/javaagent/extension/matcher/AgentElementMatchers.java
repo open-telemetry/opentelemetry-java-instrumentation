@@ -16,7 +16,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 /**
  * This class provides some custom ByteBuddy element matchers to use when applying instrumentation.
  */
-public class AgentElementMatchers {
+public final class AgentElementMatchers {
 
   public static ElementMatcher.Junction<TypeDescription> extendsClass(
       ElementMatcher<TypeDescription> matcher) {
@@ -92,4 +92,6 @@ public class AgentElementMatchers {
       }
     }
   }
+
+  private AgentElementMatchers() {}
 }
