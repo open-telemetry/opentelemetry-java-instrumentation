@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics;
 
-import io.opentelemetry.api.metrics.GlobalMetricsProvider;
+import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.common.Labels;
 import java.lang.management.GarbageCollectorMXBean;
@@ -35,7 +35,7 @@ public final class GarbageCollector {
   /** Register all observers provided by this module. */
   public static void registerObservers() {
     List<GarbageCollectorMXBean> garbageCollectors = ManagementFactory.getGarbageCollectorMXBeans();
-    Meter meter = GlobalMetricsProvider.getMeter(GarbageCollector.class.getName());
+    Meter meter = GlobalMeterProvider.getMeter(GarbageCollector.class.getName());
     List<Labels> labelSets = new ArrayList<>(garbageCollectors.size());
     for (final GarbageCollectorMXBean gc : garbageCollectors) {
       labelSets.add(Labels.of(GC_LABEL_KEY, gc.getName()));

@@ -18,12 +18,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p>Get max wait time for Collector to process Span Batches
  */
-@ConfigurationProperties(prefix = "opentelemetry.trace.exporter.otlp")
+@ConfigurationProperties(prefix = "otel.exporter.otlp")
 public final class OtlpGrpcSpanExporterProperties {
 
   private boolean enabled = true;
   @Nullable private String endpoint;
-  @Nullable private Duration spanTimeout;
+  @Nullable private Duration timeout;
 
   public boolean isEnabled() {
     return enabled;
@@ -43,11 +43,11 @@ public final class OtlpGrpcSpanExporterProperties {
   }
 
   @Nullable
-  public Duration getSpanTimeout() {
-    return spanTimeout;
+  public Duration getTimeout() {
+    return timeout;
   }
 
-  public void setSpanTimeout(Duration spanTimeout) {
-    this.spanTimeout = spanTimeout;
+  public void setTimeout(Duration timeout) {
+    this.timeout = timeout;
   }
 }

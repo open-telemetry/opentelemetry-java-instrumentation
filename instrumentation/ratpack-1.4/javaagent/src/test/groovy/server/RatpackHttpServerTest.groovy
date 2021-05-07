@@ -8,11 +8,14 @@ package server
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -39,6 +42,14 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> implements Agent
           all {
             controller(SUCCESS) {
               context.response.status(SUCCESS.status).send(SUCCESS.body)
+            }
+          }
+        }
+        prefix(INDEXED_CHILD.rawPath()) {
+          all {
+            controller(INDEXED_CHILD) {
+              Span.current().setAttribute("test.request.id", request.queryParams.get("id") as long)
+              context.response.status(INDEXED_CHILD.status).send()
             }
           }
         }
@@ -98,7 +109,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> implements Agent
   }
 
   @Override
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
   }
 
@@ -108,13 +119,18 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> implements Agent
   }
 
   @Override
+  boolean testConcurrency() {
+    true
+  }
+
+  @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       name endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
       kind INTERNAL
-      errored endpoint == EXCEPTION
       childOf((SpanData) parent)
       if (endpoint == EXCEPTION) {
+        status StatusCode.ERROR
         errorEvent(Exception, EXCEPTION.body)
       }
     }

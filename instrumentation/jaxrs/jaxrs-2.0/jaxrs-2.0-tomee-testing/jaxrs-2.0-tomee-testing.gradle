@@ -1,0 +1,21 @@
+ext {
+  skipPublish = true
+}
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+// add repo for org.gradle:gradle-tooling-api which org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain
+// which is used by jaxrs-2.0-arquillian-testing depends on
+repositories {
+  maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+}
+
+dependencies {
+  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-arquillian-testing')
+  testImplementation "org.apache.tomee:arquillian-tomee-embedded:8.0.6"
+  testImplementation "org.apache.tomee:tomee-embedded:8.0.6"
+  testImplementation "org.apache.tomee:tomee-jaxrs:8.0.6"
+
+  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
+  testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
+  testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-cxf-3.2:javaagent')
+}

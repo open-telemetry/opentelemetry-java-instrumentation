@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public class DefaultGrailsControllerClassInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.grails.core.DefaultGrailsControllerClass");
   }
 

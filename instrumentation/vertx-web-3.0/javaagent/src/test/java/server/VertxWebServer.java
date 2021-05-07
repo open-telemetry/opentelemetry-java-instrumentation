@@ -7,11 +7,13 @@ package server;
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -45,66 +47,74 @@ public class VertxWebServer extends AbstractVerticle {
               }
             });
     router
+        .route(INDEXED_CHILD.getPath())
+        .handler(
+            ctx ->
+                HttpServerTest.controller(
+                    INDEXED_CHILD,
+                    () -> {
+                      Span.current()
+                          .setAttribute(
+                              "test.request.id", Long.parseLong(ctx.request().getParam("id")));
+                      ctx.response().setStatusCode(INDEXED_CHILD.getStatus()).end();
+                      return null;
+                    }));
+    router
         .route(QUERY_PARAM.getPath())
         .handler(
-            ctx -> {
-              HttpServerTest.controller(
-                  QUERY_PARAM,
-                  () -> {
-                    ctx.response()
-                        .setStatusCode(QUERY_PARAM.getStatus())
-                        .end(ctx.request().query());
-                    return null;
-                  });
-            });
+            ctx ->
+                HttpServerTest.controller(
+                    QUERY_PARAM,
+                    () -> {
+                      ctx.response()
+                          .setStatusCode(QUERY_PARAM.getStatus())
+                          .end(ctx.request().query());
+                      return null;
+                    }));
     router
         .route(REDIRECT.getPath())
         .handler(
-            ctx -> {
-              HttpServerTest.controller(
-                  REDIRECT,
-                  () -> {
-                    ctx.response()
-                        .setStatusCode(REDIRECT.getStatus())
-                        .putHeader("location", REDIRECT.getBody())
-                        .end();
-                    return null;
-                  });
-            });
+            ctx ->
+                HttpServerTest.controller(
+                    REDIRECT,
+                    () -> {
+                      ctx.response()
+                          .setStatusCode(REDIRECT.getStatus())
+                          .putHeader("location", REDIRECT.getBody())
+                          .end();
+                      return null;
+                    }));
     router
         .route(ERROR.getPath())
         .handler(
-            ctx -> {
-              HttpServerTest.controller(
-                  ERROR,
-                  () -> {
-                    ctx.response().setStatusCode(ERROR.getStatus()).end(ERROR.getBody());
-                    return null;
-                  });
-            });
+            ctx ->
+                HttpServerTest.controller(
+                    ERROR,
+                    () -> {
+                      ctx.response().setStatusCode(ERROR.getStatus()).end(ERROR.getBody());
+                      return null;
+                    }));
     router
         .route(EXCEPTION.getPath())
         .handler(
-            ctx -> {
-              HttpServerTest.controller(
-                  EXCEPTION,
-                  () -> {
-                    throw new Exception(EXCEPTION.getBody());
-                  });
-            });
+            ctx ->
+                HttpServerTest.controller(
+                    EXCEPTION,
+                    () -> {
+                      throw new Exception(EXCEPTION.getBody());
+                    }));
     router
         .route("/path/:id/param")
         .handler(
-            ctx -> {
-              HttpServerTest.controller(
-                  PATH_PARAM,
-                  () -> {
-                    ctx.response()
-                        .setStatusCode(PATH_PARAM.getStatus())
-                        .end(ctx.request().getParam("id"));
-                    return null;
-                  });
-            });
+            ctx ->
+                HttpServerTest.controller(
+                    PATH_PARAM,
+                    () -> {
+                      ctx.response()
+                          .setStatusCode(PATH_PARAM.getStatus())
+                          .end(ctx.request().getParam("id"));
+                      return null;
+                    }));
 
     vertx
         .createHttpServer()

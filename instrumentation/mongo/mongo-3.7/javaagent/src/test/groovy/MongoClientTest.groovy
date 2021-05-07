@@ -13,17 +13,19 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
+import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest
+import io.opentelemetry.instrumentation.test.AgentTestTrait
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
 import spock.lang.Shared
 
-class MongoClientTest extends MongoBaseTest {
+class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>> implements AgentTestTrait {
 
   @Shared
   MongoClient client
 
-  def setup() throws Exception {
+  def setupSpec() throws Exception {
     client = MongoClients.create(MongoClientSettings.builder()
       .applyToClusterSettings({ builder ->
         builder.hosts(Arrays.asList(
@@ -33,35 +35,25 @@ class MongoClientTest extends MongoBaseTest {
       .build())
   }
 
-  def cleanup() throws Exception {
+  def cleanupSpec() throws Exception {
     client?.close()
     client = null
   }
 
-  def "test create collection"() {
-    setup:
+  @Override
+  void createCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName)
-
-    when:
     db.createCollection(collectionName)
-
-    then:
-    assertTraces(1) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName, dbName, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
   }
 
-  // Tests the fix for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/457
-  // TracingCommandListener might get added multiple times if ClientSettings are built using existing ClientSettings or when calling  a build method twice.
-  // This test asserts that duplicate traces are not created in those cases.
-  def "test create collection with already built ClientSettings"() {
-    setup:
+  @Override
+  void createCollectionNoDescription(String dbName, String collectionName) {
+    MongoDatabase db = MongoClients.create("mongodb://localhost:${port}").getDatabase(dbName)
+    db.createCollection(collectionName)
+  }
+
+  @Override
+  void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
     def clientSettings = MongoClientSettings.builder()
       .applyToClusterSettings({ builder ->
         builder.hosts(Arrays.asList(
@@ -71,91 +63,47 @@ class MongoClientTest extends MongoBaseTest {
       .build()
     def newClientSettings = MongoClientSettings.builder(clientSettings).build()
     MongoDatabase db = MongoClients.create(newClientSettings).getDatabase(dbName)
-
-    when:
     db.createCollection(collectionName)
-
-    then:
-    assertTraces(1) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName, dbName, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
   }
 
-  def "test create collection no description"() {
-    setup:
-    MongoDatabase db = MongoClients.create("mongodb://localhost:" + port).getDatabase(dbName)
-
-    when:
+  @Override
+  void createCollectionCallingBuildTwice(String dbName, String collectionName) {
+    def clientSettings = MongoClientSettings.builder()
+      .applyToClusterSettings({ builder ->
+        builder.hosts(Arrays.asList(
+          new ServerAddress("localhost", port)))
+          .description("some-description")
+      })
+    clientSettings.build()
+    MongoDatabase db = MongoClients.create(clientSettings.build()).getDatabase(dbName)
     db.createCollection(collectionName)
-
-    then:
-    assertTraces(1) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "create", collectionName, dbName, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
   }
 
-  def "test get collection"() {
-    setup:
+  @Override
+  int getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName)
-
-    when:
-    int count = db.getCollection(collectionName).count()
-
-    then:
-    count == 0
-    assertTraces(1) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "count", collectionName, dbName, "{\"count\":\"$collectionName\",\"query\":{}}")
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
+    return db.getCollection(collectionName).count()
   }
 
-  def "test insert"() {
-    setup:
+  @Override
+  MongoCollection<Document> setupInsert(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
     ignoreTracesAndClear(1)
-
-    when:
-    collection.insertOne(new Document("password", "SECRET"))
-
-    then:
-    collection.count() == 1
-    assertTraces(2) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "insert", collectionName, dbName, "{\"insert\":\"$collectionName\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}")
-      }
-      trace(1, 1) {
-        mongoSpan(it, 0, "count", collectionName, dbName, "{\"count\":\"$collectionName\",\"query\":{}}")
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
+    return collection
   }
 
-  def "test update"() {
-    setup:
+  @Override
+  int insert(MongoCollection<Document> collection) {
+    collection.insertOne(new Document("password", "SECRET"))
+    return collection.count()
+  }
+
+  @Override
+  MongoCollection<Document> setupUpdate(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
@@ -164,31 +112,20 @@ class MongoClientTest extends MongoBaseTest {
       return coll
     }
     ignoreTracesAndClear(1)
+    return collection
+  }
 
-    when:
+  @Override
+  int update(MongoCollection<Document> collection) {
     def result = collection.updateOne(
       new BsonDocument("password", new BsonString("OLDPW")),
       new BsonDocument('$set', new BsonDocument("password", new BsonString("NEWPW"))))
-
-    then:
-    result.modifiedCount == 1
-    collection.count() == 1
-    assertTraces(2) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "update", collectionName, dbName, "{\"update\":\"$collectionName\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"\$set\":{\"password\":\"?\"}}}]}")
-      }
-      trace(1, 1) {
-        mongoSpan(it, 0, "count", collectionName, dbName, "{\"count\":\"$collectionName\",\"query\":{}}")
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
+    collection.count()
+    return result.modifiedCount
   }
 
-  def "test delete"() {
-    setup:
+  @Override
+  MongoCollection<Document> setupDelete(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
@@ -197,29 +134,18 @@ class MongoClientTest extends MongoBaseTest {
       return coll
     }
     ignoreTracesAndClear(1)
-
-    when:
-    def result = collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")))
-
-    then:
-    result.deletedCount == 1
-    collection.count() == 0
-    assertTraces(2) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "delete", collectionName, dbName, "{\"delete\":\"$collectionName\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")
-      }
-      trace(1, 1) {
-        mongoSpan(it, 0, "count", collectionName, dbName, "{\"count\":\"$collectionName\",\"query\":{}}")
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
+    return collection
   }
 
-  def "test collection name for getMore command"() {
-    setup:
+  @Override
+  int delete(MongoCollection<Document> collection) {
+    def result = collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")))
+    collection.count()
+    return result.deletedCount
+  }
+
+  @Override
+  MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       def coll = db.getCollection(collectionName)
@@ -227,46 +153,24 @@ class MongoClientTest extends MongoBaseTest {
       return coll
     }
     ignoreTracesAndClear(1)
-
-    when:
-    collection.find().filter(new Document("_id", new Document('$gte', 0)))
-      .batchSize(2).into(new ArrayList())
-
-    then:
-    assertTraces(2) {
-      trace(0, 1) {
-        mongoSpan(it, 0, "find", collectionName, dbName, '{"find":"testCollection","filter":{"_id":{"$gte":"?"}},"batchSize":"?"}')
-      }
-      trace(1, 1) {
-        mongoSpan(it, 0, "getMore", collectionName, dbName, '{"getMore":"?","collection":"?","batchSize":"?"}')
-      }
-    }
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
+    return collection
   }
 
-  def "test error"() {
-    setup:
+  @Override
+  void getMore(MongoCollection<Document> collection) {
+    collection.find().filter(new Document("_id", new Document('$gte', 0)))
+      .batchSize(2).into(new ArrayList())
+  }
+
+  @Override
+  void error(String dbName, String collectionName) {
     MongoCollection<Document> collection = runUnderTrace("setup") {
       MongoDatabase db = client.getDatabase(dbName)
       db.createCollection(collectionName)
       return db.getCollection(collectionName)
     }
     ignoreTracesAndClear(1)
-
-    when:
     collection.updateOne(new BsonDocument(), new BsonDocument())
-
-    then:
-    thrown(IllegalArgumentException)
-    // Unfortunately not caught by our instrumentation.
-    assertTraces(0) {}
-
-    where:
-    dbName = "test_db"
-    collectionName = "testCollection"
   }
 
   def "test client failure"() {
@@ -284,6 +188,6 @@ class MongoClientTest extends MongoBaseTest {
 
     where:
     dbName = "test_db"
-    collectionName = "testCollection"
+    collectionName = createCollectionName()
   }
 }

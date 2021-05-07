@@ -50,7 +50,7 @@ import sun.rmi.transport.Connection;
 public class RmiClientContextInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("sun.rmi.transport.StreamRemoteCall"));
   }
 
@@ -78,6 +78,7 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
         return;
       }
 
+      // caching if a connection can support enhanced format
       ContextStore<Connection, Boolean> knownConnections =
           InstrumentationContext.get(Connection.class, Boolean.class);
 

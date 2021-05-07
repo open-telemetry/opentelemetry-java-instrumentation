@@ -10,10 +10,10 @@ import org.springframework.web.reactive.function.client.ClientRequest;
 
 class HttpHeadersInjectAdapter implements TextMapSetter<ClientRequest.Builder> {
 
-  public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
+  static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 
   @Override
   public void set(ClientRequest.Builder carrier, String key, String value) {
-    carrier.header(key, value);
+    carrier.headers(httpHeaders -> httpHeaders.set(key, value));
   }
 }

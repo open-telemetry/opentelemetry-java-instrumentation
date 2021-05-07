@@ -52,7 +52,7 @@ public interface TypeInstrumentation {
    * Returns a type matcher defining which classes should undergo transformations defined by advices
    * returned by {@link #transformers()}.
    */
-  ElementMatcher<? super TypeDescription> typeMatcher();
+  ElementMatcher<TypeDescription> typeMatcher();
 
   /**
    * Keys of the returned map are method matchers, values are full names of advice classes that will

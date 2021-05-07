@@ -54,7 +54,7 @@ public class TapestryInstrumentationModule extends InstrumentationModule {
   public static class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.apache.tapestry5.services.InitializeActivePageName");
     }
 
@@ -106,7 +106,7 @@ public class TapestryInstrumentationModule extends InstrumentationModule {
   public static class ComponentPageElementImplInstrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.apache.tapestry5.internal.structure.ComponentPageElementImpl");
     }
 

@@ -61,9 +61,10 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Java8BytecodeBridge.currentContext();
       Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
+      // TODO (trask) is it important to check serverSpan != null here?
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
-        tracer().onRequest(parentContext, serverSpan, request);
+        tracer().updateServerSpanName(parentContext, request);
         // Now create a span for handler/controller execution.
         context = tracer().startHandlerSpan(parentContext, handler);
         if (context != null) {

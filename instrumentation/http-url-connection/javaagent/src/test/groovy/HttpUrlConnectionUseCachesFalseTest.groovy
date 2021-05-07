@@ -6,14 +6,16 @@
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import spock.lang.Timeout
 
-@Timeout(5)
-class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest implements AgentTestTrait {
+class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpURLConnection> implements AgentTestTrait {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    HttpURLConnection connection = uri.toURL().openConnection()
+  HttpURLConnection buildRequest(String method, URI uri, Map<String, String> headers) {
+    return uri.toURL().openConnection() as HttpURLConnection
+  }
+
+  @Override
+  int sendRequest(HttpURLConnection connection, String method, URI uri, Map<String, String> headers) {
     try {
       connection.setRequestMethod(method)
       headers.each { connection.setRequestProperty(it.key, it.value) }
@@ -25,7 +27,6 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest implements Agen
       assert Span.current() == parentSpan
       stream.readLines()
       stream.close()
-      callback?.call()
       return connection.getResponseCode()
     } finally {
       connection.disconnect()
@@ -38,7 +39,18 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest implements Agen
   }
 
   @Override
-  Integer statusOnRedirectError() {
+  Integer responseCodeOnRedirectError() {
     return 302
+  }
+
+  @Override
+  boolean testReusedRequest() {
+    // HttpURLConnection can't be reused
+    return false
+  }
+
+  @Override
+  boolean testCallback() {
+    return false
   }
 }

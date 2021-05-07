@@ -77,12 +77,4 @@ class GlassFishServerTest extends HttpServerTest<GlassFish> implements AgentTest
         break
     }
   }
-
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    if (endpoint == NOT_FOUND) {
-      return getContextPath() + "/*"
-    }
-    return super.expectedServerSpanName(endpoint)
-  }
 }

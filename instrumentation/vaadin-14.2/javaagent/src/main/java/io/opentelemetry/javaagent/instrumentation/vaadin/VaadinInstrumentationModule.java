@@ -63,7 +63,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
   public static class VaadinServiceInstrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("com.vaadin.flow.server.VaadinService");
     }
 
@@ -108,7 +108,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return implementsInterface(named("com.vaadin.flow.server.RequestHandler"));
     }
 
@@ -156,7 +156,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
   public static class UiInstrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("com.vaadin.flow.component.UI");
     }
 
@@ -181,7 +181,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
   public static class RouterInstrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("com.vaadin.flow.router.Router");
     }
 
@@ -211,7 +211,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
   public static class JavaScriptBootstrapUiInstrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("com.vaadin.flow.component.internal.JavaScriptBootstrapUI");
     }
 
@@ -239,7 +239,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return implementsInterface(
           named("com.vaadin.flow.server.communication.rpc.RpcInvocationHandler"));
     }
@@ -282,7 +282,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
   public static class ClientCallableRpcInstrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named(
           "com.vaadin.flow.server.communication.rpc.PublishedServerEventHandlerRpcHandler");
     }

@@ -2,7 +2,7 @@ apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   api project(':testing-common')
-  api group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
+  api group: 'org.testcontainers', name: 'mongodb', version: versions.testcontainers
 
   implementation deps.groovy
   implementation deps.opentelemetryApi

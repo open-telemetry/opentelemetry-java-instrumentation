@@ -22,8 +22,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class OpenTelemetryMetricsInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.api.metrics.GlobalMetricsProvider");
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("application.io.opentelemetry.api.metrics.GlobalMeterProvider");
   }
 
   @Override

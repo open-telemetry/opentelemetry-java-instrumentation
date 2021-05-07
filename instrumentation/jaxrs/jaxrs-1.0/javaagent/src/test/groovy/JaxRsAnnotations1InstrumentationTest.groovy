@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -20,12 +22,13 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
 
   def "instrumentation can be used as root span and resource is set to METHOD PATH"() {
     setup:
-    new Jax() {
+    def jax = new Jax() {
       @POST
       @Path("/a")
       void call() {
       }
-    }.call()
+    }
+    jax.call()
 
     expect:
     assertTraces(1) {
@@ -33,6 +36,8 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
         span(0) {
           name "/a"
           attributes {
+            "${SemanticAttributes.CODE_NAMESPACE.key}" jax.getClass().getName()
+            "${SemanticAttributes.CODE_FUNCTION.key}" "call"
           }
         }
       }
@@ -51,6 +56,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
       trace(0, 2) {
         span(0) {
           name paramName
+          kind SERVER
           hasNoParent()
           attributes {
           }
@@ -59,6 +65,8 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
           name "${className}.call"
           childOf span(0)
           attributes {
+            "${SemanticAttributes.CODE_NAMESPACE.key}" obj.getClass().getName()
+            "${SemanticAttributes.CODE_FUNCTION.key}" "call"
           }
         }
       }
@@ -137,6 +145,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
       trace(0, 1) {
         span(0) {
           name "test"
+          kind SERVER
           attributes {
           }
         }

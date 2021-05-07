@@ -24,13 +24,36 @@ import com.linecorp.armeria.server.HttpService
 import com.linecorp.armeria.server.Server
 import com.linecorp.armeria.server.ServerBuilder
 import com.linecorp.armeria.server.ServiceRequestContext
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.function.Function
 
 abstract class AbstractArmeriaHttpServerTest extends HttpServerTest<Server> {
 
   abstract ServerBuilder configureServer(ServerBuilder serverBuilder)
+
+  @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_HOST,
+      SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
+      SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+      SemanticAttributes.HTTP_ROUTE,
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_SERVER_NAME,
+      SemanticAttributes.HTTP_TARGET,
+      SemanticAttributes.NET_PEER_NAME,
+      SemanticAttributes.NET_TRANSPORT
+    ]
+  }
+
+  @Override
+  boolean testNotFound() {
+    // currently span name is /notFound which indicates it won't be low-cardinality
+    false
+  }
 
   @Override
   Server startServer(int port) {
@@ -44,31 +67,31 @@ abstract class AbstractArmeriaHttpServerTest extends HttpServerTest<Server> {
       }
     }
 
-    sb.service(REDIRECT.path) {ctx, req ->
+    sb.service(REDIRECT.path) { ctx, req ->
       controller(REDIRECT) {
         HttpResponse.of(ResponseHeaders.of(HttpStatus.valueOf(REDIRECT.status), HttpHeaderNames.LOCATION, REDIRECT.body))
       }
     }
 
-    sb.service(ERROR.path) {ctx, req ->
+    sb.service(ERROR.path) { ctx, req ->
       controller(ERROR) {
         HttpResponse.of(HttpStatus.valueOf(ERROR.status), MediaType.PLAIN_TEXT_UTF_8, ERROR.body)
       }
     }
 
-    sb.service(EXCEPTION.path) {ctx, req ->
+    sb.service(EXCEPTION.path) { ctx, req ->
       controller(EXCEPTION) {
         throw new Exception(EXCEPTION.body)
       }
     }
 
-    sb.service("/query") {ctx, req ->
+    sb.service("/query") { ctx, req ->
       controller(QUERY_PARAM) {
         HttpResponse.of(HttpStatus.valueOf(QUERY_PARAM.status), MediaType.PLAIN_TEXT_UTF_8, "some=${QueryParams.fromQueryString(ctx.query()).get("some")}")
       }
     }
 
-    sb.service("/path/:id/param") {ctx, req ->
+    sb.service("/path/:id/param") { ctx, req ->
       controller(PATH_PARAM) {
         HttpResponse.of(HttpStatus.valueOf(PATH_PARAM.status), MediaType.PLAIN_TEXT_UTF_8, ctx.pathParam("id"))
       }

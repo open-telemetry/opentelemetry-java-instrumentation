@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.context.ContextPropagationDebug;
+import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /** Utils for concurrent instrumentations. */
 public class ExecutorInstrumentationUtils {
+  private static final String AGENT_CLASSLOADER_NAME =
+      "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
 
   private static final ClassValue<Boolean> INSTRUMENTED_RUNNABLE_CLASS =
       new ClassValue<Boolean>() {
@@ -45,6 +45,13 @@ public class ExecutorInstrumentationUtils {
             return false;
           }
 
+          // HttpConnection implements Runnable. When async request is completed HttpConnection
+          // may be sent to process next request while context from previous request hasn't been
+          // cleared yet.
+          if (taskClass.getName().equals("org.eclipse.jetty.server.HttpConnection")) {
+            return false;
+          }
+
           Class<?> enclosingClass = taskClass.getEnclosingClass();
           if (enclosingClass != null) {
             // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to
@@ -73,6 +80,32 @@ public class ExecutorInstrumentationUtils {
             if (enclosingClass.getName().equals("com.squareup.okhttp.ConnectionPool")) {
               return false;
             }
+
+            // Avoid instrumenting internal OrderedExecutor worker class
+            if (enclosingClass
+                .getName()
+                .equals("org.hornetq.utils.OrderedExecutorFactory$OrderedExecutor")) {
+              return false;
+            }
+          }
+
+          // Don't trace runnables from libraries that are packaged inside the agent.
+          // Although GlobalClassloaderIgnoresMatcher excludes these classes from instrumentation
+          // their instances can still be passed to executors which we have instrumented so we need
+          // to exclude them here too.
+          ClassLoader taskClassLoader = taskClass.getClassLoader();
+          if (taskClassLoader != null
+              && AGENT_CLASSLOADER_NAME.equals(taskClassLoader.getClass().getName())) {
+            return false;
+          }
+
+          if (taskClass.getName().startsWith("ratpack.exec.internal.")) {
+            // Context is passed through Netty channels in Ratpack as executor instrumentation is
+            // not suitable. As the context that would be propagated via executor would be
+            // incorrect, skip the propagation. Not checking for concrete class names as this covers
+            // anonymous classes from ratpack.exec.internal.DefaultExecution and
+            // ratpack.exec.internal.DefaultExecController.
+            return false;
           }
 
           return true;
@@ -111,12 +144,7 @@ public class ExecutorInstrumentationUtils {
   public static <T> State setupState(ContextStore<T, State> contextStore, T task, Context context) {
     State state = contextStore.putIfAbsent(task, State.FACTORY);
     if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
-      List<StackTraceElement[]> locations = ContextPropagationDebug.getLocations(context);
-      if (locations == null) {
-        locations = new CopyOnWriteArrayList<>();
-        context = ContextPropagationDebug.withLocations(locations, context);
-      }
-      locations.add(0, new Exception().getStackTrace());
+      context = ContextPropagationDebug.appendLocations(context, new Exception().getStackTrace());
     }
     state.setParentContext(context);
     return state;

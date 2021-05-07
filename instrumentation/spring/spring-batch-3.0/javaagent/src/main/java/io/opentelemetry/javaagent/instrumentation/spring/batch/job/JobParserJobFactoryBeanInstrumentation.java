@@ -28,7 +28,7 @@ import org.springframework.batch.core.configuration.xml.JobParserJobFactoryBean;
 
 public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     // Spring Batch XML config
     return named("org.springframework.batch.core.configuration.xml.JobParserJobFactoryBean");
   }

@@ -6,12 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.tooling.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
@@ -21,8 +25,8 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] additionalHelperClassNames() {
-    return new String[] {"io.opentelemetry.extension.aws.AwsXrayPropagator"};
+  public boolean isHelperClass(String className) {
+    return className.startsWith("io.opentelemetry.extension.aws.");
   }
 
   /**
@@ -45,6 +49,23 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new AwsSdkInitializationInstrumentation());
+    return Collections.singletonList(new ResourceInjectingTypeInstrumentation());
+  }
+
+  // A type instrumentation is needed to trigger resource injection.
+  public static class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      // This is essentially the entry point of the AWS SDK, all clients implement it. We can ensure
+      // our interceptor service definition is injected as early as possible if we typematch against
+      // it.
+      return named("software.amazon.awssdk.core.SdkClient");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      // Nothing to transform, this type instrumentation is only used for injecting resources.
+      return Collections.emptyMap();
+    }
   }
 }

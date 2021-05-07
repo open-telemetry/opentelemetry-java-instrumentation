@@ -6,12 +6,13 @@
 package io.opentelemetry.instrumentation.awslambda.v1_0
 
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.github.stefanbirkner.systemlambda.SystemLambda
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecification {
 
@@ -67,7 +68,7 @@ abstract class AbstractAwsLambdaRequestHandlerTest extends InstrumentationSpecif
         span(0) {
           name("my_function")
           kind SERVER
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException, "bad argument")
           attributes {
             "${SemanticAttributes.FAAS_EXECUTION.key}" "1-22-333"

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.webclient;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.httpclients.HttpClientsProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,13 +23,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 @ConditionalOnClass(WebClient.class)
 @EnableConfigurationProperties(HttpClientsProperties.class)
 @ConditionalOnProperty(
-    prefix = "opentelemetry.trace.httpclients",
+    prefix = "otel.springboot.httpclients",
     name = "enabled",
     matchIfMissing = true)
 public class WebClientAutoConfiguration {
 
   @Bean
-  public WebClientBeanPostProcessor otelWebClientBeanPostProcessor() {
-    return new WebClientBeanPostProcessor();
+  public WebClientBeanPostProcessor otelWebClientBeanPostProcessor(OpenTelemetry openTelemetry) {
+    return new WebClientBeanPostProcessor(openTelemetry);
   }
 }

@@ -5,11 +5,17 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.apache.dubbo.common.utils.NetUtils
 import org.apache.dubbo.config.ApplicationConfig
 import org.apache.dubbo.config.ProtocolConfig
 import org.apache.dubbo.config.ReferenceConfig
@@ -21,22 +27,21 @@ import org.apache.dubbo.rpc.service.GenericService
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
 @Unroll
 abstract class AbstractDubboTest extends InstrumentationSpecification {
 
   @Shared
   def protocolConfig = new ProtocolConfig()
 
+  def setupSpec() {
+    NetUtils.LOCAL_ADDRESS = InetAddress.getLoopbackAddress()
+  }
+
   ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>()
     reference.setInterface(HelloService)
     reference.setGeneric("true")
-    reference.setUrl("dubbo://localhost:" + port)
+    reference.setUrl("dubbo://localhost:" + port + "/?timeout=30000")
     return reference
   }
 
@@ -88,7 +93,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           name "org.apache.dubbo.rpc.service.GenericService/\$invoke"
           kind CLIENT
           childOf span(0)
-          errored false
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
             "${SemanticAttributes.RPC_SERVICE.key}" "org.apache.dubbo.rpc.service.GenericService"
@@ -101,7 +105,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           name "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
           kind SERVER
           childOf span(1)
-          errored false
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
             "${SemanticAttributes.RPC_SERVICE.key}" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
@@ -157,7 +160,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           name "org.apache.dubbo.rpc.service.GenericService/\$invokeAsync"
           kind CLIENT
           childOf span(0)
-          errored false
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
             "${SemanticAttributes.RPC_SERVICE.key}" "org.apache.dubbo.rpc.service.GenericService"
@@ -170,7 +172,6 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           name "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
           kind SERVER
           childOf span(1)
-          errored false
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "dubbo"
             "${SemanticAttributes.RPC_SERVICE.key}" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"

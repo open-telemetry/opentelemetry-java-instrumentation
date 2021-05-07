@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.googlehttpclient.GoogleHttpClientTracer.tracer;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -39,18 +38,13 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public Map<String, String> contextStore() {
-    return singletonMap("com.google.api.client.http.HttpRequest", Context.class.getName());
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HttpRequestInstrumentation());
   }
 
   public static class HttpRequestInstrumentation implements TypeInstrumentation {
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       // HttpRequest is a final class.  Only need to instrument it exactly
       // Note: the rest of com.google.api is ignored in AdditionalLibraryIgnoresMatcher to speed
       // things up

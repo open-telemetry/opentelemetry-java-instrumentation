@@ -22,7 +22,7 @@ dependencies {
   testInstrumentation project(":instrumentation:jaxws:jws-1.1:javaagent")
 
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
-  testInstrumentation project(':instrumentation:jetty-8.0:javaagent')
+  testInstrumentation project(':instrumentation:jetty:jetty-8.0:javaagent')
 
   testImplementation group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.11'

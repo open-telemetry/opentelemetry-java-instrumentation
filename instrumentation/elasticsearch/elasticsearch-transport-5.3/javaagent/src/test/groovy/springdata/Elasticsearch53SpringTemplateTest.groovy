@@ -6,6 +6,7 @@
 package springdata
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
@@ -93,7 +94,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
         span(0) {
           name "RefreshAction"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent IndexNotFoundException, "no such index"
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"

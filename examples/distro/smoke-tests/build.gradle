@@ -16,6 +16,8 @@ dependencies {
 tasks.test {
   useJUnitPlatform()
 
+  testLogging.showStandardStreams = true
+
   def shadowTask = project(":agent").tasks.shadowJar
   inputs.files(layout.files(shadowTask))
 

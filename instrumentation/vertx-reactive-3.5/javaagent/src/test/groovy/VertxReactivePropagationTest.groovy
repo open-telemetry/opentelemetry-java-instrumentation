@@ -53,7 +53,6 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
         span(0) {
           name "/listProducts"
           kind SERVER
-          errored false
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -72,7 +71,6 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           name "SELECT test.products"
           kind CLIENT
           childOf span(2)
-          errored false
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
             "${SemanticAttributes.DB_NAME.key}" "test"

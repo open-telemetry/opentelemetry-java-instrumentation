@@ -30,7 +30,8 @@ abstract class AppServerTest extends SmokeTest {
     serverVersion = appServer.version()
     jdk = appServer.jdk()
 
-    isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
+    isWindows = System.getProperty("os.name").toLowerCase().contains("windows") &&
+      "1" != System.getenv("USE_LINUX_CONTAINERS")
     startTarget(jdk, serverVersion, isWindows)
   }
 
@@ -42,7 +43,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20210316.657616194"
+    String extraTag = "20210428.792292726"
     String fullSuffix = "-${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + fullSuffix
   }

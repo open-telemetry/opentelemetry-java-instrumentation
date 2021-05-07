@@ -372,38 +372,34 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 ##### Enabling/Disabling Features
 
-|Feature   				|Property   									|Default Value  |ConditionalOnClass
-|---					|---											|---			|---
-|spring-web  	 		|opentelemetry.trace.httpclients.enabled   		|true   		|RestTemplate
-|spring-webmvc   		|opentelemetry.trace.httpclients.enabled   		|true   		|OncePerRequestFilter
-|spring-webflux   		|opentelemetry.trace.httpclients.enabled 		|true   		|WebClient
-|@WithSpan   			|opentelemetry.trace.aspects.enabled 	 		|true   		|WithSpan, Aspect
-|Otlp Exporter		    |opentelemetry.trace.exporters.otlp.enabled		|true   		|OtlpGrpcSpanExporter
-|Jaeger Exporter		|opentelemetry.trace.exporters.jaeger.enabled	|true   		|JaegerGrpcSpanExporter
-|Zipkin Exporter		|opentelemetry.trace.exporters.zipkin.enabled	|true   		|ZipkinSpanExporter
-|Logging Exporter	    |opentelemetry.trace.exporters.logging.enabled	|true   		|LoggingSpanExporter
+| Feature          | Property                                 | Default Value | ConditionalOnClass     |
+|------------------|------------------------------------------|---------------|------------------------|
+| spring-web       | otel.springboot.httpclients.enabled | true          | RestTemplate           |
+| spring-webmvc    | otel.springboot.httpclients.enabled | true          | OncePerRequestFilter   |
+| spring-webflux   | otel.springboot.httpclients.enabled | true          | WebClient              |
+| @WithSpan        | otel.springboot.aspects.enabled     | true          | WithSpan, Aspect       |
+| Otlp Exporter    | otel.exporter.otlp.enabled               | true          | OtlpGrpcSpanExporter   |
+| Jaeger Exporter  | otel.exporter.jaeger.enabled             | true          | JaegerGrpcSpanExporter |
+| Zipkin Exporter  | otel.exporter.zipkin.enabled             | true          | ZipkinSpanExporter     |
+| Logging Exporter | otel.exporter.logging.enabled            | true          | LoggingSpanExporter    |
 
-<!-- Slf4j Log Correlation  opentelemetry.trace.loggers.slf4j.enabled		true   		org.slf4j.MDC -->
+<!-- Slf4j Log Correlation  otel.springboot.loggers.slf4j.enabled		true   		org.slf4j.MDC -->
 
 ##### Exporter Properties
 
-|Feature   				|Property   										|Default Value
-|---					|---												|---
-|Otlp Exporter  	 	|opentelemetry.trace.exporters.otlp.servicename 	|unknown
-|				  		|opentelemetry.trace.exporters.otlp.endpoint		|localhost:55680
-|				   		|opentelemetry.trace.exporters.otlp.spantimeout		|1s
-|Jaeger Exporter  	 	|opentelemetry.trace.exporters.jaeger.servicename 	|unknown
-|				  		|opentelemetry.trace.exporters.jaeger.endpoint		|localhost:14250
-|				   		|opentelemetry.trace.exporters.jaeger.spantimeout	|1s
-|Zipkin Exporter 		|opentelemetry.trace.exporters.jaeger.servicename	|unknown
-|				 		|opentelemetry.trace.exporters.jaeger.endpoint		|http://localhost:9411/api/v2/spans
+| Feature         | Property                      | Default Value                      |
+|-----------------|-------------------------------|------------------------------------|
+| Otlp Exporter   | otel.exporter.otlp.endpoint   | localhost:55680                    |
+|                 | otel.exporter.otlp.timeout    | 1s                                 |
+| Jaeger Exporter | otel.exporter.jaeger.endpoint | localhost:14250                    |
+|                 | otel.exporter.jaeger.timeout  | 1s                                 |
+| Zipkin Exporter | otel.exporter.jaeger.endpoint | http://localhost:9411/api/v2/spans |
 
 ##### Tracer Properties
 
-|Feature   				|Property   										|Default Value
-|---					|---												|---
-|Tracer			 |opentelemetry.trace.tracer.samplerprobability 		|1.0
-
+| Feature | Property                       | Default Value |
+|---------|--------------------------------|---------------|
+| Tracer  | otel.traces.sampler.probability | 1.0           |
 
 ### Starter Guide
 

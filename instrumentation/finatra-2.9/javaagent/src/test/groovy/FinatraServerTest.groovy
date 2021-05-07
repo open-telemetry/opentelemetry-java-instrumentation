@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import com.twitter.finatra.http.HttpServer
@@ -48,19 +49,18 @@ class FinatraServerTest extends HttpServerTest<HttpServer> implements AgentTestT
   }
 
   @Override
-  boolean hasHandlerSpan() {
-    return true
-  }
-
-  @Override
-  boolean testNotFound() {
-    // Resource name is set to "GET /notFound"
-    false
-  }
-
-  @Override
   void stopServer(HttpServer httpServer) {
     Await.ready(httpServer.close(), TIMEOUT)
+  }
+
+  @Override
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
+    endpoint != NOT_FOUND
+  }
+
+  @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    return endpoint == NOT_FOUND ? "HTTP GET" : super.expectedServerSpanName(endpoint)
   }
 
   @Override
@@ -76,7 +76,6 @@ class FinatraServerTest extends HttpServerTest<HttpServer> implements AgentTestT
       childOf(parent as SpanData)
       // Finatra doesn't propagate the stack trace or exception to the instrumentation
       // so the normal errorAttributes() method can't be used
-      errored false
       attributes {
       }
     }

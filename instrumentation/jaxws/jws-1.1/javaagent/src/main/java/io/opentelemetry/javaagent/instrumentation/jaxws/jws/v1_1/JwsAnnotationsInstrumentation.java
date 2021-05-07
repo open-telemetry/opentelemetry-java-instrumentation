@@ -39,7 +39,7 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return hasInterface(isAnnotatedWith(named(JWS_WEB_SERVICE_ANNOTATION)))
         .or(isAnnotatedWith(named(JWS_WEB_SERVICE_ANNOTATION)));
   }

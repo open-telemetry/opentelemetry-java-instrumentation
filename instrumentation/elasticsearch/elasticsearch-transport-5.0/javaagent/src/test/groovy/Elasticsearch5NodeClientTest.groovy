@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
@@ -68,10 +69,10 @@ class Elasticsearch5NodeClientTest extends AgentInstrumentationSpecification {
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest())
 
-    def status = result.get().status
+    def clusterHealthStatus = result.get().status
 
     expect:
-    status.name() == "GREEN"
+    clusterHealthStatus.name() == "GREEN"
 
     assertTraces(1) {
       trace(0, 1) {
@@ -101,7 +102,7 @@ class Elasticsearch5NodeClientTest extends AgentInstrumentationSpecification {
       trace(0, 1) {
         span(0) {
           name "GetAction"
-          errored true
+          status ERROR
           errorEvent IndexNotFoundException, "no such index"
           kind CLIENT
           attributes {

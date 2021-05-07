@@ -33,7 +33,14 @@ dependencies {
 
   testLibrary group: 'io.grpc', name: 'grpc-netty', version: grpcVersion
   testLibrary group: 'io.grpc', name: 'grpc-protobuf', version: grpcVersion
+  testLibrary group: 'io.grpc', name: 'grpc-services', version: grpcVersion
   testLibrary group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
 
   testImplementation project(':instrumentation:grpc-1.5:testing')
+}
+
+test {
+  // The agent context debug mechanism isn't compatible with the bridge approach which may add a
+  // gRPC context to the root.
+  jvmArgs "-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false"
 }

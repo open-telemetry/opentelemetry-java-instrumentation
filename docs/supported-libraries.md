@@ -1,5 +1,5 @@
 
-# Supported libraries, frameworks, and application servers
+# Supported libraries, frameworks, application servers, and JVMs
 
 We automatically instrument and support a huge number of libraries, frameworks,
 and application servers... right out of the box!
@@ -11,6 +11,7 @@ or [contributing](../CONTRIBUTING.md).
 
   * [Libraries / Frameworks](#libraries---frameworks)
   * [Application Servers](#application-servers)
+  * [JVMs and Operating Systems](#jvms-and-operating-systems)
   * [Disabled instrumentations](#disabled-instrumentations)
     + [Grizzly instrumentation](#grizzly-instrumentation)
 
@@ -21,6 +22,10 @@ These are the supported libraries and frameworks:
 | Library/Framework                                                                                                                     | Versions                       |
 |---------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
 | [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html)                                                                    | 10.0+                          |
+| [Apache Axis2](https://axis.apache.org/axis2/java/core/)                                                                              | 1.6+                           |
+| [Apache CXF JAX-RS](https://cxf.apache.org/)                                                                                          | 3.2+                           |
+| [Apache CXF JAX-RS Client](https://cxf.apache.org/)                                                                                   | 3.0+                           |
+| [Apache CXF JAX-WS](https://cxf.apache.org/)                                                                                          | 3.0+                           |
 | [Apache Dubbo](https://github.com/apache/dubbo/)                                                                                      | 2.7+ (not including 3.x yet)   |
 | [Apache HttpAsyncClient](https://hc.apache.org/index.html)                                                                            | 4.1+                           |
 | [Apache HttpClient](https://hc.apache.org/index.html)                                                                                 | 2.0+                           |
@@ -32,7 +37,7 @@ These are the supported libraries and frameworks:
 | [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)                                                          | 1.0+                           |
 | [AWS SDK](https://aws.amazon.com/sdk-for-java/)                                                                                       | 1.11.x and 2.2.0+              |
 | [Cassandra Driver](https://github.com/datastax/java-driver)                                                                           | 3.0+                           |
-| [Couchbase Client](https://github.com/couchbase/couchbase-java-client)                                                                | 2.0+ (not including 3.x yet)   |
+| [Couchbase Client](https://github.com/couchbase/couchbase-java-client)                                                                | 2.0+ and 3.1+                  |
 | [Dropwizard Views](https://www.dropwizard.io/en/latest/manual/views.html)                                                             | 0.7+                           |
 | [Elasticsearch API](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/index.html)                                 | 5.0+                           |
 | [Elasticsearch REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/index.html)                        | 5.0+                           |
@@ -52,21 +57,23 @@ These are the supported libraries and frameworks:
 | [JAX-WS](https://jakarta.ee/specifications/xml-web-services/2.3/apidocs/javax/xml/ws/package-summary.html)                            | 2.0+ (not including 3.x yet)   |
 | [JDBC](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/package-summary.html)                                     | Java 7+                        |
 | [Jedis](https://github.com/xetorthio/jedis)                                                                                           | 1.4+                           |
+| [Jersey](https://eclipse-ee4j.github.io/jersey/)                                                                                      | 2.0+ (not including 3.x yet)   |
 | [JMS](https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html)                                                   | 1.1+                           |
 | [JSP](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/jsp/package-summary.html)                                           | 2.3+                           |
 | [Kafka](https://kafka.apache.org/20/javadoc/overview-summary.html)                                                                    | 0.11+                          |
 | [khttp](https://khttp.readthedocs.io)                                                                                                 | 0.1+                           |
 | [Kubernetes Client](https://github.com/kubernetes-client/java)                                                                        | 7.0+                           |
-| [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+ (not including 6.x yet)   |
+| [Lettuce](https://github.com/lettuce-io/lettuce-core)                                                                                 | 4.0+                           |
 | [Log4j 1](https://logging.apache.org/log4j/1.2/)                                                                                      | 1.2+                           |
 | [Log4j 2](https://logging.apache.org/log4j/2.x/)                                                                                      | 2.7+                           |
 | [Logback](http://logback.qos.ch/)                                                                                                     | 1.0+                           |
+| [Metro](https://projects.eclipse.org/projects/ee4j.metro)                                                                             | 2.2+ (not including 3.x yet)   |
 | [Mojarra](https://projects.eclipse.org/projects/ee4j.mojarra)                                                                         | 1.2+ (not including 3.x yet)   |
 | [MongoDB Drivers](https://mongodb.github.io/mongo-java-driver/)                                                                       | 3.3+                           |
 | [MyFaces](https://myfaces.apache.org/)                                                                                                | 1.2+ (not including 3.x yet)   |
 | [Netty](https://github.com/netty/netty)                                                                                               | 3.8+                           |
 | [OkHttp](https://github.com/square/okhttp/)                                                                                           | 3.0+                           |
-| [Play](https://github.com/playframework/playframework)                                                                                | 2.3+ (not including 2.8.x yet) |
+| [Play](https://github.com/playframework/playframework)                                                                                | 2.4+ (not including 2.8.x yet) |
 | [Play WS](https://github.com/playframework/play-ws)                                                                                   | 1.0+                           |
 | [RabbitMQ Client](https://github.com/rabbitmq/rabbitmq-java-client)                                                                   | 2.7+                           |
 | [Ratpack](https://github.com/ratpack/ratpack)                                                                                         | 1.4+                           |
@@ -74,9 +81,10 @@ These are the supported libraries and frameworks:
 | [Reactor Netty](https://github.com/reactor/reactor-netty)                                                                             | 0.9+                           |
 | [Rediscala](https://github.com/etaty/rediscala)                                                                                       | 1.8+                           |
 | [Redisson](https://github.com/redisson/redisson)                                                                                      | 3.0+                           |
+| [RESTEasy](https://resteasy.github.io/)                                                                                               | 3.0+                           |
 | [RMI](https://docs.oracle.com/en/java/javase/11/docs/api/java.rmi/java/rmi/package-summary.html)                                      | Java 7+                        |
 | [RxJava](https://github.com/ReactiveX/RxJava)                                                                                         | 1.0+                           |
-| [Servlet](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/package-summary.html)                                           | 2.2+ (not including 5.x yet)   |
+| [Servlet](https://javaee.github.io/javaee-spec/javadocs/javax/servlet/package-summary.html)                                           | 2.2+                           |
 | [Spark Web Framework](https://github.com/perwendel/spark)                                                                             | 2.3+                           |
 | [Spring Batch](https://spring.io/projects/spring-batch)                                                                               | 3.0+                           |
 | [Spring Data](https://spring.io/projects/spring-data)                                                                                 | 1.8+                           |
@@ -111,6 +119,15 @@ These are the supported application servers:
 | [Websphere Liberty Profile](https://www.ibm.com/cloud/websphere-liberty)                  | 20.0.0.12                   | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
 | [WildFly](https://www.wildfly.org/)                                                       | 13.0.x                      | OpenJDK 8        | Ubuntu 18, Windows Server 2019 |
 | [WildFly](https://www.wildfly.org/)                                                       | 17.0.1, 21.0.0              | OpenJDK 8, 11    | Ubuntu 18, Windows Server 2019 |
+
+## JVMs and operating systems
+
+These are the supported JVM version and OS configurations which the javaagent is tested on:
+
+| JVM                                               | Versions  | OS                             |
+| ------------------------------------------------- | --------- | ------------------------------ |
+| [AdoptOpenJDK Hotspot](https://adoptopenjdk.net/) | 8, 11, 15 | Ubuntu 18, Windows Server 2019 |
+| [AdoptOpenJDK OpenJ9](https://adoptopenjdk.net/)  | 8, 11, 15 | Ubuntu 18, Windows Server 2019 |
 
 ## Disabled instrumentations
 

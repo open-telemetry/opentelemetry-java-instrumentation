@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import com.google.api.client.http.GenericUrl
 import com.google.api.client.http.HttpRequest
@@ -14,20 +15,25 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import spock.lang.Shared
 
-abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements AgentTestTrait {
+abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
 
   @Shared
   def requestFactory = new NetHttpTransport().createRequestFactory()
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    doRequest(method, uri, headers, callback, false)
+  boolean testCallback() {
+    // executeAsync does not actually allow asynchronous execution since it returns a standard
+    // Future which cannot have callbacks attached. We instrument execute and executeAsync
+    // differently so test both but do not need to run our normal asynchronous tests, which check
+    // context propagation, as there is no possible context propagation.
+    return false
   }
 
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback, boolean throwExceptionOnError) {
-    GenericUrl genericUrl = new GenericUrl(uri)
+  @Override
+  HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+    def genericUrl = new GenericUrl(uri)
 
-    HttpRequest request = requestFactory.buildRequest(method, genericUrl, null)
+    def request = requestFactory.buildRequest(method, genericUrl, null)
     request.connectTimeout = CONNECT_TIMEOUT_MS
 
     // GenericData::putAll method converts all known http headers to List<String>
@@ -37,15 +43,16 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
       -> [(name): (ci.getFieldInfo(name) != null ? [value] : value.toLowerCase())]
     })
 
-    request.setThrowExceptionOnExecuteError(throwExceptionOnError)
-
-    HttpResponse response = executeRequest(request)
-    callback?.call()
-
-    return response.getStatusCode()
+    request.setThrowExceptionOnExecuteError(false)
+    return request
   }
 
-  abstract HttpResponse executeRequest(HttpRequest request)
+  @Override
+  int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
+    return sendRequest(request).getStatusCode()
+  }
+
+  abstract HttpResponse sendRequest(HttpRequest request)
 
   @Override
   boolean testCircularRedirects() {
@@ -58,15 +65,15 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest implements Ag
     def uri = server.address.resolve("/error")
 
     when:
-    def status = doRequest(method, uri)
+    def responseCode = doRequest(method, uri)
 
     then:
-    status == 500
+    responseCode == 500
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
           kind CLIENT
-          errored true
+          status ERROR
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"

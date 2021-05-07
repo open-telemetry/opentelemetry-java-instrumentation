@@ -125,16 +125,6 @@ class SpanAssert {
     checked.status = true
   }
 
-  def errored(boolean errored) {
-    if (errored) {
-      // comparing only canonical code, since description may be different
-      assert span.status.statusCode == StatusCode.ERROR
-    } else {
-      assert span.status.statusCode == StatusCode.UNSET
-    }
-    checked.status = true
-  }
-
   def errorEvent(Class<Throwable> errorType) {
     errorEvent(errorType, null)
   }
@@ -158,7 +148,10 @@ class SpanAssert {
 
   void assertDefaults() {
     if (!checked.status) {
-      errored(false)
+      status(StatusCode.UNSET)
+    }
+    if (!checked.kind) {
+      kind(SpanKind.INTERNAL)
     }
   }
 
@@ -173,7 +166,7 @@ class SpanAssert {
 
   private Map<String, Object> toMap(Attributes attributes) {
     def map = new HashMap()
-    attributes.forEach {key, value ->
+    attributes.forEach { key, value ->
       map.put(key.key, value)
     }
     return map

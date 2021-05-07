@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
@@ -89,10 +90,10 @@ class Elasticsearch53TransportClientTest extends AgentInstrumentationSpecificati
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest())
 
-    def status = result.get().status
+    def clusterHealthStatus = result.get().status
 
     expect:
-    status.name() == "GREEN"
+    clusterHealthStatus.name() == "GREEN"
 
     assertTraces(1) {
       trace(0, 1) {
@@ -126,7 +127,7 @@ class Elasticsearch53TransportClientTest extends AgentInstrumentationSpecificati
         span(0) {
           name "GetAction"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent RemoteTransportException, String
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
@@ -181,14 +182,9 @@ class Elasticsearch53TransportClientTest extends AgentInstrumentationSpecificati
 
     and:
     assertTraces(5) {
-      sortTraces {
-        // IndexAction and PutMappingAction run in separate threads and so their order is not always the same
-        if (traces[2][0].name == "IndexAction") {
-          def tmp = traces[2]
-          traces[2] = traces[3]
-          traces[3] = tmp
-        }
-      }
+      // PutMappingAction and IndexAction run in separate threads so their order can vary
+      traces.subList(2, 4).sort(orderByRootSpanName("PutMappingAction", "IndexAction"))
+
       trace(0, 1) {
         span(0) {
           name "CreateIndexAction"

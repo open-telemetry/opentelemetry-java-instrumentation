@@ -9,6 +9,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERR
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -30,9 +31,11 @@ import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpServerCodec
+import io.netty.handler.codec.http.QueryStringDecoder
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.CharsetUtil
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 
@@ -57,16 +60,21 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
           pipeline.addLast([
             channelRead0       : { ctx, msg ->
               if (msg instanceof HttpRequest) {
-                def uri = URI.create((msg as HttpRequest).uri)
+                def uri = URI.create((msg as HttpRequest).uri())
                 ServerEndpoint endpoint = ServerEndpoint.forPath(uri.path)
                 ctx.write controller(endpoint) {
                   ByteBuf content = null
-                  FullHttpResponse response = null
+                  FullHttpResponse response
                   switch (endpoint) {
                     case SUCCESS:
                     case ERROR:
                       content = Unpooled.copiedBuffer(endpoint.body, CharsetUtil.UTF_8)
                       response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
+                      break
+                    case INDEXED_CHILD:
+                      QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri)
+                      Span.current().setAttribute("test.request.id", queryStringDecoder.parameters().get("id").find() as long)
+                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status))
                       break
                     case QUERY_PARAM:
                       content = Unpooled.copiedBuffer(uri.query, CharsetUtil.UTF_8)
@@ -115,5 +123,10 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
   @Override
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "HTTP GET"
+  }
+
+  @Override
+  boolean testConcurrency() {
+    return true
   }
 }

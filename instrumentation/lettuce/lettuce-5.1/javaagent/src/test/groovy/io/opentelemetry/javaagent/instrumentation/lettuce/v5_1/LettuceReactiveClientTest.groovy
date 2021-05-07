@@ -36,14 +36,12 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
       trace(0, 3) {
         span(0) {
           name "test-parent"
-          errored false
           attributes {
           }
         }
         span(1) {
           name "SET"
           kind SpanKind.CLIENT
-          errored false
           childOf span(0)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -63,7 +61,6 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
         span(2) {
           name "GET"
           kind SpanKind.CLIENT
-          errored false
           childOf span(0)
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"

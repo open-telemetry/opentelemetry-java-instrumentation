@@ -4,7 +4,8 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -82,7 +83,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     and:
     assertTraces(1) {
       trace(0, 1) {
-        basicSpan(it, 0, getContextPath() + "/hello.xhtml", null)
+        basicServerSpan(it, 0, getContextPath() + "/hello.xhtml", null)
       }
     }
 
@@ -105,7 +106,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     and:
     assertTraces(1) {
       trace(0, 1) {
-        basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
+        basicServerSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
       }
     }
     clearExportedData()
@@ -126,7 +127,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     // set up form parameter for post
     RequestBody formBody = new FormBody.Builder()
       .add("app-form", "app-form")
-      // value used for name is returned in app-form:output-message element
+    // value used for name is returned in app-form:output-message element
       .add("app-form:name", "test")
       .add("app-form:submit", "Say hello")
       .add("app-form_SUBMIT", "1") // MyFaces
@@ -144,7 +145,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
+        basicServerSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
         handlerSpan(it, 1, span(0), "#{greetingForm.submit()}")
       }
     }
@@ -165,7 +166,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     and:
     assertTraces(1) {
       trace(0, 1) {
-        basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
+        basicServerSpan(it, 0, getContextPath() + "/greeting.xhtml", null)
       }
     }
     clearExportedData()
@@ -186,7 +187,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     // set up form parameter for post
     RequestBody formBody = new FormBody.Builder()
       .add("app-form", "app-form")
-      // setting name parameter to "exception" triggers throwing exception in GreetingForm
+    // setting name parameter to "exception" triggers throwing exception in GreetingForm
       .add("app-form:name", "exception")
       .add("app-form:submit", "Say hello")
       .add("app-form_SUBMIT", "1") // MyFaces
@@ -201,7 +202,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, getContextPath() + "/greeting.xhtml", null, new Exception("submit exception"))
+        basicServerSpan(it, 0, getContextPath() + "/greeting.xhtml", null, new Exception("submit exception"))
         handlerSpan(it, 1, span(0), "#{greetingForm.submit()}", new Exception("submit exception"))
       }
     }
@@ -219,8 +220,8 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
     trace.span(index) {
       name spanName
       kind INTERNAL
-      errored expectedException != null
       if (expectedException != null) {
+        status ERROR
         errorEvent(expectedException.getClass(), expectedException.getMessage())
       }
       childOf((SpanData) parent)

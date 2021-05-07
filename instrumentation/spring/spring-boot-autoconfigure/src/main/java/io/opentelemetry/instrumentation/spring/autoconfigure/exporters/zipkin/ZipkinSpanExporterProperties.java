@@ -11,11 +11,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Configuration for {@link io.opentelemetry.exporter.zipkin.ZipkinSpanExporter}.
  *
- * <p>Get Exporter Service Name {@link #getServiceName()}
- *
  * <p>Get Exporter Endpoint
  */
-@ConfigurationProperties(prefix = "opentelemetry.trace.exporter.zipkin")
+@ConfigurationProperties(prefix = "otel.exporter.zipkin")
 public class ZipkinSpanExporterProperties {
 
   private boolean enabled = true;

@@ -4,16 +4,17 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.client.Client
+import javax.ws.rs.ProcessingException
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
 import javax.ws.rs.client.Invocation
-import javax.ws.rs.client.WebTarget
+import javax.ws.rs.client.InvocationCallback
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
@@ -21,23 +22,53 @@ import org.glassfish.jersey.client.ClientConfig
 import org.glassfish.jersey.client.ClientProperties
 import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import spock.lang.Timeout
 import spock.lang.Unroll
 
-abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait {
+abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implements AgentTestTrait {
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  Invocation.Builder buildRequest(String method, URI uri, Map<String, String> headers) {
+    return internalBuildRequest(uri, headers)
+  }
 
-    Client client = builder().build()
-    WebTarget service = client.target(uri)
-    Invocation.Builder request = service.request(MediaType.TEXT_PLAIN)
-    headers.each { request.header(it.key, it.value) }
+  @Override
+  int sendRequest(Invocation.Builder request, String method, URI uri, Map<String, String> headers) {
+    try {
+      def body = BODY_METHODS.contains(method) ? Entity.text("") : null
+      def response = request.build(method, body).invoke()
+      response.close()
+      return response.status
+    } catch (ProcessingException exception) {
+      throw exception.getCause()
+    }
+  }
+
+  @Override
+  void sendRequestWithCallback(Invocation.Builder request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     def body = BODY_METHODS.contains(method) ? Entity.text("") : null
-    Response response = request.method(method, (Entity) body)
-    callback?.call()
 
-    return response.status
+    request.async().method(method, (Entity) body, new InvocationCallback<Response>() {
+      @Override
+      void completed(Response response) {
+        requestResult.complete(response.status)
+      }
+
+      @Override
+      void failed(Throwable throwable) {
+        if (throwable instanceof ProcessingException) {
+          throwable = throwable.getCause()
+        }
+        requestResult.complete(throwable)
+      }
+    })
+  }
+
+  private Invocation.Builder internalBuildRequest(URI uri, Map<String, String> headers) {
+    def client = builder().build()
+    def service = client.target(uri)
+    def requestBuilder = service.request(MediaType.TEXT_PLAIN)
+    headers.each { requestBuilder.header(it.key, it.value) }
+    return requestBuilder
   }
 
   abstract ClientBuilder builder()
@@ -60,7 +91,7 @@ abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait 
           hasNoParent()
           name expectedOperationName(method)
           kind CLIENT
-          errored true
+          status ERROR
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
             "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
@@ -83,7 +114,6 @@ abstract class JaxRsClientTest extends HttpClientTest implements AgentTestTrait 
   }
 }
 
-@Timeout(5)
 class JerseyClientTest extends JaxRsClientTest {
 
   @Override
@@ -93,12 +123,12 @@ class JerseyClientTest extends JaxRsClientTest {
     return new JerseyClientBuilder().withConfig(config)
   }
 
-  boolean testCircularRedirects() {
-    false
+  @Override
+  int maxRedirects() {
+    20
   }
 }
 
-@Timeout(5)
 class ResteasyClientTest extends JaxRsClientTest {
 
   @Override
@@ -112,7 +142,6 @@ class ResteasyClientTest extends JaxRsClientTest {
   }
 }
 
-@Timeout(5)
 class CxfClientTest extends JaxRsClientTest {
 
   @Override

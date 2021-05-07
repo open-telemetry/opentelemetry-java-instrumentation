@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.test.base
 
 import ch.qos.logback.classic.Level
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
+import io.opentelemetry.instrumentation.test.utils.LoggerUtils
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import okhttp3.OkHttpClient
@@ -21,7 +22,7 @@ import org.slf4j.LoggerFactory
 trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
   static final Logger SERVER_LOGGER = LoggerFactory.getLogger("http-server")
   static {
-    ((ch.qos.logback.classic.Logger) SERVER_LOGGER).setLevel(Level.DEBUG)
+    LoggerUtils.setLevel(SERVER_LOGGER, Level.DEBUG)
   }
   static final String TEST_CLIENT_IP = "1.1.1.1"
   static final String TEST_USER_AGENT = "test-user-agent"

@@ -3,13 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 
-import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -27,11 +30,6 @@ import org.eclipse.jetty.util.resource.FileResource
 class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestTrait {
 
   @Override
-  boolean testNotFound() {
-    return false
-  }
-
-  @Override
   boolean testPathParam() {
     return true
   }
@@ -42,13 +40,13 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
   }
 
   @Override
-  boolean hasHandlerSpan() {
-    return true
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
+    return endpoint != NOT_FOUND
   }
 
   @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
-    endpoint == REDIRECT || endpoint == ERROR || endpoint == EXCEPTION
+    endpoint == REDIRECT || endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND
   }
 
   @Override
@@ -59,22 +57,30 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
         break
       case ERROR:
       case EXCEPTION:
+      case NOT_FOUND:
         sendErrorSpan(trace, index, handlerSpan)
         break
     }
   }
 
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return endpoint == PATH_PARAM ? getContextPath() + "/path/{id}/param" : endpoint.resolvePath(address).path
+    switch (endpoint) {
+      case PATH_PARAM:
+        return getContextPath() + "/path/{id}/param"
+      case NOT_FOUND:
+        return getContextPath() + "/*"
+      default:
+        return endpoint.resolvePath(address).path
+    }
   }
 
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method, ServerEndpoint endpoint) {
     trace.span(index) {
       name "GreetingAction.${endpoint.name().toLowerCase()}"
-      kind SpanKind.INTERNAL
-      errored endpoint == EXCEPTION
+      kind INTERNAL
       if (endpoint == EXCEPTION) {
+        status StatusCode.ERROR
         errorEvent(Exception, EXCEPTION.body)
       }
       def expectedMethodName = endpoint.name().toLowerCase()
@@ -130,10 +136,9 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
 
     and:
     assertTraces(1) {
-      trace(0, 3) {
-        basicSpan(it, 0, getContextPath() + "/dispatch", null)
+      trace(0, 2) {
+        basicServerSpan(it, 0, getContextPath() + "/dispatch", null)
         basicSpan(it, 1, "GreetingAction.dispatch_servlet", span(0))
-        basicSpan(it, 2, "Dispatcher.forward", span(0))
       }
     }
   }

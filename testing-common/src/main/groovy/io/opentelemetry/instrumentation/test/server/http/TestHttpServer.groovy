@@ -116,7 +116,7 @@ class TestHttpServer implements AutoCloseable {
   static distributedRequestSpan(TraceAssert trace, int index, SpanData parentSpan = null) {
     trace.span(index) {
       name "test-http-server"
-      errored false
+      kind SERVER
       if (parentSpan == null) {
         hasNoParent()
       } else {
@@ -248,6 +248,7 @@ class TestHttpServer implements AutoCloseable {
         isTestServer = Boolean.parseBoolean(request.getHeader("is-test-server"))
       }
       if (isTestServer) {
+        verifyNoDuplicateTracingHeaders()
         final SpanBuilder spanBuilder = tracer.spanBuilder("test-http-server").setSpanKind(SERVER)
         // using Context.root() to avoid inheriting any potentially leaked context here
         spanBuilder.setParent(GlobalOpenTelemetry.getPropagators().getTextMapPropagator().extract(Context.root(), req, GETTER))
@@ -259,6 +260,15 @@ class TestHttpServer implements AutoCloseable {
 
         final Span span = spanBuilder.startSpan()
         span.end()
+      }
+    }
+
+    private void verifyNoDuplicateTracingHeaders() {
+      for (String field : GlobalOpenTelemetry.getPropagators().getTextMapPropagator().fields()) {
+        def headers = req.getHeaders(field)
+        if (headers.hasMoreElements() && headers.nextElement() && headers.hasMoreElements()) {
+          throw new AssertionError("more than one " + field + " header present")
+        }
       }
     }
 

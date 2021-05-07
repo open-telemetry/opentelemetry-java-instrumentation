@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.sun.xml.ws.fault.SOAPFaultBuilder");
   }
 

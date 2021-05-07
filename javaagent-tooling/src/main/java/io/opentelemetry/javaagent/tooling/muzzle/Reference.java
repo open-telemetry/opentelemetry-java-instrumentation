@@ -436,12 +436,14 @@ public final class Reference {
     private final Set<Flag> flags;
     private final String name;
     private final Type type;
+    private final boolean declared;
 
-    public Field(Source[] sources, Flag[] flags, String name, Type fieldType) {
+    public Field(Source[] sources, Flag[] flags, String name, Type fieldType, boolean declared) {
       this.sources = new LinkedHashSet<>(Arrays.asList(sources));
       this.flags = new LinkedHashSet<>(Arrays.asList(flags));
       this.name = name;
-      type = fieldType;
+      this.type = fieldType;
+      this.declared = declared;
     }
 
     public String getName() {
@@ -460,6 +462,14 @@ public final class Reference {
       return type;
     }
 
+    /**
+     * Denotes whether this field is declared in the class {@link Reference} it is a part of. If
+     * {@code false} then this field is just used and most likely is declared in the super class.
+     */
+    public boolean isDeclared() {
+      return declared;
+    }
+
     public Field merge(Field anotherField) {
       if (!equals(anotherField) || !type.equals(anotherField.type)) {
         throw new IllegalStateException("illegal merge " + this + " != " + anotherField);
@@ -468,7 +478,8 @@ public final class Reference {
           Reference.merge(sources, anotherField.sources).toArray(new Source[0]),
           mergeFlags(flags, anotherField.flags).toArray(new Flag[0]),
           name,
-          type);
+          type,
+          declared || anotherField.declared);
     }
 
     @Override
@@ -537,8 +548,8 @@ public final class Reference {
     }
 
     public Builder withField(
-        Source[] sources, Flag[] fieldFlags, String fieldName, Type fieldType) {
-      Field field = new Field(sources, fieldFlags, fieldName, fieldType);
+        Source[] sources, Flag[] fieldFlags, String fieldName, Type fieldType, boolean declared) {
+      Field field = new Field(sources, fieldFlags, fieldName, fieldType, declared);
       int existingIndex = fields.indexOf(field);
       if (existingIndex == -1) {
         fields.add(field);

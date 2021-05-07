@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServerSpan
 
 import hello.HelloApplication
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -66,7 +66,7 @@ class WicketTest extends AgentInstrumentationSpecification implements HttpServer
 
     assertTraces(1) {
       trace(0, 1) {
-        basicSpan(it, 0, getContextPath() + "/wicket-test/hello.HelloPage")
+        basicServerSpan(it, 0, getContextPath() + "/wicket-test/hello.HelloPage")
       }
     }
   }
@@ -82,7 +82,7 @@ class WicketTest extends AgentInstrumentationSpecification implements HttpServer
 
     assertTraces(1) {
       trace(0, 1) {
-        basicSpan(it, 0, getContextPath() + "/wicket-test/org.apache.wicket.markup.html.pages.InternalErrorPage", null, new Exception("test exception"))
+        basicServerSpan(it, 0, getContextPath() + "/wicket-test/hello.ExceptionPage", null, new Exception("test exception"))
       }
     }
   }

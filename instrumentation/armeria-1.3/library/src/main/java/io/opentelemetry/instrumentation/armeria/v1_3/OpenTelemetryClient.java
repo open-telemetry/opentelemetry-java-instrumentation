@@ -10,34 +10,31 @@ import com.linecorp.armeria.client.HttpClient;
 import com.linecorp.armeria.client.SimpleDecoratingHttpClient;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
-import com.linecorp.armeria.common.logging.RequestLogProperty;
+import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import java.util.concurrent.TimeUnit;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /** Decorates an {@link HttpClient} to trace outbound {@link HttpResponse}s. */
 final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
 
-  private final ArmeriaClientTracer clientTracer;
+  private final Instrumenter<ClientRequestContext, RequestLog> instrumenter;
 
-  OpenTelemetryClient(HttpClient delegate, ArmeriaClientTracer clientTracer) {
+  OpenTelemetryClient(
+      HttpClient delegate, Instrumenter<ClientRequestContext, RequestLog> instrumenter) {
     super(delegate);
-    this.clientTracer = clientTracer;
+    this.instrumenter = instrumenter;
   }
 
   @Override
   public HttpResponse execute(ClientRequestContext ctx, HttpRequest req) throws Exception {
     Context parentContext = Context.current();
-    if (!clientTracer.shouldStartSpan(parentContext)) {
+    if (!instrumenter.shouldStart(parentContext, ctx)) {
       return unwrap().execute(ctx, req);
     }
 
-    // Always available in practice.
-    long requestStartTimeMicros =
-        ctx.log().ensureAvailable(RequestLogProperty.REQUEST_START_TIME).requestStartTimeMicros();
-    long requestStartTimeNanos = TimeUnit.MICROSECONDS.toNanos(requestStartTimeMicros);
-    Context context = clientTracer.startSpan(parentContext, ctx, ctx, requestStartTimeNanos);
+    Context context = instrumenter.start(Context.current(), ctx);
 
     Span span = Span.fromContext(context);
     if (span.isRecording()) {
@@ -45,15 +42,7 @@ final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
           .whenComplete()
           .thenAccept(
               log -> {
-                clientTracer.getNetPeerAttributes().setNetPeer(span, ctx.remoteAddress());
-
-                long requestEndTimeNanos = requestStartTimeNanos + log.responseDurationNanos();
-                if (log.responseCause() != null) {
-                  clientTracer.endExceptionally(
-                      context, log, log.responseCause(), requestEndTimeNanos);
-                } else {
-                  clientTracer.end(context, log, requestEndTimeNanos);
-                }
+                instrumenter.end(context, ctx, log, log.responseCause());
               });
     }
 

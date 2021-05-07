@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_5
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -30,11 +31,14 @@ import io.grpc.ServerCallHandler
 import io.grpc.ServerInterceptor
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import io.grpc.protobuf.services.ProtoReflectionService
+import io.grpc.reflection.v1alpha.ServerReflectionGrpc
+import io.grpc.reflection.v1alpha.ServerReflectionRequest
+import io.grpc.reflection.v1alpha.ServerReflectionResponse
 import io.grpc.stub.StreamObserver
-import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -86,7 +90,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           childOf span(0)
-          errored false
           event(0) {
             eventName "message"
             attributes {
@@ -104,7 +107,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(1)
-          errored false
           event(0) {
             eventName "message"
             attributes {
@@ -168,8 +170,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           hasNoParent()
-          errored true
-          status(StatusCode.ERROR)
+          status ERROR
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
@@ -180,8 +181,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(0)
-          errored true
-          status(StatusCode.ERROR)
+          status ERROR
           event(0) {
             eventName "message"
             attributes {
@@ -255,7 +255,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           hasNoParent()
-          errored true
+          status ERROR
           // NB: Exceptions thrown on the server don't appear to be propagated to the client, at
           // least for the version we test against.
           attributes {
@@ -268,8 +268,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(0)
-          errored true
-          status(StatusCode.ERROR)
+          status ERROR
           event(0) {
             eventName "message"
             attributes {
@@ -413,7 +412,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind CLIENT
           childOf span(0)
-          errored false
           event(0) {
             eventName "message"
             attributes {
@@ -431,7 +429,6 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           name "example.Greeter/SayHello"
           kind SERVER
           childOf span(1)
-          errored false
           event(0) {
             eventName "message"
             attributes {
@@ -510,6 +507,101 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
 
     then:
     error.get() != null
+
+    cleanup:
+    channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)
+    server?.shutdownNow()?.awaitTermination()
+  }
+
+  def "test reflection service"() {
+    setup:
+    def service = ProtoReflectionService.newInstance()
+    def port = PortUtils.findOpenPort()
+    Server server = configureServer(ServerBuilder.forPort(port).addService(service)).build().start()
+    ManagedChannelBuilder channelBuilder = configureClient(ManagedChannelBuilder.forAddress("localhost", port))
+
+    // Depending on the version of gRPC usePlainText may or may not take an argument.
+    try {
+      channelBuilder.usePlaintext()
+    } catch (MissingMethodException e) {
+      channelBuilder.usePlaintext(true)
+    }
+    ManagedChannel channel = channelBuilder.build()
+    ServerReflectionGrpc.ServerReflectionStub client = ServerReflectionGrpc.newStub(channel)
+
+    when:
+    AtomicReference<Throwable> error = new AtomicReference<>()
+    AtomicReference<ServerReflectionResponse> response = new AtomicReference<>()
+    CountDownLatch latch = new CountDownLatch(1)
+    def request = client.serverReflectionInfo(new StreamObserver<ServerReflectionResponse>() {
+      @Override
+      void onNext(ServerReflectionResponse serverReflectionResponse) {
+        response.set(serverReflectionResponse)
+      }
+
+      @Override
+      void onError(Throwable throwable) {
+        error.set(throwable)
+        latch.countDown()
+      }
+
+      @Override
+      void onCompleted() {
+        latch.countDown()
+      }
+    })
+
+    request.onNext(ServerReflectionRequest.newBuilder()
+      .setListServices("The content will not be checked?")
+      .build())
+    request.onCompleted()
+
+    latch.await(10, TimeUnit.SECONDS)
+
+    then:
+    error.get() == null
+    response.get().listServicesResponse.getService(0).name == "grpc.reflection.v1alpha.ServerReflection"
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo"
+          kind CLIENT
+          hasNoParent()
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "grpc.reflection.v1alpha.ServerReflection"
+            "${SemanticAttributes.RPC_METHOD.key}" "ServerReflectionInfo"
+          }
+        }
+        span(1) {
+          name "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo"
+          kind SERVER
+          childOf span(0)
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 1
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "grpc.reflection.v1alpha.ServerReflection"
+            "${SemanticAttributes.RPC_METHOD.key}" "ServerReflectionInfo"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+          }
+        }
+      }
+    }
 
     cleanup:
     channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)

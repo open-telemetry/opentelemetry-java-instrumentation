@@ -6,12 +6,14 @@
 import io.opentelemetry.instrumentation.spring.httpclients.RestTemplateInterceptor
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestTemplate
 import spock.lang.Shared
 
-class RestTemplateInstrumentationTest extends HttpClientTest implements LibraryTestTrait {
+class RestTemplateInstrumentationTest extends HttpClientTest<HttpEntity<String>> implements LibraryTestTrait {
   @Shared
   RestTemplate restTemplate
 
@@ -23,16 +25,33 @@ class RestTemplateInstrumentationTest extends HttpClientTest implements LibraryT
   }
 
   @Override
-  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+  HttpEntity<String> buildRequest(String method, URI uri, Map<String, String> headers) {
+    def httpHeaders = new HttpHeaders()
+    headers.each { httpHeaders.put(it.key, [it.value]) }
+    return new HttpEntity<String>(httpHeaders)
+  }
+
+  @Override
+  int sendRequest(HttpEntity<String> request, String method, URI uri, Map<String, String> headers) {
     try {
-      return restTemplate.execute(uri, HttpMethod.valueOf(method), { request ->
-        headers.forEach(request.getHeaders().&add)
-      }, { response ->
-        callback?.call()
-        response.statusCode.value()
-      })
+      return restTemplate.exchange(uri, HttpMethod.valueOf(method), request, String)
+        .statusCode
+        .value()
     } catch (ResourceAccessException exception) {
       throw exception.getCause()
+    }
+  }
+
+  @Override
+  void sendRequestWithCallback(HttpEntity<String> request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
+    try {
+      restTemplate.execute(uri, HttpMethod.valueOf(method), { req ->
+        headers.forEach(req.getHeaders().&add)
+      }, { response ->
+        requestResult.complete(response.statusCode.value())
+      })
+    } catch (ResourceAccessException exception) {
+      requestResult.complete(exception.getCause())
     }
   }
 

@@ -11,6 +11,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import java.net.URI;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 
@@ -54,6 +55,14 @@ public class JaxRsClientTracer
   @Override
   protected TextMapSetter<ClientRequestContext> getSetter() {
     return SETTER;
+  }
+
+  @Override
+  protected Throwable unwrapThrowable(Throwable throwable) {
+    if (throwable instanceof ProcessingException) {
+      throwable = throwable.getCause();
+    }
+    return super.unwrapThrowable(throwable);
   }
 
   @Override

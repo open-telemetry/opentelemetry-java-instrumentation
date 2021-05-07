@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrument the Twilio SDK to identify calls as a separate service. */
@@ -34,9 +35,7 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
 
   /** Match any child class of the base Twilio service classes. */
   @Override
-  public net.bytebuddy.matcher.ElementMatcher<
-          ? super net.bytebuddy.description.type.TypeDescription>
-      typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(
         namedOneOf(
             "com.twilio.base.Creator",

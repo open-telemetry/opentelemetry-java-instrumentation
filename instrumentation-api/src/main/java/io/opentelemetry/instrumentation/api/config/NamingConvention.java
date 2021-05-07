@@ -5,19 +5,21 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
-// config property names are normalized to underscore separated lowercase words
+import java.util.Locale;
+
+// config property names are normalized to dot separated lowercase words
 enum NamingConvention {
   DOT {
     @Override
     public String normalize(String key) {
       // many instrumentation names have dashes ('-')
-      return key.toLowerCase().replace('-', '.');
+      return key.toLowerCase(Locale.ROOT).replace('-', '.');
     }
   },
   ENV_VAR {
     @Override
     public String normalize(String key) {
-      return key.toLowerCase().replace('_', '.');
+      return key.toLowerCase(Locale.ROOT).replace('_', '.');
     }
   };
 

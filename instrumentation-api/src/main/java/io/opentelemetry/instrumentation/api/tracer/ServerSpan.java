@@ -29,7 +29,7 @@ public final class ServerSpan {
     return context.get(KEY);
   }
 
-  static Context with(Context context, Span serverSpan) {
+  public static Context with(Context context, Span serverSpan) {
     return context.with(KEY, serverSpan);
   }
 

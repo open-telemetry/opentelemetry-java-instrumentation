@@ -30,6 +30,9 @@ class HelperReferenceWrapperTest extends Specification {
     .withSuperName(baseHelperClass.className)
     .withInterface(HelperReferenceWrapperTestClasses.Interface2.name)
     .withMethod(new Reference.Source[0], new Reference.Flag[0], "bar", Type.VOID_TYPE)
+    .withField(new Reference.Source[0], new Reference.Flag[0], "field", Type.getType("Ljava/lang/Object;"), false)
+    .withField(new Reference.Source[0], new Reference.Flag[0], "declaredField", Type.getType("Ljava/lang/Object;"), true)
+    .withField(new Reference.Source[0], [Reference.Flag.VisibilityFlag.PRIVATE] as Reference.Flag[], "privateFieldsAreSkipped", Type.getType("Ljava/lang/Object;"), true)
     .build()
 
   def "should wrap helper types"() {
@@ -53,6 +56,14 @@ class HelperReferenceWrapperTest extends Specification {
           !it.abstract
           it.name == "bar"
           it.descriptor == "()V"
+        }
+      }
+
+      with(helper.fields.collect(toList())) {
+        it.size() == 1
+        with(it[0]) {
+          it.name == "declaredField"
+          it.descriptor == "Ljava/lang/Object;"
         }
       }
 
@@ -83,6 +94,14 @@ class HelperReferenceWrapperTest extends Specification {
               abstractClasspathType.abstract
 
               abstractClasspathType.getMethods().collect(toList()).isEmpty()
+
+              with(abstractClasspathType.fields.collect(toList())) {
+                it.size() == 1
+                with(it[0]) {
+                  it.name == "field"
+                  it.descriptor == "Ljava/lang/Object;"
+                }
+              }
 
               abstractClasspathType.hasSuperTypes()
               with(abstractClasspathType.superTypes.collect(toList())) {

@@ -47,7 +47,8 @@ import org.slf4j.LoggerFactory;
  * possible to extend and reuse them in vendor distributions.
  */
 public abstract class InstrumentationModule {
-  private static final Logger log = LoggerFactory.getLogger(InstrumentationModule.class);
+  private static final TransformSafeLogger log =
+      TransformSafeLogger.getLogger(InstrumentationModule.class);
   private static final Logger muzzleLog = LoggerFactory.getLogger("muzzleMatcher");
 
   private static final String[] EMPTY = new String[0];
@@ -191,7 +192,7 @@ public abstract class InstrumentationModule {
   }
 
   private InstrumentationContextProvider getContextProvider() {
-    Map<String, String> contextStore = contextStore();
+    Map<String, String> contextStore = getMuzzleContextStoreClasses();
     if (!contextStore.isEmpty()) {
       return new FieldBackedProvider(getClass(), contextStore);
     } else {
@@ -233,7 +234,7 @@ public abstract class InstrumentationModule {
             }
           }
         } else {
-          if (muzzleLog.isDebugEnabled()) {
+          if (log.isDebugEnabled()) {
             log.debug(
                 "Applying instrumentation: {} -- {} on {}",
                 mainInstrumentationName(),
@@ -282,7 +283,8 @@ public abstract class InstrumentationModule {
    * {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
-   * <p><b>This method is generated automatically, do not override it.</b>
+   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
+   * will not generate a new implementation, it will leave the existing one.
    */
   protected ReferenceMatcher getMuzzleReferenceMatcher() {
     return null;
@@ -296,10 +298,26 @@ public abstract class InstrumentationModule {
    * the {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
    * ByteBuddy plugin.
    *
-   * <p><b>This method is generated automatically, do not override it.</b>
+   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
+   * will not generate a new implementation, it will leave the existing one.
    */
   protected String[] getMuzzleHelperClassNames() {
     return EMPTY;
+  }
+
+  /**
+   * Returns a map of {@code class-name to context-class-name}. Keys (and their subclasses) will be
+   * associated with a context class stored in the value.
+   *
+   * <p>The actual implementation of this method is generated automatically during compilation by
+   * the {@link io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * ByteBuddy plugin.
+   *
+   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
+   * will not generate a new implementation, it will leave the existing one.
+   */
+  protected Map<String, String> getMuzzleContextStoreClasses() {
+    return Collections.emptyMap();
   }
 
   /**
@@ -307,7 +325,13 @@ public abstract class InstrumentationModule {
    * not located in instrumentation packages described in {@link InstrumentationClassPredicate} and
    * {@link #isHelperClass(String)} (and not automatically detected by muzzle). These additional
    * classes will be injected into the application classloader first.
+   *
+   * <p>Implementing {@link #isHelperClass(String)} is generally simpler and less error-prone
+   * compared to implementing this method.
+   *
+   * @deprecated Use {@link #isHelperClass(String)} instead.
    */
+  @Deprecated
   protected String[] additionalHelperClassNames() {
     return EMPTY;
   }
@@ -344,16 +368,6 @@ public abstract class InstrumentationModule {
 
   /** Returns a list of all individual type instrumentation in this module. */
   public abstract List<TypeInstrumentation> typeInstrumentations();
-
-  /**
-   * Context stores to define for this instrumentation.
-   *
-   * <p>A map of {@code class-name to context-class-name}. Keys (and their subclasses) will be
-   * associated with a context of the value.
-   */
-  protected Map<String, String> contextStore() {
-    return Collections.emptyMap();
-  }
 
   /**
    * Allows instrumentation modules to disable themselves by default, or to additionally disable

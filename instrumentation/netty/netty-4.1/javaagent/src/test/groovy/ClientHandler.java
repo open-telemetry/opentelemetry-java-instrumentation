@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import groovy.lang.Closure;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpObject;
@@ -16,11 +15,9 @@ When request initiated by a test gets a response, calls a given callback and com
 future with response's status code.
 */
 public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
-  private final Closure<Void> callback;
   private final CompletableFuture<Integer> responseCode;
 
-  public ClientHandler(Closure<Void> callback, CompletableFuture<Integer> responseCode) {
-    this.callback = callback;
+  public ClientHandler(CompletableFuture<Integer> responseCode) {
     this.responseCode = responseCode;
   }
 
@@ -29,10 +26,6 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
     if (msg instanceof HttpResponse) {
       ctx.pipeline().remove(this);
 
-      if (callback != null) {
-        callback.call();
-      }
-
       HttpResponse response = (HttpResponse) msg;
       responseCode.complete(response.getStatus().code());
     }
@@ -40,7 +33,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-    cause.printStackTrace();
+    responseCode.completeExceptionally(cause);
     ctx.close();
   }
 }

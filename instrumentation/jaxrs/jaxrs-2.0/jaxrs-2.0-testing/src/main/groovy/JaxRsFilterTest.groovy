@@ -4,9 +4,12 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderServerTrace
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
@@ -71,18 +74,23 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name parentSpanName != null ? parentSpanName : "test.span"
-          if (runsOnServer()) {
-            errored abortNormal
-          } else {
-            attributes {
-            }
+          kind SERVER
+          if (runsOnServer() && abortNormal) {
+            status ERROR
           }
         }
         span(1) {
           childOf span(0)
           name controllerName
-          if (!runsOnServer()) {
+          if (abortPrematch) {
             attributes {
+              "${SemanticAttributes.CODE_NAMESPACE.key}" "JaxRsFilterTest\$PrematchRequestFilter"
+              "${SemanticAttributes.CODE_FUNCTION.key}" "filter"
+            }
+          } else {
+            attributes {
+              "${SemanticAttributes.CODE_NAMESPACE.key}" ~/Resource[$]Test*/
+              "${SemanticAttributes.CODE_FUNCTION.key}" "hello"
             }
           }
         }
@@ -123,6 +131,7 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
       trace(0, 2) {
         span(0) {
           name parentResourceName
+          kind SERVER
           if (!runsOnServer()) {
             attributes {
             }
@@ -132,9 +141,9 @@ abstract class JaxRsFilterTest extends AgentInstrumentationSpecification {
           childOf span(0)
           name controller1Name
           kind INTERNAL
-          if (!runsOnServer()) {
-            attributes {
-            }
+          attributes {
+            "${SemanticAttributes.CODE_NAMESPACE.key}" ~/Resource[$]Test*/
+            "${SemanticAttributes.CODE_FUNCTION.key}" "nested"
           }
         }
       }

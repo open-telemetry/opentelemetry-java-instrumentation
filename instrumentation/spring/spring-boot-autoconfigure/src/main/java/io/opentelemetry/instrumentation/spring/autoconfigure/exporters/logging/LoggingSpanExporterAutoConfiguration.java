@@ -19,10 +19,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties(LoggingSpanExporterProperties.class)
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@ConditionalOnProperty(
-    prefix = "opentelemetry.trace.exporter.logging",
-    name = "enabled",
-    matchIfMissing = true)
+@ConditionalOnProperty(prefix = "otel.exporter.logging", name = "enabled", matchIfMissing = true)
 @ConditionalOnClass(LoggingSpanExporter.class)
 public class LoggingSpanExporterAutoConfiguration {
 

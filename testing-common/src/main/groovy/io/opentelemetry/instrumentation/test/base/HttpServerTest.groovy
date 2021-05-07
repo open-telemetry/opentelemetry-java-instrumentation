@@ -5,23 +5,32 @@
 
 package io.opentelemetry.instrumentation.test.base
 
+
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
+import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -32,19 +41,26 @@ import spock.lang.Unroll
 abstract class HttpServerTest<SERVER> extends InstrumentationSpecification implements HttpServerTestTrait<SERVER> {
 
   String expectedServerSpanName(ServerEndpoint endpoint) {
-    return endpoint == PATH_PARAM ? getContextPath() + "/path/:id/param" : endpoint.resolvePath(address).path
+    switch (endpoint) {
+      case PATH_PARAM:
+        return getContextPath() + "/path/:id/param"
+      case NOT_FOUND:
+        return getContextPath() + "/*"
+      default:
+        return endpoint.resolvePath(address).path
+    }
   }
 
   String getContextPath() {
     return ""
   }
 
-  boolean hasHandlerSpan() {
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
     false
   }
 
-  boolean hasExceptionOnServerSpan() {
-    !hasHandlerSpan()
+  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
+    !hasHandlerSpan(endpoint)
   }
 
   boolean hasRenderSpan(ServerEndpoint endpoint) {
@@ -52,14 +68,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   boolean hasResponseSpan(ServerEndpoint endpoint) {
-    false
-  }
-
-  boolean hasForwardSpan() {
-    false
-  }
-
-  boolean hasIncludeSpan() {
     false
   }
 
@@ -99,6 +107,14 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     true
   }
 
+  boolean testConcurrency() {
+    false
+  }
+
+  List<AttributeKey<?>> extraAttributes() {
+    []
+  }
+
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
     REDIRECT("redirect", 302, "/redirected"),
@@ -114,7 +130,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     PATH_PARAM("path/123/param", 200, "123"),
     AUTH_REQUIRED("authRequired", 200, null),
     LOGIN("login", 302, null),
-    AUTH_ERROR("basicsecured/endpoint", 401, null)
+    AUTH_ERROR("basicsecured/endpoint", 401, null),
+    INDEXED_CHILD("child", 200, null),
 
     private final URI uriObj
     private final String path
@@ -265,7 +282,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     response.withCloseable {
       assert response.code() == REDIRECT.status
       assert response.header("location") == REDIRECT.body ||
-        response.header("location") == "${address.resolve(REDIRECT.body)}"
+        new URI(response.header("location")).normalize().toString() == "${address.resolve(REDIRECT.body)}"
       true
     }
 
@@ -361,25 +378,95 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     body = null
   }
 
+  /*
+  This test fires a bunch of parallel request to the fixed backend endpoint.
+  That endpoint is supposed to create a new child span in the context of the SERVER span.
+  That child span is expected to have an attribute called "test.request.id".
+  The value of that attribute should be the value of request's parameter called "id".
+
+  This test then asserts that there is the correct number of traces (one per request executed)
+  and that each trace has exactly three spans and both first and the last spans have "test.request.id"
+  attribute with equal value. Server span is not going to have that attribute because it is not
+  under the control of this test.
+
+  This way we verify that child span created by the server actually corresponds to the client request.
+   */
+
+  def "high concurrency test"() {
+    setup:
+    assumeTrue(testConcurrency())
+    int count = 100
+    def endpoint = INDEXED_CHILD
+
+    def latch = new CountDownLatch(1)
+
+    def pool = Executors.newFixedThreadPool(4)
+    def propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator()
+    def setter = { Request.Builder carrier, String name, String value ->
+      carrier.header(name, value)
+    }
+
+    when:
+    count.times { index ->
+      def job = {
+        latch.await()
+        def url = HttpUrl.get(endpoint.resolvePath(address)).newBuilder()
+          .query("id=$index")
+          .build()
+        Request.Builder builder = request(url, "GET", null)
+        runUnderTrace("client " + index) {
+          Span.current().setAttribute("test.request.id", index)
+          propagator.inject(Context.current(), builder, setter)
+          client.newCall(builder.build()).execute()
+        }
+
+      }
+      pool.submit(job)
+    }
+    latch.countDown()
+
+    then:
+    assertTraces(count) {
+      (0..count - 1).each {
+        trace(it, hasHandlerSpan(endpoint) ? 4 : 3) {
+          def rootSpan = it.span(0)
+          //Traces can be in arbitrary order, let us find out the request id of the current one
+          def requestId = Integer.parseInt(rootSpan.name.substring("client ".length()))
+
+          basicSpan(it, 0, "client " + requestId, null, null) {
+            it."test.request.id" requestId
+          }
+          indexedServerSpan(it, span(0), requestId)
+
+          def controllerSpanIndex = 2
+
+          if (hasHandlerSpan(endpoint)) {
+            handlerSpan(it, 2, span(1), "GET", endpoint)
+            controllerSpanIndex++
+          }
+
+          indexedControllerSpan(it, controllerSpanIndex, span(controllerSpanIndex - 1), requestId)
+        }
+      }
+    }
+
+    cleanup:
+    pool.shutdownNow()
+  }
+
   //FIXME: add tests for POST with large/chunked data
 
   void assertTheTraces(int size, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String errorMessage = null, Response response = null) {
     def spanCount = 1 // server span
-    if (hasHandlerSpan()) {
+    if (hasResponseSpan(endpoint)) {
       spanCount++
     }
-    if (hasResponseSpan(endpoint)) {
+    if (hasHandlerSpan(endpoint)) {
       spanCount++
     }
     if (endpoint != NOT_FOUND) {
       spanCount++ // controller span
       if (hasRenderSpan(endpoint)) {
-        spanCount++
-      }
-      if (hasForwardSpan()) {
-        spanCount++
-      }
-      if (hasIncludeSpan()) {
         spanCount++
       }
     }
@@ -391,20 +478,12 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         trace(it, spanCount) {
           def spanIndex = 0
           serverSpan(it, spanIndex++, traceID, parentID, method, response?.body()?.contentLength(), endpoint)
-          if (hasHandlerSpan()) {
+          if (hasHandlerSpan(endpoint)) {
             handlerSpan(it, spanIndex++, span(0), method, endpoint)
           }
           if (endpoint != NOT_FOUND) {
             def controllerSpanIndex = 0
-            if (hasHandlerSpan()) {
-              controllerSpanIndex++
-            }
-            if (hasForwardSpan()) {
-              forwardSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
-              controllerSpanIndex++
-            }
-            if (hasIncludeSpan()) {
-              includeSpan(it, spanIndex++, span(0), errorMessage, expectedExceptionClass())
+            if (hasHandlerSpan(endpoint)) {
               controllerSpanIndex++
             }
             controllerSpan(it, spanIndex++, span(controllerSpanIndex), errorMessage, expectedExceptionClass())
@@ -427,8 +506,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
     trace.span(index) {
       name "controller"
-      errored errorMessage != null
       if (errorMessage) {
+        status StatusCode.ERROR
         errorEvent(exceptionClass, errorMessage)
       }
       childOf((SpanData) parent)
@@ -471,43 +550,22 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     }
   }
 
-  void forwardSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
-    trace.span(index) {
-      name ~/\.forward$/
-      kind SpanKind.INTERNAL
-      errored errorMessage != null
-      if (errorMessage) {
-        errorEvent(exceptionClass, errorMessage)
-      }
-      childOf((SpanData) parent)
-    }
-  }
-
-  void includeSpan(TraceAssert trace, int index, Object parent, String errorMessage = null, Class exceptionClass = Exception) {
-    trace.span(index) {
-      name ~/\.include$/
-      kind SpanKind.INTERNAL
-      errored errorMessage != null
-      if (errorMessage) {
-        errorEvent(exceptionClass, errorMessage)
-      }
-      childOf((SpanData) parent)
-    }
-  }
-
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
+    def extraAttributes = extraAttributes()
     trace.span(index) {
       name expectedServerSpanName(endpoint)
       kind SpanKind.SERVER // can't use static import because of SERVER type parameter
-      errored endpoint.errored
+      if (endpoint.errored) {
+        status StatusCode.ERROR
+      }
       if (parentID != null) {
         traceId traceID
         parentSpanId parentID
       } else {
         hasNoParent()
       }
-      if (endpoint == EXCEPTION && hasExceptionOnServerSpan()) {
+      if (endpoint == EXCEPTION && hasExceptionOnServerSpan(endpoint)) {
         event(0) {
           eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
           attributes {
@@ -526,7 +584,68 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
         "${SemanticAttributes.HTTP_STATUS_CODE.key}" endpoint.status
         "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
         "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+
+        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+          "${SemanticAttributes.HTTP_HOST}" "localhost:${port}"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_ROUTE)) {
+          // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
+          // currently reports '/*' which is a fallback route.
+          "${SemanticAttributes.HTTP_ROUTE}" String
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
+          "${SemanticAttributes.HTTP_SCHEME}" "http"
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_SERVER_NAME)) {
+          "${SemanticAttributes.HTTP_SERVER_NAME}" String
+        }
+        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
+          "${SemanticAttributes.HTTP_TARGET}" endpoint.path + "${endpoint == QUERY_PARAM ? "?${endpoint.body}" : ""}"
+        }
+        if (extraAttributes.contains(SemanticAttributes.NET_PEER_NAME)) {
+          "${SemanticAttributes.NET_PEER_NAME}" "localhost"
+        }
+        if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
+          "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP.value
+        }
       }
     }
   }
+
+  void indexedServerSpan(TraceAssert trace, Object parent, int requestId) {
+    ServerEndpoint endpoint = INDEXED_CHILD
+    trace.span(1) {
+      name expectedServerSpanName(endpoint)
+      kind SpanKind.SERVER // can't use static import because of SERVER type parameter
+      childOf((SpanData) parent)
+      attributes {
+        "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
+        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
+        "${SemanticAttributes.HTTP_CLIENT_IP.key}" { it == null || it == TEST_CLIENT_IP }
+        "${SemanticAttributes.HTTP_URL.key}" endpoint.resolve(address).toString() + "?id=$requestId"
+        "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+        "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
+        "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+        "${SemanticAttributes.HTTP_USER_AGENT.key}" TEST_USER_AGENT
+      }
+    }
+  }
+
+  void indexedControllerSpan(TraceAssert trace, int index, Object parent, int requestId) {
+    trace.span(index) {
+      name "controller"
+      childOf((SpanData) parent)
+      attributes {
+        it."test.request.id" requestId
+      }
+    }
+  }
+
+
 }

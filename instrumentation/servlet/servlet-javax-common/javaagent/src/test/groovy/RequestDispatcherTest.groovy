@@ -25,6 +25,7 @@ class RequestDispatcherTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
+      orderByRootSpanName("forward-child", "include-child")
       trace(0, 1) {
         basicSpan(it, 0, "forward-child")
       }
@@ -42,13 +43,9 @@ class RequestDispatcherTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         basicSpan(it, 0, "parent")
-        span(1) {
-          name "TestDispatcher.$operation"
-          childOf span(0)
-        }
-        basicSpan(it, 2, "$operation-child", span(1))
+        basicSpan(it, 1, "$operation-child", span(0))
       }
     }
 
@@ -78,13 +75,10 @@ class RequestDispatcherTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      trace(0, 3) {
+      orderByRootSpanName("parent", "notParent")
+      trace(0, 2) {
         basicSpan(it, 0, "parent")
-        span(1) {
-          name "TestDispatcher.$operation"
-          childOf span(0)
-        }
-        basicSpan(it, 2, "$operation-child", span(1))
+        basicSpan(it, 1, "$operation-child", span(0))
       }
       trace(1, 1) {
         basicSpan(it, 0, "notParent")
@@ -116,15 +110,9 @@ class RequestDispatcherTest extends AgentInstrumentationSpecification {
     th == ex
 
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         basicSpan(it, 0, "parent", null, ex)
-        span(1) {
-          name "TestDispatcher.$operation"
-          childOf span(0)
-          errored true
-          errorEvent(ex.class, ex.message)
-        }
-        basicSpan(it, 2, "$operation-child", span(1))
+        basicSpan(it, 1, "$operation-child", span(0))
       }
     }
 

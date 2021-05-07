@@ -45,7 +45,7 @@ public class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentatio
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
         @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {
-      interceptors.add(0, GrpcInterceptors.CLIENT_INTERCEPTOR);
+      interceptors.add(0, GrpcSingletons.CLIENT_INTERCEPTOR);
     }
   }
 }

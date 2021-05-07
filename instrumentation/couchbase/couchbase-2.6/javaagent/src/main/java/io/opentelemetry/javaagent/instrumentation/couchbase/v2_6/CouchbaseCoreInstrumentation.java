@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.couchbase.client.core.CouchbaseCore");
   }
 

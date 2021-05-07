@@ -25,6 +25,7 @@ import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatcher;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -82,6 +83,13 @@ public class AgentInstaller {
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(loadBootstrapPackagePrefixes());
     // this needs to be done as early as possible - before the first Config.get() call
     ConfigInitializer.initialize();
+    // ensure java.lang.reflect.Proxy is loaded, as transformation code uses it internally
+    // loading java.lang.reflect.Proxy after the bytebuddy transformer is set up causes
+    // the internal-proxy instrumentation module to transform it, and then the bytebuddy
+    // transformation code also tries to load it, which leads to a ClassCircularityError
+    // loading java.lang.reflect.Proxy early here still allows it to be retransformed by the
+    // internal-proxy instrumentation module after the bytebuddy transformer is set up
+    Proxy.class.getName();
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
@@ -89,7 +97,6 @@ public class AgentInstaller {
     Config config = Config.get();
     if (config.getBooleanProperty(JAVAAGENT_ENABLED_CONFIG, true)) {
       Iterable<ComponentInstaller> componentInstallers = loadComponentProviders();
-      installComponentsBeforeByteBuddy(componentInstallers, config);
       installBytebuddyAgent(inst, componentInstallers);
     } else {
       log.debug("Tracing is disabled, not installing instrumentations.");
@@ -105,6 +112,9 @@ public class AgentInstaller {
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
       Instrumentation inst, Iterable<ComponentInstaller> componentInstallers) {
+
+    Config config = Config.get();
+    installComponentsBeforeByteBuddy(componentInstallers, config);
 
     INSTRUMENTATION = inst;
 
@@ -128,7 +138,6 @@ public class AgentInstaller {
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), GlobalClassloaderIgnoresMatcher.skipClassLoader(ignoreMatcherProvider));
 
-    Config config = Config.get();
     ignoredAgentBuilder =
         ignoredAgentBuilder.or(
             globalIgnoresMatcher(
@@ -344,10 +353,10 @@ public class AgentInstaller {
         Throwable throwable) {
       if (log.isDebugEnabled()) {
         log.debug(
-            "Failed to handle {} for transformation on classloader {}: {}",
+            "Failed to handle {} for transformation on classloader {}",
             typeName,
             classLoader,
-            throwable.getMessage());
+            throwable);
       }
     }
 

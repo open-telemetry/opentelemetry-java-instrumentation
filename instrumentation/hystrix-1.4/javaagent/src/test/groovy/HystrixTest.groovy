@@ -4,6 +4,7 @@
  */
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -11,9 +12,7 @@ import com.netflix.hystrix.HystrixCommand
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
-import spock.lang.Timeout
 
-@Timeout(10)
 class HystrixTest extends AgentInstrumentationSpecification {
 
   def "test command #action"() {
@@ -40,14 +39,12 @@ class HystrixTest extends AgentInstrumentationSpecification {
         span(0) {
           name "parent"
           hasNoParent()
-          errored false
           attributes {
           }
         }
         span(1) {
           name "ExampleGroup.HystrixTest\$1.execute"
           childOf span(0)
-          errored false
           attributes {
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -57,7 +54,6 @@ class HystrixTest extends AgentInstrumentationSpecification {
         span(2) {
           name "tracedMethod"
           childOf span(1)
-          errored false
           attributes {
           }
         }
@@ -102,14 +98,13 @@ class HystrixTest extends AgentInstrumentationSpecification {
         span(0) {
           name "parent"
           hasNoParent()
-          errored false
           attributes {
           }
         }
         span(1) {
           name "ExampleGroup.HystrixTest\$2.execute"
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException)
           attributes {
             "hystrix.command" "HystrixTest\$2"
@@ -120,7 +115,6 @@ class HystrixTest extends AgentInstrumentationSpecification {
         span(2) {
           name "ExampleGroup.HystrixTest\$2.fallback"
           childOf span(1)
-          errored false
           attributes {
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"

@@ -83,6 +83,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
   public Consumer<OutputFrame> startTarget(
       String targetImageName,
       String agentPath,
+      String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       Map<String, String> extraResources,
       TargetWaitStrategy waitStrategy) {
@@ -97,7 +98,7 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/" + TARGET_AGENT_FILENAME)
-            .withEnv(getAgentEnvironment())
+            .withEnv(getAgentEnvironment(jvmArgsEnvVarName))
             .withEnv(extraEnv);
 
     extraResources.forEach(

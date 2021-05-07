@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_5;
 
+import io.grpc.Contexts;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Grpc;
@@ -54,7 +55,9 @@ final class TracingServerInterceptor implements ServerInterceptor {
 
     try (Scope ignored = context.makeCurrent()) {
       return new TracingServerCallListener<>(
-          next.startCall(new TracingServerCall<>(call, context), headers), context);
+          Contexts.interceptCall(
+              io.grpc.Context.current(), new TracingServerCall<>(call, context), headers, next),
+          context);
     } catch (Throwable e) {
       tracer.endExceptionally(context, e);
       throw e;
@@ -73,7 +76,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void close(Status status, Metadata trailers) {
       tracer.setStatus(context, status);
-      try (Scope ignored = context.makeCurrent()) {
+      try {
         delegate().close(status, trailers);
       } catch (Throwable e) {
         tracer.endExceptionally(context, e);
@@ -103,14 +106,12 @@ final class TracingServerInterceptor implements ServerInterceptor {
               GrpcHelper.MESSAGE_ID,
               messageId.incrementAndGet());
       Span.fromContext(context).addEvent("message", attributes);
-      try (Scope ignored = context.makeCurrent()) {
-        delegate().onMessage(message);
-      }
+      delegate().onMessage(message);
     }
 
     @Override
     public void onHalfClose() {
-      try (Scope ignored = context.makeCurrent()) {
+      try {
         delegate().onHalfClose();
       } catch (Throwable e) {
         tracer.endExceptionally(context, e);
@@ -120,7 +121,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onCancel() {
-      try (Scope ignored = context.makeCurrent()) {
+      try {
         delegate().onCancel();
         if (captureExperimentalSpanAttributes) {
           Span.fromContext(context).setAttribute("grpc.canceled", true);
@@ -134,7 +135,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onComplete() {
-      try (Scope ignored = context.makeCurrent()) {
+      try {
         delegate().onComplete();
       } catch (Throwable e) {
         tracer.endExceptionally(context, e);
@@ -145,7 +146,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onReady() {
-      try (Scope ignored = context.makeCurrent()) {
+      try {
         delegate().onReady();
       } catch (Throwable e) {
         tracer.endExceptionally(context, e);

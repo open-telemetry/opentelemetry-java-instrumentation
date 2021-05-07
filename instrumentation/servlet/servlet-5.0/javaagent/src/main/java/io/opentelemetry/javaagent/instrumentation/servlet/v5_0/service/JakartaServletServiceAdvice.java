@@ -10,13 +10,17 @@ import static io.opentelemetry.instrumentation.servlet.jakarta.v5_0.JakartaServl
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
+import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
+import jakarta.servlet.Filter;
+import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
@@ -29,6 +33,7 @@ public class JakartaServletServiceAdvice {
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
+
     CallDepthThreadLocalMap.incrementCallDepth(AppServerBridge.getCallDepthKey());
     if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
@@ -36,12 +41,24 @@ public class JakartaServletServiceAdvice {
 
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
+    boolean servlet = servletOrFilter instanceof Servlet;
+    MappingResolver mappingResolver;
+    if (servlet) {
+      mappingResolver =
+          InstrumentationContext.get(Servlet.class, MappingResolver.class)
+              .get((Servlet) servletOrFilter);
+    } else {
+      mappingResolver =
+          InstrumentationContext.get(Filter.class, MappingResolver.class)
+              .get((Filter) servletOrFilter);
+    }
+
     Context attachedContext = tracer().getServerContext(httpServletRequest);
     if (attachedContext != null) {
       // We are inside nested servlet/filter/app-server span, don't create new span
       if (tracer().needsRescoping(attachedContext)) {
         attachedContext =
-            tracer().updateContext(attachedContext, servletOrFilter, httpServletRequest);
+            tracer().updateContext(attachedContext, httpServletRequest, mappingResolver, servlet);
         scope = attachedContext.makeCurrent();
         return;
       }
@@ -50,7 +67,7 @@ public class JakartaServletServiceAdvice {
       // instrumentation, if needed update span with info from current request.
       Context currentContext = Java8BytecodeBridge.currentContext();
       Context updatedContext =
-          tracer().updateContext(currentContext, servletOrFilter, httpServletRequest);
+          tracer().updateContext(currentContext, httpServletRequest, mappingResolver, servlet);
       if (updatedContext != currentContext) {
         // runOnceUnderAppServer updated context, need to re-scope
         scope = updatedContext.makeCurrent();
@@ -65,7 +82,7 @@ public class JakartaServletServiceAdvice {
       // In case it was created by app server integration we need to update it with info from
       // current request.
       Context updatedContext =
-          tracer().updateContext(currentContext, servletOrFilter, httpServletRequest);
+          tracer().updateContext(currentContext, httpServletRequest, mappingResolver, servlet);
       if (currentContext != updatedContext) {
         // updateContext updated context, need to re-scope
         scope = updatedContext.makeCurrent();
@@ -73,7 +90,7 @@ public class JakartaServletServiceAdvice {
       return;
     }
 
-    context = tracer().startSpan(servletOrFilter, httpServletRequest);
+    context = tracer().startSpan(httpServletRequest, mappingResolver, servlet);
     scope = context.makeCurrent();
   }
 
@@ -84,49 +101,16 @@ public class JakartaServletServiceAdvice {
       @Advice.Thrown Throwable throwable,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    int callDepth = CallDepthThreadLocalMap.decrementCallDepth(AppServerBridge.getCallDepthKey());
-
-    if (scope != null) {
-      scope.close();
-    }
-
-    if (context == null && callDepth == 0) {
-      Context currentContext = Java8BytecodeBridge.currentContext();
-      // Something else is managing the context, we're in the outermost level of Servlet
-      // instrumentation and we have an uncaught throwable. Let's add it to the current span.
-      if (throwable != null) {
-        tracer().addUnwrappedThrowable(currentContext, throwable);
-      }
-      tracer().setPrincipal(currentContext, (HttpServletRequest) request);
-    }
-
-    if (scope == null || context == null) {
+    if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
       return;
     }
 
-    tracer().setPrincipal(context, (HttpServletRequest) request);
-    if (throwable != null) {
-      tracer().endExceptionally(context, throwable, (HttpServletResponse) response);
-      return;
-    }
-
-    AtomicBoolean responseHandled = new AtomicBoolean(false);
-
-    // In case of async servlets wait for the actual response to be ready
-    if (request.isAsyncStarted()) {
-      try {
-        request
-            .getAsyncContext()
-            .addListener(new TagSettingAsyncListener(responseHandled, context));
-      } catch (IllegalStateException e) {
-        // org.eclipse.jetty.server.Request may throw an exception here if request became
-        // finished after check above. We just ignore that exception and move on.
-      }
-    }
-
-    // Check again in case the request finished before adding the listener.
-    if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-      tracer().end(context, (HttpServletResponse) response);
-    }
+    ServletAndFilterAdviceHelper.stopSpan(
+        tracer(),
+        (HttpServletRequest) request,
+        (HttpServletResponse) response,
+        throwable,
+        context,
+        scope);
   }
 }

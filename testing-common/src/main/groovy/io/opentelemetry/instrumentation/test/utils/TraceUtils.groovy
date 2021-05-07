@@ -59,9 +59,28 @@ class TraceUtils {
     r.call()
   }
 
+  static basicClientSpan(TraceAssert trace, int index, String operation, Object parentSpan = null, Throwable exception = null,
+                         @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
+                         @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure additionAttributesAssert = null) {
+    return basicSpanForKind(trace, index, SpanKind.CLIENT, operation, parentSpan, exception, additionAttributesAssert)
+  }
+
+  static basicServerSpan(TraceAssert trace, int index, String operation, Object parentSpan = null, Throwable exception = null,
+                         @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
+                         @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure additionAttributesAssert = null) {
+    return basicSpanForKind(trace, index, SpanKind.SERVER, operation, parentSpan, exception, additionAttributesAssert)
+  }
+
+  // TODO rename to basicInternalSpan
   static basicSpan(TraceAssert trace, int index, String operation, Object parentSpan = null, Throwable exception = null,
                    @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
                    @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure additionAttributesAssert = null) {
+    return basicSpanForKind(trace, index, SpanKind.INTERNAL, operation, parentSpan, exception, additionAttributesAssert)
+  }
+
+  private static basicSpanForKind(TraceAssert trace, int index, SpanKind spanKind, String operation, Object parentSpan = null, Throwable exception = null,
+                                  @ClosureParams(value = SimpleType, options = ['io.opentelemetry.instrumentation.test.asserts.AttributesAssert'])
+                                  @DelegatesTo(value = AttributesAssert, strategy = Closure.DELEGATE_FIRST) Closure additionAttributesAssert = null) {
     trace.span(index) {
       if (parentSpan == null) {
         hasNoParent()
@@ -69,8 +88,9 @@ class TraceUtils {
         childOf((SpanData) parentSpan)
       }
       name operation
-      errored exception != null
+      kind spanKind
       if (exception) {
+        status StatusCode.ERROR
         errorEvent(exception.class, exception.message)
       }
 

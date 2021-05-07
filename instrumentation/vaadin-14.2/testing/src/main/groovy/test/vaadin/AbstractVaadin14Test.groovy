@@ -31,33 +31,28 @@ abstract class AbstractVaadin14Test extends AbstractVaadinTest {
   void assertFirstRequest() {
     assertTraces(VAADIN_14_4 ? 5 : 4) {
       def handlers = getRequestHandlers("BootstrapHandler")
-      trace(0, 3 + handlers.size()) {
+      trace(0, 2 + handlers.size()) {
         serverSpan(it, 0, getContextPath() + "/main")
-        basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
-        basicSpan(it, 2, "SpringVaadinServletService.handleRequest", span(1))
+        basicSpan(it, 1, "SpringVaadinServletService.handleRequest", span(0))
 
-        int spanIndex = 3
+        int spanIndex = 2
         handlers.each { handler ->
-          basicSpan(it, spanIndex++, handler + ".handleRequest", span(2))
+          basicSpan(it, spanIndex++, handler + ".handleRequest", span(1))
         }
       }
       // following traces are for javascript files used on page
-      trace(1, 2) {
+      trace(1, 1) {
         serverSpan(it, 0, getContextPath() + "/*")
-        basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
-      trace(2, 2) {
+      trace(2, 1) {
         serverSpan(it, 0, getContextPath() + "/*")
-        basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
-      trace(3, 2) {
+      trace(3, 1) {
         serverSpan(it, 0, getContextPath() + "/*")
-        basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
       }
       if (VAADIN_14_4) {
-        trace(4, 2) {
+        trace(4, 1) {
           serverSpan(it, 0, getContextPath() + "/*")
-          basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
         }
       }
     }
@@ -67,14 +62,13 @@ abstract class AbstractVaadin14Test extends AbstractVaadinTest {
   void assertButtonClick() {
     assertTraces(1) {
       def handlers = getRequestHandlers("UidlRequestHandler")
-      trace(0, 3 + handlers.size() + 1) {
+      trace(0, 2 + handlers.size() + 1) {
         serverSpan(it, 0, getContextPath() + "/main")
-        basicSpan(it, 1, "ApplicationDispatcher.forward", span(0))
-        basicSpan(it, 2, "SpringVaadinServletService.handleRequest", span(1))
+        basicSpan(it, 1, "SpringVaadinServletService.handleRequest", span(0))
 
-        int spanIndex = 3
+        int spanIndex = 2
         handlers.each { handler ->
-          basicSpan(it, spanIndex++, handler + ".handleRequest", span(2))
+          basicSpan(it, spanIndex++, handler + ".handleRequest", span(1))
         }
         basicSpan(it, spanIndex, "EventRpcHandler.handle/click", span(spanIndex - 1))
       }

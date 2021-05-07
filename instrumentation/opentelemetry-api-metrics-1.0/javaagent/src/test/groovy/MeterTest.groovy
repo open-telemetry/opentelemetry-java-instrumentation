@@ -12,7 +12,7 @@ import static java.util.concurrent.TimeUnit.SECONDS
 
 import com.google.common.base.Stopwatch
 import io.opentelemetry.api.metrics.AsynchronousInstrument
-import io.opentelemetry.api.metrics.GlobalMetricsProvider
+import io.opentelemetry.api.metrics.GlobalMeterProvider
 import io.opentelemetry.api.metrics.common.Labels
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.sdk.metrics.data.MetricData
@@ -27,7 +27,7 @@ class MeterTest extends AgentInstrumentationSpecification {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = GlobalMetricsProvider.getMeter(instrumentationName, "1.2.3")
+    def meter = GlobalMeterProvider.getMeter(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -78,7 +78,7 @@ class MeterTest extends AgentInstrumentationSpecification {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = GlobalMetricsProvider.getMeter(instrumentationName, "1.2.3")
+    def meter = GlobalMeterProvider.getMeter(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -124,7 +124,7 @@ class MeterTest extends AgentInstrumentationSpecification {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = GlobalMetricsProvider.getMeter(instrumentationName, "1.2.3")
+    def meter = GlobalMeterProvider.getMeter(instrumentationName, "1.2.3")
     def instrument = meter."$builderMethod"("test")
       .setDescription("d")
       .setUnit("u")
@@ -206,7 +206,7 @@ class MeterTest extends AgentInstrumentationSpecification {
     def instrumentationName = "test" + new Random().nextLong()
 
     when:
-    def meter = GlobalMetricsProvider.getMeter(instrumentationName, "1.2.3")
+    def meter = GlobalMeterProvider.getMeter(instrumentationName, "1.2.3")
     def longCounter = meter.longCounterBuilder("test")
       .setDescription("d")
       .setUnit("u")
@@ -264,6 +264,7 @@ class MeterTest extends AgentInstrumentationSpecification {
   List<PointData> points(MetricData metricData) {
     def points = []
     points.addAll(metricData.getDoubleGaugeData().getPoints())
+    points.addAll(metricData.getDoubleHistogramData().getPoints())
     points.addAll(metricData.getDoubleSumData().getPoints())
     points.addAll(metricData.getDoubleSummaryData().getPoints())
     points.addAll(metricData.getLongGaugeData().getPoints())
