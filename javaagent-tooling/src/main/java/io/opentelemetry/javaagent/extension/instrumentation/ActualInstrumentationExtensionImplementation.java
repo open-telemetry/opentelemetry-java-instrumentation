@@ -46,6 +46,7 @@ public final class ActualInstrumentationExtensionImplementation
   public static final ElementMatcher.Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
       not(isAnnotatedWith(named("javax.decorator.Decorator")));
 
+
   @Override
   AgentBuilder extend(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
