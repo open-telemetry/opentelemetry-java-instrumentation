@@ -46,11 +46,6 @@ afterEvaluate {
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-metrics'
     }
-    compileOnly(project(':javaagent-tooling')) {
-      // OpenTelemetry SDK is not needed for compilation
-      exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
-      exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-metrics'
-    }
     compileOnly deps.bytebuddy
     annotationProcessor deps.autoservice
     compileOnly deps.autoservice
