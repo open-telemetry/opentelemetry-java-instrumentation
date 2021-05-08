@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v3_0.CassandraDatabaseClientTracer.tracer;
 
 import com.datastax.driver.core.BoundStatement;
@@ -53,7 +52,7 @@ public class TracingSession implements Session {
             return new TracingSession(session);
           }
         },
-        directExecutor());
+        DirectExecutor.INSTANCE);
   }
 
   @Override
@@ -223,6 +222,6 @@ public class TracingSession implements Session {
             tracer().endExceptionally(context, t);
           }
         },
-        directExecutor());
+        DirectExecutor.INSTANCE);
   }
 }
