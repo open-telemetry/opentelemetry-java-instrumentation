@@ -238,8 +238,8 @@ public abstract class InstrumentationModule implements AgentExtension {
   }
 
   // visible for testing
-  static boolean initEnabled(Config config, List<String> instrumentationNames,
-      boolean defaultEnabled) {
+  static boolean initEnabled(
+      Config config, List<String> instrumentationNames, boolean defaultEnabled) {
     return config.isInstrumentationEnabled(instrumentationNames, defaultEnabled);
   }
 }
