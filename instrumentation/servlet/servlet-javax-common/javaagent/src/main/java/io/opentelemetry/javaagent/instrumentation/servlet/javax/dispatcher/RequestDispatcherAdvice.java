@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet.javax.dispatcher;
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.dispatcher.RequestDispatcherAdviceHelper;
 import java.lang.reflect.Method;
@@ -22,7 +21,6 @@ public class RequestDispatcherAdvice {
       @Advice.Origin Method method,
       @Advice.Local("otelRequestContext") Context requestContext,
       @Advice.Local("otelContext") Context context,
-      @Advice.Local("otelScope") Scope scope,
       @Advice.Argument(0) ServletRequest request) {
 
     Context currentContext = Java8BytecodeBridge.currentContext();
@@ -37,9 +35,6 @@ public class RequestDispatcherAdvice {
 
     // this tells the dispatched servlet to use the current span as the parent for its work
     request.setAttribute(CONTEXT_ATTRIBUTE, context);
-
-    // TODO (trask) do we need this, since doing manual propagation above?
-    scope = context.makeCurrent();
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -47,10 +42,7 @@ public class RequestDispatcherAdvice {
       @Advice.Argument(0) ServletRequest request,
       @Advice.Local("otelRequestContext") Context requestContext,
       @Advice.Local("otelContext") Context context,
-      @Advice.Local("otelScope") Scope scope,
       @Advice.Thrown Throwable throwable) {
-
-    scope.close();
 
     if (requestContext != null) {
       // restore the original request context
