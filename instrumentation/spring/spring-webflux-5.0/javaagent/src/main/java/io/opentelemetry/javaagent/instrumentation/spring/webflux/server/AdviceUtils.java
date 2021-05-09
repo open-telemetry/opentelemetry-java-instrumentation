@@ -40,7 +40,7 @@ public class AdviceUtils {
 
   public static <T> Mono<T> setPublisherSpan(
       Mono<T> mono, io.opentelemetry.context.Context context) {
-    return mono.transform(finishSpanNextOrError(context));
+    return mono.<T>transform(finishSpanNextOrError(context));
   }
 
   /**
