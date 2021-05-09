@@ -33,6 +33,8 @@ import net.bytebuddy.matcher.ElementMatcher;
  */
 public abstract class InstrumentationModule implements AgentExtension {
   private static final String[] EMPTY = new String[0];
+  private static final boolean DEFAULT_ENABLED = Config.get()
+      .getBooleanProperty("otel.instrumentation.common.default-enabled", true);
 
   private final Set<String> instrumentationNames;
   final boolean enabled;
@@ -228,8 +230,6 @@ public abstract class InstrumentationModule implements AgentExtension {
    * themselves on some other condition.
    */
   protected boolean defaultEnabled() {
-    // TODO (trask) caching this value statically requires changing (or removing) the tests that
-    //  rely on updating the value
-    return Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
+    return DEFAULT_ENABLED;
   }
 }
