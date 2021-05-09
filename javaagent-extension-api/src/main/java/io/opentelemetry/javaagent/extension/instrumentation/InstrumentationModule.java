@@ -33,8 +33,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  */
 public abstract class InstrumentationModule implements AgentExtension {
   private static final String[] EMPTY = new String[0];
-  private static final boolean DEFAULT_ENABLED = Config.get()
-      .getBooleanProperty("otel.instrumentation.common.default-enabled", true);
+  private static final boolean DEFAULT_ENABLED = initDefaultEnabled(Config.get());
 
   private final Set<String> instrumentationNames;
   final boolean enabled;
@@ -74,7 +73,7 @@ public abstract class InstrumentationModule implements AgentExtension {
       throw new IllegalArgumentException("InstrumentationModules must be named");
     }
     this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
-    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
+    enabled = initEnabled(Config.get(), instrumentationNames, defaultEnabled());
   }
 
   private static List<String> toList(String first, String[] rest) {
@@ -231,5 +230,16 @@ public abstract class InstrumentationModule implements AgentExtension {
    */
   protected boolean defaultEnabled() {
     return DEFAULT_ENABLED;
+  }
+
+  // visible for testing
+  static boolean initDefaultEnabled(Config config) {
+    return config.getBooleanProperty("otel.instrumentation.common.default-enabled", true);
+  }
+
+  // visible for testing
+  static boolean initEnabled(Config config, List<String> instrumentationNames,
+      boolean defaultEnabled) {
+    return config.isInstrumentationEnabled(instrumentationNames, defaultEnabled);
   }
 }
