@@ -43,10 +43,7 @@ public class TracingSession implements Session {
 
   @Override
   public ListenableFuture<Session> initAsync() {
-    return Futures.transform(
-        session.initAsync(),
-        TracingSession::new,
-        Runnable::run);
+    return Futures.transform(session.initAsync(), TracingSession::new, Runnable::run);
   }
 
   @Override
