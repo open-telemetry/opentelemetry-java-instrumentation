@@ -6,16 +6,18 @@
 import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.javaagent.testing.common.HelperInjectorAccess
+
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicReference
+import org.apache.commons.lang3.SystemUtils
 
 class ResourceInjectionTest extends AgentInstrumentationSpecification {
 
   def "resources injected to non-delegating classloader"() {
     setup:
     String resourceName = 'test-resources/test-resource.txt'
-    AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], (ClassLoader) null))
+    URL[] urls = [ SystemUtils.getProtectionDomain().getCodeSource().getLocation() ]
+    AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(urls, (ClassLoader) null))
 
     when:
     def resourceUrls = emptyLoader.get().getResources(resourceName)
@@ -23,9 +25,11 @@ class ResourceInjectionTest extends AgentInstrumentationSpecification {
     !resourceUrls.hasMoreElements()
 
     when:
-    URLClassLoader notInjectedLoader = new URLClassLoader(new URL[0], (ClassLoader) null)
+    URLClassLoader notInjectedLoader = new URLClassLoader(urls, (ClassLoader) null)
 
-    HelperInjectorAccess.injectResources(emptyLoader.get(), resourceName)
+    // this triggers resource injection
+    emptyLoader.get().loadClass(SystemUtils.getName())
+
     resourceUrls = emptyLoader.get().getResources(resourceName)
 
     then:
