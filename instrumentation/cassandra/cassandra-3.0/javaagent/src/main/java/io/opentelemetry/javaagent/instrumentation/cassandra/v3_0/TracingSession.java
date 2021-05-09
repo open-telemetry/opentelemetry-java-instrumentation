@@ -16,7 +16,6 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
-import com.google.common.base.Function;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -46,13 +45,8 @@ public class TracingSession implements Session {
   public ListenableFuture<Session> initAsync() {
     return Futures.transform(
         session.initAsync(),
-        new Function<Session, Session>() {
-          @Override
-          public Session apply(Session session) {
-            return new TracingSession(session);
-          }
-        },
-        DirectExecutor.INSTANCE);
+        TracingSession::new,
+        Runnable::run);
   }
 
   @Override
@@ -222,6 +216,6 @@ public class TracingSession implements Session {
             tracer().endExceptionally(context, t);
           }
         },
-        DirectExecutor.INSTANCE);
+        Runnable::run);
   }
 }
