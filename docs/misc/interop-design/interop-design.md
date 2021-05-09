@@ -9,7 +9,7 @@ These two things must seamlessly interoperate:
 
 ## Design
 
-![Design](./design.png)
+![Design](design.png)
 
 The orange components above may or may not be present, depending on whether the user app uses
 the OpenTelemetry API (either directly or transitively via an instrumented library).
@@ -80,7 +80,7 @@ that the Java agent takes over, and their configuration work / exporter is not c
 If the user brings the OpenTelemetry API and the OpenTelemetry SDK,
 the bytecode instrumentation could use the OpenTelemetry API brought by the user:
 
-![Alternate Design 1](./alt-design-1.png)
+![Alternate Design 1](alt-design-1.png)
 
 The Java agent could check which version of the OpenTelemetry API was brought by the user,
 and only apply the bytecode instrumentation if it's compatible
@@ -107,7 +107,7 @@ The above disadvantage is pretty serious, so more likely
 if we want the bytecode instrumentation to use the OpenTelemetry API brought by the user,
 we would end up with something more like this:
 
-![Alternate Design 2](./alt-design-2.png)
+![Alternate Design 2](alt-design-2.png)
 
 This would work by having new server/consumer spans set the Class Loader Bridge
 (pointing to the OpenTelemetry API brought by the user) into a ThreadLocal,
