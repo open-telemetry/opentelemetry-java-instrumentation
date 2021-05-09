@@ -37,6 +37,11 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest<HttpURLConnec
   }
 
   @Override
+  Exception exceptionThrownOnErrorResponse(URI uri) {
+    new IOException("Server returned HTTP response code: 500 for URL: ${uri.toURL()}")
+  }
+
+  @Override
   boolean testReusedRequest() {
     // HttpURLConnection can't be reused
     return false

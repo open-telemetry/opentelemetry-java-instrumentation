@@ -68,8 +68,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
 
   @Override
   Exception exceptionThrownOnErrorResponse(URI uri) {
-    def url = uri.toURL()
-    new IOException("Server returned HTTP response code: 500 for URL: $url")
+    new IOException("Server returned HTTP response code: 500 for URL: ${uri.toURL()}")
   }
 
   @Unroll

@@ -506,7 +506,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def exception = exceptionThrownOnErrorResponse(uri)
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
-        basicSpan(it, 0, "parent", null, exception)
+        basicSpan(it, 0, "parent", null)
         clientSpan(it, 1, span(0), method, uri, 500, exception)
         serverSpan(it, 2 + extraClientSpans(), span(1 + extraClientSpans()))
       }
