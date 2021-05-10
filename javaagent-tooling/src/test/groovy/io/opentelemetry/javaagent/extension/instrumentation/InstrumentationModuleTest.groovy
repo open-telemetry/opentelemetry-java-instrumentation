@@ -75,42 +75,6 @@ class InstrumentationModuleTest extends Specification {
     enabled << [true, false]
   }
 
-  def "configure default sys prop as #value"() {
-    setup:
-    Config config = new ConfigBuilder().readProperties([
-      "otel.instrumentation.common.default-enabled": String.valueOf(value)
-    ]).build()
-
-    expect:
-    InstrumentationModule.initDefaultEnabled(config) == enabled
-
-    where:
-    value   | enabled
-    "true"  | true
-    "false" | false
-    "asdf"  | false
-  }
-
-  def "configure sys prop enabled for #value when default is disabled"() {
-    setup:
-    Config config = new ConfigBuilder().readProperties([
-      ("otel.instrumentation." + value + ".enabled"): "true"
-    ]).build()
-
-    expect:
-    InstrumentationModule.initEnabled(config, [name, altName], false) == enabled
-
-    where:
-    value             | enabled | name          | altName
-    "test"            | true    | "test"        | "asdf"
-    "duplicate"       | true    | "duplicate"   | "duplicate"
-    "bad"             | false   | "not"         | "valid"
-    "altTest"         | true    | "asdf"        | "altTest"
-    "dash-test"       | true    | "dash-test"   | "asdf"
-    "underscore_test" | true    | "asdf"        | "underscore_test"
-    "period.test"     | true    | "period.test" | "asdf"
-  }
-
   static class TestInstrumentationModule extends InstrumentationModule {
     boolean applyCalled = false
 
