@@ -219,10 +219,10 @@ public class HelperInjector implements Transformer {
             target.modify(
                 AgentInstaller.getInstrumentation(),
                 Collections.singleton(helperModule),
-                Collections.<String, Set<JavaModule>>emptyMap(),
-                Collections.<String, Set<JavaModule>>emptyMap(),
-                Collections.<Class<?>>emptySet(),
-                Collections.<Class<?>, List<Class<?>>>emptyMap());
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                Collections.emptySet(),
+                Collections.emptyMap());
           }
         }
       }

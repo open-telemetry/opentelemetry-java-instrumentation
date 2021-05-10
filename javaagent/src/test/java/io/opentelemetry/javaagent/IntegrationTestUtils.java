@@ -137,14 +137,6 @@ public class IntegrationTestUtils {
     return (String[]) f.get(null);
   }
 
-  public static String[] getAgentPackagePrefixes() throws Exception {
-    Field f =
-        getAgentClassLoader()
-            .loadClass("io.opentelemetry.javaagent.tooling.Constants")
-            .getField("AGENT_PACKAGE_PREFIXES");
-    return (String[]) f.get(null);
-  }
-
   private static String getAgentArgument() {
     RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
     for (String arg : runtimeMxBean.getInputArguments()) {

@@ -51,12 +51,6 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
     return false
   }
 
-  //We override this test below because it produces somewhat different attributes
-  @Override
-  boolean testRemoteConnection() {
-    return false
-  }
-
   // TODO nested client span is not created, but context is still injected
   //  which is not what the test expects
   @Override
