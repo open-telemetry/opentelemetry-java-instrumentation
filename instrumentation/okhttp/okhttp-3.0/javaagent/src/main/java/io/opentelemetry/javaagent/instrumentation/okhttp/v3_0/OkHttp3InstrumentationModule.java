@@ -56,6 +56,8 @@ public class OkHttp3InstrumentationModule extends InstrumentationModule {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addTracingInterceptor(
         @Advice.This OkHttpClient.Builder builder, @Advice.Local("callDepth") int callDepth) {
+      // No-args constructor is automatically called by constructors with args, but we only want to
+      // run once from the constructor with args because that is where the dedupe needs to happen.
       if (callDepth > 0) {
         return;
       }
