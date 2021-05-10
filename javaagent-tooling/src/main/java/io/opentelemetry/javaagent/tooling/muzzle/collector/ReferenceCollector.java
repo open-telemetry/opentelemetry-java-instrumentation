@@ -164,9 +164,9 @@ public class ReferenceCollector {
   private static InputStream getResourceStream(String resource) throws IOException {
     URLConnection connection =
         checkNotNull(
-            ReferenceCollector.class.getClassLoader().getResource(resource),
-            "Couldn't find resource %s",
-            resource)
+                ReferenceCollector.class.getClassLoader().getResource(resource),
+                "Couldn't find resource %s",
+                resource)
             .openConnection();
 
     // Since the JarFile cache is not per class loader, but global with path as key, using cache may
@@ -227,10 +227,13 @@ public class ReferenceCollector {
         //
         // can at least prune constructors, private, and static methods, since those cannot be used
         // to help implement an abstract library method
-        reference.getMethods().removeIf(
-            method -> method.getName().equals(MethodDescription.CONSTRUCTOR_INTERNAL_NAME)
-                || method.getFlags().contains(Reference.Flag.VisibilityFlag.PRIVATE)
-                || method.getFlags().contains(Reference.Flag.OwnershipFlag.STATIC));
+        reference
+            .getMethods()
+            .removeIf(
+                method ->
+                    method.getName().equals(MethodDescription.CONSTRUCTOR_INTERNAL_NAME)
+                        || method.getFlags().contains(Reference.Flag.VisibilityFlag.PRIVATE)
+                        || method.getFlags().contains(Reference.Flag.OwnershipFlag.STATIC));
         continue;
       }
       i.remove();

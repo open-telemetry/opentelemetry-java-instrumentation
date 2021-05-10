@@ -325,7 +325,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
               .withFlag(computeMinimumClassAccess(refSourceType, ownerType))
               .withField(
                   new Reference.Source[] {
-                      new Reference.Source(refSourceClassName, currentLineNumber)
+                    new Reference.Source(refSourceClassName, currentLineNumber)
                   },
                   fieldFlags.toArray(new Reference.Flag[0]),
                   name,
@@ -398,7 +398,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
               .withFlag(computeMinimumClassAccess(refSourceType, ownerType))
               .withMethod(
                   new Reference.Source[] {
-                      new Reference.Source(refSourceClassName, currentLineNumber)
+                    new Reference.Source(refSourceClassName, currentLineNumber)
                   },
                   methodFlags.toArray(new Reference.Flag[0]),
                   name,
@@ -517,7 +517,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
 
       // remember used context classes if this is an InstrumentationContext.get() call
       if ("io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext"
-          .equals(ownerType.getClassName())
+              .equals(ownerType.getClassName())
           && "get".equals(name)
           && methodType.getArgumentTypes().length == 2) {
         // in case of invalid scenario (not using .class ref directly) don't store anything and
