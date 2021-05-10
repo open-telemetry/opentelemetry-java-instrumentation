@@ -35,6 +35,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.jar.asm.ClassReader;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -163,9 +164,9 @@ public class ReferenceCollector {
   private static InputStream getResourceStream(String resource) throws IOException {
     URLConnection connection =
         checkNotNull(
-                ReferenceCollector.class.getClassLoader().getResource(resource),
-                "Couldn't find resource %s",
-                resource)
+            ReferenceCollector.class.getClassLoader().getResource(resource),
+            "Couldn't find resource %s",
+            resource)
             .openConnection();
 
     // Since the JarFile cache is not per class loader, but global with path as key, using cache may
@@ -224,9 +225,12 @@ public class ReferenceCollector {
         // these need to be kept in order to check that abstract methods are implemented,
         // and to check that declared super class fields are present
         //
-        // can at least prune the constructor, since that cannot be used to help implement an
-        // abstract library method
-        reference.getMethods().removeIf(method -> method.getName().equals("<init>"));
+        // can at least prune constructors, private, and static methods, since those cannot be used
+        // to help implement an abstract library method
+        reference.getMethods().removeIf(
+            method -> method.getName().equals(MethodDescription.CONSTRUCTOR_INTERNAL_NAME)
+                || method.getFlags().contains(Reference.Flag.VisibilityFlag.PRIVATE)
+                || method.getFlags().contains(Reference.Flag.OwnershipFlag.STATIC));
         continue;
       }
       i.remove();

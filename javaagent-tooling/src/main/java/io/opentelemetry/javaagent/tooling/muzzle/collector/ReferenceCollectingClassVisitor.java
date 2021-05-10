@@ -21,7 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.jar.asm.ClassVisitor;
 import net.bytebuddy.jar.asm.FieldVisitor;
 import net.bytebuddy.jar.asm.Handle;
@@ -233,21 +232,16 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
       Flag ownershipFlag = computeOwnershipFlag(access);
       Flag manifestationFlag = computeTypeManifestationFlag(access);
 
-      // as an optimization skip constructors, private and static methods
-      if (!(visibilityFlag == VisibilityFlag.PRIVATE
-          || ownershipFlag == OwnershipFlag.STATIC
-          || MethodDescription.CONSTRUCTOR_INTERNAL_NAME.equals(name))) {
-        addReference(
-            new Reference.Builder(refSourceClassName)
-                .withSource(refSourceClassName)
-                .withMethod(
-                    new Source[0],
-                    new Flag[] {visibilityFlag, ownershipFlag, manifestationFlag},
-                    name,
-                    methodType.getReturnType(),
-                    methodType.getArgumentTypes())
-                .build());
-      }
+      addReference(
+          new Reference.Builder(refSourceClassName)
+              .withSource(refSourceClassName)
+              .withMethod(
+                  new Source[0],
+                  new Flag[] {visibilityFlag, ownershipFlag, manifestationFlag},
+                  name,
+                  methodType.getReturnType(),
+                  methodType.getArgumentTypes())
+              .build());
     }
 
     // Additional references we could check
@@ -331,7 +325,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
               .withFlag(computeMinimumClassAccess(refSourceType, ownerType))
               .withField(
                   new Reference.Source[] {
-                    new Reference.Source(refSourceClassName, currentLineNumber)
+                      new Reference.Source(refSourceClassName, currentLineNumber)
                   },
                   fieldFlags.toArray(new Reference.Flag[0]),
                   name,
@@ -404,7 +398,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
               .withFlag(computeMinimumClassAccess(refSourceType, ownerType))
               .withMethod(
                   new Reference.Source[] {
-                    new Reference.Source(refSourceClassName, currentLineNumber)
+                      new Reference.Source(refSourceClassName, currentLineNumber)
                   },
                   methodFlags.toArray(new Reference.Flag[0]),
                   name,
@@ -523,7 +517,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
 
       // remember used context classes if this is an InstrumentationContext.get() call
       if ("io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext"
-              .equals(ownerType.getClassName())
+          .equals(ownerType.getClassName())
           && "get".equals(name)
           && methodType.getArgumentTypes().length == 2) {
         // in case of invalid scenario (not using .class ref directly) don't store anything and
