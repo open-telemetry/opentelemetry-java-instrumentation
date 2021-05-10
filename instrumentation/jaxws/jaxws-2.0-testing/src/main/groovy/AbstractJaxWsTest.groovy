@@ -3,14 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.api.trace.SpanKind
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.test.hello_web_service.HelloRequest
 import io.opentelemetry.test.hello_web_service.Hello2Request
+import io.opentelemetry.test.hello_web_service.HelloRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
@@ -156,8 +159,10 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
     trace.span(index) {
       hasNoParent()
       name operation
-      kind SpanKind.SERVER
-      errored exception != null
+      kind SERVER
+      if (exception != null) {
+        status ERROR
+      }
     }
   }
 
@@ -169,9 +174,9 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
         childOf((SpanData) parentSpan)
       }
       name "HelloService/" + operation
-      kind SpanKind.INTERNAL
-      errored exception != null
+      kind INTERNAL
       if (exception) {
+        status ERROR
         errorEvent(exception.class, exception.message)
       }
     }
@@ -185,9 +190,9 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
         childOf((SpanData) parentSpan)
       }
       name "HelloServiceImpl." + methodName
-      kind SpanKind.INTERNAL
-      errored exception != null
+      kind INTERNAL
       if (exception) {
+        status ERROR
         errorEvent(exception.class, exception.message)
       }
       attributes {

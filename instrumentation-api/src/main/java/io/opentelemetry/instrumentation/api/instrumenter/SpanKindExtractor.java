@@ -30,6 +30,16 @@ public interface SpanKindExtractor<REQUEST> {
     return request -> SpanKind.SERVER;
   }
 
+  /** Returns a {@link SpanNameExtractor} which always returns {@link SpanKind#PRODUCER}. */
+  static <REQUEST> SpanKindExtractor<REQUEST> alwaysProducer() {
+    return request -> SpanKind.PRODUCER;
+  }
+
+  /** Returns a {@link SpanNameExtractor} which always returns {@link SpanKind#CONSUMER}. */
+  static <REQUEST> SpanKindExtractor<REQUEST> alwaysConsumer() {
+    return request -> SpanKind.CONSUMER;
+  }
+
   /** Returns the {@link SpanKind} corresponding to the {@link REQUEST}. */
   SpanKind extract(REQUEST request);
 }

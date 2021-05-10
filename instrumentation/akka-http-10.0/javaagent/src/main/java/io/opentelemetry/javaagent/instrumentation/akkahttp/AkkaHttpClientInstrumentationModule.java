@@ -18,8 +18,8 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -154,7 +154,8 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
       HttpRequest request = carrier.getRequest();
       if (request != null) {
         // It looks like this cast is only needed in Java, Scala would have figured it out
-        carrier.setRequest((HttpRequest) request.addHeader(RawHeader.create(key, value)));
+        carrier.setRequest(
+            (HttpRequest) request.removeHeader(key).addHeader(RawHeader.create(key, value)));
       }
     }
   }

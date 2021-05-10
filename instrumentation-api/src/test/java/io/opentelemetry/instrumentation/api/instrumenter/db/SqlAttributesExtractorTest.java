@@ -28,27 +28,27 @@ class SqlAttributesExtractorTest {
         }
 
         @Override
-        protected String rawDbStatement(Map<String, String> map) {
+        protected String rawStatement(Map<String, String> map) {
           return map.get("db.statement");
         }
 
         @Override
-        protected String dbSystem(Map<String, String> map) {
+        protected String system(Map<String, String> map) {
           return map.get("db.system");
         }
 
         @Override
-        protected String dbUser(Map<String, String> map) {
+        protected String user(Map<String, String> map) {
           return map.get("db.user");
         }
 
         @Override
-        protected String dbName(Map<String, String> map) {
+        protected String name(Map<String, String> map) {
           return map.get("db.name");
         }
 
         @Override
-        protected String dbConnectionString(Map<String, String> map) {
+        protected String connectionString(Map<String, String> map) {
           return map.get("db.connection_string");
         }
       };

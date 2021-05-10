@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.hibernate.Version
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository
@@ -42,6 +43,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
   }
 
   def "test CRUD"() {
+    def isHibernate4 = Version.getVersionString().startsWith("4.")
     // moved inside test -- otherwise, miss the opportunity to instrument
     def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)
     def repo = context.getBean(JpaCustomerRepository)
@@ -61,7 +63,6 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         span(0) {
           name "JpaRepository.findAll"
           kind INTERNAL
-          errored false
           attributes {
           }
         }
@@ -90,15 +91,31 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
     then:
     customer.id != null
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 2 + (isHibernate4 ? 0 : 1)) {
         span(0) {
           name "CrudRepository.save"
           kind INTERNAL
-          errored false
           attributes {
           }
         }
-        span(1) { // insert
+        def offset = 0
+        // hibernate5 has extra span
+        if (!isHibernate4) {
+          offset = 1
+          span(1) {
+            name "test"
+            kind CLIENT
+            childOf span(0)
+            attributes {
+              "${SemanticAttributes.DB_SYSTEM.key}" "hsqldb"
+              "${SemanticAttributes.DB_NAME.key}" "test"
+              "${SemanticAttributes.DB_USER.key}" "sa"
+              "${SemanticAttributes.DB_CONNECTION_STRING.key}" "hsqldb:mem:"
+              "${SemanticAttributes.DB_STATEMENT.key}" "call next value for hibernate_sequence"
+            }
+          }
+        }
+        span(1 + offset) { // insert
           name "INSERT test.JpaCustomer"
           kind CLIENT
           childOf span(0)
@@ -127,7 +144,6 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         span(0) {
           name "CrudRepository.save"
           kind INTERNAL
-          errored false
           attributes {
           }
         }
@@ -172,7 +188,6 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         span(0) {
           name "JpaCustomerRepository.findByLastName"
           kind INTERNAL
-          errored false
           attributes {
           }
         }
@@ -203,7 +218,6 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
         span(0) {
           name "CrudRepository.delete"
           kind INTERNAL
-          errored false
           attributes {
           }
         }

@@ -5,7 +5,6 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  compileOnly(project(':javaagent-spi'))
   compileOnly(deps.bytebuddy)
   compileOnly(deps.opentelemetrySdk)
   compileOnly(deps.opentelemetrySdkAutoconfigure)
@@ -14,6 +13,7 @@ dependencies {
   annotationProcessor deps.autoservice
   compileOnly deps.autoservice
 
+  implementation project(':javaagent-extension-api')
   implementation project(':javaagent-tooling')
   implementation deps.opentelemetryProto
   implementation deps.opentelemetryOtlp
@@ -25,6 +25,7 @@ dependencies {
   // FIXME: we should enable this, but currently this fails tests for google http client
   //testImplementation project(':instrumentation:http-url-connection:javaagent')
   implementation project(':instrumentation:internal:internal-class-loader:javaagent')
+  implementation project(':instrumentation:internal:internal-eclipse-osgi-3.6:javaagent')
   implementation project(':instrumentation:internal:internal-proxy:javaagent')
   implementation project(':instrumentation:internal:internal-url-class-loader:javaagent')
 

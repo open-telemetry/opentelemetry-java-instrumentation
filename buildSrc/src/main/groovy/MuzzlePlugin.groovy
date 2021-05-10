@@ -31,6 +31,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.model.ObjectFactory
+
 /**
  * muzzle task plugin which runs muzzle validation against a range of dependencies.
  */
@@ -43,14 +44,16 @@ class MuzzlePlugin implements Plugin<Project> {
 
   @Override
   void apply(Project project) {
-    def bootstrapProject = project.rootProject.getChildProjects().get('javaagent-bootstrap')
-    def toolingProject = project.rootProject.getChildProjects().get('javaagent-tooling')
     project.extensions.create("muzzle", MuzzleExtension, project.objects)
 
     // compileMuzzle compiles all projects required to run muzzle validation.
     // Not adding group and description to keep this task from showing in `gradle tasks`.
-    def compileMuzzle = project.task('compileMuzzle')
-    compileMuzzle.dependsOn(bootstrapProject.tasks.classes, toolingProject.tasks.classes, project.tasks.classes)
+    def compileMuzzle = project.task('compileMuzzle') {
+      dependsOn(':javaagent-bootstrap:classes')
+      dependsOn(':javaagent-tooling:classes')
+      dependsOn(':javaagent-extension-api:classes')
+      dependsOn(project.tasks.classes)
+    }
 
     def muzzle = project.task('muzzle') {
       group = 'Muzzle'

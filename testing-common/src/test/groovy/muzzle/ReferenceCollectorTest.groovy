@@ -5,20 +5,15 @@
 
 package muzzle
 
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.MinimumVisibilityFlag
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag
-import static io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.VisibilityFlag
-import static muzzle.TestClasses.HelperAdvice
-import static muzzle.TestClasses.LdcAdvice
-import static muzzle.TestClasses.MethodBodyAdvice
+import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.*
+import static muzzle.TestClasses.*
 
 import external.instrumentation.ExternalHelper
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.InstrumentationContextTestClasses
 import io.opentelemetry.instrumentation.OtherTestHelperClasses
 import io.opentelemetry.instrumentation.TestHelperClasses
-import io.opentelemetry.javaagent.tooling.muzzle.Reference
+import io.opentelemetry.javaagent.extension.muzzle.Reference
 import io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCompilationException
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
 import spock.lang.Specification
@@ -145,6 +140,28 @@ class ReferenceCollectorTest extends Specification {
       helperClass.flags.contains(ManifestationFlag.NON_FINAL)
       assertHelperSuperClassMethod helperClass, false
       assertHelperInterfaceMethod helperClass, false
+    }
+  }
+
+  def "should collect field declaration references"() {
+    when:
+    def collector = new ReferenceCollector({ it == DeclaredFieldTestClass.Helper.name })
+    collector.collectReferencesFromAdvice(DeclaredFieldTestClass.Advice.name)
+    def references = collector.references
+
+    then:
+    println references
+
+    with(references[DeclaredFieldTestClass.Helper.name]) {helperClass ->
+      def superField = findField(helperClass, 'superField')
+      !superField.declared
+
+      def field = findField(helperClass, 'helperField')
+      field.declared
+    }
+
+    with(references[DeclaredFieldTestClass.LibraryBaseClass.name]) {libraryBaseClass ->
+      libraryBaseClass.fields.empty
     }
   }
 

@@ -298,10 +298,19 @@ public abstract class BaseTracer {
   public <C> Context extract(C carrier, TextMapGetter<C> getter) {
     ContextPropagationDebug.debugContextLeakIfEnabled();
 
-    // Using Context.root() here may be quite unexpected, but the reason is simple.
-    // We want either span context extracted from the carrier or invalid one.
-    // We DO NOT want any span context potentially lingering in the current context.
-    return propagators.getTextMapPropagator().extract(Context.root(), carrier, getter);
+    Context parent = Context.current();
+    if (Span.fromContextOrNull(parent) != null) {
+      // A span has leaked from another thread.
+      // We want either span context extracted from the carrier or invalid one.
+      // We DO NOT want any span context potentially lingering in the current context.
+      // We reset to the root context, which may not always be appropriate (e.g., a framework added
+      // an item to the context before we create a span) but it is safer than removing all the
+      // possible spans that instrumentation may have added and such frameworks as of now do not
+      // have leaks.
+      parent = Context.root();
+    }
+
+    return propagators.getTextMapPropagator().extract(parent, carrier, getter);
   }
 
   /**

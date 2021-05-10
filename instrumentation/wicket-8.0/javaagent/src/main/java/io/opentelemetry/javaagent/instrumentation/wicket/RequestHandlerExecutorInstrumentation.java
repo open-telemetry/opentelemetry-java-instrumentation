@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.wicket;
 
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTROLLER;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
-import io.opentelemetry.instrumentation.api.servlet.ServletSpanNaming;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -23,7 +23,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.wicket.core.request.handler.IPageClassRequestHandler;
 import org.apache.wicket.request.IRequestHandler;
-import org.apache.wicket.request.cycle.RequestCycle;
 
 public class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
 
@@ -49,14 +48,10 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         return;
       }
       if (handler instanceof IPageClassRequestHandler) {
-        // using class name as page name
-        String pageName = ((IPageClassRequestHandler) handler).getPageClass().getName();
-        // wicket filter mapping without wildcard, if wicket filter is mapped to /*
-        // this will be an empty string
-        String filterPath = RequestCycle.get().getRequest().getFilterPath();
-        serverSpan.updateName(ServletContextPath.prepend(context, filterPath + "/" + pageName));
-        // prevent servlet integration from doing further updates to server span name
-        ServletSpanNaming.setServletUpdatedServerSpanName(context);
+        ServerSpanNaming.updateServerSpanName(
+            context,
+            CONTROLLER,
+            new ServerSpanNameSupplier(context, (IPageClassRequestHandler) handler));
       }
     }
   }

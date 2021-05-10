@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 
@@ -94,7 +95,6 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind operation == "SendMessage" ? PRODUCER : CLIENT
-          errored false
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
@@ -119,19 +119,19 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
     server.lastRequest.headers.get("traceparent") == null
 
     where:
-    service      | operation           | method | path                  | clientBuilder                                                             | call                                                                            | additionalAttributes              | body
-    "S3"         | "CreateBucket"      | "PUT"  | "/testbucket/"        | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true)         | { c  -> c.createBucket("testbucket") }                                          | ["aws.bucket.name": "testbucket"] | ""
-    "S3"         | "GetObject"         | "GET"  | "/someBucket/someKey" | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true)         | { c -> c.getObject("someBucket", "someKey") }                                   | ["aws.bucket.name": "someBucket"] | ""
-    "DynamoDBv2" | "CreateTable"       | "POST" | "/"                   | AmazonDynamoDBClientBuilder.standard()                                    | { c -> c.createTable(new CreateTableRequest("sometable", null)) }               | ["aws.table.name": "sometable"]   | ""
-    "Kinesis"    | "DeleteStream"      | "POST" | "/"                   | AmazonKinesisClientBuilder.standard()                                     | { c -> c.deleteStream(new DeleteStreamRequest().withStreamName("somestream")) } | ["aws.stream.name": "somestream"] | ""
-    "EC2"        | "AllocateAddress"   | "POST" | "/"                   | AmazonEC2ClientBuilder.standard()                                         | { c -> c.allocateAddress() }                                                    | [:]                               | """
+    service      | operation           | method | path                  | clientBuilder                                                     | call                                                                            | additionalAttributes              | body
+    "S3"         | "CreateBucket"      | "PUT"  | "/testbucket/"        | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true) | { c -> c.createBucket("testbucket") }                                           | ["aws.bucket.name": "testbucket"] | ""
+    "S3"         | "GetObject"         | "GET"  | "/someBucket/someKey" | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true) | { c -> c.getObject("someBucket", "someKey") }                                   | ["aws.bucket.name": "someBucket"] | ""
+    "DynamoDBv2" | "CreateTable"       | "POST" | "/"                   | AmazonDynamoDBClientBuilder.standard()                            | { c -> c.createTable(new CreateTableRequest("sometable", null)) }               | ["aws.table.name": "sometable"]   | ""
+    "Kinesis"    | "DeleteStream"      | "POST" | "/"                   | AmazonKinesisClientBuilder.standard()                             | { c -> c.deleteStream(new DeleteStreamRequest().withStreamName("somestream")) } | ["aws.stream.name": "somestream"] | ""
+    "EC2"        | "AllocateAddress"   | "POST" | "/"                   | AmazonEC2ClientBuilder.standard()                                 | { c -> c.allocateAddress() }                                                    | [:]                               | """
         <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
            <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
            <publicIp>192.0.2.1</publicIp>
            <domain>standard</domain>
         </AllocateAddressResponse>
       """
-    "RDS"        | "DeleteOptionGroup" | "POST" | "/"                   | AmazonRDSClientBuilder.standard()                                         | { c -> c.deleteOptionGroup(new DeleteOptionGroupRequest()) }                    | [:]                               | """
+    "RDS"        | "DeleteOptionGroup" | "POST" | "/"                   | AmazonRDSClientBuilder.standard()                                 | { c -> c.deleteOptionGroup(new DeleteOptionGroupRequest()) }                    | [:]                               | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata>
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
@@ -160,7 +160,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
         span(0) {
           name "$service.$operation"
           kind CLIENT
-          errored true
+          status ERROR
           errorEvent SdkClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
@@ -183,8 +183,8 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
     }
 
     where:
-    service | operation   | method | url                  | call                                                    | additionalAttributes              | body | clientBuilder
-    "S3"    | "GetObject" | "GET"  | "someBucket/someKey" | { c -> c.getObject("someBucket", "someKey") }           | ["aws.bucket.name": "someBucket"] | ""   | AmazonS3ClientBuilder.standard()
+    service | operation   | method | url                  | call                                          | additionalAttributes              | body | clientBuilder
+    "S3"    | "GetObject" | "GET"  | "someBucket/someKey" | { c -> c.getObject("someBucket", "someKey") } | ["aws.bucket.name": "someBucket"] | ""   | AmazonS3ClientBuilder.standard()
   }
 
   // TODO(anuraaga): Add events for retries.
@@ -215,7 +215,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
         span(0) {
           name "S3.GetObject"
           kind CLIENT
-          errored true
+          status ERROR
           try {
             errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           } catch (AssertionError e) {

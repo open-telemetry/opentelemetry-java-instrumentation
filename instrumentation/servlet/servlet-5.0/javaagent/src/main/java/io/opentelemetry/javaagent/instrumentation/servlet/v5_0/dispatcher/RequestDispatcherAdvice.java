@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.dispatcher;
 
 import static io.opentelemetry.instrumentation.api.tracer.HttpServerTracer.CONTEXT_ATTRIBUTE;
-import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.dispatcher.RequestDispatcherTracer.tracer;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -33,17 +32,15 @@ public class RequestDispatcherAdvice {
     Object requestContextAttr = request.getAttribute(CONTEXT_ATTRIBUTE);
     requestContext = requestContextAttr instanceof Context ? (Context) requestContextAttr : null;
 
-    Context parentContext =
-        RequestDispatcherAdviceHelper.getStartParentContext(currentContext, requestContext);
-    if (parentContext == null) {
+    context = RequestDispatcherAdviceHelper.getStartParentContext(currentContext, requestContext);
+    if (context == null) {
       return;
     }
-
-    context = tracer().startSpan(parentContext, method);
 
     // this tells the dispatched servlet to use the current span as the parent for its work
     request.setAttribute(CONTEXT_ATTRIBUTE, context);
 
+    // TODO (trask) do we need this, since doing manual propagation above?
     scope = context.makeCurrent();
   }
 
@@ -60,12 +57,6 @@ public class RequestDispatcherAdvice {
     if (requestContext != null) {
       // restore the original request context
       request.setAttribute(CONTEXT_ATTRIBUTE, requestContext);
-    }
-
-    if (throwable != null) {
-      tracer().endExceptionally(context, throwable);
-    } else {
-      tracer().end(context);
     }
   }
 }

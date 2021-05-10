@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

@@ -4,6 +4,7 @@
  */
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
@@ -54,14 +55,12 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
         span(0) {
           name "parent"
           hasNoParent()
-          errored false
           attributes {
           }
         }
         span(1) {
           name "ExampleGroup.HystrixObservableTest\$1.execute"
           childOf span(0)
-          errored false
           attributes {
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -71,7 +70,6 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
         span(2) {
           name "tracedMethod"
           childOf span(1)
-          errored false
           attributes {
           }
         }
@@ -148,14 +146,13 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
         span(0) {
           name "parent"
           hasNoParent()
-          errored false
           attributes {
           }
         }
         span(1) {
           name "ExampleGroup.HystrixObservableTest\$2.execute"
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException)
           attributes {
             "hystrix.command" "HystrixObservableTest\$2"
@@ -166,7 +163,6 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
         span(2) {
           name "ExampleGroup.HystrixObservableTest\$2.fallback"
           childOf span(1)
-          errored false
           attributes {
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -245,13 +241,13 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
         span(0) {
           name "parent"
           hasNoParent()
-          errored true
+          status ERROR
           errorEvent(HystrixRuntimeException, "HystrixObservableTest\$3 failed and no fallback available.")
         }
         span(1) {
           name "FailingGroup.HystrixObservableTest\$3.execute"
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(IllegalArgumentException)
           attributes {
             "hystrix.command" "HystrixObservableTest\$3"
@@ -262,7 +258,7 @@ class HystrixObservableTest extends AgentInstrumentationSpecification {
         span(2) {
           name "FailingGroup.HystrixObservableTest\$3.fallback"
           childOf span(1)
-          errored true
+          status ERROR
           errorEvent(UnsupportedOperationException, "No fallback available.")
           attributes {
             "hystrix.command" "HystrixObservableTest\$3"

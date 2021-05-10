@@ -45,6 +45,13 @@ public class ExecutorInstrumentationUtils {
             return false;
           }
 
+          // HttpConnection implements Runnable. When async request is completed HttpConnection
+          // may be sent to process next request while context from previous request hasn't been
+          // cleared yet.
+          if (taskClass.getName().equals("org.eclipse.jetty.server.HttpConnection")) {
+            return false;
+          }
+
           Class<?> enclosingClass = taskClass.getEnclosingClass();
           if (enclosingClass != null) {
             // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to
@@ -89,6 +96,15 @@ public class ExecutorInstrumentationUtils {
           ClassLoader taskClassLoader = taskClass.getClassLoader();
           if (taskClassLoader != null
               && AGENT_CLASSLOADER_NAME.equals(taskClassLoader.getClass().getName())) {
+            return false;
+          }
+
+          if (taskClass.getName().startsWith("ratpack.exec.internal.")) {
+            // Context is passed through Netty channels in Ratpack as executor instrumentation is
+            // not suitable. As the context that would be propagated via executor would be
+            // incorrect, skip the propagation. Not checking for concrete class names as this covers
+            // anonymous classes from ratpack.exec.internal.DefaultExecution and
+            // ratpack.exec.internal.DefaultExecController.
             return false;
           }
 

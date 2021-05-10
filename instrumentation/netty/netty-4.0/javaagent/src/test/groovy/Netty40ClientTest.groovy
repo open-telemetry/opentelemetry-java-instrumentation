@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -27,7 +28,6 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 import spock.lang.Shared
 
 class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implements AgentTestTrait {
@@ -62,15 +62,19 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   int sendRequest(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers) {
     def channel = bootstrap.connect(uri.host, uri.port).sync().channel()
     def result = new CompletableFuture<Integer>()
-    channel.pipeline().addLast(new ClientHandler(null, result))
+    channel.pipeline().addLast(new ClientHandler(result))
     channel.writeAndFlush(request).get()
     return result.get(20, TimeUnit.SECONDS)
   }
 
   @Override
-  void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
-    ch.pipeline().addLast(new ClientHandler(callback, CompletableFuture.completedFuture(0)))
+    def result = new CompletableFuture<Integer>()
+    result.whenComplete { status, throwable ->
+      requestResult.complete({ status }, throwable)
+    }
+    ch.pipeline().addLast(new ClientHandler(result))
     ch.writeAndFlush(request)
   }
 
@@ -118,7 +122,7 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           name "CONNECT"
           kind CLIENT
           childOf span(0)
-          errored true
+          status ERROR
           Class errorClass = ConnectException
           try {
             errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')

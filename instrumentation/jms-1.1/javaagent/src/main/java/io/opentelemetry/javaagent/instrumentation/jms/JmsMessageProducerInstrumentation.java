@@ -5,17 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import static io.opentelemetry.javaagent.instrumentation.jms.JmsTracer.tracer;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenters.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jms.Destination;
@@ -60,6 +62,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) Message message,
         @Advice.This MessageProducer producer,
+        @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
@@ -74,14 +77,19 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         defaultDestination = null;
       }
 
-      MessageDestination messageDestination =
-          tracer().extractDestination(message, defaultDestination);
-      context = tracer().startProducerSpan(messageDestination, message);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      request = MessageWithDestination.create(message, MessageOperation.SEND, defaultDestination);
+      if (!producerInstrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = producerInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
@@ -91,11 +99,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
       scope.close();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      producerInstrumenter().end(context, request, null, throwable);
     }
   }
 
@@ -105,6 +109,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) Destination destination,
         @Advice.Argument(1) Message message,
+        @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       int callDepth = CallDepthThreadLocalMap.incrementCallDepth(MessageProducer.class);
@@ -112,13 +117,19 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      MessageDestination messageDestination = tracer().extractDestination(message, destination);
-      context = tracer().startProducerSpan(messageDestination, message);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      request = MessageWithDestination.create(message, MessageOperation.SEND, destination);
+      if (!producerInstrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = producerInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Local("otelRequest") MessageWithDestination request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
@@ -128,11 +139,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       CallDepthThreadLocalMap.reset(MessageProducer.class);
 
       scope.close();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      producerInstrumenter().end(context, request, null, throwable);
     }
   }
 }

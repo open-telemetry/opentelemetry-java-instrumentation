@@ -8,6 +8,7 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
+import test.JaxRsTestApplication
 
 class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
 
@@ -34,5 +35,11 @@ class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
   @Override
   boolean asyncCancelHasSendError() {
     true
+  }
+
+  @Override
+  boolean testInterfaceMethodWithPath() {
+    // disables a test that jersey deems invalid
+    false
   }
 }

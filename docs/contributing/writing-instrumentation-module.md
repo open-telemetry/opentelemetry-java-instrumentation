@@ -22,7 +22,7 @@ the javaagent jar. The easiest way to do it is using `@AutoService`:
 
 ```java
 
-@AutoService(InstrumentationModule.class)
+@AutoService(AgentExtension.class)
 class MyLibraryInstrumentationModule extends InstrumentationModule {
   // ...
 }
@@ -195,9 +195,12 @@ Advice classes are not really "classes", they're raw pieces of code that will be
 the instrumented library class files. You should not treat them as ordinary, plain Java classes -
 unfortunately many standard practices do not apply to them:
 
+* if they're inner classes they MUST be static;
 * they MUST only contain static methods;
 * they MUST NOT contain any state (fields) whatsoever - static constants included! Only the advice
   methods' content is copied to the instrumented code, the constants are not;
+* inner advice classes defined in an `InstrumentationModule` or a `TypeInstrumentation` MUST NOT use
+  anything from the outer class (loggers, constants, etc);
 * reusing code by extracting a common method and/or parent class will most likely not work properly:
   instead you can create additional helper classes to store any reusable code;
 * they SHOULD NOT contain any methods other than `@Advice`-annotated method.

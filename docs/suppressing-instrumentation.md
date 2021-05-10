@@ -6,11 +6,96 @@ You can disable the agent using `-Dotel.javaagent.enabled=false`
 ## Suppressing specific agent instrumentation
 
 You can suppress agent instrumentation of specific libraries by using
-`-Dotel.instrumentation.[id].enabled=false`.
+`-Dotel.instrumentation.[name].enabled=false` where `name` is the corresponding instrumentation `name`:
 
-where `id` is the instrumentation `id`:
-
-[TODO add table here with all instrumentation ids]
+| Library/Framework | Instrumentation name |
+|-------------------|----------------------|
+| Additional methods tracing | methods |
+| Additional tracing annotations | external-annotations |
+| Akka Actor | akka-actor|
+| Akka HTTP | akka-http|
+| Apache Axis2 | axis2|
+| Apache Camel | apache-camel|
+| Apache Cassandra | cassandra|
+| Apache CXF | cxf|
+| Apache Dubbo | apache-dubbo|
+| Apache Geode | geode|
+| Apache HttpAsyncClient | apache-httpasyncclient|
+| Apache HttpClient | apache-httpclient|
+| Apache Kafka | kafka |
+| Apache RocketMQ | rocketmq-client|
+| Apache Tapestry | tapestry|
+| Apache Tomcat | tomcat|
+| Apache Wicket | wicket|
+| Armeria | armeria|
+| AsyncHttpClient (AHC) | async-http-client|
+| AWS Lambda | aws-lambda|
+| AWS SDK | aws-sdk|
+| Couchbase | couchbase|
+| Dropwizard Views | dropwizard-views |
+| Eclipse OSGi | eclipse-osgi |
+| Elasticsearch client | elasticsearch-transport|
+| Elasticsearch REST client | elasticsearch-rest|
+| Google Guava | guava|
+| Google HTTP client | google-http-client|
+| Google Web Toolkit | gwt|
+| Grails | grails|
+| GRPC | grpc|
+| Hibernate | hibernate|
+| Java EE Grizzly | grizzly|
+| Java HTTP Client | java-http-client |
+| Java `HttpURLConnection` | http-url-connection |
+| Java JDBC | jdbc |
+| Java JDBC `DataSource` | jdbc-datasource |
+| Java RMI | rmi|
+| Java Servlet | servlet|
+| java.util.concurrent | executor |
+| JAX-RS (Client) | jaxrs-client|
+| JAX-RS (Server) | jaxrs|
+| JAX-WS | jaxws|
+| JAX-WS Metro | metro|
+| Jetty | jetty|
+| JMS | jms|
+| JSF Mojarra | mojarra|
+| JSF MyFaces | myfaces|
+| JSP | jsp |
+| K8s Client | kubernetes-client|
+| Kotlin HTTP (kHttp) | khttp |
+| kotlinx.coroutines | kotlinx-coroutines |
+| Log4j | log4j|
+| Logback | logback|
+| MongoDB | mongo |
+| Netflix Hystrix | hystrix|
+| Netty | netty|
+| OkHttp | okhttp|
+| OpenLiberty | liberty |
+| OpenTelemetry Trace annotations | opentelemetry-annotations |
+| OSHI (Operating System and Hardware Information) | oshi |
+| Play Framework | play|
+| Play WS HTTP Client | play-ws|
+| RabbitMQ Client | rabbitmq|
+| Ratpack | ratpack|
+| ReactiveX RxJava | rxjava2, rxjava3 |
+| Reactor | reactor|
+| Reactor Netty | reactor-netty|
+| Redis Jedis | jedis|
+| Redis Lettuce | lettuce|
+| Rediscala | rediscala|
+| Scala executors | scala-executors |
+| Spark Web Framework | spark|
+| Spring Core | spring-core|
+| Spring Data | spring-data|
+| Spring Scheduling | spring-scheduling|
+| Spring Webflux | spring-webflux|
+| Spring WebMVC | spring-webmvc|
+| Spring WS | spring-ws|
+| Spymemcached | spymemcached|
+| Struts | struts|
+| Twilio SDK | twilio|
+| Twitter Finatra | finatra|
+| Undertow | undertow|
+| Vaadin | vaadin|
+| Vert.x RxJava2 | vertx |
 
 ### Even more fine-grained control
 

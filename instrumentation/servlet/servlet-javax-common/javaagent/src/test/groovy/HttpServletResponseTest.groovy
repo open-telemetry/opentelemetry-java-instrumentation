@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static java.util.Collections.emptyEnumeration
@@ -108,7 +109,7 @@ class HttpServletResponseTest extends AgentInstrumentationSpecification {
         span(1) {
           name 'HttpServletResponseTest$2.sendRedirect'
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(ex.class, ex.message)
         }
       }

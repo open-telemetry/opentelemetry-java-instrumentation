@@ -21,14 +21,4 @@ class LibertySmokeTest extends AppServerTest {
   protected TargetWaitStrategy getWaitStrategy() {
     return new TargetWaitStrategy.Log(Duration.ofMinutes(3), ".*server is ready to run a smarter planet.*")
   }
-
-  @Override
-  protected String getSpanName(String path) {
-    switch (path) {
-      case "/app/hello.txt":
-      case "/app/file-that-does-not-exist":
-        return "HTTP GET"
-    }
-    return super.getSpanName(path)
-  }
 }

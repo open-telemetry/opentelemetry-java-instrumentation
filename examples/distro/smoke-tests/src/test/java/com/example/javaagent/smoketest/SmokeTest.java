@@ -55,7 +55,7 @@ abstract class SmokeTest {
   static void setupSpec() {
     backend =
         new GenericContainer<>(
-            "open-telemetry-docker-dev.bintray.io/java/smoke-fake-backend:latest")
+            "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20210324.684269693")
             .withExposedPorts(8080)
             .waitingFor(Wait.forHttp("/health").forPort(8080))
             .withNetwork(network)
@@ -172,7 +172,7 @@ abstract class SmokeTest {
 
       Request request =
           new Request.Builder()
-              .url(String.format("http://localhost:%d/get-requests", backend.getMappedPort(8080)))
+              .url(String.format("http://localhost:%d/get-traces", backend.getMappedPort(8080)))
               .build();
 
       try (ResponseBody body = client.newCall(request).execute().body()) {

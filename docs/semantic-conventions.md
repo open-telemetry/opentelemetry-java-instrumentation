@@ -76,7 +76,7 @@ not values defined by spec.
 | `db.mssql.instance_name`   | N | - |
 | `db.name`   | N | only set of JDBC, Mongo, Geode and MongoDB |
 | `db.statement`   | N | +, except for ElasticSearch and Memcached, see `db.operation` |
-| `db.operation`   | N | only set of ElasticSearch and Memcached |
+| `db.operation`   | N | only set for ElasticSearch, Memcached and JDBC |
 | `db.cassandra.keyspace`   | Y | + |
 | `db.hbase`   | Y | -, HBase is not supported |
 | `db.redis.database_index`   | N | only set for Lettuce driver, not for Jedis |

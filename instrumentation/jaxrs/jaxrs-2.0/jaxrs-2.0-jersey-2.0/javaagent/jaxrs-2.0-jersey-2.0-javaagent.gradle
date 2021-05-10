@@ -7,12 +7,21 @@ muzzle {
     group = "org.glassfish.jersey.core"
     module = "jersey-server"
     versions = "[2.0,3.0.0)"
+    extraDependency "javax.servlet:javax.servlet-api:3.1.0"
+  }
+  pass {
+    group = "org.glassfish.jersey.containers"
+    module = "jersey-container-servlet"
+    versions = "[2.0,3.0.0)"
+    extraDependency "javax.servlet:javax.servlet-api:3.1.0"
   }
 }
 
 dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
-  compileOnly group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.0'
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+  library group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.0'
+  library group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '2.0'
 
   implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
 
@@ -25,6 +34,12 @@ dependencies {
   testLibrary group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
   testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
   testImplementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
+
+  latestDepTestLibrary group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.+'
+  latestDepTestLibrary group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '2.+'
+  // this is needed because dropwizard-testing version 0.8.0 (above) pulls it in transitively,
+  // but the latest version of dropwizard-testing does not
+  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '9.+'
 }
 
 test {

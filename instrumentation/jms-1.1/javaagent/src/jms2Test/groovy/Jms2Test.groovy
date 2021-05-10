@@ -239,7 +239,6 @@ class Jms2Test extends AgentInstrumentationSpecification {
     trace.span(index) {
       name destinationName + " send"
       kind PRODUCER
-      errored false
       hasNoParent()
       attributes {
         "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
@@ -248,6 +247,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
         if (destinationName == "(temporary)") {
           "${SemanticAttributes.MESSAGING_TEMP_DESTINATION.key}" true
         }
+        "${SemanticAttributes.MESSAGING_MESSAGE_ID.key}" String
       }
     }
   }
@@ -264,7 +264,6 @@ class Jms2Test extends AgentInstrumentationSpecification {
       } else {
         hasNoParent()
       }
-      errored false
       attributes {
         "${SemanticAttributes.MESSAGING_SYSTEM.key}" "jms"
         "${SemanticAttributes.MESSAGING_DESTINATION.key}" destinationName

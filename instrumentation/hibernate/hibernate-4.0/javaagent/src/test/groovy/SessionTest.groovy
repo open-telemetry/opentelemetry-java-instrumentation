@@ -5,6 +5,7 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -225,7 +226,7 @@ class SessionTest extends AbstractHibernateTest {
           name "Session.replicate"
           kind INTERNAL
           childOf span(0)
-          errored(true)
+          status ERROR
           errorEvent(MappingException, "Unknown entity: java.lang.Long")
         }
         span(2) {

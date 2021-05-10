@@ -9,7 +9,6 @@ muzzle {
 }
 
 dependencies {
-  api project(':javaagent-spi')
   implementation project(':instrumentation:oshi:library')
 
   library group: 'com.github.oshi', name: 'oshi-core', version: '5.3.1'

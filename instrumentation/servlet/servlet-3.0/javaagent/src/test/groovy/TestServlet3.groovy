@@ -77,6 +77,11 @@ class TestServlet3 {
                 resp.writer.print(endpoint.body)
                 context.complete()
                 break
+              case INDEXED_CHILD:
+                Span.current().setAttribute("test.request.id", req.getParameter("id") as long)
+                resp.status = endpoint.status
+                context.complete()
+                break
               case QUERY_PARAM:
                 resp.status = endpoint.status
                 resp.writer.print(req.queryString)
@@ -121,6 +126,10 @@ class TestServlet3 {
             case SUCCESS:
               resp.status = endpoint.status
               resp.writer.print(endpoint.body)
+              break
+            case INDEXED_CHILD:
+              Span.current().setAttribute("test.request.id", req.getParameter("id") as long)
+              resp.status = endpoint.status
               break
             case QUERY_PARAM:
               resp.status = endpoint.status

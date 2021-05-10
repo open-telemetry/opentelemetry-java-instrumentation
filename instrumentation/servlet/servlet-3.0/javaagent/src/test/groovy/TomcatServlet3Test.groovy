@@ -54,14 +54,6 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     super.responseSpan(trace, index, parent, method, endpoint)
   }
 
-  @Override
-  String expectedServerSpanName(ServerEndpoint endpoint) {
-    if (endpoint == NOT_FOUND) {
-      return getContextPath() + "/*"
-    }
-    return super.expectedServerSpanName(endpoint)
-  }
-
   @Shared
   def accessLogValue = new TestAccessLogValve()
 
@@ -145,26 +137,10 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
       def loggedTraces = accessLogValue.loggedIds*.first
       def loggedSpans = accessLogValue.loggedIds*.second
 
-      def expectedCount = 2
-      if (hasIncludeSpan()) {
-        expectedCount++
-      }
-      if (hasForwardSpan()) {
-        expectedCount++
-      }
       (0..count - 1).each {
-        trace(it, expectedCount) {
+        trace(it, 2) {
           serverSpan(it, 0, null, null, "GET", SUCCESS.body.length())
-          def controllerIndex = 1
-          if (hasIncludeSpan()) {
-            includeSpan(it, 1, span(0))
-            controllerIndex++
-          }
-          if (hasForwardSpan()) {
-            forwardSpan(it, 1, span(0))
-            controllerIndex++
-          }
-          controllerSpan(it, controllerIndex, span(controllerIndex - 1))
+          controllerSpan(it, 1, span(0))
         }
 
         assert loggedTraces.contains(traces[it][0].traceId)
@@ -193,17 +169,10 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     if (errorEndpointUsesSendError()) {
       spanCount++
     }
-    if (hasForwardSpan()) {
-      spanCount++
-    }
     assertTraces(1) {
       trace(0, spanCount) {
         serverSpan(it, 0, null, null, method, response.body().contentLength(), ERROR)
         def spanIndex = 1
-        if (hasForwardSpan()) {
-          forwardSpan(it, spanIndex, span(spanIndex - 1))
-          spanIndex++
-        }
         controllerSpan(it, spanIndex, span(spanIndex - 1))
         spanIndex++
         if (errorEndpointUsesSendError()) {
@@ -342,6 +311,11 @@ class TomcatServlet3TestAsync extends TomcatServlet3Test {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
   }
+
+  @Override
+  boolean testConcurrency() {
+    return true
+  }
 }
 
 class TomcatServlet3TestFakeAsync extends TomcatServlet3Test {
@@ -356,6 +330,11 @@ class TomcatServlet3TestFakeAsync extends TomcatServlet3Test {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
   }
+
+  @Override
+  boolean testConcurrency() {
+    return true
+  }
 }
 
 class TomcatServlet3TestForward extends TomcatDispatchTest {
@@ -367,11 +346,6 @@ class TomcatServlet3TestForward extends TomcatDispatchTest {
   @Override
   boolean testNotFound() {
     false
-  }
-
-  @Override
-  boolean hasForwardSpan() {
-    true
   }
 
   @Override
@@ -406,11 +380,6 @@ class TomcatServlet3TestInclude extends TomcatDispatchTest {
   @Override
   boolean testError() {
     false
-  }
-
-  @Override
-  boolean hasIncludeSpan() {
-    true
   }
 
   @Override

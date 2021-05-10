@@ -126,4 +126,9 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
         .listen(port) { startFuture.complete() }
     }
   }
+
+  @Override
+  boolean hasExceptionOnServerSpan(HttpServerTest.ServerEndpoint endpoint) {
+    return endpoint != EXCEPTION && super.hasExceptionOnServerSpan(endpoint)
+  }
 }

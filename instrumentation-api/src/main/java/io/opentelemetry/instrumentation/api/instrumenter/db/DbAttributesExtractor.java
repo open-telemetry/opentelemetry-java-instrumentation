@@ -22,32 +22,32 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public abstract class DbAttributesExtractor<REQUEST> extends AttributesExtractor<REQUEST, Void> {
   @Override
   protected void onStart(AttributesBuilder attributes, REQUEST request) {
-    set(attributes, SemanticAttributes.DB_SYSTEM, dbSystem(request));
-    set(attributes, SemanticAttributes.DB_USER, dbUser(request));
-    set(attributes, SemanticAttributes.DB_NAME, dbName(request));
-    set(attributes, SemanticAttributes.DB_CONNECTION_STRING, dbConnectionString(request));
-    set(attributes, SemanticAttributes.DB_STATEMENT, dbStatement(request));
-    set(attributes, SemanticAttributes.DB_OPERATION, dbOperation(request));
+    set(attributes, SemanticAttributes.DB_SYSTEM, system(request));
+    set(attributes, SemanticAttributes.DB_USER, user(request));
+    set(attributes, SemanticAttributes.DB_NAME, name(request));
+    set(attributes, SemanticAttributes.DB_CONNECTION_STRING, connectionString(request));
+    set(attributes, SemanticAttributes.DB_STATEMENT, statement(request));
+    set(attributes, SemanticAttributes.DB_OPERATION, operation(request));
   }
 
   @Override
   protected final void onEnd(AttributesBuilder attributes, REQUEST request, Void unused) {}
 
   @Nullable
-  protected abstract String dbSystem(REQUEST request);
+  protected abstract String system(REQUEST request);
 
   @Nullable
-  protected abstract String dbUser(REQUEST request);
+  protected abstract String user(REQUEST request);
 
   @Nullable
-  protected abstract String dbName(REQUEST request);
+  protected abstract String name(REQUEST request);
 
   @Nullable
-  protected abstract String dbConnectionString(REQUEST request);
+  protected abstract String connectionString(REQUEST request);
 
   @Nullable
-  protected abstract String dbStatement(REQUEST request);
+  protected abstract String statement(REQUEST request);
 
   @Nullable
-  protected abstract String dbOperation(REQUEST request);
+  protected abstract String operation(REQUEST request);
 }

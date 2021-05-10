@@ -11,6 +11,29 @@ import io.opentelemetry.javaagent.IntegrationTestUtils
 import spock.lang.Specification
 
 class ShadowPackageRenamingTest extends Specification {
+
+
+  static final String[] AGENT_PACKAGE_PREFIXES = [
+    "io.opentelemetry.instrumentation.api",
+    // guava
+    "com.google.auto",
+    "com.google.common",
+    "com.google.thirdparty.publicsuffix",
+    // bytebuddy
+    "net.bytebuddy",
+    "org.yaml.snakeyaml",
+    // disruptor
+    "com.lmax.disruptor",
+    // okHttp
+    "okhttp3",
+    "okio",
+    "jnr",
+    "org.objectweb.asm",
+    "com.kenai",
+    // Custom RxJava Utility
+    "rx.__OpenTelemetryTracingUtil"
+  ]
+
   def "agent dependencies renamed"() {
     setup:
     Class<?> clazz =
@@ -49,7 +72,6 @@ class ShadowPackageRenamingTest extends Specification {
     ClassPath bootstrapClasspath = ClassPath.from(IntegrationTestUtils.getBootstrapProxy())
     Set<String> bootstrapClasses = new HashSet<>()
     String[] bootstrapPrefixes = IntegrationTestUtils.getBootstrapPackagePrefixes()
-    String[] agentPrefixes = IntegrationTestUtils.getAgentPackagePrefixes()
     List<String> badBootstrapPrefixes = []
     for (ClassPath.ClassInfo info : bootstrapClasspath.getAllClasses()) {
       bootstrapClasses.add(info.getName())
@@ -76,13 +98,15 @@ class ShadowPackageRenamingTest extends Specification {
 
     List<ClassPath.ClassInfo> agentDuplicateClassFile = new ArrayList<>()
     List<String> badAgentPrefixes = []
+    // TODO (trask) agentClasspath.getAllClasses() is empty
+    //  so this part of the test doesn't verify what it thinks it is verifying
     for (ClassPath.ClassInfo classInfo : agentClasspath.getAllClasses()) {
       if (bootstrapClasses.contains(classInfo.getName())) {
         agentDuplicateClassFile.add(classInfo)
       }
       boolean goodPrefix = false
-      for (int i = 0; i < agentPrefixes.length; ++i) {
-        if (classInfo.getName().startsWith(agentPrefixes[i])) {
+      for (int i = 0; i < AGENT_PACKAGE_PREFIXES.length; ++i) {
+        if (classInfo.getName().startsWith(AGENT_PACKAGE_PREFIXES[i])) {
           goodPrefix = true
           break
         }

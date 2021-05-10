@@ -19,14 +19,15 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
 
   private boolean started = false;
 
-  protected Map<String, String> getAgentEnvironment() {
+  protected Map<String, String> getAgentEnvironment(String jvmArgsEnvVarName) {
     Map<String, String> environment = new HashMap<>();
-    environment.put("JAVA_TOOL_OPTIONS", "-javaagent:/" + TARGET_AGENT_FILENAME);
+    environment.put(jvmArgsEnvVarName, "-javaagent:/" + TARGET_AGENT_FILENAME);
     environment.put("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1");
     environment.put("OTEL_BSP_SCHEDULE_DELAY", "10ms");
     environment.put("OTEL_IMR_EXPORT_INTERVAL", "1000");
     environment.put("OTEL_EXPORTER_OTLP_ENDPOINT", "http://" + COLLECTOR_ALIAS + ":55680");
     environment.put("OTEL_RESOURCE_ATTRIBUTES", "service.name=smoke-test");
+    environment.put("OTEL_JAVAAGENT_DEBUG", "true");
     return environment;
   }
 

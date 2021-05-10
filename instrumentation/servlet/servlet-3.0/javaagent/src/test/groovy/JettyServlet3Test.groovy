@@ -146,6 +146,11 @@ class JettyServlet3TestAsync extends JettyServlet3Test {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
   }
+
+  @Override
+  boolean testConcurrency() {
+    return true
+  }
 }
 
 class JettyServlet3TestFakeAsync extends JettyServlet3Test {
@@ -160,17 +165,17 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/807
     return false
   }
+
+  @Override
+  boolean testConcurrency() {
+    return true
+  }
 }
 
 class JettyServlet3TestForward extends JettyDispatchTest {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.Sync // dispatch to sync servlet
-  }
-
-  @Override
-  boolean hasForwardSpan() {
-    true
   }
 
   @Override
@@ -200,11 +205,6 @@ class JettyServlet3TestInclude extends JettyDispatchTest {
   @Override
   boolean testError() {
     false
-  }
-
-  @Override
-  boolean hasIncludeSpan() {
-    true
   }
 
   @Override

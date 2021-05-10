@@ -14,15 +14,6 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 @FunctionalInterface
 public interface SpanNameExtractor<REQUEST> {
 
-  /**
-   * Returns a {@link SpanNameExtractor} which should be used for HTTP requests. HTTP attributes
-   * will be examined to determine the name of the span.
-   */
-  static <REQUEST> SpanNameExtractor<REQUEST> http(
-      HttpAttributesExtractor<REQUEST, ?> attributesExtractor) {
-    return new HttpSpanNameExtractor<>(attributesExtractor);
-  }
-
   /** Returns the span name. */
   String extract(REQUEST request);
 }

@@ -79,7 +79,7 @@ public class AgentInitializer {
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     /*
      Must invoke ClassLoader.getPlatformClassLoader by reflection to remain
-     compatible with java 7 + 8.
+     compatible with java 8.
     */
     Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
     return (ClassLoader) method.invoke(null);

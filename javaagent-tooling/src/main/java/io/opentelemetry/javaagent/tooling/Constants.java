@@ -21,27 +21,5 @@ public final class Constants {
     "io.opentelemetry.javaagent.instrumentation.api",
   };
 
-  // This is used in IntegrationTestUtils.java
-  public static final String[] AGENT_PACKAGE_PREFIXES = {
-    "io.opentelemetry.instrumentation.api",
-    // guava
-    "com.google.auto",
-    "com.google.common",
-    "com.google.thirdparty.publicsuffix",
-    // bytebuddy
-    "net.bytebuddy",
-    "org.yaml.snakeyaml",
-    // disruptor
-    "com.lmax.disruptor",
-    // okHttp
-    "okhttp3",
-    "okio",
-    "jnr",
-    "org.objectweb.asm",
-    "com.kenai",
-    // Custom RxJava Utility
-    "rx.__OpenTelemetryTracingUtil",
-  };
-
   private Constants() {}
 }

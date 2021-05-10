@@ -5,15 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
-import static io.opentelemetry.javaagent.instrumentation.jms.JmsTracer.tracer;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenters.consumerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jms.Message;
@@ -49,28 +52,27 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
   public static class ConsumerAdvice {
 
     @Advice.OnMethodEnter
-    public static long onEnter() {
-      return System.currentTimeMillis();
+    public static Instant onEnter() {
+      return Instant.now();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter long startTime,
+        @Advice.Enter Instant startTime,
         @Advice.Return Message message,
         @Advice.Thrown Throwable throwable) {
-      MessageDestination destination;
       if (message == null) {
         // Do not create span when no message is received
         return;
       }
-      destination = tracer().extractDestination(message, null);
 
-      Context context = tracer().startConsumerSpan(destination, "receive", message, startTime);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      MessageWithDestination request =
+          MessageWithDestination.create(message, MessageOperation.RECEIVE, null, startTime);
 
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
+      if (consumerInstrumenter().shouldStart(parentContext, request)) {
+        Context context = consumerInstrumenter().start(parentContext, request);
+        consumerInstrumenter().end(context, request, null, throwable);
       }
     }
   }

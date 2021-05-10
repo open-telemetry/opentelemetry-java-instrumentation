@@ -7,9 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcTracer.tracer;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,15 +41,14 @@ public class HandlerMappingResourceNameFilter implements Filter, Ordered {
     }
 
     Context context = Context.current();
-    Span serverSpan = ServerSpan.fromContextOrNull(context);
 
-    if (handlerMappings != null && serverSpan != null) {
+    if (handlerMappings != null) {
       try {
         if (findMapping((HttpServletRequest) request)) {
 
           // Name the parent span based on the matching pattern
           // Let the parent span resource name be set with the attribute set in findMapping.
-          tracer().onRequest(context, serverSpan, (HttpServletRequest) request);
+          tracer().updateServerSpanName(context, (HttpServletRequest) request);
         }
       } catch (Exception ignored) {
         // mapping.getHandler() threw exception.  Ignore

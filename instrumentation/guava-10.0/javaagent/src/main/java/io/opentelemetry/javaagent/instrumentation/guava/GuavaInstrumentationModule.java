@@ -6,20 +6,21 @@
 package io.opentelemetry.javaagent.instrumentation.guava;
 
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import com.google.common.util.concurrent.AbstractFuture;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.ExecutorInstrumentationUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -49,9 +50,20 @@ public class GuavaInstrumentationModule extends InstrumentationModule {
 
     @Override
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+      Map<ElementMatcher<? super MethodDescription>, String> map = new HashMap<>();
+      map.put(
+          isConstructor(), GuavaInstrumentationModule.class.getName() + "$AbstractFutureAdvice");
+      map.put(
           named("addListener").and(ElementMatchers.takesArguments(Runnable.class, Executor.class)),
           GuavaInstrumentationModule.class.getName() + "$AddListenerAdvice");
+      return map;
+    }
+  }
+
+  public static class AbstractFutureAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onConstruction() {
+      InstrumentationHelper.initialize();
     }
   }
 

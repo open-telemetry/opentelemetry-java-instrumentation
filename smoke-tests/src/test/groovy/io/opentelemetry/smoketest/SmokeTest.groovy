@@ -34,11 +34,19 @@ abstract class SmokeTest extends Specification {
   protected String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
 
   /**
+   * Subclasses can override this method to pass jvm arguments in another environment variable
+   */
+  protected String getJvmArgsEnvVarName() {
+    return "JAVA_TOOL_OPTIONS"
+  }
+
+  /**
    * Subclasses can override this method to customise target application's environment
    */
   protected Map<String, String> getExtraEnv() {
     return Collections.emptyMap()
   }
+
   /**
    * Subclasses can override this method to provide additional files to copy to target container
    */
@@ -57,7 +65,7 @@ abstract class SmokeTest extends Specification {
 
   def startTarget(String jdk, String serverVersion, boolean windows) {
     def targetImage = getTargetImage(jdk, serverVersion, windows)
-    return containerManager.startTarget(targetImage, agentPath, extraEnv, extraResources, getWaitStrategy())
+    return containerManager.startTarget(targetImage, agentPath, jvmArgsEnvVarName, extraEnv, extraResources, getWaitStrategy())
   }
 
   protected abstract String getTargetImage(String jdk)

@@ -14,6 +14,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.extension.aws.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 
 public class ParentContextExtractor {
@@ -69,7 +70,7 @@ public class ParentContextExtractor {
 
     @Override
     public String get(Map<String, String> map, String s) {
-      return map.get(s.toLowerCase());
+      return map.get(s.toLowerCase(Locale.ROOT));
     }
   }
 }

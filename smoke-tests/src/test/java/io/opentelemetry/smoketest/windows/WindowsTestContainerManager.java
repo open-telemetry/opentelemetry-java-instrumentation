@@ -77,7 +77,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             .exec()
             .getId();
 
-    String backendSuffix = "-windows-20210401.709152102";
+    String backendSuffix = "-windows-20210427.788400024";
 
     String backendImageName =
         "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend" + backendSuffix;
@@ -165,6 +165,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
   public Consumer<OutputFrame> startTarget(
       String targetImageName,
       String agentPath,
+      String jvmArgsEnvVarName,
       Map<String, String> extraEnv,
       Map<String, String> extraResources,
       TargetWaitStrategy waitStrategy) {
@@ -175,7 +176,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     }
 
     List<String> environment = new ArrayList<>();
-    getAgentEnvironment().forEach((key, value) -> environment.add(key + "=" + value));
+    getAgentEnvironment(jvmArgsEnvVarName)
+        .forEach((key, value) -> environment.add(key + "=" + value));
     extraEnv.forEach((key, value) -> environment.add(key + "=" + value));
 
     target =

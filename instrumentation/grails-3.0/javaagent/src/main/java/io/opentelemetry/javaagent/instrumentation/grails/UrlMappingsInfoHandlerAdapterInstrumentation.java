@@ -13,11 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -48,11 +46,7 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
 
       if (handler instanceof GrailsControllerUrlMappingInfo) {
         Context parentContext = Java8BytecodeBridge.currentContext();
-        Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
-        if (serverSpan != null) {
-          tracer()
-              .nameServerSpan(parentContext, serverSpan, (GrailsControllerUrlMappingInfo) handler);
-        }
+        tracer().updateServerSpanName(parentContext, (GrailsControllerUrlMappingInfo) handler);
       }
     }
   }

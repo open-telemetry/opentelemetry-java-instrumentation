@@ -35,7 +35,8 @@ subprojects {
 dependencies {
   compileOnly project(':instrumentation-api')
   compileOnly project(':javaagent-api')
-  implementation(project(':javaagent-tooling'))
+  implementation project(':javaagent-tooling')
+  implementation project(':javaagent-extension-api')
 }
 
 configurations {

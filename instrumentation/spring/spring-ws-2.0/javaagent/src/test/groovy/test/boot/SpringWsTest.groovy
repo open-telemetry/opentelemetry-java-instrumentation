@@ -5,6 +5,9 @@
 
 package test.boot
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.StatusCode.ERROR
+
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -123,7 +126,9 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
       hasNoParent()
       name operation
       kind SpanKind.SERVER
-      errored exception != null
+      if (exception != null) {
+        status ERROR
+      }
     }
   }
 
@@ -135,9 +140,9 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
         childOf((SpanData) parentSpan)
       }
       name "HelloEndpoint." + methodName
-      kind SpanKind.INTERNAL
-      errored exception != null
+      kind INTERNAL
       if (exception) {
+        status ERROR
         errorEvent(exception.class, exception.message)
       }
       attributes {

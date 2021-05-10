@@ -7,6 +7,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -18,6 +19,7 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -57,13 +59,8 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
   }
 
   @Override
-  boolean hasHandlerSpan() {
-    true
-  }
-
-  @Override
-  boolean testNotFound() {
-    false
+  boolean hasHandlerSpan(ServerEndpoint endpoint) {
+    endpoint != NOT_FOUND
   }
 
   @Override
@@ -72,12 +69,24 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
   }
 
   @Override
+  String expectedServerSpanName(ServerEndpoint endpoint) {
+    switch (endpoint) {
+      case PATH_PARAM:
+        return "/path/{id}/param"
+      case NOT_FOUND:
+        return "/*"
+      default:
+        return endpoint.resolvePath(address).path
+    }
+  }
+
+  @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       name "${this.testResource().simpleName}.${endpoint.name().toLowerCase()}"
       kind INTERNAL
-      errored endpoint == EXCEPTION
       if (endpoint == EXCEPTION) {
+        status StatusCode.ERROR
         errorEvent(Exception, EXCEPTION.body)
       }
       childOf((SpanData) parent)
@@ -88,9 +97,11 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
   @Override
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", Long responseContentLength = null, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      name "${endpoint == PATH_PARAM ? "/path/{id}/param" : endpoint.resolvePath(address).path}"
+      name expectedServerSpanName(endpoint)
       kind SERVER
-      errored endpoint.errored
+      if (endpoint.errored) {
+        status StatusCode.ERROR
+      }
       if (parentID != null) {
         traceId traceID
         parentSpanId parentID

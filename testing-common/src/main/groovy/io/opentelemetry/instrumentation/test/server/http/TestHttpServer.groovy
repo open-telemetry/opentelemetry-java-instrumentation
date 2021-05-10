@@ -117,7 +117,6 @@ class TestHttpServer implements AutoCloseable {
     trace.span(index) {
       name "test-http-server"
       kind SERVER
-      errored false
       if (parentSpan == null) {
         hasNoParent()
       } else {
@@ -268,7 +267,7 @@ class TestHttpServer implements AutoCloseable {
       for (String field : GlobalOpenTelemetry.getPropagators().getTextMapPropagator().fields()) {
         def headers = req.getHeaders(field)
         if (headers.hasMoreElements() && headers.nextElement() && headers.hasMoreElements()) {
-          throw new AssertionError("more than one traceparent header present")
+          throw new AssertionError("more than one " + field + " header present")
         }
       }
     }

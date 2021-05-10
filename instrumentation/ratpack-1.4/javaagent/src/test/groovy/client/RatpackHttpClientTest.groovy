@@ -8,10 +8,10 @@ package client
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.time.Duration
-import java.util.function.Consumer
 import ratpack.exec.Operation
 import ratpack.exec.Promise
 import ratpack.http.client.HttpClient
+import ratpack.http.client.HttpClientSpec
 import ratpack.test.exec.ExecHarness
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -26,6 +26,10 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   def client = HttpClient.of {
     it.readTimeout(Duration.ofSeconds(2))
     // Connect timeout added in 1.5
+    // execController method added in 1.9
+    if (HttpClientSpec.metaClass.getMetaMethod("execController") != null) {
+      it.execController(exec.getController())
+    }
   }
 
   @Override
@@ -41,10 +45,10 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
-  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers, Consumer<Integer> callback) {
+  void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     exec.execute(Operation.of {
       internalSendRequest(method, uri, headers).result {
-        callback.accept(it.value)
+        requestResult.complete(it.value)
       }
     })
   }

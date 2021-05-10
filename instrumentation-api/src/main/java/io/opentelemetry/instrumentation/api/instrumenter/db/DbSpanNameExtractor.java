@@ -11,11 +11,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class DbSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
-   * conventions: {@code <db.operation> <db.name><table>}.
+   * conventions: {@code <db.operation> <db.name>.<table>}.
    *
-   * @see DbAttributesExtractor#dbOperation(Object) used to extract {@code <db.operation>}.
-   * @see DbAttributesExtractor#dbName(Object) used to extract {@code <db.name>}.
-   * @see SqlAttributesExtractor#dbTable(Object) used to extract {@code <db.table>}.
+   * @see DbAttributesExtractor#operation(Object) used to extract {@code <db.operation>}.
+   * @see DbAttributesExtractor#name(Object) used to extract {@code <db.name>}.
+   * @see SqlAttributesExtractor#table(Object) used to extract {@code <db.table>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       DbAttributesExtractor<REQUEST> attributesExtractor) {
@@ -32,8 +32,8 @@ public final class DbSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQ
 
   @Override
   public String extract(REQUEST request) {
-    String operation = attributesExtractor.dbOperation(request);
-    String dbName = attributesExtractor.dbName(request);
+    String operation = attributesExtractor.operation(request);
+    String dbName = attributesExtractor.name(request);
     if (operation == null) {
       return dbName == null ? DEFAULT_SPAN_NAME : dbName;
     }
@@ -58,7 +58,7 @@ public final class DbSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQ
   @Nullable
   private String getTableName(REQUEST request) {
     if (attributesExtractor instanceof SqlAttributesExtractor) {
-      return ((SqlAttributesExtractor<REQUEST>) attributesExtractor).dbTable(request);
+      return ((SqlAttributesExtractor<REQUEST>) attributesExtractor).table(request);
     }
     return null;
   }

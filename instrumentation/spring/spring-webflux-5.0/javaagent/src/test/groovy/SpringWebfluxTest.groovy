@@ -5,6 +5,7 @@
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.OkHttpUtils
@@ -22,6 +23,7 @@ import server.EchoHandlerFunction
 import server.FooModel
 import server.SpringWebFluxTestApplication
 import server.TestController
+import spock.lang.Unroll
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentInstrumentationSpecification {
@@ -42,6 +44,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
 
   OkHttpClient client = OkHttpUtils.client(true)
 
+  @Unroll
   def "Basic GET test #testName"() {
     setup:
     String url = "http://localhost:$port$urlPath"
@@ -108,6 +111,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
     "annotation API delayed response"    | "/foo-delayed"       | "/foo-delayed"         | "getFooDelayed" | new FooModel(3L, "delayed").toString()
   }
 
+  @Unroll
   def "GET test with async response #testName"() {
     setup:
     String url = "http://localhost:$port$urlPath"
@@ -161,7 +165,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         span(2) {
           name "tracedMethod"
           childOf span(0)
-          errored false
           attributes {
           }
         }
@@ -195,7 +198,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
   merely wraps handler call into Mono and thus actual invocation of handler function happens later,
   when INTERNAL handler span has already finished. Thus, "tracedMethod" has SERVER Netty span as its parent.
    */
-
   def "Create span during handler function"() {
     setup:
     String url = "http://localhost:$port$urlPath"
@@ -249,7 +251,6 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         span(2) {
           name "tracedMethod"
           childOf span(annotatedMethod ? 0 : 1)
-          errored false
           attributes {
           }
         }
@@ -278,7 +279,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           name "/**"
           kind SERVER
           hasNoParent()
-          errored true
+          status ERROR
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
@@ -294,7 +295,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           name "ResourceWebHandler.handle"
           kind INTERNAL
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(ResponseStatusException, String)
           attributes {
             "spring-webflux.handler.type" "org.springframework.web.reactive.resource.ResourceWebHandler"
@@ -355,6 +356,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
     }
   }
 
+  @Unroll
   def "GET to bad endpoint #testName"() {
     setup:
     String url = "http://localhost:$port$urlPath"
@@ -370,7 +372,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
         span(0) {
           name urlPathWithVariables
           kind SERVER
-          errored true
+          status ERROR
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
@@ -393,7 +395,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           }
           kind INTERNAL
           childOf span(0)
-          errored true
+          status ERROR
           errorEvent(RuntimeException, "bad things happen")
           attributes {
             if (annotatedMethod == null) {
@@ -493,6 +495,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
     }
   }
 
+  @Unroll
   def "Multiple GETs to delaying route #testName"() {
     setup:
     def requestsCount = 50 // Should be more than 2x CPUs to fish out some bugs

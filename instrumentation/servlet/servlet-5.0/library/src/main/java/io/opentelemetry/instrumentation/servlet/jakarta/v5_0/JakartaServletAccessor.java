@@ -86,6 +86,11 @@ public class JakartaServletAccessor
   }
 
   @Override
+  public String getRequestPathInfo(HttpServletRequest request) {
+    return request.getPathInfo();
+  }
+
+  @Override
   public Principal getRequestUserPrincipal(HttpServletRequest request) {
     return request.getUserPrincipal();
   }

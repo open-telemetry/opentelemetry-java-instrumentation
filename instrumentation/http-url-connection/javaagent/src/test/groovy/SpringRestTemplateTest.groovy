@@ -5,7 +5,6 @@
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.function.Consumer
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -45,12 +44,16 @@ class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implemen
   }
 
   @Override
-  void sendRequestWithCallback(HttpEntity<String> request, String method, URI uri, Map<String, String> headers = [:], Consumer<Integer> callback) {
-    restTemplate.execute(uri, HttpMethod.valueOf(method), { req ->
-      req.getHeaders().putAll(request.getHeaders())
-    }, { response ->
-      callback.accept(response.statusCode.value())
-    })
+  void sendRequestWithCallback(HttpEntity<String> request, String method, URI uri, Map<String, String> headers = [:], RequestResult requestResult) {
+    try {
+      restTemplate.execute(uri, HttpMethod.valueOf(method), { req ->
+        req.getHeaders().putAll(request.getHeaders())
+      }, { response ->
+        requestResult.complete(response.statusCode.value())
+      })
+    } catch (ResourceAccessException exception) {
+      requestResult.complete(exception.getCause())
+    }
   }
 
   @Override
@@ -59,7 +62,7 @@ class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implemen
   }
 
   @Override
-  Integer statusOnRedirectError() {
+  Integer responseCodeOnRedirectError() {
     return 302
   }
 }
