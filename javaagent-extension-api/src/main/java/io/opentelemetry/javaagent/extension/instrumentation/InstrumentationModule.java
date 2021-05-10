@@ -75,7 +75,7 @@ public abstract class InstrumentationModule implements AgentExtension {
       throw new IllegalArgumentException("InstrumentationModules must be named");
     }
     this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
-    enabled = Config.get().isInstrumentationEnabled(instrumentationNames, defaultEnabled());
+    this.enabled = Config.get().isInstrumentationEnabled(instrumentationNames, defaultEnabled());
   }
 
   private static List<String> toList(String first, String[] rest) {
