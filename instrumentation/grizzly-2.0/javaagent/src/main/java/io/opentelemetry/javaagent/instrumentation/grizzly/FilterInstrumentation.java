@@ -31,14 +31,8 @@ public class FilterInstrumentation implements TypeInstrumentation {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return hasSuperClass(named("org.glassfish.grizzly.filterchain.BaseFilter"))
         // HttpCodecFilter is instrumented in the server instrumentation
-        .and(
-            not(
-                ElementMatchers.<TypeDescription>named(
-                    "org.glassfish.grizzly.http.HttpCodecFilter")))
-        .and(
-            not(
-                ElementMatchers.<TypeDescription>named(
-                    "org.glassfish.grizzly.http.HttpServerFilter")));
+        .and(not(ElementMatchers.named("org.glassfish.grizzly.http.HttpCodecFilter")))
+        .and(not(ElementMatchers.named("org.glassfish.grizzly.http.HttpServerFilter")));
   }
 
   @Override
