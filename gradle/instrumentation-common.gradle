@@ -68,9 +68,13 @@ configurations {
 
 if (testLatestDeps) {
   afterEvaluate {
-    def latestDepTest = tasks.findByName('latestDepTest')
-    if (latestDepTest) {
-      tasks.test.dependsOn latestDepTest
+    try {
+      def latestDepTest = tasks.named('latestDepTest')
+      tasks.named('test').configure {
+        dependsOn(latestDepTest)
+      }
+    } catch (UnknownDomainObjectException e) {
+      // Ignore
     }
   }
 }

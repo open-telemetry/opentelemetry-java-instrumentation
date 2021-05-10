@@ -17,7 +17,7 @@ dependencies {
   testInstrumentation project(':instrumentation:spring:spring-core-2.0:javaagent')
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   jvmArgs '-Dotel.instrumentation.spring-batch.enabled=true'
 }
 test {

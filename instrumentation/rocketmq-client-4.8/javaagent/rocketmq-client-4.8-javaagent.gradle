@@ -16,6 +16,6 @@ dependencies {
 
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   jvmArgs "-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true"
 }

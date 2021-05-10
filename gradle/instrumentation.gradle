@@ -80,7 +80,7 @@ configurations {
   testInstrumentation
 }
 
-shadowJar {
+tasks.named('shadowJar').configure {
   configurations = [project.configurations.runtimeClasspath, project.configurations.testInstrumentation]
   mergeServiceFiles()
 

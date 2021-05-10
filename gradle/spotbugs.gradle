@@ -10,23 +10,4 @@ allprojects {
     effort = "max"
     excludeFilter = file("$rootDir/gradle/spotbugs-exclude.xml")
   }
-
-  spotbugsTest {
-    reports {
-      html.enabled = !isCI
-      xml.enabled = isCI
-      html {
-        stylesheet = 'fancy-hist.xsl'
-      }
-    }
-  }
-  spotbugsMain {
-    reports {
-      html.enabled = !isCI
-      xml.enabled = isCI
-      html {
-        stylesheet = 'fancy-hist.xsl'
-      }
-    }
-  }
 }
