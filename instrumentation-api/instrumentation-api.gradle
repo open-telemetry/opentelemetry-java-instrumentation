@@ -34,5 +34,6 @@ dependencies {
   testImplementation deps.mockito
   testImplementation deps.assertj
   testImplementation deps.awaitility
+  testImplementation deps.opentelemetrySdkMetrics
   testImplementation deps.opentelemetrySdkTesting
 }

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,7 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryData;
+import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.MetricDataType;
@@ -93,14 +98,15 @@ class HttpServerMetricsTest {
             metric -> {
               assertThat(metric.getName()).isEqualTo("http.server.duration");
               assertThat(metric.getDoubleSummaryData().getPoints()).hasSize(1);
-              DoubleSummaryPointData data = metric.getDoubleSummaryData().getPoints().stream().findFirst().get();
+              DoubleSummaryPointData data =
+                  metric.getDoubleSummaryData().getPoints().stream().findFirst().get();
               assertThat(data.getLabels().asMap())
                   .containsOnly(
                       entry("http.host", "host"),
                       entry("http.method", "GET"),
                       entry("http.scheme", "https"),
                       entry("net.host.name", "localhost"));
-              assertThat(data.getPoints()).isNotEmpty();
+              assertThat(data.getPercentileValues()).isNotEmpty();
             });
 
     listener.end(context2, responseAttributes);
@@ -119,9 +125,10 @@ class HttpServerMetricsTest {
         .anySatisfy(
             metric -> {
               assertThat(metric.getName()).isEqualTo("http.server.duration");
-              assertThat(metric.getDoubleSummaryData().getPoints()).hasSize(2);
-              DoubleSummaryPointData data = metric.getDoubleSummaryData().getPoints().stream().findFirst().get();
-              assertThat(data.getPoints()).isNotEmpty();
+              assertThat(metric.getDoubleSummaryData().getPoints()).hasSize(1);
+              DoubleSummaryPointData data =
+                  metric.getDoubleSummaryData().getPoints().stream().findFirst().get();
+              assertThat(data.getPercentileValues()).isNotEmpty();
             });
   }
 }

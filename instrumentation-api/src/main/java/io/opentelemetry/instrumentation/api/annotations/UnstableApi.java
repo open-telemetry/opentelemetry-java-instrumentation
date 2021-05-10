@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
  *
  * <p>Only use an API marked with {@link UnstableApi} if you are comfortable keeping up with
  * breaking changes. In particular, DO NOT use it in a library that itself has a guarantee of
- * stability.
+ * stability, there is no valid use case for it.
  */
 @Target({
   ElementType.ANNOTATION_TYPE,

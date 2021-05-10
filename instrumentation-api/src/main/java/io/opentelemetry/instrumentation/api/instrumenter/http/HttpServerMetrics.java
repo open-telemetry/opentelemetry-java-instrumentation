@@ -25,6 +25,9 @@ import org.slf4j.LoggerFactory;
  * {@link RequestListener} which keeps track of <a
  * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-server">HTTP
  * server metrics</a>.
+ *
+ * <p>To use this class, you may need to add the {@code opentelemetry-api-metrics} artifact to your
+ * dependencies.
  */
 public final class HttpServerMetrics implements RequestListener {
 
@@ -72,8 +75,7 @@ public final class HttpServerMetrics implements RequestListener {
 
     return context.with(
         HTTP_SERVER_REQUEST_METRICS_STATE,
-        new AutoValue_HttpServerMetrics_State(
-            activeRequestLabels, durationLabels, startTimeNanos));
+        new AutoValue_HttpServerMetrics_State(activeRequestLabels, durationLabels, startTimeNanos));
   }
 
   @Override
