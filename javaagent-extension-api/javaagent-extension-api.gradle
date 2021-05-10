@@ -1,0 +1,32 @@
+group = 'io.opentelemetry.javaagent'
+
+apply from: "$rootDir/gradle/java.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
+
+// TODO this is not the desired state, only reflects current reality
+minimumBranchCoverage = 0
+minimumInstructionCoverage = 0
+
+configurations {
+  // classpath used by the instrumentation muzzle plugin
+  instrumentationMuzzle {
+    canBeConsumed = true
+    canBeResolved = false
+    extendsFrom api, implementation
+  }
+}
+
+dependencies {
+  api deps.opentelemetrySdk
+  // metrics are unstable, do not expose as api
+  implementation deps.opentelemetrySdkMetrics
+  api deps.bytebuddy
+  api deps.slf4j
+
+  implementation project(":instrumentation-api")
+  implementation project(":javaagent-api")
+  // TODO: ideally this module should not depend on bootstrap, bootstrap should be an internal component
+  implementation project(":javaagent-bootstrap")
+
+  instrumentationMuzzle sourceSets.main.output
+}

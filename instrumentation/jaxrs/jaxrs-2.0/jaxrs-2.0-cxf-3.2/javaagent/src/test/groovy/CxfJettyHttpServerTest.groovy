@@ -4,5 +4,4 @@
  */
 
 class CxfJettyHttpServerTest extends JaxRsJettyHttpServerTest {
-
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.config
 
+
 import spock.lang.Specification
 
 class MethodsConfigurationParserTest extends Specification {

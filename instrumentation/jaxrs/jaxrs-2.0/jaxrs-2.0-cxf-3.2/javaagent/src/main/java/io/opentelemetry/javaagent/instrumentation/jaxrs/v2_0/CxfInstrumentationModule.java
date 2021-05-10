@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -23,6 +23,7 @@ public class CxfInstrumentationModule extends InstrumentationModule {
     return asList(
         new CxfRequestContextInstrumentation(),
         new CxfServletControllerInstrumentation(),
-        new CxfRsHttpListenerInstrumentation());
+        new CxfRsHttpListenerInstrumentation(),
+        new CxfJaxRsInvokerInstrumentation());
   }
 }

@@ -5,18 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.hasSuperMethod
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith
 import static net.bytebuddy.matcher.ElementMatchers.none
 
-import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A
-import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B
-import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.C
-import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F
-import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G
-import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.Trace
-import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.TracedClass
-import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.UntracedClass
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.*
 import net.bytebuddy.description.method.MethodDescription
 import spock.lang.Specification
 

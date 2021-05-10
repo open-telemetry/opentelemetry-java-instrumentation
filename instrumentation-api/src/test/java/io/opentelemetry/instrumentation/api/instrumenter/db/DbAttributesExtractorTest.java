@@ -20,32 +20,32 @@ class DbAttributesExtractorTest {
   DbAttributesExtractor<Map<String, String>> underTest =
       new DbAttributesExtractor<Map<String, String>>() {
         @Override
-        protected String dbSystem(Map<String, String> map) {
+        protected String system(Map<String, String> map) {
           return map.get("db.system");
         }
 
         @Override
-        protected String dbUser(Map<String, String> map) {
+        protected String user(Map<String, String> map) {
           return map.get("db.user");
         }
 
         @Override
-        protected String dbName(Map<String, String> map) {
+        protected String name(Map<String, String> map) {
           return map.get("db.name");
         }
 
         @Override
-        protected String dbConnectionString(Map<String, String> map) {
+        protected String connectionString(Map<String, String> map) {
           return map.get("db.connection_string");
         }
 
         @Override
-        protected String dbStatement(Map<String, String> map) {
+        protected String statement(Map<String, String> map) {
           return map.get("db.statement");
         }
 
         @Override
-        protected String dbOperation(Map<String, String> map) {
+        protected String operation(Map<String, String> map) {
           return map.get("db.operation");
         }
       };

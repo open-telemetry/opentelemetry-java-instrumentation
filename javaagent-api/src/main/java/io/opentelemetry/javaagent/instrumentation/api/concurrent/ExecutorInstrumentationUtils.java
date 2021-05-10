@@ -45,6 +45,13 @@ public class ExecutorInstrumentationUtils {
             return false;
           }
 
+          // HttpConnection implements Runnable. When async request is completed HttpConnection
+          // may be sent to process next request while context from previous request hasn't been
+          // cleared yet.
+          if (taskClass.getName().equals("org.eclipse.jetty.server.HttpConnection")) {
+            return false;
+          }
+
           Class<?> enclosingClass = taskClass.getEnclosingClass();
           if (enclosingClass != null) {
             // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to

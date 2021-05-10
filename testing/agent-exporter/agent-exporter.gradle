@@ -5,7 +5,6 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  compileOnly(project(':javaagent-spi'))
   compileOnly(deps.bytebuddy)
   compileOnly(deps.opentelemetrySdk)
   compileOnly(deps.opentelemetrySdkAutoconfigure)
@@ -14,6 +13,7 @@ dependencies {
   annotationProcessor deps.autoservice
   compileOnly deps.autoservice
 
+  implementation project(':javaagent-extension-api')
   implementation project(':javaagent-tooling')
   implementation deps.opentelemetryProto
   implementation deps.opentelemetryOtlp

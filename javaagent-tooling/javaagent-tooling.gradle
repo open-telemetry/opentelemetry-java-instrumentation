@@ -18,7 +18,7 @@ configurations {
 
 dependencies {
   implementation project(':javaagent-bootstrap')
-  implementation project(':javaagent-spi')
+  implementation project(':javaagent-extension-api')
   implementation project(':javaagent-api')
   implementation project(':instrumentation-api')
 

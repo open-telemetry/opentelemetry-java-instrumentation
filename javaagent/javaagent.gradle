@@ -125,6 +125,7 @@ dependencies {
   //  in case there are dependencies (accidentally) pulled in by instrumentation modules
   //  but I couldn't get that to work
   licenseReportDependencies project(':javaagent-tooling')
+  licenseReportDependencies project(':javaagent-extension-api')
   licenseReportDependencies project(':javaagent-bootstrap')
 }
 

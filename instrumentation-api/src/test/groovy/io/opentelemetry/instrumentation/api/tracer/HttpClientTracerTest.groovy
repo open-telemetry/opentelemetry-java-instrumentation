@@ -101,6 +101,7 @@ class HttpClientTracerTest extends BaseTracerTest {
     false          | "https://host:0"                     | "https://host:0"                     | ""            | null             | "host"   | null
     false          | "https://host/path"                  | "https://host/path"                  | ""            | null             | "host"   | null
     false          | "http://host:99/path?query#fragment" | "http://host:99/path?query#fragment" | ""            | null             | "host"   | 99
+    false          | "https://usr:pswd@host/path"         | "https://host/path"                  | ""            | null             | "host"   | null
 
     req = [url: url == null ? null : new URI(url)]
   }

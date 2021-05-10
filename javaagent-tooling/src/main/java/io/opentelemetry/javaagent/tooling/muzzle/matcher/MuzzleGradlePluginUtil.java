@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,49 +47,42 @@ public final class MuzzleGradlePluginUtil {
     int validatedModulesCount = 0;
     for (InstrumentationModule instrumentationModule :
         ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
-      Method getMuzzleReferenceMatcher = null;
-      try {
-        getMuzzleReferenceMatcher =
-            InstrumentationModule.class.getDeclaredMethod("getMuzzleReferenceMatcher");
-        getMuzzleReferenceMatcher.setAccessible(true);
-        ReferenceMatcher muzzle =
-            (ReferenceMatcher) getMuzzleReferenceMatcher.invoke(instrumentationModule);
-        List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
+      ReferenceMatcher muzzle =
+          new ReferenceMatcher(
+              instrumentationModule.getAllHelperClassNames(),
+              instrumentationModule.getMuzzleReferences(),
+              instrumentationModule::isHelperClass);
+      List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
 
-        boolean classLoaderMatch =
-            instrumentationModule.classLoaderMatcher().matches(userClassLoader);
-        boolean passed = mismatches.isEmpty() && classLoaderMatch;
+      boolean classLoaderMatch =
+          instrumentationModule.classLoaderMatcher().matches(userClassLoader);
+      boolean passed = mismatches.isEmpty() && classLoaderMatch;
 
-        if (passed && !assertPass) {
-          System.err.println(
-              "MUZZLE PASSED "
-                  + instrumentationModule.getClass().getSimpleName()
-                  + " BUT FAILURE WAS EXPECTED");
-          throw new RuntimeException("Instrumentation unexpectedly passed Muzzle validation");
-        } else if (!passed && assertPass) {
-          System.err.println(
-              "FAILED MUZZLE VALIDATION: "
-                  + instrumentationModule.getClass().getName()
-                  + " mismatches:");
+      if (passed && !assertPass) {
+        System.err.println(
+            "MUZZLE PASSED "
+                + instrumentationModule.getClass().getSimpleName()
+                + " BUT FAILURE WAS EXPECTED");
+        throw new RuntimeException("Instrumentation unexpectedly passed Muzzle validation");
+      } else if (!passed && assertPass) {
+        System.err.println(
+            "FAILED MUZZLE VALIDATION: "
+                + instrumentationModule.getClass().getName()
+                + " mismatches:");
 
-          if (!classLoaderMatch) {
-            System.err.println("-- classloader mismatch");
-          }
-
-          for (Mismatch mismatch : mismatches) {
-            System.err.println("-- " + mismatch);
-          }
-          throw new RuntimeException("Instrumentation failed Muzzle validation");
+        if (!classLoaderMatch) {
+          System.err.println("-- classloader mismatch");
         }
-      } finally {
-        if (null != getMuzzleReferenceMatcher) {
-          getMuzzleReferenceMatcher.setAccessible(false);
+
+        for (Mismatch mismatch : mismatches) {
+          System.err.println("-- " + mismatch);
         }
+        throw new RuntimeException("Instrumentation failed Muzzle validation");
       }
 
       validatedModulesCount++;
     }
-    // run helper injector on all instrumenters
+    // run helper injector on all instrumentation modules
     if (assertPass) {
       for (InstrumentationModule instrumentationModule :
           ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
@@ -138,17 +130,8 @@ public final class MuzzleGradlePluginUtil {
     for (InstrumentationModule instrumentationModule :
         ServiceLoader.load(InstrumentationModule.class, instrumentationClassLoader)) {
       try {
-        Method getMuzzleMethod =
-            instrumentationModule.getClass().getDeclaredMethod("getMuzzleReferenceMatcher");
-        ReferenceMatcher muzzle;
-        try {
-          getMuzzleMethod.setAccessible(true);
-          muzzle = (ReferenceMatcher) getMuzzleMethod.invoke(instrumentationModule);
-        } finally {
-          getMuzzleMethod.setAccessible(false);
-        }
         System.out.println(instrumentationModule.getClass().getName());
-        for (Reference ref : muzzle.getReferences()) {
+        for (Reference ref : instrumentationModule.getMuzzleReferences()) {
           System.out.println(prettyPrint("  ", ref));
         }
       } catch (Exception e) {

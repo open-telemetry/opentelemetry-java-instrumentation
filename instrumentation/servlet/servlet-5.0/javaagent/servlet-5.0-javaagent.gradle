@@ -13,4 +13,9 @@ dependencies {
   api(project(':instrumentation:servlet:servlet-5.0:library'))
   implementation(project(':instrumentation:servlet:servlet-common:javaagent'))
   compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '5.0.0'
+
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.0.0'
+  testLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '11.0.0'
+  testLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '10.0.0'
+  testLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '10.0.0'
 }

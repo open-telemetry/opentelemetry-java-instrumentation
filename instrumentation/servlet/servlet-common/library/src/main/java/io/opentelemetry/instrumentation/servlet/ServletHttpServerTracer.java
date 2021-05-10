@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.servlet;
 
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.CONTAINER;
+import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.FILTER;
 import static io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming.Source.SERVLET;
 
 import io.opentelemetry.api.trace.Span;
@@ -48,11 +49,10 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
     accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
 
-    if (servlet) {
-      // server span name shouldn't be updated when server span was created from a call to Servlet
-      // (if created from a call to Filter then name may be updated from updateContext)
-      ServerSpanNaming.updateSource(context, SERVLET);
-    }
+    // server span name shouldn't be updated when server span was created from a call to Servlet
+    // (if created from a call to Filter then name may be updated from updateContext)
+    ServerSpanNaming.updateSource(context, servlet ? SERVLET : FILTER);
+
     return addServletContextPath(context, request);
   }
 

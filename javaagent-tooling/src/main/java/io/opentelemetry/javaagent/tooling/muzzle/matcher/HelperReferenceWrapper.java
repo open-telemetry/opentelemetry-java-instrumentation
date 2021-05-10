@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
 import static net.bytebuddy.description.method.MethodDescription.CONSTRUCTOR_INTERNAL_NAME;
 
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.VisibilityFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.OwnershipFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.VisibilityFlag;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -21,7 +21,7 @@ import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.pool.TypePool.Resolution;
 
 /** This class provides a common interface for {@link Reference} and {@link TypeDescription}. */
-public interface HelperReferenceWrapper {
+interface HelperReferenceWrapper {
   boolean isAbstract();
 
   /**
