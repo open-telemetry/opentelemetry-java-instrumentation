@@ -797,20 +797,29 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       }
       attributes {
         "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
-        if (uri.port == UNUSABLE_PORT) {
-          // TODO(anuraaga): For the unusable port, there isn't actually a peer so we shouldn't be
+        if (uri.port == UNUSABLE_PORT || uri.host == "192.0.2.1" || (uri.host == "www.google.com" && uri.port == 81)) {
+          // TODO(anuraaga): For theses cases, there isn't actually a peer so we shouldn't be
           // filling in peer information but some instrumentation does so based on the URL itself
           // which is present in HTTP attributes. We should fix this.
           "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == uri.host }
-          "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it == UNUSABLE_PORT }
+          "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it == uri.port }
         } else {
           "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
           "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
         }
-        "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
+        if (uri.host == "www.google.com") {
+          // unpredictable IP address (or can be none if no connection is made, see comment above)
+          "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it instanceof String }
+        } else {
+          "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
+        }
         "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
         "${SemanticAttributes.HTTP_METHOD.key}" method
-        "${SemanticAttributes.HTTP_FLAVOR.key}" httpFlavor
+        if (uri.host == "www.google.com") {
+          "${SemanticAttributes.HTTP_FLAVOR.key}" { it == httpFlavor || it == "2.0" } // google https request can be http 2.0
+        } else {
+          "${SemanticAttributes.HTTP_FLAVOR.key}" httpFlavor
+        }
         if (userAgent) {
           "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith(userAgent) }
         }
@@ -819,7 +828,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         }
 
         if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
-          "${SemanticAttributes.HTTP_HOST}" "localhost:${uri.port}"
+          "${SemanticAttributes.HTTP_HOST}" { it == uri.host || it == "${uri.host}:${uri.port}" }
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
@@ -828,7 +837,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
           "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
-          "${SemanticAttributes.HTTP_SCHEME}" "http"
+          "${SemanticAttributes.HTTP_SCHEME}" uri.scheme
         }
         if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
           "${SemanticAttributes.HTTP_TARGET}" uri.path + "${uri.query != null ? "?${uri.query}" : ""}"
