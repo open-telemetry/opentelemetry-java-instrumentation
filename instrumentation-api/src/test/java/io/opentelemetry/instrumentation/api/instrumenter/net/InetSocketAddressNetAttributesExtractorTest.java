@@ -30,7 +30,7 @@ class InetSocketAddressNetAttributesExtractorTest {
 
             @Override
             protected String transport(InetSocketAddress inetSocketAddress) {
-              return SemanticAttributes.NetTransportValues.IP_TCP.getValue();
+              return SemanticAttributes.NetTransportValues.IP_TCP;
             }
           };
 
@@ -41,9 +41,7 @@ class InetSocketAddressNetAttributesExtractorTest {
     extractor.onEnd(attributes, null, null);
     assertThat(attributes.build())
         .containsOnly(
-            entry(
-                SemanticAttributes.NET_TRANSPORT,
-                SemanticAttributes.NetTransportValues.IP_TCP.getValue()));
+            entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP));
   }
 
   @Test
@@ -62,9 +60,7 @@ class InetSocketAddressNetAttributesExtractorTest {
     // then
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(
-                SemanticAttributes.NET_TRANSPORT,
-                SemanticAttributes.NetTransportValues.IP_TCP.getValue()),
+            entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP),
             entry(SemanticAttributes.NET_PEER_IP, address.getAddress().getHostAddress()),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L));
@@ -92,9 +88,7 @@ class InetSocketAddressNetAttributesExtractorTest {
     // then
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(
-                SemanticAttributes.NET_TRANSPORT,
-                SemanticAttributes.NetTransportValues.IP_TCP.getValue()),
+            entry(SemanticAttributes.NET_TRANSPORT, SemanticAttributes.NetTransportValues.IP_TCP),
             entry(SemanticAttributes.NET_PEER_NAME, "github.com"),
             entry(SemanticAttributes.NET_PEER_PORT, 123L));
 
