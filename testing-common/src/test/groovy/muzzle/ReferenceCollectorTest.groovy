@@ -8,7 +8,6 @@ package muzzle
 import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag
 import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.MinimumVisibilityFlag
 import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.OwnershipFlag
-import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.VisibilityFlag
 import static muzzle.TestClasses.HelperAdvice
 import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice
@@ -275,20 +274,6 @@ class ReferenceCollectorTest extends Specification {
     desc                                                                        | adviceClassName
     "passing arbitrary variables or parameters to InstrumentationContext.get()" | InstrumentationContextTestClasses.NotUsingClassRefAdvice.name
     "storing class ref in a local var"                                          | InstrumentationContextTestClasses.PassingVariableAdvice.name
-  }
-
-  private static assertHelperSuperClassMethod(Reference reference, boolean isAbstract) {
-    assertMethod reference, 'abstractMethod', '()I',
-      VisibilityFlag.PROTECTED,
-      OwnershipFlag.NON_STATIC,
-      isAbstract ? ManifestationFlag.ABSTRACT : ManifestationFlag.NON_FINAL
-  }
-
-  private static assertHelperInterfaceMethod(Reference reference, boolean isAbstract) {
-    assertMethod reference, 'foo', '()V',
-      VisibilityFlag.PUBLIC,
-      OwnershipFlag.NON_STATIC,
-      isAbstract ? ManifestationFlag.ABSTRACT : ManifestationFlag.NON_FINAL
   }
 
   private static assertMethod(Reference reference, String methodName, String methodDesc, Reference.Flag... flags) {
