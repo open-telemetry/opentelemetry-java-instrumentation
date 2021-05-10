@@ -2,6 +2,73 @@
 
 ## Unreleased:
 
+### ☢️ Breaking changes
+
+### 🌟 New javaagent instrumentation
+
+- RxJava 3
+  ([#2794](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2794))
+
+### 🌟 New library instrumentation
+
+- RxJava 3
+  ([#2794](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2794))
+
+### 📈 Improvements
+
+- URL credentials of the form `https://username:password@www.example.com/` no longer captured
+  ([#2707](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2707))
+- `@WithSpan` async support added for methods returning async Reactor 3.x types
+  ([#2714](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2714))
+- `@WithSpan` async support added for methods returning Guava ListenableFuture
+  ([#2811](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2811))
+- Semantic attributes `code.namespace` and `code.function` captured on JAX-RS internal spans
+  ([#2805](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2805))
+- `SERVER` span names improved for Spring MVC, Grails, Wicket, and Struts
+  ([#2814](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2814))
+- `SERVER` span names improved for Servlet filters
+  ([#2887](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2887))
+- `SERVER` span names improved for Resteasy
+  ([#2900](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2900))
+- `SERVER` span names improved for Jersey and CXF
+  ([#2919](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2919))
+- JAX-RS `@ApplicationPath` annotation captured as part of `SERVER` span name
+  ([#2824](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2824))
+- RequestDispatcher `forward()` and `include()` internal spans removed
+  ([#2816](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2816))
+- Context propagated to reactor-netty callbacks
+  ([#2850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2850))
+- AWS lambda flush timeout raised to 10 seconds
+  ([#2855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2855))
+
+### 🛠️ Bug fixes
+
+- RxJava2 NoSuchFieldError
+  ([#2836](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2836))
+- Duplicate http client tracing headers
+  ([#2842](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2842))
+- Netty 4.1 listeners could not be removed by application
+  ([#2851](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2851))
+- NPE caused in gRPC ProtoReflectionService
+  ([#2876](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2876))
+- Context leak when using Ratpack
+  ([#2910](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2910))
+- Context leak when uising Jetty
+  ([#2920](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2920))
+
+### 🧰 Tooling
+
+- Documented how to write InstrumentationModule line by line
+  ([#2793](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2793))
+- New instrumenter API used in JMS instrumentation
+  ([#2803](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2803))
+- Instrumenter API improvements
+  ([#2860](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2860))
+- Muzzle checks whether used fields are actually declared somewhere
+  ([#2870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2870))
+- Extracted javaagent-extension-api from tooling & spi
+  ([#2879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2879))
+
 ## Version 1.1.0 - 2021-04-14
 
 ### ☢️ Breaking changes
@@ -16,7 +83,7 @@
 
 - Elasticsearch 7
   ([#2514](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2514),
-   [#2528](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2528))
+  [#2528](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2528))
 - Couchbase 3.1
   ([#2524](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2524))
 - Grails
@@ -90,8 +157,8 @@
   ([#2699](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2699))
 - Fix context not propagated over JMS when explicit destination used
   ([#2702](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2702))
-- Fix StackOverflowError if jdbc driver implementation of Connection getMetaData calls
-  Statement execute
+- Fix StackOverflowError if jdbc driver implementation of Connection getMetaData calls Statement
+  execute
   ([#2756](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2756))
 
 ### 🧰 Tooling
