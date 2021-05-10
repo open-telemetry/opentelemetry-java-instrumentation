@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer
 
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.opentelemetry.context.propagation.TextMapSetter
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes
@@ -31,7 +32,7 @@ class HttpClientTracerTest extends BaseTracerTest {
 
     then:
     if (req) {
-      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP")
+      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, IP_TCP)
       1 * span.setAttribute(SemanticAttributes.HTTP_METHOD, req.method)
       1 * span.setAttribute(SemanticAttributes.HTTP_URL, "$req.url")
       1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME, req.url.host)
@@ -58,7 +59,7 @@ class HttpClientTracerTest extends BaseTracerTest {
 
     then:
     if (req) {
-      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP")
+      1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, IP_TCP)
       1 * span.setAttribute(SemanticAttributes.HTTP_METHOD, req.method)
       1 * span.setAttribute(SemanticAttributes.HTTP_URL, "$req.url")
       1 * span.setAttribute(SemanticAttributes.NET_PEER_NAME, req.url.host)
@@ -78,7 +79,7 @@ class HttpClientTracerTest extends BaseTracerTest {
     tracer.onRequest(span, req)
 
     then:
-    1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP")
+    1 * span.setAttribute(SemanticAttributes.NET_TRANSPORT, IP_TCP)
     if (expectedUrl != null) {
       1 * span.setAttribute(SemanticAttributes.HTTP_URL, expectedUrl)
     }

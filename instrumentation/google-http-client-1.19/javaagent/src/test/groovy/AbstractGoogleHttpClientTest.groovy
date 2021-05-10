@@ -5,6 +5,7 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import com.google.api.client.http.GenericUrl
 import com.google.api.client.http.HttpRequest
@@ -75,7 +76,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> 
           kind CLIENT
           status ERROR
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.HTTP_URL.key}" "${uri}"

@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicClient
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderParentClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static org.junit.Assume.assumeTrue
 
 import groovy.transform.stc.ClosureParams
@@ -796,7 +797,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         errorEvent(exception.class, exception.message)
       }
       attributes {
-        "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+        "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
         if (uri.port == UNUSABLE_PORT) {
           // TODO(anuraaga): For the unusable port, there isn't actually a peer so we shouldn't be
           // filling in peer information but some instrumentation does so based on the URL itself

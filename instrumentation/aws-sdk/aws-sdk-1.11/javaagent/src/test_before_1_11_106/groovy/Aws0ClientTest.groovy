@@ -7,6 +7,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import com.amazonaws.AmazonClientException
 import com.amazonaws.ClientConfiguration
@@ -104,7 +105,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.HTTP_URL.key}" "$server.address"
             "${SemanticAttributes.HTTP_METHOD.key}" "$method"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
@@ -164,7 +165,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.HTTP_URL.key}" "http://localhost:${UNUSABLE_PORT}"
             "${SemanticAttributes.HTTP_METHOD.key}" "$method"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
@@ -212,7 +213,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent RuntimeException, "bad handler"
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.HTTP_URL.key}" "https://s3.amazonaws.com"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
@@ -258,7 +259,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.HTTP_URL.key}" "$server.address"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
