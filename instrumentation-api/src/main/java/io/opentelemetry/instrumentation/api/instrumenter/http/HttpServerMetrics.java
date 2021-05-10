@@ -21,6 +21,11 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * {@link RequestListener} which keeps track of <a
+ * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-server">HTTP
+ * server metrics</a>.
+ */
 public final class HttpServerMetrics implements RequestListener {
 
   private static final double NANOS_IN_MS = TimeUnit.MILLISECONDS.toNanos(1);
@@ -30,6 +35,11 @@ public final class HttpServerMetrics implements RequestListener {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpServerMetrics.class);
 
+  /**
+   * Returns a {@link RequestMetrics} which can be used to enable recording of {@link
+   * HttpServerMetrics} on an {@link
+   * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
+   */
   public static RequestMetrics get() {
     return HttpServerMetrics::new;
   }
@@ -62,7 +72,7 @@ public final class HttpServerMetrics implements RequestListener {
 
     return context.with(
         HTTP_SERVER_REQUEST_METRICS_STATE,
-        new AutoValue_HttpServerRequestMetrics_State(
+        new AutoValue_HttpServerMetrics_State(
             activeRequestLabels, durationLabels, startTimeNanos));
   }
 
