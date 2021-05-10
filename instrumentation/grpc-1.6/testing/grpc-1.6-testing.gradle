@@ -5,7 +5,7 @@ plugins {
 
 apply from: "$rootDir/gradle/java.gradle"
 
-def grpcVersion = '1.6.1'
+def grpcVersion = '1.6'
 
 protobuf {
   protoc {
