@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v3_0.CassandraDatabaseClientTracer.tracer;
 
 import com.datastax.driver.core.BoundStatement;
@@ -17,7 +16,6 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
-import com.google.common.base.Function;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -45,15 +43,7 @@ public class TracingSession implements Session {
 
   @Override
   public ListenableFuture<Session> initAsync() {
-    return Futures.transform(
-        session.initAsync(),
-        new Function<Session, Session>() {
-          @Override
-          public Session apply(Session session) {
-            return new TracingSession(session);
-          }
-        },
-        directExecutor());
+    return Futures.transform(session.initAsync(), TracingSession::new, Runnable::run);
   }
 
   @Override
@@ -223,6 +213,6 @@ public class TracingSession implements Session {
             tracer().endExceptionally(context, t);
           }
         },
-        directExecutor());
+        Runnable::run);
   }
 }

@@ -183,7 +183,21 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       URI url = url(request);
       if (url != null) {
         netPeerAttributes.setNetPeer(setter, url.getHost(), null, url.getPort());
-        setter.setAttribute(SemanticAttributes.HTTP_URL, url.toString());
+        final URI sanitized;
+        if (url.getUserInfo() != null) {
+          sanitized =
+              new URI(
+                  url.getScheme(),
+                  null,
+                  url.getHost(),
+                  url.getPort(),
+                  url.getPath(),
+                  url.getQuery(),
+                  url.getFragment());
+        } else {
+          sanitized = url;
+        }
+        setter.setAttribute(SemanticAttributes.HTTP_URL, sanitized.toString());
       }
     } catch (Exception e) {
       log.debug("Error tagging url", e);

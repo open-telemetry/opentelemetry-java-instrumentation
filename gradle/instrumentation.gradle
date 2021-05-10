@@ -41,9 +41,15 @@ afterEvaluate {
     compileOnly project(':javaagent-api')
     compileOnly project(':javaagent-bootstrap')
     // Apply common dependencies for instrumentation.
+    compileOnly(project(':javaagent-extension-api')) {
+      // OpenTelemetry SDK is not needed for compilation
+      exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+      exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-metrics'
+    }
     compileOnly(project(':javaagent-tooling')) {
       // OpenTelemetry SDK is not needed for compilation
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
+      exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-metrics'
     }
     compileOnly deps.bytebuddy
     annotationProcessor deps.autoservice
@@ -59,6 +65,7 @@ afterEvaluate {
     testImplementation deps.testcontainers
 
     toolingRuntime(project(path: ":javaagent-tooling", configuration: 'instrumentationMuzzle'))
+    toolingRuntime(project(path: ":javaagent-extension-api", configuration: 'instrumentationMuzzle'))
 
     bootstrapRuntime(project(path: ":javaagent-bootstrap", configuration: 'instrumentationMuzzle'))
   }

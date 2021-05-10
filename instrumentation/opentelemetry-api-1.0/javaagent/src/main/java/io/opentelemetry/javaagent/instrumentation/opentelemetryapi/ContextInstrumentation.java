@@ -11,8 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import application.io.opentelemetry.context.Context;
 import application.io.opentelemetry.context.ContextStorage;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

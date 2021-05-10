@@ -25,7 +25,7 @@ class RequestDispatcherTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      orderByRootSpanName("forward-child", "include-child")
+      traces.sort(orderByRootSpanName("forward-child", "include-child"))
       trace(0, 1) {
         basicSpan(it, 0, "forward-child")
       }
@@ -75,7 +75,7 @@ class RequestDispatcherTest extends AgentInstrumentationSpecification {
 
     then:
     assertTraces(2) {
-      orderByRootSpanName("parent", "notParent")
+      traces.sort(orderByRootSpanName("parent", "notParent"))
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         basicSpan(it, 1, "$operation-child", span(0))

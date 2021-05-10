@@ -18,7 +18,7 @@ class MuzzleBytecodeTransformTest extends Specification {
     List<Class> unMuzzledClasses = []
     List<Class> nonLazyFields = []
     List<Class> unInitFields = []
-    def instrumentationModuleClass = IntegrationTestUtils.getAgentClassLoader().loadClass("io.opentelemetry.javaagent.tooling.InstrumentationModule")
+    def instrumentationModuleClass = IntegrationTestUtils.getAgentClassLoader().loadClass("io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule")
     for (Object instrumenter : SafeServiceLoader.load(instrumentationModuleClass, IntegrationTestUtils.getAgentClassLoader())) {
       if (!instrumentationModuleClass.isAssignableFrom(instrumenter.getClass())) {
         // muzzle only applies to default instrumenters
@@ -27,12 +27,12 @@ class MuzzleBytecodeTransformTest extends Specification {
       Field f
       Method m
       try {
-        f = instrumenter.getClass().getDeclaredField("muzzleReferenceMatcher")
+        f = instrumenter.getClass().getDeclaredField("muzzleReferences")
         f.setAccessible(true)
         if (f.get(instrumenter) != null) {
           nonLazyFields.add(instrumenter.getClass())
         }
-        m = instrumenter.getClass().getDeclaredMethod("getMuzzleReferenceMatcher")
+        m = instrumenter.getClass().getDeclaredMethod("getMuzzleReferences")
         m.setAccessible(true)
         m.invoke(instrumenter)
         if (f.get(instrumenter) == null) {

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
+import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
@@ -219,10 +219,10 @@ public class HelperInjector implements Transformer {
             target.modify(
                 AgentInstaller.getInstrumentation(),
                 Collections.singleton(helperModule),
-                Collections.<String, Set<JavaModule>>emptyMap(),
-                Collections.<String, Set<JavaModule>>emptyMap(),
-                Collections.<Class<?>>emptySet(),
-                Collections.<Class<?>, List<Class<?>>>emptyMap());
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                Collections.emptySet(),
+                Collections.emptyMap());
           }
         }
       }

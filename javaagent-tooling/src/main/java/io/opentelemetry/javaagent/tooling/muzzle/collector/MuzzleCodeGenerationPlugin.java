@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import net.bytebuddy.build.Plugin;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
@@ -14,7 +14,8 @@ import net.bytebuddy.dynamic.DynamicType;
 
 /**
  * This class is a ByteBuddy build plugin that is responsible for generating actual implementation
- * of the {@link InstrumentationModule#getMuzzleReferenceMatcher()} method.
+ * of some {@link InstrumentationModule} methods. Auto-generated methods have the word "muzzle" in
+ * their names.
  *
  * <p>This class is used in the gradle build scripts, referenced by each instrumentation module.
  */

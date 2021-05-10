@@ -97,19 +97,14 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<ClassicHttpRequest> {
 
   @Override
   ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request)
+    return client.execute(new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()), request)
   }
 
   @Override
   void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort()), request) {
+    client.execute(new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()), request) {
       callback.accept(it)
     }
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
   }
 }
 
@@ -121,19 +116,14 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<ClassicHttpReq
 
   @Override
   ClassicHttpResponse executeRequest(ClassicHttpRequest request, URI uri) {
-    return client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext())
+    return client.execute(new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()), request, new BasicHttpContext())
   }
 
   @Override
   void executeRequestWithCallback(ClassicHttpRequest request, URI uri, Consumer<ClassicHttpResponse> callback) {
-    client.execute(new HttpHost(uri.getHost(), uri.getPort()), request, new BasicHttpContext()) {
+    client.execute(new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()), request, new BasicHttpContext()) {
       callback.accept(it)
     }
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
   }
 }
 

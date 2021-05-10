@@ -42,7 +42,7 @@ while `javaagent-api` contains classes that are only needed for auto-instrumenta
 
 ### Modules that live in the agent class loader
 
-#### `javaagent-tooling` module and `instrumentation` submodules
+#### `javaagent-tooling`, `javaagent-extension-api` modules and `instrumentation` submodules
 
 Contains everything necessary to make instrumentation machinery work,
 including integration with [ByteBuddy](https://bytebuddy.net/) and actual
@@ -51,12 +51,12 @@ from different libraries, it is paramount to hide all these classes from the
 host application. This is achieved in the following way:
 
 - When `javaagent` module builds the final agent, it moves all classes from
-`instrumentation` submodules and `javaagent-tooling` module into a separate
-folder inside final jar file, called`inst`.
+`instrumentation` submodules, `javaagent-tooling` and `javaagent-extension-api` modules
+into a separate folder inside final jar file, called`inst`.
 In addition, the extension of all class files is changed from `class` to `classdata`.
 This ensures that general classloaders cannot find nor load these classes.
 - When `io.opentelemetry.javaagent.bootstrap.AgentInitializer` is invoked, it creates an
-instance of `io.opentelemetry.javaagent.instrumentation.api.AgentClassLoader`, loads an
+instance of `io.opentelemetry.javaagent.bootstrap.AgentClassLoader`, loads an
 `io.opentelemetry.javaagent.tooling.AgentInstaller` from that `AgentClassLoader`
 and then passes control on to the `AgentInstaller` (now in the
 `AgentClassLoader`). The `AgentInstaller` then installs all of the
@@ -92,9 +92,9 @@ Context, both shaded during creation of `javaagent` jar file by Shadow Gradle pl
 during creation of `javaagent` jar file by Shadow Gradle plugin
 
 Available in the agent class loader:
-- `inst/` - contains `javaagent-tooling` module and `instrumentation` submodules, loaded and isolated
-inside `AgentClassLoader`. Including OpenTelemetry SDK (and the built-in exporters when using the
-`-all` artifact).
+- `inst/` - contains `javaagent-tooling` and `javaagent-extension-api` modules and
+  `instrumentation` submodules, loaded and isolated inside `AgentClassLoader`.
+  Including OpenTelemetry SDK (and the built-in exporters when using the `-all` artifact).
 
 ![Agent initialization sequence](initialization-sequence.svg)
 [Image source](https://docs.google.com/drawings/d/1FyRd11emnHvNWzUXLdpMNyf2R-auZlJsicNg8FpU_Ys)

@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
+import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.javaagent.tooling.matcher.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -15,6 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
@@ -158,14 +160,13 @@ public class AgentInstaller {
 
     int numInstrumenters = 0;
 
-    for (InstrumentationModule instrumentationModule : loadInstrumentationModules()) {
-      log.debug("Loading instrumentation {}", instrumentationModule.getClass().getName());
+    for (AgentExtension agentExtension : loadAgentExtensions()) {
+      log.debug("Loading extension {}", agentExtension.getClass().getName());
       try {
-        agentBuilder = instrumentationModule.instrument(agentBuilder);
+        agentBuilder = agentExtension.extend(agentBuilder);
         numInstrumenters++;
       } catch (Exception | LinkageError e) {
-        log.error(
-            "Unable to load instrumentation {}", instrumentationModule.getClass().getName(), e);
+        log.error("Unable to load extension {}", agentExtension.getClass().getName(), e);
       }
     }
 
@@ -249,11 +250,17 @@ public class AgentInstaller {
         ByteBuddyAgentCustomizer.class, AgentInstaller.class.getClassLoader());
   }
 
-  private static List<InstrumentationModule> loadInstrumentationModules() {
-    return SafeServiceLoader.load(
-            InstrumentationModule.class, AgentInstaller.class.getClassLoader())
-        .stream()
-        .sorted(Comparator.comparingInt(InstrumentationModule::getOrder))
+  private static List<? extends AgentExtension> loadAgentExtensions() {
+    // TODO: InstrumentationModule should no longer be an SPI
+    Stream<? extends AgentExtension> extensions =
+        Stream.concat(
+            SafeServiceLoader.load(
+                InstrumentationModule.class, AgentInstaller.class.getClassLoader())
+                .stream(),
+            SafeServiceLoader.load(AgentExtension.class, AgentInstaller.class.getClassLoader())
+                .stream());
+    return extensions
+        .sorted(Comparator.comparingInt(AgentExtension::order))
         .collect(Collectors.toList());
   }
 

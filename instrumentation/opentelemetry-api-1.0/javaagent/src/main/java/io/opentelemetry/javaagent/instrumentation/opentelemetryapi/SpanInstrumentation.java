@@ -11,8 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

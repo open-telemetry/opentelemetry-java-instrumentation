@@ -9,11 +9,11 @@ import static java.util.Collections.emptyList;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Source;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Factory;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Method;
 import java.util.ArrayList;
@@ -53,8 +53,8 @@ public final class ReferenceMatcher {
         new InstrumentationClassPredicate(libraryInstrumentationPredicate);
   }
 
-  Collection<Reference> getReferences() {
-    return references.values();
+  public Collection<Reference> getReferences() {
+    return Collections.unmodifiableCollection(references.values());
   }
 
   /**
@@ -71,12 +71,12 @@ public final class ReferenceMatcher {
   }
 
   private boolean doesMatch(ClassLoader loader) {
+    TypePool typePool = createTypePool(loader);
     for (Reference reference : references.values()) {
-      if (!checkMatch(reference, loader).isEmpty()) {
+      if (!checkMatch(reference, typePool, loader).isEmpty()) {
         return false;
       }
     }
-
     return true;
   }
 
@@ -90,14 +90,20 @@ public final class ReferenceMatcher {
     if (loader == BOOTSTRAP_LOADER) {
       loader = Utils.getBootstrapProxy();
     }
+    TypePool typePool = createTypePool(loader);
 
     List<Mismatch> mismatches = emptyList();
 
     for (Reference reference : references.values()) {
-      mismatches = lazyAddAll(mismatches, checkMatch(reference, loader));
+      mismatches = lazyAddAll(mismatches, checkMatch(reference, typePool, loader));
     }
 
     return mismatches;
+  }
+
+  private static TypePool createTypePool(ClassLoader loader) {
+    return AgentTooling.poolStrategy()
+        .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
   }
 
   /**
@@ -105,10 +111,7 @@ public final class ReferenceMatcher {
    *
    * @return A list of mismatched sources. A list of size 0 means the reference matches the class.
    */
-  private List<Mismatch> checkMatch(Reference reference, ClassLoader loader) {
-    TypePool typePool =
-        AgentTooling.poolStrategy()
-            .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
+  private List<Mismatch> checkMatch(Reference reference, TypePool typePool, ClassLoader loader) {
     try {
       if (instrumentationClassPredicate.isInstrumentationClass(reference.getClassName())) {
         // make sure helper class is registered

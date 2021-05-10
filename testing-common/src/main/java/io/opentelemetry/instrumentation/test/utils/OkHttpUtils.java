@@ -12,10 +12,6 @@ import okhttp3.logging.HttpLoggingInterceptor.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * This class was moved from groovy to java because groovy kept trying to introspect on the
- * OkHttpClient class which contains java 8 only classes, which caused the build to fail for java 7.
- */
 public class OkHttpUtils {
 
   private static final Logger CLIENT_LOGGER = LoggerFactory.getLogger("http-client");
