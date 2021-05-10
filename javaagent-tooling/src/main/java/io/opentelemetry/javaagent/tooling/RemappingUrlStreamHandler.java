@@ -18,9 +18,6 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import net.bytebuddy.jar.asm.ClassReader;
-import net.bytebuddy.jar.asm.ClassWriter;
-import net.bytebuddy.jar.asm.commons.ClassRemapper;
 
 class RemappingUrlStreamHandler extends URLStreamHandler {
 
@@ -50,15 +47,12 @@ class RemappingUrlStreamHandler extends URLStreamHandler {
   }
 
   /** {@inheritDoc} */
-  // TODO Usual classloading actually calls this method twice in a row for each url.
-  // Introduce some cache or any other optimisation.
   protected URLConnection openConnection(URL url) {
     try {
       String file = url.getFile();
       if ("/".equals(file)) {
         // "/" is used as the default url of the jar
         // This is called by the SecureClassLoader trying to obtain permissions
-
         // nullInputStream() is not available until Java 11
         return new InternalJarUrlConnection(url, new ByteArrayInputStream(new byte[0]), 0);
       }
@@ -71,24 +65,15 @@ class RemappingUrlStreamHandler extends URLStreamHandler {
         return null;
       }
 
-      InputStream is = delegateJarFile.getInputStream(entry);
       if (file.endsWith(".class")) {
-        byte[] remappedClass = remapClassBytes(is);
-        return new InternalJarUrlConnection(
-            url, new ByteArrayInputStream(remappedClass), remappedClass.length);
+        return new RemappingUrlConnection(url, delegateJarFile, entry);
       } else {
+        InputStream is = delegateJarFile.getInputStream(entry);
         return new InternalJarUrlConnection(url, is, entry.getSize());
       }
     } catch (IOException e) {
       System.err.printf("Failed to load and remap %s: %s%n", url, e.getMessage());
     }
     return new InternalJarUrlConnection(url, new ByteArrayInputStream(new byte[0]), 0);
-  }
-
-  private static byte[] remapClassBytes(InputStream in) throws IOException {
-    ClassReader cr = new ClassReader(in);
-    ClassWriter cw = new ClassWriter(cr, 0);
-    cr.accept(new ClassRemapper(cw, remapper), ClassReader.EXPAND_FRAMES);
-    return cw.toByteArray();
   }
 }
