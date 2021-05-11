@@ -65,7 +65,7 @@ class AgentClassLoaderTest extends Specification {
     }
 
     when:
-    URL url = loader.getResource("io/opentelemetry/sdk/internal/CurrentJavaVersionSpecific.class")
+    URL url = loader.findResource("io/opentelemetry/sdk/internal/CurrentJavaVersionSpecific.class")
 
     then:
     url != null

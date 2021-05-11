@@ -6,13 +6,17 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.security.CodeSource;
+import java.security.Permission;
 import java.security.cert.Certificate;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
@@ -79,14 +83,19 @@ public class AgentClassLoader extends URLClassLoader {
       throw new IllegalArgumentException("Internal jar file name should be set");
     }
 
-    bootstrapProxy = new BootstrapClassLoaderProxy(new URL[] {bootstrapJarLocation});
+    bootstrapProxy = new BootstrapClassLoaderProxy(this);
 
     jarEntryPrefix =
         internalJarFileName
             + (internalJarFileName.isEmpty() || internalJarFileName.endsWith("/") ? "" : "/");
     try {
-      jarBase = new URL("jar:" + bootstrapJarLocation + "!/");
+      // open jar with verification disabled
       jarFile = new JarFile(new File(bootstrapJarLocation.toURI()), false);
+      // base url for constructing jar entry urls
+      // we use a custom protocol instead of typical jar:file: because we don't want to be affected
+      // by user code disabling URLConnection caching for jar protocol e.g. tomcat does this
+      jarBase =
+          new URL("x-internal-jar", null, 0, "/", new AgentClassLoaderUrlStreamHandler(jarFile));
     } catch (URISyntaxException | IOException e) {
       throw new IllegalStateException("Unable to open agent jar", e);
     }
@@ -144,25 +153,34 @@ public class AgentClassLoader extends URLClassLoader {
   protected Class<?> findClass(String name) throws ClassNotFoundException {
     JarEntry jarEntry = findJarEntry(name.replace('.', '/') + ".class");
     if (jarEntry != null) {
-      int size = (int) jarEntry.getSize();
-      byte[] buffer = new byte[size];
-      try (InputStream is = jarFile.getInputStream(jarEntry)) {
-        int offset = 0;
-        int read;
-
-        while (offset < size && (read = is.read(buffer, offset, size - offset)) != -1) {
-          offset += read;
-        }
+      byte[] bytes;
+      try {
+        bytes = getJarEntryBytes(jarEntry);
       } catch (IOException exception) {
         throw new ClassNotFoundException(name, exception);
       }
 
       definePackageIfNeeded(name);
-      return defineClass(name, buffer, 0, size, codeSource);
+      return defineClass(name, bytes, 0, bytes.length, codeSource);
     }
 
     // find class from agent initializer jar
     return super.findClass(name);
+  }
+
+  private byte[] getJarEntryBytes(JarEntry jarEntry) throws IOException {
+    int size = (int) jarEntry.getSize();
+    byte[] buffer = new byte[size];
+    try (InputStream is = jarFile.getInputStream(jarEntry)) {
+      int offset = 0;
+      int read;
+
+      while (offset < size && (read = is.read(buffer, offset, size - offset)) != -1) {
+        offset += read;
+      }
+    }
+
+    return buffer;
   }
 
   private void definePackageIfNeeded(String className) {
@@ -192,6 +210,7 @@ public class AgentClassLoader extends URLClassLoader {
     if (isClass) {
       name += getClassSuffix();
     }
+
     JarEntry jarEntry = jarFile.getJarEntry(jarEntryPrefix + name);
     if (MULTI_RELEASE_JAR_ENABLE) {
       jarEntry = findVersionedJarEntry(jarEntry, name);
@@ -246,6 +265,10 @@ public class AgentClassLoader extends URLClassLoader {
 
   private URL findJarResource(String name) {
     JarEntry jarEntry = findJarEntry(name);
+    return getJarEntryUrl(jarEntry);
+  }
+
+  private URL getJarEntryUrl(JarEntry jarEntry) {
     if (jarEntry != null) {
       try {
         return new URL(jarBase, jarEntry.getName());
@@ -297,23 +320,114 @@ public class AgentClassLoader extends URLClassLoader {
    *
    * <p>This class is thread safe.
    */
-  public static final class BootstrapClassLoaderProxy extends URLClassLoader {
+  public static final class BootstrapClassLoaderProxy extends ClassLoader {
+    private final AgentClassLoader agentClassLoader;
+
     static {
       ClassLoader.registerAsParallelCapable();
     }
 
-    public BootstrapClassLoaderProxy(URL[] urls) {
-      super(urls, null);
+    public BootstrapClassLoaderProxy(AgentClassLoader agentClassLoader) {
+      super(null);
+      this.agentClassLoader = agentClassLoader;
     }
 
-    @Override
-    public void addURL(URL url) {
-      super.addURL(url);
+    public URL getResource(String resourceName) {
+      // find resource from boot loader
+      URL url = super.getResource(resourceName);
+      if (url != null) {
+        return url;
+      }
+      // find from agent jar
+      if (agentClassLoader != null) {
+        JarEntry jarEntry = agentClassLoader.jarFile.getJarEntry(resourceName);
+        return agentClassLoader.getJarEntryUrl(jarEntry);
+      }
+      return null;
     }
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
       throw new ClassNotFoundException(name);
+    }
+  }
+
+  private static class AgentClassLoaderUrlStreamHandler extends URLStreamHandler {
+    private final JarFile jarFile;
+
+    AgentClassLoaderUrlStreamHandler(JarFile jarFile) {
+      this.jarFile = jarFile;
+    }
+
+    @Override
+    protected URLConnection openConnection(URL url) {
+      return new AgentClassLoaderUrlConnection(url, jarFile);
+    }
+  }
+
+  private static class AgentClassLoaderUrlConnection extends URLConnection {
+    private final JarFile jarFile;
+    private final String entryName;
+    private JarEntry jarEntry;
+
+    AgentClassLoaderUrlConnection(URL url, JarFile jarFile) {
+      super(url);
+      this.jarFile = jarFile;
+      String path = url.getFile();
+      if (path.startsWith("/")) {
+        path = path.substring(1);
+      }
+      if (path.isEmpty()) {
+        path = null;
+      }
+      this.entryName = path;
+    }
+
+    @Override
+    public void connect() throws IOException {
+      if (!connected) {
+        if (entryName != null) {
+          jarEntry = jarFile.getJarEntry(entryName);
+          if (jarEntry == null) {
+            throw new FileNotFoundException(
+                "JAR entry " + entryName + " not found in " + jarFile.getName());
+          }
+        }
+        connected = true;
+      }
+    }
+
+    @Override
+    public InputStream getInputStream() throws IOException {
+      connect();
+
+      if (entryName == null) {
+        throw new IOException("no entry name specified");
+      } else {
+        if (jarEntry == null) {
+          throw new FileNotFoundException(
+              "JAR entry " + entryName + " not found in " + jarFile.getName());
+        }
+        return jarFile.getInputStream(jarEntry);
+      }
+    }
+
+    @Override
+    public Permission getPermission() {
+      return null;
+    }
+
+    @Override
+    public long getContentLengthLong() {
+      try {
+        connect();
+
+        if (jarEntry != null) {
+          return jarEntry.getSize();
+        }
+      } catch (IOException ignored) {
+      }
+      return -1;
     }
   }
 }
