@@ -37,7 +37,7 @@ dependencies {
   testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs "-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true"
 }

@@ -45,7 +45,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
   }
 
   @Unroll
-  def "span named '#paramName' from annotations on class when is not root span"() {
+  def "span named '#paramName' from annotations on class '#className' when is not root span"() {
     setup:
     runUnderServerTrace("test") {
       obj.call()
@@ -128,8 +128,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
     }
     "/child/call"  | new ChildClassWithPath()
     "/child/call"  | new JavaInterfaces.ChildClassOnInterface()
-    // TODO: uncomment when we drop support for Java 7
-    // "/child/invoke"  | new JavaInterfaces.DefaultChildClassOnInterface()
+    "/child/call"  | new JavaInterfaces.DefaultChildClassOnInterface()
 
     className = getClassName(obj.class)
   }

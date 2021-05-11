@@ -63,12 +63,6 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest>
     false
   }
 
-  // TODO(anuraaga): Enable after fixing the test https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2344
-  @Override
-  boolean testRemoteConnection() {
-    false
-  }
-
   // TODO: context not propagated to callback
   @Override
   boolean testErrorWithCallback() {

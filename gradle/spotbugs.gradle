@@ -11,21 +11,15 @@ allprojects {
     excludeFilter = file("$rootDir/gradle/spotbugs-exclude.xml")
   }
 
-  spotbugsTest {
-    reports {
-      html.enabled = !isCI
-      xml.enabled = isCI
-      html {
-        stylesheet = 'fancy-hist.xsl'
-      }
-    }
-  }
-  spotbugsMain {
-    reports {
-      html.enabled = !isCI
-      xml.enabled = isCI
-      html {
-        stylesheet = 'fancy-hist.xsl'
+  // NB: For some reason, SpotBugsTask can't be referenced even when importing it.
+  tasks.withType(VerificationTask).configureEach {
+    if (name.startsWith("spotbugs")) {
+      reports {
+        html.enabled = !isCI
+        xml.enabled = isCI
+        html {
+          stylesheet = 'fancy-hist.xsl'
+        }
       }
     }
   }

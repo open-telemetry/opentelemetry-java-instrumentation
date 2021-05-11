@@ -11,7 +11,7 @@ public class ExceptionUtils {
     if (t == null) {
       throw new NullPointerException("t");
     }
-    return ExceptionUtils.<RuntimeException>sneakyThrow0(t);
+    return ExceptionUtils.sneakyThrow0(t);
   }
 
   private static <T extends Throwable> T sneakyThrow0(Throwable t) throws T {

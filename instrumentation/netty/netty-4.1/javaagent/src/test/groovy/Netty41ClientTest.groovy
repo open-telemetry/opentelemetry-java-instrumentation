@@ -68,7 +68,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
   @Override
   int sendRequest(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers) {
-    def channel = bootstrap.connect(uri.host, uri.port).sync().channel()
+    def channel = bootstrap.connect(uri.host, getPort(uri)).sync().channel()
     def result = new CompletableFuture<Integer>()
     channel.pipeline().addLast(new ClientHandler(result))
     channel.writeAndFlush(request).get()
@@ -77,13 +77,25 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
   @Override
   void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
-    Channel ch = bootstrap.connect(uri.host, uri.port).sync().channel()
+    Channel ch = bootstrap.connect(uri.host, getPort(uri)).sync().channel()
     def result = new CompletableFuture<Integer>()
     result.whenComplete { status, throwable ->
       requestResult.complete({ status }, throwable)
     }
     ch.pipeline().addLast(new ClientHandler(result))
     ch.writeAndFlush(request)
+  }
+
+  private static int getPort(URI uri) {
+    if (uri.port != -1) {
+      return uri.port
+    } else if (uri.scheme == "http") {
+      return 80
+    } else if (uri.scheme == "https") {
+      443
+    } else {
+      throw new IllegalArgumentException("Unexpected uri: $uri")
+    }
   }
 
   @Override
