@@ -18,7 +18,7 @@ final class ArmeriaNetAttributesExtractor
 
   @Override
   protected String transport(RequestContext requestContext) {
-    return SemanticAttributes.NetTransportValues.IP_TCP.getValue();
+    return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override

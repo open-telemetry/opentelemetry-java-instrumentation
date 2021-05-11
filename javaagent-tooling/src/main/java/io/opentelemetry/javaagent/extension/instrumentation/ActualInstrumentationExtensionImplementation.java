@@ -49,11 +49,11 @@ public final class ActualInstrumentationExtensionImplementation
   @Override
   AgentBuilder extend(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
-    if (!instrumentationModule.enabled) {
+    if (!instrumentationModule.isEnabled()) {
       log.debug("Instrumentation {} is disabled", instrumentationModule.extensionName());
       return parentAgentBuilder;
     }
-    List<String> helperClassNames = instrumentationModule.getAllHelperClassNames();
+    List<String> helperClassNames = asList(instrumentationModule.getMuzzleHelperClassNames());
     List<String> helperResourceNames = asList(instrumentationModule.helperResourceNames());
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
@@ -68,7 +68,7 @@ public final class ActualInstrumentationExtensionImplementation
 
     ElementMatcher.Junction<ClassLoader> moduleClassLoaderMatcher =
         instrumentationModule.classLoaderMatcher();
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule, helperClassNames);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.extensionName(), helperClassNames, helperResourceNames);
@@ -135,11 +135,14 @@ public final class ActualInstrumentationExtensionImplementation
    */
   private static class MuzzleMatcher implements AgentBuilder.RawMatcher {
     private final InstrumentationModule instrumentationModule;
+    private final List<String> helperClassNames;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private volatile ReferenceMatcher referenceMatcher;
 
-    private MuzzleMatcher(InstrumentationModule instrumentationModule) {
+    private MuzzleMatcher(
+        InstrumentationModule instrumentationModule, List<String> helperClassNames) {
       this.instrumentationModule = instrumentationModule;
+      this.helperClassNames = helperClassNames;
     }
 
     @Override
@@ -185,7 +188,7 @@ public final class ActualInstrumentationExtensionImplementation
       if (initialized.compareAndSet(false, true)) {
         referenceMatcher =
             new ReferenceMatcher(
-                instrumentationModule.getAllHelperClassNames(),
+                helperClassNames,
                 instrumentationModule.getMuzzleReferences(),
                 instrumentationModule::isHelperClass);
       }

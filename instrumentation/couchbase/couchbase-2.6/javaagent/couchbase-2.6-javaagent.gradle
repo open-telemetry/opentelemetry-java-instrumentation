@@ -31,7 +31,7 @@ dependencies {
   latestDepTestLibrary group: 'com.couchbase.client', name: 'java-client', version: '2.+'
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs "-Dotel.instrumentation.couchbase.experimental-span-attributes=true"
 }

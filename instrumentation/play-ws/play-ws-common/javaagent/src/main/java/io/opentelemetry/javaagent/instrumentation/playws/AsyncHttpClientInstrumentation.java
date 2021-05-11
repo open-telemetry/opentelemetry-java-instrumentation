@@ -38,7 +38,7 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
     // CachingAsyncHttpClient rejects overrides to AsyncHandler
     // It also delegates to another AsyncHttpClient
     return nameStartsWith("play.")
-        .<TypeDescription>and(
+        .and(
             implementsInterface(named("play.shaded.ahc.org.asynchttpclient.AsyncHttpClient"))
                 .and(not(named("play.api.libs.ws.ahc.cache.CachingAsyncHttpClient"))));
   }

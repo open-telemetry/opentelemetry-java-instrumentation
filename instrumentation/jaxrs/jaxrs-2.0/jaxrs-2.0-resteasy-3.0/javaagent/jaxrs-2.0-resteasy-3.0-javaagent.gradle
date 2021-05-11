@@ -49,7 +49,7 @@ test {
   systemProperty 'testLatestDeps', testLatestDeps
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs "-Dotel.instrumentation.jaxrs.experimental-span-attributes=true"
 }

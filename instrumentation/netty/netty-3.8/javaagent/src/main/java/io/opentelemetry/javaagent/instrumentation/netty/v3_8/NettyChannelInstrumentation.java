@@ -50,7 +50,7 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
 
   public static class ChannelConnectAdvice {
     @Advice.OnMethodEnter
-    public static void addConnectContinuation(@Advice.This Channel channel) {
+    public static void onEnter(@Advice.This Channel channel) {
       Context context = Java8BytecodeBridge.currentContext();
       Span span = Java8BytecodeBridge.spanFromContext(context);
       if (span.getSpanContext().isValid()) {

@@ -27,8 +27,8 @@ public class ChannelTraceContext {
     return connectionContext;
   }
 
-  public void setConnectionContext(Context connectionContinuation) {
-    this.connectionContext = connectionContinuation;
+  public void setConnectionContext(Context connectionContext) {
+    this.connectionContext = connectionContext;
   }
 
   public Context getClientParentContext() {
