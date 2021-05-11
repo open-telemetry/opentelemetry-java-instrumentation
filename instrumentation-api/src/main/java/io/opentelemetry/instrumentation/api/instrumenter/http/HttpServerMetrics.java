@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class HttpServerMetrics implements RequestListener {
 
-  private static final double NANOS_IN_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
 
   private static final ContextKey<State> HTTP_SERVER_REQUEST_METRICS_STATE =
       ContextKey.named("http-server-request-metrics-state");
@@ -88,7 +88,7 @@ public final class HttpServerMetrics implements RequestListener {
     }
     activeRequests.add(-1, state.activeRequestLabels());
     duration.record(
-        (System.nanoTime() - state.startTimeNanos()) / NANOS_IN_MS, state.durationLabels());
+        (System.nanoTime() - state.startTimeNanos()) / NANOS_PER_MS, state.durationLabels());
   }
 
   private static Labels activeRequestLabels(Attributes attributes) {
@@ -117,9 +117,6 @@ public final class HttpServerMetrics implements RequestListener {
     LabelsBuilder labels = Labels.builder();
     attributes.forEach(
         (key, value) -> {
-          if (key.getType() != AttributeType.STRING) {
-            return;
-          }
           switch (key.getKey()) {
             case "http.method":
             case "http.host":
@@ -127,11 +124,15 @@ public final class HttpServerMetrics implements RequestListener {
             case "http.flavor":
             case "http.server_name":
             case "net.host.name":
-              labels.put(key.getKey(), (String) value);
+              if (value instanceof String) {
+                labels.put(key.getKey(), (String) value);
+              }
               break;
             case "http.status_code":
             case "net.host.port":
-              labels.put(key.getKey(), Long.toString((long) value));
+              if (value instanceof Long) {
+                labels.put(key.getKey(), Long.toString((long) value));
+              }
               break;
             default:
               // fall through

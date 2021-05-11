@@ -105,7 +105,8 @@ class HttpServerMetricsTest {
                       entry("http.host", "host"),
                       entry("http.method", "GET"),
                       entry("http.scheme", "https"),
-                      entry("net.host.name", "localhost"));
+                      entry("net.host.name", "localhost"),
+                      entry("net.host.port", "1234"));
               assertThat(data.getPercentileValues()).isNotEmpty();
             });
 

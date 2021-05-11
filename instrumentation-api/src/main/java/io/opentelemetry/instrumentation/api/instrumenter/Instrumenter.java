@@ -128,13 +128,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     Context context = parentContext;
 
-    for (RequestListener metrics : requestListeners) {
-      context = metrics.start(context, attributes);
+    for (RequestListener requestListener : requestListeners) {
+      context = requestListener.start(context, attributes);
     }
 
     attributes.forEach((key, value) -> spanBuilder.setAttribute((AttributeKey) key, value));
     Span span = spanBuilder.startSpan();
-    context = parentContext.with(span);
+    context = context.with(span);
     switch (spanKind) {
       case SERVER:
         return ServerSpan.with(context, span);
@@ -160,8 +160,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
     Attributes attributes = attributesBuilder.build();
 
-    for (RequestListener metrics : requestListeners) {
-      metrics.end(context, attributes);
+    for (RequestListener requestListener : requestListeners) {
+      requestListener.end(context, attributes);
     }
 
     attributes.forEach((key, value) -> span.setAttribute((AttributeKey) key, value));
