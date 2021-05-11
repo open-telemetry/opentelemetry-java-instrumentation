@@ -8,8 +8,8 @@ configurations.all {
 
 ext {
   versions = [
-    opentelemetry     : '1.1.0',
-    opentelemetryAlpha: "1.1.0-alpha",
+    opentelemetry     : '1.2.0',
+    opentelemetryAlpha: "1.2.0-alpha",
 
     slf4j             : "1.7.30",
     guava             : "30.1-jre",

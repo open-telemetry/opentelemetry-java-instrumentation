@@ -6,12 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 
 class AwsSpan {
 
-  static s3(TraceAssert traceAssert, int index, spanName, bucketName, method="GET", parentSpan=null) {
+  static s3(TraceAssert traceAssert, int index, spanName, bucketName, method = "GET", parentSpan = null) {
     return traceAssert.span(index) {
       name spanName
       kind CLIENT
@@ -31,13 +32,13 @@ class AwsSpan {
         "http.status_code" 200
         "http.url" String
         "net.peer.name" String
-        "net.transport" "IP.TCP"
+        "net.transport" IP_TCP
         "net.peer.port" { it == null || Number }
       }
     }
   }
 
-  static sqs(TraceAssert traceAssert, int index, spanName, queueUrl=null, queueName=null, spanKind=CLIENT, parentSpan=null) {
+  static sqs(TraceAssert traceAssert, int index, spanName, queueUrl = null, queueName = null, spanKind = CLIENT, parentSpan = null) {
     return traceAssert.span(index) {
       name spanName
       kind spanKind
@@ -51,8 +52,8 @@ class AwsSpan {
         "aws.endpoint" String
         "aws.operation" spanName.substring(4)
         "aws.service" "AmazonSQS"
-        "aws.queue.name" {it == null || it == queueName}
-        "aws.queue.url" {it == null || it == queueUrl}
+        "aws.queue.name" { it == null || it == queueName }
+        "aws.queue.url" { it == null || it == queueUrl }
         "http.flavor" "1.1"
         "http.method" "POST"
         "http.status_code" 200
@@ -60,12 +61,12 @@ class AwsSpan {
         "http.user_agent" { it == null || String }
         "net.peer.name" String
         "net.peer.port" { it == null || Number }
-        "net.transport" "IP.TCP"
+        "net.transport" IP_TCP
       }
     }
   }
 
-  static sns(TraceAssert traceAssert, int index, spanName, parentSpan=null) {
+  static sns(TraceAssert traceAssert, int index, spanName, parentSpan = null) {
     return traceAssert.span(index) {
       name spanName
       kind CLIENT
@@ -84,8 +85,8 @@ class AwsSpan {
         "http.status_code" 200
         "http.url" String
         "net.peer.name" String
-        "net.peer.port" {it == null || Number}
-        "net.transport" "IP.TCP"
+        "net.peer.port" { it == null || Number }
+        "net.transport" IP_TCP
       }
     }
   }
