@@ -6,13 +6,19 @@
 package io.opentelemetry.javaagent.testing.bytebuddy;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
+import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
-@AutoService(ByteBuddyAgentCustomizer.class)
-public class TestByteBuddyAgentCustomizer implements ByteBuddyAgentCustomizer {
+@AutoService(AgentExtension.class)
+public class TestAgentExtension implements AgentExtension {
+
   @Override
-  public AgentBuilder customize(AgentBuilder agentBuilder) {
+  public AgentBuilder extend(AgentBuilder agentBuilder) {
     return agentBuilder.with(TestAgentListener.INSTANCE);
+  }
+
+  @Override
+  public String extensionName() {
+    return "test";
   }
 }
