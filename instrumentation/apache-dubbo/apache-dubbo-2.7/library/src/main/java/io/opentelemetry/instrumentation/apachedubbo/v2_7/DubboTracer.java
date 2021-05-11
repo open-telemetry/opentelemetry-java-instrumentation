@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.RpcServerTracer;
@@ -45,8 +46,10 @@ class DubboTracer extends RpcServerTracer<RpcInvocation> {
   }
 
   public void end(Context context, Result result) {
-    Span span = Span.fromContext(context);
-    span.setStatus(DubboHelper.statusFromResult(result));
+    StatusCode statusCode = DubboHelper.statusFromResult(result);
+    if (statusCode != StatusCode.UNSET) {
+      Span.fromContext(context).setStatus(statusCode);
+    }
     end(context);
   }
 
