@@ -68,6 +68,7 @@ configurations {
 
 if (testLatestDeps) {
   afterEvaluate {
+    // Try/catch seems to be the only way to access an optional task with lazy configuration API.
     try {
       def latestDepTest = tasks.named('latestDepTest')
       tasks.named('test').configure {

@@ -60,7 +60,7 @@ afterEvaluate {
   }
 
   tasks.named('jacocoTestCoverageVerification').configure {
-    dependsOn(jacocoTestReport)
+    dependsOn('jacocoTestReport')
   }
   tasks.named('check').configure {
     dependsOn('jacocoTestCoverageVerification')
