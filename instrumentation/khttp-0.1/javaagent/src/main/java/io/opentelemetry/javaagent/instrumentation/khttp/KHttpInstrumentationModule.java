@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.khttp;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -45,7 +45,7 @@ public class KHttpInstrumentationModule extends InstrumentationModule {
 
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return safeHasSuperType(named("khttp.KHttp"));
+      return extendsClass(named("khttp.KHttp"));
     }
 
     @Override

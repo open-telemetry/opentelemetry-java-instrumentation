@@ -25,8 +25,7 @@ public final class AgentElementMatchers {
 
   public static ElementMatcher.Junction<TypeDescription> implementsInterface(
       ElementMatcher<TypeDescription> matcher) {
-    return not(isInterface())
-        .and(new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), true));
+    return new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), true);
   }
 
   public static ElementMatcher.Junction<TypeDescription> hasInterface(
@@ -36,8 +35,7 @@ public final class AgentElementMatchers {
 
   public static ElementMatcher.Junction<TypeDescription> safeHasSuperType(
       ElementMatcher<TypeDescription> matcher) {
-    return not(isInterface())
-        .and(new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), false));
+    return new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), false);
   }
 
   /**
