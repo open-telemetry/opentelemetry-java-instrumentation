@@ -95,7 +95,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) ForkJoinTask task) {
+        @Advice.Argument(value = 0, readOnly = false) ForkJoinTask<?> task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
         ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
@@ -131,7 +131,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     public static void exitJobSubmit(
         @Advice.Enter State state,
         @Advice.Thrown Throwable throwable,
-        @Advice.Return Future future) {
+        @Advice.Return Future<?> future) {
       if (state != null && future != null) {
         ContextStore<Future, State> contextStore =
             InstrumentationContext.get(Future.class, State.class);
@@ -145,7 +145,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) Callable task) {
+        @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
         task = CallableWrapper.wrapIfNeeded(task);
         ContextStore<Callable, State> contextStore =
@@ -160,7 +160,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     public static void exitJobSubmit(
         @Advice.Enter State state,
         @Advice.Thrown Throwable throwable,
-        @Advice.Return Future future) {
+        @Advice.Return Future<?> future) {
       if (state != null && future != null) {
         ContextStore<Future, State> contextStore =
             InstrumentationContext.get(Future.class, State.class);
@@ -202,8 +202,8 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
        is to make sure we close all scopes in case of an exception.
        Note2: invokeAll does return futures - but according to its documentation
        it actually only returns after all futures have been completed - i.e. it blocks.
-       This means we do not need to setup any hooks on these futures, we just need to clean
-       up any continuations in case of an error.
+       This means we do not need to setup any hooks on these futures, we just need to clear
+       any parent spans in case of an error.
        (according to ExecutorService docs and AbstractExecutorService code)
       */
       if (null != throwable && wrappedTasks != null) {
@@ -214,10 +214,10 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
             State state = contextStore.get(task);
             if (state != null) {
               /*
-              Note: this may potentially close somebody else's continuation if we didn't set it
+              Note: this may potentially clear somebody else's parent span if we didn't set it
               up in setupState because it was already present before us. This should be safe but
               may lead to non-attributed async work in some very rare cases.
-              Alternative is to not close continuation here if we did not set it up in setupState
+              Alternative is to not clear parent span here if we did not set it up in setupState
               but this may potentially lead to memory leaks if callers do not properly handle
               exceptions.
                */

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11
 
 import static io.opentelemetry.api.trace.StatusCode.ERROR
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.Request
@@ -96,7 +97,7 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
           errorEvent RuntimeException, "bad handler"
           hasNoParent()
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.HTTP_URL.key}" "https://s3.amazonaws.com"
             "${SemanticAttributes.HTTP_METHOD.key}" "HEAD"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"

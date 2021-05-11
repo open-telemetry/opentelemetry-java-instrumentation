@@ -33,9 +33,12 @@ import net.bytebuddy.matcher.ElementMatcher;
  */
 public abstract class InstrumentationModule implements AgentExtension {
   private static final String[] EMPTY = new String[0];
+  private static final Reference[] EMPTY_REFS = new Reference[0];
+
+  private static final boolean DEFAULT_ENABLED =
+      Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
 
   private final Set<String> instrumentationNames;
-  final boolean enabled;
 
   /**
    * Creates an instrumentation module. Note that all implementations of {@link
@@ -72,7 +75,6 @@ public abstract class InstrumentationModule implements AgentExtension {
       throw new IllegalArgumentException("InstrumentationModules must be named");
     }
     this.instrumentationNames = new LinkedHashSet<>(instrumentationNames);
-    enabled = Config.get().isInstrumentationEnabled(this.instrumentationNames, defaultEnabled());
   }
 
   private static List<String> toList(String first, String[] rest) {
@@ -98,15 +100,17 @@ public abstract class InstrumentationModule implements AgentExtension {
     return instrumentationNames.iterator().next();
   }
 
+  /** Returns true if this instrumentation module should be installed. */
+  public final boolean isEnabled() {
+    return Config.get().isInstrumentationEnabled(instrumentationNames, defaultEnabled());
+  }
+
   /**
-   * Returns all helper classes that will be injected into the application classloader, both ones
-   * provided by the implementation and ones that were collected by muzzle during compilation.
+   * Allows instrumentation modules to disable themselves by default, or to additionally disable
+   * themselves on some other condition.
    */
-  public final List<String> getAllHelperClassNames() {
-    List<String> helperClassNames = new ArrayList<>();
-    helperClassNames.addAll(asList(additionalHelperClassNames()));
-    helperClassNames.addAll(asList(getMuzzleHelperClassNames()));
-    return helperClassNames;
+  protected boolean defaultEnabled() {
+    return DEFAULT_ENABLED;
   }
 
   /**
@@ -122,82 +126,6 @@ public abstract class InstrumentationModule implements AgentExtension {
    */
   public boolean isHelperClass(String className) {
     return false;
-  }
-
-  /**
-   * Returns a list of references to helper and library classes used in this module's type
-   * instrumentation advices.
-   *
-   * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
-   * ByteBuddy plugin.
-   *
-   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
-   * will not generate a new implementation, it will leave the existing one.
-   */
-  public Reference[] getMuzzleReferences() {
-    return new Reference[0];
-  }
-
-  /**
-   * Returns a list of instrumentation helper classes, automatically detected by muzzle during
-   * compilation. Those helpers will be injected into the application classloader.
-   *
-   * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
-   * ByteBuddy plugin.
-   *
-   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
-   * will not generate a new implementation, it will leave the existing one.
-   */
-  protected String[] getMuzzleHelperClassNames() {
-    return EMPTY;
-  }
-
-  /**
-   * Returns a map of {@code class-name to context-class-name}. Keys (and their subclasses) will be
-   * associated with a context class stored in the value.
-   *
-   * <p>The actual implementation of this method is generated automatically during compilation by
-   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
-   * ByteBuddy plugin.
-   *
-   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
-   * will not generate a new implementation, it will leave the existing one.
-   */
-  protected Map<String, String> getMuzzleContextStoreClasses() {
-    return Collections.emptyMap();
-  }
-
-  /**
-   * Instrumentation modules can override this method to provide additional helper classes that are
-   * not located in instrumentation packages described in the {@code InstrumentationClassPredicate}
-   * class and {@link #isHelperClass(String)} (and not automatically detected by muzzle). These
-   * additional classes will be injected into the application classloader first.
-   *
-   * <p>Implementing {@link #isHelperClass(String)} is generally simpler and less error-prone
-   * compared to implementing this method.
-   *
-   * @deprecated Use {@link #isHelperClass(String)} instead.
-   */
-  @Deprecated
-  protected String[] additionalHelperClassNames() {
-    return EMPTY;
-  }
-
-  /**
-   * Same as {@link #order()}.
-   *
-   * @deprecated use {@link #order()} instead.
-   */
-  @Deprecated
-  public int getOrder() {
-    return 0;
-  }
-
-  /** {@inheritDoc} */
-  public int order() {
-    return getOrder();
   }
 
   /** Returns resource names to inject into the user's classloader. */
@@ -224,12 +152,47 @@ public abstract class InstrumentationModule implements AgentExtension {
   public abstract List<TypeInstrumentation> typeInstrumentations();
 
   /**
-   * Allows instrumentation modules to disable themselves by default, or to additionally disable
-   * themselves on some other condition.
+   * Returns a list of references to helper and library classes used in this module's type
+   * instrumentation advices.
+   *
+   * <p>The actual implementation of this method is generated automatically during compilation by
+   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * ByteBuddy plugin.
+   *
+   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
+   * will not generate a new implementation, it will leave the existing one.
    */
-  protected boolean defaultEnabled() {
-    // TODO (trask) caching this value statically requires changing (or removing) the tests that
-    //  rely on updating the value
-    return Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
+  public Reference[] getMuzzleReferences() {
+    return EMPTY_REFS;
+  }
+
+  /**
+   * Returns a list of instrumentation helper classes, automatically detected by muzzle during
+   * compilation. Those helpers will be injected into the application classloader.
+   *
+   * <p>The actual implementation of this method is generated automatically during compilation by
+   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * ByteBuddy plugin.
+   *
+   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
+   * will not generate a new implementation, it will leave the existing one.
+   */
+  public String[] getMuzzleHelperClassNames() {
+    return EMPTY;
+  }
+
+  /**
+   * Returns a map of {@code class-name to context-class-name}. Keys (and their subclasses) will be
+   * associated with a context class stored in the value.
+   *
+   * <p>The actual implementation of this method is generated automatically during compilation by
+   * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
+   * ByteBuddy plugin.
+   *
+   * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
+   * will not generate a new implementation, it will leave the existing one.
+   */
+  public Map<String, String> getMuzzleContextStoreClasses() {
+    return Collections.emptyMap();
   }
 }

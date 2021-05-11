@@ -74,4 +74,6 @@ public final class NameMatchers {
       return (include && contained) || (!include && !contained);
     }
   }
+
+  private NameMatchers() {}
 }
