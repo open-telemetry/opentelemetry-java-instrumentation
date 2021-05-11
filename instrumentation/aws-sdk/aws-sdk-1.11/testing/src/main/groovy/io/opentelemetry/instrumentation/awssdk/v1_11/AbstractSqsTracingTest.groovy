@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicAWSCredentials
@@ -39,7 +40,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
     println getClass().name + " SQS server started at: localhost:$sqsPort/"
 
     def credentials = new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"))
-    def endpointConfiguration = new AwsClientBuilder.EndpointConfiguration("http://localhost:"+sqsPort, "elasticmq")
+    def endpointConfiguration = new AwsClientBuilder.EndpointConfiguration("http://localhost:" + sqsPort, "elasticmq")
     client = configureClient(AmazonSQSAsyncClient.asyncBuilder()).withCredentials(credentials).withEndpointConfiguration(endpointConfiguration).build()
   }
 
@@ -78,7 +79,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" "IP.TCP"
+            "net.transport" IP_TCP
           }
         }
       }
@@ -99,7 +100,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" "IP.TCP"
+            "net.transport" IP_TCP
           }
         }
         span(1) {
@@ -119,7 +120,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.user_agent" String
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" "IP.TCP"
+            "net.transport" IP_TCP
           }
         }
       }
@@ -144,7 +145,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "http.url" "http://localhost:$sqsPort"
             "net.peer.name" "localhost"
             "net.peer.port" sqsPort
-            "net.transport" "IP.TCP"
+            "net.transport" IP_TCP
           }
         }
       }

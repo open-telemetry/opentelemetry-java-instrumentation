@@ -67,4 +67,24 @@ abstract class AbstractOkHttp3Test extends HttpClientTest<Request> {
   boolean testCausality() {
     false
   }
+
+  def "reused builder has one interceptor"() {
+    when:
+    def builder = configureClient(new OkHttpClient.Builder()
+      .connectTimeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+      .retryOnConnectionFailure(false))
+    builder.build()
+    def newClient = builder.build()
+
+    then:
+    newClient.interceptors().size() == 1
+  }
+
+  def "builder created from client has one interceptor"() {
+    when:
+    def newClient = client.newBuilder().build()
+
+    then:
+    newClient.interceptors().size() == 1
+  }
 }

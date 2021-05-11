@@ -5,6 +5,7 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import spock.lang.Ignore
@@ -54,8 +55,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" {it == null || Number}
+            "net.transport" IP_TCP
+            "net.peer.port" { it == null || Number }
           }
         }
       }
@@ -76,8 +77,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" {it == null || Number}
+            "net.transport" IP_TCP
+            "net.peer.port" { it == null || Number }
           }
         }
       }
@@ -98,8 +99,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" {it == null || Number}
+            "net.transport" IP_TCP
+            "net.peer.port" { it == null || Number }
           }
         }
       }
@@ -119,8 +120,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" {it == null || Number}
+            "net.transport" IP_TCP
+            "net.peer.port" { it == null || Number }
           }
         }
       }
@@ -140,8 +141,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" {it == null || Number}
+            "net.transport" IP_TCP
+            "net.peer.port" { it == null || Number }
           }
         }
       }
@@ -160,8 +161,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" {it == null || Number}
+            "net.transport" IP_TCP
+            "net.peer.port" { it == null || Number }
           }
         }
         span(1) {
@@ -180,8 +181,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.url" String
             "http.user_agent" String
             "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" {it == null || Number}
+            "net.transport" IP_TCP
+            "net.peer.port" { it == null || Number }
           }
         }
       }
@@ -205,8 +206,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "http.status_code" 200
             "http.url" String
             "net.peer.name" String
-            "net.transport" "IP.TCP"
-            "net.peer.port" {it == null || Number}
+            "net.transport" IP_TCP
+            "net.peer.port" { it == null || Number }
           }
         }
       }
