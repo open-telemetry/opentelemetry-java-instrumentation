@@ -38,8 +38,8 @@ jobs:
           java-version: 11
 
       - name: Build
-        run: ./gradlew build --stacktrace
-        working-directory: examples/distro --no-build-cache
+        run: ./gradlew build --stacktrace --no-build-cache
+        working-directory: examples/distro
 
   smoke-test:
     runs-on: ${{ matrix.os }}
