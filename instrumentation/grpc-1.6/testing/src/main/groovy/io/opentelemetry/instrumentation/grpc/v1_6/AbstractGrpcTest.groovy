@@ -483,30 +483,76 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     when:
     AtomicReference<Throwable> error = new AtomicReference<>()
     CountDownLatch latch = new CountDownLatch(1)
-    client.sayHello(
-      Helloworld.Request.newBuilder().setName("test").build(),
-      new StreamObserver<Helloworld.Response>() {
-        @Override
-        void onNext(Helloworld.Response r) {
-          throw new IllegalStateException("illegal")
-        }
+    runUnderTrace("parent") {
+      client.sayHello(
+        Helloworld.Request.newBuilder().setName("test").build(),
+        new StreamObserver<Helloworld.Response>() {
+          @Override
+          void onNext(Helloworld.Response r) {
+            throw new IllegalStateException("illegal")
+          }
 
-        @Override
-        void onError(Throwable throwable) {
-          error.set(throwable)
-          latch.countDown()
-        }
+          @Override
+          void onError(Throwable throwable) {
+            error.set(throwable)
+            latch.countDown()
+          }
 
-        @Override
-        void onCompleted() {
-          latch.countDown()
-        }
-      })
+          @Override
+          void onCompleted() {
+            latch.countDown()
+          }
+        })
+    }
 
     latch.await(10, TimeUnit.SECONDS)
 
     then:
     error.get() != null
+
+    assertTraces(1) {
+      trace(0, 3) {
+        basicSpan(it, 0, "parent")
+        span(1) {
+          name "example.Greeter/SayHello"
+          kind CLIENT
+          childOf span(0)
+          status ERROR
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "SENT"
+              "message.id" 1
+            }
+          }
+          errorEvent(IllegalStateException, "illegal", 1)
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+          }
+        }
+        span(2) {
+          name "example.Greeter/SayHello"
+          kind SERVER
+          childOf span(1)
+          event(0) {
+            eventName "message"
+            attributes {
+              "message.type" "RECEIVED"
+              "message.id" 1
+            }
+          }
+          attributes {
+            "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
+            "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
+            "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+          }
+        }
+      }
+    }
 
     cleanup:
     channel?.shutdownNow()?.awaitTermination(10, TimeUnit.SECONDS)
