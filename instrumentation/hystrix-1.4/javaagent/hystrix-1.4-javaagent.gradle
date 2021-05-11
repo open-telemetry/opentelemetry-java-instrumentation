@@ -15,7 +15,7 @@ dependencies {
   library group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs "-Dotel.instrumentation.hystrix.experimental-span-attributes=true"
   // Disable so failure testing below doesn't inadvertently change the behavior.
