@@ -61,9 +61,9 @@ public class JdbcDataSourceInstrumentationModule extends InstrumentationModule {
         @Advice.This DataSource ds,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      // TODO this is very strange condition
       if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
-        // Don't want to generate a new top-level span
+        // this instrumentation is already very noisy, and calls to getConnection outside of an
+        // existing trace do not tend to be very interesting
         return;
       }
 
