@@ -4,6 +4,9 @@
 
 ### ☢️ Breaking changes
 
+- AWS lambda flush timeout raised to 10 seconds
+  ([#2855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2855))
+
 ### 🌟 New javaagent instrumentation
 
 - RxJava 3
@@ -38,8 +41,6 @@
   ([#2816](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2816))
 - Context propagated to reactor-netty callbacks
   ([#2850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2850))
-- AWS lambda flush timeout raised to 10 seconds
-  ([#2855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2855))
 
 ### 🛠️ Bug fixes
 
