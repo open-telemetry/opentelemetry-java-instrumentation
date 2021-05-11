@@ -68,6 +68,10 @@
   ([#2870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2870))
 - Extracted javaagent-extension-api from tooling & spi
   ([#2879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2879))
+  - You no longer have to depend on the `javaagent-tooling` module to implement custom instrumentations: a new `javaagent-extension-api` module was introduced, containing all the necessary instrumentation classes and interfaces;
+  - `InstrumentationModule` and `TypeInstrumentation` were moved to the `io.opentelemetry.javaagent.extension.instrumentation` package;
+  - `AgentElementMatchers`, `ClassLoaderMatcher` and `NameMatchers` were moved to the `io.opentelemetry.javaagent.extension.matcher` package;
+  - A new SPI `AgentExtension` was introduced: it will replace `ByteBuddyAgentCustomizer` in the next release.
 
 ## Version 1.1.0 - 2021-04-14
 
