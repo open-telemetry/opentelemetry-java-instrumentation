@@ -53,7 +53,7 @@
   ([#2876](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2876))
 - Context leak when using Ratpack
   ([#2910](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2910))
-- Context leak when uising Jetty
+- Context leak when using Jetty
   ([#2920](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2920))
 
 ### 🧰 Tooling
