@@ -31,28 +31,6 @@ jobs:
           S3_BUILD_CACHE_SECRET_KEY: ${{ secrets.S3_BUILD_CACHE_SECRET_KEY }}
         run: ./gradlew build --stacktrace -x :smoke-tests:test
 
-  example-distro:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK 11 for running checks
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: jdk11
-
-      - name: Build
-        run: ./gradlew build --stacktrace
-        working-directory: examples/distro
-
   smoke-test:
     runs-on: ${{ matrix.os }}
     strategy:

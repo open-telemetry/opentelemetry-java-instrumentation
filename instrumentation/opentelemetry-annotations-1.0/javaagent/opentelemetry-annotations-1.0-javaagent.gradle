@@ -1,6 +1,8 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
+  compileOnly project(':javaagent-tooling')
+
   // this instrumentation needs to do similar shading dance as opentelemetry-api-1.0 because
   // the @WithSpan annotation references the OpenTelemetry API's SpanKind class
   //

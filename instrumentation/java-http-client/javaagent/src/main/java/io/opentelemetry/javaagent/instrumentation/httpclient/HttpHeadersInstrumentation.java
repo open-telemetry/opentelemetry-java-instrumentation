@@ -5,15 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpclient;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.httpclient.JdkHttpClientTracer.tracer;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.net.http.HttpHeaders;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

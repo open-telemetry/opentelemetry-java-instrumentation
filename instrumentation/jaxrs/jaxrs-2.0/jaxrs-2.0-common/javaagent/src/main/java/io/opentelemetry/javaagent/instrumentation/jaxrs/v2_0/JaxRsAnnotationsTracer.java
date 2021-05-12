@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
@@ -20,6 +21,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 
@@ -61,19 +63,12 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
 
   public void updateSpanNames(
       Context context, Span span, Span serverSpan, Class<?> target, Method method) {
-    String pathBasedSpanName = getPathSpanName(target, method);
-    // If path based name is empty skip prepending context path so that path based name would
-    // remain as an empty string for which we skip updating span name. Path base span name is
-    // empty when method and class don't have a jax-rs path annotation, this can happen when
-    // creating an "abort" span, see RequestContextHelper.
-    if (!pathBasedSpanName.isEmpty()) {
-      pathBasedSpanName = JaxrsContextPath.prepend(context, pathBasedSpanName);
-      pathBasedSpanName = ServletContextPath.prepend(context, pathBasedSpanName);
-    }
+    Supplier<String> spanNameSupplier = getPathSpanNameSupplier(context, target, method);
     if (serverSpan == null) {
-      updateSpanName(span, pathBasedSpanName);
+      updateSpanName(span, spanNameSupplier.get());
     } else {
-      updateSpanName(serverSpan, pathBasedSpanName);
+      ServerSpanNaming.updateServerSpanName(
+          context, ServerSpanNaming.Source.CONTROLLER, spanNameSupplier);
       updateSpanName(span, spanNameForMethod(target, method));
     }
   }
@@ -89,6 +84,22 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     if (method != null) {
       spanBuilder.setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName());
     }
+  }
+
+  private Supplier<String> getPathSpanNameSupplier(
+      Context context, Class<?> target, Method method) {
+    return () -> {
+      String pathBasedSpanName = getPathSpanName(target, method);
+      // If path based name is empty skip prepending context path so that path based name would
+      // remain as an empty string for which we skip updating span name. Path base span name is
+      // empty when method and class don't have a jax-rs path annotation, this can happen when
+      // creating an "abort" span, see RequestContextHelper.
+      if (!pathBasedSpanName.isEmpty()) {
+        pathBasedSpanName = JaxrsContextPath.prepend(context, pathBasedSpanName);
+        pathBasedSpanName = ServletContextPath.prepend(context, pathBasedSpanName);
+      }
+      return pathBasedSpanName;
+    };
   }
 
   /**

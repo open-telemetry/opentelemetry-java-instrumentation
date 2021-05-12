@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
+import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.javaagent.tooling.matcher.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -15,16 +15,18 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
-import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
 import io.opentelemetry.javaagent.spi.ComponentInstaller;
 import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatcher;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -82,6 +84,13 @@ public class AgentInstaller {
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(loadBootstrapPackagePrefixes());
     // this needs to be done as early as possible - before the first Config.get() call
     ConfigInitializer.initialize();
+    // ensure java.lang.reflect.Proxy is loaded, as transformation code uses it internally
+    // loading java.lang.reflect.Proxy after the bytebuddy transformer is set up causes
+    // the internal-proxy instrumentation module to transform it, and then the bytebuddy
+    // transformation code also tries to load it, which leads to a ClassCircularityError
+    // loading java.lang.reflect.Proxy early here still allows it to be retransformed by the
+    // internal-proxy instrumentation module after the bytebuddy transformer is set up
+    Proxy.class.getName();
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
@@ -150,18 +159,16 @@ public class AgentInstaller {
 
     int numInstrumenters = 0;
 
-    for (InstrumentationModule instrumentationModule : loadInstrumentationModules()) {
-      log.debug("Loading instrumentation {}", instrumentationModule.getClass().getName());
+    for (AgentExtension agentExtension : loadAgentExtensions()) {
+      log.debug("Loading extension {}", agentExtension.getClass().getName());
       try {
-        agentBuilder = instrumentationModule.instrument(agentBuilder);
+        agentBuilder = agentExtension.extend(agentBuilder);
         numInstrumenters++;
       } catch (Exception | LinkageError e) {
-        log.error(
-            "Unable to load instrumentation {}", instrumentationModule.getClass().getName(), e);
+        log.error("Unable to load extension {}", agentExtension.getClass().getName(), e);
       }
     }
 
-    agentBuilder = customizeByteBuddyAgent(agentBuilder);
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     installComponentsAfterByteBuddy(componentInstallers, config);
@@ -211,15 +218,6 @@ public class AgentInstaller {
     }
   }
 
-  private static AgentBuilder customizeByteBuddyAgent(AgentBuilder agentBuilder) {
-    Iterable<ByteBuddyAgentCustomizer> agentCustomizers = loadByteBuddyAgentCustomizers();
-    for (ByteBuddyAgentCustomizer agentCustomizer : agentCustomizers) {
-      log.debug("Applying agent builder customizer {}", agentCustomizer.getClass().getName());
-      agentBuilder = agentCustomizer.customize(agentBuilder);
-    }
-    return agentBuilder;
-  }
-
   private static Iterable<ComponentInstaller> loadComponentProviders() {
     return ServiceLoader.load(ComponentInstaller.class, AgentInstaller.class.getClassLoader());
   }
@@ -235,16 +233,17 @@ public class AgentInstaller {
     return new NoopIgnoreMatcherProvider();
   }
 
-  private static Iterable<ByteBuddyAgentCustomizer> loadByteBuddyAgentCustomizers() {
-    return ServiceLoader.load(
-        ByteBuddyAgentCustomizer.class, AgentInstaller.class.getClassLoader());
-  }
-
-  private static List<InstrumentationModule> loadInstrumentationModules() {
-    return SafeServiceLoader.load(
-            InstrumentationModule.class, Thread.currentThread().getContextClassLoader())
-        .stream()
-        .sorted(Comparator.comparingInt(InstrumentationModule::getOrder))
+  private static List<? extends AgentExtension> loadAgentExtensions() {
+    // TODO: InstrumentationModule should no longer be an SPI
+    Stream<? extends AgentExtension> extensions =
+        Stream.concat(
+            SafeServiceLoader.load(
+                InstrumentationModule.class, AgentInstaller.class.getClassLoader())
+                .stream(),
+            SafeServiceLoader.load(AgentExtension.class, AgentInstaller.class.getClassLoader())
+                .stream());
+    return extensions
+        .sorted(Comparator.comparingInt(AgentExtension::order))
         .collect(Collectors.toList());
   }
 

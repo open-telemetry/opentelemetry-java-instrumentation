@@ -8,10 +8,13 @@ package server
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+import static play.mvc.Http.Context.Implicit.request
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -30,6 +33,12 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
         .GET(SUCCESS.getPath()).routeTo({
         controller(SUCCESS) {
           Results.status(SUCCESS.getStatus(), SUCCESS.getBody())
+        }
+      } as Supplier)
+        .GET(INDEXED_CHILD.getPath()).routeTo({
+        controller(INDEXED_CHILD) {
+          Span.current().setAttribute("test.request.id", request().getQueryString("id") as long)
+          Results.status(INDEXED_CHILD.getStatus())
         }
       } as Supplier)
         .GET(QUERY_PARAM.getPath()).routeTo({
@@ -64,6 +73,11 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   @Override
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
     true
+  }
+
+  @Override
+  boolean testConcurrency() {
+    return true
   }
 
   @Override

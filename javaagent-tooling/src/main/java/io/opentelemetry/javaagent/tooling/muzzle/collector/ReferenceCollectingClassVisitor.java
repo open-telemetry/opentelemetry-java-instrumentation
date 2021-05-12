@@ -6,22 +6,21 @@
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import com.google.common.collect.EvictingQueue;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.MinimumVisibilityFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.OwnershipFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.VisibilityFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Source;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.ManifestationFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.MinimumVisibilityFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.OwnershipFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Flag.VisibilityFlag;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.jar.asm.ClassVisitor;
 import net.bytebuddy.jar.asm.FieldVisitor;
 import net.bytebuddy.jar.asm.Handle;
@@ -209,8 +208,15 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     // Additional references we could check
     // - annotations on field
 
-    // intentionally not creating refs to fields here.
-    // Will create refs in method instructions to include line numbers.
+    Type fieldType = Type.getType(descriptor);
+
+    // remember that this field was declared in the currently visited helper class
+    addReference(
+        new Reference.Builder(refSourceClassName)
+            .withSource(refSourceClassName)
+            .withField(new Source[0], new Flag[0], name, fieldType, true)
+            .build());
+
     return super.visitField(access, name, descriptor, signature, value);
   }
 
@@ -226,21 +232,16 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
       Flag ownershipFlag = computeOwnershipFlag(access);
       Flag manifestationFlag = computeTypeManifestationFlag(access);
 
-      // as an optimization skip constructors, private and static methods
-      if (!(visibilityFlag == VisibilityFlag.PRIVATE
-          || ownershipFlag == OwnershipFlag.STATIC
-          || MethodDescription.CONSTRUCTOR_INTERNAL_NAME.equals(name))) {
-        addReference(
-            new Reference.Builder(refSourceClassName)
-                .withSource(refSourceClassName)
-                .withMethod(
-                    new Source[0],
-                    new Flag[] {visibilityFlag, ownershipFlag, manifestationFlag},
-                    name,
-                    methodType.getReturnType(),
-                    methodType.getArgumentTypes())
-                .build());
-      }
+      addReference(
+          new Reference.Builder(refSourceClassName)
+              .withSource(refSourceClassName)
+              .withMethod(
+                  new Source[0],
+                  new Flag[] {visibilityFlag, ownershipFlag, manifestationFlag},
+                  name,
+                  methodType.getReturnType(),
+                  methodType.getArgumentTypes())
+              .build());
     }
 
     // Additional references we could check
@@ -328,7 +329,8 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
                   },
                   fieldFlags.toArray(new Reference.Flag[0]),
                   name,
-                  fieldType)
+                  fieldType,
+                  false)
               .build());
 
       Type underlyingFieldType = underlyingType(fieldType);

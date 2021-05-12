@@ -51,7 +51,7 @@ dependencies {
   testImplementation group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs '-Dotel.instrumentation.spring-webflux.experimental-span-attributes=true'
   // TODO(anuraaga): There is no actual context leak - it just seems that the server-side does not

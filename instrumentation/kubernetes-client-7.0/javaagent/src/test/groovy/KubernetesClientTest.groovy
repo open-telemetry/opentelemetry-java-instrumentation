@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.h
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.kubernetes.client.openapi.ApiCallback
 import io.kubernetes.client.openapi.ApiClient
@@ -183,7 +184,7 @@ class KubernetesClientTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.HTTP_METHOD.key" "GET"
         "$SemanticAttributes.HTTP_USER_AGENT" TEST_USER_AGENT
         "$SemanticAttributes.HTTP_STATUS_CODE" responseStatus.get()
-        "$SemanticAttributes.NET_TRANSPORT" "IP.TCP"
+        "$SemanticAttributes.NET_TRANSPORT" IP_TCP
         "$SemanticAttributes.NET_PEER_NAME" server.address.host
         "$SemanticAttributes.NET_PEER_PORT" server.address.port
         "kubernetes-client.namespace" "namespace"

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.jsp.JspTracer.tracer;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;

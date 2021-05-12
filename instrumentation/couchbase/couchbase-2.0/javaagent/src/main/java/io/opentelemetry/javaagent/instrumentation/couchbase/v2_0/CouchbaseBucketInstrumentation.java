@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
+import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,8 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.java.CouchbaseCluster;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;

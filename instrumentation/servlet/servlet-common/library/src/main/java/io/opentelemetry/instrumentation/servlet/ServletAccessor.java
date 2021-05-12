@@ -8,10 +8,11 @@ package io.opentelemetry.instrumentation.servlet;
 import java.security.Principal;
 
 /**
- * This interface is used to access methods of HttpServletRequest and HttpServletResponse classes in
- * shared code that is used for both jakarta.servlet and javax.servlet versions of those classes. A
- * wrapper class with extra information attached may be used as well in cases where the class itself
- * does not provide some field (such as response status for Servlet API 2.2).
+ * This interface is used to access methods of ServletContext, HttpServletRequest and
+ * HttpServletResponse classes in shared code that is used for both jakarta.servlet and
+ * javax.servlet versions of those classes. A wrapper class with extra information attached may be
+ * used as well in cases where the class itself does not provide some field (such as response status
+ * for Servlet API 2.2).
  *
  * @param <REQUEST> HttpServletRequest class (or a wrapper)
  * @param <RESPONSE> HttpServletResponse class (or a wrapper)
@@ -42,6 +43,8 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
   String getRequestHeader(REQUEST request, String name);
 
   String getRequestServletPath(REQUEST request);
+
+  String getRequestPathInfo(REQUEST request);
 
   Principal getRequestUserPrincipal(REQUEST request);
 

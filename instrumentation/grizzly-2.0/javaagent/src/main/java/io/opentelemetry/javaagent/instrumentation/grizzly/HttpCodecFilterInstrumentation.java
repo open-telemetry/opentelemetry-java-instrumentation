@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;

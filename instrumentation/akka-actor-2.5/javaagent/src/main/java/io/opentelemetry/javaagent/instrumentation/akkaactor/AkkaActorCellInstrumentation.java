@@ -10,11 +10,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.dispatch.Envelope;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;

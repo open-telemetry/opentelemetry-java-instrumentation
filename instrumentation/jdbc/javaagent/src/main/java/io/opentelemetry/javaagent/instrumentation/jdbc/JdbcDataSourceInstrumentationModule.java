@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.DataSourceTracer.tracer;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -15,9 +15,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
@@ -61,9 +61,9 @@ public class JdbcDataSourceInstrumentationModule extends InstrumentationModule {
         @Advice.This DataSource ds,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      // TODO this is very strange condition
       if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
-        // Don't want to generate a new top-level span
+        // this instrumentation is already very noisy, and calls to getConnection outside of an
+        // existing trace do not tend to be very interesting
         return;
       }
 

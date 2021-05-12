@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.api.GlobalOpenTelemetry
@@ -428,7 +429,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     then:
     assertTraces(count) {
       (0..count - 1).each {
-        trace(it, 3) {
+        trace(it, hasHandlerSpan(endpoint) ? 4 : 3) {
           def rootSpan = it.span(0)
           //Traces can be in arbitrary order, let us find out the request id of the current one
           def requestId = Integer.parseInt(rootSpan.name.substring("client ".length()))
@@ -437,7 +438,15 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
             it."test.request.id" requestId
           }
           indexedServerSpan(it, span(0), requestId)
-          indexedControllerSpan(it, 2, span(1), requestId)
+
+          def controllerSpanIndex = 2
+
+          if (hasHandlerSpan(endpoint)) {
+            handlerSpan(it, 2, span(1), "GET", endpoint)
+            controllerSpanIndex++
+          }
+
+          indexedControllerSpan(it, controllerSpanIndex, span(controllerSpanIndex - 1), requestId)
         }
       }
     }
@@ -604,7 +613,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           "${SemanticAttributes.NET_PEER_NAME}" "localhost"
         }
         if (extraAttributes.contains(SemanticAttributes.NET_TRANSPORT)) {
-          "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP.value
+          "${SemanticAttributes.NET_TRANSPORT}" IP_TCP
         }
       }
     }

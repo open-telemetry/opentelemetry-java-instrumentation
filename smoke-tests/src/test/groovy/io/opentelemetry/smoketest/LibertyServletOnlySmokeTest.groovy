@@ -16,4 +16,13 @@ class LibertyServletOnlySmokeTest extends LibertySmokeTest {
     return ["liberty-servlet.xml": "/config/server.xml"]
   }
 
+  @Override
+  protected String getSpanName(String path) {
+    switch (path) {
+      case "/app/hello.txt":
+      case "/app/file-that-does-not-exist":
+        return "HTTP GET"
+    }
+    return super.getSpanName(path)
+  }
 }

@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -155,6 +156,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           hasNoParent()
           name "HTTP GET"
           kind SpanKind.SERVER
+          status StatusCode.ERROR
 
           event(0) {
             eventName "before-event"

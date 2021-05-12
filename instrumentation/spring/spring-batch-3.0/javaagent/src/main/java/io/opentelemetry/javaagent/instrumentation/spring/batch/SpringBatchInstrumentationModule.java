@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch;
 
+import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.SpringBatchInstrumentationConfig.instrumentationNames;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.chunk.StepBuilderInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.item.ChunkOrientedTaskletInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.item.JsrChunkProcessorInstrumentation;
@@ -18,8 +20,6 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobBuilderHel
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.job.JobParserJobFactoryBeanInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.step.StepBuilderHelperInstrumentation;
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Arrays;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;

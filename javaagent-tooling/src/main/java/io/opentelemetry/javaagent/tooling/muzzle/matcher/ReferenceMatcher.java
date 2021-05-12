@@ -9,11 +9,11 @@ import static java.util.Collections.emptyList;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.Reference.Source;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference.Source;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Factory;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Method;
 import java.util.ArrayList;
@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -52,8 +53,8 @@ public final class ReferenceMatcher {
         new InstrumentationClassPredicate(libraryInstrumentationPredicate);
   }
 
-  Collection<Reference> getReferences() {
-    return references.values();
+  public Collection<Reference> getReferences() {
+    return Collections.unmodifiableCollection(references.values());
   }
 
   /**
@@ -70,12 +71,12 @@ public final class ReferenceMatcher {
   }
 
   private boolean doesMatch(ClassLoader loader) {
+    TypePool typePool = createTypePool(loader);
     for (Reference reference : references.values()) {
-      if (!checkMatch(reference, loader).isEmpty()) {
+      if (!checkMatch(reference, typePool, loader).isEmpty()) {
         return false;
       }
     }
-
     return true;
   }
 
@@ -89,14 +90,20 @@ public final class ReferenceMatcher {
     if (loader == BOOTSTRAP_LOADER) {
       loader = Utils.getBootstrapProxy();
     }
+    TypePool typePool = createTypePool(loader);
 
     List<Mismatch> mismatches = emptyList();
 
     for (Reference reference : references.values()) {
-      mismatches = lazyAddAll(mismatches, checkMatch(reference, loader));
+      mismatches = lazyAddAll(mismatches, checkMatch(reference, typePool, loader));
     }
 
     return mismatches;
+  }
+
+  private static TypePool createTypePool(ClassLoader loader) {
+    return AgentTooling.poolStrategy()
+        .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
   }
 
   /**
@@ -104,10 +111,7 @@ public final class ReferenceMatcher {
    *
    * @return A list of mismatched sources. A list of size 0 means the reference matches the class.
    */
-  private List<Mismatch> checkMatch(Reference reference, ClassLoader loader) {
-    TypePool typePool =
-        AgentTooling.poolStrategy()
-            .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
+  private List<Mismatch> checkMatch(Reference reference, TypePool typePool, ClassLoader loader) {
     try {
       if (instrumentationClassPredicate.isInstrumentationClass(reference.getClassName())) {
         // make sure helper class is registered
@@ -118,10 +122,6 @@ public final class ReferenceMatcher {
         }
         // helper classes get their own check: whether they implement all abstract methods
         return checkHelperClassMatch(reference, typePool);
-      } else if (helperClassNames.contains(reference.getClassName())) {
-        // skip muzzle check for those helper classes that are not in instrumentation packages; e.g.
-        // some instrumentations inject guava types as helper classes
-        return emptyList();
       } else {
         TypePool.Resolution resolution = typePool.describe(reference.getClassName());
         if (!resolution.isResolved()) {
@@ -146,12 +146,38 @@ public final class ReferenceMatcher {
   }
 
   // for helper classes we make sure that all abstract methods from super classes and interfaces are
-  // implemented
+  // implemented and that all accessed fields are defined somewhere in the type hierarchy
   private List<Mismatch> checkHelperClassMatch(Reference helperClass, TypePool typePool) {
     List<Mismatch> mismatches = emptyList();
 
     HelperReferenceWrapper helperWrapper = new Factory(typePool, references).create(helperClass);
 
+    Set<HelperReferenceWrapper.Field> undeclaredFields =
+        helperClass.getFields().stream()
+            .filter(f -> !f.isDeclared())
+            .map(f -> new HelperReferenceWrapper.Field(f.getName(), f.getType().getDescriptor()))
+            .collect(Collectors.toSet());
+
+    // if there are any fields in this helper class that's not declared here, check the type
+    // hierarchy
+    if (!undeclaredFields.isEmpty()) {
+      Set<HelperReferenceWrapper.Field> superClassFields = new HashSet<>();
+      collectFieldsFromTypeHierarchy(helperWrapper, superClassFields);
+
+      undeclaredFields.removeAll(superClassFields);
+      for (HelperReferenceWrapper.Field missingField : undeclaredFields) {
+        mismatches =
+            lazyAdd(
+                mismatches,
+                new Mismatch.MissingField(
+                    helperClass.getSources().toArray(new Source[0]),
+                    helperClass.getClassName(),
+                    missingField.getName(),
+                    missingField.getDescriptor()));
+      }
+    }
+
+    // skip abstract method check if this type does not have super type or is abstract
     if (!helperWrapper.hasSuperTypes() || helperWrapper.isAbstract()) {
       return mismatches;
     }
@@ -175,6 +201,13 @@ public final class ReferenceMatcher {
     }
 
     return mismatches;
+  }
+
+  private static void collectFieldsFromTypeHierarchy(
+      HelperReferenceWrapper type, Set<HelperReferenceWrapper.Field> fields) {
+
+    type.getFields().forEach(fields::add);
+    type.getSuperTypes().forEach(superType -> collectFieldsFromTypeHierarchy(superType, fields));
   }
 
   private static void collectMethodsFromTypeHierarchy(

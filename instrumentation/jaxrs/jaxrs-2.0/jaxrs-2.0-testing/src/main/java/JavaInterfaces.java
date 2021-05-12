@@ -23,7 +23,8 @@ public class JavaInterfaces {
   }
 
   @Path("abstract")
-  abstract class AbstractClassOnInterfaceWithClassPath implements InterfaceWithClassMethodPath {
+  abstract static class AbstractClassOnInterfaceWithClassPath
+      implements InterfaceWithClassMethodPath {
 
     @GET
     @Path("call")
@@ -36,7 +37,7 @@ public class JavaInterfaces {
   }
 
   @Path("child")
-  class ChildClassOnInterface extends AbstractClassOnInterfaceWithClassPath {
+  static class ChildClassOnInterface extends AbstractClassOnInterfaceWithClassPath {
 
     @Override
     void actual() {
@@ -44,25 +45,25 @@ public class JavaInterfaces {
     }
   }
 
-  // TODO: uncomment when we drop support for Java 7
-  //  @Path("interface")
-  //  interface DefaultInterfaceWithClassMethodPath extends Jax {
-  //
-  //    @GET
-  //    @Path("invoke")
-  //    default void call() {
-  //      actual();
-  //    }
-  //
-  //    void actual();
-  //  }
-  //
-  //  @Path("child")
-  //  class DefaultChildClassOnInterface implements DefaultInterfaceWithClassMethodPath {
-  //
-  //    @Override
-  //    public void actual() {
-  //      // do nothing
-  //    }
-  //  }
+  @Path("interface")
+  interface DefaultInterfaceWithClassMethodPath extends Jax {
+
+    @Override
+    @GET
+    @Path("call")
+    default void call() {
+      actual();
+    }
+
+    void actual();
+  }
+
+  @Path("child")
+  static class DefaultChildClassOnInterface implements DefaultInterfaceWithClassMethodPath {
+
+    @Override
+    public void actual() {
+      // do nothing
+    }
+  }
 }

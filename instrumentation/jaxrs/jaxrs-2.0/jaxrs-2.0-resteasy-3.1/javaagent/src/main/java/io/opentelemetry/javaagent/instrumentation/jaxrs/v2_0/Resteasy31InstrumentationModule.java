@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.tooling.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -22,6 +22,9 @@ public class Resteasy31InstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new Resteasy31RequestContextInstrumentation(),
-        new Resteasy31ServletContainerDispatcherInstrumentation());
+        new ResteasyServletContainerDispatcherInstrumentation(),
+        new ResteasyRootNodeTypeInstrumentation(),
+        new ResteasyResourceMethodInvokerInstrumentation(),
+        new ResteasyResourceLocatorInvokerInstrumentation());
   }
 }

@@ -11,6 +11,7 @@ import java.time.Duration
 import ratpack.exec.Operation
 import ratpack.exec.Promise
 import ratpack.http.client.HttpClient
+import ratpack.http.client.HttpClientSpec
 import ratpack.test.exec.ExecHarness
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -25,6 +26,10 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   def client = HttpClient.of {
     it.readTimeout(Duration.ofSeconds(2))
     // Connect timeout added in 1.5
+    // execController method added in 1.9
+    if (HttpClientSpec.metaClass.getMetaMethod("execController") != null) {
+      it.execController(exec.getController())
+    }
   }
 
   @Override

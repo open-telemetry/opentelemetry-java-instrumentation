@@ -10,8 +10,8 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import java.util.Map;
 import javax.faces.context.FacesContext;
 import net.bytebuddy.asm.Advice;

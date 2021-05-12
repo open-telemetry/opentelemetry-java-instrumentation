@@ -14,9 +14,9 @@ import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
+import io.opentelemetry.javaagent.extension.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.tooling.muzzle.Reference;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +26,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,7 +35,9 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.jar.asm.ClassReader;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * {@link LinkedHashMap} is used for reference map to guarantee a deterministic order of iteration,
@@ -62,7 +65,7 @@ public class ReferenceCollector {
    * (external) class is encountered.
    *
    * @param resource path to the resource file, same as in {@link ClassLoader#getResource(String)}
-   * @see io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate
+   * @see InstrumentationClassPredicate
    */
   public void collectReferencesFromResource(String resource) {
     if (!isSpiFile(resource)) {
@@ -107,7 +110,7 @@ public class ReferenceCollector {
    * encountered.
    *
    * @param adviceClassName Starting point for generating references.
-   * @see io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate
+   * @see InstrumentationClassPredicate
    */
   public void collectReferencesFromAdvice(String adviceClassName) {
     visitClassesAndCollectReferences(singleton(adviceClassName), true);
@@ -199,6 +202,95 @@ public class ReferenceCollector {
 
   public Map<String, Reference> getReferences() {
     return references;
+  }
+
+  public void prune() {
+    // helper classes that may help another helper class implement an abstract library method
+    // must be retained
+    // for example if helper class A extends helper class B, and A also implements a library
+    // interface L, then B needs to be retained so that it can be used at runtime to verify that A
+    // implements all of L's methods.
+    // Super types of A that are not also helper classes do not need to be retained because they can
+    // be looked up on the classpath at runtime, see HelperReferenceWrapper.create().
+    Set<Reference> helperClassesParticipatingInLibrarySuperType =
+        getHelperClassesParticipatingInLibrarySuperType();
+
+    for (Iterator<Reference> i = references.values().iterator(); i.hasNext(); ) {
+      Reference reference = i.next();
+      if (instrumentationClassPredicate.isProvidedByLibrary(reference.getClassName())) {
+        // these are the references to library classes which need to be checked at runtime
+        continue;
+      }
+      if (helperClassesParticipatingInLibrarySuperType.contains(reference)) {
+        // these need to be kept in order to check that abstract methods are implemented,
+        // and to check that declared super class fields are present
+        //
+        // can at least prune constructors, private, and static methods, since those cannot be used
+        // to help implement an abstract library method
+        reference
+            .getMethods()
+            .removeIf(
+                method ->
+                    method.getName().equals(MethodDescription.CONSTRUCTOR_INTERNAL_NAME)
+                        || method.getFlags().contains(Reference.Flag.VisibilityFlag.PRIVATE)
+                        || method.getFlags().contains(Reference.Flag.OwnershipFlag.STATIC));
+        continue;
+      }
+      i.remove();
+    }
+  }
+
+  private Set<Reference> getHelperClassesParticipatingInLibrarySuperType() {
+    Set<Reference> helperClassesParticipatingInLibrarySuperType = new HashSet<>();
+    for (Reference reference : getHelperClassesWithLibrarySuperType()) {
+      addSuperTypesThatAreAlsoHelperClasses(
+          reference.getClassName(), helperClassesParticipatingInLibrarySuperType);
+    }
+    return helperClassesParticipatingInLibrarySuperType;
+  }
+
+  private Set<Reference> getHelperClassesWithLibrarySuperType() {
+    Set<Reference> helperClassesWithLibrarySuperType = new HashSet<>();
+    for (Reference reference : references.values()) {
+      if (instrumentationClassPredicate.isInstrumentationClass(reference.getClassName())
+          && hasLibrarySuperType(reference.getClassName())) {
+        helperClassesWithLibrarySuperType.add(reference);
+      }
+    }
+    return helperClassesWithLibrarySuperType;
+  }
+
+  private void addSuperTypesThatAreAlsoHelperClasses(
+      @Nullable String className, Set<Reference> superTypes) {
+    if (className != null && instrumentationClassPredicate.isInstrumentationClass(className)) {
+      Reference reference = references.get(className);
+      superTypes.add(reference);
+
+      addSuperTypesThatAreAlsoHelperClasses(reference.getSuperName(), superTypes);
+      // need to keep interfaces too since they may have default methods
+      for (String superType : reference.getInterfaces()) {
+        addSuperTypesThatAreAlsoHelperClasses(superType, superTypes);
+      }
+    }
+  }
+
+  private boolean hasLibrarySuperType(@Nullable String typeName) {
+    if (typeName == null || typeName.startsWith("java.")) {
+      return false;
+    }
+    if (instrumentationClassPredicate.isProvidedByLibrary(typeName)) {
+      return true;
+    }
+    Reference reference = references.get(typeName);
+    if (hasLibrarySuperType(reference.getSuperName())) {
+      return true;
+    }
+    for (String type : reference.getInterfaces()) {
+      if (hasLibrarySuperType(type)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // see https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm

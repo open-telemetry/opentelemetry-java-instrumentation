@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
 
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.tooling.bytebuddy.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -17,9 +17,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.tooling.TypeInstrumentation;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +39,7 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
   public ElementMatcher<TypeDescription> typeMatcher() {
     // Exact class because private fields are used
     return nameStartsWith("com.couchbase.client.")
-        .<TypeDescription>and(
-            extendsClass(named("com.couchbase.client.core.endpoint.AbstractGenericHandler")));
+        .and(extendsClass(named("com.couchbase.client.core.endpoint.AbstractGenericHandler")));
   }
 
   @Override
