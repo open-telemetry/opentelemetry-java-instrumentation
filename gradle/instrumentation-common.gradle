@@ -68,14 +68,11 @@ configurations {
 
 if (testLatestDeps) {
   afterEvaluate {
-    // Try/catch seems to be the only way to access an optional task with lazy configuration API.
-    try {
+    if (tasks.names.contains('latestDepTest')) {
       def latestDepTest = tasks.named('latestDepTest')
       tasks.named('test').configure {
         dependsOn(latestDepTest)
       }
-    } catch (UnknownDomainObjectException e) {
-      // Ignore
     }
   }
 }

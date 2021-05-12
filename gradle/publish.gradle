@@ -4,7 +4,7 @@ apply plugin: 'signing'
 publishing {
   publications {
     maven(MavenPublication) {
-      if (project.tasks.findByName("shadowJar") != null && !findProperty('noShadowPublish')) {
+      if (project.tasks.names.contains('shadowJar') && !findProperty('noShadowPublish')) {
         project.shadow.component(it)
         //These two are here just to satisfy Maven Central
         artifact sourcesJar
@@ -92,11 +92,11 @@ rootProject.tasks.named('release').configure {
   finalizedBy tasks.publishToSonatype
 }
 
-tasks.withType(Sign).configureEach {
-  onlyIf { System.getenv("CI") != null }
-}
-
-signing {
-  useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSWORD"))
-  sign publishing.publications.maven
+// Stub out entire signing block off of CI since Gradle provides no way of lazy configuration of
+// signing tasks.
+if (System.getenv("CI") != null) {
+  signing {
+    useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSWORD"))
+    sign publishing.publications.maven
+  }
 }
