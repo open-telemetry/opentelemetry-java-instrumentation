@@ -1,4 +1,4 @@
-name: Nightly build
+name: Nightly build without cache
 
 on:
   schedule:
@@ -94,7 +94,7 @@ jobs:
 
   issue:
     name: Open issue on failure
-    needs: [ build, test, testLatestDep, snapshot ]
+    needs: [ build, test, example-distro, smoke-test]
     runs-on: ubuntu-latest
     if: always()
     steps:
