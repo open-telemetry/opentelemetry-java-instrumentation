@@ -14,5 +14,4 @@ public class OkHttp3Interceptors {
 
   public static final Interceptor TRACING_INTERCEPTOR =
       OkHttpTracing.create(GlobalOpenTelemetry.get()).newInterceptor();
-  String a = Byte.toString((byte) 2);
 }

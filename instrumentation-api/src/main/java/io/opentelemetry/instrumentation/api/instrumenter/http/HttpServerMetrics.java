@@ -15,6 +15,7 @@ import io.opentelemetry.api.metrics.common.Labels;
 import io.opentelemetry.api.metrics.common.LabelsBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestListener;
 import io.opentelemetry.instrumentation.api.instrumenter.RequestMetrics;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
  * <p>To use this class, you may need to add the {@code opentelemetry-api-metrics} artifact to your
  * dependencies.
  */
+@UnstableApi
 public final class HttpServerMetrics implements RequestListener {
 
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
@@ -43,6 +45,7 @@ public final class HttpServerMetrics implements RequestListener {
    * HttpServerMetrics} on an {@link
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
+  @UnstableApi
   public static RequestMetrics get() {
     return HttpServerMetrics::new;
   }
@@ -67,10 +70,10 @@ public final class HttpServerMetrics implements RequestListener {
   }
 
   @Override
-  public Context start(Context context, Attributes attributes) {
+  public Context start(Context context, Attributes requestAttributes) {
     long startTimeNanos = System.nanoTime();
-    Labels activeRequestLabels = activeRequestLabels(attributes);
-    Labels durationLabels = durationLabels(attributes);
+    Labels activeRequestLabels = activeRequestLabels(requestAttributes);
+    Labels durationLabels = durationLabels(requestAttributes);
     activeRequests.add(1, activeRequestLabels);
 
     return context.with(
@@ -79,7 +82,7 @@ public final class HttpServerMetrics implements RequestListener {
   }
 
   @Override
-  public void end(Context context, Attributes attributes) {
+  public void end(Context context, Attributes responseAttributes) {
     State state = context.get(HTTP_SERVER_REQUEST_METRICS_STATE);
     if (state == null) {
       logger.debug(
