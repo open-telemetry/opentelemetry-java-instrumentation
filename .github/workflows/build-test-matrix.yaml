@@ -12,7 +12,7 @@ jobs:
   buildLinux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.4
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
@@ -47,7 +47,7 @@ jobs:
       - name: Support longpaths
         run: git config --system core.longpaths true
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.4
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
