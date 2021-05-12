@@ -1,5 +1,6 @@
 plugins {
-  id "me.champeau.jmh" version "0.6.2"
+  id "me.champeau.jmh"
+  id "com.github.johnrengelman.shadow"
 }
 
 apply from: "$rootDir/gradle/java.gradle"
@@ -25,7 +26,6 @@ jmh {
   profilers = ['io.opentelemetry.benchmark.UsedMemoryProfiler', 'gc']
 
   duplicateClassesStrategy = DuplicatesStrategy.EXCLUDE
-  jmhVersion = '1.28' // Specifies JMH version
 
   def jmhIncludeSingleClass = project.findProperty('jmhIncludeSingleClass')
   if (jmhIncludeSingleClass != null) {
@@ -33,7 +33,9 @@ jmh {
   }
 }
 
-tasks.jmh.dependsOn(':javaagent:shadowJar')
+tasks.named('jmh').configure {
+  dependsOn(':javaagent:shadowJar')
+}
 
 /*
 If using libasyncProfiler, use the following to generate nice svg flamegraphs.

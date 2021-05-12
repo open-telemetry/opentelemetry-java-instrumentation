@@ -5,21 +5,19 @@
 
 package io.opentelemetry.javaagent;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
 import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,8 +79,9 @@ public class OpenTelemetryAgent {
       File bootstrapFile = new File(javaAgentJarUrl.toURI());
 
       if (!bootstrapFile.isDirectory()) {
-        checkJarManifestMainClassIsThis(javaAgentJarUrl);
-        inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapFile));
+        JarFile agentJar = new JarFile(bootstrapFile, false);
+        checkJarManifestMainClassIsThis(javaAgentJarUrl, agentJar);
+        inst.appendToBootstrapClassLoaderSearch(agentJar);
         return javaAgentJarUrl;
       }
     }
@@ -125,19 +124,21 @@ public class OpenTelemetryAgent {
       throw new RuntimeException("Unable to find javaagent file: " + javaagentFile);
     }
     javaAgentJarUrl = javaagentFile.toURI().toURL();
-    checkJarManifestMainClassIsThis(javaAgentJarUrl);
-    inst.appendToBootstrapClassLoaderSearch(new JarFile(javaagentFile));
+    JarFile agentJar = new JarFile(javaagentFile, false);
+    checkJarManifestMainClassIsThis(javaAgentJarUrl, agentJar);
+    inst.appendToBootstrapClassLoaderSearch(agentJar);
 
     return javaAgentJarUrl;
   }
 
   private static List<String> getVmArgumentsThroughReflection() {
+    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
     try {
       // Try Oracle-based
       Class managementFactoryHelperClass =
-          thisClass.getClassLoader().loadClass("sun.management.ManagementFactoryHelper");
+          classLoader.loadClass("sun.management.ManagementFactoryHelper");
 
-      Class vmManagementClass = thisClass.getClassLoader().loadClass("sun.management.VMManagement");
+      Class vmManagementClass = classLoader.loadClass("sun.management.VMManagement");
 
       Object vmManagement;
 
@@ -156,7 +157,7 @@ public class OpenTelemetryAgent {
 
     } catch (ReflectiveOperationException e) {
       try { // Try IBM-based.
-        Class vmClass = thisClass.getClassLoader().loadClass("com.ibm.oti.vm.VM");
+        Class vmClass = classLoader.loadClass("com.ibm.oti.vm.VM");
         String[] argArray = (String[]) vmClass.getMethod("getVMArgs").invoke(null);
         return Arrays.asList(argArray);
       } catch (ReflectiveOperationException e1) {
@@ -169,18 +170,12 @@ public class OpenTelemetryAgent {
     }
   }
 
-  private static boolean checkJarManifestMainClassIsThis(URL jarUrl) throws IOException {
-    URL manifestUrl = new URL("jar:" + jarUrl + "!/META-INF/MANIFEST.MF");
-    String mainClassLine = "Main-Class: " + thisClass.getCanonicalName();
-    try (BufferedReader reader =
-        new BufferedReader(
-            new InputStreamReader(manifestUrl.openStream(), StandardCharsets.UTF_8))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        if (line.equals(mainClassLine)) {
-          return true;
-        }
-      }
+  private static boolean checkJarManifestMainClassIsThis(URL jarUrl, JarFile agentJar)
+      throws IOException {
+    Manifest manifest = agentJar.getManifest();
+    String mainClass = manifest.getMainAttributes().getValue("Main-Class");
+    if (thisClass.getCanonicalName().equals(mainClass)) {
+      return true;
     }
     throw new RuntimeException(
         "opentelemetry-javaagent is not installed, because class '"

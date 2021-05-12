@@ -4,6 +4,7 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
@@ -41,19 +42,13 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
   @Override
   void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-      .whenComplete {response, throwable ->
+      .whenComplete { response, throwable ->
         requestResult.complete({ response.statusCode() }, throwable?.getCause())
       }
   }
 
   @Override
   boolean testCircularRedirects() {
-    return false
-  }
-
-  //We override this test below because it produces somewhat different attributes
-  @Override
-  boolean testRemoteConnection() {
     return false
   }
 
@@ -87,7 +82,7 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
           name expectedOperationName(method)
           kind CLIENT
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" "IP.TCP"
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
             "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" }
             // Optional

@@ -196,7 +196,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
     private void generateMuzzleHelperClassNamesMethod(ReferenceCollector collector) {
       /*
-       * protected String[] getMuzzleHelperClassNames() {
+       * public String[] getMuzzleHelperClassNames() {
        *   return new String[] {
        *     // sorted helper class names
        *   };
@@ -204,7 +204,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
        */
       MethodVisitor mv =
           super.visitMethod(
-              Opcodes.ACC_PROTECTED,
+              Opcodes.ACC_PUBLIC,
               MUZZLE_HELPER_CLASSES_METHOD_NAME,
               "()[Ljava/lang/String;",
               null,
@@ -237,7 +237,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
     private void generateMuzzleReferencesMethod(ReferenceCollector collector) {
       /*
-       * protected synchronized Reference[] getMuzzleReferences() {
+       * public synchronized Reference[] getMuzzleReferences() {
        *   if (null == this.muzzleReferences) {
        *     this.muzzleReferences = new Reference[] {
        *                               // reference builders
@@ -249,7 +249,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       try {
         MethodVisitor mv =
             super.visitMethod(
-                Opcodes.ACC_PROTECTED + Opcodes.ACC_SYNCHRONIZED,
+                Opcodes.ACC_PUBLIC + Opcodes.ACC_SYNCHRONIZED,
                 MUZZLE_REFERENCES_METHOD_NAME,
                 "()[Lio/opentelemetry/javaagent/extension/muzzle/Reference;",
                 null,
@@ -535,7 +535,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
     private void generateMuzzleContextStoreClassesMethod(ReferenceCollector collector) {
       /*
-       * protected Map<String, String> getMuzzleContextStoreClasses() {
+       * public Map<String, String> getMuzzleContextStoreClasses() {
        *   Map<String, String> contextStore = new HashMap();
        *   contextStore.put(..., ...);
        *   return contextStore;
@@ -543,7 +543,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
        */
       MethodVisitor mv =
           super.visitMethod(
-              Opcodes.ACC_PROTECTED,
+              Opcodes.ACC_PUBLIC,
               MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME,
               "()Ljava/util/Map;",
               null,

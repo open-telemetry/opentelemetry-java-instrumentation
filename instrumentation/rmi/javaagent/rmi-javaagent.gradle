@@ -6,7 +6,9 @@ muzzle {
   }
 }
 
-task "rmic", dependsOn: testClasses {
+def rmic = tasks.register('rmic') {
+  dependsOn(testClasses)
+
   def clazz = 'rmi.app.ServerLegacy'
 
   // Try one level up too in case java.home refers to jre directory inside jdk directory
@@ -19,7 +21,7 @@ task "rmic", dependsOn: testClasses {
   command.execute().text
 }
 
-test.dependsOn "rmic"
+test.dependsOn rmic
 
 // We cannot use "--release" javac option here because that will forbid importing "sun.rmi" package.
 // We also can't seem to use the toolchain without the "--release" option. So disable everything.
@@ -32,12 +34,12 @@ java {
   }
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
   options.release = null
 }
-tasks.withType(GroovyCompile) {
+tasks.withType(GroovyCompile).configureEach {
   options.release = null
 }
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   jvmArgs "-Djava.rmi.server.hostname=127.0.0.1"
 }

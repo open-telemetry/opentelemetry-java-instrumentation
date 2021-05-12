@@ -6,11 +6,13 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
@@ -155,7 +157,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
   private void onRequest(AttributeSetter setter, REQUEST request) {
     assert setter != null;
     if (request != null) {
-      setter.setAttribute(SemanticAttributes.NET_TRANSPORT, "IP.TCP");
+      setter.setAttribute(SemanticAttributes.NET_TRANSPORT, IP_TCP);
       setter.setAttribute(SemanticAttributes.HTTP_METHOD, method(request));
       setter.setAttribute(SemanticAttributes.HTTP_USER_AGENT, requestHeader(request, USER_AGENT));
 
@@ -210,7 +212,10 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       Integer status = status(response);
       if (status != null) {
         span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
-        span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
+        StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(status);
+        if (statusCode != StatusCode.UNSET) {
+          span.setStatus(statusCode);
+        }
       }
     }
   }
