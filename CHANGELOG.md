@@ -72,7 +72,10 @@
   - You no longer have to depend on the `javaagent-tooling` module to implement custom instrumentations: a new `javaagent-extension-api` module was introduced, containing all the necessary instrumentation classes and interfaces;
   - `InstrumentationModule` and `TypeInstrumentation` were moved to the `io.opentelemetry.javaagent.extension.instrumentation` package;
   - `AgentElementMatchers`, `ClassLoaderMatcher` and `NameMatchers` were moved to the `io.opentelemetry.javaagent.extension.matcher` package;
-  - A new SPI `AgentExtension` was introduced: it will replace `ByteBuddyAgentCustomizer` in the next release.
+  - A new SPI `AgentExtension` was introduced: it replaces `ByteBuddyAgentCustomizer`;
+  - `InstrumentationModule#getOrder()` was renamed to `order()`;
+  - `InstrumentationModule#additionalHelperClassNames()` has been removed; use `isHelperClass(String)` instead if you use the muzzle compile plugin. If you're not using muzzle, you can override `getMuzzleHelperClassNames()` directly instead;
+  - `InstrumentationModule#getAllHelperClassNames()` has been removed; you can call `getMuzzleHelperClassNames()` to retrieve all helper class names instead.
 
 ## Version 1.1.0 - 2021-04-14
 
