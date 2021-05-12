@@ -5,9 +5,11 @@
 
 package muzzle
 
+
 import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag
 import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.MinimumVisibilityFlag
 import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.OwnershipFlag
+import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.VisibilityFlag
 import static muzzle.TestClasses.HelperAdvice
 import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice
@@ -116,6 +118,40 @@ class ReferenceCollectorTest extends Specification {
     expect:
     references['muzzle.TestClasses$MethodBodyAdvice$SomeImplementation'] != null
     references['muzzle.TestClasses$MethodBodyAdvice$B'] != null
+  }
+
+  def "should create references for helper classes"() {
+    when:
+    def collector = new ReferenceCollector({ false })
+    collector.collectReferencesFromAdvice(HelperAdvice.name)
+    def references = collector.getReferences()
+
+    then:
+    references.keySet() == [
+      TestHelperClasses.Helper.name,
+      TestHelperClasses.HelperSuperClass.name,
+      TestHelperClasses.HelperInterface.name
+    ] as Set
+
+    with(references[TestHelperClasses.HelperSuperClass.name]) { helperSuperClass ->
+      helperSuperClass.flags.contains(ManifestationFlag.ABSTRACT)
+      assertHelperSuperClassMethod(helperSuperClass, true)
+      assertMethod helperSuperClass, 'finalMethod', '()Ljava/lang/String;',
+        VisibilityFlag.PUBLIC,
+        OwnershipFlag.NON_STATIC,
+        ManifestationFlag.FINAL
+    }
+
+    with(references[TestHelperClasses.HelperInterface.name]) { helperInterface ->
+      helperInterface.flags.contains(ManifestationFlag.ABSTRACT)
+      assertHelperInterfaceMethod helperInterface, true
+    }
+
+    with(references[TestHelperClasses.Helper.name]) { helperClass ->
+      helperClass.flags.contains(ManifestationFlag.NON_FINAL)
+      assertHelperSuperClassMethod helperClass, false
+      assertHelperInterfaceMethod helperClass, false
+    }
   }
 
   def "should collect field declaration references"() {
@@ -274,6 +310,20 @@ class ReferenceCollectorTest extends Specification {
     desc                                                                        | adviceClassName
     "passing arbitrary variables or parameters to InstrumentationContext.get()" | InstrumentationContextTestClasses.NotUsingClassRefAdvice.name
     "storing class ref in a local var"                                          | InstrumentationContextTestClasses.PassingVariableAdvice.name
+  }
+
+  private static assertHelperSuperClassMethod(Reference reference, boolean isAbstract) {
+    assertMethod reference, 'abstractMethod', '()I',
+      VisibilityFlag.PROTECTED,
+      OwnershipFlag.NON_STATIC,
+      isAbstract ? ManifestationFlag.ABSTRACT : ManifestationFlag.NON_FINAL
+  }
+
+  private static assertHelperInterfaceMethod(Reference reference, boolean isAbstract) {
+    assertMethod reference, 'foo', '()V',
+      VisibilityFlag.PUBLIC,
+      OwnershipFlag.NON_STATIC,
+      isAbstract ? ManifestationFlag.ABSTRACT : ManifestationFlag.NON_FINAL
   }
 
   private static assertMethod(Reference reference, String methodName, String methodDesc, Reference.Flag... flags) {
