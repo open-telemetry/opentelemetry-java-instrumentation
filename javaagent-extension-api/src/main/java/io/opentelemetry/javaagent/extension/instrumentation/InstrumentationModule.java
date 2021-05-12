@@ -10,14 +10,12 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.muzzle.Reference;
-import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
@@ -28,10 +26,11 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>Classes extending {@link InstrumentationModule} should be public and non-final so that it's
  * possible to extend and reuse them in vendor distributions.
  *
- * <p>WARNING: using {@link InstrumentationModule} as SPI is now deprecated; please use {@link
- * AgentExtension} instead.
+ * <p>{@link InstrumentationModule} is an SPI, you need to ensure that a proper {@code
+ * META-INF/services/} provider file is created for it to be picked up by the agent. See {@link
+ * java.util.ServiceLoader} for more details.
  */
-public abstract class InstrumentationModule implements AgentExtension {
+public abstract class InstrumentationModule {
   private static final String[] EMPTY = new String[0];
   private static final Reference[] EMPTY_REFS = new Reference[0];
 
@@ -85,18 +84,10 @@ public abstract class InstrumentationModule implements AgentExtension {
   }
 
   /**
-   * Add this instrumentation to an AgentBuilder.
-   *
-   * @param parentAgentBuilder AgentBuilder to base instrumentation config off of.
-   * @return the original agentBuilder and this instrumentation
+   * Returns the main instrumentation name. See {@link #InstrumentationModule(String, String...)}
+   * for more details about instrumentation names.
    */
-  @Override
-  public final AgentBuilder extend(AgentBuilder parentAgentBuilder) {
-    return InstrumentationExtensionImplementation.get().extend(this, parentAgentBuilder);
-  }
-
-  @Override
-  public final String extensionName() {
+  public final String instrumentationName() {
     return instrumentationNames.iterator().next();
   }
 
@@ -111,6 +102,15 @@ public abstract class InstrumentationModule implements AgentExtension {
    */
   protected boolean defaultEnabled() {
     return DEFAULT_ENABLED;
+  }
+
+  /**
+   * Returns the order of adding instrumentation modules to the javaagent. Higher values are added
+   * later, for example: an instrumentation module with order=1 will run after a module with
+   * order=0.
+   */
+  public int order() {
+    return 0;
   }
 
   /**

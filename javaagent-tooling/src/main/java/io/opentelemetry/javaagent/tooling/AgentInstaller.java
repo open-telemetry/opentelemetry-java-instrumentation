@@ -157,19 +157,25 @@ public class AgentInstaller {
               .with(new TransformLoggingListener());
     }
 
-    int numInstrumenters = 0;
-
+    int numberOfLoadedExtensions = 0;
     for (AgentExtension agentExtension : loadAgentExtensions()) {
-      log.debug("Loading extension {}", agentExtension.getClass().getName());
+      log.debug(
+          "Loading extension {} [class {}]",
+          agentExtension.extensionName(),
+          agentExtension.getClass().getName());
       try {
         agentBuilder = agentExtension.extend(agentBuilder);
-        numInstrumenters++;
+        numberOfLoadedExtensions++;
       } catch (Exception | LinkageError e) {
-        log.error("Unable to load extension {}", agentExtension.getClass().getName(), e);
+        log.error(
+            "Unable to load extension {} [class {}]",
+            agentExtension.extensionName(),
+            agentExtension.getClass().getName(),
+            e);
       }
     }
+    log.debug("Installed {} extension(s)", numberOfLoadedExtensions);
 
-    log.debug("Installed {} instrumenter(s)", numInstrumenters);
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     installComponentsAfterByteBuddy(componentInstallers, config);
     return resettableClassFileTransformer;
@@ -234,16 +240,9 @@ public class AgentInstaller {
     return new NoopIgnoreMatcherProvider();
   }
 
-  private static List<? extends AgentExtension> loadAgentExtensions() {
-    // TODO: InstrumentationModule should no longer be an SPI
-    Stream<? extends AgentExtension> extensions =
-        Stream.concat(
-            SafeServiceLoader.load(
-                InstrumentationModule.class, AgentInstaller.class.getClassLoader())
-                .stream(),
-            SafeServiceLoader.load(AgentExtension.class, AgentInstaller.class.getClassLoader())
-                .stream());
-    return extensions
+  private static List<AgentExtension> loadAgentExtensions() {
+    return SafeServiceLoader.load(AgentExtension.class, AgentInstaller.class.getClassLoader())
+        .stream()
         .sorted(Comparator.comparingInt(AgentExtension::order))
         .collect(Collectors.toList());
   }
