@@ -53,33 +53,22 @@ public class Servlet3Advice {
     }
 
     Context attachedContext = tracer().getServerContext(httpServletRequest);
-    if (attachedContext != null) {
+    if (attachedContext != null && tracer().needsRescoping(attachedContext)) {
       // We are inside nested servlet/filter/app-server span, don't create new span
-      if (tracer().needsRescoping(attachedContext)) {
-        attachedContext =
-            tracer().updateContext(attachedContext, httpServletRequest, mappingResolver, servlet);
-        scope = attachedContext.makeCurrent();
-        return;
-      }
-
-      // We already have attached context to request but this could have been done by app server
-      // instrumentation, if needed update span with info from current request.
-      Context currentContext = Java8BytecodeBridge.currentContext();
-      Context updatedContext =
-          tracer().updateContext(currentContext, httpServletRequest, mappingResolver, servlet);
-      if (updatedContext != currentContext) {
-        // runOnceUnderAppServer updated context, need to re-scope
-        scope = updatedContext.makeCurrent();
-      }
+      attachedContext =
+          tracer().updateContext(attachedContext, httpServletRequest, mappingResolver, servlet);
+      scope = attachedContext.makeCurrent();
       return;
     }
 
     Context currentContext = Java8BytecodeBridge.currentContext();
     if (currentContext != null
         && Java8BytecodeBridge.spanFromContext(currentContext).isRecording()) {
-      // We already have a span but it was not created by servlet instrumentation.
-      // In case it was created by app server integration we need to update it with info from
-      // current request.
+      // Update context with info from current request to ensure that server span gets the best
+      // possible name.
+      // In case server span was created by app server instrumentations calling updateContext
+      // returns a new context that contains servlet context path that is used in other
+      // instrumentations for naming server span.
       Context updatedContext =
           tracer().updateContext(currentContext, httpServletRequest, mappingResolver, servlet);
       if (currentContext != updatedContext) {
