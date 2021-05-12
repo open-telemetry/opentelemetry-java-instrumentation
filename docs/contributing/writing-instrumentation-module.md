@@ -55,7 +55,7 @@ public int order() {
 }
 ```
 
-Higher `order()` means that the instrumentation module will be applied later. The default value is 
+Higher `order()` means that the instrumentation module will be applied later. The default value is
 `0`.
 
 ### `isHelperClass()`
