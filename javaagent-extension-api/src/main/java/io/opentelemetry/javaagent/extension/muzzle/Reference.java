@@ -22,6 +22,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * bytecode generated based on them would also be deterministic.
  */
 public final class Reference {
+
+  // this could be exposed as a system property if needed, but for now it's just helpful to be able
+  // to change manually here when reviewing/optimizing the generated getMuzzleReferences() method
+  private static final boolean COLLECT_SOURCES = true;
+
   private final Set<Source> sources;
   private final String className;
   private final String superName;
@@ -198,6 +203,7 @@ public final class Reference {
     boolean matches(int asmFlags);
 
     // This method is internally used to generate the getMuzzleReferenceMatcher() implementation
+
     /** Same as {@link Enum#name()}. */
     String name();
 
@@ -351,7 +357,7 @@ public final class Reference {
     public Method(
         Source[] sources, Flag[] flags, String name, Type returnType, Type[] parameterTypes) {
       this(
-          new LinkedHashSet<>(Arrays.asList(sources)),
+          COLLECT_SOURCES ? new LinkedHashSet<>(Arrays.asList(sources)) : new LinkedHashSet<>(),
           new LinkedHashSet<>(Arrays.asList(flags)),
           name,
           returnType,
@@ -442,7 +448,8 @@ public final class Reference {
     private final boolean declared;
 
     public Field(Source[] sources, Flag[] flags, String name, Type fieldType, boolean declared) {
-      this.sources = new LinkedHashSet<>(Arrays.asList(sources));
+      this.sources =
+          COLLECT_SOURCES ? new LinkedHashSet<>(Arrays.asList(sources)) : new LinkedHashSet<>();
       this.flags = new LinkedHashSet<>(Arrays.asList(flags));
       this.name = name;
       this.type = fieldType;
@@ -541,7 +548,9 @@ public final class Reference {
     }
 
     public Builder withSource(String sourceName, int line) {
-      sources.add(new Source(sourceName, line));
+      if (COLLECT_SOURCES) {
+        sources.add(new Source(sourceName, line));
+      }
       return this;
     }
 
