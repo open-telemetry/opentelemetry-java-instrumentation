@@ -16,7 +16,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 /**
  * This class provides some custom ByteBuddy element matchers to use when applying instrumentation.
  */
-public class AgentElementMatchers {
+public final class AgentElementMatchers {
 
   public static ElementMatcher.Junction<TypeDescription> extendsClass(
       ElementMatcher<TypeDescription> matcher) {
@@ -25,8 +25,7 @@ public class AgentElementMatchers {
 
   public static ElementMatcher.Junction<TypeDescription> implementsInterface(
       ElementMatcher<TypeDescription> matcher) {
-    return not(isInterface())
-        .and(new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), true));
+    return new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), true);
   }
 
   public static ElementMatcher.Junction<TypeDescription> hasInterface(
@@ -36,8 +35,7 @@ public class AgentElementMatchers {
 
   public static ElementMatcher.Junction<TypeDescription> safeHasSuperType(
       ElementMatcher<TypeDescription> matcher) {
-    return not(isInterface())
-        .and(new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), false));
+    return new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), false);
   }
 
   /**
@@ -92,4 +90,6 @@ public class AgentElementMatchers {
       }
     }
   }
+
+  private AgentElementMatchers() {}
 }

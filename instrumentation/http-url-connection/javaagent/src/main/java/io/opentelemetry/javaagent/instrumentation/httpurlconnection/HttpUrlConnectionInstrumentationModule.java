@@ -18,6 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
@@ -164,7 +165,10 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
       if (httpUrlState != null) {
         Span span = Java8BytecodeBridge.spanFromContext(httpUrlState.context);
         span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, returnValue);
-        span.setStatus(HttpStatusConverter.statusFromHttpStatus(returnValue));
+        StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(returnValue);
+        if (statusCode != StatusCode.UNSET) {
+          span.setStatus(statusCode);
+        }
       }
     }
   }

@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
@@ -171,7 +172,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       span.recordException(error);
     }
 
-    span.setStatus(spanStatusExtractor.extract(request, response, error));
+    StatusCode statusCode = spanStatusExtractor.extract(request, response, error);
+    if (statusCode != StatusCode.UNSET) {
+      span.setStatus(statusCode);
+    }
 
     if (endTimeExtractor != null) {
       span.end(endTimeExtractor.extract(response));

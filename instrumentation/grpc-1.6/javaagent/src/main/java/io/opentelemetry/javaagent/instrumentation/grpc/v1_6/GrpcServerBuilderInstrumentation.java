@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -31,7 +31,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return safeHasSuperType(named("io.grpc.ServerBuilder"));
+    return extendsClass(named("io.grpc.ServerBuilder"));
   }
 
   @Override

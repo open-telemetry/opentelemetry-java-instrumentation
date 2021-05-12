@@ -9,14 +9,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader.BootstrapClassLoaderProxy;
-import java.net.URL;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 
 public class Utils {
 
   private static final BootstrapClassLoaderProxy unitTestBootstrapProxy =
-      new BootstrapClassLoaderProxy(new URL[0]);
+      new BootstrapClassLoaderProxy(null);
 
   /** Return the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {

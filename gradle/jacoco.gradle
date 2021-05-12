@@ -4,8 +4,8 @@ jacoco {
   toolVersion = "0.8.6"
 }
 
-jacocoTestReport {
-  dependsOn test
+tasks.named('jacocoTestReport').configure {
+  dependsOn('test')
   reports {
     xml.enabled true
     csv.enabled false
@@ -30,7 +30,7 @@ project.ext.minimumBranchCoverage = 0.9
 project.ext.minimumInstructionCoverage = 0.9
 
 afterEvaluate {
-  tasks.withType(Test) {
+  tasks.withType(Test).configureEach {
     jacoco {
       // Make sure that excluded classes do not get jacoco instrumentation applied since it may confuse apm agent in some cases
       excludes = project.excludedClassesCoverage
@@ -59,6 +59,10 @@ afterEvaluate {
     }
   }
 
-  jacocoTestCoverageVerification.dependsOn jacocoTestReport
-  check.dependsOn jacocoTestCoverageVerification
+  tasks.named('jacocoTestCoverageVerification').configure {
+    dependsOn('jacocoTestReport')
+  }
+  tasks.named('check').configure {
+    dependsOn('jacocoTestCoverageVerification')
+  }
 }

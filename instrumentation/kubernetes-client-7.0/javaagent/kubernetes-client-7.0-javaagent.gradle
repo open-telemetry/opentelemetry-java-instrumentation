@@ -17,7 +17,7 @@ dependencies {
   testInstrumentation(project(':instrumentation:okhttp:okhttp-3.0:javaagent'))
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs "-Dotel.instrumentation.kubernetes-client.experimental-span-attributes=true"
 }

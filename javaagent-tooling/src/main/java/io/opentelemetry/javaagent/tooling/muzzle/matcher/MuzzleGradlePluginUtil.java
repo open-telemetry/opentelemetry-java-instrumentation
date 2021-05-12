@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
@@ -49,7 +51,7 @@ public final class MuzzleGradlePluginUtil {
         ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
       ReferenceMatcher muzzle =
           new ReferenceMatcher(
-              instrumentationModule.getAllHelperClassNames(),
+              asList(instrumentationModule.getMuzzleHelperClassNames()),
               instrumentationModule.getMuzzleReferences(),
               instrumentationModule::isHelperClass);
       List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(userClassLoader);
@@ -88,7 +90,7 @@ public final class MuzzleGradlePluginUtil {
           ServiceLoader.load(InstrumentationModule.class, agentClassLoader)) {
         try {
           // verify helper injector works
-          List<String> allHelperClasses = instrumentationModule.getAllHelperClassNames();
+          List<String> allHelperClasses = asList(instrumentationModule.getMuzzleHelperClassNames());
           if (!allHelperClasses.isEmpty()) {
             new HelperInjector(
                     MuzzleGradlePluginUtil.class.getSimpleName(),

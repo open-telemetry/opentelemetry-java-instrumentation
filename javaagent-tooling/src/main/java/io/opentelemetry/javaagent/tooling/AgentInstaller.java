@@ -20,7 +20,6 @@ import io.opentelemetry.javaagent.extension.spi.AgentExtension;
 import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
-import io.opentelemetry.javaagent.spi.ByteBuddyAgentCustomizer;
 import io.opentelemetry.javaagent.spi.ComponentInstaller;
 import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
@@ -170,7 +169,6 @@ public class AgentInstaller {
       }
     }
 
-    agentBuilder = customizeByteBuddyAgent(agentBuilder);
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     installComponentsAfterByteBuddy(componentInstallers, config);
@@ -221,15 +219,6 @@ public class AgentInstaller {
     }
   }
 
-  private static AgentBuilder customizeByteBuddyAgent(AgentBuilder agentBuilder) {
-    Iterable<ByteBuddyAgentCustomizer> agentCustomizers = loadByteBuddyAgentCustomizers();
-    for (ByteBuddyAgentCustomizer agentCustomizer : agentCustomizers) {
-      log.debug("Applying agent builder customizer {}", agentCustomizer.getClass().getName());
-      agentBuilder = agentCustomizer.customize(agentBuilder);
-    }
-    return agentBuilder;
-  }
-
   private static Iterable<ComponentInstaller> loadComponentProviders() {
     return ServiceLoader.load(ComponentInstaller.class, AgentInstaller.class.getClassLoader());
   }
@@ -243,11 +232,6 @@ public class AgentInstaller {
       return iterator.next();
     }
     return new NoopIgnoreMatcherProvider();
-  }
-
-  private static Iterable<ByteBuddyAgentCustomizer> loadByteBuddyAgentCustomizers() {
-    return ServiceLoader.load(
-        ByteBuddyAgentCustomizer.class, AgentInstaller.class.getClassLoader());
   }
 
   private static List<? extends AgentExtension> loadAgentExtensions() {

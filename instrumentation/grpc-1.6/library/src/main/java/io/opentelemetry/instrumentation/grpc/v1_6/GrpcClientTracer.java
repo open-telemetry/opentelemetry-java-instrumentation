@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.RpcClientTracer;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -36,8 +37,10 @@ final class GrpcClientTracer extends RpcClientTracer {
   }
 
   public void end(Context context, Status status) {
-    Span.fromContext(context)
-        .setStatus(GrpcHelper.statusFromGrpcStatus(status), status.getDescription());
+    StatusCode statusCode = GrpcHelper.statusFromGrpcStatus(status);
+    if (statusCode != StatusCode.UNSET) {
+      Span.fromContext(context).setStatus(statusCode, status.getDescription());
+    }
     end(context);
   }
 
@@ -45,7 +48,10 @@ final class GrpcClientTracer extends RpcClientTracer {
   public void onException(Context context, Throwable throwable) {
     Status grpcStatus = Status.fromThrowable(throwable);
     Span span = Span.fromContext(context);
-    span.setStatus(GrpcHelper.statusFromGrpcStatus(grpcStatus), grpcStatus.getDescription());
+    StatusCode statusCode = GrpcHelper.statusFromGrpcStatus(grpcStatus);
+    if (statusCode != StatusCode.UNSET) {
+      span.setStatus(statusCode, grpcStatus.getDescription());
+    }
     span.recordException(unwrapThrowable(grpcStatus.getCause()));
   }
 
