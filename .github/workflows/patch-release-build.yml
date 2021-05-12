@@ -26,13 +26,13 @@ jobs:
       - id: checkout-release-branch
         name: Check out release branch
         continue-on-error: true
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           ref: ${{ steps.parse-release-branch.outputs.release-branch-name }}
       - id: checkout-release-tag
         name: Check out release tag
         if: ${{ steps.checkout-release-branch.outcome == 'failure' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           ref: ${{ steps.parse-release-branch.outputs.release-tag-name }}
       - name: Create release branch
@@ -45,7 +45,7 @@ jobs:
     needs: prepare-release-branch
     steps:
       - name: Checkout release branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           ref: ${{ needs.prepare-release-branch.outputs.release-branch-name }}
       - uses: actions/setup-java@v2
