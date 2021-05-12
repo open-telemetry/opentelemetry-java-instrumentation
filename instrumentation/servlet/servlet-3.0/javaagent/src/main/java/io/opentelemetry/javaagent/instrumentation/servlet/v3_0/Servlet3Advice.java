@@ -11,7 +11,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
-import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -63,7 +62,8 @@ public class Servlet3Advice {
     }
 
     Context currentContext = Java8BytecodeBridge.currentContext();
-    if (attachedContext != null || ServerSpan.fromContextOrNull(currentContext) != null) {
+    if (attachedContext != null
+        || Java8BytecodeBridge.spanFromContext(currentContext).isRecording()) {
       // Update context with info from current request to ensure that server span gets the best
       // possible name.
       // In case server span was created by app server instrumentations calling updateContext
