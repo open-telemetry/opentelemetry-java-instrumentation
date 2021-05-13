@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
@@ -325,29 +324,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
         }
       }
     }
-  }
-
-  def "error span"() {
-    def uri = server.address.resolve("/error")
-    when:
-    def url = uri.toURL()
-    runUnderTrace("parent") {
-      doRequest(method, uri)
-    }
-
-    then:
-    def expectedException = new IOException("Server returned HTTP response code: 500 for URL: $url")
-    thrown(IOException)
-    assertTraces(1) {
-      trace(0, 3 + extraClientSpans()) {
-        basicSpan(it, 0, "parent", null, expectedException)
-        clientSpan(it, 1, span(0), method, uri, 500, expectedException)
-        serverSpan(it, 2 + extraClientSpans(), span(1 + extraClientSpans()))
-      }
-    }
-
-    where:
-    method = "GET"
   }
 
   // This test makes no sense on IBM JVM because there is no HttpsURLConnectionImpl class there
