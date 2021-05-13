@@ -24,6 +24,7 @@ dependencies {
   api deps.opentelemetryContext
   api deps.opentelemetrySemConv
 
+  implementation deps.opentelemetryApiMetrics
   implementation deps.slf4j
 
   compileOnly deps.autoValueAnnotations
@@ -33,5 +34,6 @@ dependencies {
   testImplementation deps.mockito
   testImplementation deps.assertj
   testImplementation deps.awaitility
+  testImplementation deps.opentelemetrySdkMetrics
   testImplementation deps.opentelemetrySdkTesting
 }

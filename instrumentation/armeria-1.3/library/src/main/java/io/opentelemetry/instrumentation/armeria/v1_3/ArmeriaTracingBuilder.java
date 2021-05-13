@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
@@ -81,6 +82,8 @@ public final class ArmeriaTracingBuilder {
                     .addAttributesExtractor(httpAttributesExtractor)
                     .addAttributesExtractor(netAttributesExtractor)
                     .addAttributesExtractors(additionalExtractors));
+
+    serverInstrumenterBuilder.addRequestMetrics(HttpServerMetrics.get());
 
     return new ArmeriaTracing(
         clientInstrumenterBuilder.newClientInstrumenter(ClientRequestContextSetter.INSTANCE),

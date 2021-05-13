@@ -190,6 +190,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       for (String resource : instrumentationModule.helperResourceNames()) {
         collector.collectReferencesFromResource(resource);
       }
+      collector.prune();
       return collector;
     }
 

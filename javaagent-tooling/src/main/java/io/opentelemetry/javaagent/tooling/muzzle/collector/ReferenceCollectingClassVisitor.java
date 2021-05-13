@@ -21,7 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.jar.asm.ClassVisitor;
 import net.bytebuddy.jar.asm.FieldVisitor;
 import net.bytebuddy.jar.asm.Handle;
@@ -233,21 +232,16 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
       Flag ownershipFlag = computeOwnershipFlag(access);
       Flag manifestationFlag = computeTypeManifestationFlag(access);
 
-      // as an optimization skip constructors, private and static methods
-      if (!(visibilityFlag == VisibilityFlag.PRIVATE
-          || ownershipFlag == OwnershipFlag.STATIC
-          || MethodDescription.CONSTRUCTOR_INTERNAL_NAME.equals(name))) {
-        addReference(
-            new Reference.Builder(refSourceClassName)
-                .withSource(refSourceClassName)
-                .withMethod(
-                    new Source[0],
-                    new Flag[] {visibilityFlag, ownershipFlag, manifestationFlag},
-                    name,
-                    methodType.getReturnType(),
-                    methodType.getArgumentTypes())
-                .build());
-      }
+      addReference(
+          new Reference.Builder(refSourceClassName)
+              .withSource(refSourceClassName)
+              .withMethod(
+                  new Source[0],
+                  new Flag[] {visibilityFlag, ownershipFlag, manifestationFlag},
+                  name,
+                  methodType.getReturnType(),
+                  methodType.getArgumentTypes())
+              .build());
     }
 
     // Additional references we could check
