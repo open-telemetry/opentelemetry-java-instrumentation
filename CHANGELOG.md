@@ -2,11 +2,6 @@
 
 ## Unreleased:
 
-### ☢️ Breaking changes
-
-- AWS lambda flush timeout raised to 10 seconds
-  ([#2855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2855))
-
 ### 🌟 New javaagent instrumentation
 
 - RxJava 3
@@ -17,16 +12,21 @@
 - RxJava 3
   ([#2794](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2794))
 
-### 📈 Improvements
+### 📈 Enhancements
 
-- URL credentials of the form `https://username:password@www.example.com/` no longer captured
-  ([#2707](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2707))
 - `@WithSpan` async support added for methods returning async Reactor 3.x types
   ([#2714](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2714))
 - `@WithSpan` async support added for methods returning Guava ListenableFuture
   ([#2811](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2811))
 - Semantic attributes `code.namespace` and `code.function` captured on JAX-RS internal spans
   ([#2805](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2805))
+- Context propagated to reactor-netty callbacks
+  ([#2850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2850))
+
+### Behavioral changes
+
+- AWS lambda flush timeout raised to 10 seconds
+  ([#2855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2855))
 - `SERVER` span names improved for Spring MVC, Grails, Wicket, and Struts
   ([#2814](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2814))
 - `SERVER` span names improved for Servlet filters
@@ -39,11 +39,11 @@
   ([#2824](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2824))
 - RequestDispatcher `forward()` and `include()` internal spans removed
   ([#2816](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2816))
-- Context propagated to reactor-netty callbacks
-  ([#2850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2850))
 
 ### 🛠️ Bug fixes
 
+- URL credentials of the form `https://username:password@www.example.com/` no longer captured
+  ([#2707](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2707))
 - RxJava2 NoSuchFieldError
   ([#2836](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2836))
 - Duplicate http client tracing headers
