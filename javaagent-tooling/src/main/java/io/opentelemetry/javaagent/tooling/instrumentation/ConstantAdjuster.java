@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension.instrumentation;
+package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.TypeConstantAdjustment;
@@ -12,8 +12,8 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
 
 /**
- * This {@link net.bytebuddy.agent.builder.AgentBuilder.Transformer} ensures that class files of a
- * version previous to Java 5 do not store class entries in the generated class's constant pool.
+ * This {@link AgentBuilder.Transformer} ensures that class files of a version previous to Java 5 do
+ * not store class entries in the generated class's constant pool.
  *
  * @see ConstantAdjuster The ASM visitor that does the actual work.
  */
