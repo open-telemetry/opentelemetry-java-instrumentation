@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.tooling.ShadingRemapper.rule;
 
-import io.opentelemetry.javaagent.bootstrap.InternalJarUrlConnection;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +53,7 @@ class RemappingUrlStreamHandler extends URLStreamHandler {
         // "/" is used as the default url of the jar
         // This is called by the SecureClassLoader trying to obtain permissions
         // nullInputStream() is not available until Java 11
-        return new InternalJarUrlConnection(url, new ByteArrayInputStream(new byte[0]), 0);
+        return new InputStreamUrlConnection(url, new ByteArrayInputStream(new byte[0]), 0);
       }
 
       if (file.startsWith("/")) {
@@ -69,11 +68,11 @@ class RemappingUrlStreamHandler extends URLStreamHandler {
         return new RemappingUrlConnection(url, delegateJarFile, entry);
       } else {
         InputStream is = delegateJarFile.getInputStream(entry);
-        return new InternalJarUrlConnection(url, is, entry.getSize());
+        return new InputStreamUrlConnection(url, is, entry.getSize());
       }
     } catch (IOException e) {
       System.err.printf("Failed to load and remap %s: %s%n", url, e.getMessage());
     }
-    return new InternalJarUrlConnection(url, new ByteArrayInputStream(new byte[0]), 0);
+    return new InputStreamUrlConnection(url, new ByteArrayInputStream(new byte[0]), 0);
   }
 }

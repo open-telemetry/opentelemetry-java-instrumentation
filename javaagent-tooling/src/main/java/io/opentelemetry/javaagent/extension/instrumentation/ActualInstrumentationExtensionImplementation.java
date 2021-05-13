@@ -71,7 +71,10 @@ public final class ActualInstrumentationExtensionImplementation
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule, helperClassNames);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
-            instrumentationModule.extensionName(), helperClassNames, helperResourceNames);
+            instrumentationModule.extensionName(),
+            helperClassNames,
+            helperResourceNames,
+            Utils.getExtensionsClassLoader());
     InstrumentationContextProvider contextProvider =
         createInstrumentationContextProvider(instrumentationModule);
 

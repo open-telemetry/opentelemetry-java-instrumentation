@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap;
+package io.opentelemetry.javaagent.tooling;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.Permission;
 
-public class InternalJarUrlConnection extends URLConnection {
+public class InputStreamUrlConnection extends URLConnection {
   private final InputStream inputStream;
   private final long contentLength;
 
-  public InternalJarUrlConnection(URL url, InputStream inputStream, long contentLength) {
+  public InputStreamUrlConnection(URL url, InputStream inputStream, long contentLength) {
     super(url);
     this.inputStream = inputStream;
     this.contentLength = contentLength;

@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader.BootstrapClassLoaderProxy;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
-import java.net.URL;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 
