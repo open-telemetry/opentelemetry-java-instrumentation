@@ -89,4 +89,9 @@ interface ResteasyProxyResource {
   @Path("success")
   Response put_success(@QueryParam("with") String param,
                        @HeaderParam("is-test-server") String isTestServer)
+
+  @GET
+  @Path("error")
+  Response get_error(@QueryParam("with") String param,
+                     @HeaderParam("is-test-server") String isTestServer)
 }

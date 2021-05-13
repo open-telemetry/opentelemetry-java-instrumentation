@@ -22,7 +22,7 @@ the javaagent jar. The easiest way to do it is using `@AutoService`:
 
 ```java
 
-@AutoService(AgentExtension.class)
+@AutoService(InstrumentationModule.class)
 class MyLibraryInstrumentationModule extends InstrumentationModule {
   // ...
 }
@@ -41,6 +41,22 @@ public MyLibraryInstrumentationModule() {
 
 For detailed information on `InstrumentationModule` names please read the
 `InstrumentationModule#InstrumentationModule(String, String...)` Javadoc.
+
+### `order()`
+
+If you need to have instrumentations applied in a specific order (for example your custom
+instrumentation enriches the built-in servlet one and thus needs to run after it) you can override
+the `order()` method to specify the ordering:
+
+```java
+@Override
+public int order() {
+  return 1;
+}
+```
+
+Higher `order()` means that the instrumentation module will be applied later. The default value is
+`0`.
 
 ### `isHelperClass()`
 

@@ -493,6 +493,29 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     method = "GET"
   }
 
+  def "error span"() {
+    def uri = server.address.resolve("/error")
+    when:
+    runUnderTrace("parent") {
+      try {
+        doRequest(method, uri)
+      } catch (Exception ignored) {
+      }
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, 3 + extraClientSpans()) {
+        basicSpan(it, 0, "parent", null)
+        clientSpan(it, 1, span(0), method, uri, 500)
+        serverSpan(it, 2 + extraClientSpans(), span(1 + extraClientSpans()))
+      }
+    }
+
+    where:
+    method = "GET"
+  }
+
   def "reuse request"() {
     given:
     assumeTrue(testReusedRequest())
@@ -795,6 +818,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       if (exception) {
         status ERROR
         errorEvent(exception.class, exception.message)
+      } else if (responseCode >= 400) {
+        status ERROR
       }
       attributes {
         "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP

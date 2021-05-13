@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.extension.instrumentation
 
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
-import net.bytebuddy.agent.builder.AgentBuilder
 import spock.lang.Specification
 
 class InstrumentationModuleTest extends Specification {
@@ -20,20 +19,14 @@ class InstrumentationModuleTest extends Specification {
   def "default enabled"() {
     setup:
     def target = new TestInstrumentationModule(["test"])
-    target.extend(new AgentBuilder.Default())
 
     expect:
     target.enabled
-    target.applyCalled
   }
 
   def "default enabled override"() {
-    setup:
-    target.extend(new AgentBuilder.Default())
-
     expect:
     target.enabled == enabled
-    target.applyCalled == enabled
 
     where:
     enabled | target
@@ -62,11 +55,9 @@ class InstrumentationModuleTest extends Specification {
         return false
       }
     }
-    target.extend(new AgentBuilder.Default())
 
     expect:
     target.enabled == enabled
-    target.applyCalled == enabled
 
     cleanup:
     Config.INSTANCE = null
@@ -76,15 +67,12 @@ class InstrumentationModuleTest extends Specification {
   }
 
   static class TestInstrumentationModule extends InstrumentationModule {
-    boolean applyCalled = false
-
     TestInstrumentationModule(List<String> instrumentationNames) {
       super(instrumentationNames)
     }
 
     @Override
     List<TypeInstrumentation> typeInstrumentations() {
-      applyCalled = true
       return []
     }
   }

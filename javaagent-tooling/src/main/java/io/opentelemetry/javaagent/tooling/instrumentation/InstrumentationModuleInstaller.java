@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension.instrumentation;
+package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.failSafe;
 import static java.util.Arrays.asList;
@@ -11,7 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -34,9 +35,7 @@ import net.bytebuddy.utility.JavaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@AutoService(InstrumentationExtensionImplementation.class)
-public final class ActualInstrumentationExtensionImplementation
-    extends InstrumentationExtensionImplementation {
+public final class InstrumentationModuleInstaller {
   private static final TransformSafeLogger log =
       TransformSafeLogger.getLogger(InstrumentationModule.class);
   private static final Logger muzzleLog = LoggerFactory.getLogger("muzzleMatcher");
@@ -46,11 +45,10 @@ public final class ActualInstrumentationExtensionImplementation
   public static final ElementMatcher.Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
       not(isAnnotatedWith(named("javax.decorator.Decorator")));
 
-  @Override
-  AgentBuilder extend(
+  AgentBuilder install(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     if (!instrumentationModule.isEnabled()) {
-      log.debug("Instrumentation {} is disabled", instrumentationModule.extensionName());
+      log.debug("Instrumentation {} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;
     }
     List<String> helperClassNames = asList(instrumentationModule.getMuzzleHelperClassNames());
@@ -60,7 +58,7 @@ public final class ActualInstrumentationExtensionImplementation
       if (!helperClassNames.isEmpty() || !helperResourceNames.isEmpty()) {
         log.warn(
             "Helper classes and resources won't be injected if no types are instrumented: {}",
-            instrumentationModule.extensionName());
+            instrumentationModule.instrumentationName());
       }
 
       return parentAgentBuilder;
@@ -71,7 +69,7 @@ public final class ActualInstrumentationExtensionImplementation
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher(instrumentationModule, helperClassNames);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
-            instrumentationModule.extensionName(), helperClassNames, helperResourceNames);
+            instrumentationModule.instrumentationName(), helperClassNames, helperResourceNames);
     InstrumentationContextProvider contextProvider =
         createInstrumentationContextProvider(instrumentationModule);
 
@@ -158,8 +156,8 @@ public final class ActualInstrumentationExtensionImplementation
       if (!isMatch) {
         if (muzzleLog.isWarnEnabled()) {
           muzzleLog.warn(
-              "Instrumentation skipped, mismatched references were found: {} -- {} on {}",
-              instrumentationModule.extensionName(),
+              "Instrumentation skipped, mismatched references were found: {} [class {}] on {}",
+              instrumentationModule.instrumentationName(),
               instrumentationModule.getClass().getName(),
               classLoader);
           List<Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
@@ -170,8 +168,8 @@ public final class ActualInstrumentationExtensionImplementation
       } else {
         if (log.isDebugEnabled()) {
           log.debug(
-              "Applying instrumentation: {} -- {} on {}",
-              instrumentationModule.extensionName(),
+              "Applying instrumentation: {} [class {}] on {}",
+              instrumentationModule.instrumentationName(),
               instrumentationModule.getClass().getName(),
               classLoader);
         }

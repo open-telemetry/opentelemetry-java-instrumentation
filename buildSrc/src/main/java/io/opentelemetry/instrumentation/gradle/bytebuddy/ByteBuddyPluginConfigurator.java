@@ -8,12 +8,15 @@ package io.opentelemetry.instrumentation.gradle.bytebuddy;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import net.bytebuddy.build.gradle.ByteBuddySimpleTask;
 import net.bytebuddy.build.gradle.Transformation;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.AbstractCompile;
 
 /**
@@ -56,23 +59,34 @@ public class ByteBuddyPluginConfigurator {
 
   public void configure() {
     String taskName = getTaskName();
-    Task byteBuddyTask =
+
+    List<TaskProvider<?>> languageTasks =
+        LANGUAGES.stream()
+            .map(
+                language -> {
+                  if (project.fileTree("src/" + sourceSet.getName() + "/" + language).isEmpty()) {
+                    return null;
+                  }
+                  String compileTaskName = sourceSet.getCompileTaskName(language);
+                  if (!project.getTasks().getNames().contains(compileTaskName)) {
+                    return null;
+                  }
+                  final TaskProvider<?> compileTask = project.getTasks().named(compileTaskName);
+
+                  // We also process resources for SPI classes.
+                  return createLanguageTask(
+                      compileTask, taskName + language, sourceSet.getProcessResourcesTaskName());
+                })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+
+    TaskProvider<?> byteBuddyTask =
         project
             .getTasks()
-            // TODO(anuraaga): Use lazy configuration to create muzzle task.
-            .create(
+            .register(
                 taskName,
                 task -> {
-                  for (String language : LANGUAGES) {
-                    AbstractCompile compile = getCompileTask(language);
-
-                    if (compile != null) {
-                      Task languageTask = createLanguageTask(compile, taskName + language);
-                      // We also process resources for SPI classes.
-                      languageTask.dependsOn(sourceSet.getProcessResourcesTaskName());
-                      task.dependsOn(languageTask);
-                    }
-                  }
+                  task.dependsOn(languageTasks);
                 });
 
     project
@@ -81,46 +95,37 @@ public class ByteBuddyPluginConfigurator {
         .configure(task -> task.dependsOn(byteBuddyTask));
   }
 
-  private Task createLanguageTask(AbstractCompile compileTask, String name) {
+  private TaskProvider<?> createLanguageTask(
+      TaskProvider<?> compileTaskProvider, String name, String processResourcesTaskName) {
     return project
         .getTasks()
-        .create(
+        .register(
             name,
             ByteBuddySimpleTask.class,
             task -> {
               task.setGroup("Byte Buddy");
               task.getOutputs().cacheIf(unused -> true);
 
-              File classesDirectory = compileTask.getDestinationDir();
-              File rawClassesDirectory =
-                  new File(classesDirectory.getParent(), classesDirectory.getName() + "raw")
-                      .getAbsoluteFile();
+              Task maybeCompileTask = compileTaskProvider.get();
+              if (maybeCompileTask instanceof AbstractCompile) {
+                AbstractCompile compileTask = (AbstractCompile) maybeCompileTask;
+                File classesDirectory = compileTask.getDestinationDir();
+                File rawClassesDirectory =
+                    new File(classesDirectory.getParent(), classesDirectory.getName() + "raw")
+                        .getAbsoluteFile();
 
-              task.dependsOn(compileTask);
-              compileTask.setDestinationDir(rawClassesDirectory);
+                task.dependsOn(compileTask);
+                compileTask.setDestinationDir(rawClassesDirectory);
 
-              task.setSource(rawClassesDirectory);
-              task.setTarget(classesDirectory);
-              task.setClassPath(compileTask.getClasspath());
+                task.setSource(rawClassesDirectory);
+                task.setTarget(classesDirectory);
+                task.setClassPath(compileTask.getClasspath());
 
-              task.dependsOn(compileTask);
+                task.dependsOn(compileTask, processResourcesTaskName);
+              }
 
               task.getTransformations().add(createTransformation(inputClasspath, pluginClassName));
             });
-  }
-
-  private AbstractCompile getCompileTask(String language) {
-    Task task = project.getTasks().findByName(sourceSet.getCompileTaskName(language));
-
-    if (task instanceof AbstractCompile) {
-      AbstractCompile compile = (AbstractCompile) task;
-
-      if (!compile.getSource().isEmpty()) {
-        return compile;
-      }
-    }
-
-    return null;
   }
 
   private String getTaskName() {

@@ -141,7 +141,14 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(httpUrlState.context, throwable);
+        if (responseCode >= 400) {
+          // HttpURLConnection unnecessarily throws exception on error response.
+          // None of the other http clients do this, so not recording the exception on the span
+          // to be consistent with the telemetry for other http clients.
+          tracer().end(httpUrlState.context, new HttpUrlResponse(connection, responseCode));
+        } else {
+          tracer().endExceptionally(httpUrlState.context, throwable);
+        }
         httpUrlState.finished = true;
       } else if (methodName.equals("getInputStream") && responseCode > 0) {
         // responseCode field is sometimes not populated.

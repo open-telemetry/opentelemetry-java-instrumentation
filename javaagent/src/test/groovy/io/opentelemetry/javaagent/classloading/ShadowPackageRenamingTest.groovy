@@ -52,8 +52,8 @@ class ShadowPackageRenamingTest extends Specification {
       clazz.getProtectionDomain().getCodeSource().getLocation()
 
     expect:
-    agentSource.getFile() == "/"
-    agentSource.getProtocol() == "x-internal-jar"
+    agentSource.getFile().endsWith(".jar")
+    agentSource.getProtocol() == "file"
     agentSource == agentGuavaDep
     agentSource.getFile() != userGuava.getFile()
   }
