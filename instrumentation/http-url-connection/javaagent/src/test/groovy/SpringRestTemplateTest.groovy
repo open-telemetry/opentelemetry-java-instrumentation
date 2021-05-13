@@ -65,9 +65,4 @@ class SpringRestTemplateTest extends HttpClientTest<HttpEntity<String>> implemen
   Integer responseCodeOnRedirectError() {
     return 302
   }
-
-  @Override
-  Exception exceptionThrownOnErrorResponse(URI uri) {
-    new IOException("Server returned HTTP response code: 500 for URL: ${uri.toURL()}")
-  }
 }

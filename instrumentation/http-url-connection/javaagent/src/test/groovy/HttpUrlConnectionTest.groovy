@@ -66,11 +66,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
     return false
   }
 
-  @Override
-  Exception exceptionThrownOnErrorResponse(URI uri) {
-    new IOException("Server returned HTTP response code: 500 for URL: ${uri.toURL()}")
-  }
-
   @Unroll
   def "trace request with propagation (useCaches: #useCaches)"() {
     setup:

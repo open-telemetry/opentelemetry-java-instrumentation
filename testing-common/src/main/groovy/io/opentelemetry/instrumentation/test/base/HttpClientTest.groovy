@@ -504,11 +504,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
 
     then:
-    def exception = exceptionThrownOnErrorResponse(uri)
     assertTraces(1) {
       trace(0, 3 + extraClientSpans()) {
         basicSpan(it, 0, "parent", null)
-        clientSpan(it, 1, span(0), method, uri, 500, exception)
+        clientSpan(it, 1, span(0), method, uri, 500)
         serverSpan(it, 2 + extraClientSpans(), span(1 + extraClientSpans()))
       }
     }
@@ -913,10 +912,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   // maximum number of redirects that http client follows before giving up
   int maxRedirects() {
     2
-  }
-
-  Exception exceptionThrownOnErrorResponse(URI uri) {
-    null
   }
 
   boolean testReusedRequest() {
