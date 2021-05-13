@@ -333,7 +333,7 @@ class ReferenceCollectorTest extends Specification {
 
   private static findMethod(Reference reference, String methodName, String methodDesc) {
     for (def method : reference.methods) {
-      if (method == new Reference.Method(methodName, methodDesc)) {
+      if (method.name == methodName && method.descriptor == methodDesc) {
         return method
       }
     }

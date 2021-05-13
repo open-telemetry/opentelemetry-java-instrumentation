@@ -236,6 +236,14 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     }
 
     private void generateMuzzleReferencesMethod(ReferenceCollector collector) {
+      Type referenceType = Type.getType(Reference.class);
+      Type referenceArrayType = Type.getType(Reference[].class);
+      Type referenceBuilderType = Type.getType(Reference.Builder.class);
+      Type referenceFlagType = Type.getType(Reference.Flag.class);
+      Type referenceSourceType = Type.getType(Reference.Source.class);
+      Type stringType = Type.getType(String.class);
+      Type typeType = Type.getType(Type.class);
+
       /*
        * public synchronized Reference[] getMuzzleReferences() {
        *   if (null == this.muzzleReferences) {
@@ -251,7 +259,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             super.visitMethod(
                 Opcodes.ACC_PUBLIC + Opcodes.ACC_SYNCHRONIZED,
                 MUZZLE_REFERENCES_METHOD_NAME,
-                "()[Lio/opentelemetry/javaagent/extension/muzzle/Reference;",
+                Type.getMethodDescriptor(referenceArrayType),
                 null,
                 null);
 
@@ -267,26 +275,24 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             Opcodes.GETFIELD,
             instrumentationClassName,
             MUZZLE_REFERENCES_FIELD_NAME,
-            Type.getDescriptor(Reference[].class));
+            referenceArrayType.getDescriptor());
         mv.visitJumpInsn(Opcodes.IF_ACMPNE, ret);
 
         mv.visitVarInsn(Opcodes.ALOAD, 0);
 
         Reference[] references = collector.getReferences().values().toArray(new Reference[0]);
         mv.visitLdcInsn(references.length);
-        mv.visitTypeInsn(
-            Opcodes.ANEWARRAY, "io/opentelemetry/javaagent/extension/muzzle/Reference");
+        mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceType.getInternalName());
 
         for (int i = 0; i < references.length; ++i) {
           mv.visitInsn(Opcodes.DUP);
           mv.visitLdcInsn(i);
-          mv.visitTypeInsn(
-              Opcodes.NEW, "io/opentelemetry/javaagent/extension/muzzle/Reference$Builder");
+          mv.visitTypeInsn(Opcodes.NEW, referenceBuilderType.getInternalName());
           mv.visitInsn(Opcodes.DUP);
           mv.visitLdcInsn(references[i].getClassName());
           mv.visitMethodInsn(
               Opcodes.INVOKESPECIAL,
-              "io/opentelemetry/javaagent/extension/muzzle/Reference$Builder",
+              referenceBuilderType.getInternalName(),
               "<init>",
               "(Ljava/lang/String;)V",
               false);
@@ -295,9 +301,9 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             mv.visitLdcInsn(source.getLine());
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                "io/opentelemetry/javaagent/extension/muzzle/Reference$Builder",
+                referenceBuilderType.getInternalName(),
                 "withSource",
-                "(Ljava/lang/String;I)Lio/opentelemetry/javaagent/extension/muzzle/Reference$Builder;",
+                Type.getMethodDescriptor(referenceBuilderType, stringType, Type.INT_TYPE),
                 false);
           }
           for (Reference.Flag flag : references[i].getFlags()) {
@@ -306,49 +312,46 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                 Opcodes.GETSTATIC, enumClassName, flag.name(), "L" + enumClassName + ";");
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                "io/opentelemetry/javaagent/extension/muzzle/Reference$Builder",
+                referenceBuilderType.getInternalName(),
                 "withFlag",
-                "(Lio/opentelemetry/javaagent/extension/muzzle/Reference$Flag;)Lio/opentelemetry/javaagent/extension/muzzle/Reference$Builder;",
+                Type.getMethodDescriptor(referenceBuilderType, referenceFlagType),
                 false);
           }
           if (null != references[i].getSuperName()) {
             mv.visitLdcInsn(references[i].getSuperName());
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                "io/opentelemetry/javaagent/extension/muzzle/Reference$Builder",
+                referenceBuilderType.getInternalName(),
                 "withSuperName",
-                "(Ljava/lang/String;)Lio/opentelemetry/javaagent/extension/muzzle/Reference$Builder;",
+                Type.getMethodDescriptor(referenceBuilderType, stringType),
                 false);
           }
           for (String interfaceName : references[i].getInterfaces()) {
             mv.visitLdcInsn(interfaceName);
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                "io/opentelemetry/javaagent/extension/muzzle/Reference$Builder",
+                referenceBuilderType.getInternalName(),
                 "withInterface",
-                "(Ljava/lang/String;)Lio/opentelemetry/javaagent/extension/muzzle/Reference$Builder;",
+                Type.getMethodDescriptor(referenceBuilderType, stringType),
                 false);
           }
           for (Reference.Field field : references[i].getFields()) {
             { // sources
               mv.visitLdcInsn(field.getSources().size());
-              mv.visitTypeInsn(
-                  Opcodes.ANEWARRAY,
-                  "io/opentelemetry/javaagent/extension/muzzle/Reference$Source");
+              mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceSourceType.getInternalName());
 
               int j = 0;
               for (Reference.Source source : field.getSources()) {
                 mv.visitInsn(Opcodes.DUP);
                 mv.visitLdcInsn(j);
 
-                mv.visitTypeInsn(
-                    Opcodes.NEW, "io/opentelemetry/javaagent/extension/muzzle/Reference$Source");
+                mv.visitTypeInsn(Opcodes.NEW, referenceSourceType.getInternalName());
                 mv.visitInsn(Opcodes.DUP);
                 mv.visitLdcInsn(source.getName());
                 mv.visitLdcInsn(source.getLine());
                 mv.visitMethodInsn(
                     Opcodes.INVOKESPECIAL,
-                    "io/opentelemetry/javaagent/extension/muzzle/Reference$Source",
+                    referenceSourceType.getInternalName(),
                     "<init>",
                     "(Ljava/lang/String;I)V",
                     false);
@@ -360,8 +363,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
             { // flags
               mv.visitLdcInsn(field.getFlags().size());
-              mv.visitTypeInsn(
-                  Opcodes.ANEWARRAY, "io/opentelemetry/javaagent/extension/muzzle/Reference$Flag");
+              mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceFlagType.getInternalName());
 
               int j = 0;
               for (Reference.Flag flag : field.getFlags()) {
@@ -378,12 +380,12 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             mv.visitLdcInsn(field.getName());
 
             { // field type
-              mv.visitLdcInsn(field.getType().getDescriptor());
+              mv.visitLdcInsn(field.getDescriptor());
               mv.visitMethodInsn(
                   Opcodes.INVOKESTATIC,
-                  Type.getInternalName(Type.class),
+                  typeType.getInternalName(),
                   "getType",
-                  Type.getMethodDescriptor(Type.class.getMethod("getType", String.class)),
+                  Type.getMethodDescriptor(typeType, stringType),
                   false);
             }
 
@@ -392,7 +394,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                "io/opentelemetry/javaagent/extension/muzzle/Reference$Builder",
+                referenceBuilderType.getInternalName(),
                 "withField",
                 Type.getMethodDescriptor(
                     Reference.Builder.class.getMethod(
@@ -406,21 +408,19 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
           }
           for (Reference.Method method : references[i].getMethods()) {
             mv.visitLdcInsn(method.getSources().size());
-            mv.visitTypeInsn(
-                Opcodes.ANEWARRAY, "io/opentelemetry/javaagent/extension/muzzle/Reference$Source");
+            mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceSourceType.getInternalName());
             int j = 0;
             for (Reference.Source source : method.getSources()) {
               mv.visitInsn(Opcodes.DUP);
               mv.visitLdcInsn(j);
 
-              mv.visitTypeInsn(
-                  Opcodes.NEW, "io/opentelemetry/javaagent/extension/muzzle/Reference$Source");
+              mv.visitTypeInsn(Opcodes.NEW, referenceSourceType.getInternalName());
               mv.visitInsn(Opcodes.DUP);
               mv.visitLdcInsn(source.getName());
               mv.visitLdcInsn(source.getLine());
               mv.visitMethodInsn(
                   Opcodes.INVOKESPECIAL,
-                  "io/opentelemetry/javaagent/extension/muzzle/Reference$Source",
+                  referenceSourceType.getInternalName(),
                   "<init>",
                   "(Ljava/lang/String;I)V",
                   false);
@@ -430,8 +430,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             }
 
             mv.visitLdcInsn(method.getFlags().size());
-            mv.visitTypeInsn(
-                Opcodes.ANEWARRAY, "io/opentelemetry/javaagent/extension/muzzle/Reference$Flag");
+            mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceFlagType.getInternalName());
             j = 0;
             for (Reference.Flag flag : method.getFlags()) {
               mv.visitInsn(Opcodes.DUP);
@@ -445,38 +444,43 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
             mv.visitLdcInsn(method.getName());
 
-            { // return type
-              mv.visitLdcInsn(method.getReturnType().getDescriptor());
+            {
+              // method return and parameter types must be passed by Type.getType() call to be
+              // properly shaded
+              Type methodType = Type.getMethodType(method.getDescriptor());
+
+              // return type
+              mv.visitLdcInsn(methodType.getReturnType().getDescriptor());
               mv.visitMethodInsn(
                   Opcodes.INVOKESTATIC,
-                  Type.getInternalName(Type.class),
+                  typeType.getInternalName(),
                   "getType",
-                  Type.getMethodDescriptor(Type.class.getMethod("getType", String.class)),
-                  false);
-            }
-
-            mv.visitLdcInsn(method.getParameterTypes().size());
-            mv.visitTypeInsn(Opcodes.ANEWARRAY, Type.getInternalName(Type.class));
-            j = 0;
-            for (Type parameterType : method.getParameterTypes()) {
-              mv.visitInsn(Opcodes.DUP);
-              mv.visitLdcInsn(j);
-
-              mv.visitLdcInsn(parameterType.getDescriptor());
-              mv.visitMethodInsn(
-                  Opcodes.INVOKESTATIC,
-                  Type.getInternalName(Type.class),
-                  "getType",
-                  Type.getMethodDescriptor(Type.class.getMethod("getType", String.class)),
+                  Type.getMethodDescriptor(typeType, stringType),
                   false);
 
-              mv.visitInsn(Opcodes.AASTORE);
-              j++;
+              mv.visitLdcInsn(methodType.getArgumentTypes().length);
+              mv.visitTypeInsn(Opcodes.ANEWARRAY, typeType.getInternalName());
+              j = 0;
+              for (Type parameterType : methodType.getArgumentTypes()) {
+                mv.visitInsn(Opcodes.DUP);
+                mv.visitLdcInsn(j);
+
+                mv.visitLdcInsn(parameterType.getDescriptor());
+                mv.visitMethodInsn(
+                    Opcodes.INVOKESTATIC,
+                    typeType.getInternalName(),
+                    "getType",
+                    Type.getMethodDescriptor(typeType, stringType),
+                    false);
+
+                mv.visitInsn(Opcodes.AASTORE);
+                j++;
+              }
             }
 
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
-                "io/opentelemetry/javaagent/extension/muzzle/Reference$Builder",
+                referenceBuilderType.getInternalName(),
                 "withMethod",
                 Type.getMethodDescriptor(
                     Reference.Builder.class.getMethod(
@@ -490,9 +494,9 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
           }
           mv.visitMethodInsn(
               Opcodes.INVOKEVIRTUAL,
-              "io/opentelemetry/javaagent/extension/muzzle/Reference$Builder",
+              referenceBuilderType.getInternalName(),
               "build",
-              "()Lio/opentelemetry/javaagent/extension/muzzle/Reference;",
+              Type.getMethodDescriptor(referenceType),
               false);
           mv.visitInsn(Opcodes.AASTORE);
         }
@@ -501,7 +505,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             Opcodes.PUTFIELD,
             instrumentationClassName,
             MUZZLE_REFERENCES_FIELD_NAME,
-            Type.getDescriptor(Reference[].class));
+            referenceArrayType.getDescriptor());
 
         mv.visitLabel(ret);
         if (frames) {
@@ -512,7 +516,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             Opcodes.GETFIELD,
             instrumentationClassName,
             MUZZLE_REFERENCES_FIELD_NAME,
-            Type.getDescriptor(Reference[].class));
+            referenceArrayType.getDescriptor());
         mv.visitInsn(Opcodes.ARETURN);
         mv.visitLabel(finish);
 
