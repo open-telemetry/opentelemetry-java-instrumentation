@@ -50,46 +50,18 @@ java {
   withSourcesJar()
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
   options.release.set(project.ext.release.majorVersion.toInteger())
   options.compilerArgs.add("-Werror")
 }
 //Groovy and Scala compilers don't actually understand --release option
-tasks.withType(GroovyCompile) {
+tasks.withType(GroovyCompile).configureEach {
   sourceCompatibility = JavaVersion.toVersion(project.ext.release)
   targetCompatibility = JavaVersion.toVersion(project.ext.release)
 }
-tasks.withType(ScalaCompile) {
+tasks.withType(ScalaCompile).configureEach {
   sourceCompatibility = JavaVersion.toVersion(project.ext.release)
   targetCompatibility = JavaVersion.toVersion(project.ext.release)
-}
-
-apply plugin: "eclipse"
-eclipse {
-  classpath {
-    downloadSources = true
-    downloadJavadoc = true
-  }
-}
-if (configurations.find { it.name == 'jmh' }) {
-  eclipse.classpath.plusConfigurations += [configurations.jmh]
-}
-
-jar {
-  /*
-  Make Jar build fail on duplicate files
-
-  By default Gradle Jar task can put multiple files with the same name
-  into a Jar. This may lead to confusion. For example if auto-service
-  annotation processing creates files with same name in `scala` and
-  `java` directory this would result in Jar having two files with the
-  same name in it. Which in turn would result in only one of those
-  files being actually considered when that Jar is used leading to very
-  confusing failures.
-
-  Instead we should 'fail early' and avoid building such Jars.
-  */
-  duplicatesStrategy = 'fail'
 }
 
 repositories {
@@ -113,7 +85,22 @@ dependencies {
   testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
 }
 
-jar {
+tasks.named('jar').configure {
+  /*
+  Make Jar build fail on duplicate files
+
+  By default Gradle Jar task can put multiple files with the same name
+  into a Jar. This may lead to confusion. For example if auto-service
+  annotation processing creates files with same name in `scala` and
+  `java` directory this would result in Jar having two files with the
+  same name in it. Which in turn would result in only one of those
+  files being actually considered when that Jar is used leading to very
+  confusing failures.
+
+  Instead we should 'fail early' and avoid building such Jars.
+  */
+  duplicatesStrategy = 'fail'
+
   manifest {
     attributes(
       "Implementation-Title": project.name,
@@ -132,7 +119,7 @@ normalization {
   }
 }
 
-javadoc {
+tasks.named('javadoc').configure {
   options.addStringOption('Xdoclint:none', '-quiet')
   // non-standard option to fail on warnings, see https://bugs.openjdk.java.net/browse/JDK-8200363
   options.addStringOption('Xwerror', '-quiet')
@@ -183,7 +170,7 @@ def isJavaVersionAllowed(JavaVersion version) {
 def testJavaVersion = rootProject.findProperty('testJavaVersion')
 if (testJavaVersion != null) {
   def requestedJavaVersion = JavaVersion.toVersion(testJavaVersion)
-  tasks.withType(Test).all {
+  tasks.withType(Test).configureEach {
     javaLauncher = javaToolchains.launcherFor {
       languageVersion = JavaLanguageVersion.of(requestedJavaVersion.majorVersion)
     }
@@ -194,7 +181,7 @@ if (testJavaVersion != null) {
   // the default test task's version so commands like `./gradlew check` can test all projects regardless
   // of Java version.
   if (!isJavaVersionAllowed(JavaVersion.toVersion(DEFAULT_JAVA_VERSION))) {
-    tasks.withType(Test) {
+    tasks.withType(Test).configureEach {
       javaLauncher = javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(project.getProperty('maxJavaVersionForTests').majorVersion)
       }
@@ -229,7 +216,7 @@ tasks.withType(Test).configureEach {
   jvmArgs "-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty('enableStrictContext') ?: false}"
 }
 
-tasks.withType(AbstractArchiveTask) {
+tasks.withType(AbstractArchiveTask).configureEach {
   preserveFileTimestamps = false
   reproducibleFileOrder = true
 }
@@ -240,7 +227,7 @@ plugins.withId('net.ltgt.errorprone') {
     errorprone group: "com.google.errorprone", name: "error_prone_core", version: versions.errorprone
   }
 
-  tasks.withType(JavaCompile) {
+  tasks.withType(JavaCompile).configureEach {
     if (!name.toLowerCase().contains("test")) {
       options.errorprone {
         error("NullAway")

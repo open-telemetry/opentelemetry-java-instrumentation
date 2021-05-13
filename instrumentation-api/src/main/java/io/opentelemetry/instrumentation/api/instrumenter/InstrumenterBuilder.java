@@ -8,9 +8,12 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.GlobalMeterProvider;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,14 +24,17 @@ import java.util.List;
  * {@link Instrumenter}.
  */
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
+
   final OpenTelemetry openTelemetry;
+  final Meter meter;
   final String instrumentationName;
   final SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
+  final List<RequestListener> requestListeners = new ArrayList<>();
 
-  SpanKindExtractor<? super REQUEST> spanKindExtractor;
+  SpanKindExtractor<? super REQUEST> spanKindExtractor = null;
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
@@ -40,6 +46,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
     this.openTelemetry = openTelemetry;
+    // TODO(anuraaga): Retrieve from openTelemetry when not alpha anymore.
+    this.meter = GlobalMeterProvider.get().get(instrumentationName);
     this.instrumentationName = instrumentationName;
     this.spanNameExtractor = spanNameExtractor;
   }
@@ -72,6 +80,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
       AttributesExtractor<? super REQUEST, ? super RESPONSE>... attributesExtractors) {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
+  }
+
+  /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and stop. */
+  @UnstableApi
+  public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
+    requestListeners.add(factory.create(meter));
+    return this;
   }
 
   /**

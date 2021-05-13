@@ -54,7 +54,7 @@ public class AwsLambdaTracer extends BaseTracer {
   private void setAttributes(SpanBuilder span, Context context, Object input) {
     setCommonAttributes(span, context);
     if (input instanceof APIGatewayProxyRequestEvent) {
-      span.setAttribute(FAAS_TRIGGER, FaasTriggerValues.HTTP.getValue());
+      span.setAttribute(FAAS_TRIGGER, FaasTriggerValues.HTTP);
       httpSpanAttributes.onRequest(span, (APIGatewayProxyRequestEvent) input);
     }
   }

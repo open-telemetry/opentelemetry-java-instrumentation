@@ -14,7 +14,7 @@ final class ClientInstrumenter<REQUEST, RESPONSE> extends Instrumenter<REQUEST, 
   private final ContextPropagators propagators;
   private final TextMapSetter<REQUEST> setter;
 
-  public ClientInstrumenter(
+  ClientInstrumenter(
       InstrumenterBuilder<REQUEST, RESPONSE> builder, TextMapSetter<REQUEST> setter) {
     super(builder);
     this.propagators = builder.openTelemetry.getPropagators();

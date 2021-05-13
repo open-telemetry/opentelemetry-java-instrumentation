@@ -9,10 +9,13 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.named
 
 import io.opentelemetry.javaagent.tooling.AgentTooling
-import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.*
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.E
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.description.type.TypeList
-import net.bytebuddy.jar.asm.Opcodes
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -28,10 +31,10 @@ class SafeHasSuperTypeMatcherTest extends Specification {
 
     where:
     matcherClass | type | result
-    A            | A    | false
-    A            | B    | false
+    A            | A    | true
+    A            | B    | true
     B            | A    | false
-    A            | E    | false
+    A            | E    | true
     A            | F    | true
     B            | G    | true
     F            | A    | false
@@ -54,7 +57,6 @@ class SafeHasSuperTypeMatcherTest extends Specification {
     then:
     !result // default to false
     noExceptionThrown()
-    1 * type.getModifiers() >> Opcodes.ACC_ABSTRACT
     1 * type.asGenericType() >> typeGeneric
     1 * typeGeneric.asErasure() >> { throw new Exception("asErasure exception") }
     1 * typeGeneric.getTypeName() >> "typeGeneric-name"
@@ -78,7 +80,6 @@ class SafeHasSuperTypeMatcherTest extends Specification {
     then:
     !result // default to false
     noExceptionThrown()
-    1 * type.getModifiers() >> Opcodes.ACC_ABSTRACT
     1 * type.getInterfaces() >> interfaces
     1 * interfaces.iterator() >> it
     1 * type.asGenericType() >> typeGeneric

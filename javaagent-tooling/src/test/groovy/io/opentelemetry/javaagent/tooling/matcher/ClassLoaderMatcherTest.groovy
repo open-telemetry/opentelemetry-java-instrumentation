@@ -16,7 +16,8 @@ class ClassLoaderMatcherTest extends Specification {
 
   def "skips agent classloader"() {
     setup:
-    URLClassLoader agentLoader = new AgentClassLoader(null, null, null)
+    URL url = AgentClassLoader.getProtectionDomain().getCodeSource().getLocation()
+    URLClassLoader agentLoader = new AgentClassLoader(url, "", null)
     expect:
     GlobalClassloaderIgnoresMatcher.skipClassLoader(matcherProvider).matches(agentLoader)
   }

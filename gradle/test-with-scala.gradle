@@ -6,6 +6,6 @@ dependencies {
   testImplementation deps.scala
 }
 
-compileTestGroovy {
+tasks.named('compileTestGroovy').configure {
   classpath += files(sourceSets.test.scala.classesDirectory)
 }

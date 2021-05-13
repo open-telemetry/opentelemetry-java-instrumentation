@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -252,9 +253,10 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   private static void setStatus(Span span, int status) {
     span.setAttribute(SemanticAttributes.HTTP_STATUS_CODE, (long) status);
-    // TODO status_message
-    // See https://github.com/open-telemetry/opentelemetry-specification/issues/950
-    span.setStatus(HttpStatusConverter.statusFromHttpStatus(status));
+    StatusCode statusCode = HttpStatusConverter.statusFromHttpStatus(status);
+    if (statusCode != StatusCode.UNSET) {
+      span.setStatus(statusCode);
+    }
   }
 
   @Nullable

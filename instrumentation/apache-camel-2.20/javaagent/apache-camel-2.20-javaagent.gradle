@@ -46,7 +46,7 @@ dependencies {
   latestDepTestLibrary group: 'org.apache.camel', name: 'camel-aws', version: '2.+'
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs "-Dotel.instrumentation.apache-camel.experimental-span-attributes=true"
   jvmArgs "-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true"
