@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id "com.diffplug.spotless" version "5.8.2"
+    id "com.diffplug.spotless" version "5.12.4"
     id 'com.dorongold.task-tree' version '1.5'
     id 'com.github.ben-manes.versions' version '0.27.0'
     id "com.github.johnrengelman.shadow" version "6.1.0"
@@ -8,7 +8,7 @@ pluginManagement {
     id "io.github.gradle-nexus.publish-plugin" version "1.0.0"
     id "me.champeau.jmh" version "0.6.4"
     id "net.ltgt.errorprone" version "1.3.0"
-    id 'org.unbroken-dome.test-sets' version '3.0.1'
+    id 'org.unbroken-dome.test-sets' version '4.0.0'
     id "nebula.release" version "15.3.0"
     id 'org.gradle.test-retry' version '1.2.0'
   }

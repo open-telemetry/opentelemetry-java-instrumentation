@@ -17,7 +17,7 @@ dependencies {
   testImplementation deps.testcontainers
 }
 
-configurations.testRuntime {
+configurations.testRuntimeClasspath {
   resolutionStrategy {
     force group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
   }
