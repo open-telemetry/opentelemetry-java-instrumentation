@@ -166,8 +166,8 @@ class ReferenceMatcherTest extends Specification {
     "privateField"   | "Ljava/lang/Object;"                             | [PROTECTED_OR_HIGHER]         | MethodBodyAdvice.A2         | [MissingFlag]      | "mismatch private field in supertype"
     "protectedField" | "Ljava/lang/Object;"                             | [STATIC]                      | MethodBodyAdvice.A          | [MissingFlag]      | "mismatch static field"
     "staticB"        | Type.getType(MethodBodyAdvice.B).getDescriptor() | [STATIC, PROTECTED_OR_HIGHER] | MethodBodyAdvice.A          | []                 | "match static field"
-    "a"              | "I"                                              | [PACKAGE_OR_HIGHER]           | MethodBodyAdvice.Primitives | []                 | "match primitive int"
-    "b"              | "Z"                                              | [PACKAGE_OR_HIGHER]           | MethodBodyAdvice.Primitives | []                 | "match primitive boolean"
+    "number"         | "I"                                              | [PACKAGE_OR_HIGHER]           | MethodBodyAdvice.Primitives | []                 | "match primitive int"
+    "flag"           | "Z"                                              | [PACKAGE_OR_HIGHER]           | MethodBodyAdvice.Primitives | []                 | "match primitive boolean"
   }
 
   def "should not check abstract #desc helper classes"() {
