@@ -59,18 +59,6 @@ public final class ContextStorageBridge extends Context.Storage {
 
   @Override
   public void detach(Context toDetach, Context toRestore) {
-    io.opentelemetry.context.Context otelContext = io.opentelemetry.context.Context.current();
-    Context current = otelContext.get(GRPC_CONTEXT);
-    if (current != toDetach) {
-      // Log a severe message instead of throwing an exception as the context to attach is assumed
-      // to be the correct one and the unbalanced state represents a coding mistake in a lower
-      // layer in the stack that cannot be recovered from here.
-      logger.log(
-          Level.SEVERE,
-          "Context was not attached when detaching",
-          new Throwable().fillInStackTrace());
-    }
-
     Scope scope = OTEL_SCOPE.get(toRestore);
     if (scope == null) {
       logger.log(

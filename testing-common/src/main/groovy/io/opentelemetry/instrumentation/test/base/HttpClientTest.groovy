@@ -291,7 +291,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     method << BODY_METHODS
   }
 
-  def "should suppress nested CLIENT span if already under parent CLIENT span"() {
+  def "should suppress nested CLIENT span if already under parent CLIENT span (#method)"() {
     given:
     assumeTrue(testWithClientParent())
 

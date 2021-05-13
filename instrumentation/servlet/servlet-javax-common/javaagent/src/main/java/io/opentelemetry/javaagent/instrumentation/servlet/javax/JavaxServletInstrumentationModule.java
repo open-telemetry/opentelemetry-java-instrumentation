@@ -8,9 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.servlet.javax;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.dispatcher.RequestDispatcherInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -23,11 +22,9 @@ public class JavaxServletInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
+    return Collections.singletonList(
         new HttpServletResponseInstrumentation(
-            BASE_PACKAGE, adviceClassName(".response.ResponseSendAdvice")),
-        new RequestDispatcherInstrumentation(
-            BASE_PACKAGE, adviceClassName(".dispatcher.RequestDispatcherAdvice")));
+            BASE_PACKAGE, adviceClassName(".response.ResponseSendAdvice")));
   }
 
   private static String adviceClassName(String suffix) {
