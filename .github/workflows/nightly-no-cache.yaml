@@ -100,7 +100,7 @@ jobs:
     steps:
       # run this action to get workflow conclusion
       # You can get conclusion by env (env.WORKFLOW_CONCLUSION)
-      - uses: technote-space/workflow-conclusion-action@v1
+      - uses: technote-space/workflow-conclusion-action@v2.1.6
       - uses: actions/checkout@v2.3.4
       - uses: JasonEtco/create-an-issue@v2.5.0
         if: env.WORKFLOW_CONCLUSION == 'failure' # notify only if failure
