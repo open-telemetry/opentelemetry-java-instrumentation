@@ -29,9 +29,8 @@ import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.model.ObjectFactory
-
+import org.gradle.api.tasks.TaskProvider
 /**
  * muzzle task plugin which runs muzzle validation against a range of dependencies.
  */
@@ -48,20 +47,20 @@ class MuzzlePlugin implements Plugin<Project> {
 
     // compileMuzzle compiles all projects required to run muzzle validation.
     // Not adding group and description to keep this task from showing in `gradle tasks`.
-    def compileMuzzle = project.task('compileMuzzle') {
+    def compileMuzzle = project.tasks.register('compileMuzzle') {
       dependsOn(':javaagent-bootstrap:classes')
       dependsOn(':javaagent-tooling:classes')
       dependsOn(':javaagent-extension-api:classes')
       dependsOn(project.tasks.classes)
     }
 
-    def muzzle = project.task('muzzle') {
+    def muzzle = project.tasks.register('muzzle') {
       group = 'Muzzle'
       description = "Run instrumentation muzzle on compile time dependencies"
       dependsOn(compileMuzzle)
     }
 
-    project.task('printMuzzleReferences') {
+    project.tasks.register('printMuzzleReferences') {
       group = 'Muzzle'
       description = "Print references created by instrumentation muzzle"
       dependsOn(compileMuzzle)
@@ -89,7 +88,7 @@ class MuzzlePlugin implements Plugin<Project> {
 
     project.afterEvaluate {
       // use runAfter to set up task finalizers in version order
-      Task runAfter = muzzle
+      TaskProvider runAfter = muzzle
 
       for (MuzzleDirective muzzleDirective : project.muzzle.directives) {
         project.getLogger().info("configured $muzzleDirective")
@@ -315,7 +314,7 @@ class MuzzlePlugin implements Plugin<Project> {
    *
    * @return The created muzzle task.
    */
-  private static Task addMuzzleTask(MuzzleDirective muzzleDirective, Artifact versionArtifact, Project instrumentationProject, Task runAfter) {
+  private static TaskProvider addMuzzleTask(MuzzleDirective muzzleDirective, Artifact versionArtifact, Project instrumentationProject, TaskProvider runAfter) {
     def taskName
     if (muzzleDirective.coreJdk) {
       taskName = "muzzle-Assert$muzzleDirective"
@@ -345,7 +344,7 @@ class MuzzlePlugin implements Plugin<Project> {
       })
     }
 
-    def muzzleTask = instrumentationProject.task(taskName) {
+    def muzzleTask = instrumentationProject.tasks.register(taskName) {
       dependsOn(instrumentationProject.configurations.named("runtimeClasspath"))
       doLast {
         ClassLoader instrumentationCL = createInstrumentationClassloader(instrumentationProject)
@@ -375,7 +374,9 @@ class MuzzlePlugin implements Plugin<Project> {
         }
       }
     }
-    runAfter.finalizedBy(muzzleTask)
+    runAfter.configure {
+      finalizedBy(muzzleTask)
+    }
     return muzzleTask
   }
 
