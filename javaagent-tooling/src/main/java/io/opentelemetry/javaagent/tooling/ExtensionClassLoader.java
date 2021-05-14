@@ -71,7 +71,7 @@ public class ExtensionClassLoader extends URLClassLoader {
     return null;
   }
 
-  public ExtensionClassLoader(URL url, ClassLoader parent) {
+  private ExtensionClassLoader(URL url, ClassLoader parent) {
     super(new URL[] {url}, parent);
   }
 }

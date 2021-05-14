@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.ShadingRemapper.rule;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -19,22 +17,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 class RemappingUrlStreamHandler extends URLStreamHandler {
-
-  // We need to prefix the names to prevent the gradle shadowJar relocation rules from touching
-  // them. It's possible to do this by excluding this class from shading, but it may cause issue
-  // with transitive dependencies down the line.
-  private static final ShadingRemapper remapper =
-      new ShadingRemapper(
-          rule("#io.opentelemetry.api", "#io.opentelemetry.javaagent.shaded.io.opentelemetry.api"),
-          rule(
-              "#io.opentelemetry.context",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.context"),
-          rule(
-              "#io.opentelemetry.extension.aws",
-              "#io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.aws"),
-          rule("#java.util.logging.Logger", "#io.opentelemetry.javaagent.bootstrap.PatchLogger"),
-          rule("#org.slf4j", "#io.opentelemetry.javaagent.slf4j"));
-
   private final JarFile delegateJarFile;
 
   public RemappingUrlStreamHandler(URL delegateJarFileLocation) {
@@ -64,6 +46,7 @@ class RemappingUrlStreamHandler extends URLStreamHandler {
         return null;
       }
 
+      // That will NOT remap the content of files under META-INF/services
       if (file.endsWith(".class")) {
         return new RemappingUrlConnection(url, delegateJarFile, entry);
       } else {
