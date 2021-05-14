@@ -14,6 +14,8 @@
 
 ### 📈 Enhancements
 
+- Support sub-millisecond precision for start/end times on Java 9+
+  ([#2600](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2600))
 - `@WithSpan` async support added for methods returning async Reactor 3.x types
   ([#2714](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2714))
 - `@WithSpan` async support added for methods returning Guava ListenableFuture
@@ -39,11 +41,18 @@
   ([#2824](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2824))
 - RequestDispatcher `forward()` and `include()` internal spans removed
   ([#2816](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2816))
+- Raised gRPC min version supported to 1.6 in order to use new gRPC context bridge API
+  ([#2948](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2948))
 
 ### 🛠️ Bug fixes
 
+- gRPC context bridging issues
+  ([#2564](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2564),
+  [#2564](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2564))
 - URL credentials of the form `https://username:password@www.example.com/` no longer captured
   ([#2707](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2707))
+- Spring MVC instrumentation can cause Spring MVC to misroute requests under some conditions
+  ([#2815](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2815))
 - RxJava2 NoSuchFieldError
   ([#2836](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2836))
 - Duplicate http client tracing headers
@@ -56,6 +65,10 @@
   ([#2910](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2910))
 - Context leak when using Jetty
   ([#2920](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2920))
+- Servlet instrumentation overwrites setStatus that was set manually earlier
+  ([#2929](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2929))
+- Spans not captured on interface default methods annotated with JAX-RS annotations
+  ([#2930](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2930))
 
 ### 🧰 Tooling
 
