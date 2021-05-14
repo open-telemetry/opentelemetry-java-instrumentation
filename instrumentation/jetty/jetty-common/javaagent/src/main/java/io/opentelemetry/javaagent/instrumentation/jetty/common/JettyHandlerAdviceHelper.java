@@ -7,10 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jetty.common;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
-import io.opentelemetry.instrumentation.servlet.TagSettingAsyncListener;
-import java.util.concurrent.atomic.AtomicBoolean;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
 
 public class JettyHandlerAdviceHelper {
   /** Shared method exit implementation for Jetty handler advices. */
@@ -45,23 +43,7 @@ public class JettyHandlerAdviceHelper {
       return;
     }
 
-    AtomicBoolean responseHandled = new AtomicBoolean(false);
-    ServletAccessor<REQUEST, RESPONSE> servletAccessor = tracer.getServletAccessor();
-
-    // In case of async servlets wait for the actual response to be ready
-    if (servletAccessor.isRequestAsyncStarted(request)) {
-      try {
-        servletAccessor.addRequestAsyncListener(
-            request, new TagSettingAsyncListener<>(tracer, responseHandled, context));
-      } catch (IllegalStateException e) {
-        // org.eclipse.jetty.server.Request may throw an exception here if request became
-        // finished after check above. We just ignore that exception and move on.
-      }
-    }
-
-    // Check again in case the request finished before adding the listener.
-    if (!servletAccessor.isRequestAsyncStarted(request)
-        && responseHandled.compareAndSet(false, true)) {
+    if (ServletAndFilterAdviceHelper.mustEndOnHandlerMethodExit(tracer, request)) {
       tracer.end(context, response);
     }
   }

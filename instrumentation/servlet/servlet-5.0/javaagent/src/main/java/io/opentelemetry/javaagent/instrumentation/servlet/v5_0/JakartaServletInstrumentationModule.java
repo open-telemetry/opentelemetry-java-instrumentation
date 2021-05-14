@@ -9,6 +9,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
 import java.util.Arrays;
@@ -27,6 +28,7 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
     return Arrays.asList(
         new AsyncContextInstrumentation(
             BASE_PACKAGE, adviceClassName(".async.AsyncDispatchAdvice")),
+        new AsyncStartInstrumentation(BASE_PACKAGE, adviceClassName(".async.AsyncStartAdvice")),
         new ServletAndFilterInstrumentation(
             BASE_PACKAGE,
             adviceClassName(".service.JakartaServletServiceAdvice"),

@@ -9,8 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.liberty.LibertyHttpServ
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TagSettingAsyncListener;
-import java.util.concurrent.atomic.AtomicBoolean;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -68,17 +67,7 @@ public class LibertyHandleRequestAdvice {
       return;
     }
 
-    AtomicBoolean responseHandled = new AtomicBoolean(false);
-
-    // In case of async servlets wait for the actual response to be ready
-    if (request.isAsyncStarted()) {
-      request
-          .getAsyncContext()
-          .addListener(new TagSettingAsyncListener(responseHandled, context), request, response);
-    }
-
-    // Check again in case the request finished before adding the listener.
-    if (!request.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
+    if (ServletAndFilterAdviceHelper.mustEndOnHandlerMethodExit(tracer(), request)) {
       tracer().end(context, response);
     }
   }

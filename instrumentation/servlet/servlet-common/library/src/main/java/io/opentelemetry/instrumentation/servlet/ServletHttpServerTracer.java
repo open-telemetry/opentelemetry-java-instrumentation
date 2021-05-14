@@ -23,6 +23,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,9 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     extends HttpServerTracer<REQUEST, RESPONSE, REQUEST, REQUEST> {
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
+
+  public static final String ASYNC_LISTENER_ATTRIBUTE =
+      ServletHttpServerTracer.class.getName() + ".AsyncListener";
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
@@ -140,6 +144,20 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
 
   public ServletAccessor<REQUEST, RESPONSE> getServletAccessor() {
     return accessor;
+  }
+
+  public void attachAsyncListener(REQUEST request) {
+    Context context = getServerContext(request);
+
+    if (context != null) {
+      accessor.addRequestAsyncListener(
+          request, new TagSettingAsyncListener<>(this, new AtomicBoolean(), context));
+      accessor.setRequestAttribute(request, ASYNC_LISTENER_ATTRIBUTE, true);
+    }
+  }
+
+  public boolean isAsyncListenerAttached(REQUEST request) {
+    return accessor.getRequestAttribute(request, ASYNC_LISTENER_ATTRIBUTE) != null;
   }
 
   public void addUnwrappedThrowable(Context context, Throwable throwable) {
