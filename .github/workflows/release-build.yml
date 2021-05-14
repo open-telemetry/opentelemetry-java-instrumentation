@@ -24,8 +24,6 @@ jobs:
           remote-build-cache-proxy-enabled: false
           arguments: build final closeAndReleaseSonatypeStagingRepository --stacktrace -x :smoke-tests:test -Prelease.version=${{ github.event.inputs.version }}
         env:
-          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
-          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GRGIT_USER: ${{ github.actor }}
