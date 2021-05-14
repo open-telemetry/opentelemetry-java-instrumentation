@@ -16,7 +16,7 @@ muzzle {
     assertInverse = true
     // versions 2.3.9 and 2.3.10 depends on com.typesafe.netty:netty-http-pipelining:1.1.2
     // which does not exist
-    skipVersions += ['2.3.9', '2.3.10']
+    skip('2.3.9', '2.3.10')
   }
   pass {
     group = 'com.typesafe.play'

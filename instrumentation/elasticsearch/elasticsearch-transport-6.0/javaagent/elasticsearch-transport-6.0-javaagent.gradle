@@ -7,7 +7,7 @@ muzzle {
     versions = "[6.0.0,)"
     // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
     // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    skipVersions += ['7.11.0']
+    skip('7.11.0')
     assertInverse = true
   }
   pass {
@@ -16,7 +16,7 @@ muzzle {
     versions = "[6.0.0,)"
     // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
     // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    skipVersions += ['7.11.0']
+    skip('7.11.0')
     assertInverse = true
   }
 }

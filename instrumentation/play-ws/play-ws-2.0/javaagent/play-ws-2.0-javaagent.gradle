@@ -14,7 +14,7 @@ muzzle {
     module = 'play-ahc-ws-standalone_2.12'
     versions = '[2.0.0,2.1.0)'
     // 2.0.5 is missing play.shaded.ahc.org.asynchttpclient.AsyncHandler#onTlsHandshakeSuccess()V
-    skipVersions += '2.0.5'
+    skip('2.0.5')
     assertInverse = true
   }
 
