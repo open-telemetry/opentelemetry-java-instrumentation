@@ -445,8 +445,9 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             mv.visitLdcInsn(method.getName());
 
             {
-              // method return and parameter types must be passed by Type.getType() call to be
-              // properly shaded
+              // we cannot pass the whole method descriptor string as it won't be shaded, so we
+              // have to pass the return and parameter types separately - strings in Type.getType()
+              // calls will be shaded correctly
               Type methodType = Type.getMethodType(method.getDescriptor());
 
               // return type
