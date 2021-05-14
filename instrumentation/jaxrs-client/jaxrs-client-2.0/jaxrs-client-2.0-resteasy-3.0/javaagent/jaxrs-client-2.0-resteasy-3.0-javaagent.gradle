@@ -25,7 +25,7 @@ dependencies {
   // putSingle(String, Object) is a generic implementation for
   // javax.ws.rs.core.MultivaluedMap.putSingle(K, V), and so there's also a synthetic bridge method
   // putSingle(Object, Object) in those versions
-  library group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.10.Final'
+  library "org.jboss.resteasy:resteasy-client:3.0.10.Final"
 
   implementation project(':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-common:javaagent')
 }

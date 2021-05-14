@@ -1,17 +1,17 @@
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
-  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+  compileOnly "javax.servlet:javax.servlet-api:3.0.1"
 
-  testInstrumentation group: 'io.opentelemetry.javaagent.instrumentation', name: 'opentelemetry-javaagent-servlet-common', version: versions.opentelemetryJavaagentAlpha
-  testInstrumentation group: 'io.opentelemetry.javaagent.instrumentation', name: 'opentelemetry-javaagent-servlet-2.2', version: versions.opentelemetryJavaagentAlpha
-  testInstrumentation group: 'io.opentelemetry.javaagent.instrumentation', name: 'opentelemetry-javaagent-servlet-3.0', version: versions.opentelemetryJavaagentAlpha
+  testInstrumentation "io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-common:${versions.opentelemetryJavaagentAlpha}"
+  testInstrumentation "io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-2.2:${versions.opentelemetryJavaagentAlpha}"
+  testInstrumentation "io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-3.0:${versions.opentelemetryJavaagentAlpha}"
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common:${versions.opentelemetryJavaagentAlpha}") {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
 
-  testImplementation group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
+  testImplementation "javax.servlet:javax.servlet-api:3.0.1"
+  testImplementation "org.eclipse.jetty:jetty-server:8.0.0.v20110901"
+  testImplementation "org.eclipse.jetty:jetty-servlet:8.0.0.v20110901"
 }

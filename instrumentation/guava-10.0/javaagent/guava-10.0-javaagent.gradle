@@ -10,7 +10,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'com.google.guava', name: 'guava', version: '10.0'
+  library "com.google.guava:guava:10.0"
 
   implementation project(':instrumentation:guava-10.0:library')
 

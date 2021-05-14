@@ -1,6 +1,6 @@
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
 dependencies {
-  compileOnly group: 'jakarta.faces', name: 'jakarta.faces-api', version: '2.3.2'
-  compileOnly group: 'jakarta.el', name: 'jakarta.el-api', version: '3.0.3'
+  compileOnly "jakarta.faces:jakarta.faces-api:2.3.2"
+  compileOnly "jakarta.el:jakarta.el-api:3.0.3"
 }

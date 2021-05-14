@@ -22,5 +22,5 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
+  library "org.apache.httpcomponents:httpclient:4.0"
 }

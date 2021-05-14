@@ -70,9 +70,9 @@ repositories {
 }
 
 dependencies {
-  compileOnly group: 'org.checkerframework', name: 'checker-qual', version: versions.checkerFramework
+  compileOnly "org.checkerframework:checker-qual:${versions.checkerFramework}"
 
-  testImplementation enforcedPlatform(group: 'org.junit', name: 'junit-bom', version: versions.junit5)
+  testImplementation enforcedPlatform("org.junit:junit-bom:${versions.junit5}")
   testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api'
   testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params'
   testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine'
@@ -81,8 +81,8 @@ dependencies {
   testImplementation deps.spock
   testImplementation deps.groovy
   testImplementation deps.testLogging
-  testImplementation group: 'info.solidsoft.spock', name: 'spock-global-unroll', version: '0.5.1'
-  testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
+  testImplementation "info.solidsoft.spock:spock-global-unroll:0.5.1"
+  testImplementation "com.github.stefanbirkner:system-rules:1.19.0"
 }
 
 tasks.named('jar').configure {

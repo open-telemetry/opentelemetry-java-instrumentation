@@ -27,10 +27,10 @@ muzzle {
 }
 
 dependencies {
-  library group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.0.0'
+  library "com.datastax.cassandra:cassandra-driver-core:3.0.0"
 
-  testLibrary group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'
+  testLibrary "com.datastax.cassandra:cassandra-driver-core:3.2.0"
   testInstrumentation project(':instrumentation:guava-10.0:javaagent')
 
-  latestDepTestLibrary group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.+'
+  latestDepTestLibrary "com.datastax.cassandra:cassandra-driver-core:3.+"
 }

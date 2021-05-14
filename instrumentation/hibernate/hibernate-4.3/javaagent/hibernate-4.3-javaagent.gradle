@@ -26,7 +26,7 @@ testSets {
 test.dependsOn version5Test, version6Test
 
 dependencies {
-  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
+  compileOnly "org.hibernate:hibernate-core:4.3.0.Final"
 
   implementation project(':instrumentation:hibernate:hibernate-common:javaagent')
 
@@ -35,26 +35,26 @@ dependencies {
   testInstrumentation project(':instrumentation:hibernate:hibernate-3.3:javaagent')
   testInstrumentation project(':instrumentation:hibernate:hibernate-4.0:javaagent')
 
-  testImplementation group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
-  testImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
-  testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
+  testImplementation "org.hibernate:hibernate-core:4.3.0.Final"
+  testImplementation "org.hibernate:hibernate-entitymanager:4.3.0.Final"
+  testImplementation "org.hsqldb:hsqldb:2.0.0"
   //First version to work with Java 14
-  testImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
+  testImplementation "org.springframework.data:spring-data-jpa:1.8.0.RELEASE"
 
-  version5TestImplementation group: 'org.hibernate', name: 'hibernate-core', version: '5.0.0.Final'
-  version5TestImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.0.0.Final'
-  version5TestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '2.3.0.RELEASE'
+  version5TestImplementation "org.hibernate:hibernate-core:5.0.0.Final"
+  version5TestImplementation "org.hibernate:hibernate-entitymanager:5.0.0.Final"
+  version5TestImplementation "org.springframework.data:spring-data-jpa:2.3.0.RELEASE"
 
-  version6TestImplementation group: 'org.hibernate', name: 'hibernate-core', version: '6.0.0.Alpha6'
-  version6TestImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '6.0.0.Alpha6'
-  version6TestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '2.3.0.RELEASE'
+  version6TestImplementation "org.hibernate:hibernate-core:6.0.0.Alpha6"
+  version6TestImplementation "org.hibernate:hibernate-entitymanager:6.0.0.Alpha6"
+  version6TestImplementation "org.springframework.data:spring-data-jpa:2.3.0.RELEASE"
 
-  testImplementation group: 'javax.activation', name: 'javax.activation-api', version: '1.2.0'
-  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
-  testImplementation group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: '2.3.3'
+  testImplementation "javax.activation:javax.activation-api:1.2.0"
+  testImplementation "javax.xml.bind:jaxb-api:2.3.1"
+  testImplementation "org.glassfish.jaxb:jaxb-runtime:2.3.3"
 
   // hibernate 6 is alpha so use 5 as latest version
-  latestDepTestImplementation group: 'org.hibernate', name: 'hibernate-core', version: '5.+'
-  latestDepTestImplementation group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.+'
-  latestDepTestImplementation group: 'org.springframework.data', name: 'spring-data-jpa', version: '(2.4.0,)'
+  latestDepTestImplementation "org.hibernate:hibernate-core:5.+"
+  latestDepTestImplementation "org.hibernate:hibernate-entitymanager:5.+"
+  latestDepTestImplementation "org.springframework.data:spring-data-jpa:(2.4.0,)"
 }

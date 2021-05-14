@@ -3,7 +3,7 @@ apply from: "$rootDir/gradle/java.gradle"
 dependencies {
   api project(':testing-common')
 
-  api group: 'io.reactivex.rxjava3', name: 'rxjava', version: "3.0.12"
+  api "io.reactivex.rxjava3:rxjava:3.0.12"
 
   implementation deps.guava
 

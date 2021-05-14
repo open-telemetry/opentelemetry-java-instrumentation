@@ -22,19 +22,19 @@ muzzle {
 // For now, that limits support to spring-data-commons 1.9.0 (maybe 1.8.0).
 // For testing, chose a couple spring-data modules that are old enough to work with 1.9.0.
 dependencies {
-  library group: 'org.springframework.data', name: 'spring-data-commons', version: '1.8.0.RELEASE'
-  compileOnly(group: 'org.springframework', name: 'spring-aop', version: '1.2')
+  library "org.springframework.data:spring-data-commons:1.8.0.RELEASE"
+  compileOnly("org.springframework:spring-aop:1.2")
 
-  testImplementation group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
-  testLibrary group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
-  testLibrary group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'
+  testImplementation "org.spockframework:spock-spring:$versions.spock"
+  testLibrary "org.springframework:spring-test:3.0.0.RELEASE"
+  testLibrary "org.springframework.data:spring-data-jpa:1.8.0.RELEASE"
 
   // JPA dependencies
   testInstrumentation project(':instrumentation:jdbc:javaagent')
-  testImplementation group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
-  testImplementation group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
-  testLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
+  testImplementation "com.mysema.querydsl:querydsl-jpa:3.7.4"
+  testImplementation "org.hsqldb:hsqldb:2.0.0"
+  testLibrary "org.hibernate:hibernate-entitymanager:4.3.0.Final"
 
-  latestDepTestLibrary group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.+'
+  latestDepTestLibrary "org.hibernate:hibernate-entitymanager:5.+"
 }
 

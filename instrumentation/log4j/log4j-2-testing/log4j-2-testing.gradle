@@ -3,7 +3,7 @@ apply from: "$rootDir/gradle/java.gradle"
 dependencies {
   api project(':testing-common')
 
-  api group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.7'
+  api "org.apache.logging.log4j:log4j-core:2.7"
 
   implementation deps.guava
 
@@ -11,5 +11,5 @@ dependencies {
   implementation deps.opentelemetryApi
   implementation deps.spock
 
-  annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.7'
+  annotationProcessor "org.apache.logging.log4j:log4j-core:2.7"
 }

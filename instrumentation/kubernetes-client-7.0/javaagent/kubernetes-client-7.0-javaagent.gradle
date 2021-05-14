@@ -10,7 +10,7 @@ muzzle {
 }
 
 dependencies {
-  library(group: 'io.kubernetes', name: 'client-java-api', version: '7.0.0')
+  library("io.kubernetes:client-java-api:7.0.0")
 
   implementation(project(':instrumentation:okhttp:okhttp-3.0:javaagent'))
 

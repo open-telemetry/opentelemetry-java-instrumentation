@@ -10,7 +10,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'commons-httpclient', name: 'commons-httpclient', version: '2.0'
+  library "commons-httpclient:commons-httpclient:2.0"
 
-  latestDepTestLibrary group: 'commons-httpclient', name: 'commons-httpclient', version: '3.+'
+  latestDepTestLibrary "commons-httpclient:commons-httpclient:3.+"
 }

@@ -9,6 +9,6 @@ muzzle {
 }
 
 dependencies {
-  library group: 'javax.xml.ws', name: 'jaxws-api', version: '2.0'
+  library "javax.xml.ws:jaxws-api:2.0"
   implementation project(":instrumentation:jaxws:jaxws-common:library")
 }

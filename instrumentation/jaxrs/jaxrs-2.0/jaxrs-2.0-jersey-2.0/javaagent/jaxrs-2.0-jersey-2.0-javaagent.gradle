@@ -18,10 +18,10 @@ muzzle {
 }
 
 dependencies {
-  compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
-  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
-  library group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.0'
-  library group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '2.0'
+  compileOnly "javax.ws.rs:javax.ws.rs-api:2.0"
+  compileOnly "javax.servlet:javax.servlet-api:3.1.0"
+  library "org.glassfish.jersey.core:jersey-server:2.0"
+  library "org.glassfish.jersey.containers:jersey-container-servlet:2.0"
 
   implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
 
@@ -31,15 +31,15 @@ dependencies {
   testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing')
 
   // First version with DropwizardTestSupport:
-  testLibrary group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
-  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
-  testImplementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
+  testLibrary "io.dropwizard:dropwizard-testing:0.8.0"
+  testImplementation "javax.xml.bind:jaxb-api:2.2.3"
+  testImplementation "com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10"
 
-  latestDepTestLibrary group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.+'
-  latestDepTestLibrary group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '2.+'
+  latestDepTestLibrary "org.glassfish.jersey.core:jersey-server:2.+"
+  latestDepTestLibrary "org.glassfish.jersey.containers:jersey-container-servlet:2.+"
   // this is needed because dropwizard-testing version 0.8.0 (above) pulls it in transitively,
   // but the latest version of dropwizard-testing does not
-  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '9.+'
+  latestDepTestLibrary "org.eclipse.jetty:jetty-webapp:9.+"
 }
 
 test {

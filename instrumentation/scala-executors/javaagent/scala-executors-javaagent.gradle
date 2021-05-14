@@ -26,16 +26,16 @@ compileSlickTestGroovy {
 }
 
 dependencies {
-  library group: 'org.scala-lang', name: 'scala-library', version: '2.8.0'
+  library "org.scala-lang:scala-library:2.8.0"
 
-  latestDepTestLibrary group: 'org.scala-lang', name: 'scala-library', version: '2.11.+'
+  latestDepTestLibrary "org.scala-lang:scala-library:2.11.+"
 
   testInstrumentation project(':instrumentation:jdbc:javaagent')
 
   slickTestImplementation project(':testing-common')
   slickTestImplementation deps.scala
-  slickTestImplementation group: 'com.typesafe.slick', name: 'slick_2.11', version: '3.2.0'
-  slickTestImplementation group: 'com.h2database', name: 'h2', version: '1.4.197'
+  slickTestImplementation "com.typesafe.slick:slick_2.11:3.2.0"
+  slickTestImplementation "com.h2database:h2:1.4.197"
 }
 
 // Run Slick library tests along with the rest of tests

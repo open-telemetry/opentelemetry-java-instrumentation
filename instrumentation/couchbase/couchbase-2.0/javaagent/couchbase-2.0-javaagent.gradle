@@ -28,10 +28,10 @@ muzzle {
 dependencies {
   implementation project(':instrumentation:rxjava:rxjava-1.0:library')
 
-  library group: 'com.couchbase.client', name: 'java-client', version: '2.0.0'
+  library "com.couchbase.client:java-client:2.0.0"
 
   testImplementation project(':instrumentation:couchbase:couchbase-testing')
 
-  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.+'
-  latestDepTestLibrary group: 'com.couchbase.client', name: 'java-client', version: '2.+'
+  latestDepTestLibrary "org.springframework.data:spring-data-couchbase:3.+"
+  latestDepTestLibrary "com.couchbase.client:java-client:2.+"
 }

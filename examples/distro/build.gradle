@@ -17,12 +17,12 @@ subprojects {
     versions.opentelemetryJavaagentAlpha = "${versions.opentelemetryJavaagent}-alpha"
 
     deps = [
-      bytebuddy           : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: versions.bytebuddy),
-      bytebuddyagent      : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: versions.bytebuddy),
+      bytebuddy           : dependencies.create("net.bytebuddy:byte-buddy:${versions.bytebuddy}"),
+      bytebuddyagent      : dependencies.create("net.bytebuddy:byte-buddy-agent:${versions.bytebuddy}"),
       autoservice         : [
-        dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc7'),
-        dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.8'),
-        dependencies.create(group: 'com.google.guava', name: 'guava', version: "${versions.guava}"),
+        dependencies.create("com.google.auto.service:auto-service:1.0-rc7"),
+        dependencies.create("com.google.auto:auto-common:0.8"),
+        dependencies.create("com.google.guava:guava:${versions.guava}"),
       ],
       autoValueAnnotations: "com.google.auto.value:auto-value-annotations:${versions.autoValue}",
     ]

@@ -14,18 +14,18 @@ muzzle {
 ext.vertxVersion = '3.0.0'
 
 dependencies {
-  library group: 'io.vertx', name: 'vertx-web', version: vertxVersion
+  library "io.vertx:vertx-web:${vertxVersion}"
 
   //We need both version as different versions of Vert.x use different versions of Netty
   testInstrumentation project(':instrumentation:netty:netty-4.0:javaagent')
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
   testInstrumentation project(':instrumentation:jdbc:javaagent')
 
-  testImplementation group: 'io.vertx', name: 'vertx-jdbc-client', version: vertxVersion
+  testImplementation "io.vertx:vertx-jdbc-client:${vertxVersion}"
 
   // Vert.x 4.0 is incompatible with our tests.
-  latestDepTestLibrary group: 'io.vertx', name: 'vertx-web', version: '3.+'
-  latestDepTestLibrary group: 'io.vertx', name: 'vertx-web-client', version: '3.+'
+  latestDepTestLibrary "io.vertx:vertx-web:3.+"
+  latestDepTestLibrary "io.vertx:vertx-web-client:3.+"
 }
 
 test {

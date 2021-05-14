@@ -18,13 +18,13 @@ dependencies {
   api(project(':instrumentation:servlet:servlet-javax-common:library'))
   implementation(project(':instrumentation:servlet:servlet-common:javaagent'))
 
-  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
+  compileOnly "javax.servlet:servlet-api:2.3"
 
   testImplementation(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
 
   // We don't check testLatestDeps for this module since we have coverage in others like servlet-3.0
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.0.0.v20091005'
+  testImplementation "org.eclipse.jetty:jetty-server:7.0.0.v20091005"
+  testImplementation "org.eclipse.jetty:jetty-servlet:7.0.0.v20091005"
 }

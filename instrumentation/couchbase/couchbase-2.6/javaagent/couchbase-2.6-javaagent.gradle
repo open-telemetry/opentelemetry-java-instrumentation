@@ -19,16 +19,16 @@ muzzle {
 dependencies {
   implementation project(':instrumentation:rxjava:rxjava-1.0:library')
 
-  library group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
+  library "com.couchbase.client:java-client:2.6.0"
 
   testInstrumentation project(':instrumentation:couchbase:couchbase-2.0:javaagent')
   testImplementation project(':instrumentation:couchbase:couchbase-testing')
 
-  testLibrary group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1.0.RELEASE'
-  testLibrary group: 'com.couchbase.client', name: 'encryption', version: '1.0.0'
+  testLibrary "org.springframework.data:spring-data-couchbase:3.1.0.RELEASE"
+  testLibrary "com.couchbase.client:encryption:1.0.0"
 
-  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1+'
-  latestDepTestLibrary group: 'com.couchbase.client', name: 'java-client', version: '2.+'
+  latestDepTestLibrary "org.springframework.data:spring-data-couchbase:3.1+"
+  latestDepTestLibrary "com.couchbase.client:java-client:2.+"
 }
 
 tasks.withType(Test).configureEach {
