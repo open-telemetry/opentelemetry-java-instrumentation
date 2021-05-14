@@ -3,16 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import io.netty.channel.ChannelInitializer
+import io.netty.channel.ChannelOption
 import io.netty.channel.ChannelPipeline
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.nio.NioEventLoopGroup
@@ -26,7 +21,6 @@ import io.netty.handler.codec.http.HttpVersion
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import spock.lang.Shared
 
@@ -40,6 +34,7 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     bootstrap = new Bootstrap()
     bootstrap.group(group)
       .channel(NioSocketChannel)
+      .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
       .handler(new ChannelInitializer<SocketChannel>() {
         @Override
         protected void initChannel(SocketChannel socketChannel) throws Exception {
@@ -69,7 +64,13 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
   @Override
   void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
-    Channel ch = bootstrap.connect(uri.host, getPort(uri)).sync().channel()
+    Channel ch
+    try {
+      ch = bootstrap.connect(uri.host, getPort(uri)).sync().channel()
+    } catch (Exception exception) {
+      requestResult.complete(exception)
+      return
+    }
     def result = new CompletableFuture<Integer>()
     result.whenComplete { status, throwable ->
       requestResult.complete({ status }, throwable)
@@ -78,15 +79,27 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     ch.writeAndFlush(request)
   }
 
-  private static int getPort(URI uri) {
-    if (uri.port != -1) {
-      return uri.port
-    } else if (uri.scheme == "http") {
-      return 80
-    } else if (uri.scheme == "https") {
-      443
-    } else {
-      throw new IllegalArgumentException("Unexpected uri: $uri")
+  @Override
+  String expectedClientSpanName(URI uri, String method) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "http://www.google.com:81/": // dropped request
+      case "https://192.0.2.1/": // non routable address
+        return "CONNECT"
+      default:
+        return super.expectedClientSpanName(uri, method)
+    }
+  }
+
+  @Override
+  boolean hasClientSpanAttributes(URI uri) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "http://www.google.com:81/": // dropped request
+      case "https://192.0.2.1/": // non routable address
+        return false
+      default:
+        return true
     }
   }
 
@@ -101,53 +114,7 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   }
 
   @Override
-  boolean testRemoteConnection() {
-    return false
-  }
-
-  @Override
-  boolean testConnectionFailure() {
+  boolean testHttps() {
     false
-  }
-
-  // This is almost identical to "connection error (unopened port)" test from superclass.
-  // But it uses somewhat different span name for the client span.
-  // For now creating a separate test for this, hoping to remove this duplication in the future.
-  def "netty connection error (unopened port)"() {
-    given:
-    def uri = new URI("http://127.0.0.1:$UNUSABLE_PORT/") // Use numeric address to avoid ipv4/ipv6 confusion
-
-    when:
-    runUnderTrace("parent") {
-      doRequest(method, uri)
-    }
-
-    then:
-    def ex = thrown(Exception)
-    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
-
-    and:
-    assertTraces(1) {
-      trace(0, 2) {
-        basicSpan(it, 0, "parent", null, thrownException)
-        span(1) {
-          name "CONNECT"
-          kind CLIENT
-          childOf span(0)
-          status ERROR
-          Class errorClass = ConnectException
-          try {
-            errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')
-          } catch (ClassNotFoundException e) {
-            // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
-          }
-          errorEvent(errorClass, "Connection refused: /127.0.0.1:$UNUSABLE_PORT")
-        }
-
-      }
-    }
-
-    where:
-    method = "GET"
   }
 }

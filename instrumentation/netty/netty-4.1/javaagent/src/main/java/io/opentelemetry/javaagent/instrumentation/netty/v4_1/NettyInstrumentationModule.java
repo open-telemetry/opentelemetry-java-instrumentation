@@ -31,7 +31,7 @@ public class NettyInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ChannelInstrumentation(),
-        new ChannelFutureInstrumentation(),
+        new NettyFutureInstrumentation(),
         new ChannelFutureListenerInstrumentation(),
         new NettyChannelPipelineInstrumentation(),
         new AbstractChannelHandlerContextInstrumentation());

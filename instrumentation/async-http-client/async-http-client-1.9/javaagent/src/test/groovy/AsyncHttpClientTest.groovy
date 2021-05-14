@@ -56,16 +56,6 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   boolean testRedirects() {
     false
   }
-
-  @Override
-  boolean testConnectionFailure() {
-    false
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
-  }
 }
 
 

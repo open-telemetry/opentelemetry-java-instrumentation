@@ -63,13 +63,8 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   }
 
   @Override
-  boolean testConnectionFailure() {
+  boolean testHttps() {
     false
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
   }
 }
 

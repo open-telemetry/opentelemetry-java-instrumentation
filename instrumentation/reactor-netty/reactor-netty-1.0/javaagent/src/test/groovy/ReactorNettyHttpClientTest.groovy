@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.netty.channel.ChannelOption
 import io.opentelemetry.instrumentation.test.base.SingleConnection
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
@@ -11,7 +12,9 @@ import reactor.netty.http.client.HttpClient
 class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
 
   HttpClient createHttpClient() {
-    return HttpClient.create()
+    return HttpClient.create().tcpConfiguration({ tcpClient ->
+      tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
+    })
   }
 
   @Override
