@@ -8,14 +8,27 @@ apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
 def jflexTargetDir = file"${project.buildDir}/generated/jflex/sql"
-def jflexTask = tasks.create("sqlSanitizerJflex", org.xbib.gradle.plugin.JFlexTask) {
+
+def sqlSanitizerJflex = tasks.register("sqlSanitizerJflex", org.xbib.gradle.plugin.JFlexTask) {
   group = 'jflex'
   description = 'Generate SqlSanitizer'
   source = [file("${project.projectDir}/src/main/jflex/SqlSanitizer.flex")]
   target = jflexTargetDir
 }
-tasks.compileJava.dependsOn(jflexTask)
-sourceSets.main.java.srcDirs += jflexTargetDir
+
+tasks.named("compileJava").configure {
+  dependsOn(sqlSanitizerJflex)
+}
+
+tasks.named("javadoc").configure {
+  dependsOn(sqlSanitizerJflex)
+}
+
+tasks.named("sourcesJar").configure {
+  dependsOn(sqlSanitizerJflex)
+}
+
+sourceSets.main.java.srcDir(jflexTargetDir)
 
 dependencies {
   api project(":instrumentation-api-caching")
@@ -24,6 +37,7 @@ dependencies {
   api deps.opentelemetryContext
   api deps.opentelemetrySemConv
 
+  implementation deps.opentelemetryApiMetrics
   implementation deps.slf4j
 
   compileOnly deps.autoValueAnnotations
@@ -33,5 +47,6 @@ dependencies {
   testImplementation deps.mockito
   testImplementation deps.assertj
   testImplementation deps.awaitility
+  testImplementation deps.opentelemetrySdkMetrics
   testImplementation deps.opentelemetrySdkTesting
 }
