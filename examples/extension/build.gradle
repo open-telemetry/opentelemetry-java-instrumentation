@@ -8,13 +8,13 @@ subprojects {
 
   ext {
     versions = [
-      opentelemetry         : "1.1.0",
-      opentelemetryJavaagent: "1.2.0-SNAPSHOT",
+      opentelemetry         : "1.2.0",
+      opentelemetryJavaagent: "1.3.0-SNAPSHOT",
       bytebuddy             : "1.10.18",
       guava                 : "30.1-jre"
     ]
     versions.opentelemetryAlpha = "${versions.opentelemetry}-alpha"
-    versions.opentelemetryJavaagentAlpha = "1.2.0-alpha-SNAPSHOT"
+    versions.opentelemetryJavaagentAlpha = "1.3.0-alpha-SNAPSHOT"
 
     deps = [
       bytebuddy           : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: versions.bytebuddy),

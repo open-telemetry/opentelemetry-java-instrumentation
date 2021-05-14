@@ -122,7 +122,10 @@ public final class InstrumentationModuleInstaller {
       agentBuilder =
           agentBuilder.transform(
               new AgentBuilder.Transformer.ForAdvice()
-                  .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
+                  .include(
+                      Utils.getBootstrapProxy(),
+                      Utils.getAgentClassLoader(),
+                      Utils.getExtensionsClassLoader())
                   .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
                   .advice(entry.getKey(), entry.getValue()));
     }

@@ -225,12 +225,12 @@ public class AgentInstaller {
   }
 
   private static Iterable<ComponentInstaller> loadComponentProviders() {
-    return ServiceLoader.load(ComponentInstaller.class, AgentInstaller.class.getClassLoader());
+    return ServiceLoader.load(ComponentInstaller.class);
   }
 
   private static IgnoreMatcherProvider loadIgnoreMatcherProvider() {
     ServiceLoader<IgnoreMatcherProvider> ignoreMatcherProviders =
-        ServiceLoader.load(IgnoreMatcherProvider.class, AgentInstaller.class.getClassLoader());
+        ServiceLoader.load(IgnoreMatcherProvider.class);
 
     Iterator<IgnoreMatcherProvider> iterator = ignoreMatcherProviders.iterator();
     if (iterator.hasNext()) {
@@ -240,7 +240,8 @@ public class AgentInstaller {
   }
 
   private static List<AgentExtension> loadAgentExtensions() {
-    return SafeServiceLoader.load(AgentExtension.class, AgentInstaller.class.getClassLoader())
+    return SafeServiceLoader.load(
+            AgentExtension.class, Thread.currentThread().getContextClassLoader())
         .stream()
         .sorted(Comparator.comparingInt(AgentExtension::order))
         .collect(Collectors.toList());
