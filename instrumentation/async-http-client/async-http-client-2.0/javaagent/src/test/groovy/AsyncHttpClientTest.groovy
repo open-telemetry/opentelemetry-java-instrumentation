@@ -18,7 +18,7 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
 
   @AutoCleanup
   @Shared
-  def client = Dsl.asyncHttpClient()
+  def client = Dsl.asyncHttpClient(Dsl.config().setConnectTimeout(CONNECT_TIMEOUT_MS))
 
   @Override
   Request buildRequest(String method, URI uri, Map<String, String> headers) {
