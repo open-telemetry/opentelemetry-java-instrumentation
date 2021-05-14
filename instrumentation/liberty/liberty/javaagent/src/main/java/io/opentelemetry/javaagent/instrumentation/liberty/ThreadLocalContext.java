@@ -8,18 +8,21 @@ package io.opentelemetry.javaagent.instrumentation.liberty;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public class ThreadLocalContext {
 
   private static final ThreadLocal<ThreadLocalContext> local = new ThreadLocal<>();
 
   private final HttpServletRequest req;
+  private final HttpServletResponse response;
   private Context context;
   private Scope scope;
   private boolean started;
 
-  private ThreadLocalContext(HttpServletRequest req) {
+  private ThreadLocalContext(HttpServletRequest req, HttpServletResponse response) {
     this.req = req;
+    this.response = response;
   }
 
   public Context getContext() {
@@ -42,6 +45,10 @@ public class ThreadLocalContext {
     return req;
   }
 
+  public HttpServletResponse getResponse() {
+    return response;
+  }
+
   /**
    * Test whether span should be started.
    *
@@ -53,8 +60,8 @@ public class ThreadLocalContext {
     return !b;
   }
 
-  public static void startRequest(HttpServletRequest req) {
-    ThreadLocalContext ctx = new ThreadLocalContext(req);
+  public static void startRequest(HttpServletRequest req, HttpServletResponse response) {
+    ThreadLocalContext ctx = new ThreadLocalContext(req, response);
     local.set(ctx);
   }
 

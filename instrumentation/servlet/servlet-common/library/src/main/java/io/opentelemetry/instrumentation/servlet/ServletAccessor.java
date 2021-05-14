@@ -52,7 +52,8 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   boolean isRequestAsyncStarted(REQUEST request);
 
-  void addRequestAsyncListener(REQUEST request, ServletAsyncListener<RESPONSE> listener);
+  void addRequestAsyncListener(
+      REQUEST request, ServletAsyncListener<RESPONSE> listener, Object response);
 
   int getResponseStatus(RESPONSE response);
 

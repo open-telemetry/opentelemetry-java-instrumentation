@@ -32,7 +32,7 @@ public class LibertyHandleRequestAdvice {
     // it is a bit too early to start span at this point because calling
     // some methods on HttpServletRequest will give a NPE
     // just remember the request and use it a bit later to start the span
-    ThreadLocalContext.startRequest(httpServletRequest);
+    ThreadLocalContext.startRequest(httpServletRequest, (HttpServletResponse) response);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

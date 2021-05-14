@@ -107,8 +107,16 @@ public class JakartaServletAccessor
 
   @Override
   public void addRequestAsyncListener(
-      HttpServletRequest request, ServletAsyncListener<HttpServletResponse> listener) {
-    request.getAsyncContext().addListener(new Listener(listener));
+      HttpServletRequest request,
+      ServletAsyncListener<HttpServletResponse> listener,
+      Object response) {
+    if (response instanceof HttpServletResponse) {
+      request
+          .getAsyncContext()
+          .addListener(new Listener(listener), request, (HttpServletResponse) response);
+    } else {
+      request.getAsyncContext().addListener(new Listener(listener));
+    }
   }
 
   @Override

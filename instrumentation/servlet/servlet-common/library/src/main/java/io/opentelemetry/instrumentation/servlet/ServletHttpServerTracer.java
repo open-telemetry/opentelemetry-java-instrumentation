@@ -34,6 +34,8 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
 
   public static final String ASYNC_LISTENER_ATTRIBUTE =
       ServletHttpServerTracer.class.getName() + ".AsyncListener";
+  public static final String ASYNC_LISTENER_RESPONSE_ATTRIBUTE =
+      ServletHttpServerTracer.class.getName() + ".AsyncListenerResponse";
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
@@ -146,12 +148,23 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
     return accessor;
   }
 
+  /**
+   * Servlet containers where AsyncContext listener must be attached with request and response
+   * objects included, a response object to use for that purpose must be attached to the request
+   * with this method before attaching the listener.
+   */
+  public void setAsyncListenerResponse(REQUEST request, RESPONSE response) {
+    accessor.setRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE, response);
+  }
+
   public void attachAsyncListener(REQUEST request) {
     Context context = getServerContext(request);
 
     if (context != null) {
+      Object response = accessor.getRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
+
       accessor.addRequestAsyncListener(
-          request, new TagSettingAsyncListener<>(this, new AtomicBoolean(), context));
+          request, new TagSettingAsyncListener<>(this, new AtomicBoolean(), context), response);
       accessor.setRequestAttribute(request, ASYNC_LISTENER_ATTRIBUTE, true);
     }
   }
