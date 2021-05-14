@@ -27,7 +27,7 @@ public class Servlet3AsyncStartAdvice {
     int callDepth = CallDepthThreadLocalMap.decrementCallDepth(AsyncContext.class);
 
     if (callDepth != 0) {
-      // This is not the innermost invocation, ignore.
+      // This is not the outermost invocation, ignore.
       return;
     }
 
