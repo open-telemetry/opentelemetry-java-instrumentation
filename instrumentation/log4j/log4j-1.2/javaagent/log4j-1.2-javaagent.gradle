@@ -6,7 +6,7 @@ muzzle {
     module = "log4j"
     versions = "[1.2,)"
     // version 1.2.15 has a bad dependency on javax.jms:jms:1.1 which was released as pom only
-    skipVersions += '1.2.15'
+    skip('1.2.15')
   }
 }
 

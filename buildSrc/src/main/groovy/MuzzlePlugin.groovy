@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.gradle.muzzle.MuzzleDirective
+import io.opentelemetry.instrumentation.gradle.muzzle.MuzzleExtension
 import java.lang.reflect.Method
 import java.security.SecureClassLoader
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Predicate
 import java.util.regex.Pattern
-import javax.inject.Inject
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
 import org.eclipse.aether.DefaultRepositorySystemSession
 import org.eclipse.aether.RepositorySystem
@@ -25,12 +26,11 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.version.Version
-import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.TaskProvider
+
 /**
  * muzzle task plugin which runs muzzle validation against a range of dependencies.
  */
@@ -90,16 +90,16 @@ class MuzzlePlugin implements Plugin<Project> {
       // use runAfter to set up task finalizers in version order
       TaskProvider runAfter = muzzle
 
-      for (MuzzleDirective muzzleDirective : project.muzzle.directives) {
+      for (MuzzleDirective muzzleDirective : project.muzzle.directives.get()) {
         project.getLogger().info("configured $muzzleDirective")
 
-        if (muzzleDirective.coreJdk) {
+        if (muzzleDirective.coreJdk.get()) {
           runAfter = addMuzzleTask(muzzleDirective, null, project, runAfter)
         } else {
           muzzleDirectiveToArtifacts(project, muzzleDirective, system, session).collect() { Artifact singleVersion ->
             runAfter = addMuzzleTask(muzzleDirective, singleVersion, project, runAfter)
           }
-          if (muzzleDirective.assertInverse) {
+          if (muzzleDirective.assertInverse.get()) {
             inverseOf(project, muzzleDirective, system, session).collect() { MuzzleDirective inverseDirective ->
               muzzleDirectiveToArtifacts(project, inverseDirective, system, session).collect() { Artifact singleVersion ->
                 runAfter = addMuzzleTask(inverseDirective, singleVersion, project, runAfter)
@@ -184,19 +184,19 @@ class MuzzlePlugin implements Plugin<Project> {
    * Convert a muzzle directive to a list of artifacts
    */
   private static Set<Artifact> muzzleDirectiveToArtifacts(Project instrumentationProject, MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
-    Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
+    Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group.get(), muzzleDirective.module.get(), "jar", muzzleDirective.versions.get())
 
     VersionRangeRequest rangeRequest = new VersionRangeRequest()
     rangeRequest.setRepositories(getProjectRepositories(instrumentationProject))
     rangeRequest.setArtifact(directiveArtifact)
     VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
 
-    Set<Artifact> allVersionArtifacts = filterVersions(rangeResult, muzzleDirective.skipVersions).collect { version ->
-      new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", version)
+    Set<Artifact> allVersionArtifacts = filterVersions(rangeResult, muzzleDirective.normalizedSkipVersions).collect { version ->
+      new DefaultArtifact(muzzleDirective.group.get(), muzzleDirective.module.get(), "jar", version)
     }.toSet()
 
     if (allVersionArtifacts.isEmpty()) {
-      throw new GradleException("No muzzle artifacts found for $muzzleDirective.group:$muzzleDirective.module $muzzleDirective.versions")
+      throw new GradleException("No muzzle artifacts found for $muzzleDirective")
     }
 
     return allVersionArtifacts
@@ -214,8 +214,8 @@ class MuzzlePlugin implements Plugin<Project> {
   private static Set<MuzzleDirective> inverseOf(Project instrumentationProject, MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
     Set<MuzzleDirective> inverseDirectives = new HashSet<>()
 
-    Artifact allVersionsArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", "[,)")
-    Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
+    Artifact allVersionsArtifact = new DefaultArtifact(muzzleDirective.group.get(), muzzleDirective.module.get(), "jar", "[,)")
+    Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group.get(), muzzleDirective.module.get(), "jar", muzzleDirective.versions.get())
 
     List<RemoteRepository> repos = getProjectRepositories(instrumentationProject)
     VersionRangeRequest allRangeRequest = new VersionRangeRequest()
@@ -230,8 +230,8 @@ class MuzzlePlugin implements Plugin<Project> {
 
     allRangeResult.getVersions().removeAll(rangeResult.getVersions())
 
-    filterVersions(allRangeResult, muzzleDirective.skipVersions).each { version ->
-      MuzzleDirective inverseDirective = new MuzzleDirective()
+    filterVersions(allRangeResult, muzzleDirective.normalizedSkipVersions).each { version ->
+      MuzzleDirective inverseDirective = instrumentationProject.objects.newInstance(MuzzleDirective)
       inverseDirective.group = muzzleDirective.group
       inverseDirective.module = muzzleDirective.module
       inverseDirective.versions = version
@@ -316,14 +316,14 @@ class MuzzlePlugin implements Plugin<Project> {
    */
   private static TaskProvider addMuzzleTask(MuzzleDirective muzzleDirective, Artifact versionArtifact, Project instrumentationProject, TaskProvider runAfter) {
     def taskName
-    if (muzzleDirective.coreJdk) {
+    if (muzzleDirective.coreJdk.get()) {
       taskName = "muzzle-Assert$muzzleDirective"
     } else {
-      taskName = "muzzle-Assert${muzzleDirective.assertPass ? "Pass" : "Fail"}-$versionArtifact.groupId-$versionArtifact.artifactId-$versionArtifact.version${muzzleDirective.name ? "-${muzzleDirective.getNameSlug()}" : ""}"
+      taskName = "muzzle-Assert${muzzleDirective.assertPass ? "Pass" : "Fail"}-$versionArtifact.groupId-$versionArtifact.artifactId-$versionArtifact.version${!muzzleDirective.name.get().isEmpty() ? "-${muzzleDirective.getNameSlug()}" : ""}"
     }
     def config = instrumentationProject.configurations.create(taskName)
 
-    if (!muzzleDirective.coreJdk) {
+    if (!muzzleDirective.coreJdk.get()) {
       def dep = instrumentationProject.dependencies.create("$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version") {
         transitive = true
       }
@@ -334,7 +334,7 @@ class MuzzlePlugin implements Plugin<Project> {
 
       config.dependencies.add(dep)
     }
-    for (String additionalDependency : muzzleDirective.additionalDependencies) {
+    for (String additionalDependency : muzzleDirective.additionalDependencies.get()) {
       if (additionalDependency.count(":") < 2) {
         // Dependency definition without version, use the artifact's version.
         additionalDependency += ":${versionArtifact.version}"
@@ -362,7 +362,7 @@ class MuzzlePlugin implements Plugin<Project> {
           // find all instrumenters, get muzzle, and assert
           Method assertionMethod = instrumentationCL.loadClass('io.opentelemetry.javaagent.tooling.muzzle.matcher.MuzzleGradlePluginUtil')
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
-          assertionMethod.invoke(null, instrumentationCL, userCL, muzzleDirective.assertPass)
+          assertionMethod.invoke(null, instrumentationCL, userCL, muzzleDirective.assertPass.get())
         } finally {
           Thread.currentThread().contextClassLoader = ccl
         }
@@ -404,101 +404,5 @@ class MuzzlePlugin implements Plugin<Project> {
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo))
 
     return session
-  }
-}
-
-// plugin extension classes
-
-/**
- * A pass or fail directive for a single dependency.
- */
-class MuzzleDirective {
-
-  /**
-   * Name is optional and is used to further define the scope of a directive. The motivation for this is that this
-   * plugin creates a config for each of the dependencies under test with name '...-<group_id>-<artifact_id>-<version>'.
-   * The problem is that if we want to test multiple times the same configuration under different conditions, e.g.
-   * with different extra dependencies, the plugin would throw an error as it would try to create several times the
-   * same config. This property can be used to differentiate those config names for different directives.
-   */
-  String name
-
-  String group
-  String module
-  String versions
-  Set<String> skipVersions = new HashSet<>()
-  List<String> additionalDependencies = new ArrayList<>()
-  boolean assertPass
-  boolean assertInverse = false
-  boolean coreJdk = false
-
-  void coreJdk() {
-    coreJdk = true
-  }
-
-  /**
-   * Adds extra dependencies to the current muzzle test.
-   *
-   * @param compileString An extra dependency in the gradle canonical form: '<group_id>:<artifact_id>:<version_id>'.
-   */
-  void extraDependency(String compileString) {
-    additionalDependencies.add(compileString)
-  }
-
-  /**
-   * Slug of directive name.
-   *
-   * @return A slug of the name or an empty string if name is empty. E.g. 'My Directive' --> 'My-Directive'
-   */
-  String getNameSlug() {
-    if (null == name) {
-      return ""
-    }
-
-    return name.trim().replaceAll("[^a-zA-Z0-9]+", "-")
-  }
-
-  String toString() {
-    if (coreJdk) {
-      return "${assertPass ? 'Pass' : 'Fail'}-core-jdk"
-    } else {
-      return "${assertPass ? 'pass' : 'fail'} $group:$module:$versions"
-    }
-  }
-}
-
-/**
- * Muzzle extension containing all pass and fail directives.
- */
-class MuzzleExtension {
-  final List<MuzzleDirective> directives = new ArrayList<>()
-  private final ObjectFactory objectFactory
-
-  @Inject
-  MuzzleExtension(final ObjectFactory objectFactory) {
-    this.objectFactory = objectFactory
-  }
-
-  void pass(Action<? super MuzzleDirective> action) {
-    MuzzleDirective pass = objectFactory.newInstance(MuzzleDirective)
-    action.execute(pass)
-    postConstruct(pass)
-    pass.assertPass = true
-    directives.add(pass)
-  }
-
-  void fail(Action<? super MuzzleDirective> action) {
-    MuzzleDirective fail = objectFactory.newInstance(MuzzleDirective)
-    action.execute(fail)
-    postConstruct(fail)
-    fail.assertPass = false
-    directives.add(fail)
-  }
-
-  private postConstruct(MuzzleDirective directive) {
-    // Make skipVersions case insensitive.
-    directive.skipVersions = directive.skipVersions.collect {
-      it.toLowerCase()
-    }
   }
 }

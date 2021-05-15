@@ -6,7 +6,7 @@ muzzle {
     module = "jaxws-rt"
     versions = "[2.2.0.1,3)"
     // version 2.3.4 depends on org.glassfish.gmbal:gmbal-api-only:4.0.3 which does not exist
-    skipVersions += "2.3.4"
+    skip('2.3.4')
     assertInverse = true
     extraDependency "javax.servlet:javax.servlet-api:3.0.1"
   }
