@@ -59,6 +59,11 @@ public class TestClasses {
 
     public static class A2 extends A {}
 
+    public static class Primitives {
+      int number = 1;
+      boolean flag = false;
+    }
+
     public interface SomeInterface {
       void someMethod();
     }

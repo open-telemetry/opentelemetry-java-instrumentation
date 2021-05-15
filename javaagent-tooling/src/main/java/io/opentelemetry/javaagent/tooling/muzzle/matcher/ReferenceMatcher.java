@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.extension.muzzle.Reference;
-import io.opentelemetry.javaagent.extension.muzzle.Reference.Source;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.pool.TypePool;
 
 /** Matches a set of references against a classloader. */
@@ -116,18 +117,14 @@ public final class ReferenceMatcher {
       if (instrumentationClassPredicate.isInstrumentationClass(reference.getClassName())) {
         // make sure helper class is registered
         if (!helperClassNames.contains(reference.getClassName())) {
-          return Collections.singletonList(
-              new Mismatch.MissingClass(
-                  reference.getSources().toArray(new Source[0]), reference.getClassName()));
+          return singletonList(new Mismatch.MissingClass(reference));
         }
         // helper classes get their own check: whether they implement all abstract methods
         return checkHelperClassMatch(reference, typePool);
       } else {
         TypePool.Resolution resolution = typePool.describe(reference.getClassName());
         if (!resolution.isResolved()) {
-          return Collections.singletonList(
-              new Mismatch.MissingClass(
-                  reference.getSources().toArray(new Source[0]), reference.getClassName()));
+          return singletonList(new Mismatch.MissingClass(reference));
         }
         return checkThirdPartyTypeMatch(reference, resolution.resolve());
       }
@@ -136,11 +133,10 @@ public final class ReferenceMatcher {
         // bytebuddy throws an illegal state exception with this message if it cannot resolve types
         // TODO: handle missing type resolutions without catching bytebuddy's exceptions
         String className = e.getMessage().replace("Cannot resolve type description for ", "");
-        return Collections.singletonList(
-            new Mismatch.MissingClass(reference.getSources().toArray(new Source[0]), className));
+        return singletonList(new Mismatch.MissingClass(reference, className));
       } else {
         // Shouldn't happen. Fail the reference check and add a mismatch for debug logging.
-        return Collections.singletonList(new Mismatch.ReferenceCheckError(e, reference, loader));
+        return singletonList(new Mismatch.ReferenceCheckError(e, reference, loader));
       }
     }
   }
@@ -155,7 +151,7 @@ public final class ReferenceMatcher {
     Set<HelperReferenceWrapper.Field> undeclaredFields =
         helperClass.getFields().stream()
             .filter(f -> !f.isDeclared())
-            .map(f -> new HelperReferenceWrapper.Field(f.getName(), f.getType().getDescriptor()))
+            .map(f -> new HelperReferenceWrapper.Field(f.getName(), f.getDescriptor()))
             .collect(Collectors.toSet());
 
     // if there are any fields in this helper class that's not declared here, check the type
@@ -166,14 +162,7 @@ public final class ReferenceMatcher {
 
       undeclaredFields.removeAll(superClassFields);
       for (HelperReferenceWrapper.Field missingField : undeclaredFields) {
-        mismatches =
-            lazyAdd(
-                mismatches,
-                new Mismatch.MissingField(
-                    helperClass.getSources().toArray(new Source[0]),
-                    helperClass.getClassName(),
-                    missingField.getName(),
-                    missingField.getDescriptor()));
+        mismatches = lazyAdd(mismatches, new Mismatch.MissingField(helperClass, missingField));
       }
     }
 
@@ -191,13 +180,7 @@ public final class ReferenceMatcher {
     abstractMethods.removeAll(plainMethods);
     for (HelperReferenceWrapper.Method unimplementedMethod : abstractMethods) {
       mismatches =
-          lazyAdd(
-              mismatches,
-              new Mismatch.MissingMethod(
-                  helperClass.getSources().toArray(new Reference.Source[0]),
-                  unimplementedMethod.getDeclaringClass(),
-                  unimplementedMethod.getName(),
-                  unimplementedMethod.getDescriptor()));
+          lazyAdd(mismatches, new Mismatch.MissingMethod(helperClass, unimplementedMethod));
     }
 
     return mismatches;
@@ -232,24 +215,14 @@ public final class ReferenceMatcher {
             lazyAdd(
                 mismatches,
                 new Mismatch.MissingFlag(
-                    reference.getSources().toArray(new Source[0]),
-                    desc,
-                    flag,
-                    typeOnClasspath.getActualModifiers(false)));
+                    reference.getSources(), desc, flag, typeOnClasspath.getActualModifiers(false)));
       }
     }
 
     for (Reference.Field fieldRef : reference.getFields()) {
       FieldDescription.InDefinedShape fieldDescription = findField(fieldRef, typeOnClasspath);
       if (fieldDescription == null) {
-        mismatches =
-            lazyAdd(
-                mismatches,
-                new Mismatch.MissingField(
-                    fieldRef.getSources().toArray(new Reference.Source[0]),
-                    reference.getClassName(),
-                    fieldRef.getName(),
-                    fieldRef.getType().getInternalName()));
+        mismatches = lazyAdd(mismatches, new Mismatch.MissingField(reference, fieldRef));
       } else {
         for (Reference.Flag flag : fieldRef.getFlags()) {
           if (!flag.matches(fieldDescription.getModifiers())) {
@@ -257,15 +230,12 @@ public final class ReferenceMatcher {
                 reference.getClassName()
                     + "#"
                     + fieldRef.getName()
-                    + fieldRef.getType().getInternalName();
+                    + Type.getType(fieldRef.getDescriptor()).getInternalName();
             mismatches =
                 lazyAdd(
                     mismatches,
                     new Mismatch.MissingFlag(
-                        fieldRef.getSources().toArray(new Source[0]),
-                        desc,
-                        flag,
-                        fieldDescription.getModifiers()));
+                        fieldRef.getSources(), desc, flag, fieldDescription.getModifiers()));
           }
         }
       }
@@ -274,14 +244,7 @@ public final class ReferenceMatcher {
     for (Reference.Method methodRef : reference.getMethods()) {
       MethodDescription.InDefinedShape methodDescription = findMethod(methodRef, typeOnClasspath);
       if (methodDescription == null) {
-        mismatches =
-            lazyAdd(
-                mismatches,
-                new Mismatch.MissingMethod(
-                    methodRef.getSources().toArray(new Reference.Source[0]),
-                    reference.getClassName(),
-                    methodRef.getName(),
-                    methodRef.getDescriptor()));
+        mismatches = lazyAdd(mismatches, new Mismatch.MissingMethod(reference, methodRef));
       } else {
         for (Reference.Flag flag : methodRef.getFlags()) {
           if (!flag.matches(methodDescription.getModifiers())) {
@@ -291,10 +254,7 @@ public final class ReferenceMatcher {
                 lazyAdd(
                     mismatches,
                     new Mismatch.MissingFlag(
-                        methodRef.getSources().toArray(new Source[0]),
-                        desc,
-                        flag,
-                        methodDescription.getModifiers()));
+                        methodRef.getSources(), desc, flag, methodDescription.getModifiers()));
           }
         }
       }
@@ -302,31 +262,11 @@ public final class ReferenceMatcher {
     return mismatches;
   }
 
-  private static boolean matchesPrimitive(String longName, String shortName) {
-    // The two meta type systems in use here differ in their treatment of primitive type names....
-    return shortName.equals("I") && longName.equals(int.class.getName())
-        || shortName.equals("C") && longName.equals(char.class.getName())
-        || shortName.equals("Z") && longName.equals(boolean.class.getName())
-        || shortName.equals("J") && longName.equals(long.class.getName())
-        || shortName.equals("S") && longName.equals(short.class.getName())
-        || shortName.equals("F") && longName.equals(float.class.getName())
-        || shortName.equals("D") && longName.equals(double.class.getName())
-        || shortName.equals("B") && longName.equals(byte.class.getName());
-  }
-
   private static FieldDescription.InDefinedShape findField(
       Reference.Field fieldRef, TypeDescription typeOnClasspath) {
     for (FieldDescription.InDefinedShape fieldType : typeOnClasspath.getDeclaredFields()) {
       if (fieldType.getName().equals(fieldRef.getName())
-          && ((fieldType
-                  .getType()
-                  .asErasure()
-                  .getInternalName()
-                  .equals(fieldRef.getType().getInternalName()))
-              || (fieldType.getType().asErasure().isPrimitive()
-                  && matchesPrimitive(
-                      fieldType.getType().asErasure().getInternalName(),
-                      fieldRef.getType().getInternalName())))) {
+          && fieldType.getDescriptor().equals(fieldRef.getDescriptor())) {
         return fieldType;
       }
     }

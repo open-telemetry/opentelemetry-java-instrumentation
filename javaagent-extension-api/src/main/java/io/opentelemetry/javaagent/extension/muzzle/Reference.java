@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.extension.muzzle;
 
+import static java.util.Collections.emptySet;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,6 +14,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -149,7 +153,10 @@ public final class Reference {
 
   @Override
   public String toString() {
-    return "Reference<" + className + ">";
+    String extendsPart = superName == null ? "" : " extends " + superName;
+    String implementsPart =
+        interfaces.isEmpty() ? "" : " implements " + String.join(", ", interfaces);
+    return "ClassRef: " + className + extendsPart + implementsPart;
   }
 
   /** Represents the source (file name, line number) of a reference. */
@@ -342,39 +349,22 @@ public final class Reference {
     private final Set<Source> sources;
     private final Set<Flag> flags;
     private final String name;
-    private final Type returnType;
-    private final List<Type> parameterTypes;
-
-    public Method(String name, String descriptor) {
-      this(
-          new Source[0],
-          new Flag[0],
-          name,
-          Type.getMethodType(descriptor).getReturnType(),
-          Type.getMethodType(descriptor).getArgumentTypes());
-    }
+    private final String descriptor;
 
     public Method(
         Source[] sources, Flag[] flags, String name, Type returnType, Type[] parameterTypes) {
       this(
-          COLLECT_SOURCES ? new LinkedHashSet<>(Arrays.asList(sources)) : new LinkedHashSet<>(),
+          COLLECT_SOURCES ? new LinkedHashSet<>(Arrays.asList(sources)) : emptySet(),
           new LinkedHashSet<>(Arrays.asList(flags)),
           name,
-          returnType,
-          Arrays.asList(parameterTypes));
+          Type.getMethodDescriptor(returnType, parameterTypes));
     }
 
-    private Method(
-        Set<Source> sources,
-        Set<Flag> flags,
-        String name,
-        Type returnType,
-        List<Type> parameterTypes) {
+    private Method(Set<Source> sources, Set<Flag> flags, String name, String descriptor) {
       this.sources = sources;
       this.flags = flags;
       this.name = name;
-      this.returnType = returnType;
-      this.parameterTypes = parameterTypes;
+      this.descriptor = descriptor;
     }
 
     public Set<Source> getSources() {
@@ -389,12 +379,8 @@ public final class Reference {
       return name;
     }
 
-    public Type getReturnType() {
-      return returnType;
-    }
-
-    public List<Type> getParameterTypes() {
-      return parameterTypes;
+    public String getDescriptor() {
+      return descriptor;
     }
 
     public Method merge(Method anotherMethod) {
@@ -410,16 +396,19 @@ public final class Reference {
       mergedFlags.addAll(flags);
       mergedFlags.addAll(anotherMethod.flags);
 
-      return new Method(mergedSources, mergedFlags, name, returnType, parameterTypes);
+      return new Method(mergedSources, mergedFlags, name, descriptor);
     }
 
     @Override
     public String toString() {
-      return name + getDescriptor();
-    }
-
-    public String getDescriptor() {
-      return Type.getMethodType(returnType, parameterTypes.toArray(new Type[0])).getDescriptor();
+      Type methodType = Type.getMethodType(getDescriptor());
+      String returnType = methodType.getReturnType().getClassName();
+      String modifiers = flags.stream().map(Flag::toString).collect(Collectors.joining(" "));
+      String parameters =
+          Stream.of(methodType.getArgumentTypes())
+              .map(Type::getClassName)
+              .collect(Collectors.joining(", ", "(", ")"));
+      return "MethodRef: " + modifiers + " " + returnType + " " + name + parameters;
     }
 
     @Override
@@ -431,12 +420,12 @@ public final class Reference {
         return false;
       }
       Method other = (Method) obj;
-      return name.equals(other.name) && getDescriptor().equals(other.getDescriptor());
+      return name.equals(other.name) && descriptor.equals(other.descriptor);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(name, getDescriptor());
+      return Objects.hash(name, descriptor);
     }
   }
 
@@ -444,15 +433,24 @@ public final class Reference {
     private final Set<Source> sources;
     private final Set<Flag> flags;
     private final String name;
-    private final Type type;
+    private final String descriptor;
     private final boolean declared;
 
-    public Field(Source[] sources, Flag[] flags, String name, Type fieldType, boolean declared) {
-      this.sources =
-          COLLECT_SOURCES ? new LinkedHashSet<>(Arrays.asList(sources)) : new LinkedHashSet<>();
-      this.flags = new LinkedHashSet<>(Arrays.asList(flags));
+    private Field(Source[] sources, Flag[] flags, String name, Type fieldType, boolean declared) {
+      this(
+          COLLECT_SOURCES ? new LinkedHashSet<>(Arrays.asList(sources)) : emptySet(),
+          new LinkedHashSet<>(Arrays.asList(flags)),
+          name,
+          fieldType.getDescriptor(),
+          declared);
+    }
+
+    private Field(
+        Set<Source> sources, Set<Flag> flags, String name, String descriptor, boolean declared) {
+      this.sources = sources;
+      this.flags = flags;
       this.name = name;
-      this.type = fieldType;
+      this.descriptor = descriptor;
       this.declared = declared;
     }
 
@@ -468,8 +466,8 @@ public final class Reference {
       return flags;
     }
 
-    public Type getType() {
-      return type;
+    public String getDescriptor() {
+      return descriptor;
     }
 
     /**
@@ -481,20 +479,22 @@ public final class Reference {
     }
 
     public Field merge(Field anotherField) {
-      if (!equals(anotherField) || !type.equals(anotherField.type)) {
+      if (!equals(anotherField) || !descriptor.equals(anotherField.descriptor)) {
         throw new IllegalStateException("illegal merge " + this + " != " + anotherField);
       }
       return new Field(
-          Reference.merge(sources, anotherField.sources).toArray(new Source[0]),
-          mergeFlags(flags, anotherField.flags).toArray(new Flag[0]),
+          Reference.merge(sources, anotherField.sources),
+          mergeFlags(flags, anotherField.flags),
           name,
-          type,
+          descriptor,
           declared || anotherField.declared);
     }
 
     @Override
     public String toString() {
-      return "FieldRef:" + name + type.getInternalName();
+      String modifiers = flags.stream().map(Flag::toString).collect(Collectors.joining(" "));
+      String fieldType = Type.getType(getDescriptor()).getClassName();
+      return "FieldRef: " + modifiers + " " + fieldType + " " + name;
     }
 
     @Override

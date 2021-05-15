@@ -217,7 +217,7 @@ interface HelperReferenceWrapper {
       }
 
       private Field toField(Reference.Field field) {
-        return new Field(field.getName(), field.getType().getDescriptor());
+        return new Field(field.getName(), field.getDescriptor());
       }
     }
 
