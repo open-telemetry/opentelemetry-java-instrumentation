@@ -324,7 +324,7 @@ class MuzzlePlugin implements Plugin<Project> {
     def config = instrumentationProject.configurations.create(taskName)
 
     if (!muzzleDirective.coreJdk) {
-      def dep = instrumentationProject."$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version" {
+      def dep = instrumentationProject.dependencies.create("$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version") {
         transitive = true
       }
       // The following optional transitive dependencies are brought in by some legacy module such as log4j 1.x but are no
@@ -339,7 +339,7 @@ class MuzzlePlugin implements Plugin<Project> {
         // Dependency definition without version, use the artifact's version.
         additionalDependency += ":${versionArtifact.version}"
       }
-      config.dependencies.add(instrumentationProject.additionalDependency {
+      config.dependencies.add(instrumentationProject.dependencies.create(additionalDependency) {
         transitive = true
       })
     }
