@@ -22,7 +22,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.elasticsearch.client', name: 'transport', version: '5.3.0'
+  library "org.elasticsearch.client:transport:5.3.0"
 
   implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common:library')
 
@@ -30,17 +30,17 @@ dependencies {
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
   testInstrumentation project(':instrumentation:spring:spring-data-1.8:javaagent')
 
-  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
-  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+  testImplementation "org.apache.logging.log4j:log4j-core:2.11.0"
+  testImplementation "org.apache.logging.log4j:log4j-api:2.11.0"
 
-  testLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.3.0'
+  testLibrary "org.elasticsearch.plugin:transport-netty3-client:5.3.0"
 
   // Unfortunately this will bump the transport version up to 5.5.0.
-  testLibrary group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.0.RELEASE'
+  testLibrary "org.springframework.data:spring-data-elasticsearch:3.0.0.RELEASE"
 
-  latestDepTestLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.+'
-  latestDepTestLibrary group: 'org.elasticsearch.client', name: 'transport', version: '5.+'
-  latestDepTestLibrary group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.+'
+  latestDepTestLibrary "org.elasticsearch.plugin:transport-netty3-client:5.+"
+  latestDepTestLibrary "org.elasticsearch.client:transport:5.+"
+  latestDepTestLibrary "org.springframework.data:spring-data-elasticsearch:3.0.+"
 }
 
 tasks.withType(Test).configureEach {

@@ -2,7 +2,7 @@ apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   api project(':testing-common')
-  api group: 'org.apache.rocketmq', name: 'rocketmq-test', version: '4.8.0'
+  api "org.apache.rocketmq:rocketmq-test:4.8.0"
 
   implementation deps.guava
   implementation deps.groovy

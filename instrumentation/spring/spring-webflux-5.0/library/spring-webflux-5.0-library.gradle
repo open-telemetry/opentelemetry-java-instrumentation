@@ -1,6 +1,6 @@
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
 dependencies {
-  compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
-  compileOnly group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
+  compileOnly "org.springframework:spring-webflux:5.0.0.RELEASE"
+  compileOnly "io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE"
 }

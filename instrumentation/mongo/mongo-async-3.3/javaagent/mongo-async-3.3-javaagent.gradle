@@ -13,7 +13,7 @@ muzzle {
 dependencies {
   implementation(project(':instrumentation:mongo:mongo-3.1:library'))
 
-  library group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.3.0'
+  library "org.mongodb:mongodb-driver-async:3.3.0"
 
   testImplementation project(':instrumentation:mongo:mongo-testing')
 

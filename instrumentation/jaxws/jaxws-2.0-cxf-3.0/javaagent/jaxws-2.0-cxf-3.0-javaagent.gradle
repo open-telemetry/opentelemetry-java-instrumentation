@@ -13,8 +13,8 @@ muzzle {
 dependencies {
   implementation project(':instrumentation:jaxws:jaxws-2.0-cxf-3.0:library')
 
-  library group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxws', version: '3.0.0'
-  testLibrary group: 'org.apache.cxf', name: 'cxf-rt-transports-http', version: '3.0.0'
+  library "org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0"
+  testLibrary "org.apache.cxf:cxf-rt-transports-http:3.0.0"
 
   testImplementation project(":instrumentation:jaxws:jaxws-2.0-testing")
 
@@ -24,11 +24,11 @@ dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:jetty:jetty-8.0:javaagent')
 
-  testImplementation group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
-  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.11'
-  testImplementation group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.2.11'
-  testImplementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.2.11'
-  testImplementation group: 'javax.activation', name: 'javax.activation-api', version: '1.2.0'
-  testImplementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.2'
-  testImplementation group: 'com.sun.xml.messaging.saaj', name: 'saaj-impl', version: '1.5.2'
+  testImplementation "javax.xml.ws:jaxws-api:2.3.1"
+  testImplementation "javax.xml.bind:jaxb-api:2.2.11"
+  testImplementation "com.sun.xml.bind:jaxb-core:2.2.11"
+  testImplementation "com.sun.xml.bind:jaxb-impl:2.2.11"
+  testImplementation "javax.activation:javax.activation-api:1.2.0"
+  testImplementation "javax.annotation:javax.annotation-api:1.2"
+  testImplementation "com.sun.xml.messaging.saaj:saaj-impl:1.5.2"
 }

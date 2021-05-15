@@ -5,9 +5,9 @@ dependencies {
 
   api(project(':instrumentation:servlet:servlet-common:library'))
 
-  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.2'
+  compileOnly "javax.servlet:servlet-api:2.2"
 
-  testImplementation group: 'javax.servlet', name: 'servlet-api', version: '2.2'
+  testImplementation "javax.servlet:servlet-api:2.2"
   testImplementation deps.mockito
   testImplementation deps.assertj
 }

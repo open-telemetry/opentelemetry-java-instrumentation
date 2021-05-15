@@ -27,14 +27,14 @@ muzzle {
 }
 
 dependencies {
-  library group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
+  library "io.netty:netty-codec-http:4.1.0.Final"
   api project(':instrumentation:netty:netty-4.1:library')
 
   //Contains logging handler
-  testLibrary group: 'io.netty', name: 'netty-handler', version: '4.1.0.Final'
+  testLibrary "io.netty:netty-handler:4.1.0.Final"
 
-  latestDepTestLibrary group: 'io.netty', name: 'netty-codec-http', version: '(,5.0)'
-  latestDepTestLibrary group: 'io.netty', name: 'netty-handler', version: '(,5.0)'
+  latestDepTestLibrary "io.netty:netty-codec-http:(,5.0)"
+  latestDepTestLibrary "io.netty:netty-handler:(,5.0)"
 }
 
 test {

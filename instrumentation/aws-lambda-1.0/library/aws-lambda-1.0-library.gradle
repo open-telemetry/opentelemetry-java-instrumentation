@@ -19,12 +19,12 @@ dependencies {
   compileOnly deps.opentelemetrySdk
   compileOnly deps.opentelemetrySdkAutoconfigure
 
-  library group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.0.0'
+  library "com.amazonaws:aws-lambda-java-core:1.0.0"
   // First version to includes support for SQSEvent, currently the most popular message queue used
   // with lambda.
   // NB: 2.2.0 includes a class called SQSEvent but isn't usable due to it returning private classes
   // in public API.
-  library group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '2.2.1'
+  library "com.amazonaws:aws-lambda-java-events:2.2.1"
 
   compileOnly(
     'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',
@@ -34,7 +34,7 @@ dependencies {
   implementation deps.opentelemetryExtAws
 
   // 1.2.0 allows to get the function ARN
-  testLibrary group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.0'
+  testLibrary "com.amazonaws:aws-lambda-java-core:1.2.0"
 
   testImplementation(
     'com.fasterxml.jackson.core:jackson-databind:2.10.5.1',

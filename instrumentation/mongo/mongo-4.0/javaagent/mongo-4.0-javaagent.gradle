@@ -12,11 +12,11 @@ muzzle {
 dependencies {
   implementation(project(':instrumentation:mongo:mongo-3.1:library'))
 
-  library group: 'org.mongodb', name: 'mongodb-driver-core', version: '4.0.0'
+  library "org.mongodb:mongodb-driver-core:4.0.0"
 
-  testLibrary group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.0.0'
-  testLibrary group: 'org.mongodb', name: 'mongodb-driver-reactivestreams', version: '4.0.0'
+  testLibrary "org.mongodb:mongodb-driver-sync:4.0.0"
+  testLibrary "org.mongodb:mongodb-driver-reactivestreams:4.0.0"
 
   testImplementation project(':instrumentation:mongo:mongo-testing')
-  testImplementation group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
+  testImplementation "de.flapdoodle.embed:de.flapdoodle.embed.mongo:1.50.5"
 }

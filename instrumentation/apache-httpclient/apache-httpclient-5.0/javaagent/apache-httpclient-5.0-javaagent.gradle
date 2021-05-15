@@ -9,5 +9,5 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.0'
+  library "org.apache.httpcomponents.client5:httpclient5:5.0"
 }

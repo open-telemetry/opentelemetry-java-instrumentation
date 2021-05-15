@@ -9,14 +9,14 @@ muzzle {
 }
 
 dependencies {
-  library group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
+  library "io.ratpack:ratpack-core:1.4.0"
 
   implementation project(':instrumentation:netty:netty-4.1:javaagent')
 
-  testLibrary group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
+  testLibrary "io.ratpack:ratpack-groovy-test:1.4.0"
 
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
-    testImplementation group: 'com.sun.activation', name: 'jakarta.activation', version: '1.2.2'
+    testImplementation "com.sun.activation:jakarta.activation:1.2.2"
   }
 }
 

@@ -27,11 +27,11 @@ dependencies {
   implementation deps.opentelemetryExtAnnotations
   implementation project(':instrumentation-api')
 
-  api group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.0'
-  api group: 'com.squareup.okhttp3', name: 'logging-interceptor', version: '4.9.0'
+  api "com.squareup.okhttp3:okhttp:4.9.0"
+  api "com.squareup.okhttp3:logging-interceptor:4.9.0"
 
   //TODO replace with Servlet API?
-  implementation group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
+  implementation "org.eclipse.jetty:jetty-server:8.0.0.v20110901"
 
   annotationProcessor deps.autoservice
   compileOnly deps.autoservice

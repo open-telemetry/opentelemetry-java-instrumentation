@@ -10,16 +10,16 @@ muzzle {
 }
 
 dependencies {
-  library group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
+  library "com.rabbitmq:amqp-client:2.7.0"
 
-  testLibrary group: 'org.springframework.amqp', name: 'spring-rabbit', version: '1.1.0.RELEASE'
+  testLibrary "org.springframework.amqp:spring-rabbit:1.1.0.RELEASE"
 
   testImplementation deps.testcontainers
 }
 
 configurations.testRuntimeClasspath {
   resolutionStrategy {
-    force group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
+    force "com.rabbitmq:amqp-client:2.7.0"
   }
 }
 

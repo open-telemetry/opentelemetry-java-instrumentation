@@ -7,5 +7,5 @@ muzzle {
 }
 
 dependencies {
-  testImplementation group: 'org.springframework', name: 'spring-web', version: '4.3.7.RELEASE'
+  testImplementation "org.springframework:spring-web:4.3.7.RELEASE"
 }

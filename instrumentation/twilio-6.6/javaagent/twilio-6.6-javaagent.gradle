@@ -10,12 +10,12 @@ muzzle {
 }
 
 dependencies {
-  library group: 'com.twilio.sdk', name: 'twilio', version: '6.6.9'
+  library "com.twilio.sdk:twilio:6.6.9"
 
   // included to make sure the apache httpclient nested spans are suppressed
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
 
-  latestDepTestLibrary group: 'com.twilio.sdk', name: 'twilio', version: '7.+'
+  latestDepTestLibrary "com.twilio.sdk:twilio:7.+"
 }
 
 tasks.withType(Test).configureEach {

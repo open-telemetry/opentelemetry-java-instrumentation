@@ -23,8 +23,8 @@ testSets {
 test.dependsOn myfaces12Test, myfaces2Test
 
 dependencies {
-  compileOnly group: 'org.apache.myfaces.core', name: 'myfaces-api', version: '1.2.12'
-  compileOnly group: 'javax.el', name: 'el-api', version: '1.0'
+  compileOnly "org.apache.myfaces.core:myfaces-api:1.2.12"
+  compileOnly "javax.el:el-api:1.0"
 
   implementation project(':instrumentation:jsf:jsf-common:library')
 
@@ -32,12 +32,12 @@ dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
 
-  myfaces12TestImplementation group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '1.2.12'
-  myfaces12TestImplementation group: 'com.sun.facelets', name: 'jsf-facelets', version: '1.1.14'
+  myfaces12TestImplementation "org.apache.myfaces.core:myfaces-impl:1.2.12"
+  myfaces12TestImplementation "com.sun.facelets:jsf-facelets:1.1.14"
 
-  myfaces2TestImplementation group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '2.3.2'
-  myfaces2TestImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.11'
-  myfaces2TestImplementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.2.11'
+  myfaces2TestImplementation "org.apache.myfaces.core:myfaces-impl:2.3.2"
+  myfaces2TestImplementation "javax.xml.bind:jaxb-api:2.2.11"
+  myfaces2TestImplementation "com.sun.xml.bind:jaxb-impl:2.2.11"
 
-  latestDepTestImplementation group: 'org.apache.myfaces.core', name: 'myfaces-impl', version: '2.+'
+  latestDepTestImplementation "org.apache.myfaces.core:myfaces-impl:2.+"
 }

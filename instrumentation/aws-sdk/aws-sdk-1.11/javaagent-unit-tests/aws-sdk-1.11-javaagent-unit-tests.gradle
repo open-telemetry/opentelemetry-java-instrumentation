@@ -4,8 +4,8 @@ dependencies {
   api project(':testing-common')
   testImplementation project(':instrumentation:aws-sdk:aws-sdk-1.11:javaagent')
 
-  testImplementation group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
-  testImplementation group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: '1.11.106'
+  testImplementation "com.amazonaws:aws-java-sdk-core:1.11.0"
+  testImplementation "com.amazonaws:aws-java-sdk-sqs:1.11.106"
 
   testImplementation deps.assertj
 }

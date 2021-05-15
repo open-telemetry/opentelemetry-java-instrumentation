@@ -12,13 +12,13 @@ muzzle {
 }
 
 dependencies {
-  implementation(group: "com.couchbase.client", name: "tracing-opentelemetry", version: "0.3.3") {
+  implementation("com.couchbase.client:tracing-opentelemetry:0.3.3") {
     exclude(group: "com.couchbase.client", module: "core-io")
   }
 
-  library group: "com.couchbase.client", name: "core-io", version: "2.1.0"
+  library "com.couchbase.client:core-io:2.1.0"
 
-  testLibrary group: "com.couchbase.client", name: "java-client", version: "3.1.0"
+  testLibrary "com.couchbase.client:java-client:3.1.0"
 
   testImplementation group: "org.testcontainers", name: "couchbase", version: versions.testcontainers
 }

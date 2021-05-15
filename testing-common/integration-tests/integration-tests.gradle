@@ -16,11 +16,11 @@ dependencies {
   testImplementation deps.guava
   testImplementation deps.opentelemetryExtAnnotations
 
-  testImplementation group: 'cglib', name: 'cglib', version: '3.2.5'
+  testImplementation "cglib:cglib:3.2.5"
 
   // test instrumenting java 1.1 bytecode
   // TODO do we want this?
-  testImplementation group: 'net.sf.jt400', name: 'jt400', version: '6.1'
+  testImplementation "net.sf.jt400:jt400:6.1"
 }
 
 test {

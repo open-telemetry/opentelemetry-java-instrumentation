@@ -23,9 +23,9 @@ dependencies {
   implementation project(':instrumentation:jaxws:jaxws-2.0-axis2-1.6:library')
 
   def axis2Version = '1.6.0'
-  library group: 'org.apache.axis2', name: 'axis2-jaxws', version: axis2Version
-  testLibrary group: 'org.apache.axis2', name: 'axis2-transport-http', version: axis2Version
-  testLibrary group: 'org.apache.axis2', name: 'axis2-transport-local', version: axis2Version
+  library "org.apache.axis2:axis2-jaxws:${axis2Version}"
+  testLibrary "org.apache.axis2:axis2-transport-http:${axis2Version}"
+  testLibrary "org.apache.axis2:axis2-transport-local:${axis2Version}"
 
   testImplementation project(":instrumentation:jaxws:jaxws-2.0-testing")
 
@@ -35,10 +35,10 @@ dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:jetty:jetty-8.0:javaagent')
 
-  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.11'
-  testImplementation group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.2.11'
-  testImplementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.2.11'
+  testImplementation "javax.xml.bind:jaxb-api:2.2.11"
+  testImplementation "com.sun.xml.bind:jaxb-core:2.2.11"
+  testImplementation "com.sun.xml.bind:jaxb-impl:2.2.11"
 
-  testImplementation group: 'com.sun.xml.ws', name: 'jaxws-rt', version: '2.2.8'
-  testImplementation group: 'com.sun.xml.ws', name: 'jaxws-tools', version: '2.2.8'
+  testImplementation "com.sun.xml.ws:jaxws-rt:2.2.8"
+  testImplementation "com.sun.xml.ws:jaxws-tools:2.2.8"
 }

@@ -10,7 +10,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'com.datastax.oss', name: 'java-driver-core', version: '4.0.0'
+  library "com.datastax.oss:java-driver-core:4.0.0"
 
-  latestDepTestLibrary group: 'com.datastax.oss', name: 'java-driver-core', version: '4.+'
+  latestDepTestLibrary "com.datastax.oss:java-driver-core:4.+"
 }

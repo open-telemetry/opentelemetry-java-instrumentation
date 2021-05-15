@@ -9,7 +9,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '10.0.0'
+  library "org.apache.tomcat.embed:tomcat-embed-core:10.0.0"
   implementation project(':instrumentation:tomcat:tomcat-common:javaagent')
   implementation project(':instrumentation:servlet:servlet-5.0:javaagent')
   // Make sure nothing breaks due to both 7.0 and 10.0 modules being present together

@@ -16,7 +16,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.4.0'
+  library "org.elasticsearch.client:elasticsearch-rest-client:6.4.0"
 
   implementation project(':instrumentation:elasticsearch:elasticsearch-rest-common:library')
 
@@ -26,14 +26,14 @@ dependencies {
   // Netty is used, but it adds complexity to the tests since we're using embedded ES.
   //testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
 
-  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
-  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+  testImplementation "org.apache.logging.log4j:log4j-core:2.11.0"
+  testImplementation "org.apache.logging.log4j:log4j-api:2.11.0"
 
-  testLibrary group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.4.0'
-  testLibrary group: 'org.elasticsearch', name: 'elasticsearch', version: '6.4.0'
-  testLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.4.0'
+  testLibrary "org.elasticsearch.client:elasticsearch-rest-client:6.4.0"
+  testLibrary "org.elasticsearch:elasticsearch:6.4.0"
+  testLibrary "org.elasticsearch.plugin:transport-netty4-client:6.4.0"
 
-  latestDepTestLibrary group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.+'
-  latestDepTestLibrary group: 'org.elasticsearch', name: 'elasticsearch', version: '6.+'
-  latestDepTestLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.+'
+  latestDepTestLibrary "org.elasticsearch.client:elasticsearch-rest-client:6.+"
+  latestDepTestLibrary "org.elasticsearch:elasticsearch:6.+"
+  latestDepTestLibrary "org.elasticsearch.plugin:transport-netty4-client:6.+"
 }
