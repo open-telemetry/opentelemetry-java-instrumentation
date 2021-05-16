@@ -41,10 +41,10 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             // Also include CallableStatement, which is a sub type of PreparedStatement
             .and(returns(hasInterface(named("java.sql.PreparedStatement")))),
-        ConnectionInstrumentation.class.getName() + "$ConnectionPrepareAdvice");
+        ConnectionInstrumentation.class.getName() + "$PrepareAdvice");
   }
 
-  public static class ConnectionPrepareAdvice {
+  public static class PrepareAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(
         @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
