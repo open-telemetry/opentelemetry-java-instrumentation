@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.apache.commons.httpclient.HttpClient
 import org.apache.commons.httpclient.HttpMethod
 import org.apache.commons.httpclient.methods.DeleteMethod
@@ -87,5 +89,14 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
   @Override
   boolean testCallback() {
     false
+  }
+
+  @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_HOST,
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_TARGET,
+    ]
   }
 }
