@@ -15,7 +15,7 @@ class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {
     new SoapProvider().invoke(null)
 
     then:
-    assertTraces(1, {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           name 'SoapProvider.invoke'
@@ -25,6 +25,6 @@ class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {
           }
         }
       }
-    })
+    }
   }
 }

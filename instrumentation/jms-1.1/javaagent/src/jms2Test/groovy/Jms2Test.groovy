@@ -162,7 +162,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
     expect:
     receivedMessage == null
     // span is not created if no message is received
-    assertTraces(0, {})
+    assertTraces(0) {}
 
     cleanup:
     consumer.close()
@@ -183,7 +183,7 @@ class Jms2Test extends AgentInstrumentationSpecification {
     expect:
     receivedMessage == null
     // span is not created if no message is received
-    assertTraces(0, {})
+    assertTraces(0) {}
 
     cleanup:
     consumer.close()

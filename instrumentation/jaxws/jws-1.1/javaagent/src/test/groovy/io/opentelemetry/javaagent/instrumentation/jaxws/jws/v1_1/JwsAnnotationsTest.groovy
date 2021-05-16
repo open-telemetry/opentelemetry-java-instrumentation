@@ -20,7 +20,7 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
     new WebServiceClass().doSomethingProtected()
 
     then:
-    assertTraces(1, {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           name "WebServiceClass.doSomethingPublic"
@@ -30,7 +30,7 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
           }
         }
       }
-    })
+    }
   }
 
   def "WebService via interface generates spans only for methods of the interface"() {
@@ -40,7 +40,7 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
     new WebServiceFromInterface().notPartOfAnything()
 
     then:
-    assertTraces(1, {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           name "WebServiceFromInterface.partOfPublicInterface"
@@ -50,7 +50,7 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
           }
         }
       }
-    })
+    }
   }
 
   def "WebService via proxy must have span attributes from actual implementation"() {
@@ -64,7 +64,7 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
 
     then:
     proxy.getClass() != WebServiceFromInterface
-    assertTraces(1, {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           name "WebServiceFromInterface.partOfPublicInterface"
@@ -74,6 +74,6 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
           }
         }
       }
-    })
+    }
   }
 }
