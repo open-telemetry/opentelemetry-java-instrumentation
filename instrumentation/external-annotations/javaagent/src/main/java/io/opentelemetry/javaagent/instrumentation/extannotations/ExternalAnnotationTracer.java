@@ -9,10 +9,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import java.lang.reflect.Method;
 
-public class TraceAnnotationTracer extends BaseTracer {
-  private static final TraceAnnotationTracer TRACER = new TraceAnnotationTracer();
+public class ExternalAnnotationTracer extends BaseTracer {
+  private static final ExternalAnnotationTracer TRACER = new ExternalAnnotationTracer();
 
-  public static TraceAnnotationTracer tracer() {
+  public static ExternalAnnotationTracer tracer() {
     return TRACER;
   }
 
