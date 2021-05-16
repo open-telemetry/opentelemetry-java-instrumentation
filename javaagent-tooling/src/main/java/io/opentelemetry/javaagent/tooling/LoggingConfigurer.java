@@ -14,7 +14,7 @@ class LoggingConfigurer {
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY =
       "io.opentelemetry.javaagent.slf4j.simpleLogger.dateTimeFormat";
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT =
-      "'[opentelemetry.auto.trace 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
+      "'[otel.javaagent 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
   private static final String SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY =
       "io.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel";
   private static final String SIMPLE_LOGGER_PREFIX =
