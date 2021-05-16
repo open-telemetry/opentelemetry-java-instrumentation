@@ -28,23 +28,6 @@ class AttributesAssert {
     asserter.assertAttributesAllVerified()
   }
 
-  def attribute(String name, value) {
-    if (value == null) {
-      return
-    }
-    assertedAttributes.add(name)
-    def val = attributes.get(name)
-    if (value instanceof Pattern) {
-      assert val =~ value
-    } else if (value instanceof Class) {
-      assert ((Class) value).isInstance(val)
-    } else if (value instanceof Closure) {
-      assert ((Closure) value).call(val)
-    } else {
-      assert val == value
-    }
-  }
-
   def attribute(String name) {
     return attributes[name]
   }
@@ -53,10 +36,27 @@ class AttributesAssert {
     if (args.length == 0) {
       throw new IllegalArgumentException(args.toString())
     }
-    attribute(name, args[0])
+    assertAttribute(name, args[0])
   }
 
-  void assertAttributesAllVerified() {
+  private assertAttribute(String name, expected) {
+    if (expected == null) {
+      return
+    }
+    assertedAttributes.add(name)
+    def value = attributes.get(name)
+    if (expected instanceof Pattern) {
+      assert value =~ expected
+    } else if (expected instanceof Class) {
+      assert ((Class) expected).isInstance(value)
+    } else if (expected instanceof Closure) {
+      assert ((Closure) expected).call(value)
+    } else {
+      assert value == expected
+    }
+  }
+
+  private void assertAttributesAllVerified() {
     Set<String> allAttributes = new TreeSet<>(attributes.keySet())
     Set<String> unverifiedAttributes = new TreeSet(allAttributes)
     unverifiedAttributes.removeAll(assertedAttributes)

@@ -54,34 +54,30 @@ class SpanAssert {
     assertEvent(span.events.get(index), spec)
   }
 
-  def assertNameContains(String spanName, String... shouldContainArr) {
-    for (String shouldContain : shouldContainArr) {
-      assert spanName.contains(shouldContain)
+  def name(String expected) {
+    assert span.name == expected
+    checked.name = true
+  }
+
+  def name(Pattern expected) {
+    assert span.name =~ expected
+    checked.name = true
+  }
+
+  def name(Closure expected) {
+    assert ((Closure) expected).call(span.name)
+    checked.name = true
+  }
+
+  def nameContains(String... expectedParts) {
+    for (String expectedPart : expectedParts) {
+      assert span.name.contains(expectedPart)
     }
-  }
-
-  def name(String name) {
-    assert span.name == name
     checked.name = true
   }
 
-  def name(Pattern pattern) {
-    assert span.name =~ pattern
-    checked.name = true
-  }
-
-  def name(Closure spec) {
-    assert ((Closure) spec).call(span.name)
-    checked.name = true
-  }
-
-  def nameContains(String... nameParts) {
-    assertNameContains(span.name, nameParts)
-    checked.name = true
-  }
-
-  def kind(SpanKind kind) {
-    assert span.kind == kind
+  def kind(SpanKind expected) {
+    assert span.kind == expected
     checked.kind = true
   }
 
@@ -90,29 +86,29 @@ class SpanAssert {
     checked.parentSpanId = true
   }
 
-  def parentSpanId(String parentSpanId) {
-    assert span.parentSpanId == parentSpanId
+  def parentSpanId(String expected) {
+    assert span.parentSpanId == expected
     checked.parentId = true
   }
 
-  def traceId(String traceId) {
-    assert span.traceId == traceId
+  def traceId(String expected) {
+    assert span.traceId == expected
     checked.traceId = true
   }
 
-  def childOf(SpanData parent) {
-    parentSpanId(parent.spanId)
-    traceId(parent.traceId)
+  def childOf(SpanData expectedParent) {
+    parentSpanId(expectedParent.spanId)
+    traceId(expectedParent.traceId)
   }
 
-  def hasLink(SpanData linked) {
-    hasLink(linked.traceId, linked.spanId)
+  def hasLink(SpanData expectedLink) {
+    hasLink(expectedLink.traceId, expectedLink.spanId)
   }
 
-  def hasLink(String traceId, String spanId) {
+  def hasLink(String expectedTraceId, String expectedSpanId) {
     def found = false
     for (def link : span.links) {
-      if (link.spanContext.traceId == traceId && link.spanContext.spanId == spanId) {
+      if (link.spanContext.traceId == expectedTraceId && link.spanContext.spanId == expectedSpanId) {
         found = true
         break
       }
@@ -120,27 +116,27 @@ class SpanAssert {
     assert found
   }
 
-  def status(StatusCode status) {
-    assert span.status.statusCode == status
+  def status(StatusCode expected) {
+    assert span.status.statusCode == expected
     checked.status = true
   }
 
-  def errorEvent(Class<Throwable> errorType) {
-    errorEvent(errorType, null)
+  def errorEvent(Class<Throwable> expectedClass) {
+    errorEvent(expectedClass, null)
   }
 
-  def errorEvent(Class<Throwable> errorType, message) {
-    errorEvent(errorType, message, 0)
+  def errorEvent(Class<Throwable> expectedClass, expectedMessage) {
+    errorEvent(expectedClass, expectedMessage, 0)
   }
 
-  def errorEvent(Class<Throwable> errorType, message, int index) {
+  def errorEvent(Class<Throwable> errorClass, expectedMessage, int index) {
     event(index) {
       eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
       attributes {
-        "${SemanticAttributes.EXCEPTION_TYPE.key}" errorType.canonicalName
+        "${SemanticAttributes.EXCEPTION_TYPE.key}" errorClass.canonicalName
         "${SemanticAttributes.EXCEPTION_STACKTRACE.key}" String
-        if (message != null) {
-          "${SemanticAttributes.EXCEPTION_MESSAGE.key}" message
+        if (expectedMessage != null) {
+          "${SemanticAttributes.EXCEPTION_MESSAGE.key}" expectedMessage
         }
       }
     }
@@ -164,7 +160,7 @@ class SpanAssert {
     assert assertedEventIndexes.size() == span.events.size()
   }
 
-  private Map<String, Object> toMap(Attributes attributes) {
+  private static Map<String, Object> toMap(Attributes attributes) {
     def map = new HashMap()
     attributes.forEach { key, value ->
       map.put(key.key, value)
