@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static java.util.Collections.singletonMap;
@@ -36,8 +41,8 @@ public class SessionBuilderInstrumentation implements TypeInstrumentation {
      * com.datastax.oss.driver.api.core.session.SessionBuilder.buildAsync() method is called. The
      * opentracing contribution is a simple wrapper, so we just have to wrap the new session.
      *
-     * @param stage The fresh CompletionStage to patch. This stage produces session which is replaced
-     *     with new session
+     * @param stage The fresh CompletionStage to patch. This stage produces session which is
+     *     replaced with new session
      */
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void injectTracingSession(

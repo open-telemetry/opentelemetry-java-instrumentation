@@ -23,5 +23,4 @@ public class ExternalAnnotationInstrumentationModule extends InstrumentationModu
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ExternalAnnotationInstrumentation());
   }
-
 }

@@ -57,5 +57,4 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return typeInstrumentations;
   }
-
 }

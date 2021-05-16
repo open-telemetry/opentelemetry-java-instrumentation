@@ -30,8 +30,9 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new AsyncHttpClientInstrumentation(
-        PlayWsInstrumentationModule.class.getName() + "$ClientAdvice"));
+    return singletonList(
+        new AsyncHttpClientInstrumentation(
+            PlayWsInstrumentationModule.class.getName() + "$ClientAdvice"));
   }
 
   public static class ClientAdvice {

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
@@ -47,8 +52,8 @@ public class MethodInstrumentation implements TypeInstrumentation {
       }
     }
 
-    return Collections
-        .singletonMap(methodMatchers, MethodInstrumentation.class.getName() + "$MethodAdvice");
+    return Collections.singletonMap(
+        methodMatchers, MethodInstrumentation.class.getName() + "$MethodAdvice");
   }
 
   public static class MethodAdvice {

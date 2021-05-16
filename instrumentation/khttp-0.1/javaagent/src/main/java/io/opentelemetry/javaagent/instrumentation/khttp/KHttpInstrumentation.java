@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.khttp;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
@@ -62,8 +67,8 @@ public class KHttpInstrumentation implements TypeInstrumentation {
       }
 
       headers = asWritable(headers);
-      context = tracer()
-          .startSpan(parentContext, new RequestWrapper(method, uri, headers), headers);
+      context =
+          tracer().startSpan(parentContext, new RequestWrapper(method, uri, headers), headers);
       scope = context.makeCurrent();
     }
 

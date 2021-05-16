@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package instrumentation;
 
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
@@ -24,8 +29,8 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return Collections.singletonMap(named("getHostName"),
-        TestTypeInstrumentation.class.getName() + "$GetHostNameAdvice");
+    return Collections.singletonMap(
+        named("getHostName"), TestTypeInstrumentation.class.getName() + "$GetHostNameAdvice");
   }
 
   public static class GetHostNameAdvice {

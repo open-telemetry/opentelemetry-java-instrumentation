@@ -25,5 +25,4 @@ public class WithSpanInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new WithSpanInstrumentation());
   }
-
 }

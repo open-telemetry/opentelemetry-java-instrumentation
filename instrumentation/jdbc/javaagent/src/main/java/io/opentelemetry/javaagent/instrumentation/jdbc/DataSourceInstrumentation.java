@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
@@ -25,8 +30,8 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(named("getConnection"),
-        DataSourceInstrumentation.class.getName() + "$GetConnectionAdvice");
+    return singletonMap(
+        named("getConnection"), DataSourceInstrumentation.class.getName() + "$GetConnectionAdvice");
   }
 
   public static class GetConnectionAdvice {
