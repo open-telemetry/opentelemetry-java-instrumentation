@@ -13,8 +13,6 @@ muzzle {
 dependencies {
   library "biz.paluch.redis:lettuce:4.0.Final"
 
-  testImplementation "com.github.kstyrc:embedded-redis:0.6"
-
   latestDepTestLibrary "biz.paluch.redis:lettuce:4.+"
 }
 

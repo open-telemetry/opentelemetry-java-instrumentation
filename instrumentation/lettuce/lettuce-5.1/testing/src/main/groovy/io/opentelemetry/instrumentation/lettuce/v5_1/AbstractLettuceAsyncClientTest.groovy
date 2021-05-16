@@ -25,13 +25,15 @@ import java.util.function.BiConsumer
 import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Function
-import redis.embedded.RedisServer
+import org.testcontainers.containers.FixedHostPortGenericContainer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
 abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecification {
   public static final String HOST = "127.0.0.1"
   public static final int DB_INDEX = 0
+
+  private static FixedHostPortGenericContainer redisServer = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
 
   abstract RedisClient createClient(String uri)
 
@@ -47,9 +49,6 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
   String dbUriNonExistent
   @Shared
   String embeddedDbUri
-
-  @Shared
-  RedisServer redisServer
 
   @Shared
   Map<String, String> testHashMap = [
@@ -71,18 +70,12 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     dbUriNonExistent = "redis://" + dbAddrNonExistent
     embeddedDbUri = "redis://" + dbAddr
 
-    redisServer = RedisServer.builder()
-    // bind to localhost to avoid firewall popup
-      .setting("bind " + HOST)
-    // set max memory to avoid problems in CI
-      .setting("maxmemory 128M")
-      .port(port).build()
+    redisServer = redisServer.withFixedExposedPort(port, 6379)
   }
 
   def setup() {
     redisClient = createClient(embeddedDbUri)
 
-    println "Using redis: $redisServer.args"
     redisServer.start()
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS)
 

@@ -15,8 +15,8 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.function.Consumer
+import org.testcontainers.containers.FixedHostPortGenericContainer
 import reactor.core.scheduler.Schedulers
-import redis.embedded.RedisServer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
@@ -27,11 +27,11 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
+  private static FixedHostPortGenericContainer redisServer = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
+
   @Shared
   String embeddedDbUri
 
-  @Shared
-  RedisServer redisServer
 
   RedisClient redisClient
   StatefulConnection connection
@@ -43,18 +43,12 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
     String dbAddr = PEER_HOST + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
 
-    redisServer = RedisServer.builder()
-    // bind to localhost to avoid firewall popup
-      .setting("bind " + PEER_HOST)
-    // set max memory to avoid problems in CI
-      .setting("maxmemory 128M")
-      .port(port).build()
+    redisServer = redisServer.withFixedExposedPort(port, 6379)
   }
 
   def setup() {
     redisClient = RedisClient.create(embeddedDbUri)
 
-    println "Using redis: $redisServer.args"
     redisServer.start()
     redisClient.setOptions(CLIENT_OPTIONS)
 
@@ -201,7 +195,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
-            "lettuce.command.results.count" 157
+            "lettuce.command.results.count" 224
           }
         }
       }

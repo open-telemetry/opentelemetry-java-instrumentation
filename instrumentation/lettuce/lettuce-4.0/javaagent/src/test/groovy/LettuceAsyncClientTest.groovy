@@ -25,7 +25,7 @@ import java.util.function.BiConsumer
 import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Function
-import redis.embedded.RedisServer
+import org.testcontainers.containers.FixedHostPortGenericContainer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
@@ -34,6 +34,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = new ClientOptions.Builder().autoReconnect(false).build()
+
+  private static FixedHostPortGenericContainer redisServer = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
 
   @Shared
   int port
@@ -47,9 +49,6 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
   String dbUriNonExistent
   @Shared
   String embeddedDbUri
-
-  @Shared
-  RedisServer redisServer
 
   @Shared
   Map<String, String> testHashMap = [
@@ -71,18 +70,12 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
     dbUriNonExistent = "redis://" + dbAddrNonExistent
     embeddedDbUri = "redis://" + dbAddr
 
-    redisServer = RedisServer.builder()
-    // bind to localhost to avoid firewall popup
-      .setting("bind " + HOST)
-    // set max memory to avoid problems in CI
-      .setting("maxmemory 128M")
-      .port(port).build()
+    redisServer = redisServer.withFixedExposedPort(port, 6379)
   }
 
   def setup() {
     redisClient = RedisClient.create(embeddedDbUri)
 
-    println "Using redis: $redisServer.args"
     redisServer.start()
     redisClient.setOptions(CLIENT_OPTIONS)
 

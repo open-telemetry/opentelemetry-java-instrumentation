@@ -14,7 +14,7 @@ import com.lambdaworks.redis.api.sync.RedisCommands
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import redis.embedded.RedisServer
+import org.testcontainers.containers.FixedHostPortGenericContainer
 import spock.lang.Shared
 
 class LettuceSyncClientTest extends AgentInstrumentationSpecification {
@@ -22,6 +22,8 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = new ClientOptions.Builder().autoReconnect(false).build()
+
+  private static FixedHostPortGenericContainer redis = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
 
   @Shared
   int port
@@ -35,9 +37,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
   String dbUriNonExistent
   @Shared
   String embeddedDbUri
-
-  @Shared
-  RedisServer redisServer
 
   @Shared
   Map<String, String> testHashMap = [
@@ -58,18 +57,15 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
     dbUriNonExistent = "redis://" + dbAddrNonExistent
     embeddedDbUri = "redis://" + dbAddr
 
-    redisServer = RedisServer.builder()
-    // bind to localhost to avoid firewall popup
-      .setting("bind " + HOST)
-    // set max memory to avoid problems in CI
-      .setting("maxmemory 128M")
-      .port(port).build()
+    redis = redis.withFixedExposedPort(port, 6379)
   }
 
   def setup() {
+    //TODO do not restart server for every test
+    redis.start()
+
     redisClient = RedisClient.create(embeddedDbUri)
 
-    redisServer.start()
     connection = redisClient.connect()
     syncCommands = connection.sync()
 
@@ -82,7 +78,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
 
   def cleanup() {
     connection.close()
-    redisServer.stop()
+    redis.stop()
   }
 
   def "connect"() {
