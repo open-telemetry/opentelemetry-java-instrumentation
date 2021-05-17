@@ -28,7 +28,7 @@ class AttributesAssert {
     asserter.assertAttributesAllVerified()
   }
 
-  private assertAttribute(String name, expected) {
+  def attribute(String name, expected) {
     if (expected == null) {
       return
     }
@@ -53,7 +53,7 @@ class AttributesAssert {
     if (args.length == 0) {
       throw new IllegalArgumentException(args.toString())
     }
-    assertAttribute(name, args[0])
+    attribute(name, args[0])
   }
 
   void assertAttributesAllVerified() {
