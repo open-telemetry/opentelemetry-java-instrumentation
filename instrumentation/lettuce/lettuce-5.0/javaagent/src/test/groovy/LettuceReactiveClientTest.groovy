@@ -195,7 +195,7 @@ class LettuceReactiveClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "COMMAND"
-            "lettuce.command.results.count" 224
+            "lettuce.command.results.count" { it > 100 }
           }
         }
       }
