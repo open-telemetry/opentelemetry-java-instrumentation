@@ -1,5 +1,4 @@
 plugins {
-  id 'groovy'
   id 'java-gradle-plugin'
   id "com.diffplug.spotless" version "5.12.4"
 }
@@ -10,16 +9,13 @@ spotless {
     licenseHeaderFile rootProject.file('../gradle/enforcement/spotless.license.java'), '(package|import|public)'
     target 'src/**/*.java'
   }
-  groovy {
-    licenseHeaderFile rootProject.file('../gradle/enforcement/spotless.license.java'), '(package|import|class)'
-  }
 }
 
 gradlePlugin {
   plugins {
     create("muzzle-plugin") {
       id = "muzzle"
-      implementationClass = "MuzzlePlugin"
+      implementationClass = "io.opentelemetry.instrumentation.gradle.muzzle.MuzzlePlugin"
     }
   }
 }
