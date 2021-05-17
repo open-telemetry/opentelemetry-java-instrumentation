@@ -56,7 +56,8 @@ class AttributesAssert {
     }
   }
 
-  private void assertAttributesAllVerified() {
+  // this could be private, but then codenarc fails, thinking (incorrectly) that it's unused
+  void assertAttributesAllVerified() {
     Set<String> allAttributes = new TreeSet<>(attributes.keySet())
     Set<String> unverifiedAttributes = new TreeSet(allAttributes)
     unverifiedAttributes.removeAll(assertedAttributes)
