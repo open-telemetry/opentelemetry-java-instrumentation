@@ -89,8 +89,8 @@ final class ArmeriaHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(
-      RequestContext ctx, RequestLog requestLog) {
+  @Nullable
+  protected Long responseContentLengthUncompressed(RequestContext ctx, RequestLog requestLog) {
     return null;
   }
 

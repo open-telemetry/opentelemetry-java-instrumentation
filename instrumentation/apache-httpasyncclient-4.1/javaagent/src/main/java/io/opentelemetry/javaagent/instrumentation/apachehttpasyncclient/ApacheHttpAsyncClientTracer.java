@@ -53,7 +53,8 @@ public class ApacheHttpAsyncClientTracer
   }
 
   @Override
-  protected @Nullable String flavor(HttpRequest httpRequest) {
+  @Nullable
+  protected String flavor(HttpRequest httpRequest) {
     return httpRequest.getProtocolVersion().toString();
   }
 

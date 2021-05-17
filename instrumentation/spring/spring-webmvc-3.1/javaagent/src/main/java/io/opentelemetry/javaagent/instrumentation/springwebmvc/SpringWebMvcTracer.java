@@ -38,7 +38,8 @@ public class SpringWebMvcTracer extends BaseTracer {
     return TRACER;
   }
 
-  public @Nullable Context startHandlerSpan(Context parentContext, Object handler) {
+  @Nullable
+  public Context startHandlerSpan(Context parentContext, Object handler) {
     String spanName = spanNameOnHandle(handler);
     if (spanName != null) {
       return startSpan(parentContext, spanName, INTERNAL);

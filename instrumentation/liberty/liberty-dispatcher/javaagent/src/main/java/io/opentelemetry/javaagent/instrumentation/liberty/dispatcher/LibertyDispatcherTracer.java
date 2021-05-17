@@ -30,12 +30,14 @@ public class LibertyDispatcherTracer
   }
 
   @Override
-  protected @Nullable Integer peerPort(LibertyConnectionWrapper libertyConnectionWrapper) {
+  @Nullable
+  protected Integer peerPort(LibertyConnectionWrapper libertyConnectionWrapper) {
     return libertyConnectionWrapper.peerPort();
   }
 
   @Override
-  protected @Nullable String peerHostIP(LibertyConnectionWrapper libertyConnectionWrapper) {
+  @Nullable
+  protected String peerHostIP(LibertyConnectionWrapper libertyConnectionWrapper) {
     return libertyConnectionWrapper.peerHostIP();
   }
 
@@ -100,7 +102,8 @@ public class LibertyDispatcherTracer
   }
 
   @Override
-  public @Nullable Context getServerContext(Void none) {
+  @Nullable
+  public Context getServerContext(Void none) {
     return null;
   }
 
