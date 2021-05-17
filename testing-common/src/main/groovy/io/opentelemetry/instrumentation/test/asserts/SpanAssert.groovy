@@ -160,7 +160,7 @@ class SpanAssert {
     assert assertedEventIndexes.size() == span.events.size()
   }
 
-  private static Map<String, Object> toMap(Attributes attributes) {
+  private Map<String, Object> toMap(Attributes attributes) {
     def map = new HashMap()
     attributes.forEach { key, value ->
       map.put(key.key, value)

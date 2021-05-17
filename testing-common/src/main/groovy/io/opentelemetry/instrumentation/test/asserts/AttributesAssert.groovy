@@ -28,17 +28,6 @@ class AttributesAssert {
     asserter.assertAttributesAllVerified()
   }
 
-  def attribute(String name) {
-    return attributes[name]
-  }
-
-  def methodMissing(String name, args) {
-    if (args.length == 0) {
-      throw new IllegalArgumentException(args.toString())
-    }
-    assertAttribute(name, args[0])
-  }
-
   private assertAttribute(String name, expected) {
     if (expected == null) {
       return
@@ -56,7 +45,17 @@ class AttributesAssert {
     }
   }
 
-  // this could be private, but then codenarc fails, thinking (incorrectly) that it's unused
+  def attribute(String name) {
+    return attributes[name]
+  }
+
+  def methodMissing(String name, args) {
+    if (args.length == 0) {
+      throw new IllegalArgumentException(args.toString())
+    }
+    assertAttribute(name, args[0])
+  }
+
   void assertAttributesAllVerified() {
     Set<String> allAttributes = new TreeSet<>(attributes.keySet())
     Set<String> unverifiedAttributes = new TreeSet(allAttributes)
