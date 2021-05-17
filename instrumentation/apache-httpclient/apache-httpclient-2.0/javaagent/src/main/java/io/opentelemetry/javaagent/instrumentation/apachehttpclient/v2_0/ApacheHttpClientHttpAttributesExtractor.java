@@ -98,7 +98,8 @@ final class ApacheHttpClientHttpAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long responseContentLengthUncompressed(HttpMethod httpMethod, Void unused) {
+  @Nullable
+  protected Long responseContentLengthUncompressed(HttpMethod httpMethod, Void unused) {
     return null;
   }
 
