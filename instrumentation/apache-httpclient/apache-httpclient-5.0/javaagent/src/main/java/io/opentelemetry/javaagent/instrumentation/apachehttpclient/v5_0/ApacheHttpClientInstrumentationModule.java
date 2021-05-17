@@ -22,11 +22,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.HashMap;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hc.core5.http.ClassicHttpRequest;
@@ -57,13 +55,12 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    public void transform(TypeTransformer transformer) {
       // There are 8 execute(...) methods. Depending on the version, they may or may not delegate
       // to each other. Thus, all methods need to be instrumented. Because of argument position and
       // type, some methods can share the same advice class. The call depth tracking ensures only 1
       // span is created
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("execute"))
               .and(not(isAbstract()))
@@ -71,7 +68,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
               .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest"))),
           ApacheHttpClientInstrumentationModule.class.getName() + "$RequestAdvice");
 
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("execute"))
               .and(not(isAbstract()))
@@ -80,7 +77,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
               .and(takesArgument(1, named("org.apache.hc.core5.http.protocol.HttpContext"))),
           ApacheHttpClientInstrumentationModule.class.getName() + "$RequestAdvice");
 
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("execute"))
               .and(not(isAbstract()))
@@ -89,7 +86,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
               .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest"))),
           ApacheHttpClientInstrumentationModule.class.getName() + "$RequestWithHostAdvice");
 
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("execute"))
               .and(not(isAbstract()))
@@ -99,7 +96,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
               .and(takesArgument(2, named("org.apache.hc.core5.http.protocol.HttpContext"))),
           ApacheHttpClientInstrumentationModule.class.getName() + "$RequestWithHostAdvice");
 
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("execute"))
               .and(not(isAbstract()))
@@ -109,7 +106,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
                   takesArgument(1, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
           ApacheHttpClientInstrumentationModule.class.getName() + "$RequestWithHandlerAdvice");
 
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("execute"))
               .and(not(isAbstract()))
@@ -121,7 +118,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
           ApacheHttpClientInstrumentationModule.class.getName()
               + "$RequestWithContextAndHandlerAdvice");
 
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("execute"))
               .and(not(isAbstract()))
@@ -133,7 +130,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
           ApacheHttpClientInstrumentationModule.class.getName()
               + "$RequestWithHostAndHandlerAdvice");
 
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("execute"))
               .and(not(isAbstract()))
@@ -145,8 +142,6 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
                   takesArgument(3, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
           ApacheHttpClientInstrumentationModule.class.getName()
               + "$RequestWithHostAndContextAndHandlerAdvice");
-
-      return transformers;
     }
   }
 

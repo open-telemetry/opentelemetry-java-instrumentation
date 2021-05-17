@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.extension.instrumentation;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers;
-import java.util.Map;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
@@ -54,17 +52,10 @@ public interface TypeInstrumentation {
    */
   ElementMatcher<TypeDescription> typeMatcher();
 
-  // TODO: will be removed in the next commit
-  @Deprecated
-  Map<? extends ElementMatcher<? super MethodDescription>, String> transformers();
-
   /**
    * Define transformations that should be applied to classes matched by {@link #typeMatcher()}, for
    * example: apply advice classes to chosen methods ({@link
    * TypeTransformer#applyAdviceToMethod(ElementMatcher, String)}.
    */
-  // TODO: the default implementation will be removed in the next commit
-  default void transform(TypeTransformer transformer) {
-    transformers().forEach(transformer::applyAdviceToMethod);
-  }
+  void transform(TypeTransformer transformer);
 }

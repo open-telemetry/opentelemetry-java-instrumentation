@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.ha
 import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioTracer.tracer;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -19,9 +18,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Map;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -45,18 +43,15 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
             "com.twilio.base.Updater"));
   }
 
-  /** Return bytebuddy transformers for instrumenting the Twilio SDK. */
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-
+  public void transform(TypeTransformer transformer) {
     /*
        We are listing out the main service calls on the Creator, Deleter, Fetcher, Reader, and
        Updater abstract classes. The isDeclaredBy() matcher did not work in the unit tests and
        we found that there were certain methods declared on the base class (particularly Reader),
        which we weren't interested in annotating.
     */
-
-    return singletonMap(
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
             .and(not(isAbstract()))

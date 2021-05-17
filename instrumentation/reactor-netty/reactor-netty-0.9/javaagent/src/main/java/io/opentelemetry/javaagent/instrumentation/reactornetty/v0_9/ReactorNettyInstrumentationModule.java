@@ -20,14 +20,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
@@ -67,45 +65,43 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isStatic().and(namedOneOf("create", "newConnection", "from")),
           ReactorNettyInstrumentationModule.class.getName() + "$CreateAdvice");
 
       // advice classes below expose current context in doOn*/doAfter* callbacks
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isPublic()
               .and(namedOneOf("doOnRequest", "doAfterRequest"))
               .and(takesArguments(1))
               .and(takesArgument(0, BiConsumer.class)),
           ReactorNettyInstrumentationModule.class.getName() + "$OnRequestAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isPublic()
               .and(named("doOnRequestError"))
               .and(takesArguments(1))
               .and(takesArgument(0, BiConsumer.class)),
           ReactorNettyInstrumentationModule.class.getName() + "$OnRequestErrorAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isPublic()
               .and(namedOneOf("doOnResponse", "doAfterResponse"))
               .and(takesArguments(1))
               .and(takesArgument(0, BiConsumer.class)),
           ReactorNettyInstrumentationModule.class.getName() + "$OnResponseAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isPublic()
               .and(named("doOnResponseError"))
               .and(takesArguments(1))
               .and(takesArgument(0, BiConsumer.class)),
           ReactorNettyInstrumentationModule.class.getName() + "$OnResponseErrorAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isPublic()
               .and(named("doOnError"))
               .and(takesArguments(2))
               .and(takesArgument(0, BiConsumer.class))
               .and(takesArgument(1, BiConsumer.class)),
           ReactorNettyInstrumentationModule.class.getName() + "$OnErrorAdvice");
-      return transformers;
     }
   }
 

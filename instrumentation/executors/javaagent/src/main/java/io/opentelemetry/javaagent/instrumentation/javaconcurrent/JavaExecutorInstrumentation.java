@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
@@ -19,54 +20,48 @@ import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.matcher.ElementMatcher;
 
 public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation {
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, Runnable.class)).and(takesArguments(1)),
         JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
     // Netty uses addTask as the actual core of their submission; there are non-standard variations
     // like execute(Runnable,boolean) that aren't caught by standard instrumentation
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("addTask").and(takesArgument(0, Runnable.class)).and(takesArguments(1)),
         JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, ForkJoinTask.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("submit").and(takesArgument(0, Runnable.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("submit").and(takesArgument(0, Callable.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("submit").and(takesArgument(0, ForkJoinTask.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         nameMatches("invoke(Any|All)$").and(takesArgument(0, Collection.class)),
         JavaExecutorInstrumentation.class.getName()
             + "$SetCallableStateForCallableCollectionAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         nameMatches("invoke").and(takesArgument(0, ForkJoinTask.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("schedule").and(takesArgument(0, Runnable.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("schedule").and(takesArgument(0, Callable.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
-    return transformers;
   }
 
   public static class SetExecuteRunnableStateAdvice {

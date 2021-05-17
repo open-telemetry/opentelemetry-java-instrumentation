@@ -20,12 +20,10 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.concurrent.Future;
@@ -50,19 +48,17 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    public void transform(TypeTransformer transformer) {
       // This is mainly for compatibility with 10.0
-      transformers.put(
+      transformer.applyAdviceToMethod(
           named("singleRequest")
               .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
           AkkaHttpClientInstrumentationModule.class.getName() + "$SingleRequestAdvice");
       // This is for 10.1+
-      transformers.put(
+      transformer.applyAdviceToMethod(
           named("singleRequestImpl")
               .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
           AkkaHttpClientInstrumentationModule.class.getName() + "$SingleRequestAdvice");
-      return transformers;
     }
   }
 

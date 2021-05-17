@@ -12,10 +12,8 @@ import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Collections;
-import java.util.Map;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -27,8 +25,8 @@ public class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation 
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return Collections.singletonMap(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isConstructor(),
         CouchbaseEnvironmentInstrumentation.class.getName() + "$ConstructorAdvice");
   }

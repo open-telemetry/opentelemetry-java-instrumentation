@@ -13,9 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.HashMap;
-import java.util.Map;
-import net.bytebuddy.description.method.MethodDescription;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -51,24 +49,22 @@ public class ServletAndFilterInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         namedOneOf("doFilter", "service")
             .and(takesArgument(0, named(basePackageName + ".ServletRequest")))
             .and(takesArgument(1, named(basePackageName + ".ServletResponse")))
             .and(isPublic()),
         adviceClassName);
     if (servletInitAdviceClassName != null) {
-      transformers.put(
+      transformer.applyAdviceToMethod(
           named("init").and(takesArgument(0, named(basePackageName + ".ServletConfig"))),
           servletInitAdviceClassName);
     }
     if (filterInitAdviceClassName != null) {
-      transformers.put(
+      transformer.applyAdviceToMethod(
           named("init").and(takesArgument(0, named(basePackageName + ".FilterConfig"))),
           filterInitAdviceClassName);
     }
-    return transformers;
   }
 }

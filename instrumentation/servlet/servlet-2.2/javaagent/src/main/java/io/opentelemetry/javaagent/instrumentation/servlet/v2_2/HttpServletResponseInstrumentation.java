@@ -13,14 +13,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import java.util.HashMap;
-import java.util.Map;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -47,15 +45,13 @@ public class HttpServletResponseInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         namedOneOf("sendError", "setStatus"),
         HttpServletResponseInstrumentation.class.getName() + "$Servlet2ResponseStatusAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("sendRedirect"),
         HttpServletResponseInstrumentation.class.getName() + "$Servlet2ResponseRedirectAdvice");
-    return transformers;
   }
 
   public static class Servlet2ResponseRedirectAdvice {

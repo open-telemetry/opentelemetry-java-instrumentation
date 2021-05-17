@@ -12,12 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.HashMap;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import java.util.Map;
 import kotlin.coroutines.CoroutineContext;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -45,17 +43,15 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           (named("launch").or(named("launch$default")))
               .and(takesArgument(1, named("kotlin.coroutines.CoroutineContext"))),
           KotlinCoroutinesInstrumentationModule.class.getName() + "$LaunchAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           (named("runBlocking").or(named("runBlocking$default")))
               .and(takesArgument(0, named("kotlin.coroutines.CoroutineContext"))),
           KotlinCoroutinesInstrumentationModule.class.getName() + "$RunBlockingAdvice");
-      return transformers;
     }
   }
 

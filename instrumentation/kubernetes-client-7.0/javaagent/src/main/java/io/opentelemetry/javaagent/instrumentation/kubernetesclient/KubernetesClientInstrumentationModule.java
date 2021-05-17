@@ -19,12 +19,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.Call;
@@ -49,25 +47,23 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isPublic().and(named("buildRequest")).and(takesArguments(10)),
           KubernetesClientInstrumentationModule.class.getName() + "$BuildRequestAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isPublic()
               .and(named("execute"))
               .and(takesArguments(2))
               .and(takesArgument(0, named("okhttp3.Call"))),
           KubernetesClientInstrumentationModule.class.getName() + "$ExecuteAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isPublic()
               .and(named("executeAsync"))
               .and(takesArguments(3))
               .and(takesArgument(0, named("okhttp3.Call")))
               .and(takesArgument(2, named("io.kubernetes.client.openapi.ApiCallback"))),
           KubernetesClientInstrumentationModule.class.getName() + "$ExecuteAsyncAdvice");
-      return transformers;
     }
   }
 

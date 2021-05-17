@@ -16,14 +16,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
-import java.util.HashMap;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -54,25 +52,22 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isMethod().and(nameStartsWith("end").or(named("sendHead"))),
         HttpRequestInstrumentation.class.getName() + "$EndRequestAdvice");
 
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod().and(named("handleException")),
         HttpRequestInstrumentation.class.getName() + "$HandleExceptionAdvice");
 
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod().and(named("handleResponse")),
         HttpRequestInstrumentation.class.getName() + "$HandleResponseAdvice");
 
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod().and(isPrivate()).and(nameStartsWith("write").or(nameStartsWith("connected"))),
         HttpRequestInstrumentation.class.getName() + "$MountContextAdvice");
-    return transformers;
   }
 
   public static class EndRequestAdvice {

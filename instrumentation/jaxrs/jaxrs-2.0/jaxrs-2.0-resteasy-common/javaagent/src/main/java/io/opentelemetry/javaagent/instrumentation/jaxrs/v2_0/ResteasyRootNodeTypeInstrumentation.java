@@ -9,11 +9,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import java.util.HashMap;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -27,9 +25,8 @@ public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation 
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         named("addInvoker")
             .and(takesArgument(0, String.class))
             // package of ResourceInvoker was changed in reasteasy 4
@@ -39,8 +36,6 @@ public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation 
                     named("org.jboss.resteasy.core.ResourceInvoker")
                         .or(named("org.jboss.resteasy.spi.ResourceInvoker")))),
         ResteasyRootNodeTypeInstrumentation.class.getName() + "$AddInvokerAdvice");
-
-    return transformers;
   }
 
   public static class AddInvokerAdvice {

@@ -16,13 +16,11 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.util.HashMap;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -39,25 +37,23 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(named("addListener"))
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener"))),
         ChannelFutureInstrumentation.class.getName() + "$AddListenerAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod().and(named("addListeners")).and(takesArgument(0, isArray())),
         ChannelFutureInstrumentation.class.getName() + "$AddListenersAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(named("removeListener"))
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener"))),
         ChannelFutureInstrumentation.class.getName() + "$RemoveListenerAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod().and(named("removeListeners")).and(takesArgument(0, isArray())),
         ChannelFutureInstrumentation.class.getName() + "$RemoveListenersAdvice");
-    return transformers;
   }
 
   public static class AddListenerAdvice {

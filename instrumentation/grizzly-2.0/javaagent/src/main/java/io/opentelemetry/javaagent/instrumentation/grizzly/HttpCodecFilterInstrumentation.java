@@ -12,11 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
@@ -32,23 +30,21 @@ public class HttpCodecFilterInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+  public void transform(TypeTransformer transformer) {
     // this is for 2.3.20+
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("handleRead")
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
             .and(takesArgument(1, named("org.glassfish.grizzly.http.HttpHeader")))
             .and(isPublic()),
         HttpCodecFilterInstrumentation.class.getName() + "$HandleReadAdvice");
     // this is for 2.3 through 2.3.19
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("handleRead")
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
             .and(takesArgument(1, named("org.glassfish.grizzly.http.HttpPacketParsing")))
             .and(isPublic()),
         HttpCodecFilterInstrumentation.class.getName() + "$HandleReadOldAdvice");
-    return transformers;
   }
 
   public static class HandleReadAdvice {
