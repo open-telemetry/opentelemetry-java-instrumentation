@@ -45,10 +45,6 @@ class AttributesAssert {
     }
   }
 
-  def attribute(String name) {
-    return attributes[name]
-  }
-
   def methodMissing(String name, args) {
     if (args.length == 0) {
       throw new IllegalArgumentException(args.toString())
@@ -56,6 +52,7 @@ class AttributesAssert {
     attribute(name, args[0])
   }
 
+  // this could be private, but then codenarc fails, thinking (incorrectly) that it's unused
   void assertAttributesAllVerified() {
     Set<String> allAttributes = new TreeSet<>(attributes.keySet())
     Set<String> unverifiedAttributes = new TreeSet(allAttributes)

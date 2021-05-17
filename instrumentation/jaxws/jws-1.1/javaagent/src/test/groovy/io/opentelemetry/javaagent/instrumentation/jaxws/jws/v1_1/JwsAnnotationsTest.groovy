@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.test.WebServiceClass
 import io.opentelemetry.test.WebServiceDefinitionInterface
 import io.opentelemetry.test.WebServiceFromInterface
@@ -25,8 +26,8 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "WebServiceClass.doSomethingPublic"
           attributes {
-            attribute('code.function', 'doSomethingPublic')
-            attribute('code.namespace', 'io.opentelemetry.test.WebServiceClass')
+            "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.test.WebServiceClass"
+            "${SemanticAttributes.CODE_FUNCTION.key}" "doSomethingPublic"
           }
         }
       }
@@ -45,8 +46,8 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "WebServiceFromInterface.partOfPublicInterface"
           attributes {
-            attribute('code.function', 'partOfPublicInterface')
-            attribute('code.namespace', 'io.opentelemetry.test.WebServiceFromInterface')
+            "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.test.WebServiceFromInterface"
+            "${SemanticAttributes.CODE_FUNCTION.key}" "partOfPublicInterface"
           }
         }
       }
@@ -69,8 +70,8 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "WebServiceFromInterface.partOfPublicInterface"
           attributes {
-            attribute('code.function', 'partOfPublicInterface')
-            attribute('code.namespace', 'io.opentelemetry.test.WebServiceFromInterface')
+            "${SemanticAttributes.CODE_NAMESPACE.key}" "io.opentelemetry.test.WebServiceFromInterface"
+            "${SemanticAttributes.CODE_FUNCTION.key}" "partOfPublicInterface"
           }
         }
       }
