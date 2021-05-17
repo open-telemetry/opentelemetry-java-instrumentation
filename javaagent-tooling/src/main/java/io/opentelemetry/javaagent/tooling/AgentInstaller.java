@@ -240,9 +240,7 @@ public class AgentInstaller {
   }
 
   private static List<AgentExtension> loadAgentExtensions() {
-    return SafeServiceLoader.load(
-            AgentExtension.class, Thread.currentThread().getContextClassLoader())
-        .stream()
+    return SafeServiceLoader.load(AgentExtension.class).stream()
         .sorted(Comparator.comparingInt(AgentExtension::order))
         .collect(Collectors.toList());
   }
@@ -294,8 +292,7 @@ public class AgentInstaller {
     List<String> bootstrapPackages =
         new ArrayList<>(Arrays.asList(Constants.BOOTSTRAP_PACKAGE_PREFIXES));
     Iterable<BootstrapPackagesProvider> bootstrapPackagesProviders =
-        SafeServiceLoader.load(
-            BootstrapPackagesProvider.class, Thread.currentThread().getContextClassLoader());
+        SafeServiceLoader.load(BootstrapPackagesProvider.class);
     for (BootstrapPackagesProvider provider : bootstrapPackagesProviders) {
       List<String> packagePrefixes = provider.getPackagePrefixes();
       log.debug(

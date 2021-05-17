@@ -29,6 +29,7 @@ subprojects {
   }
 
   repositories {
+    // needed because relying on locally built SNAPSHOT versions above for now
     mavenLocal()
     mavenCentral()
   }
