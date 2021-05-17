@@ -15,8 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
-import io.opentelemetry.javaagent.tooling.Utils;
-import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.context.InstrumentationContextProvider;
 import io.opentelemetry.javaagent.tooling.context.NoopContextProvider;
@@ -28,7 +26,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
@@ -90,9 +87,9 @@ public final class InstrumentationModuleInstaller {
               .transform(ConstantAdjuster.instance())
               .transform(helperInjector);
       extendableAgentBuilder = contextProvider.instrumentationTransformer(extendableAgentBuilder);
-      extendableAgentBuilder =
-          applyInstrumentationTransformers(
-              typeInstrumentation.transformers(), extendableAgentBuilder);
+      TypeTransformerImpl typeTransformer = new TypeTransformerImpl(extendableAgentBuilder);
+      typeInstrumentation.transform(typeTransformer);
+      extendableAgentBuilder = typeTransformer.getAgentBuilder();
       extendableAgentBuilder = contextProvider.additionalInstrumentation(extendableAgentBuilder);
 
       agentBuilder = extendableAgentBuilder;
@@ -109,21 +106,6 @@ public final class InstrumentationModuleInstaller {
     } else {
       return NoopContextProvider.INSTANCE;
     }
-  }
-
-  private AgentBuilder.Identified.Extendable applyInstrumentationTransformers(
-      Map<? extends ElementMatcher<? super MethodDescription>, String> transformers,
-      AgentBuilder.Identified.Extendable agentBuilder) {
-    for (Map.Entry<? extends ElementMatcher<? super MethodDescription>, String> entry :
-        transformers.entrySet()) {
-      agentBuilder =
-          agentBuilder.transform(
-              new AgentBuilder.Transformer.ForAdvice()
-                  .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
-                  .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
-                  .advice(entry.getKey(), entry.getValue()));
-    }
-    return agentBuilder;
   }
 
   /**

@@ -6,14 +6,13 @@
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.muzzle.Reference;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
@@ -178,13 +177,13 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     }
 
     private ReferenceCollector collectReferences() {
-      Set<String> adviceClassNames =
-          instrumentationModule.typeInstrumentations().stream()
-              .flatMap(typeInstrumentation -> typeInstrumentation.transformers().values().stream())
-              .collect(Collectors.toSet());
+      AdviceClassNameCollector adviceClassNameCollector = new AdviceClassNameCollector();
+      for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
+        typeInstrumentation.transform(adviceClassNameCollector);
+      }
 
       ReferenceCollector collector = new ReferenceCollector(instrumentationModule::isHelperClass);
-      for (String adviceClass : adviceClassNames) {
+      for (String adviceClass : adviceClassNameCollector.getAdviceClassNames()) {
         collector.collectReferencesFromAdvice(adviceClass);
       }
       for (String resource : instrumentationModule.helperResourceNames()) {

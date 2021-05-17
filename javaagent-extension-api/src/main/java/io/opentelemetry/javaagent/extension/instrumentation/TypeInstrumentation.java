@@ -49,14 +49,22 @@ public interface TypeInstrumentation {
   }
 
   /**
-   * Returns a type matcher defining which classes should undergo transformations defined by advices
-   * returned by {@link #transformers()}.
+   * Returns a type matcher defining which classes should undergo transformations defined in the
+   * {@link #transform(TypeTransformer)} method.
    */
   ElementMatcher<TypeDescription> typeMatcher();
 
-  /**
-   * Keys of the returned map are method matchers, values are full names of advice classes that will
-   * be applied onto methods that satisfy matcher (key).
-   */
+  // TODO: will be removed in the next commit
+  @Deprecated
   Map<? extends ElementMatcher<? super MethodDescription>, String> transformers();
+
+  /**
+   * Define transformations that should be applied to classes matched by {@link #typeMatcher()}, for
+   * example: apply advice classes to chosen methods ({@link
+   * TypeTransformer#applyAdviceToMethod(ElementMatcher, String)}.
+   */
+  // TODO: the default implementation will be removed in the next commit
+  default void transform(TypeTransformer transformer) {
+    transformers().forEach(transformer::applyAdviceToMethod);
+  }
 }

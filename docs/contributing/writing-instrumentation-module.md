@@ -166,15 +166,24 @@ public ElementMatcher<? super TypeDescription> typeMatcher() {
 }
 ```
 
-### `transformers()`
-The last `TypeInstrumentation` method describes which methods should be instrumented with which
-advice classes. It is suggested to make the method matchers as strict as possible - the type
-instrumentation should only instrument the code that it's supposed to, not more.
+### `transform(TypeTransformer)`
+
+The last `TypeInstrumentation` method describes what transformations should be applied to the
+matched type. Type `TypeTransformer` interface (implemented internally by the agent) defines a set
+of available transformations that you can apply:
+
+* Calling `applyAdviceToMethod(ElementMatcher<? super MethodDescription>, String)` allows you to
+  apply an advice class (the second parameter) to all matching methods (the first parameter). It is
+  suggested to make the method matchers as strict as possible - the type instrumentation should
+  only instrument the code that it's supposed to, not more.
+* `applyTransformer(AgentBuilder.Transformer)` allows you to inject an arbitrary ByteBuddy
+  transformer. This is an advanced, low-level option that will not be subjected to muzzle safety
+  checks and helper class detection - use it responsibly.
 
 ```java
 @Override
-public Map<?extends ElementMatcher<? super MethodDescription>, String> transformers() {
-  return Collections.singletonMap(
+public void transform(TypeTransformer transformer) {
+  transformer.applyAdviceToMethod(
     isPublic()
         .and(named("someMethod"))
         .and(takesArguments(2))
@@ -188,8 +197,8 @@ For matching built-in Java types you can use the `takesArgument(0, String.class)
 originating from the instrumented library need to be matched using the `named()` matcher.
 
 Implementations of `TypeInstrumentation` will often implement advice classes as static inner
-classes. These classes are referred to by name in the mappings from method descriptor to advice
-class, typically in the `transform()` method.
+classes. These classes are referred to by name when applying advice classes to methods in
+the `transform()` method.
 
 You probably noticed in the example above that the advice class is being referenced in a slightly
 peculiar way:
