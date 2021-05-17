@@ -94,7 +94,6 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
   @Override
   List<AttributeKey<?>> extraAttributes() {
     [
-      SemanticAttributes.HTTP_HOST,
       SemanticAttributes.HTTP_SCHEME,
       SemanticAttributes.HTTP_TARGET,
     ]

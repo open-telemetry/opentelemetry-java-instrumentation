@@ -36,8 +36,15 @@ final class ApacheHttpClientHttpAttributesExtractor
   @Override
   @Nullable
   protected String host(HttpMethod httpMethod) {
+    Header header = httpMethod.getRequestHeader("Host");
+    if (header != null) {
+      return header.getValue();
+    }
     HostConfiguration hostConfiguration = httpMethod.getHostConfiguration();
-    return hostConfiguration != null ? hostConfiguration.getHost() : null;
+    if (hostConfiguration != null) {
+      return hostConfiguration.getVirtualHost();
+    }
+    return null;
   }
 
   @Override

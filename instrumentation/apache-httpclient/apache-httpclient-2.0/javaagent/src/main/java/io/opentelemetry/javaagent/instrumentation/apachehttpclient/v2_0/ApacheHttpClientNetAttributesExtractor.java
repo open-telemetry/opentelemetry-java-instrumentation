@@ -5,15 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.InetSocketAddress;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpClientNetAttributesExtractor
-    extends InetSocketAddressNetAttributesExtractor<HttpMethod, Void> {
+    extends NetAttributesExtractor<HttpMethod, Void> {
 
   @Override
   protected String transport(HttpMethod httpMethod) {
@@ -21,11 +20,19 @@ final class ApacheHttpClientNetAttributesExtractor
   }
 
   @Override
-  @Nullable
-  protected InetSocketAddress getAddress(HttpMethod httpMethod, @Nullable Void unused) {
+  protected @Nullable String peerName(HttpMethod httpMethod, @Nullable Void unused) {
     HostConfiguration hostConfiguration = httpMethod.getHostConfiguration();
-    return hostConfiguration != null
-        ? new InetSocketAddress(hostConfiguration.getHost(), hostConfiguration.getPort())
-        : null;
+    return hostConfiguration != null ? hostConfiguration.getHost() : null;
+  }
+
+  @Override
+  protected @Nullable Long peerPort(HttpMethod httpMethod, @Nullable Void unused) {
+    HostConfiguration hostConfiguration = httpMethod.getHostConfiguration();
+    return hostConfiguration != null ? (long) hostConfiguration.getPort() : null;
+  }
+
+  @Override
+  protected @Nullable String peerIp(HttpMethod httpMethod, @Nullable Void unused) {
+    return null;
   }
 }
