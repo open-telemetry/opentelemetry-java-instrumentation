@@ -5,8 +5,7 @@ dependencies {
 
   api "io.lettuce:lettuce-core:5.1.0.RELEASE"
 
-  api "com.github.kstyrc:embedded-redis:0.6"
-
+  implementation deps.testcontainers
   implementation deps.guava
 
   implementation deps.groovy

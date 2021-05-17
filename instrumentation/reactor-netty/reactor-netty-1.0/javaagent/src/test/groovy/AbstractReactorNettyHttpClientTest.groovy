@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.atomic.AtomicReference
@@ -24,12 +25,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
-  boolean testConnectionFailure() {
-    false
-  }
-
-  @Override
-  boolean testRemoteConnection() {
+  boolean testHttps() {
     false
   }
 
@@ -55,8 +51,47 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
 
   @Override
   void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
-    request.response().subscribe {
+    request.response().subscribe({
       requestResult.complete(it.status().code())
+    }, { throwable ->
+      requestResult.complete(throwable)
+    })
+  }
+
+  @Override
+  String expectedClientSpanName(URI uri, String method) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "http://www.google.com:81/": // dropped request
+      case "https://192.0.2.1/": // non routable address
+        return "CONNECT"
+      default:
+        return super.expectedClientSpanName(uri, method)
+    }
+  }
+
+  @Override
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+    if (exception.class.getName().endsWith("ReactiveException")) {
+      switch (uri.toString()) {
+        case "http://localhost:61/": // unopened port
+        case "http://www.google.com:81/": // dropped request
+        case "https://192.0.2.1/": // non routable address
+          exception = exception.getCause()
+      }
+    }
+    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+  }
+
+  @Override
+  boolean hasClientSpanAttributes(URI uri) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "http://www.google.com:81/": // dropped request
+      case "https://192.0.2.1/": // non routable address
+        return false
+      default:
+        return true
     }
   }
 

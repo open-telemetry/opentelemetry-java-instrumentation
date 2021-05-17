@@ -7,13 +7,12 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import akka.actor.ActorSystem
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.testcontainers.containers.GenericContainer
 import redis.ByteStringDeserializerDefault
 import redis.ByteStringSerializerLowPriority
 import redis.RedisClient
 import redis.RedisDispatcher
-import redis.embedded.RedisServer
 import scala.Option
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -21,16 +20,10 @@ import spock.lang.Shared
 
 class RediscalaClientTest extends AgentInstrumentationSpecification {
 
-  @Shared
-  int port = PortUtils.findOpenPort()
+  private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
   @Shared
-  RedisServer redisServer = RedisServer.builder()
-  // bind to localhost to avoid firewall popup
-    .setting("bind 127.0.0.1")
-  // set max memory to avoid problems in CI
-    .setting("maxmemory 128M")
-    .port(port).build()
+  int port
 
   @Shared
   ActorSystem system
@@ -39,6 +32,8 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
   RedisClient redisClient
 
   def setupSpec() {
+    redisServer.start()
+    port = redisServer.getMappedPort(6379)
     system = ActorSystem.create()
     redisClient = new RedisClient("localhost",
       port,
@@ -48,9 +43,6 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
       Option.apply(null),
       system,
       new RedisDispatcher("rediscala.rediscala-client-worker-dispatcher"))
-
-    println "Using redis: $redisServer.args"
-    redisServer.start()
   }
 
   def cleanupSpec() {

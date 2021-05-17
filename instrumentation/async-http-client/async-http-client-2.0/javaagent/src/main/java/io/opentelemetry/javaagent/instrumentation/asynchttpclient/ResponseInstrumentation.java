@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
 
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -32,10 +32,15 @@ public class ResponseInstrumentation implements TypeInstrumentation {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
+    Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
+    transformers.put(
         named("onCompleted")
             .and(takesArgument(0, named("org.asynchttpclient.Response")))
             .and(isPublic()),
-        ResponseAdvice.class.getName());
+        ResponseInstrumentation.class.getPackage().getName() + ".ResponseAdvice");
+    transformers.put(
+        named("onThrowable").and(takesArgument(0, Throwable.class)).and(isPublic()),
+        ResponseInstrumentation.class.getPackage().getName() + ".ResponseFailureAdvice");
+    return transformers;
   }
 }

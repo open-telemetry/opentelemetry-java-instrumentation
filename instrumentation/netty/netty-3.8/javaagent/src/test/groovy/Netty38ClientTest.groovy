@@ -3,12 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
-import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
-
 import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
 import com.ning.http.client.AsyncHttpClientConfig
@@ -16,22 +10,40 @@ import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
 import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
+import java.nio.channels.ClosedChannelException
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
 class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrait {
 
   @Shared
-  def clientConfig = new AsyncHttpClientConfig.Builder()
-    .setRequestTimeoutInMs(TimeUnit.SECONDS.toMillis(10).toInteger())
-    .build()
-
-  @Shared
   @AutoCleanup
-  AsyncHttpClient client = new AsyncHttpClient(clientConfig)
+  AsyncHttpClient client = new AsyncHttpClient(getClientConfig())
+
+  def getClientConfig() {
+    def builder = new AsyncHttpClientConfig.Builder()
+      .setUserAgent("test-user-agent")
+
+    if (builder.metaClass.getMetaMethod("setConnectTimeout", int) != null) {
+      builder.setConnectTimeout(CONNECT_TIMEOUT_MS)
+    } else {
+      builder.setRequestTimeoutInMs(CONNECT_TIMEOUT_MS)
+    }
+    if (builder.metaClass.getMetaMethod("setFollowRedirect", boolean) != null) {
+      builder.setFollowRedirect(true)
+    } else {
+      builder.setFollowRedirects(true)
+    }
+    if (builder.metaClass.getMetaMethod("setMaxRedirects", int) != null) {
+      builder.setMaxRedirects(3)
+    } else {
+      builder.setMaximumNumberOfRedirects(3)
+    }
+
+    return builder.build()
+  }
 
   @Override
   Request buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -67,7 +79,44 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
 
   @Override
   String userAgent() {
-    return "NING"
+    return "test-user-agent"
+  }
+
+  @Override
+  String expectedClientSpanName(URI uri, String method) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "http://www.google.com:81/": // dropped request
+      case "https://192.0.2.1/": // non routable address
+        return "CONNECT"
+      default:
+        return super.expectedClientSpanName(uri, method)
+    }
+  }
+
+  @Override
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+        exception = exception.getCause() != null ? exception.getCause() : new ConnectException("Connection refused: localhost/127.0.0.1:61")
+        break
+      case "http://www.google.com:81/": // dropped request
+      case "https://192.0.2.1/": // non routable address
+        exception = exception.getCause() != null ? exception.getCause() : new ClosedChannelException()
+    }
+    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+  }
+
+  @Override
+  boolean hasClientSpanAttributes(URI uri) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "http://www.google.com:81/": // dropped request
+      case "https://192.0.2.1/": // non routable address
+        return false
+      default:
+        return true
+    }
   }
 
   @Override
@@ -76,53 +125,7 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
   }
 
   @Override
-  boolean testConnectionFailure() {
+  boolean testHttps() {
     false
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
-  }
-
-  // This is almost identical to "connection error (unopened port)" test from superclass.
-  // But it uses somewhat different span name for the client span.
-  // For now creating a separate test for this, hoping to remove this duplication in the future.
-  def "netty connection error (unopened port)"() {
-    given:
-    def uri = new URI("http://127.0.0.1:$UNUSABLE_PORT/")
-
-    when:
-    runUnderTrace("parent") {
-      doRequest(method, uri)
-    }
-
-    then:
-    def ex = thrown(Exception)
-    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
-
-    and:
-    assertTraces(1) {
-      trace(0, 2) {
-        basicSpan(it, 0, "parent", null, thrownException)
-
-        span(1) {
-          name "CONNECT"
-          kind CLIENT
-          childOf span(0)
-          status ERROR
-          Class errorClass = ConnectException
-          try {
-            errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')
-          } catch (ClassNotFoundException e) {
-            // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
-          }
-          errorEvent(errorClass, ~/Connection refused:( no further information:)? \/127.0.0.1:$UNUSABLE_PORT/)
-        }
-      }
-    }
-
-    where:
-    method = "GET"
   }
 }

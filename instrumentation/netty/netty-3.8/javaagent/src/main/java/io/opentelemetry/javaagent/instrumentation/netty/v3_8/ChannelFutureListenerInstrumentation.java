@@ -64,18 +64,17 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
       ContextStore<Channel, ChannelTraceContext> contextStore =
           InstrumentationContext.get(Channel.class, ChannelTraceContext.class);
 
-      Context parentContext =
-          contextStore
-              .putIfAbsent(future.getChannel(), ChannelTraceContext.Factory.INSTANCE)
-              .getConnectionContext();
-      contextStore.get(future.getChannel()).setConnectionContext(null);
+      ChannelTraceContext channelTraceContext =
+          contextStore.putIfAbsent(future.getChannel(), ChannelTraceContext.Factory.INSTANCE);
+      Context parentContext = channelTraceContext.getConnectionContext();
       if (parentContext == null) {
         return null;
       }
-      // TODO pass Context into Tracer.startSpan() and then don't need this scoping
       Scope parentScope = parentContext.makeCurrent();
-      Context errorContext = tracer().startSpan("CONNECT", SpanKind.CLIENT);
-      tracer().endExceptionally(errorContext, cause);
+      if (channelTraceContext.createConnectionSpan()) {
+        Context errorContext = tracer().startSpan("CONNECT", SpanKind.CLIENT);
+        tracer().endExceptionally(errorContext, cause);
+      }
       return parentScope;
     }
 

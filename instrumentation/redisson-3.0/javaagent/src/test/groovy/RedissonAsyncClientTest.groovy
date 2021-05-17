@@ -6,7 +6,6 @@
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import org.redisson.Redisson
@@ -17,33 +16,28 @@ import org.redisson.api.RSet
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
 import org.redisson.config.SingleServerConfig
-import redis.embedded.RedisServer
+import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
 class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
 
+  private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
   @Shared
-  int port = PortUtils.findOpenPort()
+  int port
 
-  @Shared
-  RedisServer redisServer = RedisServer.builder()
-  // bind to localhost to avoid firewall popup
-    .setting("bind 127.0.0.1")
-  // set max memory to avoid problems in CI
-    .setting("maxmemory 128M")
-    .port(port).build()
   @Shared
   RedissonClient redisson
   @Shared
-  String address = "localhost:" + port
+  String address
 
   def setupSpec() {
+    redisServer.start()
+    port = redisServer.getMappedPort(6379)
+    address = "localhost:" + port
     if (Boolean.getBoolean("testLatestDeps")) {
       // Newer versions of redisson require scheme, older versions forbid it
       address = "redis://" + address
     }
-    println "Using redis: $redisServer.args"
-    redisServer.start()
   }
 
   def cleanupSpec() {

@@ -6,30 +6,25 @@
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import org.testcontainers.containers.GenericContainer
 import redis.clients.jedis.Jedis
-import redis.embedded.RedisServer
 import spock.lang.Shared
 
 class JedisClientTest extends AgentInstrumentationSpecification {
 
-  @Shared
-  int port = PortUtils.findOpenPort()
+  private static GenericContainer redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379)
 
   @Shared
-  RedisServer redisServer = RedisServer.builder()
-  // bind to localhost to avoid firewall popup
-    .setting("bind 127.0.0.1")
-  // set max memory to avoid problems in CI
-    .setting("maxmemory 128M")
-    .port(port).build()
+  int port
+
   @Shared
-  Jedis jedis = new Jedis("localhost", port)
+  Jedis jedis
 
   def setupSpec() {
-    println "Using redis: $redisServer.args"
     redisServer.start()
+    port = redisServer.getMappedPort(6379)
+    jedis = new Jedis("localhost", port)
   }
 
   def cleanupSpec() {

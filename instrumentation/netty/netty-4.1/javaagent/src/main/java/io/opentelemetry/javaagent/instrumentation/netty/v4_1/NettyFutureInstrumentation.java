@@ -26,16 +26,16 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ChannelFutureInstrumentation implements TypeInstrumentation {
+public class NettyFutureInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("io.netty.channel.ChannelFuture");
+    return hasClassesNamed("io.netty.util.concurrent.Future");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("io.netty.channel.ChannelFuture"));
+    return implementsInterface(named("io.netty.util.concurrent.Future"));
   }
 
   @Override
@@ -45,18 +45,18 @@ public class ChannelFutureInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(named("addListener"))
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener"))),
-        ChannelFutureInstrumentation.class.getName() + "$AddListenerAdvice");
+        NettyFutureInstrumentation.class.getName() + "$AddListenerAdvice");
     transformers.put(
         isMethod().and(named("addListeners")).and(takesArgument(0, isArray())),
-        ChannelFutureInstrumentation.class.getName() + "$AddListenersAdvice");
+        NettyFutureInstrumentation.class.getName() + "$AddListenersAdvice");
     transformers.put(
         isMethod()
             .and(named("removeListener"))
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener"))),
-        ChannelFutureInstrumentation.class.getName() + "$RemoveListenerAdvice");
+        NettyFutureInstrumentation.class.getName() + "$RemoveListenerAdvice");
     transformers.put(
         isMethod().and(named("removeListeners")).and(takesArgument(0, isArray())),
-        ChannelFutureInstrumentation.class.getName() + "$RemoveListenersAdvice");
+        NettyFutureInstrumentation.class.getName() + "$RemoveListenersAdvice");
     return transformers;
   }
 

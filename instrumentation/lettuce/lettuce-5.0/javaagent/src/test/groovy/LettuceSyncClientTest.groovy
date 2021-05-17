@@ -15,7 +15,7 @@ import io.netty.channel.AbstractChannel
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import redis.embedded.RedisServer
+import org.testcontainers.containers.FixedHostPortGenericContainer
 import spock.lang.Shared
 
 class LettuceSyncClientTest extends AgentInstrumentationSpecification {
@@ -24,6 +24,8 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
   public static final int DB_INDEX = 0
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
+
+  private static FixedHostPortGenericContainer redisServer = new FixedHostPortGenericContainer<>("redis:6.2.3-alpine")
 
   @Shared
   int port
@@ -37,9 +39,6 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
   String dbUriNonExistent
   @Shared
   String embeddedDbUri
-
-  @Shared
-  RedisServer redisServer
 
   @Shared
   Map<String, String> testHashMap = [
@@ -60,12 +59,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
     dbUriNonExistent = "redis://" + dbAddrNonExistent
     embeddedDbUri = "redis://" + dbAddr
 
-    redisServer = RedisServer.builder()
-    // bind to localhost to avoid firewall popup
-      .setting("bind " + PEER_NAME)
-    // set max memory to avoid problems in CI
-      .setting("maxmemory 128M")
-      .port(port).build()
+    redisServer = redisServer.withFixedExposedPort(port, 6379)
   }
 
   def setup() {

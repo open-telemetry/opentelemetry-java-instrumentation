@@ -15,18 +15,14 @@ muzzle {
   }
 }
 
-testSets {
-  latestDepTest
-}
-
 dependencies {
   compileOnly "io.netty:netty:3.8.0.Final"
 
-  testImplementation "io.netty:netty:3.8.0.Final"
-  testImplementation "com.ning:async-http-client:1.8.0"
+  testLibrary "io.netty:netty:3.8.0.Final"
+  testLibrary "com.ning:async-http-client:1.8.0"
 
-  latestDepTestImplementation "io.netty:netty:3.10.+"
-  latestDepTestImplementation "com.ning:async-http-client:1.9.+"
+  latestDepTestLibrary "io.netty:netty:3.10.+"
+  latestDepTestLibrary "com.ning:async-http-client:1.9.+"
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
