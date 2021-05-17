@@ -34,7 +34,7 @@ public final class ApacheHttpClientInstrumenters {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(new ApacheHttpClientNetAttributesExtractor())
-            .newClientInstrumenter(new HttpHeaderSetter());
+            .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<HttpMethod, Void> instrumenter() {
