@@ -42,8 +42,6 @@ public class ExceptionHandlerWrapper implements Handler<Throwable> {
   }
 
   private void callHandler(Throwable throwable) {
-    if (handler != null) {
-      handler.handle(throwable);
-    }
+    handler.handle(throwable);
   }
 }
