@@ -24,6 +24,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
+import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
@@ -237,6 +238,18 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         RequestResult requestResult) {
     // Must be implemented if testAsync is true
     throw new UnsupportedOperationException()
+  }
+
+  static int getPort(URI uri) {
+    if (uri.port != -1) {
+      return uri.port
+    } else if (uri.scheme == "http") {
+      return 80
+    } else if (uri.scheme == "https") {
+      443
+    } else {
+      throw new IllegalArgumentException("Unexpected uri: $uri")
+    }
   }
 
   Integer responseCodeOnRedirectError() {
@@ -680,6 +693,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def "test https request"() {
     given:
     assumeTrue(testRemoteConnection())
+    assumeTrue(testHttps())
     def uri = new URI("https://www.google.com/")
 
     when:
@@ -813,60 +827,62 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       } else {
         childOf((SpanData) parentSpan)
       }
-      name expectedOperationName(method)
+      name expectedClientSpanName(uri, method)
       kind CLIENT
       if (exception) {
         status ERROR
-        errorEvent(exception.class, exception.message)
+        assertClientSpanErrorEvent(it, uri, exception)
       } else if (responseCode >= 400) {
         status ERROR
       }
-      attributes {
-        "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-        if (uri.port == UNUSABLE_PORT || uri.host == "192.0.2.1" || (uri.host == "www.google.com" && uri.port == 81)) {
-          // TODO(anuraaga): For theses cases, there isn't actually a peer so we shouldn't be
-          // filling in peer information but some instrumentation does so based on the URL itself
-          // which is present in HTTP attributes. We should fix this.
-          "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == uri.host }
-          "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it == uri.port }
-        } else {
-          "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
-          "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
-        }
-        if (uri.host == "www.google.com") {
-          // unpredictable IP address (or can be none if no connection is made, see comment above)
-          "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it instanceof String }
-        } else {
-          "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
-        }
-        "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
-        "${SemanticAttributes.HTTP_METHOD.key}" method
-        if (uri.host == "www.google.com") {
-          "${SemanticAttributes.HTTP_FLAVOR.key}" { it == httpFlavor || it == "2.0" } // google https request can be http 2.0
-        } else {
-          "${SemanticAttributes.HTTP_FLAVOR.key}" httpFlavor
-        }
-        if (userAgent) {
-          "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith(userAgent) }
-        }
-        if (responseCode) {
-          "${SemanticAttributes.HTTP_STATUS_CODE.key}" responseCode
-        }
+      if (hasClientSpanAttributes(uri)) {
+        attributes {
+          "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
+          if (uri.port == UNUSABLE_PORT || uri.host == "192.0.2.1" || (uri.host == "www.google.com" && uri.port == 81)) {
+            // TODO(anuraaga): For theses cases, there isn't actually a peer so we shouldn't be
+            // filling in peer information but some instrumentation does so based on the URL itself
+            // which is present in HTTP attributes. We should fix this.
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == uri.host }
+            "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it == uri.port }
+          } else {
+            "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
+            "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
+          }
+          if (uri.host == "www.google.com") {
+            // unpredictable IP address (or can be none if no connection is made, see comment above)
+            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it instanceof String }
+          } else {
+            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
+          }
+          "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
+          "${SemanticAttributes.HTTP_METHOD.key}" method
+          if (uri.host == "www.google.com") {
+            "${SemanticAttributes.HTTP_FLAVOR.key}" { it == httpFlavor || it == "2.0" } // google https request can be http 2.0
+          } else {
+            "${SemanticAttributes.HTTP_FLAVOR.key}" httpFlavor
+          }
+          if (userAgent) {
+            "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith(userAgent) }
+          }
+          if (responseCode) {
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" responseCode
+          }
 
-        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
-          "${SemanticAttributes.HTTP_HOST}" { it == uri.host || it == "${uri.host}:${uri.port}" }
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
-          "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
-          "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
-          "${SemanticAttributes.HTTP_SCHEME}" uri.scheme
-        }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
-          "${SemanticAttributes.HTTP_TARGET}" uri.path + "${uri.query != null ? "?${uri.query}" : ""}"
+          if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+            "${SemanticAttributes.HTTP_HOST}" { it == uri.host || it == "${uri.host}:${uri.port}" }
+          }
+          if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+            "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
+          }
+          if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+            "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
+          }
+          if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
+            "${SemanticAttributes.HTTP_SCHEME}" uri.scheme
+          }
+          if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
+            "${SemanticAttributes.HTTP_TARGET}" uri.path + "${uri.query != null ? "?${uri.query}" : ""}"
+          }
         }
       }
     }
@@ -891,6 +907,22 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   String expectedOperationName(String method) {
     return method != null ? "HTTP $method" : "HTTP request"
+  }
+
+  String expectedClientSpanName(URI uri, String method) {
+    return expectedOperationName(method)
+  }
+
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+    assertClientSpanErrorEvent(spanAssert, uri, exception.class, exception.message)
+  }
+
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Class<Throwable> errorType, message) {
+    spanAssert.errorEvent(errorType, message)
+  }
+
+  boolean hasClientSpanAttributes(URI uri) {
+    true
   }
 
   int extraClientSpans() {
@@ -923,6 +955,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   boolean testRemoteConnection() {
+    true
+  }
+
+  boolean testHttps() {
     true
   }
 

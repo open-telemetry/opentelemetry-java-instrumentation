@@ -27,7 +27,7 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
 
   @Override
   HttpClientRequest buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = httpClient.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
+    def request = httpClient.request(HttpMethod.valueOf(method), getPort(uri), uri.host, "$uri")
     headers.each { request.putHeader(it.key, it.value) }
     return request
   }
@@ -70,20 +70,7 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   }
 
   @Override
-  boolean testConnectionFailure() {
-    false
-  }
-
-  boolean testRemoteConnection() {
-    // FIXME: figure out how to configure timeouts.
-    false
-  }
-
-  // TODO the vertx client span is suppressed, but also so is the vertx client instrumentation
-  //  context propagation down to netty, and so netty doesn't see any existing context,
-  //  and so it creates a (not-nested) client span, which is not what the test expects
-  @Override
-  boolean testWithClientParent() {
+  boolean testHttps() {
     false
   }
 
