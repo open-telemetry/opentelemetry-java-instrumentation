@@ -16,7 +16,6 @@ import io.vertx.reactivex.core.buffer.Buffer
 import io.vertx.reactivex.ext.web.client.HttpRequest
 import io.vertx.reactivex.ext.web.client.HttpResponse
 import io.vertx.reactivex.ext.web.client.WebClient
-import java.util.function.Consumer
 import spock.lang.Shared
 
 class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implements AgentTestTrait {
@@ -57,7 +56,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
-  void clientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
     if (exception.class == RuntimeException) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
@@ -66,7 +65,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
           exception = exception.getCause()
       }
     }
-    super.clientSpanErrorEvent(spanAssert, uri, exception)
+    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
   }
 
   @Override

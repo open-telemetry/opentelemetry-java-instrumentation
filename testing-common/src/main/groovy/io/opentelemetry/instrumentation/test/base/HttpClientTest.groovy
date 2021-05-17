@@ -831,7 +831,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       kind CLIENT
       if (exception) {
         status ERROR
-        clientSpanErrorEvent(it, uri, exception)
+        assertClientSpanErrorEvent(it, uri, exception)
       } else if (responseCode >= 400) {
         status ERROR
       }
@@ -913,11 +913,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     return expectedOperationName(method)
   }
 
-  void clientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
-    clientSpanErrorEvent(spanAssert, uri, exception.class, exception.message)
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+    assertClientSpanErrorEvent(spanAssert, uri, exception.class, exception.message)
   }
 
-  void clientSpanErrorEvent(SpanAssert spanAssert, URI uri, Class<Throwable> errorType, message) {
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Class<Throwable> errorType, message) {
     spanAssert.errorEvent(errorType, message)
   }
 

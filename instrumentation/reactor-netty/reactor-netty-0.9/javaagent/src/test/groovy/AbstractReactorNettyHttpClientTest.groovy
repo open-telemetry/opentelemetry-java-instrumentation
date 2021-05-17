@@ -71,7 +71,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
-  void clientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
     if (exception.class.getName().endsWith("ReactiveException")) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
@@ -80,7 +80,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
           exception = exception.getCause()
       }
     }
-    super.clientSpanErrorEvent(spanAssert, uri, exception)
+    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
   }
 
   @Override

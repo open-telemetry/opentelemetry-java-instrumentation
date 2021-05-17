@@ -95,7 +95,7 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
   }
 
   @Override
-  void clientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
         exception = exception.getCause() != null ? exception.getCause() : new ConnectException("Connection refused: localhost/127.0.0.1:61")
@@ -104,7 +104,7 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
       case "https://192.0.2.1/": // non routable address
         exception = exception.getCause() != null ? exception.getCause() : new ClosedChannelException()
     }
-    super.clientSpanErrorEvent(spanAssert, uri, exception)
+    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
   }
 
   @Override

@@ -57,7 +57,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
   }
 
   @Override
-  void clientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
     if (!exception.getClass().getName().endsWith("WebClientRequestException")) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
@@ -70,7 +70,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
           exception = exception.getCause()
       }
     }
-    super.clientSpanErrorEvent(spanAssert, uri, exception)
+    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
   }
 
   @Override
