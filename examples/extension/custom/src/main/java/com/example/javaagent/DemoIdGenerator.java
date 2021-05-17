@@ -1,6 +1,5 @@
 package com.example.javaagent;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.trace.IdGenerator;
 import java.util.concurrent.atomic.AtomicLong;
 
