@@ -1,21 +1,19 @@
 package com.example.javaagent.instrumentation;
 
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers;
 import io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher;
 import io.opentelemetry.javaagent.extension.matcher.NameMatchers;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.util.List;
-import java.util.Map;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
@@ -58,11 +56,13 @@ public final class DemoServlet3InstrumentationModule extends InstrumentationModu
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+    public void transform(TypeTransformer typeTransformer) {
+      typeTransformer.applyAdviceToMethod(
           NameMatchers.namedOneOf("doFilter", "service")
-              .and(ElementMatchers.takesArgument(0, ElementMatchers.named("javax.servlet.ServletRequest")))
-              .and(ElementMatchers.takesArgument(1, ElementMatchers.named("javax.servlet.ServletResponse")))
+              .and(ElementMatchers
+                  .takesArgument(0, ElementMatchers.named("javax.servlet.ServletRequest")))
+              .and(ElementMatchers
+                  .takesArgument(1, ElementMatchers.named("javax.servlet.ServletResponse")))
               .and(ElementMatchers.isPublic()),
           DemoServlet3Instrumentation.class.getName() + "$DemoServlet3Advice");
     }
