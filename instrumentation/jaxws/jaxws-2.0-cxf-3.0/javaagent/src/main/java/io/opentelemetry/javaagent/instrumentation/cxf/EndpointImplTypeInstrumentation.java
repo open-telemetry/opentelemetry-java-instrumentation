@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.cxf;
 
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Map;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.cxf.jaxws.EndpointImpl;
@@ -25,8 +23,8 @@ public class EndpointImplTypeInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         named("getServer").and(takesArgument(0, named(String.class.getName()))),
         EndpointImplTypeInstrumentation.class.getName() + "$GetServerAdvice");
   }

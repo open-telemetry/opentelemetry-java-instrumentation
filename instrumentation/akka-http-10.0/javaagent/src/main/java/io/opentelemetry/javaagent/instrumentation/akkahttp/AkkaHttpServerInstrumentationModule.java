@@ -18,11 +18,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.HashMap;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
@@ -48,21 +46,19 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    public void transform(TypeTransformer transformer) {
       // Instrumenting akka-streams bindAndHandle api was previously attempted.
       // This proved difficult as there was no clean way to close the async scope
       // in the graph logic after the user's request handler completes.
       //
       // Instead, we're instrumenting the bindAndHandle function helpers by
       // wrapping the scala functions with our own handlers.
-      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(
+      transformer.applyAdviceToMethod(
           named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
           AkkaHttpServerInstrumentationModule.class.getName() + "$AkkaHttpSyncAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
           AkkaHttpServerInstrumentationModule.class.getName() + "$AkkaHttpAsyncAdvice");
-      return transformers;
     }
   }
 

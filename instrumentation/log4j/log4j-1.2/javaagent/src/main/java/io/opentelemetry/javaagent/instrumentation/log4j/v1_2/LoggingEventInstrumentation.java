@@ -17,12 +17,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.log4j.MDC;
@@ -35,10 +33,8 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
-
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
             .and(named("getMDC"))
@@ -46,11 +42,9 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class)),
         LoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
 
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(named("getMDCCopy")).and(takesArguments(0)),
         LoggingEventInstrumentation.class.getName() + "$GetMdcCopyAdvice");
-
-    return transformers;
   }
 
   public static class GetMdcAdvice {

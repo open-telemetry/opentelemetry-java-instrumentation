@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import static io.opentelemetry.javaagent.instrumentation.otelannotations.WithSpanTracer.tracer;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
@@ -20,6 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.lang.reflect.Method;
@@ -55,8 +55,8 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         annotatedMethodMatcher.and(not(excludedMethodsMatcher)),
         WithSpanInstrumentation.class.getName() + "$WithSpanAdvice");
   }

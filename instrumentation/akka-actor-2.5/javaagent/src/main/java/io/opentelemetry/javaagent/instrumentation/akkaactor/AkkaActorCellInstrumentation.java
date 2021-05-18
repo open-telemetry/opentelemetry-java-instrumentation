@@ -11,14 +11,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import akka.dispatch.Envelope;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.AdviceUtils;
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
-import java.util.Collections;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -30,8 +28,8 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return Collections.singletonMap(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         named("invoke").and(takesArgument(0, named("akka.dispatch.Envelope"))),
         AkkaActorCellInstrumentation.class.getName() + "$InvokeStateAdvice");
   }

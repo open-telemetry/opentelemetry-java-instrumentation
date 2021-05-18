@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.vaadin.VaadinTracer.tracer;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -26,11 +25,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -68,8 +66,8 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           named("handleRequest")
               .and(takesArgument(0, named("com.vaadin.flow.server.VaadinRequest")))
               .and(takesArgument(1, named("com.vaadin.flow.server.VaadinResponse"))),
@@ -113,8 +111,8 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           named("handleRequest")
               .and(takesArgument(0, named("com.vaadin.flow.server.VaadinSession")))
               .and(takesArgument(1, named("com.vaadin.flow.server.VaadinRequest")))
@@ -161,10 +159,10 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    public void transform(TypeTransformer transformer) {
       // setCurrent is called by some request handler when they have accepted the request
       // we can get the path of currently active route from ui
-      return singletonMap(
+      transformer.applyAdviceToMethod(
           named("setCurrent").and(takesArgument(0, named("com.vaadin.flow.component.UI"))),
           UiInstrumentation.class.getName() + "$SetUiAdvice");
     }
@@ -186,8 +184,8 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           named("navigate")
               .and(takesArguments(4))
               .and(takesArgument(1, named("com.vaadin.flow.router.Location")))
@@ -216,8 +214,8 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           named("connectClient"),
           JavaScriptBootstrapUiInstrumentation.class.getName() + "$ConnectViewAdvice");
     }
@@ -245,8 +243,8 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           named("handle")
               .and(takesArgument(0, named("com.vaadin.flow.component.UI")))
               .and(takesArgument(1, named("elemental.json.JsonObject"))),
@@ -288,8 +286,8 @@ public class VaadinInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           named("invokeMethod")
               .and(takesArgument(0, named("com.vaadin.flow.component.Component")))
               .and(takesArgument(1, named(Class.class.getName())))

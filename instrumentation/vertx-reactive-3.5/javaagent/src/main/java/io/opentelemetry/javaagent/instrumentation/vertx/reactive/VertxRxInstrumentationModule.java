@@ -14,15 +14,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -54,15 +52,13 @@ public class VertxRxInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<? super MethodDescription>, String> result = new HashMap<>();
-      result.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isConstructor().and(takesArgument(0, named("io.vertx.core.Handler"))),
           VertxRxInstrumentationModule.class.getName() + "$AsyncResultSingleHandlerAdvice");
-      result.put(
+      transformer.applyAdviceToMethod(
           isConstructor().and(takesArgument(0, Consumer.class)),
           VertxRxInstrumentationModule.class.getName() + "$AsyncResultSingleConsumerAdvice");
-      return result;
     }
   }
 

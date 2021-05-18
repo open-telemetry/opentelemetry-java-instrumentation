@@ -12,14 +12,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import library.KeyClass;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -54,15 +52,15 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>(7);
-      transformers.put(named("isInstrumented"), MarkInstrumentedAdvice.class.getName());
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
+          named("isInstrumented"), MarkInstrumentedAdvice.class.getName());
+      transformer.applyAdviceToMethod(
           named("incrementContextCount"), StoreAndIncrementApiUsageAdvice.class.getName());
-      transformers.put(named("getContextCount"), GetApiUsageAdvice.class.getName());
-      transformers.put(named("putContextCount"), PutApiUsageAdvice.class.getName());
-      transformers.put(named("removeContextCount"), RemoveApiUsageAdvice.class.getName());
-      return transformers;
+      transformer.applyAdviceToMethod(named("getContextCount"), GetApiUsageAdvice.class.getName());
+      transformer.applyAdviceToMethod(named("putContextCount"), PutApiUsageAdvice.class.getName());
+      transformer.applyAdviceToMethod(
+          named("removeContextCount"), RemoveApiUsageAdvice.class.getName());
     }
   }
 

@@ -12,9 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.HashMap;
-import java.util.Map;
-import net.bytebuddy.description.method.MethodDescription;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -31,16 +29,14 @@ public class ResponseInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         named("onCompleted")
             .and(takesArgument(0, named("com.ning.http.client.Response")))
             .and(isPublic()),
         ResponseInstrumentation.class.getPackage().getName() + ".ResponseAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("onThrowable").and(takesArgument(0, Throwable.class)).and(isPublic()),
         ResponseInstrumentation.class.getPackage().getName() + ".ResponseFailureAdvice");
-    return transformers;
   }
 }

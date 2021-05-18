@@ -12,12 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.util.HashMap;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.asynchttpclient.Request;
@@ -31,24 +29,20 @@ public class RequestSenderInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         named("sendRequest")
             .and(takesArgument(0, named("org.asynchttpclient.Request")))
             .and(takesArgument(1, named("org.asynchttpclient.AsyncHandler")))
             .and(isPublic()),
         RequestSenderInstrumentation.class.getName() + "$AttachContextAdvice");
 
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("writeRequest")
             .and(takesArgument(0, named("org.asynchttpclient.netty.NettyResponseFuture")))
             .and(takesArgument(1, named("io.netty.channel.Channel")))
             .and(isPublic()),
         RequestSenderInstrumentation.class.getName() + "$MountContextAdvice");
-
-    return transformers;
   }
 
   public static class AttachContextAdvice {

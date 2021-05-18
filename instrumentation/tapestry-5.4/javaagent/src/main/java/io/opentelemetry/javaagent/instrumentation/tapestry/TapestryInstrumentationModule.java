@@ -19,12 +19,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Collections;
-import java.util.HashMap;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.tapestry5.internal.structure.ComponentPageElementImpl;
@@ -59,10 +56,8 @@ public class TapestryInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
-
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(isPublic())
               .and(named("handleComponentEvent"))
@@ -73,7 +68,7 @@ public class TapestryInstrumentationModule extends InstrumentationModule {
               .and(
                   takesArgument(1, named("org.apache.tapestry5.services.ComponentRequestHandler"))),
           InitializeActivePageNameInstrumentation.class.getName() + "$ComponentEventAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(isPublic())
               .and(named("handlePageRender"))
@@ -84,8 +79,6 @@ public class TapestryInstrumentationModule extends InstrumentationModule {
               .and(
                   takesArgument(1, named("org.apache.tapestry5.services.ComponentRequestHandler"))),
           InitializeActivePageNameInstrumentation.class.getName() + "$PageRenderAdvice");
-
-      return transformers;
     }
 
     public static class ComponentEventAdvice {
@@ -111,8 +104,8 @@ public class TapestryInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return Collections.singletonMap(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("processEventTriggering"))
               .and(takesArguments(3))

@@ -16,11 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.HashMap;
-import java.util.Map;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Flux;
@@ -34,15 +32,14 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(named("createMono"))
             .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Mono"))),
         LettuceReactiveCommandsInstrumentation.class.getName() + "$CreateMonoAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(nameStartsWith("create"))
             .and(nameEndsWith("Flux"))
@@ -50,8 +47,6 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
             .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Flux"))),
         LettuceReactiveCommandsInstrumentation.class.getName() + "$CreateFluxAdvice");
-
-    return transformers;
   }
 
   public static class CreateMonoAdvice {

@@ -13,9 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -42,7 +41,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<ElementMatcher<? super MethodDescription>, String> transformers() {
+  public void transform(TypeTransformer transformer) {
     ElementMatcher.Junction<MethodDescription> methodMatchers = null;
     for (String methodName : methodNames) {
       if (methodMatchers == null) {
@@ -52,7 +51,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
       }
     }
 
-    return Collections.singletonMap(
+    transformer.applyAdviceToMethod(
         methodMatchers, MethodInstrumentation.class.getName() + "$MethodAdvice");
   }
 

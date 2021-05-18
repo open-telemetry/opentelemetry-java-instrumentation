@@ -13,11 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.InvocationHandler;
-import java.util.HashMap;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -29,9 +27,8 @@ public class ProxyInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(named("newProxyInstance"))
             .and(takesArguments(3))
@@ -41,7 +38,7 @@ public class ProxyInstrumentation implements TypeInstrumentation {
             .and(isPublic())
             .and(isStatic()),
         ProxyInstrumentation.class.getName() + "$FilterDuplicateMarkerInterfaces");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(named("getProxyClass"))
             .and(takesArguments(2))
@@ -50,7 +47,6 @@ public class ProxyInstrumentation implements TypeInstrumentation {
             .and(isPublic())
             .and(isStatic()),
         ProxyInstrumentation.class.getName() + "$FilterDuplicateMarkerInterfaces");
-    return transformers;
   }
 
   public static class FilterDuplicateMarkerInterfaces {

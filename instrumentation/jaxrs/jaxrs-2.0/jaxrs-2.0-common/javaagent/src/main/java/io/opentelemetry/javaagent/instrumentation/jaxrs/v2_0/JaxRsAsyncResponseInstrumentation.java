@@ -14,14 +14,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.util.HashMap;
-import java.util.Map;
 import javax.ws.rs.container.AsyncResponse;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -38,18 +36,16 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         named("resume").and(takesArgument(0, Object.class)).and(isPublic()),
         JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("resume").and(takesArgument(0, Throwable.class)).and(isPublic()),
         JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseThrowableAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("cancel"),
         JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseCancelAdvice");
-    return transformers;
   }
 
   public static class AsyncResponseAdvice {

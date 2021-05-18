@@ -19,12 +19,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.RestResponseListener;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.client.Request;
@@ -55,15 +53,14 @@ public class Elasticsearch7RestClientInstrumentationModule extends Instrumentati
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("performRequest"))
               .and(takesArguments(1))
               .and(takesArgument(0, named("org.elasticsearch.client.Request"))),
           Elasticsearch7RestClientInstrumentationModule.class.getName() + "$PerformRequestAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("performRequestAsync"))
               .and(takesArguments(2))
@@ -71,7 +68,6 @@ public class Elasticsearch7RestClientInstrumentationModule extends Instrumentati
               .and(takesArgument(1, named("org.elasticsearch.client.ResponseListener"))),
           Elasticsearch7RestClientInstrumentationModule.class.getName()
               + "$PerformRequestAsyncAdvice");
-      return transformers;
     }
   }
 

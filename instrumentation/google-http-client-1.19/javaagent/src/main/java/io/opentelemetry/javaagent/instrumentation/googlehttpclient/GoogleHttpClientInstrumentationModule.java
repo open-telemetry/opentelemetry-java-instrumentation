@@ -21,13 +21,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -52,21 +50,18 @@ public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod().and(isPublic()).and(named("execute")).and(takesArguments(0)),
           GoogleHttpClientInstrumentationModule.class.getName() + "$GoogleHttpClientAdvice");
 
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(isPublic())
               .and(named("executeAsync"))
               .and(takesArguments(1))
               .and(takesArgument(0, Executor.class)),
           GoogleHttpClientInstrumentationModule.class.getName() + "$GoogleHttpClientAsyncAdvice");
-
-      return transformers;
     }
   }
 

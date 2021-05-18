@@ -13,13 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.ContextAndScope;
-import java.util.HashMap;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.batch.core.JobExecution;
@@ -34,16 +32,14 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(isConstructor(), this.getClass().getName() + "$InitAdvice");
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), this.getClass().getName() + "$InitAdvice");
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(named("setJobExecutionListeners"))
             .and(takesArguments(1))
             .and(takesArgument(0, isArray())),
         this.getClass().getName() + "$SetListenersAdvice");
-    return transformers;
   }
 
   public static class InitAdvice {
