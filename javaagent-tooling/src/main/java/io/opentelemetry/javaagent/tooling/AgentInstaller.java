@@ -183,7 +183,6 @@ public class AgentInstaller {
 
   private static void installComponentsBeforeByteBuddy(
       Iterable<ComponentInstaller> componentInstallers, Config config) {
-    Thread.currentThread().setContextClassLoader(AgentInstaller.class.getClassLoader());
     for (ComponentInstaller componentInstaller : componentInstallers) {
       componentInstaller.beforeByteBuddyAgent(config);
     }
@@ -226,12 +225,12 @@ public class AgentInstaller {
   }
 
   private static Iterable<ComponentInstaller> loadComponentProviders() {
-    return ServiceLoader.load(ComponentInstaller.class, AgentInstaller.class.getClassLoader());
+    return ServiceLoader.load(ComponentInstaller.class);
   }
 
   private static IgnoreMatcherProvider loadIgnoreMatcherProvider() {
     ServiceLoader<IgnoreMatcherProvider> ignoreMatcherProviders =
-        ServiceLoader.load(IgnoreMatcherProvider.class, AgentInstaller.class.getClassLoader());
+        ServiceLoader.load(IgnoreMatcherProvider.class);
 
     Iterator<IgnoreMatcherProvider> iterator = ignoreMatcherProviders.iterator();
     if (iterator.hasNext()) {
@@ -241,8 +240,7 @@ public class AgentInstaller {
   }
 
   private static List<AgentExtension> loadAgentExtensions() {
-    return SafeServiceLoader.load(AgentExtension.class, AgentInstaller.class.getClassLoader())
-        .stream()
+    return SafeServiceLoader.load(AgentExtension.class).stream()
         .sorted(Comparator.comparingInt(AgentExtension::order))
         .collect(Collectors.toList());
   }
@@ -294,8 +292,7 @@ public class AgentInstaller {
     List<String> bootstrapPackages =
         new ArrayList<>(Arrays.asList(Constants.BOOTSTRAP_PACKAGE_PREFIXES));
     Iterable<BootstrapPackagesProvider> bootstrapPackagesProviders =
-        SafeServiceLoader.load(
-            BootstrapPackagesProvider.class, AgentInstaller.class.getClassLoader());
+        SafeServiceLoader.load(BootstrapPackagesProvider.class);
     for (BootstrapPackagesProvider provider : bootstrapPackagesProviders) {
       List<String> packagePrefixes = provider.getPackagePrefixes();
       log.debug(
@@ -490,7 +487,7 @@ public class AgentInstaller {
 
     private static boolean isIgnored(Class<?> c) {
       ClassLoader cl = c.getClassLoader();
-      if (cl != null && cl.getClass() == AgentClassLoader.class) {
+      if (cl instanceof AgentClassLoader || cl instanceof ExtensionClassLoader) {
         return true;
       }
 

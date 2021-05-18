@@ -54,6 +54,7 @@ public class HelperInjector implements Transformer {
 
   private final Set<String> helperClassNames;
   private final Set<String> helperResourceNames;
+  private final ClassLoader helpersSource;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
 
   private final Cache<ClassLoader, Boolean> injectedClassLoaders =
@@ -73,20 +74,25 @@ public class HelperInjector implements Transformer {
    *     'io.opentelemetry.javaagent.shaded.instrumentation'
    */
   public HelperInjector(
-      String requestingName, List<String> helperClassNames, List<String> helperResourceNames) {
+      String requestingName,
+      List<String> helperClassNames,
+      List<String> helperResourceNames,
+      ClassLoader helpersSource) {
     this.requestingName = requestingName;
 
     this.helperClassNames = new LinkedHashSet<>(helperClassNames);
     this.helperResourceNames = new LinkedHashSet<>(helperResourceNames);
+    this.helpersSource = helpersSource;
   }
 
   public HelperInjector(String requestingName, Map<String, byte[]> helperMap) {
     this.requestingName = requestingName;
 
-    helperClassNames = helperMap.keySet();
-    dynamicTypeMap.putAll(helperMap);
+    this.helperClassNames = helperMap.keySet();
+    this.dynamicTypeMap.putAll(helperMap);
 
-    helperResourceNames = Collections.emptySet();
+    this.helperResourceNames = Collections.emptySet();
+    this.helpersSource = null;
   }
 
   public static HelperInjector forDynamicTypes(
@@ -102,7 +108,7 @@ public class HelperInjector implements Transformer {
     if (dynamicTypeMap.isEmpty()) {
       Map<String, byte[]> classnameToBytes = new LinkedHashMap<>();
 
-      ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader());
+      ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(helpersSource);
 
       for (String helperClassName : helperClassNames) {
         byte[] classBytes = locator.locate(helperClassName).resolve();
@@ -168,7 +174,7 @@ public class HelperInjector implements Transformer {
 
     if (!helperResourceNames.isEmpty()) {
       for (String resourceName : helperResourceNames) {
-        URL resource = Utils.getAgentClassLoader().getResource(resourceName);
+        URL resource = helpersSource.getResource(resourceName);
         if (resource == null) {
           log.debug("Helper resource {} requested but not found.", resourceName);
           continue;
