@@ -10,7 +10,9 @@ import javax.jms.JMSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
+enum MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
+  INSTANCE;
+
   private static final Logger log = LoggerFactory.getLogger(MessagePropertySetter.class);
 
   static final String DASH = "__dash__";

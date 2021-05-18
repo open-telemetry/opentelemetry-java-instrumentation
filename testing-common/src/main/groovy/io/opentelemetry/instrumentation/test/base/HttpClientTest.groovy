@@ -843,7 +843,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
             // filling in peer information but some instrumentation does so based on the URL itself
             // which is present in HTTP attributes. We should fix this.
             "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == uri.host }
-            "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it == uri.port }
+            "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it == uri.port || (uri.scheme == "https" && it == 443) }
           } else {
             "${SemanticAttributes.NET_PEER_NAME.key}" uri.host
             "${SemanticAttributes.NET_PEER_PORT.key}" uri.port > 0 ? uri.port : { it == null || it == 443 }
@@ -852,7 +852,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
             // unpredictable IP address (or can be none if no connection is made, see comment above)
             "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it instanceof String }
           } else {
-            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" } // Optional
+            "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" || it == uri.host  } // Optional
           }
           "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
           "${SemanticAttributes.HTTP_METHOD.key}" method
