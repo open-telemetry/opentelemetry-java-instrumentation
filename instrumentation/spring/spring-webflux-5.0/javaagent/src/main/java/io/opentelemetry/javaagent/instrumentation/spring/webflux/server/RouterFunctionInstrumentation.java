@@ -52,7 +52,7 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
                 takesArgument(
                     0, named("org.springframework.web.reactive.function.server.ServerRequest")))
             .and(takesArguments(1)),
-        this.getClass().getName() + "$Route");
+        this.getClass().getName() + "$RouteAdvice");
   }
 
   /**

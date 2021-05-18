@@ -54,7 +54,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
             .and(takesArgument(1, Object.class))
             .and(takesArguments(2)),
-        this.getClass().getName() + "HandleAdvice");
+        this.getClass().getName() + "$HandleAdvice");
   }
 
   public static class HandleAdvice {
