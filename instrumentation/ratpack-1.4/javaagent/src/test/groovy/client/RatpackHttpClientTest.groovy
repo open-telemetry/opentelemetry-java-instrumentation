@@ -32,6 +32,10 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
     if (HttpClientSpec.metaClass.getMetaMethod("execController") != null) {
       it.execController(exec.getController())
     }
+    configureClient(it)
+  }
+
+  void configureClient(HttpClientSpec spec) {
   }
 
   @Override
