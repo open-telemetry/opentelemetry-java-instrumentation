@@ -44,7 +44,7 @@ public class RemappingUrlConnection extends URLConnection {
   private final JarFile delegateJarFile;
   private final JarEntry entry;
 
-  private InputStream cachedResult;
+  private byte[] cacheClassBytes;
 
   public RemappingUrlConnection(URL url, JarFile delegateJarFile, JarEntry entry) {
     super(url);
@@ -58,22 +58,21 @@ public class RemappingUrlConnection extends URLConnection {
   }
 
   @Override
-  public InputStream getInputStream() {
-    if (cachedResult == null) {
-      cachedResult = readAndRemap();
+  public InputStream getInputStream() throws IOException {
+    if (cacheClassBytes == null) {
+      cacheClassBytes = readAndRemap();
     }
 
-    return cachedResult;
+    return new ByteArrayInputStream(cacheClassBytes);
   }
 
-  private InputStream readAndRemap() {
+  private byte[] readAndRemap() throws IOException {
     try {
       InputStream inputStream = delegateJarFile.getInputStream(entry);
-      byte[] remappedClass = remapClassBytes(inputStream);
-      return new ByteArrayInputStream(remappedClass);
+      return remapClassBytes(inputStream);
     } catch (IOException e) {
-      System.err.printf("Failed to remap bytes for %s: %s%n", url.toString(), e.getMessage());
-      return new ByteArrayInputStream(new byte[0]);
+      throw new IOException(
+          String.format("Failed to remap bytes for %s: %s%n", url.toString(), e.getMessage()));
     }
   }
 
