@@ -34,7 +34,8 @@ public class IbmResourceLevelInstrumentation extends InstrumentationModule {
 
     @Override
     public void transform(TypeTransformer transformer) {
-      transformer.applyAdviceToMethod(named("toString"), ToStringAdvice.class.getName());
+      transformer.applyAdviceToMethod(
+          named("toString"), this.getClass().getName() + "$ToStringAdvice");
     }
   }
 
