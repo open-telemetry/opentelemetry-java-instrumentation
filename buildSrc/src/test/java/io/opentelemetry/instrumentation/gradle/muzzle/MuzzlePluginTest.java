@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.instrumentation.gradle.muzzle;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
-import org.eclipse.aether.resolution.VersionRangeRequest;
-import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 import org.junit.jupiter.api.Test;
 
@@ -15,9 +15,7 @@ class MuzzlePluginTest {
 
   @Test
   void rangeRequest() {
-    MuzzlePlugin.AcceptableVersions predicate =
-        new MuzzlePlugin.AcceptableVersions(
-            new VersionRangeResult(new VersionRangeRequest()), Collections.emptyList());
+    AcceptableVersions predicate = new AcceptableVersions(Collections.emptyList());
 
     assertThat(predicate.test(new TestVersion("10.1.0-rc2+19-8e20bb26"))).isFalse();
     assertThat(predicate.test(new TestVersion("2.4.5.BUILD-SNAPSHOT"))).isFalse();
