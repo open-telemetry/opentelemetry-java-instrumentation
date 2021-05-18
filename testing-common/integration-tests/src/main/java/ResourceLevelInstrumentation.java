@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
