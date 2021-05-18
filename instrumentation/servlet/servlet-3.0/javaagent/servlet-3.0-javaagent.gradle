@@ -15,7 +15,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+  compileOnly "javax.servlet:javax.servlet-api:3.0.1"
   api(project(':instrumentation:servlet:servlet-3.0:library'))
   implementation(project(':instrumentation:servlet:servlet-common:javaagent'))
 
@@ -25,16 +25,16 @@ dependencies {
   testImplementation(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
-  testLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
-  testLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
-  testLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.41'
-  testLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.41'
+  testLibrary "org.eclipse.jetty:jetty-server:8.0.0.v20110901"
+  testLibrary "org.eclipse.jetty:jetty-servlet:8.0.0.v20110901"
+  testLibrary "org.apache.tomcat.embed:tomcat-embed-core:8.0.41"
+  testLibrary "org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41"
 
   // Jetty 10 seems to refuse to run on java8.
   // TODO: we need to setup separate test for Jetty 10 when that is released.
-  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.+'
-  latestDepTestLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.+'
+  latestDepTestLibrary "org.eclipse.jetty:jetty-server:9.+"
+  latestDepTestLibrary "org.eclipse.jetty:jetty-servlet:9.+"
 
-  latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.+'
-  latestDepTestLibrary group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.+'
+  latestDepTestLibrary "org.apache.tomcat.embed:tomcat-embed-core:9.+"
+  latestDepTestLibrary "org.apache.tomcat.embed:tomcat-embed-jasper:9.+"
 }

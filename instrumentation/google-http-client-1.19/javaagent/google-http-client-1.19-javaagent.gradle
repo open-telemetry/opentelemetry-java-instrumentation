@@ -11,5 +11,5 @@ muzzle {
 }
 
 dependencies {
-  library group: 'com.google.http-client', name: 'google-http-client', version: '1.19.0'
+  library "com.google.http-client:google-http-client:1.19.0"
 }

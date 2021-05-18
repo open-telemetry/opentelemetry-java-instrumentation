@@ -19,13 +19,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.geode.cache.Region;
@@ -53,9 +51,8 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<? super MethodDescription>, String> map = new HashMap<>(2);
-      map.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(
                   named("clear")
@@ -71,12 +68,11 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
                       .or(nameStartsWith("remove"))
                       .or(named("replace"))),
           GeodeInstrumentationModule.class.getName() + "$SimpleAdvice");
-      map.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("existsValue").or(named("query")).or(named("selectValue")))
               .and(takesArgument(0, String.class)),
           GeodeInstrumentationModule.class.getName() + "$QueryAdvice");
-      return map;
     }
   }
 

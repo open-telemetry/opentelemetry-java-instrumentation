@@ -5,15 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.axis2;
 
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.instrumentation.axis2.TracingInvocationListenerFactory;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Map;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.axis2.jaxws.registry.InvocationListenerRegistry;
@@ -25,8 +23,8 @@ public class InvocationListenerRegistryTypeInstrumentation implements TypeInstru
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isTypeInitializer(),
         InvocationListenerRegistryTypeInstrumentation.class.getName() + "$ClassInitializerAdvice");
   }

@@ -17,7 +17,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.GA'
+  library "org.hibernate:hibernate-core:3.3.0.GA"
 
   implementation project(':instrumentation:hibernate:hibernate-common:javaagent')
 
@@ -26,16 +26,16 @@ dependencies {
   testInstrumentation project(':instrumentation:hibernate:hibernate-4.0:javaagent')
   testInstrumentation project(':instrumentation:hibernate:hibernate-4.3:javaagent')
 
-  testLibrary group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.SP1'
-  testImplementation group: 'org.hibernate', name: 'hibernate-annotations', version: '3.4.0.GA'
-  testImplementation group: 'javassist', name: 'javassist', version: '+'
-  testImplementation group: 'com.h2database', name: 'h2', version: '1.4.197'
+  testLibrary "org.hibernate:hibernate-core:3.3.0.SP1"
+  testImplementation "org.hibernate:hibernate-annotations:3.4.0.GA"
+  testImplementation "javassist:javassist:+"
+  testImplementation "com.h2database:h2:1.4.197"
   testImplementation "javax.xml.bind:jaxb-api:2.2.11"
   testImplementation "com.sun.xml.bind:jaxb-core:2.2.11"
   testImplementation "com.sun.xml.bind:jaxb-impl:2.2.11"
   testImplementation "javax.activation:activation:1.1.1"
 
-  latestDepTestLibrary group: 'org.hibernate', name: 'hibernate-core', version: '3.+'
+  latestDepTestLibrary "org.hibernate:hibernate-core:3.+"
 }
 
 if (findProperty('testLatestDeps')) {

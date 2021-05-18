@@ -333,7 +333,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
                   false)
               .build());
 
-      Type underlyingFieldType = underlyingType(fieldType);
+      Type underlyingFieldType = underlyingType(Type.getType(descriptor));
       if (underlyingFieldType.getSort() == Type.OBJECT) {
         addReference(
             new Reference.Builder(underlyingFieldType.getInternalName())

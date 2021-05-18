@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -20,12 +19,10 @@ import com.mongodb.event.CommandListener;
 import com.mongodb.internal.async.SingleResultCallback;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -59,8 +56,8 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
           MongoClientInstrumentationModule.class.getName() + "$MongoClientAdvice");
     }
@@ -90,24 +87,22 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("openAsync"))
               .and(takesArgument(0, named("com.mongodb.internal.async.SingleResultCallback"))),
           MongoClientInstrumentationModule.class.getName() + "$SingleResultCallbackArg0Advice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("readAsync"))
               .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
           MongoClientInstrumentationModule.class.getName() + "$SingleResultCallbackArg1Advice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("writeAsync"))
               .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
           MongoClientInstrumentationModule.class.getName() + "$SingleResultCallbackArg1Advice");
-      return transformers;
     }
   }
 
@@ -119,8 +114,8 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      return singletonMap(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(isPublic())
               .and(named("selectServerAsync"))

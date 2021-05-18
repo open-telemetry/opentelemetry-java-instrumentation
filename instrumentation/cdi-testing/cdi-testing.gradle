@@ -4,11 +4,11 @@ ext {
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
-  testLibrary group: 'org.jboss.weld', name: 'weld-core', version: '2.3.0.Final'
-  testLibrary group: 'org.jboss.weld.se', name: 'weld-se', version: '2.3.0.Final'
-  testLibrary group: 'org.jboss.weld.se', name: 'weld-se-core', version: '2.3.0.Final'
+  testLibrary "org.jboss.weld:weld-core:2.3.0.Final"
+  testLibrary "org.jboss.weld.se:weld-se:2.3.0.Final"
+  testLibrary "org.jboss.weld.se:weld-se-core:2.3.0.Final"
 
-  latestDepTestLibrary group: 'org.jboss.weld', name: 'weld-core', version: '2.+'
-  latestDepTestLibrary group: 'org.jboss.weld.se', name: 'weld-se', version: '2.+'
-  latestDepTestLibrary group: 'org.jboss.weld.se', name: 'weld-se-core', version: '2.+'
+  latestDepTestLibrary "org.jboss.weld:weld-core:2.+"
+  latestDepTestLibrary "org.jboss.weld.se:weld-se:2.+"
+  latestDepTestLibrary "org.jboss.weld.se:weld-se-core:2.+"
 }

@@ -12,11 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.linecorp.armeria.client.WebClientBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.HashMap;
-import java.util.Map;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -28,15 +26,13 @@ public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentati
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(named("decorator").and(takesArgument(0, Function.class))),
         ArmeriaWebClientBuilderInstrumentation.class.getName() + "$SuppressDecoratorAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(named("build")),
         ArmeriaWebClientBuilderInstrumentation.class.getName() + "$BuildAdvice");
-    return transformers;
   }
 
   // Intercept calls from app to register decorator and suppress them to avoid registering

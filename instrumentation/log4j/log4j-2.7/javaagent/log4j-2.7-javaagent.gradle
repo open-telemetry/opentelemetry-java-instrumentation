@@ -10,9 +10,9 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.7'
+  library "org.apache.logging.log4j:log4j-core:2.7"
 
   testImplementation project(':instrumentation:log4j:log4j-2-testing')
 
-  latestDepTestLibrary group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.1'
+  latestDepTestLibrary "org.apache.logging.log4j:log4j-core:2.13.1"
 }

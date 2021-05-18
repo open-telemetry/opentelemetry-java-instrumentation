@@ -13,7 +13,7 @@ muzzle {
     assertInverse = true
     // versions 2.3.9 and 2.3.10 depends on com.typesafe.netty:netty-http-pipelining:1.1.2
     // which does not exist
-    skipVersions += ['2.3.9', '2.3.10']
+    skip('2.3.9', '2.3.10')
   }
   fail {
     group = 'com.typesafe.play'
@@ -30,7 +30,7 @@ muzzle {
 dependencies {
   // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
   // here.
-  compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
+  compileOnly "com.typesafe.play:play_2.11:2.4.0"
 
   testInstrumentation project(':instrumentation:netty:netty-4.0:javaagent')
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
@@ -38,15 +38,15 @@ dependencies {
   testInstrumentation project(':instrumentation:async-http-client:async-http-client-2.0:javaagent')
 
   // Before 2.5, play used netty 3.x which isn't supported, so for better test consistency, we test with just 2.5
-  testLibrary group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.0'
-  testLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.5.0'
-  testLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.0') {
+  testLibrary "com.typesafe.play:play-java_2.11:2.5.0"
+  testLibrary "com.typesafe.play:play-java-ws_2.11:2.5.0"
+  testLibrary("com.typesafe.play:play-test_2.11:2.5.0") {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 
-  latestDepTestLibrary group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.+'
-  latestDepTestLibrary group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.5.+'
-  latestDepTestLibrary(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.+') {
+  latestDepTestLibrary "com.typesafe.play:play-java_2.11:2.5.+"
+  latestDepTestLibrary "com.typesafe.play:play-java-ws_2.11:2.5.+"
+  latestDepTestLibrary("com.typesafe.play:play-test_2.11:2.5.+") {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 }

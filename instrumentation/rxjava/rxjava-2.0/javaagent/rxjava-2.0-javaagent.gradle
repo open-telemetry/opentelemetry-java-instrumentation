@@ -5,12 +5,12 @@ muzzle {
     group = "io.reactivex.rxjava2"
     module = "rxjava"
     versions = "[2.0.6,)"
-    assertInverse true
+    assertInverse = true
   }
 }
 
 dependencies {
-  library group: 'io.reactivex.rxjava2', name: 'rxjava', version: "2.0.6"
+  library "io.reactivex.rxjava2:rxjava:2.0.6"
 
   implementation project(":instrumentation:rxjava:rxjava-2.0:library")
 

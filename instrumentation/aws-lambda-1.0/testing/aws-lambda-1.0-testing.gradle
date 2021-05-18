@@ -19,8 +19,8 @@ apply from: "$rootDir/gradle/java.gradle"
 dependencies {
   api project(':testing-common')
 
-  api group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.0.0'
-  api group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '2.2.1'
+  api "com.amazonaws:aws-lambda-java-core:1.0.0"
+  api "com.amazonaws:aws-lambda-java-events:2.2.1"
 
   implementation deps.guava
 

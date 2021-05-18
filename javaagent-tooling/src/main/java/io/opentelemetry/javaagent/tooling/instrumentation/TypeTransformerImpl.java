@@ -1,0 +1,41 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.tooling.instrumentation;
+
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+final class TypeTransformerImpl implements TypeTransformer {
+  private AgentBuilder.Identified.Extendable agentBuilder;
+
+  TypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder) {
+    this.agentBuilder = agentBuilder;
+  }
+
+  @Override
+  public void applyAdviceToMethod(
+      ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
+    agentBuilder =
+        agentBuilder.transform(
+            new AgentBuilder.Transformer.ForAdvice()
+                .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
+                .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
+                .advice(methodMatcher, adviceClassName));
+  }
+
+  @Override
+  public void applyTransformer(AgentBuilder.Transformer transformer) {
+    agentBuilder = agentBuilder.transform(transformer);
+  }
+
+  AgentBuilder.Identified.Extendable getAgentBuilder() {
+    return agentBuilder;
+  }
+}

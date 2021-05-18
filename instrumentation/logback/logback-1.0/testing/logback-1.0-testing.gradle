@@ -21,7 +21,7 @@ dependencies {
 
   api project(':testing-common')
 
-  api group: 'ch.qos.logback', name: 'logback-classic', version: '1.0.0'
+  api "ch.qos.logback:logback-classic:1.0.0"
 
   implementation deps.guava
 

@@ -15,13 +15,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -38,15 +36,13 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         named("receive").and(takesArguments(0).or(takesArguments(1))).and(isPublic()),
         JmsMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         named("receiveNoWait").and(takesArguments(0)).and(isPublic()),
         JmsMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
-    return transformers;
   }
 
   public static class ConsumerAdvice {

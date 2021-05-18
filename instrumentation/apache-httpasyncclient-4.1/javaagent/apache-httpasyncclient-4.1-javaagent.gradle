@@ -12,5 +12,5 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.1'
+  library "org.apache.httpcomponents:httpasyncclient:4.1"
 }

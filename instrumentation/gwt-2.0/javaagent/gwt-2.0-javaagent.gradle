@@ -42,7 +42,7 @@ dependencies {
   testImplementation(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
-  testImplementation group: 'org.eclipse.jetty', name: 'jetty-webapp', version: '9.4.35.v20201120'
+  testImplementation "org.eclipse.jetty:jetty-webapp:9.4.35.v20201120"
 }
 
 def warDir = "$buildDir/testapp/war"

@@ -55,7 +55,7 @@ testSets {
 test.dependsOn mojarra12Test, mojarra2Test
 
 dependencies {
-  compileOnly group: 'javax.faces', name: 'jsf-api', version: '1.2'
+  compileOnly "javax.faces:jsf-api:1.2"
 
   implementation project(':instrumentation:jsf:jsf-common:library')
 
@@ -63,11 +63,11 @@ dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
 
-  mojarra12TestImplementation group: 'javax.faces', name: 'jsf-impl', version: '1.2-20'
-  mojarra12TestImplementation group: 'javax.faces', name: 'jsf-api', version: '1.2'
-  mojarra12TestImplementation group: 'com.sun.facelets', name: 'jsf-facelets', version: '1.1.14'
+  mojarra12TestImplementation "javax.faces:jsf-impl:1.2-20"
+  mojarra12TestImplementation "javax.faces:jsf-api:1.2"
+  mojarra12TestImplementation "com.sun.facelets:jsf-facelets:1.1.14"
 
-  mojarra2TestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2.3.12'
+  mojarra2TestImplementation "org.glassfish:jakarta.faces:2.3.12"
 
-  latestDepTestImplementation group: 'org.glassfish', name: 'jakarta.faces', version: '2.+'
+  latestDepTestImplementation "org.glassfish:jakarta.faces:2.+"
 }

@@ -38,17 +38,17 @@ muzzle {
 
 dependencies {
   implementation project(':instrumentation:spring:spring-webflux-5.0:library')
-  compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
-  compileOnly group: 'io.projectreactor.ipc', name: 'reactor-netty', version: '0.7.0.RELEASE'
+  compileOnly "org.springframework:spring-webflux:5.0.0.RELEASE"
+  compileOnly "io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE"
 
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
   testInstrumentation project(':instrumentation:reactor-3.1:javaagent')
   testInstrumentation project(':instrumentation:reactor-netty:reactor-netty-1.0:javaagent')
 
-  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
-  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'
-  testLibrary group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.0.RELEASE'
-  testImplementation group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
+  testLibrary "org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE"
+  testLibrary "org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE"
+  testLibrary "org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE"
+  testImplementation "org.spockframework:spock-spring:1.1-groovy-2.4"
 }
 
 tasks.withType(Test).configureEach {

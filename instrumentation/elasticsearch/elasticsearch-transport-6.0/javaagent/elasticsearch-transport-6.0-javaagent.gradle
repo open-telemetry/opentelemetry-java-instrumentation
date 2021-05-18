@@ -7,7 +7,7 @@ muzzle {
     versions = "[6.0.0,)"
     // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
     // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    skipVersions += ['7.11.0']
+    skip('7.11.0')
     assertInverse = true
   }
   pass {
@@ -16,13 +16,13 @@ muzzle {
     versions = "[6.0.0,)"
     // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
     // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    skipVersions += ['7.11.0']
+    skip('7.11.0')
     assertInverse = true
   }
 }
 
 dependencies {
-  library group: 'org.elasticsearch.client', name: 'transport', version: '6.0.0'
+  library "org.elasticsearch.client:transport:6.0.0"
 
   implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common:library')
 
@@ -31,10 +31,10 @@ dependencies {
   testInstrumentation project(':instrumentation:apache-httpasyncclient-4.1:javaagent')
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
 
-  testLibrary group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.0.0'
+  testLibrary "org.elasticsearch.plugin:transport-netty4-client:6.0.0"
 
-  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
-  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+  testImplementation "org.apache.logging.log4j:log4j-core:2.11.0"
+  testImplementation "org.apache.logging.log4j:log4j-api:2.11.0"
 }
 
 tasks.withType(Test).configureEach {

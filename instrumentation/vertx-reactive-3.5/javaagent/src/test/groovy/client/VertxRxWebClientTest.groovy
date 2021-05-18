@@ -6,6 +6,7 @@
 package client
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpMethod
@@ -15,7 +16,6 @@ import io.vertx.reactivex.core.buffer.Buffer
 import io.vertx.reactivex.ext.web.client.HttpRequest
 import io.vertx.reactivex.ext.web.client.HttpResponse
 import io.vertx.reactivex.ext.web.client.WebClient
-import java.util.function.Consumer
 import spock.lang.Shared
 
 class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implements AgentTestTrait {
@@ -29,7 +29,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
 
   @Override
   HttpRequest<Buffer> buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
+    def request = client.request(HttpMethod.valueOf(method), getPort(uri), uri.host, "$uri")
     headers.each { request.putHeader(it.key, it.value) }
     return request
   }
@@ -56,6 +56,19 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+    if (exception.class == RuntimeException) {
+      switch (uri.toString()) {
+        case "http://localhost:61/": // unopened port
+        case "http://www.google.com:81/": // dropped request
+        case "https://192.0.2.1/": // non routable address
+          exception = exception.getCause()
+      }
+    }
+    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+  }
+
+  @Override
   String userAgent() {
     return "Vert.x-WebClient"
   }
@@ -66,12 +79,7 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
-  boolean testConnectionFailure() {
-    false
-  }
-
-  boolean testRemoteConnection() {
-    // FIXME: figure out how to configure timeouts.
+  boolean testHttps() {
     false
   }
 

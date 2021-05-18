@@ -8,8 +8,8 @@ subprojects {
 
   ext {
     versions = [
-      opentelemetry         : "1.0.0",
-      opentelemetryJavaagent: "1.0.0",
+      opentelemetry         : "1.2.0",
+      opentelemetryJavaagent: "1.2.0",
       bytebuddy             : "1.10.18",
       guava                 : "30.1-jre"
     ]
@@ -17,12 +17,12 @@ subprojects {
     versions.opentelemetryJavaagentAlpha = "${versions.opentelemetryJavaagent}-alpha"
 
     deps = [
-      bytebuddy           : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: versions.bytebuddy),
-      bytebuddyagent      : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: versions.bytebuddy),
+      bytebuddy           : "net.bytebuddy:byte-buddy:${versions.bytebuddy}",
+      bytebuddyagent      : "net.bytebuddy:byte-buddy-agent:${versions.bytebuddy}",
       autoservice         : [
-        dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc7'),
-        dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.8'),
-        dependencies.create(group: 'com.google.guava', name: 'guava', version: "${versions.guava}"),
+        "com.google.auto.service:auto-service:1.0-rc7",
+        "com.google.auto:auto-common:0.8",
+        "com.google.guava:guava:${versions.guava}",
       ],
       autoValueAnnotations: "com.google.auto.value:auto-value-annotations:${versions.autoValue}",
     ]

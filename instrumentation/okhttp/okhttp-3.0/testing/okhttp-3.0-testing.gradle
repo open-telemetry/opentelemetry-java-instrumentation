@@ -5,7 +5,7 @@ dependencies {
     exclude module: 'okhttp'
   }
 
-  api group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
+  api "com.squareup.okhttp3:okhttp:3.0.0"
 
   implementation deps.guava
 

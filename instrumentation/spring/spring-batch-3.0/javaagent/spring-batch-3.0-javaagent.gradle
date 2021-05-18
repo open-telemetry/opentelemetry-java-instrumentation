@@ -10,9 +10,9 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.springframework.batch', name: 'spring-batch-core', version: '3.0.0.RELEASE'
+  library "org.springframework.batch:spring-batch-core:3.0.0.RELEASE"
 
-  testImplementation group: 'javax.inject', name: 'javax.inject', version: '1'
+  testImplementation "javax.inject:javax.inject:1"
   // SimpleAsyncTaskExecutor context propagation
   testInstrumentation project(':instrumentation:spring:spring-core-2.0:javaagent')
 }

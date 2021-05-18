@@ -10,5 +10,5 @@ muzzle {
 }
 
 dependencies {
-  library group: 'com.ning', name: 'async-http-client', version: '1.9.0'
+  library "com.ning:async-http-client:1.9.0"
 }

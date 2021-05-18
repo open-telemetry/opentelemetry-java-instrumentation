@@ -9,8 +9,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.redisson', name: 'redisson', version: '3.0.0'
-  testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+  library "org.redisson:redisson:3.0.0"
 }
 
 test {

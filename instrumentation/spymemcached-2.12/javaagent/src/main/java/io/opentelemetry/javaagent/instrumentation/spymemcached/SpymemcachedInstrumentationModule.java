@@ -17,13 +17,11 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.spy.memcached.MemcachedClient;
@@ -50,9 +48,8 @@ public class SpymemcachedInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(isPublic())
               .and(returns(named("net.spy.memcached.internal.OperationFuture")))
@@ -62,16 +59,15 @@ public class SpymemcachedInstrumentationModule extends InstrumentationModule {
               */
               .and(not(named("flush"))),
           SpymemcachedInstrumentationModule.class.getName() + "$AsyncOperationAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.GetFuture"))),
           SpymemcachedInstrumentationModule.class.getName() + "$AsyncGetAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.BulkFuture"))),
           SpymemcachedInstrumentationModule.class.getName() + "$AsyncBulkAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod().and(isPublic()).and(namedOneOf("incr", "decr")),
           SpymemcachedInstrumentationModule.class.getName() + "$SyncOperationAdvice");
-      return transformers;
     }
   }
 

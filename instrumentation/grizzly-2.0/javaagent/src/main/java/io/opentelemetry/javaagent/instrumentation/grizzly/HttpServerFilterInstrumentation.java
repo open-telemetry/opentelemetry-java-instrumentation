@@ -5,16 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
+import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlyHttpServerTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Collections;
-import java.util.Map;
-import net.bytebuddy.description.method.MethodDescription;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.glassfish.grizzly.filterchain.FilterChainContext;
+import org.glassfish.grizzly.http.HttpResponsePacket;
 
 public class HttpServerFilterInstrumentation implements TypeInstrumentation {
 
@@ -24,14 +27,27 @@ public class HttpServerFilterInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return Collections.singletonMap(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         named("prepareResponse")
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
             .and(takesArgument(1, named("org.glassfish.grizzly.http.HttpRequestPacket")))
             .and(takesArgument(2, named("org.glassfish.grizzly.http.HttpResponsePacket")))
             .and(takesArgument(3, named("org.glassfish.grizzly.http.HttpContent")))
             .and(isPrivate()),
-        HttpServerFilterAdvice.class.getName());
+        HttpServerFilterInstrumentation.class.getName() + "$PrepareResponseAdvice");
+  }
+
+  public static class PrepareResponseAdvice {
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Argument(0) FilterChainContext ctx,
+        @Advice.Argument(2) HttpResponsePacket response) {
+      Context context = tracer().getServerContext(ctx);
+      if (context != null) {
+        tracer().end(context, response);
+      }
+    }
   }
 }

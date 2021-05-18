@@ -6,16 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import java.util.Map;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -39,9 +37,9 @@ public class LibertyDispatcherInstrumentationModule extends InstrumentationModul
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    public void transform(TypeTransformer transformer) {
       // https://github.com/OpenLiberty/open-liberty/blob/master/dev/com.ibm.ws.transport.http/src/com/ibm/ws/http/dispatcher/internal/channel/HttpDispatcherLink.java
-      return singletonMap(
+      transformer.applyAdviceToMethod(
           named("sendResponse")
               .and(takesArgument(0, named("com.ibm.wsspi.http.channel.values.StatusCodes")))
               .and(takesArgument(1, named(String.class.getName())))

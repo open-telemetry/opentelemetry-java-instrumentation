@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
+import static java.lang.System.lineSeparator;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -20,6 +21,7 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 
 /** Entry point for the muzzle gradle plugin. */
 public final class MuzzleGradlePluginUtil {
+  private static final String INDENT = "  ";
 
   /**
    * Verifies that all instrumentations present in the {@code agentClassLoader} can be safely
@@ -134,7 +136,7 @@ public final class MuzzleGradlePluginUtil {
       try {
         System.out.println(instrumentationModule.getClass().getName());
         for (Reference ref : instrumentationModule.getMuzzleReferences()) {
-          System.out.println(prettyPrint("  ", ref));
+          System.out.print(prettyPrint(ref));
         }
       } catch (Exception e) {
         String message =
@@ -146,36 +148,25 @@ public final class MuzzleGradlePluginUtil {
     }
   }
 
-  private static String prettyPrint(String prefix, Reference ref) {
-    StringBuilder builder = new StringBuilder(prefix).append(ref.getClassName());
-    if (ref.getSuperName() != null) {
-      builder.append(" extends<").append(ref.getSuperName()).append(">");
-    }
-    if (!ref.getInterfaces().isEmpty()) {
-      builder.append(" implements ");
-      for (String iface : ref.getInterfaces()) {
-        builder.append(" <").append(iface).append(">");
+  private static String prettyPrint(Reference ref) {
+    StringBuilder builder = new StringBuilder(INDENT).append(ref).append(lineSeparator());
+    if (!ref.getSources().isEmpty()) {
+      builder.append(INDENT).append(INDENT).append("Sources:").append(lineSeparator());
+      for (Reference.Source source : ref.getSources()) {
+        builder
+            .append(INDENT)
+            .append(INDENT)
+            .append(INDENT)
+            .append("at: ")
+            .append(source)
+            .append(lineSeparator());
       }
-    }
-    for (Reference.Source source : ref.getSources()) {
-      builder.append("\n").append(prefix).append(prefix);
-      builder.append("Source: ").append(source.toString());
     }
     for (Reference.Field field : ref.getFields()) {
-      builder.append("\n").append(prefix).append(prefix);
-      builder.append("Field: ");
-      for (Reference.Flag flag : field.getFlags()) {
-        builder.append(flag).append(" ");
-      }
-      builder.append(field.toString());
+      builder.append(INDENT).append(INDENT).append(field).append(lineSeparator());
     }
     for (Reference.Method method : ref.getMethods()) {
-      builder.append("\n").append(prefix).append(prefix);
-      builder.append("Method: ");
-      for (Reference.Flag flag : method.getFlags()) {
-        builder.append(flag).append(" ");
-      }
-      builder.append(method.toString());
+      builder.append(INDENT).append(INDENT).append(method).append(lineSeparator());
     }
     return builder.toString();
   }

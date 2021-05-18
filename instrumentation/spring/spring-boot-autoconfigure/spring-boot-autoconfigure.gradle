@@ -6,29 +6,29 @@ apply from: "$rootDir/gradle/publish.gradle"
 sourceCompatibility = '8'
 
 dependencies {
-  implementation group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: versions.springboot
-  annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-autoconfigure-processor', version: versions.springboot
-  implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+  implementation "org.springframework.boot:spring-boot-autoconfigure:${versions.springboot}"
+  annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor:${versions.springboot}"
+  implementation "javax.validation:validation-api:2.0.1.Final"
 
   implementation project(':instrumentation:spring:spring-web-3.1:library')
   implementation project(':instrumentation:spring:spring-webmvc-3.1:library')
   implementation project(':instrumentation:spring:spring-webflux-5.0:library')
 
-  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
-  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
-  compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: versions.springboot
+  compileOnly "org.springframework.boot:spring-boot-starter-aop:${versions.springboot}"
+  compileOnly "org.springframework.boot:spring-boot-starter-web:${versions.springboot}"
+  compileOnly "org.springframework.boot:spring-boot-starter-webflux:${versions.springboot}"
 
   compileOnly deps.opentelemetryExtAnnotations
   compileOnly deps.opentelemetryLogging
   compileOnly deps.opentelemetryJaeger
   compileOnly deps.opentelemetryOtlp
   compileOnly deps.opentelemetryZipkin
-  compileOnly group: 'io.grpc', name: 'grpc-api', version: '1.30.2'
+  compileOnly "io.grpc:grpc-api:1.30.2"
 
-  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: versions.springboot
-  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: versions.springboot
-  testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: versions.springboot
-  testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.springboot) {
+  testImplementation "org.springframework.boot:spring-boot-starter-aop:${versions.springboot}"
+  testImplementation "org.springframework.boot:spring-boot-starter-webflux:${versions.springboot}"
+  testImplementation "org.springframework.boot:spring-boot-starter-web:${versions.springboot}"
+  testImplementation("org.springframework.boot:spring-boot-starter-test:${versions.springboot}") {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
 
@@ -41,6 +41,6 @@ dependencies {
   testImplementation deps.opentelemetryJaeger
   testImplementation deps.opentelemetryOtlp
   testImplementation deps.opentelemetryZipkin
-  testImplementation group: 'io.grpc', name: 'grpc-api', version: '1.30.2'
-  testImplementation group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.30.2'
+  testImplementation "io.grpc:grpc-api:1.30.2"
+  testImplementation "io.grpc:grpc-netty-shaded:1.30.2"
 }

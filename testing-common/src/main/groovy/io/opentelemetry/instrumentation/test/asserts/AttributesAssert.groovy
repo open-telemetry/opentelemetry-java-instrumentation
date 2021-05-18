@@ -28,25 +28,21 @@ class AttributesAssert {
     asserter.assertAttributesAllVerified()
   }
 
-  def attribute(String name, value) {
-    if (value == null) {
+  def attribute(String name, expected) {
+    if (expected == null) {
       return
     }
     assertedAttributes.add(name)
-    def val = attributes.get(name)
-    if (value instanceof Pattern) {
-      assert val =~ value
-    } else if (value instanceof Class) {
-      assert ((Class) value).isInstance(val)
-    } else if (value instanceof Closure) {
-      assert ((Closure) value).call(val)
+    def value = attributes.get(name)
+    if (expected instanceof Pattern) {
+      assert value =~ expected
+    } else if (expected instanceof Class) {
+      assert ((Class) expected).isInstance(value)
+    } else if (expected instanceof Closure) {
+      assert ((Closure) expected).call(value)
     } else {
-      assert val == value
+      assert value == expected
     }
-  }
-
-  def attribute(String name) {
-    return attributes[name]
   }
 
   def methodMissing(String name, args) {
@@ -56,6 +52,7 @@ class AttributesAssert {
     attribute(name, args[0])
   }
 
+  // this could be private, but then codenarc fails, thinking (incorrectly) that it's unused
   void assertAttributesAllVerified() {
     Set<String> allAttributes = new TreeSet<>(attributes.keySet())
     Set<String> unverifiedAttributes = new TreeSet(allAttributes)

@@ -375,7 +375,7 @@ class RabbitMQTest extends AgentInstrumentationSpecification {
           "rabbitmq.record.queue_time_ms" { it instanceof Long && it >= 0 }
         }
 
-        switch (attribute("rabbitmq.command")) {
+        switch (trace.span(index).attributes.get(AttributeKey.stringKey("rabbitmq.command"))) {
           case "basic.publish":
             "rabbitmq.command" "basic.publish"
             "rabbitmq.routing_key" {

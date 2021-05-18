@@ -21,12 +21,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisClientTracer.CommandWithArgs;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Connection;
@@ -57,24 +55,22 @@ public class JedisInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    public void transform(TypeTransformer transformer) {
       // FIXME: This instrumentation only incorporates sending the command, not processing the
       // result.
-      Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("sendCommand"))
               .and(takesArguments(1))
               .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command"))),
           JedisInstrumentationModule.class.getName() + "$JedisNoArgsAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("sendCommand"))
               .and(takesArguments(2))
               .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command")))
               .and(takesArgument(1, is(byte[][].class))),
           JedisInstrumentationModule.class.getName() + "$JedisArgsAdvice");
-      return transformers;
     }
   }
 

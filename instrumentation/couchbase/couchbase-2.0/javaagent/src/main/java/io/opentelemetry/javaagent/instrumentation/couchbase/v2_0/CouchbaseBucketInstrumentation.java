@@ -14,12 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.java.CouchbaseCluster;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import rx.Observable;
@@ -34,15 +32,13 @@ public class CouchbaseBucketInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(returns(named("rx.Observable"))).and(not(named("query"))),
         CouchbaseBucketInstrumentation.class.getName() + "$CouchbaseClientAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(returns(named("rx.Observable"))).and(named("query")),
         CouchbaseBucketInstrumentation.class.getName() + "$CouchbaseClientQueryAdvice");
-    return transformers;
   }
 
   public static class CouchbaseClientAdvice {

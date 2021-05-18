@@ -7,17 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.ratpack;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static java.util.Collections.singletonMap;
+import static io.opentelemetry.javaagent.instrumentation.ratpack.RatpackTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Map;
-import net.bytebuddy.description.method.MethodDescription;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Optional;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import ratpack.handling.Context;
 
 public class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
 
@@ -32,11 +34,23 @@ public class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         named("error")
             .and(takesArgument(0, named("ratpack.handling.Context")))
             .and(takesArgument(1, Throwable.class)),
-        ErrorHandlerAdvice.class.getName());
+        ServerErrorHandlerInstrumentation.class.getName() + "$ErrorAdvice");
+  }
+
+  public static class ErrorAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void captureThrowable(
+        @Advice.Argument(0) Context ctx, @Advice.Argument(1) Throwable throwable) {
+      Optional<io.opentelemetry.context.Context> otelContext =
+          ctx.maybeGet(io.opentelemetry.context.Context.class);
+      if (otelContext.isPresent()) {
+        tracer().onException(otelContext.get(), throwable);
+      }
+    }
   }
 }

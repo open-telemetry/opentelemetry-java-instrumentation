@@ -13,7 +13,7 @@ muzzle {
 }
 
 dependencies {
-  library group: 'org.eclipse.jetty', name: 'jetty-server', version: '11.0.0'
+  library "org.eclipse.jetty:jetty-server:11.0.0"
   implementation project(':instrumentation:servlet:servlet-5.0:javaagent')
   implementation project(':instrumentation:jetty:jetty-common:javaagent')
 
@@ -22,5 +22,5 @@ dependencies {
     exclude group: 'org.eclipse.jetty', module: 'jetty-server'
   }
 
-  testLibrary group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '11.0.0'
+  testLibrary "org.eclipse.jetty:jetty-servlet:11.0.0"
 }

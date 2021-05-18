@@ -12,10 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.HashMap;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import java.util.Map;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -50,11 +48,9 @@ public class LibertyInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-
+    public void transform(TypeTransformer transformer) {
       // https://github.com/OpenLiberty/open-liberty/blob/master/dev/com.ibm.ws.webcontainer/src/com/ibm/ws/webcontainer/webapp/WebApp.java
-      transformers.put(
+      transformer.applyAdviceToMethod(
           named("handleRequest")
               .and(takesArgument(0, named("javax.servlet.ServletRequest")))
               .and(takesArgument(1, named("javax.servlet.ServletResponse")))
@@ -62,11 +58,9 @@ public class LibertyInstrumentationModule extends InstrumentationModule {
           LibertyHandleRequestAdvice.class.getName());
 
       // isForbidden is called from handleRequest
-      transformers.put(
+      transformer.applyAdviceToMethod(
           named("isForbidden").and(takesArgument(0, named(String.class.getName()))),
           LibertyStartSpanAdvice.class.getName());
-
-      return transformers;
     }
   }
 }

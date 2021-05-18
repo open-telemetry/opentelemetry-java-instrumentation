@@ -10,15 +10,14 @@ muzzle {
 }
 
 dependencies {
-  library group: 'io.lettuce', name: 'lettuce-core', version: '5.1.0.RELEASE'
+  library "io.lettuce:lettuce-core:5.1.0.RELEASE"
 
   implementation project(':instrumentation:lettuce:lettuce-5.1:library')
 
   testImplementation project(':instrumentation:lettuce:lettuce-5.1:testing')
 
-  testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   // Only 5.2+ will have command arguments in the db.statement tag.
-  testLibrary group: 'io.lettuce', name: 'lettuce-core', version: '5.2.0.RELEASE'
+  testLibrary "io.lettuce:lettuce-core:5.2.0.RELEASE"
   testInstrumentation project(':instrumentation:reactor-3.1:javaagent')
 }
 

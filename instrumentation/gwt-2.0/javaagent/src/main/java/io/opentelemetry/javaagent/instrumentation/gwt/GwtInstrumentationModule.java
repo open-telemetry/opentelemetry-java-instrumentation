@@ -17,12 +17,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -52,10 +50,8 @@ public class GwtInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<MethodDescription>, String> transformers = new HashMap<>();
-
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           named("invokeAndEncodeResponse")
               .and(takesArguments(5))
               .and(takesArgument(0, Object.class))
@@ -66,7 +62,7 @@ public class GwtInstrumentationModule extends InstrumentationModule {
           RpcInstrumentation.class.getName() + "$RpcInvokeAdvice");
 
       // encodeResponseForFailure is called by invokeAndEncodeResponse in case of failure
-      transformers.put(
+      transformer.applyAdviceToMethod(
           named("encodeResponseForFailure")
               .and(takesArguments(4))
               .and(takesArgument(0, Method.class))
@@ -74,8 +70,6 @@ public class GwtInstrumentationModule extends InstrumentationModule {
               .and(takesArgument(2, named("com.google.gwt.user.server.rpc.SerializationPolicy")))
               .and(takesArgument(3, int.class)),
           RpcInstrumentation.class.getName() + "$RpcFailureAdvice");
-
-      return transformers;
     }
 
     public static class RpcInvokeAdvice {

@@ -45,7 +45,5 @@ muzzle {
 }
 
 dependencies {
-  library group: 'com.github.etaty', name: 'rediscala_2.11', version: '1.8.0'
-
-  testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+  library "com.github.etaty:rediscala_2.11:1.8.0"
 }

@@ -11,11 +11,9 @@ muzzle {
 
 
 dependencies {
-  library group: 'biz.paluch.redis', name: 'lettuce', version: '4.0.Final'
+  library "biz.paluch.redis:lettuce:4.0.Final"
 
-  testImplementation group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
-
-  latestDepTestLibrary group: 'biz.paluch.redis', name: 'lettuce', version: '4.+'
+  latestDepTestLibrary "biz.paluch.redis:lettuce:4.+"
 }
 
 tasks.withType(Test).configureEach {

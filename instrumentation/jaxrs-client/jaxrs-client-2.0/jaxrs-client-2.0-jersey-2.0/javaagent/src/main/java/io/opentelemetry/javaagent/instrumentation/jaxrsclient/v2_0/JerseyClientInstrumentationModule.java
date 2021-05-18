@@ -13,12 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -53,23 +51,19 @@ public class JerseyClientInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-      Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-
-      transformers.put(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(isPublic())
               .and(named("invoke"))
               .and(takesArgument(0, named("org.glassfish.jersey.client.ClientRequest"))),
           JerseyClientInstrumentationModule.class.getName() + "$InvokeAdvice");
-      transformers.put(
+      transformer.applyAdviceToMethod(
           isMethod()
               .and(named("submit").or(named("createRunnableForAsyncProcessing")))
               .and(takesArgument(0, named("org.glassfish.jersey.client.ClientRequest")))
               .and(takesArgument(1, named("org.glassfish.jersey.client.ResponseCallback"))),
           JerseyClientInstrumentationModule.class.getName() + "$SubmitAdvice");
-
-      return transformers;
     }
   }
 

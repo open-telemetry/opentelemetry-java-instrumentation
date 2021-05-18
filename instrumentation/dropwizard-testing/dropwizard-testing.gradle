@@ -8,7 +8,7 @@ dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
 
   // First version with DropwizardTestSupport:
-  testImplementation group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'
-  testImplementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
-  testImplementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-afterburner', version: '2.9.10'
+  testImplementation "io.dropwizard:dropwizard-testing:0.8.0"
+  testImplementation "javax.xml.bind:jaxb-api:2.2.3"
+  testImplementation "com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10"
 }

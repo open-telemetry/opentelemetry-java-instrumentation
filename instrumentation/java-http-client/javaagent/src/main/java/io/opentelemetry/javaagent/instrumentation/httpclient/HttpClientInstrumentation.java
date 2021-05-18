@@ -20,13 +20,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -46,10 +44,8 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(named("send"))
             .and(isPublic())
@@ -57,14 +53,12 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("java.net.http.HttpRequest"))),
         HttpClientInstrumentation.class.getName() + "$SendAdvice");
 
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(named("sendAsync"))
             .and(isPublic())
             .and(takesArgument(0, named("java.net.http.HttpRequest"))),
         HttpClientInstrumentation.class.getName() + "$SendAsyncAdvice");
-
-    return transformers;
   }
 
   public static class SendAdvice {

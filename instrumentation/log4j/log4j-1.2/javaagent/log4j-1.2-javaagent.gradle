@@ -6,13 +6,13 @@ muzzle {
     module = "log4j"
     versions = "[1.2,)"
     // version 1.2.15 has a bad dependency on javax.jms:jms:1.1 which was released as pom only
-    skipVersions += '1.2.15'
+    skip('1.2.15')
   }
 }
 
 dependencies {
   // 1.2 introduces MDC and there's no version earlier than 1.2.4 available
-  library group: 'log4j', name: 'log4j', version: '1.2.4'
+  library "log4j:log4j:1.2.4"
 }
 
 configurations {

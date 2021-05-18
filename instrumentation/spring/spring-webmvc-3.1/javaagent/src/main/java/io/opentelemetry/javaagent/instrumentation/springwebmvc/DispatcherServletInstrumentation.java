@@ -16,12 +16,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.context.ApplicationContext;
@@ -36,28 +34,26 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(isProtected())
             .and(named("onRefresh"))
             .and(takesArgument(0, named("org.springframework.context.ApplicationContext")))
             .and(takesArguments(1)),
         DispatcherServletInstrumentation.class.getName() + "$HandlerMappingAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(isProtected())
             .and(named("render"))
             .and(takesArgument(0, named("org.springframework.web.servlet.ModelAndView"))),
         DispatcherServletInstrumentation.class.getName() + "$RenderAdvice");
-    transformers.put(
+    transformer.applyAdviceToMethod(
         isMethod()
             .and(isProtected())
             .and(nameStartsWith("processHandlerException"))
             .and(takesArgument(3, Exception.class)),
         DispatcherServletInstrumentation.class.getName() + "$ErrorHandlerAdvice");
-    return transformers;
   }
 
   /**
