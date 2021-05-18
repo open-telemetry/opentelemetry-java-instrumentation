@@ -28,6 +28,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientRequestTracingHandler;
@@ -152,10 +153,12 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) ChannelHandler handler) {
-      ChannelHandler ourHandler =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class).get(handler);
+      ContextStore<ChannelHandler, ChannelHandler> contextStore =
+          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = contextStore.get(handler);
       if (ourHandler != null) {
         pipeline.remove(ourHandler);
+        contextStore.put(handler, null);
       }
     }
   }
@@ -169,10 +172,12 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         return;
       }
 
-      ChannelHandler ourHandler =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class).get(handler);
+      ContextStore<ChannelHandler, ChannelHandler> contextStore =
+          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = contextStore.get(handler);
       if (ourHandler != null) {
         pipeline.remove(ourHandler);
+        contextStore.put(handler, null);
       }
     }
   }
@@ -187,10 +192,12 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
         return;
       }
 
-      ChannelHandler ourHandler =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class).get(handler);
+      ContextStore<ChannelHandler, ChannelHandler> contextStore =
+          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
+      ChannelHandler ourHandler = contextStore.get(handler);
       if (ourHandler != null) {
         pipeline.remove(ourHandler);
+        contextStore.put(handler, null);
       }
     }
   }
