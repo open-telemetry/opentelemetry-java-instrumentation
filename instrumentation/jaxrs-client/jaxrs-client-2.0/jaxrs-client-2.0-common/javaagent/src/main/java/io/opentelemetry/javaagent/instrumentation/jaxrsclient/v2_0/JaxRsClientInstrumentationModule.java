@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -49,7 +49,7 @@ public class JaxRsClientInstrumentationModule extends InstrumentationModule {
     @Override
     public void transform(TypeTransformer transformer) {
       transformer.applyAdviceToMethod(
-          named("build").and(returns(hasInterface(named("javax.ws.rs.client.Client")))),
+          named("build").and(returns(implementsInterface(named("javax.ws.rs.client.Client")))),
           JaxRsClientInstrumentationModule.class.getName() + "$ClientBuilderAdvice");
     }
   }

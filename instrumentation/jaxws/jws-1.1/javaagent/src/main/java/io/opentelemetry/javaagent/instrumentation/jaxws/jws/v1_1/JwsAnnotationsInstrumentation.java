@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.methodIsDeclaredByType;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsTracer.tracer;
@@ -38,7 +38,7 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return hasInterface(isAnnotatedWith(named(JWS_WEB_SERVICE_ANNOTATION)))
+    return implementsInterface(isAnnotatedWith(named(JWS_WEB_SERVICE_ANNOTATION)))
         .or(isAnnotatedWith(named(JWS_WEB_SERVICE_ANNOTATION)));
   }
 

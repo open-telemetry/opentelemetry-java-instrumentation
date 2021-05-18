@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasInterface
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface
 import static net.bytebuddy.matcher.ElementMatchers.named
 
@@ -28,7 +27,7 @@ class HasInterfaceMatcherTest extends Specification {
 
   def "test matcher #matcherClass.simpleName -> #type.simpleName"() {
     expect:
-    hasInterface(matcher).matches(argument) == result
+    implementsInterface(matcher).matches(argument) == result
 
     where:
     matcherClass | type | result
