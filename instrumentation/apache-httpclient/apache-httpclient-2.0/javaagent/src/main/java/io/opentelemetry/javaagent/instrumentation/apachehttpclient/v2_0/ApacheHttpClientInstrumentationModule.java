@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.CommonsHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0.ApacheHttpClientInstrumenters.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -68,11 +68,11 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, httpMethod)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, httpMethod);
+      context = instrumenter().start(parentContext, httpMethod);
       scope = context.makeCurrent();
     }
 
@@ -87,7 +87,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       }
 
       scope.close();
-      tracer().endMaybeExceptionally(context, httpMethod, throwable);
+      instrumenter().end(context, httpMethod, null, throwable);
     }
   }
 }

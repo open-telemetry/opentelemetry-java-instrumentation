@@ -5,6 +5,7 @@
 
 import com.ning.http.client.AsyncCompletionHandler
 import com.ning.http.client.AsyncHttpClient
+import com.ning.http.client.AsyncHttpClientConfig
 import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
@@ -18,7 +19,8 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
 
   @AutoCleanup
   @Shared
-  def client = new AsyncHttpClient()
+  def client = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
+    .setConnectTimeout(CONNECT_TIMEOUT_MS).build())
 
   @Override
   Request buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -58,13 +60,8 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   }
 
   @Override
-  boolean testConnectionFailure() {
+  boolean testHttps() {
     false
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
   }
 }
 

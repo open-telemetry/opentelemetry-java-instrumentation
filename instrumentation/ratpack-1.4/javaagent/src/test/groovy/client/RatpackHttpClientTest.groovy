@@ -5,7 +5,9 @@
 
 package client
 
+import io.netty.channel.ConnectTimeoutException
 import io.opentelemetry.instrumentation.test.AgentTestTrait
+import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import java.time.Duration
 import ratpack.exec.Operation
@@ -41,14 +43,14 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   int sendRequest(Void request, String method, URI uri, Map<String, String> headers) {
     return exec.yield {
       internalSendRequest(method, uri, headers)
-    }.value
+    }.valueOrThrow
   }
 
   @Override
   void sendRequestWithCallback(Void request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     exec.execute(Operation.of {
-      internalSendRequest(method, uri, headers).result {
-        requestResult.complete(it.value)
+      internalSendRequest(method, uri, headers).result {result ->
+        requestResult.complete({ result.value }, result.throwable)
       }
     })
   }
@@ -70,6 +72,41 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
+  String expectedClientSpanName(URI uri, String method) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "http://www.google.com:81/": // dropped request
+      case "https://192.0.2.1/": // non routable address
+        return "CONNECT"
+      default:
+        return super.expectedClientSpanName(uri, method)
+    }
+  }
+
+  @Override
+  void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
+    switch (uri.toString()) {
+      case "http://www.google.com:81/": // dropped request
+      case "https://192.0.2.1/": // non routable address
+        spanAssert.errorEvent(ConnectTimeoutException, ~/connection timed out:/)
+        return
+    }
+    super.assertClientSpanErrorEvent(spanAssert, uri, exception)
+  }
+
+  @Override
+  boolean hasClientSpanAttributes(URI uri) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "http://www.google.com:81/": // dropped request
+      case "https://192.0.2.1/": // non routable address
+        return false
+      default:
+        return true
+    }
+  }
+
+  @Override
   boolean testRedirects() {
     false
   }
@@ -81,12 +118,7 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
-  boolean testConnectionFailure() {
+  boolean testHttps() {
     false
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
   }
 }

@@ -60,13 +60,7 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   }
 
   @Override
-  boolean testConnectionFailure() {
+  boolean testHttps() {
     false
   }
-
-  @Override
-  boolean testRemoteConnection() {
-    return false
-  }
-
 }

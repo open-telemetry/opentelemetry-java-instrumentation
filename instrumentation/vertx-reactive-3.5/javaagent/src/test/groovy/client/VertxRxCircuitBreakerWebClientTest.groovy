@@ -36,7 +36,7 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
 
   @Override
   HttpRequest<?> buildRequest(String method, URI uri, Map<String, String> headers) {
-    def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
+    def request = client.request(HttpMethod.valueOf(method), getPort(uri), uri.host, "$uri")
     headers.each { request.putHeader(it.key, it.value) }
     return request
   }
@@ -90,12 +90,7 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
   }
 
   @Override
-  boolean testConnectionFailure() {
-    false
-  }
-
-  boolean testRemoteConnection() {
-    // FIXME: figure out how to configure timeouts.
+  boolean testHttps() {
     false
   }
 

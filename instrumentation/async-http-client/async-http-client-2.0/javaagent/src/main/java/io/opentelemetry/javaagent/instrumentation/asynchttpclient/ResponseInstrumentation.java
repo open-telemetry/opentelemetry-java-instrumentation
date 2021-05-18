@@ -34,6 +34,9 @@ public class ResponseInstrumentation implements TypeInstrumentation {
         named("onCompleted")
             .and(takesArgument(0, named("org.asynchttpclient.Response")))
             .and(isPublic()),
-        ResponseAdvice.class.getName());
+        ResponseInstrumentation.class.getPackage().getName() + ".ResponseAdvice");
+    transformer.applyAdviceToMethod(
+        named("onThrowable").and(takesArgument(0, Throwable.class)).and(isPublic()),
+        ResponseInstrumentation.class.getPackage().getName() + ".ResponseFailureAdvice");
   }
 }

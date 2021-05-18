@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
+package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
@@ -16,44 +16,48 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ChannelFutureInstrumentation implements TypeInstrumentation {
+public class NettyFutureInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("io.netty.channel.ChannelFuture");
+    return hasClassesNamed("io.netty.util.concurrent.Future");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("io.netty.channel.ChannelFuture"));
+    return implementsInterface(named("io.netty.util.concurrent.Future"));
   }
 
   @Override
-  public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
+    transformers.put(
         isMethod()
             .and(named("addListener"))
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener"))),
-        ChannelFutureInstrumentation.class.getName() + "$AddListenerAdvice");
-    transformer.applyAdviceToMethod(
+        NettyFutureInstrumentation.class.getName() + "$AddListenerAdvice");
+    transformers.put(
         isMethod().and(named("addListeners")).and(takesArgument(0, isArray())),
-        ChannelFutureInstrumentation.class.getName() + "$AddListenersAdvice");
-    transformer.applyAdviceToMethod(
+        NettyFutureInstrumentation.class.getName() + "$AddListenersAdvice");
+    transformers.put(
         isMethod()
             .and(named("removeListener"))
             .and(takesArgument(0, named("io.netty.util.concurrent.GenericFutureListener"))),
-        ChannelFutureInstrumentation.class.getName() + "$RemoveListenerAdvice");
-    transformer.applyAdviceToMethod(
+        NettyFutureInstrumentation.class.getName() + "$RemoveListenerAdvice");
+    transformers.put(
         isMethod().and(named("removeListeners")).and(takesArgument(0, isArray())),
-        ChannelFutureInstrumentation.class.getName() + "$RemoveListenersAdvice");
+        NettyFutureInstrumentation.class.getName() + "$RemoveListenersAdvice");
+    return transformers;
   }
 
   public static class AddListenerAdvice {

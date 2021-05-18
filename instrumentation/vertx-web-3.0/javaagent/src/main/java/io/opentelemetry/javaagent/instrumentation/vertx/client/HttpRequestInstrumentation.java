@@ -12,13 +12,16 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import net.bytebuddy.asm.Advice;
@@ -68,19 +71,27 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod().and(isPrivate()).and(nameStartsWith("write").or(nameStartsWith("connected"))),
         HttpRequestInstrumentation.class.getName() + "$MountContextAdvice");
+
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("exceptionHandler"))
+            .and(takesArgument(0, named("io.vertx.core.Handler"))),
+        HttpRequestInstrumentation.class.getName() + "$ExceptionHandlerAdvice");
   }
 
   public static class EndRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void attachContext(
-        @Advice.This HttpClientRequest request, @Advice.Local("otelScope") Scope scope) {
+        @Advice.This HttpClientRequest request,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Java8BytecodeBridge.currentContext();
 
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
       }
 
-      Context context = tracer().startSpan(parentContext, request, request);
+      context = tracer().startSpan(parentContext, request, request);
       Contexts contexts = new Contexts(parentContext, context);
       InstrumentationContext.get(HttpClientRequest.class, Contexts.class).put(request, contexts);
 
@@ -88,9 +99,15 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void endScope(@Advice.Local("otelScope") Scope scope) {
+    public static void endScope(
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Thrown Throwable throwable) {
       if (scope != null) {
         scope.close();
+      }
+      if (throwable != null) {
+        tracer().endExceptionally(context, throwable);
       }
     }
   }
@@ -166,6 +183,19 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     public static void unmountContext(@Advice.Local("otelScope") Scope scope) {
       if (scope != null) {
         scope.close();
+      }
+    }
+  }
+
+  public static class ExceptionHandlerAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void wrapExceptionHandler(
+        @Advice.This HttpClientRequest request,
+        @Advice.Argument(value = 0, readOnly = false) Handler<Throwable> handler) {
+      if (handler != null) {
+        ContextStore<HttpClientRequest, Contexts> contextStore =
+            InstrumentationContext.get(HttpClientRequest.class, Contexts.class);
+        handler = new ExceptionHandlerWrapper(request, contextStore, handler);
       }
     }
   }
