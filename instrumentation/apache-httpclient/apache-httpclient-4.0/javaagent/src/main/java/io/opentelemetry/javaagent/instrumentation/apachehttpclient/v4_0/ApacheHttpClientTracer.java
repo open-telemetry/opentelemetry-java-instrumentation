@@ -53,7 +53,8 @@ public class ApacheHttpClientTracer
   }
 
   @Override
-  protected @Nullable String flavor(HttpUriRequest httpUriRequest) {
+  @Nullable
+  protected String flavor(HttpUriRequest httpUriRequest) {
     return httpUriRequest.getProtocolVersion().toString();
   }
 

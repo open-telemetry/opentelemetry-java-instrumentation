@@ -83,7 +83,8 @@ public class UndertowHttpServerTracer
 
   @SuppressWarnings("unchecked")
   @Override
-  public @Nullable Context getServerContext(HttpServerExchange exchange) {
+  @Nullable
+  public Context getServerContext(HttpServerExchange exchange) {
     AttachmentKey<Context> contextKey =
         (AttachmentKey<Context>) KeyHolder.contextKeys.get(AttachmentKey.class);
     if (contextKey == null) {
@@ -93,14 +94,16 @@ public class UndertowHttpServerTracer
   }
 
   @Override
-  protected @Nullable Integer peerPort(HttpServerExchange exchange) {
+  @Nullable
+  protected Integer peerPort(HttpServerExchange exchange) {
     InetSocketAddress peerAddress =
         exchange.getConnection().getPeerAddress(InetSocketAddress.class);
     return peerAddress.getPort();
   }
 
   @Override
-  protected @Nullable String peerHostIP(HttpServerExchange exchange) {
+  @Nullable
+  protected String peerHostIP(HttpServerExchange exchange) {
     InetSocketAddress peerAddress =
         exchange.getConnection().getPeerAddress(InetSocketAddress.class);
     return peerAddress.getHostString();
@@ -132,7 +135,8 @@ public class UndertowHttpServerTracer
   }
 
   @Override
-  protected @Nullable String requestHeader(HttpServerExchange exchange, String name) {
+  @Nullable
+  protected String requestHeader(HttpServerExchange exchange, String name) {
     return exchange.getRequestHeaders().getFirst(name);
   }
 

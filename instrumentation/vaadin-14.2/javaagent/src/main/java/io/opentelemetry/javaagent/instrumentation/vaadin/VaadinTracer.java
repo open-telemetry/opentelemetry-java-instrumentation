@@ -67,7 +67,8 @@ public class VaadinTracer extends BaseTracer {
     }
   }
 
-  public @Nullable Context startRequestHandlerSpan(RequestHandler requestHandler, Method method) {
+  @Nullable
+  public Context startRequestHandlerSpan(RequestHandler requestHandler, Method method) {
     Context current = Context.current();
     // ignore nested request handlers
     if (current.get(REQUEST_HANDLER_CONTEXT_KEY) != null) {

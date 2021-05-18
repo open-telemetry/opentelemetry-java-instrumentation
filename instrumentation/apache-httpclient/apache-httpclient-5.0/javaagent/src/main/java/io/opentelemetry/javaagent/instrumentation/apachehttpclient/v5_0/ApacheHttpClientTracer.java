@@ -47,7 +47,8 @@ public class ApacheHttpClientTracer
   }
 
   @Override
-  protected @Nullable String flavor(ClassicHttpRequest request) {
+  @Nullable
+  protected String flavor(ClassicHttpRequest request) {
     ProtocolVersion protocolVersion = request.getVersion();
     if (protocolVersion == null) {
       protocolVersion = HttpVersion.HTTP_1_1;

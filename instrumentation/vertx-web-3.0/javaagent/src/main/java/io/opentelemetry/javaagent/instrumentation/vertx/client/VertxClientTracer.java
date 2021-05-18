@@ -37,22 +37,26 @@ public class VertxClientTracer
   }
 
   @Override
-  protected @Nullable URI url(HttpClientRequest request) throws URISyntaxException {
+  @Nullable
+  protected URI url(HttpClientRequest request) throws URISyntaxException {
     return new URI(request.uri());
   }
 
   @Override
-  protected @Nullable Integer status(HttpClientResponse response) {
+  @Nullable
+  protected Integer status(HttpClientResponse response) {
     return response.statusCode();
   }
 
   @Override
-  protected @Nullable String requestHeader(HttpClientRequest request, String name) {
+  @Nullable
+  protected String requestHeader(HttpClientRequest request, String name) {
     return request.headers().get(name);
   }
 
   @Override
-  protected @Nullable String responseHeader(HttpClientResponse response, String name) {
+  @Nullable
+  protected String responseHeader(HttpClientResponse response, String name) {
     return response.getHeader(name);
   }
 
