@@ -19,7 +19,7 @@ class MuzzleBytecodeTransformTest extends Specification {
     List<Class> nonLazyFields = []
     List<Class> unInitFields = []
     def instrumentationModuleClass = IntegrationTestUtils.getAgentClassLoader().loadClass("io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule")
-    for (Object instrumenter : SafeServiceLoader.load(instrumentationModuleClass, IntegrationTestUtils.getAgentClassLoader())) {
+    for (Object instrumenter : SafeServiceLoader.load(instrumentationModuleClass)) {
       if (!instrumentationModuleClass.isAssignableFrom(instrumenter.getClass())) {
         // muzzle only applies to default instrumenters
         continue

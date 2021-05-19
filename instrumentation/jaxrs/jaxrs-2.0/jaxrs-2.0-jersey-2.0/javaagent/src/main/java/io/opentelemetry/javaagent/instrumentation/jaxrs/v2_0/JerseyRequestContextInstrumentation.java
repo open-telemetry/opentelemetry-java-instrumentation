@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice.Local;
 public class JerseyRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   @Override
   protected String abortAdviceName() {
-    return ContainerRequestContextAdvice.class.getName();
+    return getClass().getName() + "$ContainerRequestContextAdvice";
   }
 
   public static class ContainerRequestContextAdvice {

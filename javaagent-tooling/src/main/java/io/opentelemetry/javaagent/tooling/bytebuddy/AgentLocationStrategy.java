@@ -18,6 +18,7 @@ import net.bytebuddy.utility.JavaModule;
  * cannot find the desired resource, check up the classloader hierarchy until a resource is found.
  */
 public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
+
   public ClassFileLocator classFileLocator(ClassLoader classLoader) {
     return classFileLocator(classLoader, null);
   }
@@ -30,6 +31,7 @@ public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
       locators.add(ClassFileLocator.ForClassLoader.WeaklyReferenced.of(classLoader));
       classLoader = classLoader.getParent();
     }
+
     return new ClassFileLocator.Compound(locators.toArray(new ClassFileLocator[0]));
   }
 }

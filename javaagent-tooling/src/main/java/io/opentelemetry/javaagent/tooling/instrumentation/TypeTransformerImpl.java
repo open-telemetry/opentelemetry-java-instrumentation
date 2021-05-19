@@ -25,7 +25,10 @@ final class TypeTransformerImpl implements TypeTransformer {
     agentBuilder =
         agentBuilder.transform(
             new AgentBuilder.Transformer.ForAdvice()
-                .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
+                .include(
+                    Utils.getBootstrapProxy(),
+                    Utils.getAgentClassLoader(),
+                    Utils.getExtensionsClassLoader())
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
                 .advice(methodMatcher, adviceClassName));
   }

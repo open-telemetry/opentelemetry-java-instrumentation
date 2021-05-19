@@ -26,9 +26,7 @@ public class InstrumentationLoader implements AgentExtension {
   @Override
   public AgentBuilder extend(AgentBuilder agentBuilder) {
     List<InstrumentationModule> instrumentationModules =
-        SafeServiceLoader.load(
-                InstrumentationModule.class, InstrumentationLoader.class.getClassLoader())
-            .stream()
+        SafeServiceLoader.load(InstrumentationModule.class).stream()
             .sorted(Comparator.comparingInt(InstrumentationModule::order))
             .collect(Collectors.toList());
 
