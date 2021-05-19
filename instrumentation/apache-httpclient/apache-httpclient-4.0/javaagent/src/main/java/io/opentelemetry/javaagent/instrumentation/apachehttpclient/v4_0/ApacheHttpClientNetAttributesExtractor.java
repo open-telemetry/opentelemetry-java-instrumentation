@@ -37,8 +37,9 @@ final class ApacheHttpClientNetAttributesExtractor
         return 80L;
       case "https":
         return 443L;
+      default:
+        return null;
     }
-    return null;
   }
 
   @Override
