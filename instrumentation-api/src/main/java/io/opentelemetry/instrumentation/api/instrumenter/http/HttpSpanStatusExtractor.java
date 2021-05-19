@@ -36,9 +36,9 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
 
   @Override
   public StatusCode extract(REQUEST request, RESPONSE response, Throwable error) {
-    Long statusCode = attributesExtractor.statusCode(request, response);
+    Integer statusCode = attributesExtractor.statusCode(request, response);
     if (statusCode != null) {
-      return HttpStatusConverter.statusFromHttpStatus(statusCode.intValue());
+      return HttpStatusConverter.statusFromHttpStatus(statusCode);
     }
     return SpanStatusExtractor.getDefault().extract(request, response, error);
   }
