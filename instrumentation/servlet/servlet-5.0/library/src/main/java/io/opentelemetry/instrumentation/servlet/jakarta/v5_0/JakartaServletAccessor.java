@@ -101,11 +101,6 @@ public class JakartaServletAccessor
   }
 
   @Override
-  public boolean isRequestAsyncStarted(HttpServletRequest request) {
-    return request.isAsyncStarted();
-  }
-
-  @Override
   public void addRequestAsyncListener(
       HttpServletRequest request,
       ServletAsyncListener<HttpServletResponse> listener,

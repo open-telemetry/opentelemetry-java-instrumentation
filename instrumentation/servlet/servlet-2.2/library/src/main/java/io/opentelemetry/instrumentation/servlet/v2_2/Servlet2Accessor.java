@@ -20,11 +20,6 @@ public class Servlet2Accessor extends JavaxServletAccessor<ResponseWithStatus> {
   }
 
   @Override
-  public boolean isRequestAsyncStarted(HttpServletRequest request) {
-    return false;
-  }
-
-  @Override
   public void addRequestAsyncListener(
       HttpServletRequest request,
       ServletAsyncListener<ResponseWithStatus> listener,

@@ -144,10 +144,6 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   @Override
   protected abstract TextMapGetter<REQUEST> getGetter();
 
-  public ServletAccessor<REQUEST, RESPONSE> getServletAccessor() {
-    return accessor;
-  }
-
   /**
    * Servlet containers where AsyncContext listener must be attached with request and response
    * objects included, a response object to use for that purpose must be attached to the request
