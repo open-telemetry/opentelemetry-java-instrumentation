@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.netty.channel.Channel;
@@ -39,7 +38,7 @@ public class ChannelInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(nameStartsWith("write")),
+        isMethod().and(named("write").or(named("writeAndFlush"))),
         ChannelInstrumentation.class.getName() + "$AttachContextAdvice");
   }
 

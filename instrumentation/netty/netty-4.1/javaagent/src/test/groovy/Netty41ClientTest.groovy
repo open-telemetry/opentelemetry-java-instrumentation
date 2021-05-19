@@ -41,10 +41,10 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   private Bootstrap bootstrap
 
   def setupSpec() {
-    EventLoopGroup group = new NioEventLoopGroup()
+    EventLoopGroup group = getEventLoopGroup()
     bootstrap = new Bootstrap()
     bootstrap.group(group)
-      .channel(NioSocketChannel)
+      .channel(getChannelClass())
       .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
       .handler(new ChannelInitializer<SocketChannel>() {
         @Override
@@ -53,6 +53,14 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           pipeline.addLast(new HttpClientCodec())
         }
       })
+  }
+
+  EventLoopGroup getEventLoopGroup() {
+    return new NioEventLoopGroup()
+  }
+
+  Class<Channel> getChannelClass() {
+    return NioSocketChannel
   }
 
   @Override
@@ -251,8 +259,9 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     channel.pipeline().addLast(new TracedHandlerFromInitializerHandler())
 
     then:
+    null != channel.pipeline().get(HttpClientTracingHandler.getName())
     null != channel.pipeline().remove("added_in_initializer")
-    null != channel.pipeline().remove(HttpClientTracingHandler.getName())
+    null == channel.pipeline().get(HttpClientTracingHandler.getName())
   }
 
   def "request with trace annotated method #method"() {
