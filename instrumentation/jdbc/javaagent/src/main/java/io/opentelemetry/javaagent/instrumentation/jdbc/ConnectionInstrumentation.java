@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -38,7 +37,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
         nameStartsWith("prepare")
             .and(takesArgument(0, String.class))
             // Also include CallableStatement, which is a sub type of PreparedStatement
-            .and(returns(hasInterface(named("java.sql.PreparedStatement")))),
+            .and(returns(implementsInterface(named("java.sql.PreparedStatement")))),
         ConnectionInstrumentation.class.getName() + "$PrepareAdvice");
   }
 

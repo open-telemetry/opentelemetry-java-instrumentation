@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.geode.GeodeTracer.tracer;
 import static java.util.Collections.singletonList;
@@ -47,7 +47,7 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
 
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return hasInterface(named("org.apache.geode.cache.Region"));
+      return implementsInterface(named("org.apache.geode.cache.Region"));
     }
 
     @Override
