@@ -23,7 +23,7 @@ customize that
 * [DemoSampler](custom/src/main/java/com/example/javaagent/DemoSampler.java) - custom `Sampler`
 * [DemoSpanProcessor](custom/src/main/java/com/example/javaagent/DemoSpanProcessor.java) - custom `SpanProcessor`
 * [DemoSpanExporter](custom/src/main/java/com/example/javaagent/DemoSpanExporter.java) - custom `SpanExporter`
-* [DemoServlet3Instrumentation](instrumentation/servlet-3/src/main/java/com/example/javaagent/instrumentation/DemoServlet3Instrumentation.java) - additional instrumentation
+* [DemoServlet3InstrumentationModule](instrumentation/servlet-3/src/main/java/com/example/javaagent/instrumentation/DemoServlet3InstrumentationModule.java) - additional instrumentation
 
 ## Instrumentation customisation
 
