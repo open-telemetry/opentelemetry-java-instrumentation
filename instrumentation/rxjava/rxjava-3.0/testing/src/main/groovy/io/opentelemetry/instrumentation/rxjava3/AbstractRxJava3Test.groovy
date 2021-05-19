@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rxjava3
 
+import io.opentelemetry.api.common.AttributeKey
 import io.reactivex.rxjava3.core.BackpressureStrategy
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
@@ -313,6 +314,44 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
         }
       }
     }
+
+    where:
+    scheduler << [Schedulers.newThread(), Schedulers.computation(), Schedulers.single(), Schedulers.trampoline()]
+  }
+
+  def "test many ongoing trace chains on '#scheduler'"() {
+    setup:
+    int iterations = 100
+    HashSet<Long> missingIterations = new HashSet<>((0L..(iterations - 1)).toList())
+
+    when:
+    RxJava3ConcurrencyTestHelper.launchAndWait(scheduler, iterations, 60000)
+
+    then:
+    assertTraces(iterations) {
+      for (int i = 0; i < iterations; i++) {
+        trace(i, 3) {
+          long iteration = -1
+          span(0) {
+            name("outer")
+            iteration = span.getAttributes().get(AttributeKey.longKey("iteration")).toLong()
+            assert missingIterations.remove(iteration)
+          }
+          span(1) {
+            name("middle")
+            childOf(span(0))
+            assert span.getAttributes().get(AttributeKey.longKey("iteration")) == iteration
+          }
+          span(2) {
+            name("inner")
+            childOf(span(1))
+            assert span.getAttributes().get(AttributeKey.longKey("iteration")) == iteration
+          }
+        }
+      }
+    }
+
+    assert missingIterations.isEmpty()
 
     where:
     scheduler << [Schedulers.newThread(), Schedulers.computation(), Schedulers.single(), Schedulers.trampoline()]
