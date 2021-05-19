@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -34,7 +34,7 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return hasInterface(named("javax.xml.ws.Provider"));
+    return implementsInterface(named("javax.xml.ws.Provider"));
   }
 
   @Override

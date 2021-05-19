@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
@@ -48,7 +47,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
             .and(
                 returns(
                     namedOneOf("org.hibernate.Session", "org.hibernate.StatelessSession")
-                        .or(hasInterface(named("org.hibernate.Session"))))),
+                        .or(implementsInterface(named("org.hibernate.Session"))))),
         SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
   }
 

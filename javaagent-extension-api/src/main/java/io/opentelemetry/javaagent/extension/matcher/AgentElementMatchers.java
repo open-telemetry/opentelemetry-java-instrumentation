@@ -28,11 +28,6 @@ public final class AgentElementMatchers {
     return new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), true);
   }
 
-  public static ElementMatcher.Junction<TypeDescription> hasInterface(
-      ElementMatcher<TypeDescription> matcher) {
-    return new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), true);
-  }
-
   public static ElementMatcher.Junction<TypeDescription> safeHasSuperType(
       ElementMatcher<TypeDescription> matcher) {
     return new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), false);

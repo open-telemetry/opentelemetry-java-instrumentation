@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasInterface;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
@@ -88,11 +87,11 @@ public class SessionInstrumentation implements TypeInstrumentation {
         SessionInstrumentation.class.getName() + "$GetTransactionAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(returns(hasInterface(named("org.hibernate.Query")))),
+        isMethod().and(returns(implementsInterface(named("org.hibernate.Query")))),
         SessionInstrumentation.class.getName() + "$GetQueryAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(returns(hasInterface(named("org.hibernate.Criteria")))),
+        isMethod().and(returns(implementsInterface(named("org.hibernate.Criteria")))),
         SessionInstrumentation.class.getName() + "$GetCriteriaAdvice");
   }
 
