@@ -67,8 +67,8 @@ class HttpAttributesExtractorTest {
     }
 
     @Override
-    protected Long statusCode(Map<String, String> request, Map<String, String> response) {
-      return Long.parseLong(response.get("statusCode"));
+    protected Integer statusCode(Map<String, String> request, Map<String, String> response) {
+      return Integer.parseInt(response.get("statusCode"));
     }
 
     @Override
