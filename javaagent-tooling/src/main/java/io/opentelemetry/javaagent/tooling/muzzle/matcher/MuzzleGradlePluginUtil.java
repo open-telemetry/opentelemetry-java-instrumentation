@@ -9,7 +9,10 @@ import static java.lang.System.lineSeparator;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
+import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
+import io.opentelemetry.javaagent.extension.muzzle.Source;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import java.io.IOException;
 import java.util.Collection;
@@ -135,7 +138,7 @@ public final class MuzzleGradlePluginUtil {
         ServiceLoader.load(InstrumentationModule.class, instrumentationClassLoader)) {
       try {
         System.out.println(instrumentationModule.getClass().getName());
-        for (Reference ref : instrumentationModule.getMuzzleReferences()) {
+        for (ClassRef ref : instrumentationModule.getMuzzleReferences()) {
           System.out.print(prettyPrint(ref));
         }
       } catch (Exception e) {
@@ -148,11 +151,11 @@ public final class MuzzleGradlePluginUtil {
     }
   }
 
-  private static String prettyPrint(Reference ref) {
+  private static String prettyPrint(ClassRef ref) {
     StringBuilder builder = new StringBuilder(INDENT).append(ref).append(lineSeparator());
     if (!ref.getSources().isEmpty()) {
       builder.append(INDENT).append(INDENT).append("Sources:").append(lineSeparator());
-      for (Reference.Source source : ref.getSources()) {
+      for (Source source : ref.getSources()) {
         builder
             .append(INDENT)
             .append(INDENT)
@@ -162,10 +165,10 @@ public final class MuzzleGradlePluginUtil {
             .append(lineSeparator());
       }
     }
-    for (Reference.Field field : ref.getFields()) {
+    for (FieldRef field : ref.getFields()) {
       builder.append(INDENT).append(INDENT).append(field).append(lineSeparator());
     }
-    for (Reference.Method method : ref.getMethods()) {
+    for (MethodRef method : ref.getMethods()) {
       builder.append(INDENT).append(INDENT).append(method).append(lineSeparator());
     }
     return builder.toString();

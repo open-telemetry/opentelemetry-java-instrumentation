@@ -6,10 +6,10 @@
 package muzzle
 
 
-import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag
-import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.MinimumVisibilityFlag
-import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.OwnershipFlag
-import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.VisibilityFlag
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.VisibilityFlag
 import static muzzle.TestClasses.HelperAdvice
 import static muzzle.TestClasses.LdcAdvice
 import static muzzle.TestClasses.MethodBodyAdvice
@@ -19,7 +19,9 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.InstrumentationContextTestClasses
 import io.opentelemetry.instrumentation.OtherTestHelperClasses
 import io.opentelemetry.instrumentation.TestHelperClasses
-import io.opentelemetry.javaagent.extension.muzzle.Reference
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef
+import io.opentelemetry.javaagent.extension.muzzle.FieldRef
+import io.opentelemetry.javaagent.extension.muzzle.Flag
 import io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCompilationException
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector
 import spock.lang.Specification
@@ -312,26 +314,26 @@ class ReferenceCollectorTest extends Specification {
     "storing class ref in a local var"                                          | InstrumentationContextTestClasses.PassingVariableAdvice.name
   }
 
-  private static assertHelperSuperClassMethod(Reference reference, boolean isAbstract) {
+  private static assertHelperSuperClassMethod(ClassRef reference, boolean isAbstract) {
     assertMethod reference, 'abstractMethod', '()I',
       VisibilityFlag.PROTECTED,
       OwnershipFlag.NON_STATIC,
       isAbstract ? ManifestationFlag.ABSTRACT : ManifestationFlag.NON_FINAL
   }
 
-  private static assertHelperInterfaceMethod(Reference reference, boolean isAbstract) {
+  private static assertHelperInterfaceMethod(ClassRef reference, boolean isAbstract) {
     assertMethod reference, 'foo', '()V',
       VisibilityFlag.PUBLIC,
       OwnershipFlag.NON_STATIC,
       isAbstract ? ManifestationFlag.ABSTRACT : ManifestationFlag.NON_FINAL
   }
 
-  private static assertMethod(Reference reference, String methodName, String methodDesc, Reference.Flag... flags) {
+  private static assertMethod(ClassRef reference, String methodName, String methodDesc, Flag... flags) {
     def method = findMethod reference, methodName, methodDesc
     method != null && (method.flags == flags as Set)
   }
 
-  private static findMethod(Reference reference, String methodName, String methodDesc) {
+  private static findMethod(ClassRef reference, String methodName, String methodDesc) {
     for (def method : reference.methods) {
       if (method.name == methodName && method.descriptor == methodDesc) {
         return method
@@ -340,12 +342,12 @@ class ReferenceCollectorTest extends Specification {
     return null
   }
 
-  private static assertField(Reference reference, String fieldName, Reference.Flag... flags) {
+  private static assertField(ClassRef reference, String fieldName, Flag... flags) {
     def field = findField reference, fieldName
     field != null && (field.flags == flags as Set)
   }
 
-  private static Reference.Field findField(Reference reference, String fieldName) {
+  private static FieldRef findField(ClassRef reference, String fieldName) {
     for (def field : reference.fields) {
       if (field.name == fieldName) {
         return field
