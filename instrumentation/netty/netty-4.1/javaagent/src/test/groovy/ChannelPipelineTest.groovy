@@ -8,6 +8,7 @@ import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler
+import spock.lang.Unroll
 
 class ChannelPipelineTest extends AgentInstrumentationSpecification {
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1373
