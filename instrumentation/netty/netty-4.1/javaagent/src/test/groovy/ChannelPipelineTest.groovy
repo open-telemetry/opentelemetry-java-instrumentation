@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTr
 
 class ChannelPipelineTest extends AgentInstrumentationSpecification {
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1373
+  @Unroll
   def "test remove our handler #testName"() {
     setup:
     def channel = new EmbeddedChannel()
