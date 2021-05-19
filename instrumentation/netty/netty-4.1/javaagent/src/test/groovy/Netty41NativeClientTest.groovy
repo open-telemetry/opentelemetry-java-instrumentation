@@ -34,7 +34,7 @@ class Netty41NativeClientTest extends Netty41ClientTest {
   @Override
   Class<Channel> getChannelClass() {
     if (Epoll.isAvailable()) {
-      return new EpollSocketChannel()
+      return EpollSocketChannel
     }
     if (KQueueHelper.isAvailable()) {
       return KQueueSocketChannel
