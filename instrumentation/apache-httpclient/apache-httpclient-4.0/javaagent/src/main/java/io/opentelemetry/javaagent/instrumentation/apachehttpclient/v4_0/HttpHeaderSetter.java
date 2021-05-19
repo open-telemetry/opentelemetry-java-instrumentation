@@ -8,9 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import org.apache.http.client.methods.HttpUriRequest;
 
-class HttpHeadersInjectAdapter implements TextMapSetter<HttpUriRequest> {
-
-  public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
+enum HttpHeaderSetter implements TextMapSetter<HttpUriRequest> {
+  INSTANCE;
 
   @Override
   public void set(HttpUriRequest carrier, String key, String value) {
