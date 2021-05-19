@@ -9,6 +9,8 @@ muzzle {
     group = 'org.springframework.ws'
     module = 'spring-ws-core'
     versions = "[2.0.0.RELEASE,]"
+    // broken version, jar doesn't contain classes
+    skip('3.1.0')
     assertInverse = true
   }
 }
