@@ -322,7 +322,7 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
   def "test many ongoing trace chains on '#scheduler'"() {
     setup:
     int iterations = 100
-    HashSet<Long> missingIterations = new HashSet<>((0L..(iterations - 1)).toList())
+    Set<Long> remainingIterations = new HashSet<>((0L..(iterations - 1)).toList())
 
     when:
     RxJava3ConcurrencyTestHelper.launchAndWait(scheduler, iterations, 60000)
@@ -335,7 +335,7 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
           span(0) {
             name("outer")
             iteration = span.getAttributes().get(AttributeKey.longKey("iteration")).toLong()
-            assert missingIterations.remove(iteration)
+            assert remainingIterations.remove(iteration)
           }
           span(1) {
             name("middle")
@@ -351,7 +351,7 @@ abstract class AbstractRxJava3Test extends InstrumentationSpecification {
       }
     }
 
-    assert missingIterations.isEmpty()
+    assert remainingIterations.isEmpty()
 
     where:
     scheduler << [Schedulers.newThread(), Schedulers.computation(), Schedulers.single(), Schedulers.trampoline()]
