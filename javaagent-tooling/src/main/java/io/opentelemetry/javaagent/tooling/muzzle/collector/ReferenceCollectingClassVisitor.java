@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import com.google.common.collect.EvictingQueue;
-import io.opentelemetry.javaagent.extension.muzzle.Reference;
-import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag;
-import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag;
-import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.MinimumVisibilityFlag;
-import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.OwnershipFlag;
-import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.VisibilityFlag;
-import io.opentelemetry.javaagent.extension.muzzle.Reference.Source;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.extension.muzzle.Flag;
+import io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Flag.MinimumVisibilityFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Flag.VisibilityFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Source;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import java.util.ArrayList;
@@ -110,7 +110,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
   private final InstrumentationClassPredicate instrumentationClassPredicate;
   private final boolean isAdviceClass;
 
-  private final Map<String, Reference> references = new LinkedHashMap<>();
+  private final Map<String, ClassRef> references = new LinkedHashMap<>();
   private final Set<String> helperClasses = new HashSet<>();
   // helper super classes which are themselves also helpers
   // this is needed for injecting the helper classes into the class loader in the correct order
@@ -126,7 +126,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     this.isAdviceClass = isAdviceClass;
   }
 
-  Map<String, Reference> getReferences() {
+  Map<String, ClassRef> getReferences() {
     return references;
   }
 
@@ -142,16 +142,16 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     return contextStoreClasses;
   }
 
-  private void addExtendsReference(Reference ref) {
+  private void addExtendsReference(ClassRef ref) {
     addReference(ref);
     if (instrumentationClassPredicate.isInstrumentationClass(ref.getClassName())) {
       helperSuperClasses.add(ref.getClassName());
     }
   }
 
-  private void addReference(Reference ref) {
+  private void addReference(ClassRef ref) {
     if (!ref.getClassName().startsWith("java.")) {
-      Reference reference = references.get(ref.getClassName());
+      ClassRef reference = references.get(ref.getClassName());
       if (null == reference) {
         references.put(ref.getClassName(), ref);
       } else {
@@ -179,7 +179,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
       String fixedSuperClassName = Utils.getClassName(superName);
 
       addExtendsReference(
-          new Reference.Builder(fixedSuperClassName).withSource(refSourceClassName).build());
+          ClassRef.newBuilder(fixedSuperClassName).addSource(refSourceClassName).build());
 
       List<String> fixedInterfaceNames = new ArrayList<>(interfaces.length);
       for (String interfaceName : interfaces) {
@@ -187,15 +187,15 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
         fixedInterfaceNames.add(fixedInterfaceName);
 
         addExtendsReference(
-            new Reference.Builder(fixedInterfaceName).withSource(refSourceClassName).build());
+            ClassRef.newBuilder(fixedInterfaceName).addSource(refSourceClassName).build());
       }
 
       addReference(
-          new Reference.Builder(refSourceClassName)
-              .withSource(refSourceClassName)
-              .withSuperName(fixedSuperClassName)
-              .withInterfaces(fixedInterfaceNames)
-              .withFlag(computeTypeManifestationFlag(access))
+          ClassRef.newBuilder(refSourceClassName)
+              .addSource(refSourceClassName)
+              .setSuperClassName(fixedSuperClassName)
+              .addInterfaceNames(fixedInterfaceNames)
+              .addFlag(computeTypeManifestationFlag(access))
               .build());
     }
 
@@ -212,9 +212,9 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
 
     // remember that this field was declared in the currently visited helper class
     addReference(
-        new Reference.Builder(refSourceClassName)
-            .withSource(refSourceClassName)
-            .withField(new Source[0], new Flag[0], name, fieldType, true)
+        ClassRef.newBuilder(refSourceClassName)
+            .addSource(refSourceClassName)
+            .addField(new Source[0], new Flag[0], name, fieldType, true)
             .build());
 
     return super.visitField(access, name, descriptor, signature, value);
@@ -233,9 +233,9 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
       Flag manifestationFlag = computeTypeManifestationFlag(access);
 
       addReference(
-          new Reference.Builder(refSourceClassName)
-              .withSource(refSourceClassName)
-              .withMethod(
+          ClassRef.newBuilder(refSourceClassName)
+              .addSource(refSourceClassName)
+              .addMethod(
                   new Source[0],
                   new Flag[] {visibilityFlag, ownershipFlag, manifestationFlag},
                   name,
@@ -320,14 +320,12 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
               : OwnershipFlag.NON_STATIC);
 
       addReference(
-          new Reference.Builder(ownerType.getInternalName())
-              .withSource(refSourceClassName, currentLineNumber)
-              .withFlag(computeMinimumClassAccess(refSourceType, ownerType))
-              .withField(
-                  new Reference.Source[] {
-                    new Reference.Source(refSourceClassName, currentLineNumber)
-                  },
-                  fieldFlags.toArray(new Reference.Flag[0]),
+          ClassRef.newBuilder(ownerType.getClassName())
+              .addSource(refSourceClassName, currentLineNumber)
+              .addFlag(computeMinimumClassAccess(refSourceType, ownerType))
+              .addField(
+                  new Source[] {new Source(refSourceClassName, currentLineNumber)},
+                  fieldFlags.toArray(new Flag[0]),
                   name,
                   fieldType,
                   false)
@@ -336,9 +334,9 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
       Type underlyingFieldType = underlyingType(Type.getType(descriptor));
       if (underlyingFieldType.getSort() == Type.OBJECT) {
         addReference(
-            new Reference.Builder(underlyingFieldType.getInternalName())
-                .withSource(refSourceClassName, currentLineNumber)
-                .withFlag(computeMinimumClassAccess(refSourceType, underlyingFieldType))
+            ClassRef.newBuilder(underlyingFieldType.getClassName())
+                .addSource(refSourceClassName, currentLineNumber)
+                .addFlag(computeMinimumClassAccess(refSourceType, underlyingFieldType))
                 .build());
       }
 
@@ -368,9 +366,9 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
         Type returnType = underlyingType(methodType.getReturnType());
         if (returnType.getSort() == Type.OBJECT) {
           addReference(
-              new Reference.Builder(returnType.getInternalName())
-                  .withSource(refSourceClassName, currentLineNumber)
-                  .withFlag(computeMinimumClassAccess(refSourceType, returnType))
+              ClassRef.newBuilder(returnType.getClassName())
+                  .addSource(refSourceClassName, currentLineNumber)
+                  .addFlag(computeMinimumClassAccess(refSourceType, returnType))
                   .build());
         }
       }
@@ -379,28 +377,26 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
         paramType = underlyingType(paramType);
         if (paramType.getSort() == Type.OBJECT) {
           addReference(
-              new Reference.Builder(paramType.getInternalName())
-                  .withSource(refSourceClassName, currentLineNumber)
-                  .withFlag(computeMinimumClassAccess(refSourceType, paramType))
+              ClassRef.newBuilder(paramType.getClassName())
+                  .addSource(refSourceClassName, currentLineNumber)
+                  .addFlag(computeMinimumClassAccess(refSourceType, paramType))
                   .build());
         }
       }
 
-      List<Reference.Flag> methodFlags = new ArrayList<>();
+      List<Flag> methodFlags = new ArrayList<>();
       methodFlags.add(
           opcode == Opcodes.INVOKESTATIC ? OwnershipFlag.STATIC : OwnershipFlag.NON_STATIC);
       methodFlags.add(computeMinimumMethodAccess(refSourceType, ownerType, methodType));
 
       addReference(
-          new Reference.Builder(ownerType.getInternalName())
-              .withSource(refSourceClassName, currentLineNumber)
-              .withFlag(isInterface ? ManifestationFlag.INTERFACE : ManifestationFlag.NON_INTERFACE)
-              .withFlag(computeMinimumClassAccess(refSourceType, ownerType))
-              .withMethod(
-                  new Reference.Source[] {
-                    new Reference.Source(refSourceClassName, currentLineNumber)
-                  },
-                  methodFlags.toArray(new Reference.Flag[0]),
+          ClassRef.newBuilder(ownerType.getClassName())
+              .addSource(refSourceClassName, currentLineNumber)
+              .addFlag(isInterface ? ManifestationFlag.INTERFACE : ManifestationFlag.NON_INTERFACE)
+              .addFlag(computeMinimumClassAccess(refSourceType, ownerType))
+              .addMethod(
+                  new Source[] {new Source(refSourceClassName, currentLineNumber)},
+                  methodFlags.toArray(new Flag[0]),
                   name,
                   methodType.getReturnType(),
                   methodType.getArgumentTypes())
@@ -414,9 +410,9 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
       Type typeObj = underlyingType(Type.getObjectType(type));
       if (typeObj.getSort() == Type.OBJECT) {
         addReference(
-            new Reference.Builder(typeObj.getInternalName())
-                .withSource(refSourceClassName, currentLineNumber)
-                .withFlag(computeMinimumClassAccess(refSourceType, typeObj))
+            ClassRef.newBuilder(typeObj.getClassName())
+                .addSource(refSourceClassName, currentLineNumber)
+                .addFlag(computeMinimumClassAccess(refSourceType, typeObj))
                 .build());
       }
 
@@ -431,9 +427,9 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
         Object... bootstrapMethodArguments) {
       // This part might be unnecessary...
       addReference(
-          new Reference.Builder(bootstrapMethodHandle.getOwner())
-              .withSource(refSourceClassName, currentLineNumber)
-              .withFlag(
+          ClassRef.newBuilder(Utils.getClassName(bootstrapMethodHandle.getOwner()))
+              .addSource(refSourceClassName, currentLineNumber)
+              .addFlag(
                   computeMinimumClassAccess(
                       refSourceType, Type.getObjectType(bootstrapMethodHandle.getOwner())))
               .build());
@@ -441,9 +437,9 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
         if (arg instanceof Handle) {
           Handle handle = (Handle) arg;
           addReference(
-              new Reference.Builder(handle.getOwner())
-                  .withSource(refSourceClassName, currentLineNumber)
-                  .withFlag(
+              ClassRef.newBuilder(Utils.getClassName(handle.getOwner()))
+                  .addSource(refSourceClassName, currentLineNumber)
+                  .addFlag(
                       computeMinimumClassAccess(
                           refSourceType, Type.getObjectType(handle.getOwner())))
                   .build());
@@ -459,9 +455,9 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
         Type type = underlyingType((Type) value);
         if (type.getSort() == Type.OBJECT) {
           addReference(
-              new Reference.Builder(type.getInternalName())
-                  .withSource(refSourceClassName, currentLineNumber)
-                  .withFlag(computeMinimumClassAccess(refSourceType, type))
+              ClassRef.newBuilder(type.getClassName())
+                  .addSource(refSourceClassName, currentLineNumber)
+                  .addFlag(computeMinimumClassAccess(refSourceType, type))
                   .build());
         }
       }

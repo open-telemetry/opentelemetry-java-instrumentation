@@ -5,10 +5,12 @@
 
 package muzzle
 
-import static io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag
+import static io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag
 import static java.util.stream.Collectors.toList
 
-import io.opentelemetry.javaagent.extension.muzzle.Reference
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef
+import io.opentelemetry.javaagent.extension.muzzle.Flag
+import io.opentelemetry.javaagent.extension.muzzle.Source
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper
 import net.bytebuddy.jar.asm.Type
 import net.bytebuddy.pool.TypePool
@@ -18,21 +20,21 @@ import spock.lang.Specification
 class HelperReferenceWrapperTest extends Specification {
 
   @Shared
-  def baseHelperClass = new Reference.Builder(HelperReferenceWrapperTest.name + '$BaseHelper')
-    .withSuperName(HelperReferenceWrapperTestClasses.AbstractClasspathType.name)
-    .withFlag(ManifestationFlag.ABSTRACT)
-    .withMethod(new Reference.Source[0], new Reference.Flag[0], "foo", Type.VOID_TYPE)
-    .withMethod(new Reference.Source[0], [ManifestationFlag.ABSTRACT] as Reference.Flag[], "abstract", Type.INT_TYPE)
+  def baseHelperClass = ClassRef.newBuilder(HelperReferenceWrapperTest.name + '$BaseHelper')
+    .setSuperClassName(HelperReferenceWrapperTestClasses.AbstractClasspathType.name)
+    .addFlag(ManifestationFlag.ABSTRACT)
+    .addMethod(new Source[0], new Flag[0], "foo", Type.VOID_TYPE)
+    .addMethod(new Source[0], [ManifestationFlag.ABSTRACT] as Flag[], "abstract", Type.INT_TYPE)
     .build()
 
   @Shared
-  def helperClass = new Reference.Builder(HelperReferenceWrapperTest.name + '$Helper')
-    .withSuperName(baseHelperClass.className)
-    .withInterface(HelperReferenceWrapperTestClasses.Interface2.name)
-    .withMethod(new Reference.Source[0], new Reference.Flag[0], "bar", Type.VOID_TYPE)
-    .withField(new Reference.Source[0], new Reference.Flag[0], "field", Type.getType("Ljava/lang/Object;"), false)
-    .withField(new Reference.Source[0], new Reference.Flag[0], "declaredField", Type.getType("Ljava/lang/Object;"), true)
-    .withField(new Reference.Source[0], [Reference.Flag.VisibilityFlag.PRIVATE] as Reference.Flag[], "privateFieldsAreSkipped", Type.getType("Ljava/lang/Object;"), true)
+  def helperClass = ClassRef.newBuilder(HelperReferenceWrapperTest.name + '$Helper')
+    .setSuperClassName(baseHelperClass.className)
+    .addInterfaceName(HelperReferenceWrapperTestClasses.Interface2.name)
+    .addMethod(new Source[0], new Flag[0], "bar", Type.VOID_TYPE)
+    .addField(new Source[0], new Flag[0], "field", Type.getType("Ljava/lang/Object;"), false)
+    .addField(new Source[0], new Flag[0], "declaredField", Type.getType("Ljava/lang/Object;"), true)
+    .addField(new Source[0], [Flag.VisibilityFlag.PRIVATE] as Flag[], "privateFieldsAreSkipped", Type.getType("Ljava/lang/Object;"), true)
     .build()
 
   def "should wrap helper types"() {

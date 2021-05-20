@@ -7,10 +7,12 @@ package io.opentelemetry.javaagent.tooling.muzzle.matcher;
 
 import static net.bytebuddy.description.method.MethodDescription.CONSTRUCTOR_INTERNAL_NAME;
 
-import io.opentelemetry.javaagent.extension.muzzle.Reference;
-import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.ManifestationFlag;
-import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.OwnershipFlag;
-import io.opentelemetry.javaagent.extension.muzzle.Reference.Flag.VisibilityFlag;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
+import io.opentelemetry.javaagent.extension.muzzle.Flag.ManifestationFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Flag.OwnershipFlag;
+import io.opentelemetry.javaagent.extension.muzzle.Flag.VisibilityFlag;
+import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -20,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.pool.TypePool.Resolution;
 
-/** This class provides a common interface for {@link Reference} and {@link TypeDescription}. */
+/** This class provides a common interface for {@link ClassRef} and {@link TypeDescription}. */
 interface HelperReferenceWrapper {
   boolean isAbstract();
 
@@ -126,14 +128,14 @@ interface HelperReferenceWrapper {
 
   class Factory {
     private final TypePool classpathPool;
-    private final Map<String, Reference> helperReferences;
+    private final Map<String, ClassRef> helperReferences;
 
-    public Factory(TypePool classpathPool, Map<String, Reference> helperReferences) {
+    public Factory(TypePool classpathPool, Map<String, ClassRef> helperReferences) {
       this.classpathPool = classpathPool;
       this.helperReferences = helperReferences;
     }
 
-    public HelperReferenceWrapper create(Reference reference) {
+    public HelperReferenceWrapper create(ClassRef reference) {
       return new ReferenceType(reference);
     }
 
@@ -153,9 +155,9 @@ interface HelperReferenceWrapper {
     }
 
     private final class ReferenceType implements HelperReferenceWrapper {
-      private final Reference reference;
+      private final ClassRef reference;
 
-      private ReferenceType(Reference reference) {
+      private ReferenceType(ClassRef reference) {
         this.reference = reference;
       }
 
@@ -166,24 +168,24 @@ interface HelperReferenceWrapper {
 
       @Override
       public boolean hasSuperTypes() {
-        return hasActualSuperType() || reference.getInterfaces().size() > 0;
+        return hasActualSuperType() || reference.getInterfaceNames().size() > 0;
       }
 
       @Override
       public Stream<HelperReferenceWrapper> getSuperTypes() {
         Stream<HelperReferenceWrapper> superClass = Stream.empty();
         if (hasActualSuperType()) {
-          superClass = Stream.of(Factory.this.create(reference.getSuperName()));
+          superClass = Stream.of(Factory.this.create(reference.getSuperClassName()));
         }
 
         Stream<HelperReferenceWrapper> interfaces =
-            reference.getInterfaces().stream().map(Factory.this::create);
+            reference.getInterfaceNames().stream().map(Factory.this::create);
 
         return Stream.concat(superClass, interfaces);
       }
 
       private boolean hasActualSuperType() {
-        return reference.getSuperName() != null;
+        return reference.getSuperClassName() != null;
       }
 
       @Override
@@ -191,13 +193,13 @@ interface HelperReferenceWrapper {
         return reference.getMethods().stream().filter(this::isOverrideable).map(this::toMethod);
       }
 
-      private boolean isOverrideable(Reference.Method method) {
+      private boolean isOverrideable(MethodRef method) {
         return !(method.getFlags().contains(OwnershipFlag.STATIC)
             || method.getFlags().contains(VisibilityFlag.PRIVATE)
             || CONSTRUCTOR_INTERNAL_NAME.equals(method.getName()));
       }
 
-      private Method toMethod(Reference.Method method) {
+      private Method toMethod(MethodRef method) {
         return new Method(
             method.getFlags().contains(ManifestationFlag.ABSTRACT),
             reference.getClassName(),
@@ -212,11 +214,11 @@ interface HelperReferenceWrapper {
             .map(this::toField);
       }
 
-      private boolean isDeclaredAndNotPrivate(Reference.Field field) {
+      private boolean isDeclaredAndNotPrivate(FieldRef field) {
         return field.isDeclared() && !field.getFlags().contains(VisibilityFlag.PRIVATE);
       }
 
-      private Field toField(Reference.Field field) {
+      private Field toField(FieldRef field) {
         return new Field(field.getName(), field.getDescriptor());
       }
     }

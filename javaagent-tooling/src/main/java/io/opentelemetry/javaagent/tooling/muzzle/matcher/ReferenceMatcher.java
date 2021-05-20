@@ -10,14 +10,16 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
-import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
+import io.opentelemetry.javaagent.extension.muzzle.Flag;
+import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Factory;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,25 +39,21 @@ public final class ReferenceMatcher {
 
   private final Cache<ClassLoader, Boolean> mismatchCache =
       Cache.newBuilder().setWeakKeys().build();
-  private final Map<String, Reference> references;
+  private final Map<String, ClassRef> references;
   private final Set<String> helperClassNames;
   private final InstrumentationClassPredicate instrumentationClassPredicate;
 
   public ReferenceMatcher(
       List<String> helperClassNames,
-      Reference[] references,
+      ClassRef[] references,
       Predicate<String> libraryInstrumentationPredicate) {
     this.references = new HashMap<>(references.length);
-    for (Reference reference : references) {
+    for (ClassRef reference : references) {
       this.references.put(reference.getClassName(), reference);
     }
     this.helperClassNames = new HashSet<>(helperClassNames);
     this.instrumentationClassPredicate =
         new InstrumentationClassPredicate(libraryInstrumentationPredicate);
-  }
-
-  public Collection<Reference> getReferences() {
-    return Collections.unmodifiableCollection(references.values());
   }
 
   /**
@@ -73,7 +71,7 @@ public final class ReferenceMatcher {
 
   private boolean doesMatch(ClassLoader loader) {
     TypePool typePool = createTypePool(loader);
-    for (Reference reference : references.values()) {
+    for (ClassRef reference : references.values()) {
       if (!checkMatch(reference, typePool, loader).isEmpty()) {
         return false;
       }
@@ -95,7 +93,7 @@ public final class ReferenceMatcher {
 
     List<Mismatch> mismatches = emptyList();
 
-    for (Reference reference : references.values()) {
+    for (ClassRef reference : references.values()) {
       mismatches = lazyAddAll(mismatches, checkMatch(reference, typePool, loader));
     }
 
@@ -112,7 +110,7 @@ public final class ReferenceMatcher {
    *
    * @return A list of mismatched sources. A list of size 0 means the reference matches the class.
    */
-  private List<Mismatch> checkMatch(Reference reference, TypePool typePool, ClassLoader loader) {
+  private List<Mismatch> checkMatch(ClassRef reference, TypePool typePool, ClassLoader loader) {
     try {
       if (instrumentationClassPredicate.isInstrumentationClass(reference.getClassName())) {
         // make sure helper class is registered
@@ -143,7 +141,7 @@ public final class ReferenceMatcher {
 
   // for helper classes we make sure that all abstract methods from super classes and interfaces are
   // implemented and that all accessed fields are defined somewhere in the type hierarchy
-  private List<Mismatch> checkHelperClassMatch(Reference helperClass, TypePool typePool) {
+  private List<Mismatch> checkHelperClassMatch(ClassRef helperClass, TypePool typePool) {
     List<Mismatch> mismatches = emptyList();
 
     HelperReferenceWrapper helperWrapper = new Factory(typePool, references).create(helperClass);
@@ -205,10 +203,10 @@ public final class ReferenceMatcher {
   }
 
   private static List<Mismatch> checkThirdPartyTypeMatch(
-      Reference reference, TypeDescription typeOnClasspath) {
+      ClassRef reference, TypeDescription typeOnClasspath) {
     List<Mismatch> mismatches = Collections.emptyList();
 
-    for (Reference.Flag flag : reference.getFlags()) {
+    for (Flag flag : reference.getFlags()) {
       if (!flag.matches(typeOnClasspath.getActualModifiers(false))) {
         String desc = reference.getClassName();
         mismatches =
@@ -219,12 +217,12 @@ public final class ReferenceMatcher {
       }
     }
 
-    for (Reference.Field fieldRef : reference.getFields()) {
+    for (FieldRef fieldRef : reference.getFields()) {
       FieldDescription.InDefinedShape fieldDescription = findField(fieldRef, typeOnClasspath);
       if (fieldDescription == null) {
         mismatches = lazyAdd(mismatches, new Mismatch.MissingField(reference, fieldRef));
       } else {
-        for (Reference.Flag flag : fieldRef.getFlags()) {
+        for (Flag flag : fieldRef.getFlags()) {
           if (!flag.matches(fieldDescription.getModifiers())) {
             String desc =
                 reference.getClassName()
@@ -241,12 +239,12 @@ public final class ReferenceMatcher {
       }
     }
 
-    for (Reference.Method methodRef : reference.getMethods()) {
+    for (MethodRef methodRef : reference.getMethods()) {
       MethodDescription.InDefinedShape methodDescription = findMethod(methodRef, typeOnClasspath);
       if (methodDescription == null) {
         mismatches = lazyAdd(mismatches, new Mismatch.MissingMethod(reference, methodRef));
       } else {
-        for (Reference.Flag flag : methodRef.getFlags()) {
+        for (Flag flag : methodRef.getFlags()) {
           if (!flag.matches(methodDescription.getModifiers())) {
             String desc =
                 reference.getClassName() + "#" + methodRef.getName() + methodRef.getDescriptor();
@@ -263,7 +261,7 @@ public final class ReferenceMatcher {
   }
 
   private static FieldDescription.InDefinedShape findField(
-      Reference.Field fieldRef, TypeDescription typeOnClasspath) {
+      FieldRef fieldRef, TypeDescription typeOnClasspath) {
     for (FieldDescription.InDefinedShape fieldType : typeOnClasspath.getDeclaredFields()) {
       if (fieldType.getName().equals(fieldRef.getName())
           && fieldType.getDescriptor().equals(fieldRef.getDescriptor())) {
@@ -288,7 +286,7 @@ public final class ReferenceMatcher {
   }
 
   private static MethodDescription.InDefinedShape findMethod(
-      Reference.Method methodRef, TypeDescription typeOnClasspath) {
+      MethodRef methodRef, TypeDescription typeOnClasspath) {
     for (MethodDescription.InDefinedShape methodDescription :
         typeOnClasspath.getDeclaredMethods()) {
       if (methodDescription.getInternalName().equals(methodRef.getName())

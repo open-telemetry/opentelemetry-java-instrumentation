@@ -6,7 +6,7 @@
 package muzzle;
 
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
-import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.collector.ReferenceCollector;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.ReferenceMatcher;
 import java.lang.ref.WeakReference;
@@ -25,7 +25,7 @@ public class MuzzleWeakReferenceTest {
     WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
     ReferenceCollector collector = new ReferenceCollector(className -> false);
     collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.class.getName());
-    Reference[] refs = collector.getReferences().values().toArray(new Reference[0]);
+    ClassRef[] refs = collector.getReferences().values().toArray(new ClassRef[0]);
     ReferenceMatcher refMatcher =
         new ReferenceMatcher(Collections.emptyList(), refs, className -> false);
     refMatcher.getMismatchedReferenceSources(loader);
