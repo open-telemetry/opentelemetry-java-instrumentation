@@ -71,13 +71,14 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long requestContentLength(HttpUriRequest request, HttpResponse unused) {
+  protected Long requestContentLength(HttpUriRequest request, @Nullable HttpResponse response) {
     return null;
   }
 
   @Override
   @Nullable
-  protected Long requestContentLengthUncompressed(HttpUriRequest request, HttpResponse unused) {
+  protected Long requestContentLengthUncompressed(
+      HttpUriRequest request, @Nullable HttpResponse response) {
     return null;
   }
 
@@ -91,7 +92,7 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String flavor(HttpUriRequest request, HttpResponse response) {
+  protected String flavor(HttpUriRequest request, @Nullable HttpResponse response) {
     ProtocolVersion protocolVersion = request.getRequestLine().getProtocolVersion();
     String protocol = protocolVersion.getProtocol();
     if (!protocol.equals("HTTP")) {
@@ -126,7 +127,7 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String serverName(HttpUriRequest request, HttpResponse response) {
+  protected String serverName(HttpUriRequest request, @Nullable HttpResponse response) {
     return null;
   }
 
@@ -138,7 +139,7 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String clientIp(HttpUriRequest request, HttpResponse response) {
+  protected String clientIp(HttpUriRequest request, @Nullable HttpResponse response) {
     return null;
   }
 }
