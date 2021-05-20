@@ -35,8 +35,15 @@ final class ApacheHttpClientHttpAttributesExtractor
   @Override
   protected String target(HttpUriRequest request) {
     URI uri = request.getURI();
+    String pathString = uri.getPath();
     String queryString = uri.getQuery();
-    return queryString != null ? uri.getPath() + "?" + queryString : uri.getPath();
+    if (pathString != null && queryString != null) {
+      return pathString + "?" + queryString;
+    } else if (queryString != null) {
+      return "?" + queryString;
+    } else {
+      return pathString;
+    }
   }
 
   @Override
