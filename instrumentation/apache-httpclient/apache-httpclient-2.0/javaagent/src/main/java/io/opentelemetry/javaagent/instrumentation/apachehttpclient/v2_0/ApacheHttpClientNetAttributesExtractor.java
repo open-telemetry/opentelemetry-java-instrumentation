@@ -26,9 +26,9 @@ final class ApacheHttpClientNetAttributesExtractor
   }
 
   @Override
-  protected @Nullable Long peerPort(HttpMethod httpMethod, @Nullable Void unused) {
+  protected @Nullable Integer peerPort(HttpMethod httpMethod, @Nullable Void unused) {
     HostConfiguration hostConfiguration = httpMethod.getHostConfiguration();
-    return hostConfiguration != null ? (long) hostConfiguration.getPort() : null;
+    return hostConfiguration != null ? hostConfiguration.getPort() : null;
   }
 
   @Override

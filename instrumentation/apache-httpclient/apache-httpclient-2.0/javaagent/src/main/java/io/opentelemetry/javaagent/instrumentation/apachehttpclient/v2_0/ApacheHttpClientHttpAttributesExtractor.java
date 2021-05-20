@@ -75,9 +75,9 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long statusCode(HttpMethod httpMethod, Void unused) {
+  protected Integer statusCode(HttpMethod httpMethod, Void unused) {
     StatusLine statusLine = httpMethod.getStatusLine();
-    return statusLine == null ? null : (long) statusLine.getStatusCode();
+    return statusLine == null ? null : statusLine.getStatusCode();
   }
 
   @Override

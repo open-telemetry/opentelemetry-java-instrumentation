@@ -42,12 +42,12 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   @Nullable
-  protected final Long peerPort(REQUEST request, @Nullable RESPONSE response) {
+  protected final Integer peerPort(REQUEST request, @Nullable RESPONSE response) {
     InetSocketAddress address = getAddress(request, response);
     if (address == null) {
       return null;
     }
-    return (long) address.getPort();
+    return address.getPort();
   }
 
   @Override

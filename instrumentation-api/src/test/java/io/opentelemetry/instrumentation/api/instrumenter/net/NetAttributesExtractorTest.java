@@ -34,11 +34,11 @@ class NetAttributesExtractorTest {
     }
 
     @Override
-    protected Long peerPort(Map<String, String> request, Map<String, String> response) {
+    protected Integer peerPort(Map<String, String> request, Map<String, String> response) {
       if (response != null) {
-        return Long.valueOf(response.get("peerPort"));
+        return Integer.valueOf(response.get("peerPort"));
       }
-      return Long.valueOf(request.get("peerPort"));
+      return Integer.valueOf(request.get("peerPort"));
     }
 
     @Override

@@ -24,14 +24,20 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
     set(attributes, SemanticAttributes.NET_TRANSPORT, transport(request));
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp(request, null));
     set(attributes, SemanticAttributes.NET_PEER_NAME, peerName(request, null));
-    set(attributes, SemanticAttributes.NET_PEER_PORT, peerPort(request, null));
+    Integer peerPort = peerPort(request, null);
+    if (peerPort != null) {
+      set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+    }
   }
 
   @Override
   protected final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp(request, response));
     set(attributes, SemanticAttributes.NET_PEER_NAME, peerName(request, response));
-    set(attributes, SemanticAttributes.NET_PEER_PORT, peerPort(request, response));
+    Integer peerPort = peerPort(request, response);
+    if (peerPort != null) {
+      set(attributes, SemanticAttributes.NET_PEER_PORT, (long) peerPort);
+    }
   }
 
   @Nullable
@@ -51,7 +57,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  protected abstract Long peerPort(REQUEST request, @Nullable RESPONSE response);
+  protected abstract Integer peerPort(REQUEST request, @Nullable RESPONSE response);
 
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null

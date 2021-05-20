@@ -65,10 +65,10 @@ final class ArmeriaHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long statusCode(RequestContext ctx, RequestLog requestLog) {
+  protected Integer statusCode(RequestContext ctx, RequestLog requestLog) {
     HttpStatus status = requestLog.responseHeaders().status();
     if (!status.equals(HttpStatus.UNKNOWN)) {
-      return (long) status.code();
+      return status.code();
     }
     return null;
   }

@@ -24,9 +24,8 @@ final class JdbcNetAttributesExtractor extends NetAttributesExtractor<DbRequest,
 
   @Nullable
   @Override
-  protected Long peerPort(DbRequest request, @Nullable Void response) {
-    Integer port = request.getDbInfo().getPort();
-    return port == null ? null : port.longValue();
+  protected Integer peerPort(DbRequest request, @Nullable Void response) {
+    return request.getDbInfo().getPort();
   }
 
   @Nullable
