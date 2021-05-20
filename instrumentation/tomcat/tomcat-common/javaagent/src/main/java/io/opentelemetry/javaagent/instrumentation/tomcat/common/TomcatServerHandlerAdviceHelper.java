@@ -9,7 +9,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
-import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
@@ -26,12 +25,13 @@ public class TomcatServerHandlerAdviceHelper {
    */
   public static <REQUEST, RESPONSE> void stopSpan(
       TomcatTracer tracer,
+      TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider,
       ServletHttpServerTracer<REQUEST, RESPONSE> servletTracer,
       Request request,
       Response response,
-      @Advice.Thrown Throwable throwable,
-      @Advice.Local("otelContext") Context context,
-      @Advice.Local("otelScope") Scope scope) {
+      Throwable throwable,
+      Context context,
+      Scope scope) {
     if (scope != null) {
       scope.close();
     }
@@ -56,16 +56,26 @@ public class TomcatServerHandlerAdviceHelper {
       return;
     }
 
-    Object note = request.getNote(1);
-    if (note instanceof org.apache.catalina.connector.Request) {
-      // The Catalina Request always implements the HttpServletRequest (either javax or jakarta)
-      // which is also what REQUEST generic parameter is. We cannot cast normally without a
-      // generic because this class is compiled against javax.servlet which would make it try
-      // to use request from javax.servlet when REQUEST is actually from jakarta.servlet.
-      //noinspection unchecked
-      if (ServletAndFilterAdviceHelper.mustEndOnHandlerMethodExit(servletTracer, (REQUEST) note)) {
+    REQUEST servletRequest = servletEntityProvider.getServletRequest(request);
+
+    if (servletRequest != null) {
+      if (ServletAndFilterAdviceHelper.mustEndOnHandlerMethodExit(servletTracer, servletRequest)) {
         tracer.end(context, response);
       }
+    }
+  }
+
+  public static <REQUEST, RESPONSE> void attachResponseToRequest(
+      TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider,
+      ServletHttpServerTracer<REQUEST, RESPONSE> servletTracer,
+      Request request,
+      Response response) {
+
+    REQUEST servletRequest = servletEntityProvider.getServletRequest(request);
+    RESPONSE servletResponse = servletEntityProvider.getServletResponse(response);
+
+    if (servletRequest != null && servletResponse != null) {
+      servletTracer.setAsyncListenerResponse(servletRequest, servletResponse);
     }
   }
 }

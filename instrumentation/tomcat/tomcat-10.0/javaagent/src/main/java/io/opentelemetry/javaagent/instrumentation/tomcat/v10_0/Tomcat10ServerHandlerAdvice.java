@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.servlet.jakarta.v5_0.JakartaServletHttpServerTracer;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServerHandlerAdviceHelper;
+import jakarta.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
@@ -24,6 +25,7 @@ public class Tomcat10ServerHandlerAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
       @Advice.Argument(0) Request request,
+      @Advice.Argument(1) Response response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
     Context attachedContext = tracer().getServerContext(request);
@@ -35,6 +37,12 @@ public class Tomcat10ServerHandlerAdvice {
     context = tracer().startServerSpan(request);
 
     scope = context.makeCurrent();
+
+    TomcatServerHandlerAdviceHelper.attachResponseToRequest(
+        Tomcat10ServletEntityProvider.INSTANCE,
+        JakartaServletHttpServerTracer.tracer(),
+        request,
+        response);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -47,6 +55,7 @@ public class Tomcat10ServerHandlerAdvice {
 
     TomcatServerHandlerAdviceHelper.stopSpan(
         tracer(),
+        Tomcat10ServletEntityProvider.INSTANCE,
         JakartaServletHttpServerTracer.tracer(),
         request,
         response,

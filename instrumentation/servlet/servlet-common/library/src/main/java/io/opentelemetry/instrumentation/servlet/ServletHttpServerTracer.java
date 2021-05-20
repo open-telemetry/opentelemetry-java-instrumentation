@@ -145,9 +145,9 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   protected abstract TextMapGetter<REQUEST> getGetter();
 
   /**
-   * Servlet containers where AsyncContext listener must be attached with request and response
-   * objects included, a response object to use for that purpose must be attached to the request
-   * with this method before attaching the listener.
+   * Response object must be attached to a request prior to {@link #attachAsyncListener(Object)}
+   * being called, as otherwise in some environments it is not possible to access response from
+   * async event in listeners.
    */
   public void setAsyncListenerResponse(REQUEST request, RESPONSE response) {
     accessor.setRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE, response);

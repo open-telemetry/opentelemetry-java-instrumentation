@@ -27,8 +27,6 @@ public class LibertyStartSpanAdvice {
     ctx.setContext(context);
     ctx.setScope(scope);
 
-    // For startAsync instrumentation to work on Liberty, the listener needs to be added with a
-    // response object included, which is not available in that instrumentation.
     tracer().setAsyncListenerResponse(ctx.getRequest(), ctx.getResponse());
   }
 }
