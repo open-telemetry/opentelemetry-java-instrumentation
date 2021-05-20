@@ -30,6 +30,7 @@ muzzle {
 
 dependencies {
   library "io.netty:netty-codec-http:4.0.0.Final"
+  implementation project(':instrumentation:netty:netty-4-common:javaagent')
   latestDepTestLibrary "io.netty:netty-codec-http:4.0.56.Final"
 }
 

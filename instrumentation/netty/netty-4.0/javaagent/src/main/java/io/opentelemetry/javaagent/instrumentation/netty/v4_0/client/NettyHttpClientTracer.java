@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyResponseInjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.netty.common.client.NettyResponseInjectAdapter.SETTER;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
