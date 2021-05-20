@@ -26,17 +26,17 @@ final class ApacheHttpClientNetAttributesExtractor
   }
 
   @Override
-  protected Long peerPort(HttpUriRequest request, @Nullable HttpResponse response) {
+  protected Integer peerPort(HttpUriRequest request, @Nullable HttpResponse response) {
     URI uri = request.getURI();
     int port = uri.getPort();
     if (port != -1) {
-      return (long) port;
+      return port;
     }
     switch (uri.getScheme()) {
       case "http":
-        return 80L;
+        return 80;
       case "https":
-        return 443L;
+        return 443;
       default:
         return null;
     }

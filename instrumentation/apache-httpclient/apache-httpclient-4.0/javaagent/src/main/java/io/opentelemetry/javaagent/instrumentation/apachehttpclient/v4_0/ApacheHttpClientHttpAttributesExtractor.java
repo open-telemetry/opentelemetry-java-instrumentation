@@ -82,11 +82,11 @@ final class ApacheHttpClientHttpAttributesExtractor
   }
 
   @Override
-  protected Long statusCode(HttpUriRequest request, HttpResponse response) {
+  protected Integer statusCode(HttpUriRequest request, HttpResponse response) {
     if (response == null) {
       return null;
     }
-    return (long) response.getStatusLine().getStatusCode();
+    return response.getStatusLine().getStatusCode();
   }
 
   @Override
