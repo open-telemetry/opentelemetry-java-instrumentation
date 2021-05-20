@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -25,12 +23,11 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.instrumentation.netty.common.AbstractNettyChannelPipelineInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.client.HttpClientTracingHandler;
@@ -38,41 +35,20 @@ import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerRe
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerResponseTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.server.HttpServerTracingHandler;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
 
-public class NettyChannelPipelineInstrumentation implements TypeInstrumentation {
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("io.netty.channel.ChannelPipeline");
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("io.netty.channel.ChannelPipeline"));
-  }
+public class NettyChannelPipelineInstrumentation
+    extends AbstractNettyChannelPipelineInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    super.transform(transformer);
+
     transformer.applyAdviceToMethod(
         isMethod()
             .and(nameStartsWith("add"))
             .and(takesArgument(1, String.class))
             .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
         NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAddAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("remove"))
-            .and(takesArgument(0, named("io.netty.channel.ChannelHandler"))),
-        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineRemoveAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("remove")).and(takesArgument(0, String.class)),
-        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineRemoveByNameAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("remove")).and(takesArgument(0, Class.class)),
-        NettyChannelPipelineInstrumentation.class.getName()
-            + "$ChannelPipelineRemoveByClassAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(named("connect")).and(returns(named("io.netty.channel.ChannelFuture"))),
         NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineConnectAdvice");
@@ -140,64 +116,12 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
       if (ourHandler != null) {
         try {
           pipeline.addAfter(name, ourHandler.getClass().getName(), ourHandler);
+          // associate our handle with original handler so they could be removed together
           InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class)
               .putIfAbsent(handler, ourHandler);
         } catch (IllegalArgumentException e) {
           // Prevented adding duplicate handlers.
         }
-      }
-    }
-  }
-
-  public static class ChannelPipelineRemoveAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void removeHandler(
-        @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) ChannelHandler handler) {
-      ContextStore<ChannelHandler, ChannelHandler> contextStore =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = contextStore.get(handler);
-      if (ourHandler != null) {
-        pipeline.remove(ourHandler);
-        contextStore.put(handler, null);
-      }
-    }
-  }
-
-  public static class ChannelPipelineRemoveByNameAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void removeHandler(
-        @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) String name) {
-      ChannelHandler handler = pipeline.get(name);
-      if (handler == null) {
-        return;
-      }
-
-      ContextStore<ChannelHandler, ChannelHandler> contextStore =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = contextStore.get(handler);
-      if (ourHandler != null) {
-        pipeline.remove(ourHandler);
-        contextStore.put(handler, null);
-      }
-    }
-  }
-
-  public static class ChannelPipelineRemoveByClassAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void removeHandler(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(0) Class<ChannelHandler> handlerClass) {
-      ChannelHandler handler = pipeline.get(handlerClass);
-      if (handler == null) {
-        return;
-      }
-
-      ContextStore<ChannelHandler, ChannelHandler> contextStore =
-          InstrumentationContext.get(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = contextStore.get(handler);
-      if (ourHandler != null) {
-        pipeline.remove(ourHandler);
-        contextStore.put(handler, null);
       }
     }
   }
