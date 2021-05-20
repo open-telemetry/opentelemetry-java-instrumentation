@@ -65,14 +65,9 @@ public class ServletAndFilterAdviceHelper {
       return false;
     }
 
-    // Possible scenarios:
-    // 1) synchronously handled request
-    // 2) asynchronously handled request, but startAsync instrumentation is broken on this server
-    //    (should be caught by tests for the specific server).
-    // In case of broken startAsync instrumentation, no fallback handling for asynchronous requests
-    // should be provided as handling it in the handler/service method is  prone to race conditions
-    // (seen happening on Undertow) that may make some tests pass which should fail due to the
-    // possible race.
+    // This means that startAsync was not called (assuming startAsync instrumentation works
+    // correctly on this servlet engine), therefore the request was handled synchronously, and
+    // handler method end must also end the span.
     return true;
   }
 }
