@@ -9,7 +9,7 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -32,7 +32,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  */
 public abstract class InstrumentationModule {
   private static final String[] EMPTY = new String[0];
-  private static final Reference[] EMPTY_REFS = new Reference[0];
+  private static final ClassRef[] EMPTY_REFS = new ClassRef[0];
 
   private static final boolean DEFAULT_ENABLED =
       Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
@@ -162,7 +162,7 @@ public abstract class InstrumentationModule {
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
    * will not generate a new implementation, it will leave the existing one.
    */
-  public Reference[] getMuzzleReferences() {
+  public ClassRef[] getMuzzleReferences() {
     return EMPTY_REFS;
   }
 

@@ -14,7 +14,8 @@ import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
-import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.extension.muzzle.Flag;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
 import java.io.BufferedReader;
@@ -47,7 +48,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * plugin.
  */
 public class ReferenceCollector {
-  private final Map<String, Reference> references = new LinkedHashMap<>();
+  private final Map<String, ClassRef> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
   private final Map<String, String> contextStoreClasses = new LinkedHashMap<>();
   private final Set<String> visitedClasses = new HashSet<>();
@@ -132,9 +133,9 @@ public class ReferenceCollector {
         ClassReader reader = new ClassReader(in);
         reader.accept(cv, ClassReader.SKIP_FRAMES);
 
-        for (Map.Entry<String, Reference> entry : cv.getReferences().entrySet()) {
+        for (Map.Entry<String, ClassRef> entry : cv.getReferences().entrySet()) {
           String refClassName = entry.getKey();
-          Reference reference = entry.getValue();
+          ClassRef reference = entry.getValue();
 
           // Don't generate references created outside of the instrumentation package.
           if (!visitedClasses.contains(refClassName)
@@ -177,7 +178,7 @@ public class ReferenceCollector {
     return connection.getInputStream();
   }
 
-  private void addReference(String refClassName, Reference reference) {
+  private void addReference(String refClassName, ClassRef reference) {
     if (references.containsKey(refClassName)) {
       references.put(refClassName, references.get(refClassName).merge(reference));
     } else {
@@ -200,7 +201,7 @@ public class ReferenceCollector {
     }
   }
 
-  public Map<String, Reference> getReferences() {
+  public Map<String, ClassRef> getReferences() {
     return references;
   }
 
@@ -212,11 +213,11 @@ public class ReferenceCollector {
     // implements all of L's methods.
     // Super types of A that are not also helper classes do not need to be retained because they can
     // be looked up on the classpath at runtime, see HelperReferenceWrapper.create().
-    Set<Reference> helperClassesParticipatingInLibrarySuperType =
+    Set<ClassRef> helperClassesParticipatingInLibrarySuperType =
         getHelperClassesParticipatingInLibrarySuperType();
 
-    for (Iterator<Reference> i = references.values().iterator(); i.hasNext(); ) {
-      Reference reference = i.next();
+    for (Iterator<ClassRef> i = references.values().iterator(); i.hasNext(); ) {
+      ClassRef reference = i.next();
       if (instrumentationClassPredicate.isProvidedByLibrary(reference.getClassName())) {
         // these are the references to library classes which need to be checked at runtime
         continue;
@@ -232,26 +233,26 @@ public class ReferenceCollector {
             .removeIf(
                 method ->
                     method.getName().equals(MethodDescription.CONSTRUCTOR_INTERNAL_NAME)
-                        || method.getFlags().contains(Reference.Flag.VisibilityFlag.PRIVATE)
-                        || method.getFlags().contains(Reference.Flag.OwnershipFlag.STATIC));
+                        || method.getFlags().contains(Flag.VisibilityFlag.PRIVATE)
+                        || method.getFlags().contains(Flag.OwnershipFlag.STATIC));
         continue;
       }
       i.remove();
     }
   }
 
-  private Set<Reference> getHelperClassesParticipatingInLibrarySuperType() {
-    Set<Reference> helperClassesParticipatingInLibrarySuperType = new HashSet<>();
-    for (Reference reference : getHelperClassesWithLibrarySuperType()) {
+  private Set<ClassRef> getHelperClassesParticipatingInLibrarySuperType() {
+    Set<ClassRef> helperClassesParticipatingInLibrarySuperType = new HashSet<>();
+    for (ClassRef reference : getHelperClassesWithLibrarySuperType()) {
       addSuperTypesThatAreAlsoHelperClasses(
           reference.getClassName(), helperClassesParticipatingInLibrarySuperType);
     }
     return helperClassesParticipatingInLibrarySuperType;
   }
 
-  private Set<Reference> getHelperClassesWithLibrarySuperType() {
-    Set<Reference> helperClassesWithLibrarySuperType = new HashSet<>();
-    for (Reference reference : references.values()) {
+  private Set<ClassRef> getHelperClassesWithLibrarySuperType() {
+    Set<ClassRef> helperClassesWithLibrarySuperType = new HashSet<>();
+    for (ClassRef reference : references.values()) {
       if (instrumentationClassPredicate.isInstrumentationClass(reference.getClassName())
           && hasLibrarySuperType(reference.getClassName())) {
         helperClassesWithLibrarySuperType.add(reference);
@@ -261,14 +262,14 @@ public class ReferenceCollector {
   }
 
   private void addSuperTypesThatAreAlsoHelperClasses(
-      @Nullable String className, Set<Reference> superTypes) {
+      @Nullable String className, Set<ClassRef> superTypes) {
     if (className != null && instrumentationClassPredicate.isInstrumentationClass(className)) {
-      Reference reference = references.get(className);
+      ClassRef reference = references.get(className);
       superTypes.add(reference);
 
-      addSuperTypesThatAreAlsoHelperClasses(reference.getSuperName(), superTypes);
+      addSuperTypesThatAreAlsoHelperClasses(reference.getSuperClassName(), superTypes);
       // need to keep interfaces too since they may have default methods
-      for (String superType : reference.getInterfaces()) {
+      for (String superType : reference.getInterfaceNames()) {
         addSuperTypesThatAreAlsoHelperClasses(superType, superTypes);
       }
     }
@@ -281,11 +282,11 @@ public class ReferenceCollector {
     if (instrumentationClassPredicate.isProvidedByLibrary(typeName)) {
       return true;
     }
-    Reference reference = references.get(typeName);
-    if (hasLibrarySuperType(reference.getSuperName())) {
+    ClassRef reference = references.get(typeName);
+    if (hasLibrarySuperType(reference.getSuperClassName())) {
       return true;
     }
-    for (String type : reference.getInterfaces()) {
+    for (String type : reference.getInterfaceNames()) {
       if (hasLibrarySuperType(type)) {
         return true;
       }

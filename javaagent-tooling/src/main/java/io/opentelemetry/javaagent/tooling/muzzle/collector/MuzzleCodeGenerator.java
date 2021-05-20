@@ -7,7 +7,12 @@ package io.opentelemetry.javaagent.tooling.muzzle.collector;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.muzzle.Reference;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
+import io.opentelemetry.javaagent.extension.muzzle.ClassRefBuilder;
+import io.opentelemetry.javaagent.extension.muzzle.FieldRef;
+import io.opentelemetry.javaagent.extension.muzzle.Flag;
+import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
+import io.opentelemetry.javaagent.extension.muzzle.Source;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.util.List;
 import java.util.Map;
@@ -235,11 +240,11 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     }
 
     private void generateMuzzleReferencesMethod(ReferenceCollector collector) {
-      Type referenceType = Type.getType(Reference.class);
-      Type referenceArrayType = Type.getType(Reference[].class);
-      Type referenceBuilderType = Type.getType(Reference.Builder.class);
-      Type referenceFlagType = Type.getType(Reference.Flag.class);
-      Type referenceSourceType = Type.getType(Reference.Source.class);
+      Type referenceType = Type.getType(ClassRef.class);
+      Type referenceArrayType = Type.getType(ClassRef[].class);
+      Type referenceBuilderType = Type.getType(ClassRefBuilder.class);
+      Type referenceFlagType = Type.getType(Flag.class);
+      Type referenceSourceType = Type.getType(Source.class);
       Type stringType = Type.getType(String.class);
       Type typeType = Type.getType(Type.class);
 
@@ -279,68 +284,67 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
         mv.visitVarInsn(Opcodes.ALOAD, 0);
 
-        Reference[] references = collector.getReferences().values().toArray(new Reference[0]);
+        ClassRef[] references = collector.getReferences().values().toArray(new ClassRef[0]);
         mv.visitLdcInsn(references.length);
         mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceType.getInternalName());
 
         for (int i = 0; i < references.length; ++i) {
           mv.visitInsn(Opcodes.DUP);
           mv.visitLdcInsn(i);
-          mv.visitTypeInsn(Opcodes.NEW, referenceBuilderType.getInternalName());
-          mv.visitInsn(Opcodes.DUP);
           mv.visitLdcInsn(references[i].getClassName());
           mv.visitMethodInsn(
-              Opcodes.INVOKESPECIAL,
-              referenceBuilderType.getInternalName(),
-              "<init>",
-              "(Ljava/lang/String;)V",
+              Opcodes.INVOKESTATIC,
+              referenceType.getInternalName(),
+              "newBuilder",
+              Type.getMethodDescriptor(referenceBuilderType, stringType),
               false);
-          for (Reference.Source source : references[i].getSources()) {
+
+          for (Source source : references[i].getSources()) {
             mv.visitLdcInsn(source.getName());
             mv.visitLdcInsn(source.getLine());
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
                 referenceBuilderType.getInternalName(),
-                "withSource",
+                "addSource",
                 Type.getMethodDescriptor(referenceBuilderType, stringType, Type.INT_TYPE),
                 false);
           }
-          for (Reference.Flag flag : references[i].getFlags()) {
+          for (Flag flag : references[i].getFlags()) {
             String enumClassName = getEnumClassInternalName(flag);
             mv.visitFieldInsn(
                 Opcodes.GETSTATIC, enumClassName, flag.name(), "L" + enumClassName + ";");
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
                 referenceBuilderType.getInternalName(),
-                "withFlag",
+                "addFlag",
                 Type.getMethodDescriptor(referenceBuilderType, referenceFlagType),
                 false);
           }
-          if (null != references[i].getSuperName()) {
-            mv.visitLdcInsn(references[i].getSuperName());
+          if (null != references[i].getSuperClassName()) {
+            mv.visitLdcInsn(references[i].getSuperClassName());
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
                 referenceBuilderType.getInternalName(),
-                "withSuperName",
+                "setSuperClassName",
                 Type.getMethodDescriptor(referenceBuilderType, stringType),
                 false);
           }
-          for (String interfaceName : references[i].getInterfaces()) {
+          for (String interfaceName : references[i].getInterfaceNames()) {
             mv.visitLdcInsn(interfaceName);
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
                 referenceBuilderType.getInternalName(),
-                "withInterface",
+                "addInterfaceName",
                 Type.getMethodDescriptor(referenceBuilderType, stringType),
                 false);
           }
-          for (Reference.Field field : references[i].getFields()) {
+          for (FieldRef field : references[i].getFields()) {
             { // sources
               mv.visitLdcInsn(field.getSources().size());
               mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceSourceType.getInternalName());
 
               int j = 0;
-              for (Reference.Source source : field.getSources()) {
+              for (Source source : field.getSources()) {
                 mv.visitInsn(Opcodes.DUP);
                 mv.visitLdcInsn(j);
 
@@ -365,7 +369,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
               mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceFlagType.getInternalName());
 
               int j = 0;
-              for (Reference.Flag flag : field.getFlags()) {
+              for (Flag flag : field.getFlags()) {
                 mv.visitInsn(Opcodes.DUP);
                 mv.visitLdcInsn(j);
                 String enumClassName = getEnumClassInternalName(flag);
@@ -394,22 +398,22 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
                 referenceBuilderType.getInternalName(),
-                "withField",
+                "addField",
                 Type.getMethodDescriptor(
-                    Reference.Builder.class.getMethod(
-                        "withField",
-                        Reference.Source[].class,
-                        Reference.Flag[].class,
+                    ClassRefBuilder.class.getMethod(
+                        "addField",
+                        Source[].class,
+                        Flag[].class,
                         String.class,
                         Type.class,
                         boolean.class)),
                 false);
           }
-          for (Reference.Method method : references[i].getMethods()) {
+          for (MethodRef method : references[i].getMethods()) {
             mv.visitLdcInsn(method.getSources().size());
             mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceSourceType.getInternalName());
             int j = 0;
-            for (Reference.Source source : method.getSources()) {
+            for (Source source : method.getSources()) {
               mv.visitInsn(Opcodes.DUP);
               mv.visitLdcInsn(j);
 
@@ -431,7 +435,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             mv.visitLdcInsn(method.getFlags().size());
             mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceFlagType.getInternalName());
             j = 0;
-            for (Reference.Flag flag : method.getFlags()) {
+            for (Flag flag : method.getFlags()) {
               mv.visitInsn(Opcodes.DUP);
               mv.visitLdcInsn(j);
               String enumClassName = getEnumClassInternalName(flag);
@@ -481,12 +485,12 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
                 referenceBuilderType.getInternalName(),
-                "withMethod",
+                "addMethod",
                 Type.getMethodDescriptor(
-                    Reference.Builder.class.getMethod(
-                        "withMethod",
-                        Reference.Source[].class,
-                        Reference.Flag[].class,
+                    ClassRefBuilder.class.getMethod(
+                        "addMethod",
+                        Source[].class,
+                        Flag[].class,
                         String.class,
                         Type.class,
                         Type[].class)),
@@ -532,7 +536,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       super.visitField(
           Opcodes.ACC_PRIVATE + Opcodes.ACC_VOLATILE,
           MUZZLE_REFERENCES_FIELD_NAME,
-          Type.getDescriptor(Reference[].class),
+          Type.getDescriptor(ClassRef[].class),
           null,
           null);
     }
@@ -598,7 +602,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
         Pattern.compile("(?<enumClass>.*)\\$[0-9]+$");
 
     // drops "$1" suffix for enum constants that override/implement super class methods
-    private String getEnumClassInternalName(Reference.Flag flag) {
+    private String getEnumClassInternalName(Flag flag) {
       String fullInternalName = Utils.getInternalName(flag.getClass());
       Matcher m = ANONYMOUS_ENUM_CONSTANT_CLASS.matcher(fullInternalName);
       return m.matches() ? m.group("enumClass") : fullInternalName;
@@ -619,7 +623,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
               Opcodes.PUTFIELD,
               instrumentationClassName,
               MUZZLE_REFERENCES_FIELD_NAME,
-              Type.getDescriptor(Reference[].class));
+              Type.getDescriptor(ClassRef[].class));
         }
         super.visitInsn(opcode);
       }
