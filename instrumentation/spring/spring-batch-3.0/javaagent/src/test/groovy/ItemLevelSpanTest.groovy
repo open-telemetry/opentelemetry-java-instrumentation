@@ -138,7 +138,7 @@ abstract class ItemLevelSpanTest extends AgentInstrumentationSpecification {
       trace(0, 23) {
         // as chunks are processed in parallel we need to sort them to guarantee that they are
         // in the expected order
-        // firstly compute child span count for each chunk, we'll sort chunks from larder to smaller
+        // firstly compute child span count for each chunk, we'll sort chunks from larger to smaller
         // based on child count
         def childCount = new HashMap<SpanData, Number>()
         spans.forEach { span ->
