@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpServerTracer;
 import io.opentelemetry.instrumentation.netty.v4_1.AttributeKeys;
+import io.opentelemetry.javaagent.instrumentation.netty.common.server.NettyRequestExtractAdapter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
