@@ -84,9 +84,6 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   protected Integer statusCode(HttpUriRequest request, HttpResponse response) {
-    if (response == null) {
-      return null;
-    }
     return response.getStatusLine().getStatusCode();
   }
 
