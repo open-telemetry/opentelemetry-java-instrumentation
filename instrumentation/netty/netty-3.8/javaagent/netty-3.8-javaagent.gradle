@@ -12,6 +12,8 @@ muzzle {
     group = "io.netty"
     module = "netty-all"
     versions = "[,]"
+    // Could not find netty-tcnative-2.0.39.Final-${os.detected.classifier}.jar (io.netty:netty-tcnative:2.0.39.Final)
+    skip("4.1.64.Final")
   }
 }
 
