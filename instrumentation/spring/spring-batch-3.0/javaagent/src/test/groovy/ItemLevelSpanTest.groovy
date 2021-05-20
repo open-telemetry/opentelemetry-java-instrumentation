@@ -7,6 +7,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static java.util.Collections.emptyMap
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.sdk.trace.data.SpanData
 import org.springframework.batch.core.JobParameter
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -135,6 +136,39 @@ abstract class ItemLevelSpanTest extends AgentInstrumentationSpecification {
     then:
     assertTraces(1) {
       trace(0, 23) {
+        // as chunks are processed in parallel we need to sort them to guarantee that they are
+        // in the expected order
+        // firstly compute child span count for each chunk, we'll sort chunks from larger to smaller
+        // based on child count
+        def childCount = new HashMap<SpanData, Number>()
+        spans.forEach { span ->
+          if (span.name == "BatchJob parallelItemsJob.parallelItemsStep.Chunk") {
+            childCount.put(span, spans.count {it.parentSpanId == span.spanId })
+          }
+        }
+        // sort spans with a ranking function
+        spans.sort({
+          // job span is first
+          if (it.name == "BatchJob parallelItemsJob") {
+            return 0
+          }
+          // step span is second
+          if (it.name == "BatchJob parallelItemsJob.parallelItemsStep") {
+            return 1
+          }
+
+          // find the chunk this span belongs to
+          def chunkSpan = it
+          while (chunkSpan != null && chunkSpan.name != "BatchJob parallelItemsJob.parallelItemsStep.Chunk") {
+            chunkSpan = spans.find {it.spanId == chunkSpan.parentSpanId }
+          }
+          if (chunkSpan != null) {
+            // sort larger chunks first
+            return 100 - childCount.get(chunkSpan)
+          }
+          throw new IllegalStateException("item spans should have a parent chunk span")
+        })
+
         span(0) {
           name "BatchJob parallelItemsJob"
           kind INTERNAL
