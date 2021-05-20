@@ -35,7 +35,7 @@ public final class ApacheHttpClientInstrumenters {
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
             .addAttributesExtractor(new ApacheHttpClientNetAttributesExtractor())
-            .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
+            .newClientInstrumenter(new HttpHeaderSetter());
   }
 
   public static Instrumenter<HttpUriRequest, HttpResponse> instrumenter() {

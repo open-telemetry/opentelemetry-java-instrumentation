@@ -12,8 +12,7 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
-  INSTANCE;
+final class RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
 
   @Override
   public Iterable<String> keys(@Nullable ServiceRequestContext carrier) {

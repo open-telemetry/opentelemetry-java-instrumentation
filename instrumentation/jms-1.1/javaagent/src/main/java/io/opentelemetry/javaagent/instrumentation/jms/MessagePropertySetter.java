@@ -10,8 +10,7 @@ import javax.jms.JMSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-enum MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
-  INSTANCE;
+final class MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
 
   private static final Logger log = LoggerFactory.getLogger(MessagePropertySetter.class);
 
