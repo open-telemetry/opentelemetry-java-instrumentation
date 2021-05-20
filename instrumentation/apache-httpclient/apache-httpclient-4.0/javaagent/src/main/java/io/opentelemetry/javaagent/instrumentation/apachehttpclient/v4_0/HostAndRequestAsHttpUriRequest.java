@@ -15,7 +15,8 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.AbstractHttpMessage;
 
 /** Wraps HttpHost and HttpRequest into a HttpUriRequest for tracers and injectors. */
-public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implements HttpUriRequest {
+public final class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage
+    implements HttpUriRequest {
 
   private final String method;
   private final RequestLine requestLine;
@@ -73,9 +74,5 @@ public class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage implemen
   @Override
   public java.net.URI getURI() {
     return uri;
-  }
-
-  public HttpRequest getActualRequest() {
-    return actualRequest;
   }
 }
