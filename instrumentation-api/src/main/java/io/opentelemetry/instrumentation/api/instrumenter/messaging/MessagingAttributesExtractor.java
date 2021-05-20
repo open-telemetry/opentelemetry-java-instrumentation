@@ -53,7 +53,8 @@ public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
+  protected final void onEnd(
+      AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
     set(attributes, SemanticAttributes.MESSAGING_MESSAGE_ID, messageId(request, response));
   }
 
@@ -90,5 +91,5 @@ public abstract class MessagingAttributesExtractor<REQUEST, RESPONSE>
   protected abstract MessageOperation operation(REQUEST request);
 
   @Nullable
-  protected abstract String messageId(REQUEST request, RESPONSE response);
+  protected abstract String messageId(REQUEST request, @Nullable RESPONSE response);
 }

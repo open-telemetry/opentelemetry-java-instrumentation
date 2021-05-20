@@ -18,18 +18,18 @@ public final class ApacheHttpClientInstrumenters {
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.javaagent.apache-httpclient-2.0";
 
-  private static final Instrumenter<HttpMethod, Void> INSTRUMENTER;
+  private static final Instrumenter<HttpMethod, HttpMethod> INSTRUMENTER;
 
   static {
-    HttpAttributesExtractor<HttpMethod, Void> httpAttributesExtractor =
+    HttpAttributesExtractor<HttpMethod, HttpMethod> httpAttributesExtractor =
         new ApacheHttpClientHttpAttributesExtractor();
     SpanNameExtractor<? super HttpMethod> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super HttpMethod, ? super Void> spanStatusExtractor =
+    SpanStatusExtractor<? super HttpMethod, ? super HttpMethod> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
 
     INSTRUMENTER =
-        Instrumenter.<HttpMethod, Void>newBuilder(
+        Instrumenter.<HttpMethod, HttpMethod>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
@@ -37,7 +37,7 @@ public final class ApacheHttpClientInstrumenters {
             .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
-  public static Instrumenter<HttpMethod, Void> instrumenter() {
+  public static Instrumenter<HttpMethod, HttpMethod> instrumenter() {
     return INSTRUMENTER;
   }
 

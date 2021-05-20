@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -34,7 +36,8 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
+  protected final void onEnd(
+      AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
     set(
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
@@ -43,21 +46,23 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED,
         requestContentLengthUncompressed(request, response));
-    Integer statusCode = statusCode(request, response);
-    if (statusCode != null) {
-      set(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
-    }
     set(attributes, SemanticAttributes.HTTP_FLAVOR, flavor(request, response));
-    set(
-        attributes,
-        SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-        responseContentLength(request, response));
-    set(
-        attributes,
-        SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
-        responseContentLengthUncompressed(request, response));
     set(attributes, SemanticAttributes.HTTP_SERVER_NAME, serverName(request, response));
     set(attributes, SemanticAttributes.HTTP_CLIENT_IP, clientIp(request, response));
+    if (response != null) {
+      Integer statusCode = statusCode(request, response);
+      if (statusCode != null) {
+        set(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
+      }
+      set(
+          attributes,
+          SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+          responseContentLength(request, response));
+      set(
+          attributes,
+          SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED,
+          responseContentLengthUncompressed(request, response));
+    }
   }
 
   // Attributes that always exist in a request
@@ -85,27 +90,81 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
 
   // Attributes which are not always available when the request is ready.
 
+  /**
+   * Extracts the {@code http.request_content_length} span attribute.
+   *
+   * <p>This is called from both {@link Instrumenter#start(Context, Object)} and {@link
+   * Instrumenter#end(Context, Object, Object, Throwable)}. When it is called from {@code start},
+   * {@code response} will be {@code null}.
+   */
   @Nullable
-  protected abstract Long requestContentLength(REQUEST request, RESPONSE response);
+  protected abstract Long requestContentLength(REQUEST request, @Nullable RESPONSE response);
 
+  /**
+   * Extracts the {@code http.request_content_length_uncompressed} span attribute.
+   *
+   * <p>This is called from both {@link Instrumenter#start(Context, Object)} and {@link
+   * Instrumenter#end(Context, Object, Object, Throwable)}. When it is called from {@code start},
+   * {@code response} will be {@code null}.
+   */
   @Nullable
-  protected abstract Long requestContentLengthUncompressed(REQUEST request, RESPONSE response);
+  protected abstract Long requestContentLengthUncompressed(
+      REQUEST request, @Nullable RESPONSE response);
 
+  /**
+   * Extracts the {@code http.flavor} span attribute.
+   *
+   * <p>This is called from both {@link Instrumenter#start(Context, Object)} and {@link
+   * Instrumenter#end(Context, Object, Object, Throwable)}. When it is called from {@code start},
+   * {@code response} will be {@code null}.
+   */
+  @Nullable
+  protected abstract String flavor(REQUEST request, @Nullable RESPONSE response);
+
+  /**
+   * Extracts the {@code http.server_name} span attribute.
+   *
+   * <p>This is called from both {@link Instrumenter#start(Context, Object)} and {@link
+   * Instrumenter#end(Context, Object, Object, Throwable)}. When it is called from {@code start},
+   * {@code response} will be {@code null}.
+   */
+  @Nullable
+  protected abstract String serverName(REQUEST request, @Nullable RESPONSE response);
+
+  /**
+   * Extracts the {@code http.client_ip} span attribute.
+   *
+   * <p>This is called from both {@link Instrumenter#start(Context, Object)} and {@link
+   * Instrumenter#end(Context, Object, Object, Throwable)}. When it is called from {@code start},
+   * {@code response} will be {@code null}.
+   */
+  @Nullable
+  protected abstract String clientIp(REQUEST request, @Nullable RESPONSE response);
+
+  /**
+   * Extracts the {@code http.status_code} span attribute.
+   *
+   * <p>This is only called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, and
+   * only when {@code response} is non-{@code null}.
+   */
   @Nullable
   protected abstract Integer statusCode(REQUEST request, RESPONSE response);
 
-  @Nullable
-  protected abstract String flavor(REQUEST request, RESPONSE response);
-
+  /**
+   * Extracts the {@code http.response_content_length} span attribute.
+   *
+   * <p>This is only called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, and
+   * only when {@code response} is non-{@code null}.
+   */
   @Nullable
   protected abstract Long responseContentLength(REQUEST request, RESPONSE response);
 
+  /**
+   * Extracts the {@code http.response_content_length_uncompressed} span attribute.
+   *
+   * <p>This is only called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, and
+   * only when {@code response} is non-{@code null}.
+   */
   @Nullable
   protected abstract Long responseContentLengthUncompressed(REQUEST request, RESPONSE response);
-
-  @Nullable
-  protected abstract String serverName(REQUEST request, RESPONSE response);
-
-  @Nullable
-  protected abstract String clientIp(REQUEST request, RESPONSE response);
 }
