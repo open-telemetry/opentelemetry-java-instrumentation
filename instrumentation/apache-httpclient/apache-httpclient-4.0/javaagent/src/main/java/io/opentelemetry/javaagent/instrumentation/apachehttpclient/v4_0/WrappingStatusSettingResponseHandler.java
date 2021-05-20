@@ -5,29 +5,35 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientInstrumenters.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.io.IOException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpUriRequest;
 
-public class WrappingStatusSettingResponseHandler<T> implements ResponseHandler<T> {
-  final Context context;
-  final Context parentContext;
-  final ResponseHandler<T> handler;
+public final class WrappingStatusSettingResponseHandler<T> implements ResponseHandler<T> {
+  private final Context context;
+  private final Context parentContext;
+  private final ResponseHandler<T> handler;
+  private final HttpUriRequest httpUriRequest;
 
   public WrappingStatusSettingResponseHandler(
-      Context context, Context parentContext, ResponseHandler<T> handler) {
+      Context context,
+      Context parentContext,
+      ResponseHandler<T> handler,
+      HttpUriRequest httpUriRequest) {
     this.context = context;
     this.parentContext = parentContext;
     this.handler = handler;
+    this.httpUriRequest = httpUriRequest;
   }
 
   @Override
   public T handleResponse(HttpResponse response) throws IOException {
-    tracer().end(context, response);
+    instrumenter().end(context, httpUriRequest, response, null);
     // ending the span before executing the callback handler (and scoping the callback handler to
     // the parent context), even though we are inside of a synchronous http client callback
     // underneath HttpClient.execute(..), in order to not attribute other CLIENT span timings that

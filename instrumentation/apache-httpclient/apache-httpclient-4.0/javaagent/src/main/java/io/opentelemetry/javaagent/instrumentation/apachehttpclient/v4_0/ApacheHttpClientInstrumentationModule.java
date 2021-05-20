@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientInstrumenters.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -147,16 +147,17 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, request);
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
+        @Advice.Argument(0) HttpUriRequest request,
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
@@ -166,7 +167,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, result, throwable);
+      ApacheHttpClientHelper.doMethodExit(context, request, result, throwable);
     }
   }
 
@@ -179,21 +180,23 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, request);
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
       if (handler != null) {
-        handler = new WrappingStatusSettingResponseHandler<>(context, parentContext, handler);
+        handler =
+            new WrappingStatusSettingResponseHandler<>(context, parentContext, handler, request);
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
+        @Advice.Argument(0) HttpUriRequest request,
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
@@ -203,7 +206,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, result, throwable);
+      ApacheHttpClientHelper.doMethodExit(context, request, result, throwable);
     }
   }
 
@@ -212,14 +215,18 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodEnter(
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) HttpRequest request,
+        @Advice.Local("otelHttpUriRequest") HttpUriRequest httpUriRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+
+      httpUriRequest = new HostAndRequestAsHttpUriRequest(host, request);
+
+      if (!instrumenter().shouldStart(parentContext, httpUriRequest)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, host, request);
+      context = instrumenter().start(parentContext, httpUriRequest);
       scope = context.makeCurrent();
     }
 
@@ -227,6 +234,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelHttpUriRequest") HttpUriRequest httpUriRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
@@ -234,7 +242,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, result, throwable);
+      ApacheHttpClientHelper.doMethodExit(context, httpUriRequest, result, throwable);
     }
   }
 
@@ -245,19 +253,22 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) HttpRequest request,
         @Advice.Argument(value = 2, readOnly = false) ResponseHandler<?> handler,
+        @Advice.Local("otelHttpUriRequest") HttpUriRequest httpUriRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, httpUriRequest)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext, host, request);
+      context = instrumenter().start(parentContext, httpUriRequest);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
       if (handler != null) {
-        handler = new WrappingStatusSettingResponseHandler<>(context, parentContext, handler);
+        handler =
+            new WrappingStatusSettingResponseHandler<>(
+                context, parentContext, handler, httpUriRequest);
       }
     }
 
@@ -265,6 +276,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelHttpUriRequest") HttpUriRequest httpUriRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
@@ -272,7 +284,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, result, throwable);
+      ApacheHttpClientHelper.doMethodExit(context, httpUriRequest, result, throwable);
     }
   }
 }
