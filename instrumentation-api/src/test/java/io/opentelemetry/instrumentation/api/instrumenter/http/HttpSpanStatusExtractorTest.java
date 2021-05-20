@@ -25,19 +25,19 @@ class HttpSpanStatusExtractorTest {
   @Mock private HttpAttributesExtractor<Map<String, String>, Map<String, String>> extractor;
 
   @ParameterizedTest
-  @ValueSource(longs = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
-  void hasStatus(long statusCode) {
+  @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
+  void hasStatus(int statusCode) {
     when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
 
     assertThat(
             HttpSpanStatusExtractor.create(extractor)
                 .extract(Collections.emptyMap(), Collections.emptyMap(), null))
-        .isEqualTo(HttpStatusConverter.statusFromHttpStatus((int) statusCode));
+        .isEqualTo(HttpStatusConverter.statusFromHttpStatus(statusCode));
   }
 
   @ParameterizedTest
-  @ValueSource(longs = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
-  void hasStatus_ignoresException(long statusCode) {
+  @ValueSource(ints = {1, 100, 101, 200, 201, 300, 301, 400, 401, 500, 501, 600, 601})
+  void hasStatus_ignoresException(int statusCode) {
     when(extractor.statusCode(anyMap(), anyMap())).thenReturn(statusCode);
 
     // Presence of exception has no effect.
@@ -45,7 +45,7 @@ class HttpSpanStatusExtractorTest {
             HttpSpanStatusExtractor.create(extractor)
                 .extract(
                     Collections.emptyMap(), Collections.emptyMap(), new IllegalStateException()))
-        .isEqualTo(HttpStatusConverter.statusFromHttpStatus((int) statusCode));
+        .isEqualTo(HttpStatusConverter.statusFromHttpStatus(statusCode));
   }
 
   @Test

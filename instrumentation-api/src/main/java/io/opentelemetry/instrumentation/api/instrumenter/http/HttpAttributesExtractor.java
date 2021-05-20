@@ -43,7 +43,10 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
         attributes,
         SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED,
         requestContentLengthUncompressed(request, response));
-    set(attributes, SemanticAttributes.HTTP_STATUS_CODE, statusCode(request, response));
+    Integer statusCode = statusCode(request, response);
+    if (statusCode != null) {
+      set(attributes, SemanticAttributes.HTTP_STATUS_CODE, (long) statusCode);
+    }
     set(attributes, SemanticAttributes.HTTP_FLAVOR, flavor(request, response));
     set(
         attributes,
@@ -89,7 +92,7 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   protected abstract Long requestContentLengthUncompressed(REQUEST request, RESPONSE response);
 
   @Nullable
-  protected abstract Long statusCode(REQUEST request, RESPONSE response);
+  protected abstract Integer statusCode(REQUEST request, RESPONSE response);
 
   @Nullable
   protected abstract String flavor(REQUEST request, RESPONSE response);
