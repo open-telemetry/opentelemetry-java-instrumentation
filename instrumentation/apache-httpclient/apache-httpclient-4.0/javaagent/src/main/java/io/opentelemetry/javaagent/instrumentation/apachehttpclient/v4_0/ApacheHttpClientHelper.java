@@ -11,7 +11,6 @@ import io.opentelemetry.context.Context;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
-// needs to be public to be accessed from inside of advice
 public final class ApacheHttpClientHelper {
 
   public static void doMethodExit(

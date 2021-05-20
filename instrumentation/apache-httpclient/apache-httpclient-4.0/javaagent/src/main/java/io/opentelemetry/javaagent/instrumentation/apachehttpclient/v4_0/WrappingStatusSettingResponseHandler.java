@@ -14,7 +14,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpUriRequest;
 
-// needs to be public to be accessed from inside of advice
 public final class WrappingStatusSettingResponseHandler<T> implements ResponseHandler<T> {
   private final Context context;
   private final Context parentContext;

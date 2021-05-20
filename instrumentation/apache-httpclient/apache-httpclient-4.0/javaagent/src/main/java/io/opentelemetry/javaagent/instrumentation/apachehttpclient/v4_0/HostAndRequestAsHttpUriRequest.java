@@ -15,7 +15,6 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.AbstractHttpMessage;
 
 /** Wraps HttpHost and HttpRequest into a HttpUriRequest for tracers and injectors. */
-// needs to be public to be accessed from inside of advice
 public final class HostAndRequestAsHttpUriRequest extends AbstractHttpMessage
     implements HttpUriRequest {
 
