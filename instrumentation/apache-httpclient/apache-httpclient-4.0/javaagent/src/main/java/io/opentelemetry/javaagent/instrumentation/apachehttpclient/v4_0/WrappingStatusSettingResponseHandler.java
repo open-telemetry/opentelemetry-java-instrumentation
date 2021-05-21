@@ -17,23 +17,20 @@ import org.apache.http.client.methods.HttpUriRequest;
 public final class WrappingStatusSettingResponseHandler<T> implements ResponseHandler<T> {
   private final Context context;
   private final Context parentContext;
+  private final HttpUriRequest request;
   private final ResponseHandler<T> handler;
-  private final HttpUriRequest httpUriRequest;
 
   public WrappingStatusSettingResponseHandler(
-      Context context,
-      Context parentContext,
-      ResponseHandler<T> handler,
-      HttpUriRequest httpUriRequest) {
+      Context context, Context parentContext, HttpUriRequest request, ResponseHandler<T> handler) {
     this.context = context;
     this.parentContext = parentContext;
+    this.request = request;
     this.handler = handler;
-    this.httpUriRequest = httpUriRequest;
   }
 
   @Override
   public T handleResponse(HttpResponse response) throws IOException {
-    instrumenter().end(context, httpUriRequest, response, null);
+    instrumenter().end(context, request, response, null);
     // ending the span before executing the callback handler (and scoping the callback handler to
     // the parent context), even though we are inside of a synchronous http client callback
     // underneath HttpClient.execute(..), in order to not attribute other CLIENT span timings that

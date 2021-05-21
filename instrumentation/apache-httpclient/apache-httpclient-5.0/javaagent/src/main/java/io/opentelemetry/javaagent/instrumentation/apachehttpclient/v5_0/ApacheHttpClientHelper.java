@@ -5,18 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientInstrumenters.instrumenter;
 
 import io.opentelemetry.context.Context;
+import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 
 public class ApacheHttpClientHelper {
 
-  public static void doMethodExit(Context context, Object result, Throwable throwable) {
+  public static void doMethodExit(
+      Context context, ClassicHttpRequest request, Object result, Throwable throwable) {
     if (throwable != null) {
-      tracer().endExceptionally(context, throwable);
+      instrumenter().end(context, request, null, throwable);
     } else if (result instanceof HttpResponse) {
-      tracer().end(context, (HttpResponse) result);
+      instrumenter().end(context, request, (HttpResponse) result, null);
     } else {
       // ended in WrappingStatusSettingResponseHandler
     }

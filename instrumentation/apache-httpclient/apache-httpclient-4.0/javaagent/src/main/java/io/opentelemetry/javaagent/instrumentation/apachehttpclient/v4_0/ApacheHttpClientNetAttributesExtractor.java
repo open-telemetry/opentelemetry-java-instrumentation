@@ -11,9 +11,14 @@ import java.net.URI;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class ApacheHttpClientNetAttributesExtractor
     extends NetAttributesExtractor<HttpUriRequest, HttpResponse> {
+
+  private static final Logger logger =
+      LoggerFactory.getLogger(ApacheHttpClientNetAttributesExtractor.class);
 
   @Override
   protected String transport(HttpUriRequest request) {
@@ -38,6 +43,7 @@ final class ApacheHttpClientNetAttributesExtractor
       case "https":
         return 443;
       default:
+        logger.debug("no default port mapping for scheme: {}", uri.getScheme());
         return null;
     }
   }
