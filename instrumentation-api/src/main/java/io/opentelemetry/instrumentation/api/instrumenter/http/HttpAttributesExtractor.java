@@ -90,7 +90,11 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
 
   // Attributes which are not always available when the request is ready.
 
-  /** Extracts the {@code http.request_content_length} span attribute. */
+  /**
+   * Extracts the {@code http.request_content_length} span attribute.
+   *
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}.
+   */
   @Nullable
   protected abstract Long requestContentLength(REQUEST request, @Nullable RESPONSE response);
 
