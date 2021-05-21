@@ -358,7 +358,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       // stack: map, map
       // pass bigger size to avoid resizes; same formula as in e.g. HashSet(Collection)
       // 0.75 is the default load factor
-      mv.visitLdcInsn((size / 0.75f) + 1);
+      mv.visitLdcInsn((int) (size / 0.75f) + 1);
       // stack: map, map, size
       mv.visitLdcInsn(0.75f);
       // stack: map, map, size, loadFactor
