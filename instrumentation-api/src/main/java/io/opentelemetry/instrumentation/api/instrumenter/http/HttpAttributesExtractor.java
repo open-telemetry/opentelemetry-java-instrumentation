@@ -93,7 +93,8 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Extracts the {@code http.request_content_length} span attribute.
    *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}.
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
+   * {@code response} is {@code null} or not.
    */
   @Nullable
   protected abstract Long requestContentLength(REQUEST request, @Nullable RESPONSE response);
@@ -101,7 +102,8 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Extracts the {@code http.request_content_length_uncompressed} span attribute.
    *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}.
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
+   * {@code response} is {@code null} or not.
    */
   @Nullable
   protected abstract Long requestContentLengthUncompressed(
@@ -110,7 +112,8 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Extracts the {@code http.flavor} span attribute.
    *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}.
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
+   * {@code response} is {@code null} or not.
    */
   @Nullable
   protected abstract String flavor(REQUEST request, @Nullable RESPONSE response);
@@ -118,7 +121,8 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Extracts the {@code http.server_name} span attribute.
    *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}.
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
+   * {@code response} is {@code null} or not.
    */
   @Nullable
   protected abstract String serverName(REQUEST request, @Nullable RESPONSE response);
@@ -126,7 +130,8 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Extracts the {@code http.client_ip} span attribute.
    *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}.
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, whether
+   * {@code response} is {@code null} or not.
    */
   @Nullable
   protected abstract String clientIp(REQUEST request, @Nullable RESPONSE response);
@@ -134,8 +139,8 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Extracts the {@code http.status_code} span attribute.
    *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, and only
-   * when {@code response} is non-{@code null}.
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
+   * {@code response} is non-{@code null}.
    */
   @Nullable
   protected abstract Integer statusCode(REQUEST request, RESPONSE response);
@@ -143,8 +148,8 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Extracts the {@code http.response_content_length} span attribute.
    *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, and only
-   * when {@code response} is non-{@code null}.
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
+   * {@code response} is non-{@code null}.
    */
   @Nullable
   protected abstract Long responseContentLength(REQUEST request, RESPONSE response);
@@ -152,8 +157,8 @@ public abstract class HttpAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Extracts the {@code http.response_content_length_uncompressed} span attribute.
    *
-   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, and only
-   * when {@code response} is non-{@code null}.
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
+   * {@code response} is non-{@code null}.
    */
   @Nullable
   protected abstract Long responseContentLengthUncompressed(REQUEST request, RESPONSE response);
