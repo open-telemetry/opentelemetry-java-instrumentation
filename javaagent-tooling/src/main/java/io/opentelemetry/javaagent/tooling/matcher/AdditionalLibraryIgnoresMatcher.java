@@ -108,6 +108,7 @@ public class AdditionalLibraryIgnoresMatcher
       if (name.startsWith("org.springframework.boot.")) {
         return !instrumentedSpringBootClasses(name)
             && !name.startsWith("org.springframework.boot.context.web.")
+            && !name.startsWith("org.springframework.boot.logging.logback.")
             && !name.startsWith("org.springframework.boot.web.filter.")
             && !name.startsWith("org.springframework.boot.web.servlet.");
       }
