@@ -14,6 +14,7 @@ public final class CacheBuilder {
   private static final long UNSET = -1;
 
   private boolean weakKeys;
+  private boolean weakValues;
   private long maximumSize = UNSET;
   private Executor executor = null;
 
@@ -32,6 +33,12 @@ public final class CacheBuilder {
     return this;
   }
 
+  /** Sets that values should be referenced weakly. */
+  public CacheBuilder setWeakValues() {
+    this.weakValues = true;
+    return this;
+  }
+
   // Visible for testing
   CacheBuilder setExecutor(Executor executor) {
     this.executor = executor;
@@ -46,6 +53,9 @@ public final class CacheBuilder {
     Caffeine<?, ?> caffeine = Caffeine.newBuilder();
     if (weakKeys) {
       caffeine.weakKeys();
+    }
+    if (weakValues) {
+      caffeine.weakValues();
     }
     if (maximumSize != UNSET) {
       caffeine.maximumSize(maximumSize);

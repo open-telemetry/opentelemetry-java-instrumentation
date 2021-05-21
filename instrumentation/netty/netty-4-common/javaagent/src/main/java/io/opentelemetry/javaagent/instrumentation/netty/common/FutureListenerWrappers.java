@@ -11,55 +11,50 @@ import io.netty.util.concurrent.GenericProgressiveFutureListener;
 import io.netty.util.concurrent.ProgressiveFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.instrumentation.api.caching.Cache;
 
 public final class FutureListenerWrappers {
+  private static final Cache<
+          GenericFutureListener<? extends Future<?>>, GenericFutureListener<? extends Future<?>>>
+      wrappers = Cache.newBuilder().setWeakKeys().setWeakValues().build();
+
   @SuppressWarnings("unchecked")
-  public static GenericFutureListener<? extends Future<? super Void>> wrap(
-      ContextStore<GenericFutureListener, GenericFutureListener> contextStore,
-      Context context,
-      GenericFutureListener<? extends Future<? super Void>> delegate) {
+  public static GenericFutureListener<?> wrap(
+      Context context, GenericFutureListener<? extends Future<?>> delegate) {
     if (delegate instanceof WrappedFutureListener
         || delegate instanceof WrappedProgressiveFutureListener) {
       return delegate;
     }
-    return (GenericFutureListener<? extends Future<? super Void>>)
-        contextStore.putIfAbsent(
-            delegate,
-            () -> {
-              if (delegate instanceof GenericProgressiveFutureListener) {
-                return new WrappedProgressiveFutureListener(
-                    context,
-                    (GenericProgressiveFutureListener<ProgressiveFuture<? super Void>>) delegate);
-              } else {
-                return new WrappedFutureListener(
-                    context, (GenericFutureListener<Future<? super Void>>) delegate);
-              }
-            });
+    return wrappers.computeIfAbsent(
+        delegate,
+        (key) -> {
+          if (delegate instanceof GenericProgressiveFutureListener) {
+            return new WrappedProgressiveFutureListener(
+                context, (GenericProgressiveFutureListener<ProgressiveFuture<?>>) delegate);
+          } else {
+            return new WrappedFutureListener(context, (GenericFutureListener<Future<?>>) delegate);
+          }
+        });
   }
 
-  public static GenericFutureListener<? extends Future<? super Void>> getWrapper(
-      ContextStore<GenericFutureListener, GenericFutureListener> contextStore,
-      GenericFutureListener<? extends Future<? super Void>> delegate) {
-    GenericFutureListener<? extends Future<? super Void>> wrapper =
-        (GenericFutureListener<? extends Future<? super Void>>) contextStore.get(delegate);
+  public static GenericFutureListener<? extends Future<?>> getWrapper(
+      GenericFutureListener<? extends Future<?>> delegate) {
+    GenericFutureListener<? extends Future<?>> wrapper = wrappers.get(delegate);
     return wrapper == null ? delegate : wrapper;
   }
 
-  private static final class WrappedFutureListener
-      implements GenericFutureListener<Future<? super Void>> {
+  private static final class WrappedFutureListener implements GenericFutureListener<Future<?>> {
 
     private final Context context;
-    private final GenericFutureListener<Future<? super Void>> delegate;
+    private final GenericFutureListener<Future<?>> delegate;
 
-    private WrappedFutureListener(
-        Context context, GenericFutureListener<Future<? super Void>> delegate) {
+    private WrappedFutureListener(Context context, GenericFutureListener<Future<?>> delegate) {
       this.context = context;
       this.delegate = delegate;
     }
 
     @Override
-    public void operationComplete(Future<? super Void> future) throws Exception {
+    public void operationComplete(Future<?> future) throws Exception {
       try (Scope ignored = context.makeCurrent()) {
         delegate.operationComplete(future);
       }
@@ -67,29 +62,27 @@ public final class FutureListenerWrappers {
   }
 
   private static final class WrappedProgressiveFutureListener
-      implements GenericProgressiveFutureListener<ProgressiveFuture<? super Void>> {
+      implements GenericProgressiveFutureListener<ProgressiveFuture<?>> {
 
     private final Context context;
-    private final GenericProgressiveFutureListener<ProgressiveFuture<? super Void>> delegate;
+    private final GenericProgressiveFutureListener<ProgressiveFuture<?>> delegate;
 
     private WrappedProgressiveFutureListener(
-        Context context,
-        GenericProgressiveFutureListener<ProgressiveFuture<? super Void>> delegate) {
+        Context context, GenericProgressiveFutureListener<ProgressiveFuture<?>> delegate) {
       this.context = context;
       this.delegate = delegate;
     }
 
     @Override
-    public void operationProgressed(
-        ProgressiveFuture<? super Void> progressiveFuture, long l, long l1) throws Exception {
+    public void operationProgressed(ProgressiveFuture<?> progressiveFuture, long l, long l1)
+        throws Exception {
       try (Scope ignored = context.makeCurrent()) {
         delegate.operationProgressed(progressiveFuture, l, l1);
       }
     }
 
     @Override
-    public void operationComplete(ProgressiveFuture<? super Void> progressiveFuture)
-        throws Exception {
+    public void operationComplete(ProgressiveFuture<?> progressiveFuture) throws Exception {
       try (Scope ignored = context.makeCurrent()) {
         delegate.operationComplete(progressiveFuture);
       }
