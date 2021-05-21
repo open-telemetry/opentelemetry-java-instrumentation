@@ -14,6 +14,11 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.caching.Cache;
 
 public final class FutureListenerWrappers {
+  // Instead of ContextStore use Cache with weak keys and weak values to store link between original
+  // listener and wrapper. ContextStore works fine when wrapper is stored in a field on original
+  // listener, but when listener class is a lambda instead of field it gets stored in a map with
+  // weak keys where original listener is key and wrapper is value. As wrapper has a strong
+  // reference to original listener this causes a memory leak.
   private static final Cache<
           GenericFutureListener<? extends Future<?>>, GenericFutureListener<? extends Future<?>>>
       wrappers = Cache.newBuilder().setWeakKeys().setWeakValues().build();
