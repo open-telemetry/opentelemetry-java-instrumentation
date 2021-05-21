@@ -19,6 +19,9 @@ public final class FutureListenerWrappers {
   // listener, but when listener class is a lambda instead of field it gets stored in a map with
   // weak keys where original listener is key and wrapper is value. As wrapper has a strong
   // reference to original listener this causes a memory leak.
+  // Also note that it's ok if the value is collected prior to the key, since this cache is only
+  // used to remove the wrapped listener from the netty future, and if the value is collected prior
+  // to the key, that means it's no longer used (referenced) by the netty future anyways.
   private static final Cache<
           GenericFutureListener<? extends Future<?>>, GenericFutureListener<? extends Future<?>>>
       wrappers = Cache.newBuilder().setWeakKeys().setWeakValues().build();
