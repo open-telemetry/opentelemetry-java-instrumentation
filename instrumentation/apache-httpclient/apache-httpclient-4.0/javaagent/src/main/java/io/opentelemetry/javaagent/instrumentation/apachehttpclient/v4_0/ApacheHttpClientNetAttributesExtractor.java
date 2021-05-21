@@ -26,12 +26,12 @@ final class ApacheHttpClientNetAttributesExtractor
   }
 
   @Override
-  protected @Nullable String peerName(HttpUriRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerName(HttpUriRequest request, @Nullable HttpResponse response) {
     return request.getURI().getHost();
   }
 
   @Override
-  protected Integer peerPort(HttpUriRequest request, @Nullable HttpResponse response) {
+  public Integer peerPort(HttpUriRequest request, @Nullable HttpResponse response) {
     URI uri = request.getURI();
     int port = uri.getPort();
     if (port != -1) {
@@ -49,7 +49,7 @@ final class ApacheHttpClientNetAttributesExtractor
   }
 
   @Override
-  protected @Nullable String peerIp(HttpUriRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerIp(HttpUriRequest request, @Nullable HttpResponse response) {
     return null;
   }
 }

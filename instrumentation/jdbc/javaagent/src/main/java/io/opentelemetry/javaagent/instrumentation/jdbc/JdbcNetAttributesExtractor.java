@@ -18,19 +18,19 @@ final class JdbcNetAttributesExtractor extends NetAttributesExtractor<DbRequest,
 
   @Nullable
   @Override
-  protected String peerName(DbRequest request, @Nullable Void response) {
+  public String peerName(DbRequest request, @Nullable Void response) {
     return request.getDbInfo().getHost();
   }
 
   @Nullable
   @Override
-  protected Integer peerPort(DbRequest request, @Nullable Void response) {
+  public Integer peerPort(DbRequest request, @Nullable Void response) {
     return request.getDbInfo().getPort();
   }
 
   @Nullable
   @Override
-  protected String peerIp(DbRequest request, @Nullable Void response) {
+  public String peerIp(DbRequest request, @Nullable Void response) {
     return null;
   }
 }

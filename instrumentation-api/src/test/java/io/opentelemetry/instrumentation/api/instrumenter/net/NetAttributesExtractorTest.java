@@ -26,7 +26,7 @@ class NetAttributesExtractorTest {
     }
 
     @Override
-    protected String peerName(Map<String, String> request, Map<String, String> response) {
+    public String peerName(Map<String, String> request, Map<String, String> response) {
       if (response != null) {
         return response.get("peerName");
       }
@@ -34,7 +34,7 @@ class NetAttributesExtractorTest {
     }
 
     @Override
-    protected Integer peerPort(Map<String, String> request, Map<String, String> response) {
+    public Integer peerPort(Map<String, String> request, Map<String, String> response) {
       if (response != null) {
         return Integer.valueOf(response.get("peerPort"));
       }
@@ -42,7 +42,7 @@ class NetAttributesExtractorTest {
     }
 
     @Override
-    protected String peerIp(Map<String, String> request, Map<String, String> response) {
+    public String peerIp(Map<String, String> request, Map<String, String> response) {
       if (response != null) {
         return response.get("peerIp");
       }

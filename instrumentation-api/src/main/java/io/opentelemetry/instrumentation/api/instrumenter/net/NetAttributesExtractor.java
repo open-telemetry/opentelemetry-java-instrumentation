@@ -50,7 +50,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  protected abstract String peerName(REQUEST request, @Nullable RESPONSE response);
+  public abstract String peerName(REQUEST request, @Nullable RESPONSE response);
 
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null
@@ -58,7 +58,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  protected abstract Integer peerPort(REQUEST request, @Nullable RESPONSE response);
+  public abstract Integer peerPort(REQUEST request, @Nullable RESPONSE response);
 
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null
@@ -66,5 +66,5 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  protected abstract String peerIp(REQUEST request, @Nullable RESPONSE response);
+  public abstract String peerIp(REQUEST request, @Nullable RESPONSE response);
 }
