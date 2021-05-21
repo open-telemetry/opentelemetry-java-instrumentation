@@ -14,11 +14,12 @@ import io.opentelemetry.javaagent.extension.muzzle.Flag;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
 import io.opentelemetry.javaagent.tooling.Utils;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -27,8 +28,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.jar.asm.ClassVisitor;
 import net.bytebuddy.jar.asm.ClassWriter;
-import net.bytebuddy.jar.asm.FieldVisitor;
-import net.bytebuddy.jar.asm.Label;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
@@ -47,7 +46,6 @@ import org.slf4j.LoggerFactory;
 class MuzzleCodeGenerator implements AsmVisitorWrapper {
   private static final Logger log = LoggerFactory.getLogger(MuzzleCodeGenerator.class);
 
-  private static final String MUZZLE_REFERENCES_FIELD_NAME = "muzzleReferences";
   private static final String MUZZLE_REFERENCES_METHOD_NAME = "getMuzzleReferences";
   private static final String MUZZLE_HELPER_CLASSES_METHOD_NAME = "getMuzzleHelperClassNames";
   private static final String MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME =
@@ -73,26 +71,20 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       MethodList<?> methods,
       int writerFlags,
       int readerFlags) {
-    return new GenerateMuzzleMethodsAndFields(
-        classVisitor,
-        implementationContext.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6));
+    return new GenerateMuzzleMethodsAndFields(classVisitor);
   }
 
   private static class GenerateMuzzleMethodsAndFields extends ClassVisitor {
 
-    private final boolean frames;
-
     private String instrumentationClassName;
     private InstrumentationModule instrumentationModule;
 
-    private boolean generateReferencesField = true;
     private boolean generateReferencesMethod = true;
     private boolean generateHelperClassNamesMethod = true;
     private boolean generateContextStoreClassesMethod = true;
 
-    public GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor, boolean frames) {
+    public GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor) {
       super(Opcodes.ASM7, classVisitor);
-      this.frames = frames;
     }
 
     @Override
@@ -119,19 +111,6 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
     }
 
     @Override
-    public FieldVisitor visitField(
-        int access, String name, String descriptor, String signature, Object value) {
-      if (MUZZLE_REFERENCES_FIELD_NAME.equals(name)) {
-        generateReferencesField = false;
-        log.info(
-            "The '{}' field was already found in class '{}'. Muzzle will not generate it again",
-            MUZZLE_REFERENCES_FIELD_NAME,
-            instrumentationClassName);
-      }
-      return super.visitField(access, name, descriptor, signature, value);
-    }
-
-    @Override
     public MethodVisitor visitMethod(
         int access, String name, String descriptor, String signature, String[] exceptions) {
       if (MUZZLE_REFERENCES_METHOD_NAME.equals(name)) {
@@ -155,20 +134,12 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             MUZZLE_CONTEXT_STORE_CLASSES_METHOD_NAME,
             instrumentationClassName);
       }
-      MethodVisitor methodVisitor =
-          super.visitMethod(access, name, descriptor, signature, exceptions);
-      if ("<init>".equals(name)) {
-        methodVisitor = new InitializeReferencesField(methodVisitor);
-      }
-      return methodVisitor;
+      return super.visitMethod(access, name, descriptor, signature, exceptions);
     }
 
     @Override
     public void visitEnd() {
       ReferenceCollector collector = collectReferences();
-      if (generateReferencesField) {
-        generateMuzzleReferencesField();
-      }
       if (generateReferencesMethod) {
         generateMuzzleReferencesMethod(collector);
       }
@@ -198,353 +169,323 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       return collector;
     }
 
+    private void generateMuzzleReferencesMethod(ReferenceCollector collector) {
+      Type referenceType = Type.getType(ClassRef.class);
+      Type referenceBuilderType = Type.getType(ClassRefBuilder.class);
+      Type referenceFlagType = Type.getType(Flag.class);
+      Type referenceFlagArrayType = Type.getType(Flag[].class);
+      Type referenceSourceArrayType = Type.getType(Source[].class);
+      Type stringType = Type.getType(String.class);
+      Type typeType = Type.getType(Type.class);
+      Type typeArrayType = Type.getType(Type[].class);
+
+      /*
+       * public Map<String, ClassRef> getMuzzleReferences() {
+       *   Map<String, ClassRef> references = new HashMap<>(...);
+       *   references.put("reference class name", ClassRef.newBuilder(...)
+       *       ...
+       *       .build());
+       *   return references;
+       * }
+       */
+      MethodVisitor mv =
+          super.visitMethod(
+              Opcodes.ACC_PUBLIC, MUZZLE_REFERENCES_METHOD_NAME, "()Ljava/util/Map;", null, null);
+      mv.visitCode();
+
+      Collection<ClassRef> references = collector.getReferences().values();
+
+      writeNewMap(mv, references.size());
+      // stack: map
+      mv.visitVarInsn(Opcodes.ASTORE, 1);
+      // stack: <empty>
+
+      references.forEach(
+          reference -> {
+            mv.visitVarInsn(Opcodes.ALOAD, 1);
+            // stack: map
+            mv.visitLdcInsn(reference.getClassName());
+            // stack: map, className
+
+            mv.visitLdcInsn(reference.getClassName());
+            mv.visitMethodInsn(
+                Opcodes.INVOKESTATIC,
+                referenceType.getInternalName(),
+                "newBuilder",
+                Type.getMethodDescriptor(referenceBuilderType, stringType),
+                false);
+            // stack: map, className, builder
+
+            for (Source source : reference.getSources()) {
+              mv.visitLdcInsn(source.getName());
+              mv.visitLdcInsn(source.getLine());
+              mv.visitMethodInsn(
+                  Opcodes.INVOKEVIRTUAL,
+                  referenceBuilderType.getInternalName(),
+                  "addSource",
+                  Type.getMethodDescriptor(referenceBuilderType, stringType, Type.INT_TYPE),
+                  false);
+            }
+            // stack: map, className, builder
+            for (Flag flag : reference.getFlags()) {
+              String enumClassName = getEnumClassInternalName(flag);
+              mv.visitFieldInsn(
+                  Opcodes.GETSTATIC, enumClassName, flag.name(), "L" + enumClassName + ";");
+              mv.visitMethodInsn(
+                  Opcodes.INVOKEVIRTUAL,
+                  referenceBuilderType.getInternalName(),
+                  "addFlag",
+                  Type.getMethodDescriptor(referenceBuilderType, referenceFlagType),
+                  false);
+            }
+            // stack: map, className, builder
+            if (null != reference.getSuperClassName()) {
+              mv.visitLdcInsn(reference.getSuperClassName());
+              mv.visitMethodInsn(
+                  Opcodes.INVOKEVIRTUAL,
+                  referenceBuilderType.getInternalName(),
+                  "setSuperClassName",
+                  Type.getMethodDescriptor(referenceBuilderType, stringType),
+                  false);
+            }
+            // stack: map, className, builder
+            for (String interfaceName : reference.getInterfaceNames()) {
+              mv.visitLdcInsn(interfaceName);
+              mv.visitMethodInsn(
+                  Opcodes.INVOKEVIRTUAL,
+                  referenceBuilderType.getInternalName(),
+                  "addInterfaceName",
+                  Type.getMethodDescriptor(referenceBuilderType, stringType),
+                  false);
+            }
+            // stack: map, className, builder
+            for (FieldRef field : reference.getFields()) {
+              writeSourcesArray(mv, field.getSources());
+              writeFlagsArray(mv, field.getFlags());
+              // field name
+              mv.visitLdcInsn(field.getName());
+              writeType(mv, field.getDescriptor());
+              // declared flag
+              mv.visitLdcInsn(field.isDeclared());
+
+              mv.visitMethodInsn(
+                  Opcodes.INVOKEVIRTUAL,
+                  referenceBuilderType.getInternalName(),
+                  "addField",
+                  Type.getMethodDescriptor(
+                      referenceBuilderType,
+                      referenceSourceArrayType,
+                      referenceFlagArrayType,
+                      stringType,
+                      typeType,
+                      Type.BOOLEAN_TYPE),
+                  false);
+            }
+            // stack: map, className, builder
+            for (MethodRef method : reference.getMethods()) {
+              writeSourcesArray(mv, method.getSources());
+              writeFlagsArray(mv, method.getFlags());
+              // method name
+              mv.visitLdcInsn(method.getName());
+              // method return and argument types
+              {
+                // we cannot pass the whole method descriptor string as it won't be shaded, so
+                // we
+                // have to pass the return and parameter types separately - strings in
+                // Type.getType()
+                // calls will be shaded correctly
+                Type methodType = Type.getMethodType(method.getDescriptor());
+
+                writeType(mv, methodType.getReturnType().getDescriptor());
+
+                mv.visitLdcInsn(methodType.getArgumentTypes().length);
+                mv.visitTypeInsn(Opcodes.ANEWARRAY, typeType.getInternalName());
+                int i = 0;
+                for (Type parameterType : methodType.getArgumentTypes()) {
+                  mv.visitInsn(Opcodes.DUP);
+                  mv.visitLdcInsn(i);
+                  writeType(mv, parameterType.getDescriptor());
+                  mv.visitInsn(Opcodes.AASTORE);
+                  i++;
+                }
+              }
+
+              mv.visitMethodInsn(
+                  Opcodes.INVOKEVIRTUAL,
+                  referenceBuilderType.getInternalName(),
+                  "addMethod",
+                  Type.getMethodDescriptor(
+                      referenceBuilderType,
+                      referenceSourceArrayType,
+                      referenceFlagArrayType,
+                      stringType,
+                      typeType,
+                      typeArrayType),
+                  false);
+            }
+            // stack: map, className, builder
+            mv.visitMethodInsn(
+                Opcodes.INVOKEVIRTUAL,
+                referenceBuilderType.getInternalName(),
+                "build",
+                Type.getMethodDescriptor(referenceType),
+                false);
+            // stack: map, className, classRef
+
+            mv.visitMethodInsn(
+                Opcodes.INVOKEINTERFACE,
+                "java/util/Map",
+                "put",
+                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                true);
+            // stack: previousValue
+            mv.visitInsn(Opcodes.POP);
+            // stack: <empty>
+          });
+
+      mv.visitVarInsn(Opcodes.ALOAD, 1);
+      // stack: map
+      mv.visitInsn(Opcodes.ARETURN);
+
+      mv.visitMaxs(0, 0); // recomputed
+      mv.visitEnd();
+    }
+
+    private void writeNewMap(MethodVisitor mv, int size) {
+      mv.visitTypeInsn(Opcodes.NEW, "java/util/HashMap");
+      // stack: map
+      mv.visitInsn(Opcodes.DUP);
+      // stack: map, map
+      // pass bigger size to avoid resizes; same formula as in e.g. HashSet(Collection)
+      // 0.75 is the default load factor
+      mv.visitLdcInsn((size / 0.75f) + 1);
+      // stack: map, map, size
+      mv.visitLdcInsn(0.75f);
+      // stack: map, map, size, loadFactor
+      mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/HashMap", "<init>", "(IF)V", false);
+    }
+
+    private void writeSourcesArray(MethodVisitor mv, Set<Source> sources) {
+      Type referenceSourceType = Type.getType(Source.class);
+
+      mv.visitLdcInsn(sources.size());
+      mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceSourceType.getInternalName());
+
+      int i = 0;
+      for (Source source : sources) {
+        mv.visitInsn(Opcodes.DUP);
+        mv.visitLdcInsn(i);
+
+        mv.visitTypeInsn(Opcodes.NEW, referenceSourceType.getInternalName());
+        mv.visitInsn(Opcodes.DUP);
+        mv.visitLdcInsn(source.getName());
+        mv.visitLdcInsn(source.getLine());
+        mv.visitMethodInsn(
+            Opcodes.INVOKESPECIAL,
+            referenceSourceType.getInternalName(),
+            "<init>",
+            "(Ljava/lang/String;I)V",
+            false);
+
+        mv.visitInsn(Opcodes.AASTORE);
+        ++i;
+      }
+    }
+
+    private void writeFlagsArray(MethodVisitor mv, Set<Flag> flags) {
+      Type referenceFlagType = Type.getType(Flag.class);
+
+      mv.visitLdcInsn(flags.size());
+      mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceFlagType.getInternalName());
+
+      int i = 0;
+      for (Flag flag : flags) {
+        mv.visitInsn(Opcodes.DUP);
+        mv.visitLdcInsn(i);
+        String enumClassName = getEnumClassInternalName(flag);
+        mv.visitFieldInsn(Opcodes.GETSTATIC, enumClassName, flag.name(), "L" + enumClassName + ";");
+        mv.visitInsn(Opcodes.AASTORE);
+        ++i;
+      }
+    }
+
+    private static final Pattern ANONYMOUS_ENUM_CONSTANT_CLASS =
+        Pattern.compile("(?<enumClass>.*)\\$[0-9]+$");
+
+    // drops "$1" suffix for enum constants that override/implement super class methods
+    private String getEnumClassInternalName(Flag flag) {
+      String fullInternalName = Utils.getInternalName(flag.getClass());
+      Matcher m = ANONYMOUS_ENUM_CONSTANT_CLASS.matcher(fullInternalName);
+      return m.matches() ? m.group("enumClass") : fullInternalName;
+    }
+
+    private void writeType(MethodVisitor mv, String descriptor) {
+      Type typeType = Type.getType(Type.class);
+
+      mv.visitLdcInsn(descriptor);
+      mv.visitMethodInsn(
+          Opcodes.INVOKESTATIC,
+          typeType.getInternalName(),
+          "getType",
+          Type.getMethodDescriptor(typeType, Type.getType(String.class)),
+          false);
+    }
+
     private void generateMuzzleHelperClassNamesMethod(ReferenceCollector collector) {
       /*
-       * public String[] getMuzzleHelperClassNames() {
-       *   return new String[] {
-       *     // sorted helper class names
-       *   };
+       * public List<String> getMuzzleHelperClassNames() {
+       *   List<String> helperClassNames = new ArrayList<>(...);
+       *   helperClassNames.add(...);
+       *   return helperClassNames;
        * }
        */
       MethodVisitor mv =
           super.visitMethod(
               Opcodes.ACC_PUBLIC,
               MUZZLE_HELPER_CLASSES_METHOD_NAME,
-              "()[Ljava/lang/String;",
+              "()Ljava/util/List;",
               null,
               null);
       mv.visitCode();
 
       List<String> helperClassNames = collector.getSortedHelperClasses();
 
+      mv.visitTypeInsn(Opcodes.NEW, "java/util/ArrayList");
+      // stack: list
+      mv.visitInsn(Opcodes.DUP);
+      // stack: list, list
       mv.visitLdcInsn(helperClassNames.size());
-      // stack: size
-      mv.visitTypeInsn(Opcodes.ANEWARRAY, "java/lang/String");
-      // stack: array
-      for (int i = 0; i < helperClassNames.size(); ++i) {
-        String helperClassName = helperClassNames.get(i);
+      // stack: list, list, size
+      mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/ArrayList", "<init>", "(I)V", false);
+      // stack: list
+      mv.visitVarInsn(Opcodes.ASTORE, 1);
+      // stack: <empty>
 
-        mv.visitInsn(Opcodes.DUP);
-        // stack: array, array
-        mv.visitLdcInsn(i);
-        // stack: array, array, i
-        mv.visitLdcInsn(helperClassName);
-        // stack: array, array, i, helperClassName
-        mv.visitInsn(Opcodes.AASTORE);
-        // stack: array
-      }
+      helperClassNames.forEach(
+          helperClassName -> {
+            mv.visitVarInsn(Opcodes.ALOAD, 1);
+            // stack: list
+            mv.visitLdcInsn(helperClassName);
+            // stack: list, helperClassName
+            mv.visitMethodInsn(
+                Opcodes.INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true);
+            // stack: added
+            mv.visitInsn(Opcodes.POP);
+            // stack: <empty>
+          });
+
+      mv.visitVarInsn(Opcodes.ALOAD, 1);
+      // stack: list
       mv.visitInsn(Opcodes.ARETURN);
 
       mv.visitMaxs(0, 0);
       mv.visitEnd();
     }
 
-    private void generateMuzzleReferencesMethod(ReferenceCollector collector) {
-      Type referenceType = Type.getType(ClassRef.class);
-      Type referenceArrayType = Type.getType(ClassRef[].class);
-      Type referenceBuilderType = Type.getType(ClassRefBuilder.class);
-      Type referenceFlagType = Type.getType(Flag.class);
-      Type referenceSourceType = Type.getType(Source.class);
-      Type stringType = Type.getType(String.class);
-      Type typeType = Type.getType(Type.class);
-
-      /*
-       * public synchronized Reference[] getMuzzleReferences() {
-       *   if (null == this.muzzleReferences) {
-       *     this.muzzleReferences = new Reference[] {
-       *                               // reference builders
-       *                             };
-       *   }
-       *   return this.muzzleReferences;
-       * }
-       */
-      try {
-        MethodVisitor mv =
-            super.visitMethod(
-                Opcodes.ACC_PUBLIC + Opcodes.ACC_SYNCHRONIZED,
-                MUZZLE_REFERENCES_METHOD_NAME,
-                Type.getMethodDescriptor(referenceArrayType),
-                null,
-                null);
-
-        mv.visitCode();
-        Label start = new Label();
-        Label ret = new Label();
-        Label finish = new Label();
-
-        mv.visitLabel(start);
-        mv.visitInsn(Opcodes.ACONST_NULL);
-        mv.visitVarInsn(Opcodes.ALOAD, 0);
-        mv.visitFieldInsn(
-            Opcodes.GETFIELD,
-            instrumentationClassName,
-            MUZZLE_REFERENCES_FIELD_NAME,
-            referenceArrayType.getDescriptor());
-        mv.visitJumpInsn(Opcodes.IF_ACMPNE, ret);
-
-        mv.visitVarInsn(Opcodes.ALOAD, 0);
-
-        ClassRef[] references = collector.getReferences().values().toArray(new ClassRef[0]);
-        mv.visitLdcInsn(references.length);
-        mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceType.getInternalName());
-
-        for (int i = 0; i < references.length; ++i) {
-          mv.visitInsn(Opcodes.DUP);
-          mv.visitLdcInsn(i);
-          mv.visitLdcInsn(references[i].getClassName());
-          mv.visitMethodInsn(
-              Opcodes.INVOKESTATIC,
-              referenceType.getInternalName(),
-              "newBuilder",
-              Type.getMethodDescriptor(referenceBuilderType, stringType),
-              false);
-
-          for (Source source : references[i].getSources()) {
-            mv.visitLdcInsn(source.getName());
-            mv.visitLdcInsn(source.getLine());
-            mv.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
-                referenceBuilderType.getInternalName(),
-                "addSource",
-                Type.getMethodDescriptor(referenceBuilderType, stringType, Type.INT_TYPE),
-                false);
-          }
-          for (Flag flag : references[i].getFlags()) {
-            String enumClassName = getEnumClassInternalName(flag);
-            mv.visitFieldInsn(
-                Opcodes.GETSTATIC, enumClassName, flag.name(), "L" + enumClassName + ";");
-            mv.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
-                referenceBuilderType.getInternalName(),
-                "addFlag",
-                Type.getMethodDescriptor(referenceBuilderType, referenceFlagType),
-                false);
-          }
-          if (null != references[i].getSuperClassName()) {
-            mv.visitLdcInsn(references[i].getSuperClassName());
-            mv.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
-                referenceBuilderType.getInternalName(),
-                "setSuperClassName",
-                Type.getMethodDescriptor(referenceBuilderType, stringType),
-                false);
-          }
-          for (String interfaceName : references[i].getInterfaceNames()) {
-            mv.visitLdcInsn(interfaceName);
-            mv.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
-                referenceBuilderType.getInternalName(),
-                "addInterfaceName",
-                Type.getMethodDescriptor(referenceBuilderType, stringType),
-                false);
-          }
-          for (FieldRef field : references[i].getFields()) {
-            { // sources
-              mv.visitLdcInsn(field.getSources().size());
-              mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceSourceType.getInternalName());
-
-              int j = 0;
-              for (Source source : field.getSources()) {
-                mv.visitInsn(Opcodes.DUP);
-                mv.visitLdcInsn(j);
-
-                mv.visitTypeInsn(Opcodes.NEW, referenceSourceType.getInternalName());
-                mv.visitInsn(Opcodes.DUP);
-                mv.visitLdcInsn(source.getName());
-                mv.visitLdcInsn(source.getLine());
-                mv.visitMethodInsn(
-                    Opcodes.INVOKESPECIAL,
-                    referenceSourceType.getInternalName(),
-                    "<init>",
-                    "(Ljava/lang/String;I)V",
-                    false);
-
-                mv.visitInsn(Opcodes.AASTORE);
-                ++j;
-              }
-            }
-
-            { // flags
-              mv.visitLdcInsn(field.getFlags().size());
-              mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceFlagType.getInternalName());
-
-              int j = 0;
-              for (Flag flag : field.getFlags()) {
-                mv.visitInsn(Opcodes.DUP);
-                mv.visitLdcInsn(j);
-                String enumClassName = getEnumClassInternalName(flag);
-                mv.visitFieldInsn(
-                    Opcodes.GETSTATIC, enumClassName, flag.name(), "L" + enumClassName + ";");
-                mv.visitInsn(Opcodes.AASTORE);
-                ++j;
-              }
-            }
-
-            mv.visitLdcInsn(field.getName());
-
-            { // field type
-              mv.visitLdcInsn(field.getDescriptor());
-              mv.visitMethodInsn(
-                  Opcodes.INVOKESTATIC,
-                  typeType.getInternalName(),
-                  "getType",
-                  Type.getMethodDescriptor(typeType, stringType),
-                  false);
-            }
-
-            // declared flag
-            mv.visitLdcInsn(field.isDeclared());
-
-            mv.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
-                referenceBuilderType.getInternalName(),
-                "addField",
-                Type.getMethodDescriptor(
-                    ClassRefBuilder.class.getMethod(
-                        "addField",
-                        Source[].class,
-                        Flag[].class,
-                        String.class,
-                        Type.class,
-                        boolean.class)),
-                false);
-          }
-          for (MethodRef method : references[i].getMethods()) {
-            mv.visitLdcInsn(method.getSources().size());
-            mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceSourceType.getInternalName());
-            int j = 0;
-            for (Source source : method.getSources()) {
-              mv.visitInsn(Opcodes.DUP);
-              mv.visitLdcInsn(j);
-
-              mv.visitTypeInsn(Opcodes.NEW, referenceSourceType.getInternalName());
-              mv.visitInsn(Opcodes.DUP);
-              mv.visitLdcInsn(source.getName());
-              mv.visitLdcInsn(source.getLine());
-              mv.visitMethodInsn(
-                  Opcodes.INVOKESPECIAL,
-                  referenceSourceType.getInternalName(),
-                  "<init>",
-                  "(Ljava/lang/String;I)V",
-                  false);
-
-              mv.visitInsn(Opcodes.AASTORE);
-              ++j;
-            }
-
-            mv.visitLdcInsn(method.getFlags().size());
-            mv.visitTypeInsn(Opcodes.ANEWARRAY, referenceFlagType.getInternalName());
-            j = 0;
-            for (Flag flag : method.getFlags()) {
-              mv.visitInsn(Opcodes.DUP);
-              mv.visitLdcInsn(j);
-              String enumClassName = getEnumClassInternalName(flag);
-              mv.visitFieldInsn(
-                  Opcodes.GETSTATIC, enumClassName, flag.name(), "L" + enumClassName + ";");
-              mv.visitInsn(Opcodes.AASTORE);
-              ++j;
-            }
-
-            mv.visitLdcInsn(method.getName());
-
-            {
-              // we cannot pass the whole method descriptor string as it won't be shaded, so we
-              // have to pass the return and parameter types separately - strings in Type.getType()
-              // calls will be shaded correctly
-              Type methodType = Type.getMethodType(method.getDescriptor());
-
-              // return type
-              mv.visitLdcInsn(methodType.getReturnType().getDescriptor());
-              mv.visitMethodInsn(
-                  Opcodes.INVOKESTATIC,
-                  typeType.getInternalName(),
-                  "getType",
-                  Type.getMethodDescriptor(typeType, stringType),
-                  false);
-
-              mv.visitLdcInsn(methodType.getArgumentTypes().length);
-              mv.visitTypeInsn(Opcodes.ANEWARRAY, typeType.getInternalName());
-              j = 0;
-              for (Type parameterType : methodType.getArgumentTypes()) {
-                mv.visitInsn(Opcodes.DUP);
-                mv.visitLdcInsn(j);
-
-                mv.visitLdcInsn(parameterType.getDescriptor());
-                mv.visitMethodInsn(
-                    Opcodes.INVOKESTATIC,
-                    typeType.getInternalName(),
-                    "getType",
-                    Type.getMethodDescriptor(typeType, stringType),
-                    false);
-
-                mv.visitInsn(Opcodes.AASTORE);
-                j++;
-              }
-            }
-
-            mv.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
-                referenceBuilderType.getInternalName(),
-                "addMethod",
-                Type.getMethodDescriptor(
-                    ClassRefBuilder.class.getMethod(
-                        "addMethod",
-                        Source[].class,
-                        Flag[].class,
-                        String.class,
-                        Type.class,
-                        Type[].class)),
-                false);
-          }
-          mv.visitMethodInsn(
-              Opcodes.INVOKEVIRTUAL,
-              referenceBuilderType.getInternalName(),
-              "build",
-              Type.getMethodDescriptor(referenceType),
-              false);
-          mv.visitInsn(Opcodes.AASTORE);
-        }
-
-        mv.visitFieldInsn(
-            Opcodes.PUTFIELD,
-            instrumentationClassName,
-            MUZZLE_REFERENCES_FIELD_NAME,
-            referenceArrayType.getDescriptor());
-
-        mv.visitLabel(ret);
-        if (frames) {
-          mv.visitFrame(Opcodes.F_SAME, 1, null, 0, null);
-        }
-        mv.visitVarInsn(Opcodes.ALOAD, 0);
-        mv.visitFieldInsn(
-            Opcodes.GETFIELD,
-            instrumentationClassName,
-            MUZZLE_REFERENCES_FIELD_NAME,
-            referenceArrayType.getDescriptor());
-        mv.visitInsn(Opcodes.ARETURN);
-        mv.visitLabel(finish);
-
-        mv.visitLocalVariable("this", "L" + instrumentationClassName + ";", null, start, finish, 0);
-        mv.visitMaxs(0, 0); // recomputed
-        mv.visitEnd();
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    private void generateMuzzleReferencesField() {
-      super.visitField(
-          Opcodes.ACC_PRIVATE + Opcodes.ACC_VOLATILE,
-          MUZZLE_REFERENCES_FIELD_NAME,
-          Type.getDescriptor(ClassRef[].class),
-          null,
-          null);
-    }
-
     private void generateMuzzleContextStoreClassesMethod(ReferenceCollector collector) {
       /*
        * public Map<String, String> getMuzzleContextStoreClasses() {
-       *   Map<String, String> contextStore = new HashMap();
+       *   Map<String, String> contextStore = new HashMap<>(...);
        *   contextStore.put(..., ...);
        *   return contextStore;
        * }
@@ -560,13 +501,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
       Map<String, String> contextStoreClasses = collector.getContextStoreClasses();
 
-      mv.visitTypeInsn(Opcodes.NEW, "java/util/HashMap");
-      // stack: map
-      mv.visitInsn(Opcodes.DUP);
-      // stack: map, map
-      mv.visitLdcInsn(contextStoreClasses.size());
-      // stack: map, map, size
-      mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/HashMap", "<init>", "(I)V", false);
+      writeNewMap(mv, contextStoreClasses.size());
       // stack: map
       mv.visitVarInsn(Opcodes.ASTORE, 1);
       // stack: <empty>
@@ -596,37 +531,6 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
       mv.visitMaxs(0, 0);
       mv.visitEnd();
-    }
-
-    private static final Pattern ANONYMOUS_ENUM_CONSTANT_CLASS =
-        Pattern.compile("(?<enumClass>.*)\\$[0-9]+$");
-
-    // drops "$1" suffix for enum constants that override/implement super class methods
-    private String getEnumClassInternalName(Flag flag) {
-      String fullInternalName = Utils.getInternalName(flag.getClass());
-      Matcher m = ANONYMOUS_ENUM_CONSTANT_CLASS.matcher(fullInternalName);
-      return m.matches() ? m.group("enumClass") : fullInternalName;
-    }
-
-    /** Appends the {@code Reference[]} field initialization at the end of a method/constructor. */
-    private class InitializeReferencesField extends MethodVisitor {
-      public InitializeReferencesField(MethodVisitor methodVisitor) {
-        super(Opcodes.ASM7, methodVisitor);
-      }
-
-      @Override
-      public void visitInsn(int opcode) {
-        if (opcode == Opcodes.RETURN) {
-          super.visitVarInsn(Opcodes.ALOAD, 0);
-          super.visitInsn(Opcodes.ACONST_NULL);
-          super.visitFieldInsn(
-              Opcodes.PUTFIELD,
-              instrumentationClassName,
-              MUZZLE_REFERENCES_FIELD_NAME,
-              Type.getDescriptor(ClassRef[].class));
-        }
-        super.visitInsn(opcode);
-      }
     }
   }
 }

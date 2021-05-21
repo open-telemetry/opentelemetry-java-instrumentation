@@ -54,7 +54,7 @@ class ReferenceMatcherTest extends Specification {
     setup:
     def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(MethodBodyAdvice.name)
-    def refMatcher = createMatcher(collector.getReferences().values())
+    def refMatcher = createMatcher(collector.getReferences())
 
     expect:
     getMismatchClassSet(refMatcher.getMismatchedReferenceSources(safeClasspath)).empty
@@ -92,8 +92,8 @@ class ReferenceMatcherTest extends Specification {
     def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(MethodBodyAdvice.name)
 
-    def refMatcher1 = createMatcher(collector.getReferences().values())
-    def refMatcher2 = createMatcher(collector.getReferences().values())
+    def refMatcher1 = createMatcher(collector.getReferences())
+    def refMatcher2 = createMatcher(collector.getReferences())
     assert getMismatchClassSet(refMatcher1.getMismatchedReferenceSources(cl)).empty
     int countAfterFirstMatch = cl.count
     // the second matcher should be able to used cached type descriptions from the first
@@ -110,7 +110,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([ref]).getMismatchedReferenceSources(this.class.classLoader)
+    def mismatches = createMatcher([(ref.className): ref]).getMismatchedReferenceSources(this.class.classLoader)
 
     then:
     getMismatchClassSet(mismatches) == expectedMismatches as Set
@@ -129,7 +129,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([reference])
+    def mismatches = createMatcher([(reference.className): reference])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -153,7 +153,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([reference])
+    def mismatches = createMatcher([(reference.className): reference])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -180,7 +180,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([reference], [reference.className])
+    def mismatches = createMatcher([(reference.className): reference], [reference.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -200,7 +200,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([reference], [reference.className])
+    def mismatches = createMatcher([(reference.className): reference], [reference.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -220,7 +220,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([reference], [reference.className])
+    def mismatches = createMatcher([(reference.className): reference], [reference.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -242,7 +242,9 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([reference, emptySuperClassRef], [reference.className, emptySuperClassRef.className])
+    def mismatches = createMatcher(
+      [(reference.className): reference, (emptySuperClassRef.className): emptySuperClassRef],
+      [reference.className, emptySuperClassRef.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -269,7 +271,9 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([helper, baseHelper], [helper.className, baseHelper.className])
+    def mismatches = createMatcher(
+      [(helper.className): helper, (baseHelper.className): baseHelper],
+      [helper.className, baseHelper.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -289,7 +293,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([helper], [helper.className])
+    def mismatches = createMatcher([(helper.className): helper], [helper.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -309,7 +313,7 @@ class ReferenceMatcherTest extends Specification {
       .build()
 
     when:
-    def mismatches = createMatcher([helper], [helper.className])
+    def mismatches = createMatcher([(helper.className): helper], [helper.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
     then:
@@ -323,9 +327,9 @@ class ReferenceMatcherTest extends Specification {
     "external helper, different field type" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper" | "field"          | "Lcom/external/DifferentType;"
   }
 
-  private static ReferenceMatcher createMatcher(Collection<ClassRef> references = [],
+  private static ReferenceMatcher createMatcher(Map<String, ClassRef> references = [:],
                                                 List<String> helperClasses = []) {
-    new ReferenceMatcher(helperClasses, references as ClassRef[], { it.startsWith(TEST_EXTERNAL_INSTRUMENTATION_PACKAGE) })
+    new ReferenceMatcher(helperClasses, references, { it.startsWith(TEST_EXTERNAL_INSTRUMENTATION_PACKAGE) })
   }
 
   private static Set<Class> getMismatchClassSet(List<Mismatch> mismatches) {

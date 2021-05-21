@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -47,10 +50,10 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   // the default configuration has empty "otel.instrumentation.methods.include", and so doesn't
   // generate any TypeInstrumentation for muzzle to analyze
   @Override
-  public String[] getMuzzleHelperClassNames() {
+  public List<String> getMuzzleHelperClassNames() {
     return typeInstrumentations.isEmpty()
-        ? new String[0]
-        : new String[] {"io.opentelemetry.javaagent.instrumentation.methods.MethodTracer"};
+        ? emptyList()
+        : singletonList("io.opentelemetry.javaagent.instrumentation.methods.MethodTracer");
   }
 
   @Override
