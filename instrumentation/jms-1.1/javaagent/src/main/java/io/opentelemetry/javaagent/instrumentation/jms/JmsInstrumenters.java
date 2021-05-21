@@ -30,7 +30,7 @@ public final class JmsInstrumenters {
         Instrumenter.<MessageWithDestination, Void>newBuilder(
                 otel, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(attributesExtractor)
-            .newProducerInstrumenter(MessagePropertySetter.INSTANCE);
+            .newProducerInstrumenter(new MessagePropertySetter());
     // MessageConsumer does not do context propagation
     CONSUMER_INSTRUMENTER =
         Instrumenter.<MessageWithDestination, Void>newBuilder(
