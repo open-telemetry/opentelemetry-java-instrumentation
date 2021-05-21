@@ -8,6 +8,7 @@ package client
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.client.WebClientOptions
@@ -85,7 +86,12 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
 
   @Override
   boolean testCausality() {
-    false
+    true
+  }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    return new VertxRxSingleConnection(host, port)
   }
 
   @Override

@@ -7,12 +7,14 @@ package server
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.vertx.core.DeploymentOptions
@@ -71,6 +73,11 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
     }
   }
 
+  @Override
+  boolean testConcurrency() {
+    return true
+  }
+
   protected Class<AbstractVerticle> verticle() {
     return VertxReactiveWebServer
   }
@@ -85,6 +92,12 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
       router.route(SUCCESS.path).handler { ctx ->
         controller(SUCCESS) {
           ctx.response().setStatusCode(SUCCESS.status).end(SUCCESS.body)
+        }
+      }
+      router.route(INDEXED_CHILD.path).handler { ctx ->
+        controller(QUERY_PARAM) {
+          Span.current().setAttribute("test.request.id", ctx.request().params().get("id") as long)
+          ctx.response().setStatusCode(INDEXED_CHILD.status).end()
         }
       }
       router.route(QUERY_PARAM.path).handler { ctx ->

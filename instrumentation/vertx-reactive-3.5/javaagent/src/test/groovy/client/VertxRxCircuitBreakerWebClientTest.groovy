@@ -7,6 +7,7 @@ package client
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
 import io.vertx.circuitbreaker.CircuitBreakerOptions
 import io.vertx.core.AsyncResult
 import io.vertx.core.VertxOptions
@@ -96,7 +97,12 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<HttpRequest<?>> 
 
   @Override
   boolean testCausality() {
-    false
+    true
+  }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    return new VertxRxCircuitBreakerSingleConnection(host, port, breaker)
   }
 
   @Override
