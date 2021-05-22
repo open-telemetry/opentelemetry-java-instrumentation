@@ -5,37 +5,29 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
-import java.util.Arrays;
+import static java.util.Collections.emptyList;
+
+import com.google.auto.value.AutoValue;
+import java.util.List;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
 
-public final class JedisRequest {
+@AutoValue
+public abstract class JedisRequest {
   private static final byte[][] NO_ARGS = new byte[0][];
 
-  private final Connection connection;
-  private final Protocol.Command command;
-  private final byte[][] args;
+  public abstract Connection getConnection();
 
-  public JedisRequest(Connection connection, Protocol.Command command, byte[][] args) {
-    this.connection = connection;
-    this.command = command;
-    this.args = args;
+  public abstract Protocol.Command getCommand();
+
+  public abstract List<byte[]> getArgs();
+
+  public static JedisRequest create(Connection connection, Protocol.Command command) {
+    return new AutoValue_JedisRequest(connection, command, emptyList());
   }
 
-  public JedisRequest(Connection connection, Protocol.Command command) {
-    this(connection, command, NO_ARGS);
-  }
-
-  public Connection getConnection() {
-    return connection;
-  }
-
-  public String getCommand() {
-    return command.name();
-  }
-
-  public String getStatement() {
-    return RedisCommandSanitizer.sanitize(command.name(), Arrays.asList(args));
+  public static JedisRequest create(
+      Connection connection, Protocol.Command command, List<byte[]> args) {
+    return new AutoValue_JedisRequest(connection, command, args);
   }
 }

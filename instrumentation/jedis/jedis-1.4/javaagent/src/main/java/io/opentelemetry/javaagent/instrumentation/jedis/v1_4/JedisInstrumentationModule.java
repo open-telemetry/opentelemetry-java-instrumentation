@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisInstrumenters.instrumenter;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -83,7 +84,7 @@ public class JedisInstrumentationModule extends InstrumentationModule {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      request = new JedisRequest(connection, command);
+      request = JedisRequest.create(connection, command);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
@@ -118,7 +119,7 @@ public class JedisInstrumentationModule extends InstrumentationModule {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      request = new JedisRequest(connection, command, args);
+      request = JedisRequest.create(connection, command, asList(args));
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
