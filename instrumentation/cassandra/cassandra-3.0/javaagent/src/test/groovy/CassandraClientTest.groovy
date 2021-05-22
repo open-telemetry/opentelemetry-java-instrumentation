@@ -64,7 +64,7 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     assertTraces(keyspace ? 2 : 1) {
       if (keyspace) {
         trace(0, 1) {
-          cassandraSpan(it, 0, "USE $keyspace", "USE $keyspace")
+          cassandraSpan(it, 0, "DB Query", "USE $keyspace")
         }
       }
       trace(keyspace ? 1 : 0, 1) {
@@ -77,10 +77,10 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
 
     where:
     keyspace    | statement                                                                                         | expectedStatement                                                 | spanName                 | operation | table
-    null        | "DROP KEYSPACE IF EXISTS sync_test"                                                               | "DROP KEYSPACE IF EXISTS sync_test"                               | expectedStatement        | null      | null
-    null        | "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}"         | expectedStatement        | null      | null
+    null        | "DROP KEYSPACE IF EXISTS sync_test"                                                               | "DROP KEYSPACE IF EXISTS sync_test"                               | "DB Query"               | null      | null
+    null        | "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}"         | "DB Query"               | null      | null
     "sync_test" | "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"                                 | "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )" | "sync_test"              | null      | null
-    "sync_test" | "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "INSERT INTO sync_test.users (id, name) values (uuid(), ?)"       | "INSERT sync_test.users" | "INSERT"  | "users"
+    "sync_test" | "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "INSERT INTO sync_test.users (id, name) values (uuid(), ?)"       | "INSERT sync_test.users" | "INSERT"  | "sync_test.users"
     "sync_test" | "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                        | "SELECT * FROM users where name = ? ALLOW FILTERING"              | "SELECT sync_test.users" | "SELECT"  | "users"
   }
 
@@ -101,7 +101,7 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     assertTraces(keyspace ? 2 : 1) {
       if (keyspace) {
         trace(0, 1) {
-          cassandraSpan(it, 0, "USE $keyspace", "USE $keyspace")
+          cassandraSpan(it, 0, "DB Query", "USE $keyspace")
         }
       }
       trace(keyspace ? 1 : 0, 3) {
@@ -116,10 +116,10 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
 
     where:
     keyspace     | statement                                                                                          | expectedStatement                                                  | spanName                  | operation | table
-    null         | "DROP KEYSPACE IF EXISTS async_test"                                                               | "DROP KEYSPACE IF EXISTS async_test"                               | expectedStatement         | null      | null
-    null         | "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}"         | expectedStatement         | null      | null
+    null         | "DROP KEYSPACE IF EXISTS async_test"                                                               | "DROP KEYSPACE IF EXISTS async_test"                               | "DB Query"                | null      | null
+    null         | "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}"         | "DB Query"                | null      | null
     "async_test" | "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"                                 | "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )" | "async_test"              | null      | null
-    "async_test" | "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "INSERT INTO async_test.users (id, name) values (uuid(), ?)"       | "INSERT async_test.users" | "INSERT"  | "users"
+    "async_test" | "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "INSERT INTO async_test.users (id, name) values (uuid(), ?)"       | "INSERT async_test.users" | "INSERT"  | "async_test.users"
     "async_test" | "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                         | "SELECT * FROM users where name = ? ALLOW FILTERING"               | "SELECT async_test.users" | "SELECT"  | "users"
   }
 
