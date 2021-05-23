@@ -11,34 +11,59 @@ import static java.util.Collections.singletonList;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
-import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
-import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
+import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.redisson.client.RedisConnection;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
 
-public class RedissonClientTracer
-    extends DatabaseClientTracer<RedisConnection, Object, List<String>> {
+final class RedissonDbAttributesExtractor extends DbAttributesExtractor<RedissonRequest> {
+
   private static final String UNKNOWN_COMMAND = "Redis Command";
 
-  private static final RedissonClientTracer TRACER = new RedissonClientTracer();
-
-  private RedissonClientTracer() {
-    super(NetPeerAttributes.INSTANCE);
-  }
-
-  public static RedissonClientTracer tracer() {
-    return TRACER;
+  @Override
+  protected String system(RedissonRequest request) {
+    return SemanticAttributes.DbSystemValues.REDIS;
   }
 
   @Override
-  protected String spanName(
-      RedisConnection connection, Object ignored, List<String> sanitizedStatements) {
+  protected @Nullable String user(RedissonRequest request) {
+    return null;
+  }
+
+  @Override
+  protected @Nullable String name(RedissonRequest request) {
+    return null;
+  }
+
+  @Override
+  protected String connectionString(RedissonRequest request) {
+    Channel channel = request.getConnection().getChannel();
+    InetSocketAddress remoteAddress = (InetSocketAddress) channel.remoteAddress();
+    return remoteAddress.getHostString() + ":" + remoteAddress.getPort();
+  }
+
+  @Override
+  protected String statement(RedissonRequest request) {
+    List<String> sanitizedStatements = sanitizeStatement(request);
+    switch (sanitizedStatements.size()) {
+      case 0:
+        return UNKNOWN_COMMAND;
+        // optimize for the most common case
+      case 1:
+        return sanitizedStatements.get(0);
+      default:
+        return String.join(";", sanitizedStatements);
+    }
+  }
+
+  @Override
+  protected String operation(RedissonRequest request) {
+    List<String> sanitizedStatements = sanitizeStatement(request);
     switch (sanitizedStatements.size()) {
       case 0:
         return UNKNOWN_COMMAND;
@@ -52,18 +77,8 @@ public class RedissonClientTracer
     }
   }
 
-  private String getCommandName(String statement) {
-    int spacePos = statement.indexOf(' ');
-    return spacePos == -1 ? statement : statement.substring(0, spacePos);
-  }
-
-  @Override
-  protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.redisson-3.0";
-  }
-
-  @Override
-  protected List<String> sanitizeStatement(Object command) {
+  private List<String> sanitizeStatement(RedissonRequest request) {
+    Object command = request.getCommand();
     // get command
     if (command instanceof CommandsData) {
       List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
@@ -98,35 +113,8 @@ public class RedissonClientTracer
     return RedisCommandSanitizer.sanitize(command.getCommand().getName(), args);
   }
 
-  @Override
-  protected String dbSystem(RedisConnection connection) {
-    return DbSystemValues.REDIS;
-  }
-
-  @Override
-  protected InetSocketAddress peerAddress(RedisConnection connection) {
-    Channel channel = connection.getChannel();
-    return (InetSocketAddress) channel.remoteAddress();
-  }
-
-  @Override
-  protected String dbConnectionString(RedisConnection connection) {
-    Channel channel = connection.getChannel();
-    InetSocketAddress remoteAddress = (InetSocketAddress) channel.remoteAddress();
-    return remoteAddress.getHostString() + ":" + remoteAddress.getPort();
-  }
-
-  @Override
-  protected String dbStatement(
-      RedisConnection connection, Object ignored, List<String> sanitizedStatements) {
-    switch (sanitizedStatements.size()) {
-      case 0:
-        return UNKNOWN_COMMAND;
-        // optimize for the most common case
-      case 1:
-        return sanitizedStatements.get(0);
-      default:
-        return String.join(";", sanitizedStatements);
-    }
+  private String getCommandName(String statement) {
+    int spacePos = statement.indexOf(' ');
+    return spacePos == -1 ? statement : statement.substring(0, spacePos);
   }
 }

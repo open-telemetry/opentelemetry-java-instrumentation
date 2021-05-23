@@ -74,6 +74,7 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
+            "$SemanticAttributes.DB_OPERATION.key" "SET"
           }
         }
       }
@@ -103,6 +104,7 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "SADD set1 ?"
+            "$SemanticAttributes.DB_OPERATION.key" "SADD"
           }
         }
       }
@@ -117,6 +119,7 @@ class RedissonAsyncClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "RPUSH list1 ?"
+            "$SemanticAttributes.DB_OPERATION.key" "RPUSH"
           }
         }
       }
