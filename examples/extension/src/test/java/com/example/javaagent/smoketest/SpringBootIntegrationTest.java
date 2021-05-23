@@ -11,7 +11,7 @@ import okhttp3.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class SpringBootSmokeTest extends SmokeTest {
+class SpringBootIntegrationTest extends IntegrationTest {
 
   protected String getTargetImage(int jdk) {
     return "ghcr.io/open-telemetry/java-test-containers:smoke-springboot-jdk" + jdk

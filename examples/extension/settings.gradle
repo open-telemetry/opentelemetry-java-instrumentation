@@ -1,5 +1,1 @@
 rootProject.name = 'opentelemetry-java-instrumentation-extension-demo'
-
-include "custom"
-include "smoke-tests"
-

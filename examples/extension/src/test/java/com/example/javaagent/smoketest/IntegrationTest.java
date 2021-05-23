@@ -28,8 +28,8 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
 
-abstract class SmokeTest {
-  private static final Logger logger = LoggerFactory.getLogger(SmokeTest.class);
+abstract class IntegrationTest {
+  private static final Logger logger = LoggerFactory.getLogger(IntegrationTest.class);
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -37,9 +37,9 @@ abstract class SmokeTest {
 
   private static final Network network = Network.newNetwork();
   protected static final String agentPath =
-      System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
+      System.getProperty("io.opentelemetry.smoketest.agentPath");
   protected static final String extensionPath =
-      System.getProperty("io.opentelemetry.smoketest.agent.extensionPath");
+      System.getProperty("io.opentelemetry.smoketest.extensionPath");
 
   protected abstract String getTargetImage(int jdk);
 
@@ -57,7 +57,7 @@ abstract class SmokeTest {
   static void setupSpec() {
     backend =
         new GenericContainer<>(
-            "open-telemetry-docker-dev.bintray.io/java/smoke-fake-backend:latest")
+            "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend-20210324.684269693")
             .withExposedPorts(8080)
             .waitingFor(Wait.forHttp("/health").forPort(8080))
             .withNetwork(network)
@@ -77,7 +77,7 @@ abstract class SmokeTest {
     collector.start();
   }
 
-  protected GenericContainer target;
+  protected GenericContainer<?> target;
 
   void startTarget(int jdk) {
     target =
@@ -89,7 +89,10 @@ abstract class SmokeTest {
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
             .withCopyFileToContainer(
                 MountableFile.forHostPath(extensionPath), "/opentelemetry-extensions.jar")
-            .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true")
+            //Adds instrumentation agent with debug configuration to the targe application
+            .withEnv("JAVA_TOOL_OPTIONS",
+                "-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true")
+            //Asks instrumentation agent to include this extension archive into its runtime
             .withEnv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS", "/opentelemetry-extensions.jar")
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
@@ -121,11 +124,13 @@ abstract class SmokeTest {
     collector.stop();
   }
 
-  protected static int countResourcesByValue(Collection<ExportTraceServiceRequest> traces, String resourceName, String value) {
+  protected static int countResourcesByValue(Collection<ExportTraceServiceRequest> traces,
+      String resourceName, String value) {
     return (int) traces.stream()
         .flatMap(it -> it.getResourceSpansList().stream())
         .flatMap(it -> it.getResource().getAttributesList().stream())
-        .filter(kv -> kv.getKey().equals(resourceName) && kv.getValue().getStringValue().equals(value))
+        .filter(
+            kv -> kv.getKey().equals(resourceName) && kv.getValue().getStringValue().equals(value))
         .count();
   }
 
@@ -138,7 +143,8 @@ abstract class SmokeTest {
       Collection<ExportTraceServiceRequest> traces, String attributeName, String attributeValue) {
     return (int) getSpanStream(traces)
         .flatMap(it -> it.getAttributesList().stream())
-        .filter(kv -> kv.getKey().equals(attributeName) && kv.getValue().getStringValue().equals(attributeValue))
+        .filter(kv -> kv.getKey().equals(attributeName) && kv.getValue().getStringValue()
+            .equals(attributeValue))
         .count();
   }
 
@@ -175,7 +181,7 @@ abstract class SmokeTest {
 
       Request request =
           new Request.Builder()
-              .url(String.format("http://localhost:%d/get-requests", backend.getMappedPort(8080)))
+              .url(String.format("http://localhost:%d/get-traces", backend.getMappedPort(8080)))
               .build();
 
       try (ResponseBody body = client.newCall(request).execute().body()) {
