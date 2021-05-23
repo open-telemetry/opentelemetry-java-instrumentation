@@ -8,6 +8,9 @@ muzzle {
 
 dependencies {
   compileOnly project(':javaagent-tooling')
+
+  compileOnly deps.autoValueAnnotations
+  annotationProcessor deps.autoValue
 }
 
 tasks.withType(Test).configureEach {
