@@ -12,7 +12,7 @@ They contain a lot of documentation and comments explaining the purpose of all m
 ## How to use extension archive
 
 When you build this project by running `./gradlew build` you will get a jar file in
-`build/libs/opentelemetry-java-instrumentation-extension-demo-1.0-SNAPSHOT.jar`.
+`build/libs/opentelemetry-java-instrumentation-extension-demo-1.0-all.jar`.
 Copy this jar file to a machine running the application that you are monitoring with
 OpenTelemetry Java instrumentation agent.
 

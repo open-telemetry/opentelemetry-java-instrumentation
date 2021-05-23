@@ -1,7 +1,20 @@
-group 'io.opentelemetry.example'
-version '1.0-SNAPSHOT'
+plugins {
+  id "java"
 
-apply plugin: "java"
+  /*
+  Instrumentation agent extension mechanism expects a single jar containing everything required
+  for your extension. This also includes any external libraries that your extension uses and
+  cannot access from application classpath (see comment below about `javax.servlet-api` dependency).
+
+  Thus we use Shadow Gradle plugin to package our classes and all required runtime dependencies
+  into a single fat jar.
+  See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
+   */
+  id "com.github.johnrengelman.shadow" version "6.1.0"
+}
+
+group 'io.opentelemetry.example'
+version '1.0'
 
 ext {
   versions = [
@@ -49,9 +62,20 @@ dependencies {
    Used by our instrumentation module to references classes of the target instrumented library.
    We again use `compileOnly` here because during runtime these classes are provided by the
    actual application that we instrument.
+
+   NB! Only Advice classes of instrumentation modules can access classes from application classpath.
+   See https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/writing-instrumentation-module.md#advice-classes
    */
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
 
+  /*
+  This dependency is required DemoSpanProcessor both during compile and runtime.
+  Only dependencies added to `implementation` configuration will be picked up by Shadow plugin
+  and added to the resulting fat jar for our extension's distribution.
+   */
+  implementation 'org.apache.commons:commons-lang3:3.11'
+
+  //All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:1.15.2")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.11.2")
   testImplementation("com.google.protobuf:protobuf-java-util:3.12.4")
@@ -71,19 +95,21 @@ tasks {
   test {
     useJUnitPlatform()
 
-    def jar = tasks.jar
-    inputs.files(layout.files(jar))
+    def extensionJar = tasks.shadowJar
+    inputs.files(layout.files(extensionJar))
 
     doFirst {
       //To run our application with javaagent published by OpenTelemetry Java instrumentation project
       jvmArgs("-Dio.opentelemetry.smoketest.agentPath=${configurations.getByName("otel").resolve().find().absolutePath}")
       //Instructs our integration test where to find our extension archive
-      jvmArgs("-Dio.opentelemetry.smoketest.extensionPath=${jar.archiveFile.get()}")
+      jvmArgs("-Dio.opentelemetry.smoketest.extensionPath=${extensionJar.archiveFile.get()}")
     }
   }
 
   compileJava {
     options.release.set(11)
   }
+
+  assemble.dependsOn(shadowJar)
 }
 
