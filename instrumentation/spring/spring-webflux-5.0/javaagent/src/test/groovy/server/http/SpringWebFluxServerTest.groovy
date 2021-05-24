@@ -62,6 +62,6 @@ abstract class SpringWebFluxServerTest extends HttpServerTest<ConfigurableApplic
 
   @Override
   Class<?> expectedExceptionClass() {
-    return RuntimeException.class
+    return RuntimeException
   }
 }

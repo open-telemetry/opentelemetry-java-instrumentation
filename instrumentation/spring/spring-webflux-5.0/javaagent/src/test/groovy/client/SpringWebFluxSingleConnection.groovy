@@ -41,9 +41,9 @@ class SpringWebFluxSingleConnection implements SingleConnection {
 
   @Override
   int doRequest(String path, Map<String, String> headers) throws ExecutionException, InterruptedException, TimeoutException {
-    String requestId = Objects.requireNonNull(headers.get(REQUEST_ID_HEADER));
+    String requestId = Objects.requireNonNull(headers.get(REQUEST_ID_HEADER))
 
-    URI uri;
+    URI uri
     try {
       uri = new URL("http", host, port, path).toURI()
     } catch (MalformedURLException e) {
@@ -59,7 +59,7 @@ class SpringWebFluxSingleConnection implements SingleConnection {
     String responseId = response.headers().asHttpHeaders().getFirst(REQUEST_ID_HEADER)
     if (requestId != responseId) {
       throw new IllegalStateException(
-        String.format("Received response with id %s, expected %s", responseId, requestId));
+        String.format("Received response with id %s, expected %s", responseId, requestId))
     }
 
     return response.statusCode().value()
