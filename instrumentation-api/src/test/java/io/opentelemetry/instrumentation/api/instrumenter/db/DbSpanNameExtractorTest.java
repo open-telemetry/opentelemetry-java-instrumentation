@@ -38,6 +38,24 @@ class DbSpanNameExtractorTest {
   }
 
   @Test
+  void shouldSkipDbNameIfTableAlreadyHasDbNamePrefix() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    // cannot stub dbOperation() and dbTable() because they're final
+    given(sqlAttributesExtractor.rawStatement(dbRequest)).willReturn("SELECT * FROM another.table");
+    given(sqlAttributesExtractor.name(dbRequest)).willReturn("database");
+
+    SpanNameExtractor<DbRequest> underTest = DbSpanNameExtractor.create(sqlAttributesExtractor);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertEquals("SELECT another.table", spanName);
+  }
+
+  @Test
   void shouldExtractOperationAndTable() {
     // given
     DbRequest dbRequest = new DbRequest();
