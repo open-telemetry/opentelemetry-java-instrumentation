@@ -29,8 +29,8 @@ public class TestInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperResourceNames() {
-    return new String[] {"test-resources/test-resource.txt"};
+  public List<String> helperResourceNames() {
+    return singletonList("test-resources/test-resource.txt");
   }
 
   public static class TestTypeInstrumentation implements TypeInstrumentation {

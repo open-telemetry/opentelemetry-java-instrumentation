@@ -86,8 +86,7 @@ class InstrumenterTest {
     }
   }
 
-  enum MapGetter implements TextMapGetter<Map<String, String>> {
-    INSTANCE;
+  class MapGetter implements TextMapGetter<Map<String, String>> {
 
     @Override
     public Iterable<String> keys(Map<String, String> carrier) {
@@ -109,7 +108,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
-            .newServerInstrumenter(MapGetter.INSTANCE);
+            .newServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
@@ -151,7 +150,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
-            .newServerInstrumenter(MapGetter.INSTANCE);
+            .newServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
@@ -175,7 +174,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
-            .newServerInstrumenter(MapGetter.INSTANCE);
+            .newServerInstrumenter(new MapGetter());
 
     Map<String, String> request = new HashMap<>(REQUEST);
     W3CTraceContextPropagator.getInstance()
