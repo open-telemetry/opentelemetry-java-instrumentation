@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceConnectionDatabaseClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceInstrumenters.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LettuceClientInstrumentation implements TypeInstrumentation {
+public class LettuceConnectInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,7 +30,7 @@ public class LettuceClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(named("connectStandalone")),
-        LettuceClientInstrumentation.class.getName() + "$ConnectAdvice");
+        LettuceConnectInstrumentation.class.getName() + "$ConnectAdvice");
   }
 
   public static class ConnectAdvice {
@@ -40,21 +40,18 @@ public class LettuceClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) RedisURI redisUri,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan(currentContext(), redisUri, "CONNECT");
+      context = connectInstrumenter().start(currentContext(), redisUri);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
+        @Advice.Argument(1) RedisURI redisUri,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      connectInstrumenter().end(context, redisUri, null, throwable);
     }
   }
 }

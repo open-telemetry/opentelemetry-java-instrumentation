@@ -97,10 +97,8 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key}" HOST
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "CONNECT"
           }
         }
       }
@@ -129,10 +127,8 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           errorEvent RedisConnectionException, String
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key}" HOST
-            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" incorrectPort
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
-            "${SemanticAttributes.DB_STATEMENT.key}" "CONNECT"
           }
         }
       }
@@ -152,6 +148,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_OPERATION.key}" "SET"
             "${SemanticAttributes.DB_STATEMENT.key}" "SET"
           }
         }
@@ -172,6 +169,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_OPERATION.key}" "GET"
             "${SemanticAttributes.DB_STATEMENT.key}" "GET"
           }
         }
@@ -192,6 +190,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_OPERATION.key}" "GET"
             "${SemanticAttributes.DB_STATEMENT.key}" "GET"
           }
         }
@@ -212,6 +211,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_OPERATION.key}" "RANDOMKEY"
             "${SemanticAttributes.DB_STATEMENT.key}" "RANDOMKEY"
           }
         }
@@ -232,6 +232,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_OPERATION.key}" "LPUSH"
             "${SemanticAttributes.DB_STATEMENT.key}" "LPUSH"
           }
         }
@@ -252,6 +253,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_OPERATION.key}" "HMSET"
             "${SemanticAttributes.DB_STATEMENT.key}" "HMSET"
           }
         }
@@ -272,6 +274,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_OPERATION.key}" "HGETALL"
             "${SemanticAttributes.DB_STATEMENT.key}" "HGETALL"
           }
         }
@@ -291,6 +294,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_OPERATION.key}" "DEBUG"
             "${SemanticAttributes.DB_STATEMENT.key}" "DEBUG"
           }
         }
@@ -310,6 +314,7 @@ class LettuceSyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
+            "${SemanticAttributes.DB_OPERATION.key}" "SHUTDOWN"
             "${SemanticAttributes.DB_STATEMENT.key}" "SHUTDOWN"
           }
         }
