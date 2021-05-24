@@ -47,7 +47,7 @@ public final class CacheBuilder {
 
   /** Returns a new {@link Cache} with the settings of this {@link CacheBuilder}. */
   public <K, V> Cache<K, V> build() {
-    if (weakKeys && maximumSize == UNSET) {
+    if (weakKeys && !weakValues && maximumSize == UNSET) {
       return new WeakLockFreeCache<>();
     }
     Caffeine<?, ?> caffeine = Caffeine.newBuilder();

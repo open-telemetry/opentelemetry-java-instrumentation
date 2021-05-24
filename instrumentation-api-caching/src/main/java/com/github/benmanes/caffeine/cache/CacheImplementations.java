@@ -21,5 +21,9 @@ final class CacheImplementations {
   WSMS<?, ?> wsms; // cache
   FSMS<?, ?> fsms; // node
 
+  // Weak keys, weak values
+  WI<?, ?> wi; // cache
+  FW<?, ?> fw; // node
+
   private CacheImplementations() {}
 }
