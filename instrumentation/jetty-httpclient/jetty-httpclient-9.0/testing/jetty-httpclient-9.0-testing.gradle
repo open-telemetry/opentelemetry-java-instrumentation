@@ -1,0 +1,18 @@
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  api(project(':testing-common')) {
+//    exclude group: 'org.eclipse.jetty', module: 'jetty-client'
+//    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
+  }
+
+
+  api "org.eclipse.jetty:jetty-client:9.3.28.v20191105"
+
+  implementation deps.guava
+  implementation deps.junitApi
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}

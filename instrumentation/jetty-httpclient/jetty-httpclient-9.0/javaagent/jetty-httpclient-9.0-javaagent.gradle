@@ -1,0 +1,27 @@
+apply from: "$rootDir/gradle/instrumentation.gradle"
+
+muzzle {
+  pass {
+    group = "org.eclipse.jetty"
+    module = 'jetty-client'
+    versions = "[9.1,10)"
+    assertInverse = true
+  }
+}
+
+def jettyVers = [:]
+
+//Jetty client 9.1 is the best starting point for the v9.x series, v9.0.x is incompatible
+jettyVers.base9 = '9.1.0.v20131115'
+//jettyVers.base9 = '9.0.0.v20130308'
+jettyVers.useInTests9 = '9.3.28.v20191105'
+
+dependencies {
+  implementation project(':instrumentation:jetty-httpclient:jetty-httpclient-9.0:library')
+
+  library "org.eclipse.jetty:jetty-client:${jettyVers.base9}"
+
+  testImplementation project(':instrumentation:jetty-httpclient:jetty-httpclient-9.0:testing')
+  testLibrary "org.eclipse.jetty:jetty-server:${jettyVers.useInTests9}"
+
+}
