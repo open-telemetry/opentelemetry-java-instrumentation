@@ -53,7 +53,8 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   public List<String> getMuzzleHelperClassNames() {
     return typeInstrumentations.isEmpty()
         ? emptyList()
-        : asList("io.opentelemetry.javaagent.instrumentation.methods.MethodInstrumenters",
+        : asList(
+            "io.opentelemetry.javaagent.instrumentation.methods.MethodInstrumenters",
             "io.opentelemetry.javaagent.instrumentation.methods.MethodSpanNameExtractor");
   }
 

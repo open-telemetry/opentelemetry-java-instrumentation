@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static io.opentelemetry.instrumentation.api.tracer.BaseTracer.spanNameForMethod;
+import static io.opentelemetry.instrumentation.api.tracer.SpanNames.spanNameForMethod;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.lang.reflect.Method;
