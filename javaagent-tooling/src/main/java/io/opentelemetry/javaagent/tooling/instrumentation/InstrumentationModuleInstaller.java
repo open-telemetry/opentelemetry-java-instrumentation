@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.failSafe;
-import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -49,8 +48,8 @@ public final class InstrumentationModuleInstaller {
       log.debug("Instrumentation {} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;
     }
-    List<String> helperClassNames = asList(instrumentationModule.getMuzzleHelperClassNames());
-    List<String> helperResourceNames = asList(instrumentationModule.helperResourceNames());
+    List<String> helperClassNames = instrumentationModule.getMuzzleHelperClassNames();
+    List<String> helperResourceNames = instrumentationModule.helperResourceNames();
     List<TypeInstrumentation> typeInstrumentations = instrumentationModule.typeInstrumentations();
     if (typeInstrumentations.isEmpty()) {
       if (!helperClassNames.isEmpty() || !helperResourceNames.isEmpty()) {

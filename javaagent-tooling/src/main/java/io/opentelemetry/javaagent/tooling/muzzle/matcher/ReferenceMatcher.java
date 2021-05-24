@@ -21,7 +21,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Method;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,12 +44,9 @@ public final class ReferenceMatcher {
 
   public ReferenceMatcher(
       List<String> helperClassNames,
-      ClassRef[] references,
+      Map<String, ClassRef> references,
       Predicate<String> libraryInstrumentationPredicate) {
-    this.references = new HashMap<>(references.length);
-    for (ClassRef reference : references) {
-      this.references.put(reference.getClassName(), reference);
-    }
+    this.references = references;
     this.helperClassNames = new HashSet<>(helperClassNames);
     this.instrumentationClassPredicate =
         new InstrumentationClassPredicate(libraryInstrumentationPredicate);

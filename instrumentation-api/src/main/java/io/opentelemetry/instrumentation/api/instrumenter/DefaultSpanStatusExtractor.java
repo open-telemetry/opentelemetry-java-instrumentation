@@ -14,7 +14,8 @@ final class DefaultSpanStatusExtractor<REQUEST, RESPONSE>
   static final SpanStatusExtractor<Object, Object> INSTANCE = new DefaultSpanStatusExtractor<>();
 
   @Override
-  public StatusCode extract(REQUEST request, RESPONSE response, @Nullable Throwable error) {
+  public StatusCode extract(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     if (error != null) {
       return StatusCode.ERROR;
     }

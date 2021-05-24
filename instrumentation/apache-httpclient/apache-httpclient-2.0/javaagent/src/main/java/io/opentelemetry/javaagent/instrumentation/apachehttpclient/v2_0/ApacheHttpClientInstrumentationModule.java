@@ -87,7 +87,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       }
 
       scope.close();
-      instrumenter().end(context, httpMethod, null, throwable);
+      instrumenter().end(context, httpMethod, httpMethod, throwable);
     }
   }
 }
