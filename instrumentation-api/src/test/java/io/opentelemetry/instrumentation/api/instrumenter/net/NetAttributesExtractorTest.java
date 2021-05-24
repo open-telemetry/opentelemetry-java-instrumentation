@@ -21,7 +21,7 @@ class NetAttributesExtractorTest {
       extends NetAttributesExtractor<Map<String, String>, Map<String, String>> {
 
     @Override
-    protected String transport(Map<String, String> request) {
+    public String transport(Map<String, String> request) {
       return request.get("transport");
     }
 

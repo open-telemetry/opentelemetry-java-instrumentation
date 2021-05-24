@@ -25,7 +25,7 @@ public abstract class InetSocketAddressNetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  protected abstract InetSocketAddress getAddress(REQUEST request, @Nullable RESPONSE response);
+  public abstract InetSocketAddress getAddress(REQUEST request, @Nullable RESPONSE response);
 
   @Override
   @Nullable

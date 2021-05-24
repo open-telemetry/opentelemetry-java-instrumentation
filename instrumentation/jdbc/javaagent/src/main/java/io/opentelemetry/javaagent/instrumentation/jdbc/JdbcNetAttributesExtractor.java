@@ -12,7 +12,7 @@ final class JdbcNetAttributesExtractor extends NetAttributesExtractor<DbRequest,
 
   @Nullable
   @Override
-  protected String transport(DbRequest dbRequest) {
+  public String transport(DbRequest dbRequest) {
     return null;
   }
 

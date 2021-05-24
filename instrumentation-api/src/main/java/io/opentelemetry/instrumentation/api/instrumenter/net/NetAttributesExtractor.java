@@ -42,7 +42,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Nullable
-  protected abstract String transport(REQUEST request);
+  public abstract String transport(REQUEST request);
 
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null

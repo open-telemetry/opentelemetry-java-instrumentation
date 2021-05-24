@@ -21,7 +21,7 @@ final class ApacheHttpClientNetAttributesExtractor
       LoggerFactory.getLogger(ApacheHttpClientNetAttributesExtractor.class);
 
   @Override
-  protected String transport(HttpUriRequest request) {
+  public String transport(HttpUriRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 

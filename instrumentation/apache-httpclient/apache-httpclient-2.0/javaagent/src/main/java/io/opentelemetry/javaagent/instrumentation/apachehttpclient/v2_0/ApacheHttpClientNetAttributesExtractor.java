@@ -15,7 +15,7 @@ final class ApacheHttpClientNetAttributesExtractor
     extends NetAttributesExtractor<HttpMethod, HttpMethod> {
 
   @Override
-  protected String transport(HttpMethod request) {
+  public String transport(HttpMethod request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 

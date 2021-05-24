@@ -29,7 +29,7 @@ class InetSocketAddressNetAttributesExtractorTest {
             }
 
             @Override
-            protected String transport(InetSocketAddress inetSocketAddress) {
+            public String transport(InetSocketAddress inetSocketAddress) {
               return SemanticAttributes.NetTransportValues.IP_TCP;
             }
           };
