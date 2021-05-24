@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.log4j.v2_13_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -24,10 +25,9 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public String[] helperResourceNames() {
-    return new String[] {
-      "META-INF/services/org.apache.logging.log4j.core.util.ContextDataProvider",
-    };
+  public List<String> helperResourceNames() {
+    return singletonList(
+        "META-INF/services/org.apache.logging.log4j.core.util.ContextDataProvider");
   }
 
   @Override
