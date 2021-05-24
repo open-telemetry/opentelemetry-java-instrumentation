@@ -31,7 +31,8 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
+  protected final void onEnd(
+      AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp(request, response));
     set(attributes, SemanticAttributes.NET_PEER_NAME, peerName(request, response));
     Integer peerPort = peerPort(request, response);
