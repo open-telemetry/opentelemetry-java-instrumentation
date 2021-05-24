@@ -31,7 +31,8 @@ public abstract class DbAttributesExtractor<REQUEST> extends AttributesExtractor
   }
 
   @Override
-  protected final void onEnd(AttributesBuilder attributes, REQUEST request, Void unused) {}
+  protected final void onEnd(
+      AttributesBuilder attributes, REQUEST request, @Nullable Void unused) {}
 
   @Nullable
   protected abstract String system(REQUEST request);

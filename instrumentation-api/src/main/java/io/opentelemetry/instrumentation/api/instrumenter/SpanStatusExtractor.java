@@ -25,5 +25,5 @@ public interface SpanStatusExtractor<REQUEST, RESPONSE> {
   }
 
   /** Returns the {@link StatusCode}. */
-  StatusCode extract(REQUEST request, RESPONSE response, @Nullable Throwable error);
+  StatusCode extract(REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
 }
