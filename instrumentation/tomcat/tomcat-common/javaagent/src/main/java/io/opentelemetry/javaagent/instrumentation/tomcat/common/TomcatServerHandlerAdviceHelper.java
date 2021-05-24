@@ -65,6 +65,10 @@ public class TomcatServerHandlerAdviceHelper {
     }
   }
 
+  /**
+   * Must be attached in Tomcat instrumentations since Tomcat valves can use startAsync outside of
+   * servlet scope.
+   */
   public static <REQUEST, RESPONSE> void attachResponseToRequest(
       TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider,
       ServletHttpServerTracer<REQUEST, RESPONSE> servletTracer,
