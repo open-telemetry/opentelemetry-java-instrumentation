@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.net.InetSocketAddress;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -59,7 +60,8 @@ public class RedissonInstrumentationModule extends InstrumentationModule {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      request = RedissonRequest.create(connection, arg);
+      InetSocketAddress remoteAddress = (InetSocketAddress) connection.getChannel().remoteAddress();
+      request = RedissonRequest.create(remoteAddress, arg);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }

@@ -6,16 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import com.google.auto.value.AutoValue;
-import org.redisson.client.RedisConnection;
+import java.net.InetSocketAddress;
 
 @AutoValue
 public abstract class RedissonRequest {
 
-  public abstract RedisConnection getConnection();
+  public abstract InetSocketAddress getAddress();
 
   public abstract Object getCommand();
 
-  public static RedissonRequest create(RedisConnection connection, Object command) {
-    return new AutoValue_RedissonRequest(connection, command);
+  public static RedissonRequest create(InetSocketAddress address, Object command) {
+    return new AutoValue_RedissonRequest(address, command);
   }
 }

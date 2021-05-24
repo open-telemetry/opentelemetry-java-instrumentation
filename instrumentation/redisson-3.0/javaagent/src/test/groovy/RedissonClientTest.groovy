@@ -112,7 +112,7 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "SET;SET"
+          name "DB Query"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
@@ -121,7 +121,7 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "SET batch1 ?;SET batch2 ?"
-            "$SemanticAttributes.DB_OPERATION.key" "SET;SET"
+            "$SemanticAttributes.DB_OPERATION.key" null
           }
         }
       }

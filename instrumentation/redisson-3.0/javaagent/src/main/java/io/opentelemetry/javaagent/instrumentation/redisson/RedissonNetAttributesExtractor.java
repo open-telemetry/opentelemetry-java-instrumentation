@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
-import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
 import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -15,12 +14,12 @@ final class RedissonNetAttributesExtractor
 
   @Override
   protected InetSocketAddress getAddress(RedissonRequest request, @Nullable Void unused) {
-    Channel channel = request.getConnection().getChannel();
-    return (InetSocketAddress) channel.remoteAddress();
+    return request.getAddress();
   }
 
+  @Nullable
   @Override
-  protected @Nullable String transport(RedissonRequest request) {
+  protected String transport(RedissonRequest request) {
     return null;
   }
 }

@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -30,20 +29,21 @@ final class RedissonDbAttributesExtractor extends DbAttributesExtractor<Redisson
     return SemanticAttributes.DbSystemValues.REDIS;
   }
 
+  @Nullable
   @Override
-  protected @Nullable String user(RedissonRequest request) {
+  protected String user(RedissonRequest request) {
     return null;
   }
 
+  @Nullable
   @Override
-  protected @Nullable String name(RedissonRequest request) {
+  protected String name(RedissonRequest request) {
     return null;
   }
 
   @Override
   protected String connectionString(RedissonRequest request) {
-    Channel channel = request.getConnection().getChannel();
-    InetSocketAddress remoteAddress = (InetSocketAddress) channel.remoteAddress();
+    InetSocketAddress remoteAddress = request.getAddress();
     return remoteAddress.getHostString() + ":" + remoteAddress.getPort();
   }
 
@@ -61,20 +61,14 @@ final class RedissonDbAttributesExtractor extends DbAttributesExtractor<Redisson
     }
   }
 
+  @Nullable
   @Override
   protected String operation(RedissonRequest request) {
-    List<String> sanitizedStatements = sanitizeStatement(request);
-    switch (sanitizedStatements.size()) {
-      case 0:
-        return UNKNOWN_COMMAND;
-        // optimize for the most common case
-      case 1:
-        return getCommandName(sanitizedStatements.get(0));
-      default:
-        return sanitizedStatements.stream()
-            .map(this::getCommandName)
-            .collect(Collectors.joining(";"));
+    Object command = request.getCommand();
+    if (command instanceof CommandData) {
+      return ((CommandData<?, ?>) command).getCommand().getName();
     }
+    return null;
   }
 
   private List<String> sanitizeStatement(RedissonRequest request) {
@@ -111,10 +105,5 @@ final class RedissonDbAttributesExtractor extends DbAttributesExtractor<Redisson
       }
     }
     return RedisCommandSanitizer.sanitize(command.getCommand().getName(), args);
-  }
-
-  private String getCommandName(String statement) {
-    int spacePos = statement.indexOf(' ');
-    return spacePos == -1 ? statement : statement.substring(0, spacePos);
   }
 }
