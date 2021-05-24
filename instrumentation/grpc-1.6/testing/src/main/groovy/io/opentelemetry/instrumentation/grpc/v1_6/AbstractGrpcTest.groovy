@@ -101,6 +101,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE}" Status.Code.OK.value()
           }
         }
         span(2) {
@@ -119,7 +121,10 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.Code.OK.value()
           }
         }
       }
@@ -175,6 +180,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" grpcStatus.code.value()
           }
         }
         span(1) {
@@ -197,7 +204,10 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE}" grpcStatus.code.value()
           }
         }
       }
@@ -262,6 +272,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.UNKNOWN.code.value()
           }
         }
         span(1) {
@@ -278,13 +290,17 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
           }
           if (grpcStatus.cause != null) {
             errorEvent grpcStatus.cause.class, grpcStatus.cause.message, 1
+          } else {
+            errorEvent grpcStatus.asRuntimeException().class, grpcStatus.asRuntimeException().message, 1
           }
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
       }
@@ -423,6 +439,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
           }
         }
         span(2) {
@@ -441,7 +459,10 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
           }
         }
       }
@@ -530,6 +551,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
         span(2) {
@@ -548,7 +570,9 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
           }
         }
       }
@@ -625,6 +649,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "grpc.reflection.v1alpha.ServerReflection"
             "${SemanticAttributes.RPC_METHOD.key}" "ServerReflectionInfo"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
           }
         }
         span(1) {
@@ -643,7 +669,10 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "grpc.reflection.v1alpha.ServerReflection"
             "${SemanticAttributes.RPC_METHOD.key}" "ServerReflectionInfo"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
           }
         }
       }

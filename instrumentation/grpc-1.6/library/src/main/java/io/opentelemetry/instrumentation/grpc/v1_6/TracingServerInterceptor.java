@@ -19,18 +19,17 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.atomic.AtomicLong;
 
 final class TracingServerInterceptor implements ServerInterceptor {
 
-  private final GrpcServerTracer tracer;
+  private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
 
-  TracingServerInterceptor(GrpcServerTracer tracer, boolean captureExperimentalSpanAttributes) {
-    this.tracer = tracer;
+  TracingServerInterceptor(
+      Instrumenter<GrpcRequest, Status> instrumenter, boolean captureExperimentalSpanAttributes) {
+    this.instrumenter = instrumenter;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
@@ -39,27 +38,24 @@ final class TracingServerInterceptor implements ServerInterceptor {
       ServerCall<REQUEST, RESPONSE> call,
       Metadata headers,
       ServerCallHandler<REQUEST, RESPONSE> next) {
-
-    String methodName = call.getMethodDescriptor().getFullMethodName();
-    Context context = tracer.startSpan(methodName, headers);
-    Span span = Span.fromContext(context);
-
-    SocketAddress address = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
-    if (address instanceof InetSocketAddress) {
-      InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
-      span.setAttribute(SemanticAttributes.NET_PEER_PORT, inetSocketAddress.getPort());
-      span.setAttribute(
-          SemanticAttributes.NET_PEER_IP, inetSocketAddress.getAddress().getHostAddress());
-    }
-    GrpcHelper.prepareSpan(span, methodName);
+    GrpcRequest request =
+        new GrpcRequest(
+            call.getMethodDescriptor(),
+            headers,
+            call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
+    Context context = instrumenter.start(Context.current(), request);
 
     try (Scope ignored = context.makeCurrent()) {
       return new TracingServerCallListener<>(
           Contexts.interceptCall(
-              io.grpc.Context.current(), new TracingServerCall<>(call, context), headers, next),
-          context);
+              io.grpc.Context.current(),
+              new TracingServerCall<>(call, context, request),
+              headers,
+              next),
+          context,
+          request);
     } catch (Throwable e) {
-      tracer.endExceptionally(context, e);
+      instrumenter.end(context, request, null, e);
       throw e;
     }
   }
@@ -67,33 +63,38 @@ final class TracingServerInterceptor implements ServerInterceptor {
   final class TracingServerCall<REQUEST, RESPONSE>
       extends ForwardingServerCall.SimpleForwardingServerCall<REQUEST, RESPONSE> {
     private final Context context;
+    private final GrpcRequest request;
 
-    TracingServerCall(ServerCall<REQUEST, RESPONSE> delegate, Context context) {
+    TracingServerCall(
+        ServerCall<REQUEST, RESPONSE> delegate, Context context, GrpcRequest request) {
       super(delegate);
       this.context = context;
+      this.request = request;
     }
 
     @Override
     public void close(Status status, Metadata trailers) {
-      tracer.setStatus(context, status);
       try {
         delegate().close(status, trailers);
       } catch (Throwable e) {
-        tracer.endExceptionally(context, e);
+        instrumenter.end(context, request, status, e);
         throw e;
       }
+      instrumenter.end(context, request, status, status.getCause());
     }
   }
 
   final class TracingServerCallListener<REQUEST>
       extends ForwardingServerCallListener.SimpleForwardingServerCallListener<REQUEST> {
     private final Context context;
+    private final GrpcRequest request;
 
     private final AtomicLong messageId = new AtomicLong();
 
-    TracingServerCallListener(Listener<REQUEST> delegate, Context context) {
+    TracingServerCallListener(Listener<REQUEST> delegate, Context context, GrpcRequest request) {
       super(delegate);
       this.context = context;
+      this.request = request;
     }
 
     @Override
@@ -114,7 +115,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
       try {
         delegate().onHalfClose();
       } catch (Throwable e) {
-        tracer.endExceptionally(context, e);
+        instrumenter.end(context, request, null, e);
         throw e;
       }
     }
@@ -127,10 +128,10 @@ final class TracingServerInterceptor implements ServerInterceptor {
           Span.fromContext(context).setAttribute("grpc.canceled", true);
         }
       } catch (Throwable e) {
-        tracer.endExceptionally(context, e);
+        instrumenter.end(context, request, null, e);
         throw e;
       }
-      tracer.end(context);
+      instrumenter.end(context, request, null, null);
     }
 
     @Override
@@ -138,10 +139,9 @@ final class TracingServerInterceptor implements ServerInterceptor {
       try {
         delegate().onComplete();
       } catch (Throwable e) {
-        tracer.endExceptionally(context, e);
+        instrumenter.end(context, request, null, e);
         throw e;
       }
-      tracer.end(context);
     }
 
     @Override
@@ -149,7 +149,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
       try {
         delegate().onReady();
       } catch (Throwable e) {
-        tracer.endExceptionally(context, e);
+        instrumenter.end(context, request, null, e);
         throw e;
       }
     }

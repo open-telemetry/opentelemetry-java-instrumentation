@@ -7,7 +7,10 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.ClientInterceptor;
 import io.grpc.ServerInterceptor;
+import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /** Entrypoint for tracing gRPC servers or clients. */
 public final class GrpcTracing {
@@ -22,15 +25,20 @@ public final class GrpcTracing {
     return new GrpcTracingBuilder(openTelemetry);
   }
 
+  private final Instrumenter<GrpcRequest, Status> serverInstrumenter;
+  private final Instrumenter<GrpcRequest, Status> clientInstrumenter;
+  private final ContextPropagators propagators;
   private final boolean captureExperimentalSpanAttributes;
 
-  private final GrpcClientTracer clientTracer;
-  private final GrpcServerTracer serverTracer;
-
-  GrpcTracing(OpenTelemetry openTelemetry, boolean captureExperimentalSpanAttributes) {
+  GrpcTracing(
+      Instrumenter<GrpcRequest, Status> serverInstrumenter,
+      Instrumenter<GrpcRequest, Status> clientInstrumenter,
+      ContextPropagators propagators,
+      boolean captureExperimentalSpanAttributes) {
+    this.serverInstrumenter = serverInstrumenter;
+    this.clientInstrumenter = clientInstrumenter;
+    this.propagators = propagators;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
-    clientTracer = new GrpcClientTracer(openTelemetry);
-    serverTracer = new GrpcServerTracer(openTelemetry);
   }
 
   /**
@@ -38,7 +46,7 @@ public final class GrpcTracing {
    * io.grpc.ManagedChannelBuilder#intercept(ClientInterceptor...)}.
    */
   public ClientInterceptor newClientInterceptor() {
-    return new TracingClientInterceptor(clientTracer);
+    return new TracingClientInterceptor(clientInstrumenter, propagators);
   }
 
   /**
@@ -46,6 +54,6 @@ public final class GrpcTracing {
    * io.grpc.ServerBuilder#intercept(ServerInterceptor)}.
    */
   public ServerInterceptor newServerInterceptor() {
-    return new TracingServerInterceptor(serverTracer, captureExperimentalSpanAttributes);
+    return new TracingServerInterceptor(serverInstrumenter, captureExperimentalSpanAttributes);
   }
 }
