@@ -9,6 +9,7 @@ import io.netty.channel.ChannelOption
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.web.reactive.function.client.WebClient
@@ -76,5 +77,10 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
   @Override
   boolean testRedirects() {
     false
+  }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    return new SpringWebFluxSingleConnection(isOldVersion(), host, port)
   }
 }
