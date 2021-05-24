@@ -59,7 +59,7 @@ dependencies {
   annotationProcessor deps.autoservice
 
   /*
-   Used by our instrumentation module to references classes of the target instrumented library.
+   Used by our demo instrumentation module to references classes of the target instrumented library.
    We again use `compileOnly` here because during runtime these classes are provided by the
    actual application that we instrument.
 
@@ -112,4 +112,3 @@ tasks {
 
   assemble.dependsOn(shadowJar)
 }
-
