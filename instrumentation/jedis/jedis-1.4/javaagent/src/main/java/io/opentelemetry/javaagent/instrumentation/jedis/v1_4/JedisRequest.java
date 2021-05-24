@@ -14,13 +14,16 @@ import redis.clients.jedis.Protocol;
 
 @AutoValue
 public abstract class JedisRequest {
-  private static final byte[][] NO_ARGS = new byte[0][];
 
   public abstract Connection getConnection();
 
   public abstract Protocol.Command getCommand();
 
   public abstract List<byte[]> getArgs();
+
+  public String getConnectionString() {
+    return getConnection.getHost() + ":" + getConnection.getPort();
+  }
 
   public static JedisRequest create(Connection connection, Protocol.Command command) {
     return new AutoValue_JedisRequest(connection, command, emptyList());

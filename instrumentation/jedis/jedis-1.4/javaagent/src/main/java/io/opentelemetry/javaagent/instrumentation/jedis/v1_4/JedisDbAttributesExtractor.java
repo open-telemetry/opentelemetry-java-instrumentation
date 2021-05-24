@@ -30,8 +30,7 @@ final class JedisDbAttributesExtractor extends DbAttributesExtractor<JedisReques
 
   @Override
   protected String connectionString(JedisRequest request) {
-    Connection connection = request.getConnection();
-    return connection.getHost() + ":" + connection.getPort();
+    return request.getConnectionString();
   }
 
   @Override
