@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import redis.clients.jedis.Connection;
 
 final class JedisDbAttributesExtractor extends DbAttributesExtractor<JedisRequest> {
   @Override
