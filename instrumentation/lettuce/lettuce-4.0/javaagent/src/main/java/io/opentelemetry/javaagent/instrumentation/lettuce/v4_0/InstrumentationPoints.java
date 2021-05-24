@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import static com.lambdaworks.redis.protocol.CommandKeyword.SEGFAULT;
 import static com.lambdaworks.redis.protocol.CommandType.DEBUG;
 import static com.lambdaworks.redis.protocol.CommandType.SHUTDOWN;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceDatabaseClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceInstrumenters.instrumenter;
 
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.CommandType;
@@ -35,26 +35,24 @@ public final class InstrumentationPoints {
       Throwable throwable,
       AsyncCommand<?, ?, ?> asyncCommand) {
     if (throwable != null) {
-      tracer().endExceptionally(context, throwable);
+      instrumenter().end(context, command, null, throwable);
     } else if (expectsResponse(command)) {
       asyncCommand.handleAsync(
           (value, ex) -> {
-            if (ex == null) {
-              tracer().end(context);
-            } else if (ex instanceof CancellationException) {
+            if (ex instanceof CancellationException) {
               if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
                 Span span = Span.fromContext(context);
                 span.setAttribute("lettuce.command.cancelled", true);
               }
-              tracer().end(context);
-            } else {
-              tracer().endExceptionally(context, ex);
+              // and don't report this as an error
+              ex = null;
             }
+            instrumenter().end(context, command, null, ex);
             return null;
           });
     } else {
       // No response is expected, so we must finish the span now.
-      tracer().end(context);
+      instrumenter().end(context, command, null, null);
     }
   }
 
