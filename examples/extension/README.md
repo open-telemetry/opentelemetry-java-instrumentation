@@ -44,7 +44,7 @@ specifying the full path and the correct name of your extensions jar.
 There are several options to override or customise instrumentation provided by the upstream agent.
 The following description follows one specific use-case:
 
-> Instrumentation X from Otel distribution creates span that I don't like and I want to change it in my vendor distro.
+> Instrumentation X from Otel distribution creates span that I don't like and I want to change it.
 
 As an example, let us take some database client instrumentation that creates a span for database call
 and extracts data from db connection to provide attributes for that span.
