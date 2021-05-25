@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_0.JettyHttpClient9Tracer.tracer;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -19,10 +19,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.eclipse.jetty.client.api.Request;
@@ -42,14 +41,18 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
   public static class JettyHttpClient9Instrumentation implements TypeInstrumentation {
 
     @Override
+    public ElementMatcher<ClassLoader> classLoaderOptimization() {
+      return hasClassesNamed("org.eclipse.jetty.client.api.Request$BeginListener");
+    }
+
+    @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return hasSuperType(named("org.eclipse.jetty.client.api.Request").and(isInterface()));
     }
 
     @Override
-    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-
-      return singletonMap(
+    public void transform(TypeTransformer transformer) {
+      transformer.applyAdviceToMethod(
           isMethod().and(named("send")),
           JettyHttpClient9InstrumentationModule.class.getName() + "$JettyHttpClient9Advice");
     }
