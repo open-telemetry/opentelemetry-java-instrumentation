@@ -20,17 +20,17 @@ final class ApacheHttpClientNetAttributesExtractor
       LoggerFactory.getLogger(ApacheHttpClientNetAttributesExtractor.class);
 
   @Override
-  protected String transport(ClassicHttpRequest request) {
+  public String transport(ClassicHttpRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  protected @Nullable String peerName(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerName(ClassicHttpRequest request, @Nullable HttpResponse response) {
     return request.getAuthority().getHostName();
   }
 
   @Override
-  protected Integer peerPort(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public Integer peerPort(ClassicHttpRequest request, @Nullable HttpResponse response) {
     int port = request.getAuthority().getPort();
     if (port != -1) {
       return port;
@@ -51,7 +51,7 @@ final class ApacheHttpClientNetAttributesExtractor
   }
 
   @Override
-  protected @Nullable String peerIp(ClassicHttpRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerIp(ClassicHttpRequest request, @Nullable HttpResponse response) {
     return null;
   }
 }

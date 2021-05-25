@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
 public final class LettuceInstrumenters {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jedis-1.4";
@@ -33,10 +34,12 @@ public final class LettuceInstrumenters {
             .addAttributesExtractor(attributesExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());
 
+    LettuceNetAttributesExtractor netAttributesExtractor = new LettuceNetAttributesExtractor();
     CONNECT_INSTRUMENTER =
         Instrumenter.<RedisURI, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
-            .addAttributesExtractor(new LettuceNetAttributesExtractor())
+            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }

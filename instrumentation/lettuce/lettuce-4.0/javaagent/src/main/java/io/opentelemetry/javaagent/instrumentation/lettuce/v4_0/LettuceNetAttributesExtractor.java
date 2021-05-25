@@ -13,23 +13,23 @@ final class LettuceNetAttributesExtractor extends NetAttributesExtractor<RedisUR
 
   @Override
   @Nullable
-  protected String transport(RedisURI redisUri) {
+  public String transport(RedisURI redisUri) {
     return null;
   }
 
   @Override
-  protected String peerName(RedisURI redisUri, @Nullable Void ignored) {
+  public String peerName(RedisURI redisUri, @Nullable Void ignored) {
     return redisUri.getHost();
   }
 
   @Override
-  protected Integer peerPort(RedisURI redisUri, @Nullable Void ignored) {
+  public Integer peerPort(RedisURI redisUri, @Nullable Void ignored) {
     return redisUri.getPort();
   }
 
   @Override
   @Nullable
-  protected String peerIp(RedisURI redisUri, @Nullable Void ignored) {
+  public String peerIp(RedisURI redisUri, @Nullable Void ignored) {
     return null;
   }
 }

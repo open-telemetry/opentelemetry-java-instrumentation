@@ -15,24 +15,24 @@ final class ApacheHttpClientNetAttributesExtractor
     extends NetAttributesExtractor<HttpMethod, HttpMethod> {
 
   @Override
-  protected String transport(HttpMethod request) {
+  public String transport(HttpMethod request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  protected @Nullable String peerName(HttpMethod request, @Nullable HttpMethod response) {
+  public @Nullable String peerName(HttpMethod request, @Nullable HttpMethod response) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getHost() : null;
   }
 
   @Override
-  protected @Nullable Integer peerPort(HttpMethod request, @Nullable HttpMethod response) {
+  public @Nullable Integer peerPort(HttpMethod request, @Nullable HttpMethod response) {
     HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getPort() : null;
   }
 
   @Override
-  protected @Nullable String peerIp(HttpMethod request, @Nullable HttpMethod response) {
+  public @Nullable String peerIp(HttpMethod request, @Nullable HttpMethod response) {
     return null;
   }
 }
