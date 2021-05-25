@@ -46,6 +46,6 @@ class SpanNamesTest extends Specification {
     where:
     clazz            | method                                                              | expected
     SpanNames.class  | ReflectionUtil.getMethodByName(SpanNames.class, "spanNameForClass") | "SpanNames.spanNameForClass"
-    SpanNames.class  | "test"                                                              |  "SpanNames.test"
+    SpanNames.class  | "test"                                                              | "SpanNames.test"
   }
 }
