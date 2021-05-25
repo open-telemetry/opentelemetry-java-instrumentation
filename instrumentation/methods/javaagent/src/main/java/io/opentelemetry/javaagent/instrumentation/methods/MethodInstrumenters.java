@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.lang.reflect.Method;
 
 public final class MethodInstrumenters {
@@ -18,7 +19,7 @@ public final class MethodInstrumenters {
   private static final Instrumenter<Method, Void> INSTRUMENTER;
 
   static {
-    SpanNameExtractor<Method> spanName = new MethodSpanNameExtractor();
+    SpanNameExtractor<Method> spanName = SpanNames::spanNameForMethod;
 
     INSTRUMENTER =
         Instrumenter.<Method, Void>newBuilder(

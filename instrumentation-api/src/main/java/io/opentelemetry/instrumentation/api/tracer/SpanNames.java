@@ -50,4 +50,6 @@ public final class SpanNames {
     }
     return className;
   }
+
+  private SpanNames() {}
 }
