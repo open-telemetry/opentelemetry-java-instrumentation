@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
@@ -53,9 +53,7 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   public List<String> getMuzzleHelperClassNames() {
     return typeInstrumentations.isEmpty()
         ? emptyList()
-        : asList(
-            "io.opentelemetry.javaagent.instrumentation.methods.MethodInstrumenters",
-            "io.opentelemetry.javaagent.instrumentation.methods.MethodSpanNameExtractor");
+        : singletonList("io.opentelemetry.javaagent.instrumentation.methods.MethodInstrumenters");
   }
 
   @Override
