@@ -36,7 +36,7 @@ public abstract class ServerTestController {
     return wrapControllerMethod(
         endpoint,
         () -> {
-          setStatus(response, ServerEndpoint.QUERY_PARAM);
+          setStatus(response, endpoint);
           return request.getURI().getRawQuery();
         });
   }
@@ -84,7 +84,7 @@ public abstract class ServerTestController {
     return wrapControllerMethod(
         endpoint,
         () -> {
-          setStatus(response, ServerEndpoint.PATH_PARAM);
+          setStatus(response, endpoint);
           return id;
         });
   }
@@ -99,7 +99,7 @@ public abstract class ServerTestController {
           Span.current()
               .setAttribute(
                   "test.request.id", Long.parseLong(request.getQueryParams().getFirst("id")));
-          setStatus(response, ServerEndpoint.INDEXED_CHILD);
+          setStatus(response, endpoint);
           return "";
         });
   }
