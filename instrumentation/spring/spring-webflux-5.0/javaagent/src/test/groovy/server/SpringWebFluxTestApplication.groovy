@@ -26,7 +26,7 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
 
 @SpringBootApplication
-@ComponentScan(basePackages = ["server"], excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "server.http.*"))
+@ComponentScan(basePackages = ["server"], excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "server.base.*"))
 class SpringWebFluxTestApplication {
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test")

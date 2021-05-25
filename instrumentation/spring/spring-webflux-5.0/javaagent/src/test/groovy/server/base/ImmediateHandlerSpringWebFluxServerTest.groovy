@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package server.http
+package server.base
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import java.time.Duration
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.context.annotation.Bean
@@ -16,11 +15,11 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
 
 /**
- * Tests the case which uses route handlers, and where "controller" span is created within a Mono
- * map step, which follows a delay step. For exception endpoint, the exception is thrown within the
- * last map step.
+ * Tests the case where "controller" span is created within the route handler method scope, and
+ * the Mono<ServerResponse> from a handler is already a fully constructed response with no deferred
+ * actions. For exception endpoint, the exception is thrown within route handler method scope.
  */
-class DelayedHandlerSpringWebFluxServerTest extends HandlerSpringWebFluxServerTest {
+class ImmediateHandlerSpringWebFluxServerTest extends HandlerSpringWebFluxServerTest {
   @Override
   protected Class<?> getApplicationClass() {
     return Application
@@ -44,17 +43,10 @@ class DelayedHandlerSpringWebFluxServerTest extends HandlerSpringWebFluxServerTe
 
     @Override
     protected Mono<ServerResponse> wrapResponse(HttpServerTest.ServerEndpoint endpoint, Mono<ServerResponse> response, Runnable spanAction) {
-      return response.delayElement(Duration.ofMillis(10)).map({ original ->
-        return controller(endpoint, {
-          spanAction.run()
-          return original
-        })
+      return controller(endpoint, {
+        spanAction.run()
+        return response
       })
     }
-  }
-
-  @Override
-  boolean hasHandlerAsControllerParentSpan(HttpServerTest.ServerEndpoint endpoint) {
-    return false
   }
 }

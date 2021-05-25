@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package server.http
+package server.base
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import java.util.concurrent.Callable
