@@ -12,23 +12,23 @@ final class JedisNetAttributesExtractor extends NetAttributesExtractor<JedisRequ
 
   @Override
   @Nullable
-  protected String transport(JedisRequest request) {
+  public String transport(JedisRequest request) {
     return null;
   }
 
   @Override
-  protected String peerName(JedisRequest request, @Nullable Void response) {
+  public String peerName(JedisRequest request, @Nullable Void response) {
     return request.getConnection().getHost();
   }
 
   @Override
-  protected Integer peerPort(JedisRequest request, @Nullable Void response) {
+  public Integer peerPort(JedisRequest request, @Nullable Void response) {
     return request.getConnection().getPort();
   }
 
   @Override
   @Nullable
-  protected String peerIp(JedisRequest request, @Nullable Void response) {
+  public String peerIp(JedisRequest request, @Nullable Void response) {
     return null;
   }
 }
