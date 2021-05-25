@@ -9,9 +9,9 @@ import static io.opentelemetry.instrumentation.servlet.v3_0.Servlet3HttpServerTr
 
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import javax.servlet.AsyncContext;
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 public class Servlet3AsyncStartAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -21,9 +21,7 @@ public class Servlet3AsyncStartAdvice {
   }
 
   @Advice.OnMethodExit(suppress = Throwable.class)
-  public static void startAsyncExit(
-      @Advice.This(typing = Assigner.Typing.DYNAMIC) HttpServletRequest request) {
-
+  public static void startAsyncExit(@Advice.This ServletRequest servletRequest) {
     int callDepth = CallDepthThreadLocalMap.decrementCallDepth(AsyncContext.class);
 
     if (callDepth != 0) {
@@ -31,7 +29,9 @@ public class Servlet3AsyncStartAdvice {
       return;
     }
 
-    if (request != null) {
+    if (servletRequest instanceof HttpServletRequest) {
+      HttpServletRequest request = (HttpServletRequest) servletRequest;
+
       if (!tracer().isAsyncListenerAttached(request)) {
         tracer().attachAsyncListener(request);
       }

@@ -58,10 +58,9 @@ public class TomcatServerHandlerAdviceHelper {
 
     REQUEST servletRequest = servletEntityProvider.getServletRequest(request);
 
-    if (servletRequest != null) {
-      if (ServletAndFilterAdviceHelper.mustEndOnHandlerMethodExit(servletTracer, servletRequest)) {
-        tracer.end(context, response);
-      }
+    if (servletRequest != null
+        && ServletAndFilterAdviceHelper.mustEndOnHandlerMethodExit(servletTracer, servletRequest)) {
+      tracer.end(context, response);
     }
   }
 
