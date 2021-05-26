@@ -16,7 +16,6 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.LOCATION
 import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import org.jboss.netty.bootstrap.ServerBootstrap
@@ -75,8 +74,7 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
                 response.setContent(responseContent)
                 break
               case INDEXED_CHILD:
-                QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri)
-                Span.current().setAttribute("test.request.id", queryStringDecoder.getParameters().get("id").find() as long)
+                endpoint.collectSpanAttributes { new QueryStringDecoder(uri).getParameters().get(it).find() }
                 response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status))
                 break
               case QUERY_PARAM:
