@@ -29,6 +29,9 @@ muzzle {
 dependencies {
   library "com.datastax.cassandra:cassandra-driver-core:3.0.0"
 
+  compileOnly deps.autoValueAnnotations
+  annotationProcessor deps.autoValue
+
   testLibrary "com.datastax.cassandra:cassandra-driver-core:3.2.0"
   testInstrumentation project(':instrumentation:guava-10.0:javaagent')
 

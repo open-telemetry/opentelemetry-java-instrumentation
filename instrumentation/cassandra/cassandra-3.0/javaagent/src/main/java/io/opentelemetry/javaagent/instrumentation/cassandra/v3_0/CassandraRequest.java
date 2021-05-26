@@ -6,22 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import com.datastax.driver.core.Session;
+import com.google.auto.value.AutoValue;
 
-public final class CassandraRequest {
+@AutoValue
+public abstract class CassandraRequest {
 
-  private final Session session;
-  private final String statement;
+  public abstract Session getSession();
 
-  public CassandraRequest(Session session, String statement) {
-    this.session = session;
-    this.statement = statement;
-  }
+  public abstract String getStatement();
 
-  public Session getSession() {
-    return session;
-  }
-
-  public String getStatement() {
-    return statement;
+  public static CassandraRequest create(Session session, String statement) {
+    return new AutoValue_CassandraRequest(session, statement);
   }
 }
