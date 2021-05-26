@@ -11,7 +11,7 @@ import java.net.InetSocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class CassandraNetAttributesExtractor
-    extends InetSocketAddressNetAttributesExtractor<CassandraRequest, Void> {
+    extends InetSocketAddressNetAttributesExtractor<CassandraRequest, ExecutionInfo> {
 
   @Override
   @Nullable
@@ -20,8 +20,8 @@ final class CassandraNetAttributesExtractor
   }
 
   @Override
-  public @Nullable InetSocketAddress getAddress(CassandraRequest request, @Nullable Void response) {
-    ExecutionInfo executionInfo = request.getExecutionInfo();
-    return executionInfo == null ? null : executionInfo.getQueriedHost().getSocketAddress();
+  public @Nullable InetSocketAddress getAddress(
+      CassandraRequest request, @Nullable ExecutionInfo response) {
+    return response == null ? null : response.getQueriedHost().getSocketAddress();
   }
 }

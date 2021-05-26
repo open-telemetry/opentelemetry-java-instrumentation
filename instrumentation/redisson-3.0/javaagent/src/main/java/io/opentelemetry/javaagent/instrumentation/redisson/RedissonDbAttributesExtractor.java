@@ -20,7 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
 
-final class RedissonDbAttributesExtractor extends DbAttributesExtractor<RedissonRequest> {
+final class RedissonDbAttributesExtractor extends DbAttributesExtractor<RedissonRequest, Void> {
 
   private static final String UNKNOWN_COMMAND = "Redis Command";
 

@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
+import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
-final class CassandraKeyspaceExtractor extends AttributesExtractor<CassandraRequest, Void> {
+final class CassandraKeyspaceExtractor
+    extends AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
   @Override
   protected void onStart(AttributesBuilder attributes, CassandraRequest request) {
@@ -18,5 +20,6 @@ final class CassandraKeyspaceExtractor extends AttributesExtractor<CassandraRequ
   }
 
   @Override
-  protected void onEnd(AttributesBuilder attributes, CassandraRequest request, Void unused) {}
+  protected void onEnd(
+      AttributesBuilder attributes, CassandraRequest request, ExecutionInfo response) {}
 }

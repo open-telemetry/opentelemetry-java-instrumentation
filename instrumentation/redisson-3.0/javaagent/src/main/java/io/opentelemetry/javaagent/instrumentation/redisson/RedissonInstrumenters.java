@@ -18,7 +18,7 @@ public final class RedissonInstrumenters {
   private static final Instrumenter<RedissonRequest, Void> INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<RedissonRequest> dbAttributesExtractor =
+    DbAttributesExtractor<RedissonRequest, Void> dbAttributesExtractor =
         new RedissonDbAttributesExtractor();
     RedissonNetAttributesExtractor netAttributesExtractor = new RedissonNetAttributesExtractor();
     SpanNameExtractor<RedissonRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
