@@ -88,9 +88,11 @@ class JaxRsTestResource {
   @Path("/child")
   @GET
   void indexed_child(@Context UriInfo uriInfo, @Suspended AsyncResponse response) {
+    def parameters = uriInfo.queryParameters
+
     CompletableFuture.runAsync({
       HttpServerTest.controller(INDEXED_CHILD) {
-        INDEXED_CHILD.collectSpanAttributes { uriInfo.queryParameters.getFirst(it) }
+        INDEXED_CHILD.collectSpanAttributes { parameters.getFirst(it) }
         response.resume("")
       }
     })
