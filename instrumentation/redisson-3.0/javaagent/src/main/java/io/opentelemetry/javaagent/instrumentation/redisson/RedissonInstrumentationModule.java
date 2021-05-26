@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.redisson.RedissonClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.redisson.RedissonInstrumenters.instrumenter;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.net.InetSocketAddress;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -24,9 +25,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisConnection;
 
 @AutoService(InstrumentationModule.class)
-public class RedissonInstrumentation extends InstrumentationModule {
+public class RedissonInstrumentationModule extends InstrumentationModule {
 
-  public RedissonInstrumentation() {
+  public RedissonInstrumentationModule() {
     super("redisson", "redisson-3.0");
   }
 
@@ -45,7 +46,7 @@ public class RedissonInstrumentation extends InstrumentationModule {
     public void transform(TypeTransformer transformer) {
       transformer.applyAdviceToMethod(
           isMethod().and(named("send")),
-          RedissonInstrumentation.class.getName() + "$RedissonAdvice");
+          RedissonInstrumentationModule.class.getName() + "$RedissonAdvice");
     }
   }
 
@@ -55,24 +56,28 @@ public class RedissonInstrumentation extends InstrumentationModule {
     public static void onEnter(
         @Advice.This RedisConnection connection,
         @Advice.Argument(0) Object arg,
+        @Advice.Local("otelRedissonRequest") RedissonRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan(currentContext(), connection, arg);
+      Context parentContext = currentContext();
+      InetSocketAddress remoteAddress = (InetSocketAddress) connection.getChannel().remoteAddress();
+      request = RedissonRequest.create(remoteAddress, arg);
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelRedissonRequest") RedissonRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       scope.close();
-
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      instrumenter().end(context, request, null, throwable);
     }
   }
 }
