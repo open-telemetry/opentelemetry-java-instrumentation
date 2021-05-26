@@ -13,13 +13,13 @@ final class RedissonNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<RedissonRequest, Void> {
 
   @Override
-  protected InetSocketAddress getAddress(RedissonRequest request, @Nullable Void unused) {
+  public InetSocketAddress getAddress(RedissonRequest request, @Nullable Void unused) {
     return request.getAddress();
   }
 
   @Nullable
   @Override
-  protected String transport(RedissonRequest request) {
+  public String transport(RedissonRequest request) {
     return null;
   }
 }
