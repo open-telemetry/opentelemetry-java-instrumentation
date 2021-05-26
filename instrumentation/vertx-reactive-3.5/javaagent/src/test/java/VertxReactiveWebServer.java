@@ -36,6 +36,9 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
+  public static final String TEST_REQUEST_ID_PARAMETER = "test-request-id";
+  public static final String TEST_REQUEST_ID_ATTRIBUTE = "test.request.id";
+
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
   private static JDBCClient client;
 
@@ -94,10 +97,15 @@ public class VertxReactiveWebServer extends AbstractVerticle {
   }
 
   private void handleListProducts(RoutingContext routingContext) {
+    Long requestId = extractRequestId(routingContext);
+    attachRequestIdToCurrentSpan(requestId);
+
     Span span = tracer.spanBuilder("handleListProducts").startSpan();
     try (Scope ignored = Context.current().with(span).makeCurrent()) {
+      attachRequestIdToCurrentSpan(requestId);
+
       HttpServerResponse response = routingContext.response();
-      Single<JsonArray> jsonArraySingle = listProducts();
+      Single<JsonArray> jsonArraySingle = listProducts(requestId);
 
       jsonArraySingle.subscribe(
           arr -> response.putHeader("content-type", "application/json").end(arr.encode()));
@@ -106,11 +114,14 @@ public class VertxReactiveWebServer extends AbstractVerticle {
     }
   }
 
-  private Single<JsonArray> listProducts() {
+  private Single<JsonArray> listProducts(Long requestId) {
     Span span = tracer.spanBuilder("listProducts").startSpan();
     try (Scope ignored = Context.current().with(span).makeCurrent()) {
+      attachRequestIdToCurrentSpan(requestId);
+      String queryInfix = requestId != null ? " AS request" + requestId : "";
+
       return client
-          .rxQuery("SELECT id, name, price, weight FROM products")
+          .rxQuery("SELECT id" + queryInfix + ", name, price, weight FROM products")
           .flatMap(
               result -> {
                 Thread.dumpStack();
@@ -120,6 +131,17 @@ public class VertxReactiveWebServer extends AbstractVerticle {
               });
     } finally {
       span.end();
+    }
+  }
+
+  private Long extractRequestId(RoutingContext routingContext) {
+    String requestIdString = routingContext.request().params().get(TEST_REQUEST_ID_PARAMETER);
+    return requestIdString != null ? Long.valueOf(requestIdString) : null;
+  }
+
+  private void attachRequestIdToCurrentSpan(Long requestId) {
+    if (requestId != null) {
+      Span.current().setAttribute(TEST_REQUEST_ID_ATTRIBUTE, requestId);
     }
   }
 

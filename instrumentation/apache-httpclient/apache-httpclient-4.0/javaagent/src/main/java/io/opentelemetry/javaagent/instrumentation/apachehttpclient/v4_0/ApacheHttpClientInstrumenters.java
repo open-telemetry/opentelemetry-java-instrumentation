@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
@@ -28,14 +29,17 @@ public final class ApacheHttpClientInstrumenters {
         HttpSpanNameExtractor.create(httpAttributesExtractor);
     SpanStatusExtractor<? super HttpUriRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
+    ApacheHttpClientNetAttributesExtractor netAttributesExtractor =
+        new ApacheHttpClientNetAttributesExtractor();
 
     INSTRUMENTER =
         Instrumenter.<HttpUriRequest, HttpResponse>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(new ApacheHttpClientNetAttributesExtractor())
-            .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
+            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .newClientInstrumenter(new HttpHeaderSetter());
   }
 
   public static Instrumenter<HttpUriRequest, HttpResponse> instrumenter() {

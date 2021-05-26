@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.tracer.HttpStatusConverter;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Extractor of the <a
@@ -35,10 +36,12 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public StatusCode extract(REQUEST request, RESPONSE response, Throwable error) {
-    Integer statusCode = attributesExtractor.statusCode(request, response);
-    if (statusCode != null) {
-      return HttpStatusConverter.statusFromHttpStatus(statusCode);
+  public StatusCode extract(REQUEST request, @Nullable RESPONSE response, Throwable error) {
+    if (response != null) {
+      Integer statusCode = attributesExtractor.statusCode(request, response);
+      if (statusCode != null) {
+        return HttpStatusConverter.statusFromHttpStatus(statusCode);
+      }
     }
     return SpanStatusExtractor.getDefault().extract(request, response, error);
   }

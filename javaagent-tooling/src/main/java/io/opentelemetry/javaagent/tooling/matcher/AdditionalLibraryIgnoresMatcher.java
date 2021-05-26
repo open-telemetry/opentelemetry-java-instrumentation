@@ -108,6 +108,7 @@ public class AdditionalLibraryIgnoresMatcher
       if (name.startsWith("org.springframework.boot.")) {
         return !instrumentedSpringBootClasses(name)
             && !name.startsWith("org.springframework.boot.context.web.")
+            && !name.startsWith("org.springframework.boot.logging.logback.")
             && !name.startsWith("org.springframework.boot.web.filter.")
             && !name.startsWith("org.springframework.boot.web.servlet.");
       }
@@ -177,6 +178,7 @@ public class AdditionalLibraryIgnoresMatcher
       if (name.startsWith("org.springframework.web.")) {
         if (name.startsWith("org.springframework.web.servlet.")
             || name.startsWith("org.springframework.web.filter.")
+            || name.startsWith("org.springframework.web.multipart.")
             || name.startsWith("org.springframework.web.reactive.")
             || name.startsWith("org.springframework.web.context.request.async.")
             || name.equals(

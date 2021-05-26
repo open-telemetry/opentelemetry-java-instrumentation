@@ -53,13 +53,18 @@ final class ArmeriaHttpAttributesExtractor
   }
 
   @Override
-  protected Long requestContentLength(RequestContext ctx, RequestLog requestLog) {
+  @Nullable
+  protected Long requestContentLength(RequestContext ctx, @Nullable RequestLog requestLog) {
+    if (requestLog == null) {
+      return null;
+    }
     return requestLog.requestLength();
   }
 
   @Override
   @Nullable
-  protected Long requestContentLengthUncompressed(RequestContext ctx, RequestLog requestLog) {
+  protected Long requestContentLengthUncompressed(
+      RequestContext ctx, @Nullable RequestLog requestLog) {
     return null;
   }
 
@@ -74,7 +79,7 @@ final class ArmeriaHttpAttributesExtractor
   }
 
   @Override
-  protected String flavor(RequestContext ctx, RequestLog requestLog) {
+  protected String flavor(RequestContext ctx, @Nullable RequestLog requestLog) {
     SessionProtocol protocol = ctx.sessionProtocol();
     if (protocol.isMultiplex()) {
       return SemanticAttributes.HttpFlavorValues.HTTP_2_0;
@@ -96,7 +101,7 @@ final class ArmeriaHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String serverName(RequestContext ctx, RequestLog requestLog) {
+  protected String serverName(RequestContext ctx, @Nullable RequestLog requestLog) {
     if (ctx instanceof ServiceRequestContext) {
       return ((ServiceRequestContext) ctx).config().virtualHost().hostnamePattern();
     }
@@ -114,7 +119,7 @@ final class ArmeriaHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String clientIp(RequestContext ctx, RequestLog requestLog) {
+  protected String clientIp(RequestContext ctx, @Nullable RequestLog requestLog) {
     return null;
   }
 

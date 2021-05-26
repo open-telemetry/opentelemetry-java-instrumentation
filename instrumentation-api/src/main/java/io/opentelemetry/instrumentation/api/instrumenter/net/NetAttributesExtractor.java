@@ -31,7 +31,8 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  protected final void onEnd(AttributesBuilder attributes, REQUEST request, RESPONSE response) {
+  protected final void onEnd(
+      AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
     set(attributes, SemanticAttributes.NET_PEER_IP, peerIp(request, response));
     set(attributes, SemanticAttributes.NET_PEER_NAME, peerName(request, response));
     Integer peerPort = peerPort(request, response);
@@ -41,7 +42,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Nullable
-  protected abstract String transport(REQUEST request);
+  public abstract String transport(REQUEST request);
 
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null
@@ -49,7 +50,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  protected abstract String peerName(REQUEST request, @Nullable RESPONSE response);
+  public abstract String peerName(REQUEST request, @Nullable RESPONSE response);
 
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null
@@ -57,7 +58,7 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  protected abstract Integer peerPort(REQUEST request, @Nullable RESPONSE response);
+  public abstract Integer peerPort(REQUEST request, @Nullable RESPONSE response);
 
   /**
    * This method will be called twice: both when the request starts ({@code response} is always null
@@ -65,5 +66,5 @@ public abstract class NetAttributesExtractor<REQUEST, RESPONSE>
    * phases of processing.
    */
   @Nullable
-  protected abstract String peerIp(REQUEST request, @Nullable RESPONSE response);
+  public abstract String peerIp(REQUEST request, @Nullable RESPONSE response);
 }

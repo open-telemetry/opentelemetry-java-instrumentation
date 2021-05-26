@@ -81,8 +81,8 @@ service provider files, but it needs to be told which ones explicitly:
 
 ```java
 @Override
-public String[] helperResourceNames() {
-  return new String[] {"META-INF/services/org.my.library.SpiClass"};
+public List<String> helperResourceNames() {
+  return singletonList("META-INF/services/org.my.library.SpiClass");
 }
 ```
 

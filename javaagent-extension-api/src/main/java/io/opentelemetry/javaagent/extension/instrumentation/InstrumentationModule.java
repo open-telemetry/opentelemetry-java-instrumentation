@@ -31,9 +31,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  * java.util.ServiceLoader} for more details.
  */
 public abstract class InstrumentationModule {
-  private static final String[] EMPTY = new String[0];
-  private static final ClassRef[] EMPTY_REFS = new ClassRef[0];
-
   private static final boolean DEFAULT_ENABLED =
       Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
 
@@ -128,9 +125,9 @@ public abstract class InstrumentationModule {
     return false;
   }
 
-  /** Returns resource names to inject into the user's classloader. */
-  public String[] helperResourceNames() {
-    return EMPTY;
+  /** Returns a list of resource names to inject into the user's classloader. */
+  public List<String> helperResourceNames() {
+    return Collections.emptyList();
   }
 
   /**
@@ -152,8 +149,8 @@ public abstract class InstrumentationModule {
   public abstract List<TypeInstrumentation> typeInstrumentations();
 
   /**
-   * Returns a list of references to helper and library classes used in this module's type
-   * instrumentation advices.
+   * Returns references to helper and library classes used in this module's type instrumentation
+   * advices, grouped by {@link ClassRef#getClassName()}.
    *
    * <p>The actual implementation of this method is generated automatically during compilation by
    * the {@code io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin}
@@ -162,8 +159,8 @@ public abstract class InstrumentationModule {
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
    * will not generate a new implementation, it will leave the existing one.
    */
-  public ClassRef[] getMuzzleReferences() {
-    return EMPTY_REFS;
+  public Map<String, ClassRef> getMuzzleReferences() {
+    return Collections.emptyMap();
   }
 
   /**
@@ -177,8 +174,8 @@ public abstract class InstrumentationModule {
    * <p><b>This method is generated automatically</b>: if you override it, the muzzle compile plugin
    * will not generate a new implementation, it will leave the existing one.
    */
-  public String[] getMuzzleHelperClassNames() {
-    return EMPTY;
+  public List<String> getMuzzleHelperClassNames() {
+    return Collections.emptyList();
   }
 
   /**

@@ -114,7 +114,7 @@ class PutGetTest extends AgentInstrumentationSpecification {
           kind INTERNAL
         }
         span(1) {
-          name "clear"
+          name "clear test-region"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "geode"
@@ -123,7 +123,7 @@ class PutGetTest extends AgentInstrumentationSpecification {
           }
         }
         span(2) {
-          name "put"
+          name "put test-region"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "geode"
@@ -132,7 +132,7 @@ class PutGetTest extends AgentInstrumentationSpecification {
           }
         }
         span(3) {
-          name verb
+          name "$verb test-region"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "geode"
@@ -165,7 +165,7 @@ class PutGetTest extends AgentInstrumentationSpecification {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "query"
+          name "query test-region"
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "geode"

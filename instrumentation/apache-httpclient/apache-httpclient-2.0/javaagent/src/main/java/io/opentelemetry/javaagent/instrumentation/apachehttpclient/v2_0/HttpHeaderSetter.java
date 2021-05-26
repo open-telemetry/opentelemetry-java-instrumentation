@@ -9,8 +9,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
 
-enum HttpHeaderSetter implements TextMapSetter<HttpMethod> {
-  INSTANCE;
+final class HttpHeaderSetter implements TextMapSetter<HttpMethod> {
 
   @Override
   public void set(HttpMethod carrier, String key, String value) {

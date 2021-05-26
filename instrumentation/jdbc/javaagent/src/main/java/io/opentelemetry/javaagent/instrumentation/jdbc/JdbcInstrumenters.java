@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
 public final class JdbcInstrumenters {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jdbc";
@@ -18,14 +19,16 @@ public final class JdbcInstrumenters {
   private static final Instrumenter<DbRequest, Void> INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<DbRequest> attributesExtractor = new JdbcAttributesExtractor();
-    SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
+    DbAttributesExtractor<DbRequest> dbAttributesExtractor = new JdbcAttributesExtractor();
+    SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
+    JdbcNetAttributesExtractor netAttributesExtractor = new JdbcNetAttributesExtractor();
 
     INSTRUMENTER =
         Instrumenter.<DbRequest, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
-            .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(new JdbcNetAttributesExtractor())
+            .addAttributesExtractor(dbAttributesExtractor)
+            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

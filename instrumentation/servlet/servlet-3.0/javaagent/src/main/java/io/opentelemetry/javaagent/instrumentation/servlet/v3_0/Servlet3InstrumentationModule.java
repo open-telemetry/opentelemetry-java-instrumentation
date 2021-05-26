@@ -11,6 +11,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
 import java.util.List;
 
@@ -30,7 +31,8 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
             BASE_PACKAGE,
             adviceClassName(".Servlet3Advice"),
             adviceClassName(".Servlet3InitAdvice"),
-            adviceClassName(".Servlet3FilterInitAdvice")));
+            adviceClassName(".Servlet3FilterInitAdvice")),
+        new AsyncStartInstrumentation(BASE_PACKAGE, adviceClassName(".Servlet3AsyncStartAdvice")));
   }
 
   private static String adviceClassName(String suffix) {

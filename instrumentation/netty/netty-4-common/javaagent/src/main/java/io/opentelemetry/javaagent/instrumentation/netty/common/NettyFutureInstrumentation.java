@@ -17,8 +17,6 @@ import io.netty.util.concurrent.GenericFutureListener;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
-import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -60,11 +58,8 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<? super Void>> listener) {
-      ContextStore<GenericFutureListener, GenericFutureListener> contextStore =
-          InstrumentationContext.get(GenericFutureListener.class, GenericFutureListener.class);
-      listener =
-          FutureListenerWrappers.wrap(contextStore, Java8BytecodeBridge.currentContext(), listener);
+            GenericFutureListener<? extends Future<?>> listener) {
+      listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
     }
   }
 
@@ -72,16 +67,14 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<? super Void>>[] listeners) {
+            GenericFutureListener<? extends Future<?>>[] listeners) {
 
-      ContextStore<GenericFutureListener, GenericFutureListener> contextStore =
-          InstrumentationContext.get(GenericFutureListener.class, GenericFutureListener.class);
       Context context = Java8BytecodeBridge.currentContext();
       @SuppressWarnings("unchecked")
-      GenericFutureListener<? extends Future<? super Void>>[] wrappedListeners =
+      GenericFutureListener<? extends Future<?>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];
       for (int i = 0; i < listeners.length; ++i) {
-        wrappedListeners[i] = FutureListenerWrappers.wrap(contextStore, context, listeners[i]);
+        wrappedListeners[i] = FutureListenerWrappers.wrap(context, listeners[i]);
       }
       listeners = wrappedListeners;
     }
@@ -91,10 +84,8 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<? super Void>> listener) {
-      ContextStore<GenericFutureListener, GenericFutureListener> contextStore =
-          InstrumentationContext.get(GenericFutureListener.class, GenericFutureListener.class);
-      listener = FutureListenerWrappers.getWrapper(contextStore, listener);
+            GenericFutureListener<? extends Future<?>> listener) {
+      listener = FutureListenerWrappers.getWrapper(listener);
     }
   }
 
@@ -102,15 +93,13 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<? super Void>>[] listeners) {
+            GenericFutureListener<? extends Future<?>>[] listeners) {
 
-      ContextStore<GenericFutureListener, GenericFutureListener> contextStore =
-          InstrumentationContext.get(GenericFutureListener.class, GenericFutureListener.class);
       @SuppressWarnings("unchecked")
-      GenericFutureListener<? extends Future<? super Void>>[] wrappedListeners =
+      GenericFutureListener<? extends Future<?>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];
       for (int i = 0; i < listeners.length; ++i) {
-        wrappedListeners[i] = FutureListenerWrappers.getWrapper(contextStore, listeners[i]);
+        wrappedListeners[i] = FutureListenerWrappers.getWrapper(listeners[i]);
       }
       listeners = wrappedListeners;
     }

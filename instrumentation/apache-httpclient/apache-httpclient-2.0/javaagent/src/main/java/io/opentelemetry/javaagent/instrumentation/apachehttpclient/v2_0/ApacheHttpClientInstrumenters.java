@@ -12,32 +12,36 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import org.apache.commons.httpclient.HttpMethod;
 
 public final class ApacheHttpClientInstrumenters {
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.javaagent.apache-httpclient-2.0";
 
-  private static final Instrumenter<HttpMethod, Void> INSTRUMENTER;
+  private static final Instrumenter<HttpMethod, HttpMethod> INSTRUMENTER;
 
   static {
-    HttpAttributesExtractor<HttpMethod, Void> httpAttributesExtractor =
+    HttpAttributesExtractor<HttpMethod, HttpMethod> httpAttributesExtractor =
         new ApacheHttpClientHttpAttributesExtractor();
     SpanNameExtractor<? super HttpMethod> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super HttpMethod, ? super Void> spanStatusExtractor =
+    SpanStatusExtractor<? super HttpMethod, ? super HttpMethod> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
+    ApacheHttpClientNetAttributesExtractor netAttributesExtractor =
+        new ApacheHttpClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<HttpMethod, Void>newBuilder(
+        Instrumenter.<HttpMethod, HttpMethod>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
-            .addAttributesExtractor(new ApacheHttpClientNetAttributesExtractor())
-            .newClientInstrumenter(HttpHeaderSetter.INSTANCE);
+            .addAttributesExtractor(netAttributesExtractor)
+            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .newClientInstrumenter(new HttpHeaderSetter());
   }
 
-  public static Instrumenter<HttpMethod, Void> instrumenter() {
+  public static Instrumenter<HttpMethod, HttpMethod> instrumenter() {
     return INSTRUMENTER;
   }
 

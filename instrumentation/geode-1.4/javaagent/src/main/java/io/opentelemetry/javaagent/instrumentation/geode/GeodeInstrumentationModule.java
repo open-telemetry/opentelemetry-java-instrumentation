@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.geode.GeodeTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.geode.GeodeInstrumenters.instrumenter;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -20,7 +21,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import java.lang.reflect.Method;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
@@ -79,67 +79,69 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
   public static class SimpleAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This Region<?, ?> thiz,
+        @Advice.This Region<?, ?> region,
         @Advice.Origin Method method,
+        @Advice.Local("otelRequest") GeodeRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
+
+      Context parentContext = currentContext();
+      request = GeodeRequest.create(region, method.getName(), null);
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
-      context = tracer().startSpan(method.getName(), thiz, null);
+
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelRequest") GeodeRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
-      scope.close();
 
-      CallDepthThreadLocalMap.reset(Region.class);
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      scope.close();
+      instrumenter().end(context, request, null, throwable);
     }
   }
 
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This Region<?, ?> thiz,
+        @Advice.This Region<?, ?> region,
         @Advice.Origin Method method,
         @Advice.Argument(0) String query,
+        @Advice.Local("otelRequest") GeodeRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
+
+      Context parentContext = currentContext();
+      request = GeodeRequest.create(region, method.getName(), query);
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
-      context = tracer().startSpan(method.getName(), thiz, query);
+
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelRequest") GeodeRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
-      scope.close();
 
-      CallDepthThreadLocalMap.reset(Region.class);
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      scope.close();
+      instrumenter().end(context, request, null, throwable);
     }
   }
 }

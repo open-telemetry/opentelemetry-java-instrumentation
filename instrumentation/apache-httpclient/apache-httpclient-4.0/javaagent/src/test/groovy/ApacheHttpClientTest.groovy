@@ -46,7 +46,6 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   List<AttributeKey<?>> extraAttributes() {
     [
       SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_SCHEME,
       SemanticAttributes.HTTP_TARGET,
     ]
   }

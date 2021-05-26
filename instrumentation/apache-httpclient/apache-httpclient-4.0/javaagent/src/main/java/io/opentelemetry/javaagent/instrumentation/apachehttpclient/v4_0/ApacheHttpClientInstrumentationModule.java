@@ -190,7 +190,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       // Wrap the handler so we capture the status code
       if (handler != null) {
         handler =
-            new WrappingStatusSettingResponseHandler<>(context, parentContext, handler, request);
+            new WrappingStatusSettingResponseHandler<>(context, parentContext, request, handler);
       }
     }
 
@@ -215,18 +215,18 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodEnter(
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) HttpRequest request,
-        @Advice.Local("otelHttpUriRequest") HttpUriRequest httpUriRequest,
+        @Advice.Local("fullRequest") HttpUriRequest fullRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
 
-      httpUriRequest = new HostAndRequestAsHttpUriRequest(host, request);
+      fullRequest = new HostAndRequestAsHttpUriRequest(host, request);
 
-      if (!instrumenter().shouldStart(parentContext, httpUriRequest)) {
+      if (!instrumenter().shouldStart(parentContext, fullRequest)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, httpUriRequest);
+      context = instrumenter().start(parentContext, fullRequest);
       scope = context.makeCurrent();
     }
 
@@ -234,7 +234,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelHttpUriRequest") HttpUriRequest httpUriRequest,
+        @Advice.Local("fullRequest") HttpUriRequest fullRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
@@ -242,7 +242,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, httpUriRequest, result, throwable);
+      ApacheHttpClientHelper.doMethodExit(context, fullRequest, result, throwable);
     }
   }
 
@@ -253,22 +253,22 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) HttpRequest request,
         @Advice.Argument(value = 2, readOnly = false) ResponseHandler<?> handler,
-        @Advice.Local("otelHttpUriRequest") HttpUriRequest httpUriRequest,
+        @Advice.Local("fullRequest") HttpUriRequest fullRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, httpUriRequest)) {
+      if (!instrumenter().shouldStart(parentContext, fullRequest)) {
         return;
       }
 
-      context = instrumenter().start(parentContext, httpUriRequest);
+      context = instrumenter().start(parentContext, fullRequest);
       scope = context.makeCurrent();
 
       // Wrap the handler so we capture the status code
       if (handler != null) {
         handler =
             new WrappingStatusSettingResponseHandler<>(
-                context, parentContext, handler, httpUriRequest);
+                context, parentContext, fullRequest, handler);
       }
     }
 
@@ -276,7 +276,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelHttpUriRequest") HttpUriRequest httpUriRequest,
+        @Advice.Local("fullRequest") HttpUriRequest fullRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
@@ -284,7 +284,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
       }
 
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, httpUriRequest, result, throwable);
+      ApacheHttpClientHelper.doMethodExit(context, fullRequest, result, throwable);
     }
   }
 }

@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase
@@ -43,6 +45,14 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
       request.setHeader(new BasicHeader(it.key, it.value))
     }
     return request
+  }
+
+  @Override
+  List<AttributeKey<?>> extraAttributes() {
+    [
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_TARGET,
+    ]
   }
 
   // compilation fails with @Override annotation on this method (groovy quirk?)
