@@ -36,7 +36,7 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
       } as Supplier)
         .GET(INDEXED_CHILD.getPath()).routeTo({
         controller(INDEXED_CHILD) {
-          INDEXED_CHILD.collectSpanAttributes { request().getQueryString(it)}
+          INDEXED_CHILD.collectSpanAttributes { request().getQueryString(it) }
           Results.status(INDEXED_CHILD.getStatus())
         }
       } as Supplier)
