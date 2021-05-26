@@ -29,7 +29,9 @@ jms2Test.forkEvery 1
 test.dependsOn jms2Test
 
 repositories {
+  mavenCentral()
   maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
+  mavenLocal()
 }
 
 dependencies {
