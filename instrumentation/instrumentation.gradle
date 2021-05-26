@@ -1,15 +1,4 @@
 // this project will run in isolation under the agent's classloader
-buildscript {
-
-  repositories {
-    mavenLocal()
-    mavenCentral()
-  }
-
-  dependencies {
-    classpath "net.bytebuddy:byte-buddy-gradle-plugin:${versions.bytebuddy}"
-  }
-}
 plugins {
   id "com.github.johnrengelman.shadow"
 }
