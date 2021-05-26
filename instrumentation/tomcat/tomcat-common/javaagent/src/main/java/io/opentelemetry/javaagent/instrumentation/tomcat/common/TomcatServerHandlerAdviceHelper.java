@@ -8,9 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
-import io.opentelemetry.instrumentation.servlet.TagSettingAsyncListener;
-import java.util.concurrent.atomic.AtomicBoolean;
-import net.bytebuddy.asm.Advice;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterAdviceHelper;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
@@ -27,12 +25,13 @@ public class TomcatServerHandlerAdviceHelper {
    */
   public static <REQUEST, RESPONSE> void stopSpan(
       TomcatTracer tracer,
+      TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider,
       ServletHttpServerTracer<REQUEST, RESPONSE> servletTracer,
       Request request,
       Response response,
-      @Advice.Thrown Throwable throwable,
-      @Advice.Local("otelContext") Context context,
-      @Advice.Local("otelScope") Scope scope) {
+      Throwable throwable,
+      Context context,
+      Scope scope) {
     if (scope != null) {
       scope.close();
     }
@@ -57,35 +56,29 @@ public class TomcatServerHandlerAdviceHelper {
       return;
     }
 
-    Object note = request.getNote(1);
-    if (note instanceof org.apache.catalina.connector.Request) {
-      AtomicBoolean responseHandled = new AtomicBoolean(false);
+    REQUEST servletRequest = servletEntityProvider.getServletRequest(request);
 
-      org.apache.catalina.connector.Request servletRequest =
-          (org.apache.catalina.connector.Request) note;
-      if (servletRequest.isAsync()) {
-        try {
-          // The Catalina Request always implements the HttpServletRequest (either javax or jakarta)
-          // which is also what REQUEST generic parameter is. We cannot cast normally without a
-          // generic because this class is compiled against javax.servlet which would make it try
-          // to use request from javax.servlet when REQUEST is actually from jakarta.servlet.
-          //noinspection unchecked
-          servletTracer
-              .getServletAccessor()
-              .addRequestAsyncListener(
-                  (REQUEST) servletRequest,
-                  new TagSettingAsyncListener<>(servletTracer, responseHandled, context));
-        } catch (IllegalStateException e) {
-          // thrown by newer tomcats if request was already handled while setting the listener.
-          tracer.end(context, response);
-          return;
-        }
-      }
+    if (servletRequest != null
+        && ServletAndFilterAdviceHelper.mustEndOnHandlerMethodExit(servletTracer, servletRequest)) {
+      tracer.end(context, response);
+    }
+  }
 
-      // In case the request finished before adding the listener on older tomcats...
-      if (!servletRequest.isAsyncStarted() && responseHandled.compareAndSet(false, true)) {
-        tracer.end(context, response);
-      }
+  /**
+   * Must be attached in Tomcat instrumentations since Tomcat valves can use startAsync outside of
+   * servlet scope.
+   */
+  public static <REQUEST, RESPONSE> void attachResponseToRequest(
+      TomcatServletEntityProvider<REQUEST, RESPONSE> servletEntityProvider,
+      ServletHttpServerTracer<REQUEST, RESPONSE> servletTracer,
+      Request request,
+      Response response) {
+
+    REQUEST servletRequest = servletEntityProvider.getServletRequest(request);
+    RESPONSE servletResponse = servletEntityProvider.getServletResponse(response);
+
+    if (servletRequest != null && servletResponse != null) {
+      servletTracer.setAsyncListenerResponse(servletRequest, servletResponse);
     }
   }
 }

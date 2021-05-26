@@ -18,13 +18,8 @@ public class RequestOnlyTracer extends JavaxServletHttpServerTracer<Void> {
           }
 
           @Override
-          public boolean isRequestAsyncStarted(HttpServletRequest request) {
-            throw new UnsupportedOperationException();
-          }
-
-          @Override
           public void addRequestAsyncListener(
-              HttpServletRequest request, ServletAsyncListener<Void> listener) {
+              HttpServletRequest request, ServletAsyncListener<Void> listener, Object response) {
             throw new UnsupportedOperationException();
           }
 

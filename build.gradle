@@ -16,7 +16,6 @@ plugins {
 
   id "com.diffplug.spotless"
   id "com.github.spotbugs" apply false
-
   id "net.ltgt.errorprone" apply false
 }
 
