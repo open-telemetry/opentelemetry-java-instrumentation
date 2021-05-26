@@ -43,7 +43,8 @@ public final class DbSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQ
     if (dbName != null || table != null) {
       name.append(' ');
     }
-    if (dbName != null) {
+    // skip db name if table already has a db name prefixed to it
+    if (dbName != null && (table == null || table.indexOf('.') == -1)) {
       name.append(dbName);
       if (table != null) {
         name.append('.');
