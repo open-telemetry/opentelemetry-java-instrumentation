@@ -57,7 +57,6 @@ public final class GrpcTracingBuilder {
         Instrumenter.newBuilder(openTelemetry, INSTRUMENTATION_NAME, new GrpcSpanNameExtractor());
     instrumenterBuilder
         .setSpanStatusExtractor(new GrpcSpanStatusExtractor())
-        .setErrorCauseExtractor(new GrpcErrorCauseExtractor())
         .addAttributesExtractors(
             new GrpcNetAttributesExtractor(),
             new GrpcRpcAttributesExtractor(),

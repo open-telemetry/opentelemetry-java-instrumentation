@@ -288,11 +288,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
               "message.id" 1
             }
           }
-          if (grpcStatus.cause != null) {
-            errorEvent grpcStatus.cause.class, grpcStatus.cause.message, 1
-          } else {
-            errorEvent grpcStatus.asRuntimeException().class, grpcStatus.asRuntimeException().message, 1
-          }
+          errorEvent grpcStatus.asRuntimeException().class, grpcStatus.asRuntimeException().message, 1
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
