@@ -60,6 +60,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
+  boolean hasHandlerAsControllerParentSpan(ServerEndpoint endpoint) {
+    true
+  }
+
   boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
     !hasHandlerSpan(endpoint)
   }
@@ -446,7 +450,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
             controllerSpanIndex++
           }
 
-          indexedControllerSpan(it, controllerSpanIndex, span(controllerSpanIndex - 1), requestId)
+          def controllerParentSpanIndex = controllerSpanIndex - (hasHandlerAsControllerParentSpan(endpoint) ? 1 : 2)
+          indexedControllerSpan(it, controllerSpanIndex, span(controllerParentSpanIndex), requestId)
         }
       }
     }
@@ -484,7 +489,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           }
           if (endpoint != NOT_FOUND) {
             def controllerSpanIndex = 0
-            if (hasHandlerSpan(endpoint)) {
+            if (hasHandlerSpan(endpoint) && hasHandlerAsControllerParentSpan(endpoint)) {
               controllerSpanIndex++
             }
             controllerSpan(it, spanIndex++, span(controllerSpanIndex), errorMessage, expectedExceptionClass())
