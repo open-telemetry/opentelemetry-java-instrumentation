@@ -57,7 +57,7 @@ public class TracingSession implements Session {
       instrumenter().end(context, request, null, t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    instrumenter().end(context, request, resultSet, null);
     return resultSet;
   }
 
@@ -72,7 +72,7 @@ public class TracingSession implements Session {
       instrumenter().end(context, request, null, t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    instrumenter().end(context, request, resultSet, null);
     return resultSet;
   }
 
@@ -87,7 +87,7 @@ public class TracingSession implements Session {
       instrumenter().end(context, request, null, t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    instrumenter().end(context, request, resultSet, null);
     return resultSet;
   }
 
@@ -103,7 +103,7 @@ public class TracingSession implements Session {
       instrumenter().end(context, request, null, t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    instrumenter().end(context, request, resultSet, null);
     return resultSet;
   }
 
@@ -215,7 +215,7 @@ public class TracingSession implements Session {
         new FutureCallback<ResultSet>() {
           @Override
           public void onSuccess(ResultSet resultSet) {
-            instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+            instrumenter().end(context, request, resultSet, null);
           }
 
           @Override
