@@ -12,7 +12,6 @@ import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,8 +42,7 @@ final class RedissonDbAttributesExtractor extends DbAttributesExtractor<Redisson
 
   @Override
   protected String connectionString(RedissonRequest request) {
-    InetSocketAddress remoteAddress = request.getAddress();
-    return remoteAddress.getHostString() + ":" + remoteAddress.getPort();
+    return null;
   }
 
   @Override

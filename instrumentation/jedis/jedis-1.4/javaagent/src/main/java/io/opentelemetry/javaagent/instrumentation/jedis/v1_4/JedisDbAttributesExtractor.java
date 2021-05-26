@@ -29,7 +29,7 @@ final class JedisDbAttributesExtractor extends DbAttributesExtractor<JedisReques
 
   @Override
   protected String connectionString(JedisRequest request) {
-    return request.getConnectionString();
+    return null;
   }
 
   @Override
