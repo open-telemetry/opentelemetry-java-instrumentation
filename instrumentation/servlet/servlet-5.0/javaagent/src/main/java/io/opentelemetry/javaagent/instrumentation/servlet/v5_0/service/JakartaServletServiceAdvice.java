@@ -82,6 +82,8 @@ public class JakartaServletServiceAdvice {
 
     context = tracer().startSpan(httpServletRequest, mappingResolver, servlet);
     scope = context.makeCurrent();
+
+    tracer().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

@@ -8,12 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common.service;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.AppServerBridge;
-import io.opentelemetry.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.ServletHttpServerTracer;
-import io.opentelemetry.instrumentation.servlet.TagSettingAsyncListener;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServletAndFilterAdviceHelper {
   public static <REQUEST, RESPONSE> void stopSpan(
@@ -49,23 +46,28 @@ public class ServletAndFilterAdviceHelper {
       return;
     }
 
-    AtomicBoolean responseHandled = new AtomicBoolean(false);
-    ServletAccessor<REQUEST, RESPONSE> accessor = tracer.getServletAccessor();
-
-    // In case of async servlets wait for the actual response to be ready
-    if (accessor.isRequestAsyncStarted(request)) {
-      try {
-        accessor.addRequestAsyncListener(
-            request, new TagSettingAsyncListener<>(tracer, responseHandled, context));
-      } catch (IllegalStateException e) {
-        // org.eclipse.jetty.server.Request may throw an exception here if request became
-        // finished after check above. We just ignore that exception and move on.
-      }
-    }
-
-    // Check again in case the request finished before adding the listener.
-    if (!accessor.isRequestAsyncStarted(request) && responseHandled.compareAndSet(false, true)) {
+    if (mustEndOnHandlerMethodExit(tracer, request)) {
       tracer.end(context, response);
     }
+  }
+
+  /**
+   * Helper method to determine whether the appserver handler/servlet service/servlet filter method
+   * that started a span must also end it, even if no error was detected. Extracted as a separate
+   * method to avoid duplicating the comments on the logic behind this choice.
+   */
+  public static <REQUEST, RESPONSE> boolean mustEndOnHandlerMethodExit(
+      ServletHttpServerTracer<REQUEST, RESPONSE> tracer, REQUEST request) {
+
+    if (tracer.isAsyncListenerAttached(request)) {
+      // This request is handled asynchronously and startAsync instrumentation has already attached
+      // the listener.
+      return false;
+    }
+
+    // This means that startAsync was not called (assuming startAsync instrumentation works
+    // correctly on this servlet engine), therefore the request was handled synchronously, and
+    // handler method end must also end the span.
+    return true;
   }
 }

@@ -19,7 +19,8 @@ public class Jetty11HandlerAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
       @Advice.This Object source,
-      @Advice.Argument(value = 2, readOnly = false) HttpServletRequest request,
+      @Advice.Argument(2) HttpServletRequest request,
+      @Advice.Argument(3) HttpServletResponse response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
 
@@ -31,6 +32,9 @@ public class Jetty11HandlerAdvice {
 
     context = tracer().startServerSpan(request);
     scope = context.makeCurrent();
+
+    // Must be set here since Jetty handlers can use startAsync outside of servlet scope.
+    tracer().setAsyncListenerResponse(request, response);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

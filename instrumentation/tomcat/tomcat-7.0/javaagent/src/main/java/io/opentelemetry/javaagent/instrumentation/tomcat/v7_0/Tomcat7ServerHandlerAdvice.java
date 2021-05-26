@@ -24,6 +24,7 @@ public class Tomcat7ServerHandlerAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
       @Advice.Argument(0) Request request,
+      @Advice.Argument(1) Response response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
     Context attachedContext = tracer().getServerContext(request);
@@ -35,6 +36,12 @@ public class Tomcat7ServerHandlerAdvice {
     context = tracer().startServerSpan(request);
 
     scope = context.makeCurrent();
+
+    TomcatServerHandlerAdviceHelper.attachResponseToRequest(
+        Tomcat7ServletEntityProvider.INSTANCE,
+        Servlet3HttpServerTracer.tracer(),
+        request,
+        response);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -46,6 +53,13 @@ public class Tomcat7ServerHandlerAdvice {
       @Advice.Local("otelScope") Scope scope) {
 
     TomcatServerHandlerAdviceHelper.stopSpan(
-        tracer(), Servlet3HttpServerTracer.tracer(), request, response, throwable, context, scope);
+        tracer(),
+        Tomcat7ServletEntityProvider.INSTANCE,
+        Servlet3HttpServerTracer.tracer(),
+        request,
+        response,
+        throwable,
+        context,
+        scope);
   }
 }
