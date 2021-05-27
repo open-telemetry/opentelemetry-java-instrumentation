@@ -23,7 +23,7 @@ public final class LettuceInstrumenters {
   private static final Instrumenter<RedisURI, Void> CONNECT_INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<RedisCommand<?, ?, ?>> attributesExtractor =
+    DbAttributesExtractor<RedisCommand<?, ?, ?>, Void> attributesExtractor =
         new LettuceDbAttributesExtractor();
     SpanNameExtractor<RedisCommand<?, ?, ?>> spanName =
         DbSpanNameExtractor.create(attributesExtractor);

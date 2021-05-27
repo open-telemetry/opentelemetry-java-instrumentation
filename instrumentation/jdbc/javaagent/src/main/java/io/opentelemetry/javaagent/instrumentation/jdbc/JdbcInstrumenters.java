@@ -19,7 +19,7 @@ public final class JdbcInstrumenters {
   private static final Instrumenter<DbRequest, Void> INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<DbRequest> dbAttributesExtractor = new JdbcAttributesExtractor();
+    DbAttributesExtractor<DbRequest, Void> dbAttributesExtractor = new JdbcAttributesExtractor();
     SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
     JdbcNetAttributesExtractor netAttributesExtractor = new JdbcNetAttributesExtractor();
 

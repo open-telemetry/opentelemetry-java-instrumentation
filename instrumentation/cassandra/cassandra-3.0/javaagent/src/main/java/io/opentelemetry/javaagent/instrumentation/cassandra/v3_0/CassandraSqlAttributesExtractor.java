@@ -5,12 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
+import com.datastax.driver.core.ResultSet;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class CassandraSqlAttributesExtractor extends SqlAttributesExtractor<CassandraRequest> {
+final class CassandraSqlAttributesExtractor
+    extends SqlAttributesExtractor<CassandraRequest, ResultSet> {
 
   @Override
   protected String system(CassandraRequest request) {

@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.SqlAttributesExtract
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class JdbcAttributesExtractor extends SqlAttributesExtractor<DbRequest> {
+final class JdbcAttributesExtractor extends SqlAttributesExtractor<DbRequest, Void> {
   @Nullable
   @Override
   protected String system(DbRequest dbRequest) {

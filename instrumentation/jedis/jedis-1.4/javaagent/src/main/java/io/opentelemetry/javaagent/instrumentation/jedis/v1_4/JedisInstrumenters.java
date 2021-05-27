@@ -19,7 +19,8 @@ public final class JedisInstrumenters {
   private static final Instrumenter<JedisRequest, Void> INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<JedisRequest> attributesExtractor = new JedisDbAttributesExtractor();
+    DbAttributesExtractor<JedisRequest, Void> attributesExtractor =
+        new JedisDbAttributesExtractor();
     SpanNameExtractor<JedisRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
     JedisNetAttributesExtractor netAttributesExtractor = new JedisNetAttributesExtractor();
 

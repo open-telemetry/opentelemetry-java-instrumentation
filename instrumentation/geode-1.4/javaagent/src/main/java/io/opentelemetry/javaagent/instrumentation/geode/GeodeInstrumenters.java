@@ -18,7 +18,8 @@ public final class GeodeInstrumenters {
   private static final Instrumenter<GeodeRequest, Void> INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<GeodeRequest> attributesExtractor = new GeodeDbAttributesExtractor();
+    DbAttributesExtractor<GeodeRequest, Void> attributesExtractor =
+        new GeodeDbAttributesExtractor();
     SpanNameExtractor<GeodeRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
 
     INSTRUMENTER =

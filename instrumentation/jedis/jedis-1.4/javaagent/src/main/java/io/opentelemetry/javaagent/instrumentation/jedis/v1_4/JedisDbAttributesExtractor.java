@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtracto
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class JedisDbAttributesExtractor extends DbAttributesExtractor<JedisRequest> {
+final class JedisDbAttributesExtractor extends DbAttributesExtractor<JedisRequest, Void> {
   @Override
   protected String system(JedisRequest request) {
     return SemanticAttributes.DbSystemValues.REDIS;
