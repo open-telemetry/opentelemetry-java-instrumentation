@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.geode;
+package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
 import static java.util.Collections.singletonList;
 
@@ -13,13 +13,13 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class GeodeInstrumentationModule extends InstrumentationModule {
-  public GeodeInstrumentationModule() {
-    super("geode", "geode-1.4");
+public class DropwizardInstrumentationModule extends InstrumentationModule {
+  public DropwizardInstrumentationModule() {
+    super("dropwizard-views");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new GeodeRegionInstrumentation());
+    return singletonList(new DropwizardRendererInstrumentation());
   }
 }
