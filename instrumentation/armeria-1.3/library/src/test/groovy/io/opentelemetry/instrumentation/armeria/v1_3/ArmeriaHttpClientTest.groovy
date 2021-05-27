@@ -26,4 +26,9 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest implements Lib
   boolean testCallbackWithParent() {
     false
   }
+
+  @Override
+  boolean testErrorWithCallback() {
+    return false
+  }
 }
