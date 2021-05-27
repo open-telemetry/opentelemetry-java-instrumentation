@@ -12,7 +12,4 @@ dependencies {
 
   testImplementation deps.assertj
   testImplementation project(':instrumentation:grpc-1.6:testing')
-
-  compileOnly deps.autoValueAnnotations
-  annotationProcessor deps.autoValue
 }
