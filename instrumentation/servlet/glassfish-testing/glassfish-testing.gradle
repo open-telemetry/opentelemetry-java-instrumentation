@@ -11,6 +11,8 @@ dependencies {
   testInstrumentation project(':instrumentation:grizzly-2.0:javaagent')
 
   testLibrary "org.glassfish.main.extras:glassfish-embedded-all:4.0"
+
+  latestDepTestLibrary "org.glassfish.main.extras:glassfish-embedded-all:5.1.0"
 }
 
 tasks.withType(Test).configureEach {
