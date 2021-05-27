@@ -32,7 +32,7 @@ ext {
     mockito           : '3.6.0',
     // Caffeine 2.x to support Java 8+. 3.x is 11+.
     caffeine          : '2.9.0',
-    testcontainers    : '1.15.2',
+    testcontainers    : '1.15.3',
     weaklockfree      : '0.18'
   ]
 
