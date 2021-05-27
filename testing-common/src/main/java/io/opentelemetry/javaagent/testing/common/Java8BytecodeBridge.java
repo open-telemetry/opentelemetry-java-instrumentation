@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.testing.common;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 
 /**
@@ -17,5 +18,10 @@ public final class Java8BytecodeBridge {
   /** Calls {@link Context#current()}. */
   public static Context currentContext() {
     return Context.current();
+  }
+
+  /** Calls {@link Span#current()}. */
+  public static Span currentSpan() {
+    return Span.current();
   }
 }

@@ -12,6 +12,7 @@ import akka.stream.ActorMaterializer
 import groovy.lang.Closure
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint._
+import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 
 import scala.concurrent.Await
 
@@ -29,7 +30,15 @@ object AkkaHttpTestSyncWebServer {
           def doCall(): HttpResponse = {
             val resp = HttpResponse(status = endpoint.getStatus)
             endpoint match {
-              case SUCCESS     => resp.withEntity(endpoint.getBody)
+              case SUCCESS => resp.withEntity(endpoint.getBody)
+              case INDEXED_CHILD =>
+                Java8BytecodeBridge
+                  .currentSpan()
+                  .setAttribute(
+                    "test.request.id",
+                    uri.query().get("id").orNull.toLong
+                  )
+                resp.withEntity("")
               case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
               case REDIRECT =>
                 resp.withHeaders(headers.Location(endpoint.getBody))
