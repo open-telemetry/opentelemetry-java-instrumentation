@@ -38,7 +38,7 @@ public final class ContextPropagationDebug {
 
   public static Context appendLocations(
       Context context, StackTraceElement[] locations, Object carrier) {
-    List<Propagation> currentLocations = ContextPropagationDebug.getLocations(context);
+    List<Propagation> currentLocations = ContextPropagationDebug.getPropagations(context);
     if (currentLocations == null) {
       currentLocations = new CopyOnWriteArrayList<>();
       context = context.with(THREAD_PROPAGATION_LOCATIONS, currentLocations);
@@ -68,15 +68,15 @@ public final class ContextPropagationDebug {
     }
   }
 
-  private static List<Propagation> getLocations(Context context) {
+  private static List<Propagation> getPropagations(Context context) {
     return context.get(THREAD_PROPAGATION_LOCATIONS);
   }
 
   private static void debugContextPropagation(Context context) {
-    List<Propagation> locations = getLocations(context);
-    if (locations != null) {
+    List<Propagation> propagations = getPropagations(context);
+    if (propagations != null) {
       StringBuilder sb = new StringBuilder();
-      Iterator<Propagation> i = locations.iterator();
+      Iterator<Propagation> i = propagations.iterator();
       while (i.hasNext()) {
         Propagation entry = i.next();
         sb.append("\ncarrier of type: ").append(entry.carrierClassName);
