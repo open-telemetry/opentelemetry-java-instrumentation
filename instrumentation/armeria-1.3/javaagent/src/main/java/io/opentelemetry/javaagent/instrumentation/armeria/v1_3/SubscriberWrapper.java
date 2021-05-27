@@ -14,9 +14,17 @@ public class SubscriberWrapper implements Subscriber<Object> {
   private final Subscriber<Object> delegate;
   private final Context context;
 
-  public SubscriberWrapper(Subscriber<Object> delegate, Context context) {
+  private SubscriberWrapper(Subscriber<Object> delegate, Context context) {
     this.delegate = delegate;
     this.context = context;
+  }
+
+  public static Subscriber<Object> wrap(Subscriber<Object> delegate) {
+    Context context = Context.current();
+    if (context != Context.root()) {
+      return new SubscriberWrapper(delegate, context);
+    }
+    return delegate;
   }
 
   @Override

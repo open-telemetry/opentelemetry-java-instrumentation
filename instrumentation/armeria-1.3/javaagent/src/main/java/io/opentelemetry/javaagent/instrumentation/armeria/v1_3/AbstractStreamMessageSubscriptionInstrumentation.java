@@ -9,10 +9,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -38,10 +36,7 @@ public class AbstractStreamMessageSubscriptionInstrumentation implements TypeIns
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void attachContext(
         @Advice.Argument(value = 1, readOnly = false) Subscriber subscriber) {
-      Context context = Java8BytecodeBridge.currentContext();
-      if (context != Context.root()) {
-        subscriber = new SubscriberWrapper(subscriber, context);
-      }
+      subscriber = SubscriberWrapper.wrap(subscriber);
     }
   }
 }
