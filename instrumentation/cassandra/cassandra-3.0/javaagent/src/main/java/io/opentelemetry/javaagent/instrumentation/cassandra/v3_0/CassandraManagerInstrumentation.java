@@ -5,50 +5,34 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.driver.core.Session;
-import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(InstrumentationModule.class)
-public class CassandraClientInstrumentationModule extends InstrumentationModule {
-  public CassandraClientInstrumentationModule() {
-    super("cassandra", "cassandra-3.0");
+public class CassandraManagerInstrumentation implements TypeInstrumentation {
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    // Note: Cassandra has a large driver and we instrument single class in it.
+    // The rest is ignored in AdditionalLibraryIgnoresMatcher
+    return named("com.datastax.driver.core.Cluster$Manager");
   }
 
   @Override
-  public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ClusterManagerInstrumentation());
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
+        this.getClass().getName() + "$NewSessionAdvice");
   }
 
-  public static class ClusterManagerInstrumentation implements TypeInstrumentation {
-    @Override
-    public ElementMatcher<TypeDescription> typeMatcher() {
-      // Note: Cassandra has a large driver and we instrument single class in it.
-      // The rest is ignored in AdditionalLibraryIgnoresMatcher
-      return named("com.datastax.driver.core.Cluster$Manager");
-    }
-
-    @Override
-    public void transform(TypeTransformer transformer) {
-      transformer.applyAdviceToMethod(
-          isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
-          CassandraClientInstrumentationModule.class.getName() + "$CassandraClientAdvice");
-    }
-  }
-
-  public static class CassandraClientAdvice {
+  public static class NewSessionAdvice {
     /**
      * Strategy: each time we build a connection to a Cassandra cluster, the
      * com.datastax.driver.core.Cluster$Manager.newSession() method is called. The opentracing
