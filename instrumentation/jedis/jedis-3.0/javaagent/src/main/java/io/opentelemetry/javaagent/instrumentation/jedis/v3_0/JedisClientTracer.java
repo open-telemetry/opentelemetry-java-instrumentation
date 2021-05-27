@@ -47,7 +47,7 @@ public class JedisClientTracer extends DatabaseClientTracer<Connection, CommandW
 
   @Override
   protected String dbConnectionString(Connection connection) {
-    return connection.getHost() + ":" + connection.getPort();
+    return null;
   }
 
   @Override

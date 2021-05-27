@@ -49,7 +49,6 @@ class JedisClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION.key" "SET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
@@ -75,7 +74,6 @@ class JedisClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION.key" "SET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
@@ -89,7 +87,6 @@ class JedisClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.DB_STATEMENT.key" "GET foo"
             "$SemanticAttributes.DB_OPERATION.key" "GET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
@@ -115,7 +112,6 @@ class JedisClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION.key" "SET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
@@ -129,7 +125,6 @@ class JedisClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
             "$SemanticAttributes.DB_OPERATION.key" "RANDOMKEY"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"

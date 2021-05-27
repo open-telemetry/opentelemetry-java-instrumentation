@@ -319,13 +319,5 @@ final class OpenTelemetryTracing implements Tracing {
   private static void fillEndpoint(AttributeSetter span, OpenTelemetryEndpoint endpoint) {
     span.setAttribute(SemanticAttributes.NET_TRANSPORT, IP_TCP);
     NetPeerAttributes.INSTANCE.setNetPeer(span, endpoint.name, endpoint.ip, endpoint.port);
-
-    StringBuilder redisUrl =
-        new StringBuilder("redis://").append(endpoint.name != null ? endpoint.name : endpoint.ip);
-    if (endpoint.port > 0) {
-      redisUrl.append(":").append(endpoint.port);
-    }
-
-    span.setAttribute(SemanticAttributes.DB_CONNECTION_STRING, redisUrl.toString());
   }
 }

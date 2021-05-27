@@ -76,7 +76,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
             "$SemanticAttributes.DB_OPERATION.key" "SET"
@@ -91,7 +90,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "GET foo"
             "$SemanticAttributes.DB_OPERATION.key" "GET"
@@ -118,7 +116,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "SET batch1 ?;SET batch2 ?"
             "$SemanticAttributes.DB_OPERATION.key" null
@@ -143,7 +140,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "RPUSH list1 ?"
             "$SemanticAttributes.DB_OPERATION.key" "RPUSH"
@@ -171,7 +167,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "EVAL $script 1 map1 ? ?"
             "$SemanticAttributes.DB_OPERATION.key" "EVAL"
@@ -186,7 +181,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "HGET map1 key1"
             "$SemanticAttributes.DB_OPERATION.key" "HGET"
@@ -211,7 +205,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "SADD set1 ?"
             "$SemanticAttributes.DB_OPERATION.key" "SADD"
@@ -240,7 +233,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "ZADD sort_set1 ? ? ? ? ? ?"
             "$SemanticAttributes.DB_OPERATION.key" "ZADD"
@@ -265,7 +257,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" "INCR AtomicLong"
             "$SemanticAttributes.DB_OPERATION.key" "INCR"
@@ -295,7 +286,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" { lockScriptPattern.matcher(it).matches() }
             "$SemanticAttributes.DB_OPERATION.key" "EVAL"
@@ -312,7 +302,6 @@ class RedissonClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
-            "$SemanticAttributes.DB_CONNECTION_STRING.key" "localhost:$port"
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_STATEMENT.key" { lockScriptPattern.matcher(it).matches() }
             "$SemanticAttributes.DB_OPERATION.key" "EVAL"
