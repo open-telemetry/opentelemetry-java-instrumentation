@@ -63,8 +63,7 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
 
       Scope parentScope = parentContext.makeCurrent();
       if (tracer().shouldStartSpan(parentContext, SpanKind.CLIENT)) {
-        Context errorContext = tracer().startSpan("CONNECT", SpanKind.CLIENT);
-        tracer().endExceptionally(errorContext, cause);
+        tracer().connectionFailure(parentContext, future.channel(), cause);
       }
       return parentScope;
     }
