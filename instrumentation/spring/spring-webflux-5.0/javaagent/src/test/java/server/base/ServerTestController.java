@@ -5,7 +5,6 @@
 
 package server.base;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint;
 import java.net.URI;
 import java.util.concurrent.Callable;
@@ -96,9 +95,7 @@ public abstract class ServerTestController {
     return wrapControllerMethod(
         endpoint,
         () -> {
-          Span.current()
-              .setAttribute(
-                  "test.request.id", Long.parseLong(request.getQueryParams().getFirst("id")));
+          endpoint.collectSpanAttributes(it -> request.getQueryParams().getFirst(it));
           setStatus(response, endpoint);
           return "";
         });

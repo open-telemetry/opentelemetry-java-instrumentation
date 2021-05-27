@@ -13,7 +13,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.vertx.circuitbreaker.CircuitBreakerOptions
 import io.vertx.core.Future
@@ -64,7 +63,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           }
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
-            Span.current().setAttribute("test.request.id", ctx.request().params().get("id") as long)
+            endpoint.collectSpanAttributes { ctx.request().params().get(it) }
             ctx.response().setStatusCode(endpoint.status).end()
           }
         })

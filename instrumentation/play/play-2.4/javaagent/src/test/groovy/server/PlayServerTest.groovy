@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static play.mvc.Http.Context.Implicit.request
 
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -37,7 +36,7 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
       } as Supplier)
         .GET(INDEXED_CHILD.getPath()).routeTo({
         controller(INDEXED_CHILD) {
-          Span.current().setAttribute("test.request.id", request().getQueryString("id") as long)
+          INDEXED_CHILD.collectSpanAttributes { request().getQueryString(it) }
           Results.status(INDEXED_CHILD.getStatus())
         }
       } as Supplier)

@@ -13,7 +13,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static play.mvc.Http.Context.Implicit.request
 
-import io.opentelemetry.api.trace.Span
 import java.util.concurrent.CompletableFuture
 import java.util.function.Supplier
 import play.libs.concurrent.HttpExecution
@@ -36,7 +35,7 @@ class PlayAsyncServerTest extends PlayServerTest {
         .GET(INDEXED_CHILD.getPath()).routeTo({
         CompletableFuture.supplyAsync({
           controller(INDEXED_CHILD) {
-            Span.current().setAttribute("test.request.id", request().getQueryString("id") as long)
+            INDEXED_CHILD.collectSpanAttributes { request().getQueryString(it) }
             Results.status(INDEXED_CHILD.getStatus())
           }
         }, HttpExecution.defaultContext())

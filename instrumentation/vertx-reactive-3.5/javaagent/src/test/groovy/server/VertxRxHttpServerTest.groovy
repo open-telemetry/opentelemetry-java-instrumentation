@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.vertx.core.DeploymentOptions
@@ -95,8 +94,8 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
         }
       }
       router.route(INDEXED_CHILD.path).handler { ctx ->
-        controller(QUERY_PARAM) {
-          Span.current().setAttribute("test.request.id", ctx.request().params().get("id") as long)
+        controller(INDEXED_CHILD) {
+          INDEXED_CHILD.collectSpanAttributes { ctx.request().params().get(it) }
           ctx.response().setStatusCode(INDEXED_CHILD.status).end()
         }
       }

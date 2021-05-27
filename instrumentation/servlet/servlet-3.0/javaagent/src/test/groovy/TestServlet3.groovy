@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 import groovy.servlet.AbstractHttpServlet
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import java.util.concurrent.Phaser
 import javax.servlet.RequestDispatcher
@@ -40,7 +39,7 @@ class TestServlet3 {
             break
           case INDEXED_CHILD:
             resp.status = endpoint.status
-            Span.current().setAttribute("test.request.id", req.getParameter("id") as long)
+            endpoint.collectSpanAttributes { req.getParameter(it) }
             break
           case QUERY_PARAM:
             resp.status = endpoint.status
@@ -78,7 +77,7 @@ class TestServlet3 {
                 context.complete()
                 break
               case INDEXED_CHILD:
-                Span.current().setAttribute("test.request.id", req.getParameter("id") as long)
+                endpoint.collectSpanAttributes { req.getParameter(it) }
                 resp.status = endpoint.status
                 context.complete()
                 break
@@ -128,7 +127,7 @@ class TestServlet3 {
               resp.writer.print(endpoint.body)
               break
             case INDEXED_CHILD:
-              Span.current().setAttribute("test.request.id", req.getParameter("id") as long)
+              endpoint.collectSpanAttributes { req.getParameter(it) }
               resp.status = endpoint.status
               break
             case QUERY_PARAM:
