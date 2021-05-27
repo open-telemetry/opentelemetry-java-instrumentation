@@ -14,6 +14,6 @@ dependencies {
 
   implementation project(":instrumentation:rxjava:rxjava-2.0:library")
 
-  testImplementation deps.opentelemetryExtAnnotations
+  testImplementation "io.opentelemetry:opentelemetry-extension-annotations"
   testImplementation project(':instrumentation:rxjava:rxjava-2.0:testing')
 }

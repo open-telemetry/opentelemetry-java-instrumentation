@@ -23,9 +23,9 @@ dependencies {
 
   // using OpenTelemetry SDK to make sure that instrumentation doesn't cause
   // OpenTelemetrySdk.getTracerProvider() to throw ClassCastException
-  testImplementation deps.opentelemetrySdk
+  testImplementation "io.opentelemetry:opentelemetry-sdk"
 
   // @WithSpan annotation is used to generate spans in ContextBridgeTest
-  testImplementation deps.opentelemetryExtAnnotations
+  testImplementation "io.opentelemetry:opentelemetry-extension-annotations"
   testInstrumentation project(':instrumentation:opentelemetry-annotations-1.0:javaagent')
 }

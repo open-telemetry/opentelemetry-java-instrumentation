@@ -11,9 +11,9 @@ dependencies {
   api "software.amazon.awssdk:dynamodb:2.2.0"
   api "software.amazon.awssdk:kinesis:2.2.0"
 
-  implementation deps.guava
+  implementation "com.google.guava:guava"
 
-  implementation deps.groovy
-  implementation deps.opentelemetryApi
-  implementation deps.spock
+  implementation "org.codehaus.groovy:groovy-all"
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "org.spockframework:spock-core"
 }

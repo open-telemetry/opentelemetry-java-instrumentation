@@ -40,3 +40,6 @@ dependencies {
   latestDepTestLibrary "org.glassfish.jersey.core:jersey-client:2.+"
   latestDepTestLibrary "org.jboss.resteasy:resteasy-client:3.0.26.Final"
 }
+
+// Requires old Guava. Can't use enforcedPlatform since predates BOM
+configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"

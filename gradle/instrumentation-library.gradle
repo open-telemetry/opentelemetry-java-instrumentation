@@ -11,8 +11,7 @@ archivesBaseName = projectDir.parentFile.name
 dependencies {
   api project(':instrumentation-api')
 
-  api deps.opentelemetryApi
-  api deps.opentelemetryContext
+  api "io.opentelemetry:opentelemetry-api"
 
   testImplementation project(':testing-common')
 }

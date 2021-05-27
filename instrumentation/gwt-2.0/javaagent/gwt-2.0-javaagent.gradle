@@ -36,7 +36,7 @@ dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
   testInstrumentation project(':instrumentation:jetty:jetty-8.0:javaagent')
 
-  testImplementation "org.testcontainers:selenium:${versions.testcontainers}"
+  testImplementation "org.testcontainers:selenium:${versions["org.testcontainers"]}"
   testImplementation 'org.seleniumhq.selenium:selenium-java:3.141.59'
 
   testImplementation(project(':testing-common')) {

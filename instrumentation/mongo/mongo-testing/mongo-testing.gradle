@@ -2,9 +2,9 @@ apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   api project(':testing-common')
-  api "org.testcontainers:mongodb:${versions.testcontainers}"
+  api "org.testcontainers:mongodb:${versions["org.testcontainers"]}"
 
-  implementation deps.groovy
-  implementation deps.opentelemetryApi
-  implementation deps.spock
+  implementation "org.codehaus.groovy:groovy-all"
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "org.spockframework:spock-core"
 }

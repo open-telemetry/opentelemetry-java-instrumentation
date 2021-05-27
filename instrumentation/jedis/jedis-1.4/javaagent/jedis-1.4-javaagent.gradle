@@ -12,8 +12,8 @@ muzzle {
 dependencies {
   library "redis.clients:jedis:1.4.0"
 
-  compileOnly deps.autoValueAnnotations
-  annotationProcessor deps.autoValue
+  compileOnly "com.google.auto.value:auto-value-annotations"
+  annotationProcessor "com.google.auto.value:auto-value"
 
   // Jedis 3.0 has API changes that prevent instrumentation from applying
   latestDepTestLibrary "redis.clients:jedis:2.+"

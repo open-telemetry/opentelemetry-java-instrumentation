@@ -11,6 +11,6 @@ muzzle {
 dependencies {
   library "org.apache.geode:geode-core:1.4.0"
 
-  compileOnly deps.autoValueAnnotations
-  annotationProcessor deps.autoValue
+  compileOnly "com.google.auto.value:auto-value-annotations"
+  annotationProcessor "com.google.auto.value:auto-value"
 }

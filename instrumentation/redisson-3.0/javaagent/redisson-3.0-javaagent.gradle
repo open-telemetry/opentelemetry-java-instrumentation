@@ -11,8 +11,8 @@ muzzle {
 dependencies {
   library "org.redisson:redisson:3.0.0"
 
-  compileOnly deps.autoValueAnnotations
-  annotationProcessor deps.autoValue
+  compileOnly "com.google.auto.value:auto-value-annotations"
+  annotationProcessor "com.google.auto.value:auto-value"
 }
 
 test {

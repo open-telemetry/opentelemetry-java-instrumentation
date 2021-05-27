@@ -1,7 +1,7 @@
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
 
 dependencies {
-  implementation deps.opentelemetryExtAws
+  implementation "io.opentelemetry:opentelemetry-extension-aws"
 
   library "com.amazonaws:aws-java-sdk-core:1.11.0"
 

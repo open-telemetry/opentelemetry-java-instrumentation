@@ -4,11 +4,14 @@ dependencies {
   api project(':testing-common')
   api "javax.ws.rs:javax.ws.rs-api:2.0"
 
-  implementation deps.groovy
-  implementation deps.opentelemetryApi
-  implementation deps.spock
-  implementation deps.slf4j
-  implementation deps.testLogging
+  implementation "org.codehaus.groovy:groovy-all"
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "org.spockframework:spock-core"
+  implementation "org.slf4j:slf4j-api"
+  implementation "ch.qos.logback:logback-classic"
+  implementation "org.slf4j:log4j-over-slf4j"
+  implementation "org.slf4j:jcl-over-slf4j"
+  implementation "org.slf4j:jul-to-slf4j"
 
   implementation project(':javaagent-api')
   implementation project(':instrumentation-api')

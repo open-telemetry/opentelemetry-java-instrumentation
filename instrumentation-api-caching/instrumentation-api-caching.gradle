@@ -8,18 +8,21 @@ apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
 configurations {
-  shadowInclude
+  shadowInclude {
+    canBeResolved = true
+    canBeConsumed = false
+  }
 }
 
 dependencies {
-  compileOnly deps.caffeine
-  shadowInclude(deps.caffeine) {
+  compileOnly "com.github.ben-manes.caffeine:caffeine"
+  shadowInclude("com.github.ben-manes.caffeine:caffeine") {
     exclude group: 'com.google.errorprone', module: 'error_prone_annotations'
     exclude group: 'org.checkerframework', module: 'checker-qual'
   }
 
-  compileOnly deps.weaklockfree
-  shadowInclude deps.weaklockfree
+  compileOnly "com.blogspot.mydailyjava:weak-lock-free"
+  shadowInclude "com.blogspot.mydailyjava:weak-lock-free"
 }
 
 shadowJar {

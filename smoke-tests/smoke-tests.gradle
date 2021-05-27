@@ -14,15 +14,15 @@ description = 'smoke-tests'
 
 def dockerJavaVersion = "3.2.5"
 dependencies {
-  api deps.spock
+  api "org.spockframework:spock-core"
   api project(':testing-common')
 
   implementation platform("io.grpc:grpc-bom:1.33.1")
-  implementation deps.slf4j
-  implementation deps.opentelemetryProto
-  implementation deps.opentelemetryApi
-  implementation deps.testcontainers
-  implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
+  implementation "org.slf4j:slf4j-api"
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "io.opentelemetry:opentelemetry-proto"
+  implementation "org.testcontainers:testcontainers"
+  implementation 'com.fasterxml.jackson.core:jackson-databind'
   implementation 'com.google.protobuf:protobuf-java-util:3.12.4'
   implementation 'io.grpc:grpc-netty-shaded'
   implementation 'io.grpc:grpc-protobuf'

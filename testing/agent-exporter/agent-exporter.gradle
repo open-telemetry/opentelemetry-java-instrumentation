@@ -5,19 +5,19 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  compileOnly(deps.bytebuddy)
-  compileOnly(deps.opentelemetrySdk)
-  compileOnly(deps.opentelemetrySdkAutoconfigure)
-  compileOnly(deps.slf4j)
+  compileOnly("net.bytebuddy:byte-buddy")
+  compileOnly("io.opentelemetry:opentelemetry-sdk")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  compileOnly("org.slf4j:slf4j-api")
 
-  annotationProcessor deps.autoservice
-  compileOnly deps.autoservice
+  annotationProcessor "com.google.auto.service:auto-service"
+  compileOnly "com.google.auto.service:auto-service"
 
   implementation project(':javaagent-extension-api')
   implementation project(':javaagent-tooling')
-  implementation deps.opentelemetryProto
-  implementation deps.opentelemetryOtlp
-  implementation deps.opentelemetryOtlpMetrics
+  implementation "io.opentelemetry:opentelemetry-proto"
+  implementation "io.opentelemetry:opentelemetry-exporter-otlp"
+  implementation "io.opentelemetry:opentelemetry-exporter-otlp-metrics"
   implementation "io.grpc:grpc-testing:1.33.1"
 
   // Include instrumentations instrumenting core JDK classes tp ensure interoperability with other instrumentation

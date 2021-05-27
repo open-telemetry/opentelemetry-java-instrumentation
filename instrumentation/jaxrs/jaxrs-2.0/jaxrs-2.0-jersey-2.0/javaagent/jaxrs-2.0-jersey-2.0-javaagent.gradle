@@ -33,7 +33,7 @@ dependencies {
   // First version with DropwizardTestSupport:
   testLibrary "io.dropwizard:dropwizard-testing:0.8.0"
   testImplementation "javax.xml.bind:jaxb-api:2.2.3"
-  testImplementation "com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10"
+  testImplementation "com.fasterxml.jackson.module:jackson-module-afterburner"
 
   latestDepTestLibrary "org.glassfish.jersey.core:jersey-server:2.+"
   latestDepTestLibrary "org.glassfish.jersey.containers:jersey-container-servlet:2.+"

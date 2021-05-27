@@ -63,6 +63,7 @@ include ':instrumentation-api-caching'
 include ':javaagent-api'
 
 // misc
+include ':dependencyManagement'
 include ':testing:agent-exporter'
 include ':testing:agent-for-testing'
 include ':testing-common'
@@ -316,6 +317,9 @@ def setBuildFile(project) {
     project.buildFileName = "${project.projectDir.parentFile.name}-${project.projectDir.name}.gradle"
   } else {
     project.buildFileName = "${project.name}.gradle"
+  }
+  if (!(project.buildFile.exists())) {
+    project.buildFileName += ".kts"
   }
   project.children.each {
     setBuildFile(it)
