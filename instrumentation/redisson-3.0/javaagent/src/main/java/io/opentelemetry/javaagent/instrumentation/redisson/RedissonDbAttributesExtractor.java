@@ -65,6 +65,11 @@ final class RedissonDbAttributesExtractor extends DbAttributesExtractor<Redisson
     Object command = request.getCommand();
     if (command instanceof CommandData) {
       return ((CommandData<?, ?>) command).getCommand().getName();
+    } else if (command instanceof CommandsData) {
+      CommandsData commandsData = (CommandsData) command;
+      if (commandsData.getCommands().size() == 1) {
+        return commandsData.getCommands().get(0).getCommand().getName();
+      }
     }
     return null;
   }
