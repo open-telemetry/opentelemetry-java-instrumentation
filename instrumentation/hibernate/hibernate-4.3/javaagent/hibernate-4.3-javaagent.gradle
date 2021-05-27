@@ -15,7 +15,7 @@ testSets {
     dirName = 'test'
   }
   version6Test {
-    dirName = 'test'
+    dirName = 'hibernate6Test'
   }
 
   latestDepTest {
@@ -38,6 +38,7 @@ dependencies {
   testImplementation "org.hibernate:hibernate-core:4.3.0.Final"
   testImplementation "org.hibernate:hibernate-entitymanager:4.3.0.Final"
   testImplementation "org.hsqldb:hsqldb:2.0.0"
+  testImplementation "com.h2database:h2:1.4.197"
   //First version to work with Java 14
   testImplementation "org.springframework.data:spring-data-jpa:1.8.0.RELEASE"
 

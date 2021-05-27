@@ -9,11 +9,15 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTrac
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class SessionMethodUtils {
@@ -26,6 +30,14 @@ public class SessionMethodUtils {
       TARGET spanKey,
       String operationName,
       ENTITY entity) {
+    return startSpanFrom(contextStore, spanKey, () -> operationName, entity);
+  }
+
+  private static <TARGET, ENTITY> Context startSpanFrom(
+      ContextStore<TARGET, Context> contextStore,
+      TARGET spanKey,
+      Supplier<String> operationNameSupplier,
+      ENTITY entity) {
 
     Context sessionContext = contextStore.get(spanKey);
     if (sessionContext == null) {
@@ -37,7 +49,32 @@ public class SessionMethodUtils {
       return null; // This method call is being traced already.
     }
 
-    return tracer().startSpan(sessionContext, operationName, entity);
+    return tracer().startSpan(sessionContext, operationNameSupplier.get(), entity);
+  }
+
+  public static <TARGET> Context startSpanFromQuery(
+      ContextStore<TARGET, Context> contextStore, TARGET spanKey, String query) {
+    Supplier<String> operationNameSupplier =
+        () -> {
+          // set operation to default value that is used when sql sanitizer fails to extract
+          // operation name
+          String operation = "Hibernate Query";
+          String queryString = query;
+          // query might be hql or jpql query where select is optional, prepend select so we can use
+          // sql sanitizer to extract entity/table name
+          if (queryString.trim().toUpperCase(Locale.ROOT).startsWith("FROM ")) {
+            queryString = "SELECT * " + query;
+          }
+          SqlStatementInfo info = SqlStatementSanitizer.sanitize(queryString);
+          if (info.getOperation() != null) {
+            operation = info.getOperation();
+            if (info.getTable() != null) {
+              operation += " " + info.getTable();
+            }
+          }
+          return operation;
+        };
+    return startSpanFrom(contextStore, spanKey, operationNameSupplier, null);
   }
 
   public static void end(
