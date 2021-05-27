@@ -14,6 +14,7 @@ import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
 import spock.lang.Shared
 
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
@@ -67,8 +68,10 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
   }
 
   @Override
-  boolean testCausality() {
-    false
+  SingleConnection createSingleConnection(String host, int port) {
+    // singleConnection test would require instrumentation to support requests made through pools
+    // (newHostConnectionPool, superPool, etc), which is currently not supported.
+    return null
   }
 
   def "singleRequest exception trace"() {

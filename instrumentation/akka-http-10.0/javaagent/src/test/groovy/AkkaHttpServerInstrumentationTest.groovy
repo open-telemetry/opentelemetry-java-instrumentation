@@ -23,6 +23,11 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object> 
   String expectedServerSpanName(ServerEndpoint endpoint) {
     return "akka.request"
   }
+
+  @Override
+  boolean testConcurrency() {
+    return true
+  }
 }
 
 class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentationTest {
