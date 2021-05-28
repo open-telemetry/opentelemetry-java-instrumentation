@@ -110,13 +110,13 @@ class QueryTest extends AbstractHibernateTest {
       q.list()
     }
     "query/executeUpdate" | "UPDATE Value"              | true                | { sess ->
-      Query q = sess.createQuery("update Value set name = ?")
-      q.setParameter(0, "alyx")
+      Query q = sess.createQuery("update Value set name = :name")
+      q.setParameter("name", "alyx")
       q.executeUpdate()
     }
     "query/uniqueResult"  | "SELECT Value"              | false               | { sess ->
-      Query q = sess.createQuery("from Value where id = ?")
-      q.setParameter(0, 1L)
+      Query q = sess.createQuery("from Value where id = :id")
+      q.setParameter("id", 1L)
       q.uniqueResult()
     }
     "iterate"             | "SELECT Value"              | false               | { sess ->

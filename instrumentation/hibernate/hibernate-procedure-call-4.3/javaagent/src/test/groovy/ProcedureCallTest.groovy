@@ -23,7 +23,6 @@ import spock.lang.Shared
 
 class ProcedureCallTest extends AgentInstrumentationSpecification {
 
-
   @Shared
   protected SessionFactory sessionFactory
 
