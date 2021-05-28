@@ -7,23 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.log4j.v2_7;
 
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.isStatic;
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.logging.log4j.core.ContextDataInjector;
 
 @AutoService(InstrumentationModule.class)
 public class Log4j27InstrumentationModule extends InstrumentationModule {
@@ -40,31 +30,5 @@ public class Log4j27InstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ContextDataInjectorFactoryInstrumentation());
-  }
-
-  public static class ContextDataInjectorFactoryInstrumentation implements TypeInstrumentation {
-    @Override
-    public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("org.apache.logging.log4j.core.impl.ContextDataInjectorFactory");
-    }
-
-    @Override
-    public void transform(TypeTransformer transformer) {
-      transformer.applyAdviceToMethod(
-          isMethod()
-              .and(isPublic())
-              .and(isStatic())
-              .and(named("createInjector"))
-              .and(returns(named("org.apache.logging.log4j.core.ContextDataInjector"))),
-          Log4j27InstrumentationModule.class.getName() + "$CreateInjectorAdvice");
-    }
-  }
-
-  public static class CreateInjectorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Return(typing = Typing.DYNAMIC, readOnly = false) ContextDataInjector injector) {
-      injector = new SpanDecoratingContextDataInjector(injector);
-    }
   }
 }
