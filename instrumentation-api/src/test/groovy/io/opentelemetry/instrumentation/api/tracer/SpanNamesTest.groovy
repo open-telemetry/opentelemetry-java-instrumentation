@@ -18,9 +18,9 @@ class SpanNamesTest extends Specification {
     result == expected
 
     where:
-    clazz                   | expected
-    SpanNamesTest.class     | "SpanNamesTest"
-    SpanNames.class         | "SpanNames"
+    clazz         | expected
+    SpanNamesTest | "SpanNamesTest"
+    SpanNames     | "SpanNames"
   }
 
   def "test spanNameForMethod"() {
@@ -31,9 +31,9 @@ class SpanNamesTest extends Specification {
     result == expected
 
     where:
-    method                                                                   | expected
-    ReflectionUtil.getMethodByName(SpanNames.class, "spanNameForClass")      | "SpanNames.spanNameForClass"
-    ReflectionUtil.getMethodByName(String.class, "length")                   | "String.length"
+    method                                                        | expected
+    ReflectionUtil.getMethodByName(SpanNames, "spanNameForClass") | "SpanNames.spanNameForClass"
+    ReflectionUtil.getMethodByName(String, "length")              | "String.length"
   }
 
   def "test spanNameForMethod with class"() {
@@ -44,8 +44,8 @@ class SpanNamesTest extends Specification {
     result == expected
 
     where:
-    clazz            | method                                                              | expected
-    SpanNames.class  | ReflectionUtil.getMethodByName(SpanNames.class, "spanNameForClass") | "SpanNames.spanNameForClass"
-    SpanNames.class  | "test"                                                              | "SpanNames.test"
+    clazz     | method                                                        | expected
+    SpanNames | ReflectionUtil.getMethodByName(SpanNames, "spanNameForClass") | "SpanNames.spanNameForClass"
+    SpanNames | "test"                                                        | "SpanNames.test"
   }
 }
