@@ -440,10 +440,10 @@ class SessionTest extends AbstractHibernateTest {
     }
 
     where:
-    queryMethodName  | expectedSpanName      | queryBuildMethod
-    "createQuery"    | "from Value"          | { sess -> sess.createQuery("from Value") }
-    "getNamedQuery"  | "from Value"          | { sess -> sess.getNamedQuery("TestNamedQuery") }
-    "createSQLQuery" | "SELECT * FROM Value" | { sess -> sess.createSQLQuery("SELECT * FROM Value") }
+    queryMethodName  | expectedSpanName | queryBuildMethod
+    "createQuery"    | "SELECT Value"   | { sess -> sess.createQuery("from Value") }
+    "getNamedQuery"  | "SELECT Value"   | { sess -> sess.getNamedQuery("TestNamedQuery") }
+    "createSQLQuery" | "SELECT Value"   | { sess -> sess.createSQLQuery("SELECT * FROM Value") }
   }
 
 
