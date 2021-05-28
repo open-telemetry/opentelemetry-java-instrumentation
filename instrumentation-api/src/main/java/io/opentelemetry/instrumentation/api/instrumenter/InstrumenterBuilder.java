@@ -33,6 +33,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
+  final List<SpanLinkExtractor<? super REQUEST>> spanLinkExtractors = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
@@ -81,6 +82,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   public InstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractors(
       AttributesExtractor<? super REQUEST, ? super RESPONSE>... attributesExtractors) {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
+  }
+
+  /** Adds a {@link SpanLinkExtractor} to extract span link from requests. */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinkExtractor(
+      SpanLinkExtractor<REQUEST> spanLinkExtractor) {
+    spanLinkExtractors.add(spanLinkExtractor);
+    return this;
   }
 
   /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and stop. */

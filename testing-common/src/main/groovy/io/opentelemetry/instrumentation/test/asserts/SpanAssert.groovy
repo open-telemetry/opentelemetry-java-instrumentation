@@ -116,6 +116,10 @@ class SpanAssert {
     assert found
   }
 
+  def hasNoLinks() {
+    assert span.links.empty
+  }
+
   def status(StatusCode expected) {
     assert span.status.statusCode == expected
     checked.status = true
