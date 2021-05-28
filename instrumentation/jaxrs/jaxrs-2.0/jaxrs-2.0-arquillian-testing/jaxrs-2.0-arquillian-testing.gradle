@@ -12,7 +12,7 @@ dependencies {
   compileOnly "javax:javaee-api:7.0"
 
   api project(':testing-common')
-  implementation deps.opentelemetryApi
+  implementation "io.opentelemetry:opentelemetry-api"
 
   def arquillianVersion = '1.4.0.Final'
   implementation "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}"

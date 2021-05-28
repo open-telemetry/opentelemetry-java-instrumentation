@@ -17,11 +17,11 @@ configurations {
 }
 
 dependencies {
-  api deps.opentelemetrySdk
+  api "io.opentelemetry:opentelemetry-sdk"
   // metrics are unstable, do not expose as api
-  implementation deps.opentelemetrySdkMetrics
-  api deps.bytebuddy
-  api deps.slf4j
+  implementation "io.opentelemetry:opentelemetry-sdk-metrics"
+  api "net.bytebuddy:byte-buddy"
+  api "org.slf4j:slf4j-api"
 
   implementation project(":instrumentation-api")
   implementation project(":javaagent-api")

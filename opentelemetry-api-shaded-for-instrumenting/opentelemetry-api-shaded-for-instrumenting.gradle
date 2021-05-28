@@ -5,9 +5,8 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  implementation deps.opentelemetryApi
-  implementation deps.opentelemetryApiMetrics
-  implementation deps.opentelemetryContext
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "io.opentelemetry:opentelemetry-api-metrics"
 }
 
 // OpenTelemetry API shaded so that it can be used in instrumentation of OpenTelemetry API itself,

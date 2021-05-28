@@ -20,5 +20,5 @@ dependencies {
 
   testLibrary "com.couchbase.client:java-client:3.1.0"
 
-  testImplementation group: "org.testcontainers", name: "couchbase", version: versions.testcontainers
+  testImplementation group: "org.testcontainers", name: "couchbase", version: versions["org.testcontainers"]
 }

@@ -51,7 +51,7 @@ configurations {
 }
 
 dependencies {
-  compileOnly deps.opentelemetryExtAws
+  compileOnly "io.opentelemetry:opentelemetry-extension-aws"
 
   implementation project(':instrumentation:aws-sdk:aws-sdk-1.11:library')
 
@@ -72,11 +72,10 @@ dependencies {
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
 
   // needed for kinesis:
-  testImplementation "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:${versions.jackson}"
+  testImplementation "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor"
 
   // needed for SNS
-  testImplementation deps.testcontainers
-  testImplementation "org.testcontainers:localstack:${versions.testcontainers}"
+  testImplementation "org.testcontainers:localstack:${versions["org.testcontainers"]}"
 
   // needed by S3
   testImplementation 'javax.xml.bind:jaxb-api:2.3.1'

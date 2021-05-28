@@ -10,11 +10,11 @@ dependencies {
   testCompileOnly project(':javaagent-tooling')
   testCompileOnly project(':javaagent-extension-api')
 
-  testImplementation deps.bytebuddy
-  testImplementation deps.bytebuddyagent
+  testImplementation "net.bytebuddy:byte-buddy"
+  testImplementation "net.bytebuddy:byte-buddy-agent"
 
-  testImplementation deps.guava
-  testImplementation deps.opentelemetryExtAnnotations
+  testImplementation "com.google.guava:guava"
+  testImplementation "io.opentelemetry:opentelemetry-extension-annotations"
 
   testImplementation "cglib:cglib:3.2.5"
 

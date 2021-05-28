@@ -13,6 +13,8 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.ipc.netty.http.client.HttpClientOptions
 import reactor.ipc.netty.resources.PoolResources
+import reactor.netty.http.client.HttpClient
+import reactor.netty.resources.LoopResources
 
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
@@ -29,7 +31,8 @@ class SpringWebFluxSingleConnection implements SingleConnection {
         clientOptions.poolResources(PoolResources.fixed("pool", 1, HttpClientTest.CONNECT_TIMEOUT_MS))
       })
     } else {
-      def httpClient = reactor.netty.http.client.HttpClient.create(reactor.netty.resources.create("pool", 1)).tcpConfiguration({ tcpClient ->
+      def httpClient = HttpClient.create().tcpConfiguration({ tcpClient ->
+        tcpClient.runOn(LoopResources.create("pool", 1, true))
         tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, HttpClientTest.CONNECT_TIMEOUT_MS)
       })
       connector = new ReactorClientHttpConnector(httpClient)

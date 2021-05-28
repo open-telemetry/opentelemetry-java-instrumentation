@@ -33,7 +33,10 @@ CopySpec isolateSpec(Collection<Jar> shadowJarTasks) {
 }
 
 configurations {
-  shadowInclude
+  shadowInclude {
+    canBeResolved = true
+    canBeConsumed = false
+  }
 }
 
 evaluationDependsOn(":testing:agent-exporter")
@@ -80,7 +83,7 @@ dependencies {
   shadowInclude project(':javaagent-bootstrap')
 
   testImplementation project(':testing-common')
-  testImplementation deps.opentelemetryApi
+  testImplementation "io.opentelemetry:opentelemetry-api"
 }
 
 afterEvaluate {

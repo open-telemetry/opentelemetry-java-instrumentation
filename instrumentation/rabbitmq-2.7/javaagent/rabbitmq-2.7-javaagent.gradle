@@ -15,8 +15,6 @@ dependencies {
   testLibrary ("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE") {
     exclude group: 'com.rabbitmq', module: 'amqp-client'
   }
-
-  testImplementation deps.testcontainers
 }
 
 tasks.withType(Test).configureEach {

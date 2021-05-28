@@ -30,7 +30,11 @@ abstract class ControllerSpringWebFluxServerTest extends SpringWebFluxServerTest
         errorEvent(RuntimeException, EXCEPTION.body)
       } else if (endpoint == NOT_FOUND) {
         status StatusCode.ERROR
-        errorEvent(ResponseStatusException, "Response status 404")
+        if (Boolean.getBoolean("testLatestDeps")) {
+          errorEvent(ResponseStatusException, "404 NOT_FOUND")
+        } else {
+          errorEvent(ResponseStatusException, "Response status 404")
+        }
       }
       childOf((SpanData) parent)
     }

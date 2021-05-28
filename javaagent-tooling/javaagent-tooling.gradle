@@ -22,42 +22,42 @@ dependencies {
   implementation project(':javaagent-api')
   implementation project(':instrumentation-api')
 
-  implementation deps.opentelemetryApi
-  implementation deps.opentelemetryApiMetrics
-  implementation deps.opentelemetryContext
-  implementation deps.opentelemetrySdk
-  implementation deps.opentelemetrySdkAutoconfigure
-  implementation deps.opentelemetrySdkMetrics
-  implementation(deps.opentelemetryKotlin)
-  implementation deps.opentelemetryExtAws
-  implementation deps.opentelemetryTraceProps
-  implementation(deps.opentelemetryResources) {
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "io.opentelemetry:opentelemetry-api-metrics"
+  implementation "io.opentelemetry:opentelemetry-sdk"
+  implementation "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure"
+  implementation "io.opentelemetry:opentelemetry-sdk-metrics"
+  implementation("io.opentelemetry:opentelemetry-extension-kotlin")
+  implementation "io.opentelemetry:opentelemetry-extension-aws"
+  implementation "io.opentelemetry:opentelemetry-extension-trace-propagators"
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-resources") {
     // exclude sdk-common to avoid bumping guava version
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-common'
   }
 
-  implementation deps.opentelemetryJaeger
-  implementation deps.opentelemetryLogging
-  implementation deps.opentelemetryOtlp
-  implementation deps.opentelemetryOtlpMetrics
+  implementation "io.opentelemetry:opentelemetry-exporter-jaeger"
+  implementation "io.opentelemetry:opentelemetry-exporter-logging"
+  implementation "io.opentelemetry:opentelemetry-exporter-otlp"
+  implementation "io.opentelemetry:opentelemetry-exporter-otlp-metrics"
 
-  implementation deps.opentelemetryPrometheus
-  implementation deps.prometheus
+  implementation "io.opentelemetry:opentelemetry-exporter-prometheus"
+  implementation "io.prometheus:simpleclient"
+  implementation "io.prometheus:simpleclient_httpserver"
 
-  implementation deps.opentelemetryZipkin
+  implementation "io.opentelemetry:opentelemetry-exporter-zipkin"
 
-  api deps.bytebuddy
-  implementation deps.bytebuddyagent
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-  implementation deps.slf4j
-  implementation deps.guava
+  api "net.bytebuddy:byte-buddy"
+  implementation "net.bytebuddy:byte-buddy-agent"
+  annotationProcessor "com.google.auto.service:auto-service"
+  implementation "com.google.auto.service:auto-service"
+  implementation "org.slf4j:slf4j-api"
+  implementation "com.google.guava:guava"
 
   implementation "io.grpc:grpc-netty-shaded:1.35.1"
 
   testImplementation project(':testing-common')
-  testImplementation deps.assertj
-  testImplementation deps.mockito
+  testImplementation "org.assertj:assertj-core"
+  testImplementation "org.mockito:mockito-core"
 
   instrumentationMuzzle sourceSets.main.output
 }

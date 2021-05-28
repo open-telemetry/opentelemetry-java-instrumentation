@@ -6,5 +6,5 @@ dependencies {
   testCompileOnly project(':instrumentation-api-caching')
   testRuntimeOnly project(":javaagent-bootstrap")
 
-  testImplementation deps.assertj
+  testImplementation "org.assertj:assertj-core"
 }
