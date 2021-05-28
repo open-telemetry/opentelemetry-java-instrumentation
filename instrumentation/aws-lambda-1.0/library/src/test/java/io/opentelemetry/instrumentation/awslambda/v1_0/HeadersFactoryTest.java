@@ -34,9 +34,9 @@ class HeadersFactoryTest {
     assertThat(headers.size()).isEqualTo(3);
     assertThat(headers)
         .containsOnly(
-            entry("X-B3-TraceId", ("4fd0b6131f19f39af59518d127b0cafe")),
-            entry("X-B3-SpanId", ("0000000000000456")),
-            entry("X-B3-Sampled", ("true")));
+            entry("X-B3-TraceId", "4fd0b6131f19f39af59518d127b0cafe"),
+            entry("X-B3-SpanId", "0000000000000456"),
+            entry("X-B3-Sampled", "true"));
   }
 
   @Test

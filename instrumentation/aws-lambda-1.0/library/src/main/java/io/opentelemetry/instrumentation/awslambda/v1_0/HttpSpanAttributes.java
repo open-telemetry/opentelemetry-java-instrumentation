@@ -65,6 +65,7 @@ final class HttpSpanAttributes {
         first = false;
       }
     } catch (UnsupportedEncodingException ignored) {
+      // Ignore
     }
     return str.toString();
   }

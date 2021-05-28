@@ -19,6 +19,7 @@ import test.gwt.shared.MessageServiceAsync;
 public class GreetingEntryPoint implements EntryPoint {
   private final MessageServiceAsync messageServiceAsync = GWT.create(MessageService.class);
 
+  @Override
   public void onModuleLoad() {
     Button greetingButton = new Button("Greeting");
     greetingButton.addStyleName("greeting.button");
@@ -51,11 +52,13 @@ public class GreetingEntryPoint implements EntryPoint {
         messageServiceAsync.sendMessage(
             message,
             new AsyncCallback<String>() {
+              @Override
               public void onFailure(Throwable caught) {
                 messageLabel.setText("Error");
                 messageLabel.addStyleName("error.received");
               }
 
+              @Override
               public void onSuccess(String result) {
                 messageLabel.setText(result);
                 messageLabel.addStyleName("message.received");

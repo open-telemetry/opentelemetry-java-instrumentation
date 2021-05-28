@@ -62,35 +62,15 @@ public class TracedDelegatingConsumer implements Consumer {
   public void handleDelivery(
       String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
       throws IOException {
-    Context context = null;
-    Scope scope = null;
-    try {
-      context = tracer().startDeliverySpan(queue, envelope, properties, body);
-      scope = context.makeCurrent();
+    Context context = tracer().startDeliverySpan(queue, envelope, properties, body);
 
-    } catch (Exception e) {
-      log.debug("Instrumentation error in tracing consumer", e);
-    } finally {
-      // TODO this is very unusual code structure for this repo
-      // We have to review it
-      try {
-        // Call delegate.
-        delegate.handleDelivery(consumerTag, envelope, properties, body);
-
-        if (context != null) {
-          tracer().end(context);
-        }
-      } catch (Throwable throwable) {
-        if (context != null) {
-          tracer().endExceptionally(context, throwable);
-        }
-
-        throw throwable;
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
-      }
+    try (Scope scope = context.makeCurrent()) {
+      // Call delegate.
+      delegate.handleDelivery(consumerTag, envelope, properties, body);
+      tracer().end(context);
+    } catch (Throwable throwable) {
+      tracer().endExceptionally(context, throwable);
+      throw throwable;
     }
   }
 }

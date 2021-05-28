@@ -34,6 +34,7 @@ final class AwsSdkHttpClientTracer
     return withClientSpan(parentContext, span);
   }
 
+  @Override
   public void inject(Context context, SdkHttpRequest.Builder builder) {
     AwsXrayPropagator.getInstance().inject(context, builder, getSetter());
   }

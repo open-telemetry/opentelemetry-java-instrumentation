@@ -5,6 +5,10 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Some useful constants.
  *
@@ -13,13 +17,14 @@ package io.opentelemetry.javaagent.tooling;
 public final class Constants {
 
   /** packages which will be loaded on the bootstrap classloader. */
-  public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
-    "io.opentelemetry.javaagent.common.exec",
-    "io.opentelemetry.javaagent.slf4j",
-    "io.opentelemetry.javaagent.bootstrap",
-    "io.opentelemetry.javaagent.shaded",
-    "io.opentelemetry.javaagent.instrumentation.api",
-  };
+  public static final List<String> BOOTSTRAP_PACKAGE_PREFIXES =
+      Collections.unmodifiableList(
+          Arrays.asList(
+              "io.opentelemetry.javaagent.common.exec",
+              "io.opentelemetry.javaagent.slf4j",
+              "io.opentelemetry.javaagent.bootstrap",
+              "io.opentelemetry.javaagent.shaded",
+              "io.opentelemetry.javaagent.instrumentation.api"));
 
   private Constants() {}
 }

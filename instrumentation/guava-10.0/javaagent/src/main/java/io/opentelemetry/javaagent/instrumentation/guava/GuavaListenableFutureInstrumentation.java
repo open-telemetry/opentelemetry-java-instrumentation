@@ -67,6 +67,8 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
 
+    // Used by muzzle
+    @SuppressWarnings("UnusedMethod")
     private static void muzzleCheck(final AbstractFuture<?> future) {
       future.addListener(null, null);
     }

@@ -28,11 +28,11 @@ public abstract class DatabaseClientTracer<CONNECTION, STATEMENT, SANITIZEDSTATE
 
   protected final NetPeerAttributes netPeerAttributes;
 
-  public DatabaseClientTracer(NetPeerAttributes netPeerAttributes) {
+  protected DatabaseClientTracer(NetPeerAttributes netPeerAttributes) {
     this.netPeerAttributes = netPeerAttributes;
   }
 
-  public DatabaseClientTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
+  protected DatabaseClientTracer(OpenTelemetry openTelemetry, NetPeerAttributes netPeerAttributes) {
     super(openTelemetry);
     this.netPeerAttributes = netPeerAttributes;
   }

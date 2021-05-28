@@ -15,7 +15,7 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.core.Ordered;
 
-public class TracingJobExecutionListener implements JobExecutionListener, Ordered {
+public final class TracingJobExecutionListener implements JobExecutionListener, Ordered {
   private final ContextStore<JobExecution, ContextAndScope> executionContextStore;
 
   public TracingJobExecutionListener(
@@ -54,7 +54,7 @@ public class TracingJobExecutionListener implements JobExecutionListener, Ordere
     if (this == o) {
       return true;
     }
-    return o != null && getClass() == o.getClass();
+    return o instanceof TracingJobExecutionListener;
   }
 
   @Override

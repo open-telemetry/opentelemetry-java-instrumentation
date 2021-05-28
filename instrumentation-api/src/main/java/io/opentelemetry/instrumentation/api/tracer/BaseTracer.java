@@ -60,11 +60,11 @@ public abstract class BaseTracer {
    * @deprecated always pass an OpenTelemetry instance.
    */
   @Deprecated
-  public BaseTracer() {
+  protected BaseTracer() {
     this(GlobalOpenTelemetry.get());
   }
 
-  public BaseTracer(OpenTelemetry openTelemetry) {
+  protected BaseTracer(OpenTelemetry openTelemetry) {
     this.tracer = openTelemetry.getTracer(getInstrumentationName(), getVersion());
     this.propagators = openTelemetry.getPropagators();
   }

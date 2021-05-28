@@ -30,6 +30,7 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
     super(instrumentationNames());
   }
 
+  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // JSR-352 Batch API
     return hasClassesNamed("org.springframework.batch.core.jsr.launch.JsrJobOperator");
@@ -53,6 +54,7 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
         new JsrChunkProcessorInstrumentation());
   }
 
+  @Override
   protected boolean defaultEnabled() {
     // TODO: replace this with an experimental flag
     return false;

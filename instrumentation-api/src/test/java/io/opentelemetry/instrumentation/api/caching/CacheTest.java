@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 class CacheTest {
 
   @Nested
+  @SuppressWarnings("ClassCanBeStatic")
   class StrongKeys {
     @Test
     void unbounded() {
@@ -60,6 +61,7 @@ class CacheTest {
   }
 
   @Nested
+  @SuppressWarnings("ClassCanBeStatic")
   class WeakKeys {
     @Test
     void unbounded() {

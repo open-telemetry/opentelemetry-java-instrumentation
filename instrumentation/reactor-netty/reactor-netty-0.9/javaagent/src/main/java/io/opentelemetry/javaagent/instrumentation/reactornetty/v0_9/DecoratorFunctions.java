@@ -26,7 +26,7 @@ public final class DecoratorFunctions {
     private final BiConsumer<? super M, ? super Connection> delegate;
     private final boolean forceParentContext;
 
-    public OnMessageDecorator(
+    protected OnMessageDecorator(
         BiConsumer<? super M, ? super Connection> delegate, boolean forceParentContext) {
       this.delegate = delegate;
       this.forceParentContext = forceParentContext;
@@ -80,7 +80,7 @@ public final class DecoratorFunctions {
   private abstract static class OnMessageErrorDecorator<M> implements BiConsumer<M, Throwable> {
     private final BiConsumer<? super M, ? super Throwable> delegate;
 
-    public OnMessageErrorDecorator(BiConsumer<? super M, ? super Throwable> delegate) {
+    protected OnMessageErrorDecorator(BiConsumer<? super M, ? super Throwable> delegate) {
       this.delegate = delegate;
     }
 

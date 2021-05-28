@@ -33,9 +33,6 @@ public class Bridging {
 
   private static final Logger log = LoggerFactory.getLogger(Bridging.class);
 
-  // this is just an optimization to save some byte array allocations
-  public static final ThreadLocal<byte[]> BUFFER = new ThreadLocal<>();
-
   public static Span toApplication(io.opentelemetry.api.trace.Span agentSpan) {
     if (!agentSpan.getSpanContext().isValid()) {
       // no need to wrap
@@ -160,14 +157,5 @@ public class Bridging {
         io.opentelemetry.api.trace.TraceState.builder();
     applicationTraceState.forEach(agentTraceState::put);
     return agentTraceState.build();
-  }
-
-  private static byte[] getBuffer() {
-    byte[] bytes = BUFFER.get();
-    if (bytes == null) {
-      bytes = new byte[16];
-      BUFFER.set(bytes);
-    }
-    return bytes;
   }
 }

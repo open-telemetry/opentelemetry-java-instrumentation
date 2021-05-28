@@ -102,7 +102,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         }
 
         // Assume already instrumented event if traceId is present.
-        if (!mdc.contains(TRACE_ID)) {
+        if (!mdc.containsKey(TRACE_ID)) {
           Span span = InstrumentationContext.get(LoggingEvent.class, Span.class).get(event);
           if (span != null && span.getSpanContext().isValid()) {
             SpanContext spanContext = span.getSpanContext();

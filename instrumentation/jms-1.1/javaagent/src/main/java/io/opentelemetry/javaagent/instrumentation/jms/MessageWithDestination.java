@@ -81,6 +81,7 @@ public final class MessageWithDestination {
     try {
       jmsDestination = message.getJMSDestination();
     } catch (Exception ignored) {
+      // Ignore
     }
     if (jmsDestination == null) {
       jmsDestination = fallbackDestination;

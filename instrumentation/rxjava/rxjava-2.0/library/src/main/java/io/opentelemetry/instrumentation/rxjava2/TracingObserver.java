@@ -94,6 +94,7 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
       return MethodHandles.lookup()
           .findGetter(BasicFuseableObserver.class, fieldName, QueueDisposable.class);
     } catch (NoSuchFieldException | IllegalAccessException ignored) {
+      // Ignore
     }
     return null;
   }
