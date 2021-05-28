@@ -17,13 +17,12 @@ import java.util.List;
  *
  * <ul>
  *   <li>On entry to WebApp.handleRequest remember request. {@link
- *       LibertyWebAppInstrumentation.LibertyHandleRequestAdvice}
+ *       LibertyWebAppInstrumentation.HandleRequestAdvice}
  *   <li>On call to WebApp.isForbidden (called from WebApp.handleRequest) start span based on
  *       remembered request. We don't start span immediately at the start or handleRequest because
- *       HttpServletRequest isn't usable yet. {@link
- *       LibertyWebAppInstrumentation.LibertyStartSpanAdvice}
+ *       HttpServletRequest isn't usable yet. {@link LibertyWebAppInstrumentation.IsForbiddenAdvice}
  *   <li>On exit from WebApp.handleRequest close the span. {@link
- *       LibertyWebAppInstrumentation.LibertyHandleRequestAdvice}
+ *       LibertyWebAppInstrumentation.HandleRequestAdvice}
  * </ul>
  */
 @AutoService(InstrumentationModule.class)
