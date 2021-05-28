@@ -20,10 +20,10 @@ import org.apache.rocketmq.test.util.RandomUtil;
 public final class BaseConf {
   public static final String nsAddr;
   public static final String broker1Addr;
-  protected static String broker1Name;
-  protected static final String clusterName;
-  protected static final NamesrvController namesrvController;
-  protected static final BrokerController brokerController;
+  static String broker1Name;
+  static final String clusterName;
+  static final NamesrvController namesrvController;
+  static final BrokerController brokerController;
 
   static {
     System.setProperty(

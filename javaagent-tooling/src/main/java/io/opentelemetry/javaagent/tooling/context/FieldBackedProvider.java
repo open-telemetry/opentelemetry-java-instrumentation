@@ -853,6 +853,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
    * Template class used to generate the class that accesses stored context using either key
    * instance's own injected field or global hash map if field is not available.
    */
+  // Called from generated code
+  @SuppressWarnings({"UnusedMethod", "UnusedVariable"})
   private static final class ContextStoreImplementationTemplate
       implements ContextStore<Object, Object> {
     private static final ContextStoreImplementationTemplate INSTANCE =

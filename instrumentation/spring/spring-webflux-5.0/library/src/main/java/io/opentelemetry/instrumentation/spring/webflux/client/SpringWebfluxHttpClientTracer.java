@@ -61,6 +61,7 @@ class SpringWebfluxHttpClientTracer
       try {
         return (int) RAW_STATUS_CODE.invokeExact(httpResponse);
       } catch (Throwable ignored) {
+        // Ignore
       }
     }
     // prior to webflux 5.1, the best we can get is HttpStatus enum, which only covers standard

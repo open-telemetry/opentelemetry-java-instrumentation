@@ -332,6 +332,7 @@ public class AgentClassLoader extends URLClassLoader {
       this.agentClassLoader = agentClassLoader;
     }
 
+    @Override
     public URL getResource(String resourceName) {
       // find resource from boot loader
       URL url = super.getResource(resourceName);
@@ -426,6 +427,7 @@ public class AgentClassLoader extends URLClassLoader {
           return jarEntry.getSize();
         }
       } catch (IOException ignored) {
+        // Ignore
       }
       return -1;
     }

@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.SQS
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.response;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -117,12 +118,14 @@ enum AwsSdkRequest {
 
   private final AwsSdkRequestType type;
   private final String requestClass;
+  // Wrap in unmodifiableMap
+  @SuppressWarnings("ImmutableEnumChecker")
   private final Map<FieldMapping.Type, List<FieldMapping>> fields;
 
   AwsSdkRequest(AwsSdkRequestType type, String requestClass, FieldMapping... fields) {
     this.type = type;
     this.requestClass = requestClass;
-    this.fields = FieldMapping.groupByType(fields);
+    this.fields = Collections.unmodifiableMap(FieldMapping.groupByType(fields));
   }
 
   @Nullable

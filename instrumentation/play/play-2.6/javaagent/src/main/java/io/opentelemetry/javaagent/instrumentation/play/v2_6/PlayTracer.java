@@ -30,12 +30,14 @@ public class PlayTracer extends BaseTracer {
       // This method was added in Play 2.6.8
       typedKeyGetUnderlyingCheck = TypedKey.class.getMethod("asScala");
     } catch (NoSuchMethodException ignored) {
+      // Ignore
     }
     // Fallback
     if (typedKeyGetUnderlyingCheck == null) {
       try {
         typedKeyGetUnderlyingCheck = TypedKey.class.getMethod("underlying");
       } catch (NoSuchMethodException ignored) {
+        // Ignore
       }
     }
     typedKeyGetUnderlying = typedKeyGetUnderlyingCheck;
@@ -55,6 +57,7 @@ public class PlayTracer extends BaseTracer {
                       (play.api.libs.typedmap.TypedKey<HandlerDef>)
                           typedKeyGetUnderlying.invoke(Router.Attrs.HANDLER_DEF));
         } catch (IllegalAccessException | InvocationTargetException ignored) {
+          // Ignore
         }
       }
       if (defOption != null && !defOption.isEmpty()) {

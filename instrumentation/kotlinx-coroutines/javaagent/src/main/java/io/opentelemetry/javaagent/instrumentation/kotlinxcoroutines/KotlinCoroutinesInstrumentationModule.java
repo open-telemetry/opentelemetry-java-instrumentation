@@ -45,11 +45,13 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
     @Override
     public void transform(TypeTransformer transformer) {
       transformer.applyAdviceToMethod(
-          (named("launch").or(named("launch$default")))
+          named("launch")
+              .or(named("launch$default"))
               .and(takesArgument(1, named("kotlin.coroutines.CoroutineContext"))),
           KotlinCoroutinesInstrumentationModule.class.getName() + "$LaunchAdvice");
       transformer.applyAdviceToMethod(
-          (named("runBlocking").or(named("runBlocking$default")))
+          named("runBlocking")
+              .or(named("runBlocking$default"))
               .and(takesArgument(0, named("kotlin.coroutines.CoroutineContext"))),
           KotlinCoroutinesInstrumentationModule.class.getName() + "$RunBlockingAdvice");
     }

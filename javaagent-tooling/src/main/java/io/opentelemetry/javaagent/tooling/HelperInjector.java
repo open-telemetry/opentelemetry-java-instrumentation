@@ -213,6 +213,8 @@ public class HelperInjector implements Transformer {
     return new ClassInjector.UsingReflection(classLoader).injectRaw(classnameToBytes);
   }
 
+  // JavaModule.equals doesn't work for some reason
+  @SuppressWarnings("ReferenceEquality")
   private void ensureModuleCanReadHelperModules(JavaModule target) {
     if (JavaModule.isSupported() && target != JavaModule.UNSUPPORTED && target.isNamed()) {
       for (WeakReference<Object> helperModuleReference : helperModules) {

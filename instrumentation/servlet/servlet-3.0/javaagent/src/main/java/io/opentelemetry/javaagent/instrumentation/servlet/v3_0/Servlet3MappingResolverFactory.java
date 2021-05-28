@@ -21,6 +21,7 @@ public class Servlet3MappingResolverFactory extends ServletMappingResolverFactor
     this.servletConfig = servletConfig;
   }
 
+  @Override
   public Collection<String> getMappings() {
     String servletName = servletConfig.getServletName();
     ServletContext servletContext = servletConfig.getServletContext();
