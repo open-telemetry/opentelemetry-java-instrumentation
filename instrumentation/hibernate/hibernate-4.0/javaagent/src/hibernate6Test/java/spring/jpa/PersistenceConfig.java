@@ -57,9 +57,6 @@ public class PersistenceConfig {
     properties.setProperty("hibernate.show_sql", "true");
     properties.setProperty("hibernate.hbm2ddl.auto", "create");
     properties.setProperty("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
-    //    properties.setProperty(
-    //        "hibernate.format_sql",
-    // env.getProperty("spring.jpa.properties.hibernate.format_sql"));
     return properties;
   }
 }

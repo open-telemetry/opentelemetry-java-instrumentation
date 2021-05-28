@@ -9,11 +9,14 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.HibernateTrac
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class SessionMethodUtils {
@@ -26,6 +29,14 @@ public class SessionMethodUtils {
       TARGET spanKey,
       String operationName,
       ENTITY entity) {
+    return startSpanFrom(contextStore, spanKey, () -> operationName, entity);
+  }
+
+  private static <TARGET, ENTITY> Context startSpanFrom(
+      ContextStore<TARGET, Context> contextStore,
+      TARGET spanKey,
+      Supplier<String> operationNameSupplier,
+      ENTITY entity) {
 
     Context sessionContext = contextStore.get(spanKey);
     if (sessionContext == null) {
@@ -37,7 +48,26 @@ public class SessionMethodUtils {
       return null; // This method call is being traced already.
     }
 
-    return tracer().startSpan(sessionContext, operationName, entity);
+    return tracer().startSpan(sessionContext, operationNameSupplier.get(), entity);
+  }
+
+  public static <TARGET> Context startSpanFromQuery(
+      ContextStore<TARGET, Context> contextStore, TARGET spanKey, String query) {
+    Supplier<String> operationNameSupplier =
+        () -> {
+          // set operation to default value that is used when sql sanitizer fails to extract
+          // operation name
+          String operation = "Hibernate Query";
+          SqlStatementInfo info = SqlStatementSanitizer.sanitize(query);
+          if (info.getOperation() != null) {
+            operation = info.getOperation();
+            if (info.getTable() != null) {
+              operation += " " + info.getTable();
+            }
+          }
+          return operation;
+        };
+    return startSpanFrom(contextStore, spanKey, operationNameSupplier, null);
   }
 
   public static void end(
