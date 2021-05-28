@@ -7,6 +7,7 @@ pluginManagement {
     id "io.github.gradle-nexus.publish-plugin" version "1.0.0"
     id "me.champeau.jmh" version "0.6.4"
     id "net.ltgt.errorprone" version "1.3.0"
+    id "net.ltgt.nullaway" version "1.1.0"
     id 'org.jetbrains.kotlin.jvm' version '1.5.10'
     id 'org.unbroken-dome.test-sets' version '4.0.0'
     id "nebula.release" version "15.3.0"
@@ -140,8 +141,8 @@ include ':instrumentation:guava-10.0:library'
 include ':instrumentation:gwt-2.0:javaagent'
 include ':instrumentation:hibernate:hibernate-3.3:javaagent'
 include ':instrumentation:hibernate:hibernate-4.0:javaagent'
-include ':instrumentation:hibernate:hibernate-4.3:javaagent'
 include ':instrumentation:hibernate:hibernate-common:javaagent'
+include ':instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent'
 include ':instrumentation:http-url-connection:javaagent'
 include ':instrumentation:hystrix-1.4:javaagent'
 include ':instrumentation:java-http-client:javaagent'
