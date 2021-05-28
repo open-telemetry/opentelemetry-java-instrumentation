@@ -80,6 +80,9 @@ class SqlStatementSanitizerTest extends Specification {
 
     // whitespace normalization
     "SELECT    *    \t\r\nFROM  TABLE WHERE FIELD1 = 12344 AND FIELD2 = 5678"  | "SELECT * FROM TABLE WHERE FIELD1 = ? AND FIELD2 = ?"
+
+    // hibernate/jpa query language
+    "FROM TABLE WHERE FIELD=1234"                                              | "FROM TABLE WHERE FIELD=?"
   }
 
   @Unroll
@@ -110,6 +113,9 @@ class SqlStatementSanitizerTest extends Specification {
     '/* update comment */ select * from table1'                       | SqlStatementInfo.create(sql, 'SELECT', 'table1')
     'select /*((*/abc from table'                                     | SqlStatementInfo.create(sql, 'SELECT', 'table')
     'SeLeCT * FrOm TAblE'                                             | SqlStatementInfo.create(sql, 'SELECT', 'TAblE')
+    // hibernate/jpa
+    'FROM schema.table'                                               | SqlStatementInfo.create(sql, 'SELECT', 'schema.table')
+    '/* update comment */ from table1'                                | SqlStatementInfo.create(sql, 'SELECT', 'table1')
     // Insert
     ' insert into table where lalala'                                 | SqlStatementInfo.create(sql, 'INSERT', 'table')
     'insert insert into table where lalala'                           | SqlStatementInfo.create(sql, 'INSERT', 'table')
