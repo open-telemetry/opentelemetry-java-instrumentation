@@ -29,6 +29,8 @@ public class ArmeriaInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new ArmeriaWebClientBuilderInstrumentation(), new ArmeriaServerBuilderInstrumentation());
+        new ArmeriaWebClientBuilderInstrumentation(),
+        new ArmeriaServerBuilderInstrumentation(),
+        new AbstractStreamMessageSubscriptionInstrumentation());
   }
 }
