@@ -63,17 +63,14 @@ public class TracedDelegatingConsumer implements Consumer {
       String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
       throws IOException {
     Context context = tracer().startDeliverySpan(queue, envelope, properties, body);
-    Scope scope = context.makeCurrent();
 
-    try {
+    try (Scope scope = context.makeCurrent()) {
       // Call delegate.
       delegate.handleDelivery(consumerTag, envelope, properties, body);
       tracer().end(context);
     } catch (Throwable throwable) {
       tracer().endExceptionally(context, throwable);
       throw throwable;
-    } finally {
-      scope.close();
     }
   }
 }
