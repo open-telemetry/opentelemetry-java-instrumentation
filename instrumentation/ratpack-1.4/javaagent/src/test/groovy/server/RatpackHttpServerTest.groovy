@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -48,7 +47,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> implements Agent
         prefix(INDEXED_CHILD.rawPath()) {
           all {
             controller(INDEXED_CHILD) {
-              Span.current().setAttribute("test.request.id", request.queryParams.get("id") as long)
+              INDEXED_CHILD.collectSpanAttributes { request.queryParams.get(it) }
               context.response.status(INDEXED_CHILD.status).send()
             }
           }

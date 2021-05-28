@@ -14,6 +14,8 @@ public class ExceptionUtils {
     return ExceptionUtils.sneakyThrow0(t);
   }
 
+  // Exactly what we want
+  @SuppressWarnings("TypeParameterUnusedInFormals")
   private static <T extends Throwable> T sneakyThrow0(Throwable t) throws T {
     throw (T) t;
   }

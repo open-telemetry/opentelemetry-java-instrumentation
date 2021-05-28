@@ -133,7 +133,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "SET TESTSETKEY ?"
           }
@@ -167,7 +166,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://localhost:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "SET TESTSETKEY ?"
           }
@@ -197,7 +195,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "GET TESTKEY"
           }
@@ -227,7 +224,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "GET NON_EXISTENT_KEY"
           }
@@ -257,7 +253,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_STATEMENT.key}" "RANDOMKEY"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
           }
@@ -287,7 +282,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "LPUSH TESTLIST ?"
           }
@@ -317,7 +311,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "HMSET user firstname ? lastname ? age ?"
           }
@@ -347,7 +340,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "HGETALL TESTHM"
           }
@@ -382,7 +374,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "EVAL $b64Script 1 TESTLIST ? ?"
           }
@@ -416,7 +407,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "MSET key1 ? key2 ?"
           }
@@ -446,7 +436,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "DEBUG SEGFAULT"
           }
@@ -483,7 +472,6 @@ abstract class AbstractLettuceSyncClientTest extends InstrumentationSpecificatio
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "SHUTDOWN NOSAVE"
             if (!Boolean.getBoolean("testLatestDeps")) {

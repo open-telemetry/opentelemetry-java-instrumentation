@@ -25,7 +25,7 @@ dependencies {
   library "org.springframework.data:spring-data-commons:1.8.0.RELEASE"
   compileOnly("org.springframework:spring-aop:1.2")
 
-  testImplementation "org.spockframework:spock-spring:$versions.spock"
+  testImplementation "org.spockframework:spock-spring:${versions["org.spockframework"]}"
   testLibrary "org.springframework:spring-test:3.0.0.RELEASE"
   testLibrary "org.springframework.data:spring-data-jpa:1.8.0.RELEASE"
 

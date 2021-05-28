@@ -24,7 +24,6 @@ import io.opentelemetry.javaagent.tooling.Constants;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.Arrays;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -91,7 +90,7 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
         //noinspection unchecked
         return (List<String>) methodHandle.invokeExact();
       } catch (Throwable e) {
-        return Arrays.asList(Constants.BOOTSTRAP_PACKAGE_PREFIXES);
+        return Constants.BOOTSTRAP_PACKAGE_PREFIXES;
       }
     }
   }
@@ -114,6 +113,7 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
             try {
               return Class.forName(name, false, null);
             } catch (ClassNotFoundException ignored) {
+              // Ignore
             }
           }
         }

@@ -43,6 +43,7 @@ public class TestClasses {
         return s;
       }
 
+      @SuppressWarnings("UnusedMethod")
       private void privateStuff() {}
 
       protected void protectedMethod() {}

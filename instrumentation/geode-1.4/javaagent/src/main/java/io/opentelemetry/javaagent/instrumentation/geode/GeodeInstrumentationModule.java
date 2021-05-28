@@ -5,28 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.geode.GeodeTracer.tracer;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
-import java.lang.reflect.Method;
 import java.util.List;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.geode.cache.Region;
 
 @AutoService(InstrumentationModule.class)
 public class GeodeInstrumentationModule extends InstrumentationModule {
@@ -36,110 +20,6 @@ public class GeodeInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new RegionInstrumentation());
-  }
-
-  public static class RegionInstrumentation implements TypeInstrumentation {
-    @Override
-    public ElementMatcher<ClassLoader> classLoaderOptimization() {
-      return hasClassesNamed("org.apache.geode.cache.Region");
-    }
-
-    @Override
-    public ElementMatcher<TypeDescription> typeMatcher() {
-      return implementsInterface(named("org.apache.geode.cache.Region"));
-    }
-
-    @Override
-    public void transform(TypeTransformer transformer) {
-      transformer.applyAdviceToMethod(
-          isMethod()
-              .and(
-                  named("clear")
-                      .or(nameStartsWith("contains"))
-                      .or(named("create"))
-                      .or(named("destroy"))
-                      .or(named("entrySet"))
-                      .or(named("get"))
-                      .or(named("getAll"))
-                      .or(named("invalidate"))
-                      .or(nameStartsWith("keySet"))
-                      .or(nameStartsWith("put"))
-                      .or(nameStartsWith("remove"))
-                      .or(named("replace"))),
-          GeodeInstrumentationModule.class.getName() + "$SimpleAdvice");
-      transformer.applyAdviceToMethod(
-          isMethod()
-              .and(named("existsValue").or(named("query")).or(named("selectValue")))
-              .and(takesArgument(0, String.class)),
-          GeodeInstrumentationModule.class.getName() + "$QueryAdvice");
-    }
-  }
-
-  public static class SimpleAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This Region<?, ?> thiz,
-        @Advice.Origin Method method,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
-        return;
-      }
-      context = tracer().startSpan(method.getName(), thiz, null);
-      scope = context.makeCurrent();
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-
-      CallDepthThreadLocalMap.reset(Region.class);
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
-    }
-  }
-
-  public static class QueryAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This Region<?, ?> thiz,
-        @Advice.Origin Method method,
-        @Advice.Argument(0) String query,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (CallDepthThreadLocalMap.incrementCallDepth(Region.class) > 0) {
-        return;
-      }
-      context = tracer().startSpan(method.getName(), thiz, query);
-      scope = context.makeCurrent();
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-
-      CallDepthThreadLocalMap.reset(Region.class);
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
-    }
+    return singletonList(new GeodeRegionInstrumentation());
   }
 }

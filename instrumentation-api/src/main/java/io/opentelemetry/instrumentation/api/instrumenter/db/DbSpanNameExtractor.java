@@ -18,15 +18,15 @@ public final class DbSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQ
    * @see SqlAttributesExtractor#table(Object) used to extract {@code <db.table>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      DbAttributesExtractor<REQUEST> attributesExtractor) {
+      DbAttributesExtractor<REQUEST, ?> attributesExtractor) {
     return new DbSpanNameExtractor<>(attributesExtractor);
   }
 
   private static final String DEFAULT_SPAN_NAME = "DB Query";
 
-  private final DbAttributesExtractor<REQUEST> attributesExtractor;
+  private final DbAttributesExtractor<REQUEST, ?> attributesExtractor;
 
-  private DbSpanNameExtractor(DbAttributesExtractor<REQUEST> attributesExtractor) {
+  private DbSpanNameExtractor(DbAttributesExtractor<REQUEST, ?> attributesExtractor) {
     this.attributesExtractor = attributesExtractor;
   }
 
@@ -43,7 +43,8 @@ public final class DbSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQ
     if (dbName != null || table != null) {
       name.append(' ');
     }
-    if (dbName != null) {
+    // skip db name if table already has a db name prefixed to it
+    if (dbName != null && (table == null || table.indexOf('.') == -1)) {
       name.append(dbName);
       if (table != null) {
         name.append('.');
@@ -58,7 +59,7 @@ public final class DbSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQ
   @Nullable
   private String getTableName(REQUEST request) {
     if (attributesExtractor instanceof SqlAttributesExtractor) {
-      return ((SqlAttributesExtractor<REQUEST>) attributesExtractor).table(request);
+      return ((SqlAttributesExtractor<REQUEST, ?>) attributesExtractor).table(request);
     }
     return null;
   }

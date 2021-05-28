@@ -14,7 +14,7 @@ ext {
 
 dependencies {
   library "org.apache.camel:camel-core:$camelversion"
-  implementation deps.opentelemetryExtAws
+  implementation "io.opentelemetry:opentelemetry-extension-aws"
 
   testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent')
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
@@ -30,12 +30,11 @@ dependencies {
   testImplementation "org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE"
   testImplementation "org.springframework.boot:spring-boot-starter:1.5.17.RELEASE"
 
-  testImplementation "org.spockframework:spock-spring:$versions.spock"
+  testImplementation "org.spockframework:spock-spring:${versions["org.spockframework"]}"
   testImplementation 'javax.xml.bind:jaxb-api:2.3.1'
   testImplementation "org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0"
 
-  testImplementation deps.testcontainers
-  testImplementation "org.testcontainers:localstack:${versions.testcontainers}"
+  testImplementation "org.testcontainers:localstack:${versions["org.testcontainers"]}"
 
   latestDepTestLibrary "org.apache.camel:camel-core:2.+"
   latestDepTestLibrary "org.apache.camel:camel-spring-boot-starter:2.+"

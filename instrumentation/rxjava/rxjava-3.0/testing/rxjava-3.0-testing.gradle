@@ -5,9 +5,9 @@ dependencies {
 
   api "io.reactivex.rxjava3:rxjava:3.0.12"
 
-  implementation deps.guava
+  implementation "com.google.guava:guava"
 
-  implementation deps.groovy
-  implementation deps.opentelemetryApi
-  implementation deps.spock
+  implementation "org.codehaus.groovy:groovy-all"
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "org.spockframework:spock-core"
 }

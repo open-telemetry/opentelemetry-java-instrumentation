@@ -15,7 +15,10 @@ apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
 configurations {
-  shadowInclude
+  shadowInclude {
+    canBeResolved = true
+    canBeConsumed = false
+  }
 }
 
 processResources {
@@ -110,17 +113,17 @@ dependencies {
   testCompileOnly project(':javaagent-bootstrap')
   testCompileOnly project(':javaagent-api')
 
-  testImplementation deps.guava
+  testImplementation "com.google.guava:guava"
 
   testImplementation 'io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2'
 
   shadowInclude project(path: ':javaagent-bootstrap')
 
   // We only have compileOnly dependencies on these to make sure they don't leak into POMs.
-  licenseReportDependencies(deps.caffeine) {
+  licenseReportDependencies("com.github.ben-manes.caffeine:caffeine") {
     transitive = false
   }
-  licenseReportDependencies deps.weaklockfree
+  licenseReportDependencies "com.blogspot.mydailyjava:weak-lock-free"
   // TODO ideally this would be :instrumentation instead of :javaagent-tooling
   //  in case there are dependencies (accidentally) pulled in by instrumentation modules
   //  but I couldn't get that to work

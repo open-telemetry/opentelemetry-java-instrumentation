@@ -1,8 +1,8 @@
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  testImplementation deps.groovy
-  testImplementation deps.spock
+  testImplementation "org.codehaus.groovy:groovy-all"
+  testImplementation "org.spockframework:spock-core"
 
   testImplementation project(':instrumentation-api')
   testImplementation project(':instrumentation:couchbase:couchbase-2.0:javaagent')

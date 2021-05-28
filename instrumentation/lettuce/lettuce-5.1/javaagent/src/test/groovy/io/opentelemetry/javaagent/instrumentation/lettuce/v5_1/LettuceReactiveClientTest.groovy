@@ -48,7 +48,6 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "SET a ?"
           }
@@ -67,7 +66,6 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" port
-            "${SemanticAttributes.DB_CONNECTION_STRING.key}" "redis://127.0.0.1:$port"
             "${SemanticAttributes.DB_SYSTEM.key}" "redis"
             "${SemanticAttributes.DB_STATEMENT.key}" "GET a"
           }

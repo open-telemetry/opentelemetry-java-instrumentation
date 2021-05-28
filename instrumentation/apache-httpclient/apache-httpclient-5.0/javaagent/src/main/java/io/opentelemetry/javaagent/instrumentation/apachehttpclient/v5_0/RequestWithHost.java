@@ -6,56 +6,48 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.message.HttpRequestWrapper;
+import org.apache.hc.core5.net.URIAuthority;
 
 public class RequestWithHost extends HttpRequestWrapper implements ClassicHttpRequest {
 
-  private final ClassicHttpRequest httpRequest;
-  private final URI uri;
+  private final String scheme;
+  private final URIAuthority authority;
 
   public RequestWithHost(HttpHost httpHost, ClassicHttpRequest httpRequest) {
     super(httpRequest);
 
-    this.httpRequest = httpRequest;
-
-    URI calculatedUri;
-    try {
-      // combine requested uri with host info
-      URI requestUri = httpRequest.getUri();
-      calculatedUri =
-          new URI(
-              httpHost.getSchemeName(),
-              null,
-              httpHost.getHostName(),
-              httpHost.getPort(),
-              requestUri.getPath(),
-              requestUri.getQuery(),
-              requestUri.getFragment());
-    } catch (URISyntaxException e) {
-      calculatedUri = null;
-    }
-    uri = calculatedUri;
+    this.scheme = httpHost.getSchemeName();
+    this.authority = new URIAuthority(httpHost.getHostName(), httpHost.getPort());
   }
 
   @Override
-  public URI getUri() throws URISyntaxException {
-    if (uri != null) {
-      return uri;
-    }
-    return super.getUri();
+  public String getScheme() {
+    return scheme;
+  }
+
+  @Override
+  public URIAuthority getAuthority() {
+    return authority;
+  }
+
+  @Override
+  public URI getUri() {
+    // overriding super because it's not correct (doesn't incorporate authority)
+    // and isn't needed anyways
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public HttpEntity getEntity() {
-    return httpRequest.getEntity();
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public void setEntity(HttpEntity entity) {
-    httpRequest.setEntity(entity);
+    throw new UnsupportedOperationException();
   }
 }

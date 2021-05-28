@@ -86,7 +86,7 @@ class InstrumenterTest {
     }
   }
 
-  class MapGetter implements TextMapGetter<Map<String, String>> {
+  static class MapGetter implements TextMapGetter<Map<String, String>> {
 
     @Override
     public Iterable<String> keys(Map<String, String> carrier) {

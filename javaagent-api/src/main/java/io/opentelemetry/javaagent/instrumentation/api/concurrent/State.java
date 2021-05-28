@@ -20,6 +20,8 @@ public class State {
 
   public static final ContextStore.Factory<State> FACTORY = State::new;
 
+  // Used by AtomicReferenceFieldUpdater
+  @SuppressWarnings("UnusedVariable")
   private volatile Context parentContext;
 
   private State() {}

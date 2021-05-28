@@ -52,6 +52,13 @@ public class ExecutorInstrumentationUtils {
             return false;
           }
 
+          // This is a Mailbox created by akka.dispatch.Dispatcher#createMailbox. We must not add
+          // a context to it as context should only be carried by individual envelopes in the queue
+          // of this mailbox.
+          if (taskClass.getName().equals("akka.dispatch.Dispatcher$$anon$1")) {
+            return false;
+          }
+
           Class<?> enclosingClass = taskClass.getEnclosingClass();
           if (enclosingClass != null) {
             // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to
@@ -144,7 +151,8 @@ public class ExecutorInstrumentationUtils {
   public static <T> State setupState(ContextStore<T, State> contextStore, T task, Context context) {
     State state = contextStore.putIfAbsent(task, State.FACTORY);
     if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
-      context = ContextPropagationDebug.appendLocations(context, new Exception().getStackTrace());
+      context =
+          ContextPropagationDebug.appendLocations(context, new Exception().getStackTrace(), task);
     }
     state.setParentContext(context);
     return state;

@@ -43,6 +43,6 @@ public class ConfigBuilder {
   }
 
   public Config build() {
-    return new AutoValue_Config(allProperties);
+    return Config.create(allProperties);
   }
 }

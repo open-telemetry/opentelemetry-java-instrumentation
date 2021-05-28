@@ -196,7 +196,11 @@ public class GlobalIgnoresMatcher extends ElementMatcher.Junction.AbstractBase<T
         // want to instrument these methods in generated classes as this would create spans that
         // have the generated class name in them instead of the actual class that handles the call.
         || name.contains("__EJB31_Generated__")
-        || name.startsWith("org.springframework.core.$Proxy")) {
+        || name.startsWith("org.springframework.core.$Proxy")
+        // Tapestry Proxy, check only specific class that we know would be instrumented since there
+        // is no common prefix for its proxies other than "$". ByteBuddy fails to instrument this
+        // proxy, and as there is no reason why it should be instrumented anyway, exclude it.
+        || name.startsWith("$HttpServletRequest_")) {
       return true;
     }
 

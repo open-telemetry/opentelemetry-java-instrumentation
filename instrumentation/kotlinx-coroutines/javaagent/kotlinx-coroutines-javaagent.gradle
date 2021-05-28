@@ -1,5 +1,8 @@
+plugins {
+  id 'org.jetbrains.kotlin.jvm'
+}
+
 apply from: "$rootDir/gradle/instrumentation.gradle"
-apply from: "$rootDir/gradle/test-with-kotlin.gradle"
 
 muzzle {
   pass {
@@ -15,9 +18,16 @@ muzzle {
   }
 }
 dependencies {
-  compileOnly deps.opentelemetryKotlin
+  compileOnly "io.opentelemetry:opentelemetry-extension-kotlin"
 
-  testImplementation deps.opentelemetryKotlin
-  testImplementation deps.kotlin
-  testImplementation deps.coroutines
+  testImplementation "io.opentelemetry:opentelemetry-extension-kotlin"
+  testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+  // Use first version with flow support since we have tests for it.
+  testLibrary "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0"
+}
+
+tasks.named('compileTestGroovy').configure {
+  //Note: look like it should be `classpath += files(sourceSets.test.kotlin.classesDirectory)`
+  //instead, but kotlin plugin doesn't support it (yet?)
+  classpath += files(compileTestKotlin.destinationDir)
 }

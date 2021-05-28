@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.metrics.AsynchronousInstrument.LongResult;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
-import io.opentelemetry.api.metrics.LongUpDownSumObserver;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.common.Labels;
 import java.lang.management.ManagementFactory;
@@ -60,17 +59,16 @@ public final class MemoryPools {
   public static void registerMemoryAreaObservers() {
     MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
     Meter meter = GlobalMeterProvider.getMeter(MemoryPools.class.getName());
-    final LongUpDownSumObserver areaMetric =
-        meter
-            .longUpDownSumObserverBuilder("runtime.jvm.memory.area")
-            .setDescription("Bytes of a given JVM memory area.")
-            .setUnit("By")
-            .setUpdater(
-                resultLongObserver -> {
-                  observeHeap(resultLongObserver, memoryBean.getHeapMemoryUsage());
-                  observeNonHeap(resultLongObserver, memoryBean.getNonHeapMemoryUsage());
-                })
-            .build();
+    meter
+        .longUpDownSumObserverBuilder("runtime.jvm.memory.area")
+        .setDescription("Bytes of a given JVM memory area.")
+        .setUnit("By")
+        .setUpdater(
+            resultLongObserver -> {
+              observeHeap(resultLongObserver, memoryBean.getHeapMemoryUsage());
+              observeNonHeap(resultLongObserver, memoryBean.getNonHeapMemoryUsage());
+            })
+        .build();
   }
 
   /** Register only the "pool" observers. */

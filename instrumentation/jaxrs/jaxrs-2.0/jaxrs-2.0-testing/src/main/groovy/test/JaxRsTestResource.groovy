@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static java.util.concurrent.TimeUnit.SECONDS
 
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
@@ -88,10 +87,12 @@ class JaxRsTestResource {
 
   @Path("/child")
   @GET
-  void indexed_child(@Suspended AsyncResponse response, @QueryParam("id") long id) {
+  void indexed_child(@Context UriInfo uriInfo, @Suspended AsyncResponse response) {
+    def parameters = uriInfo.queryParameters
+
     CompletableFuture.runAsync({
       HttpServerTest.controller(INDEXED_CHILD) {
-        Span.current().setAttribute("test.request.id", id)
+        INDEXED_CHILD.collectSpanAttributes { parameters.getFirst(it) }
         response.resume("")
       }
     })

@@ -13,7 +13,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -53,9 +52,7 @@ public class VertxWebServer extends AbstractVerticle {
                 HttpServerTest.controller(
                     INDEXED_CHILD,
                     () -> {
-                      Span.current()
-                          .setAttribute(
-                              "test.request.id", Long.parseLong(ctx.request().getParam("id")));
+                      INDEXED_CHILD.collectSpanAttributes(it -> ctx.request().getParam(it));
                       ctx.response().setStatusCode(INDEXED_CHILD.getStatus()).end();
                       return null;
                     }));

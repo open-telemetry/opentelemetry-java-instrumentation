@@ -501,7 +501,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
                     int externalPort = extractMappedPort(container, internalPort);
 
                     try {
-                      (new Socket("localhost", externalPort)).close();
+                      new Socket("localhost", externalPort).close();
                     } catch (IOException e) {
                       throw new IllegalStateException(
                           "Socket not listening yet: " + externalPort, e);

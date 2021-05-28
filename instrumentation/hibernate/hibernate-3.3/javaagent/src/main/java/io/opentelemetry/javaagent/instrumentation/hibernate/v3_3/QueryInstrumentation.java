@@ -53,7 +53,7 @@ public class QueryInstrumentation implements TypeInstrumentation {
       ContextStore<Query, Context> contextStore =
           InstrumentationContext.get(Query.class, Context.class);
 
-      context = SessionMethodUtils.startSpanFrom(contextStore, query, query.getQueryString(), null);
+      context = SessionMethodUtils.startSpanFromQuery(contextStore, query, query.getQueryString());
       if (context != null) {
         scope = context.makeCurrent();
       }

@@ -30,8 +30,11 @@ dependencies {
 
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
 
+  if (!testLatestDeps) {
+    // Requires old version of Jackson
+    testImplementation enforcedPlatform("com.fasterxml.jackson:jackson-bom:2.9.10")
+  }
   testImplementation "com.twitter:finatra-http_2.11:19.12.0"
-  testImplementation "com.fasterxml.jackson.core:jackson-databind:2.9.10"
   // Required for older versions of finatra on JDKs >= 11
   testImplementation "com.sun.activation:javax.activation:1.2.0"
 
@@ -40,4 +43,9 @@ dependencies {
 
 compileLatestDepTestGroovy {
   classpath += files(sourceSets.latestDepTest.scala.classesDirectory)
+}
+
+if (testLatestDeps) {
+  // Separate task
+  test.enabled = false
 }

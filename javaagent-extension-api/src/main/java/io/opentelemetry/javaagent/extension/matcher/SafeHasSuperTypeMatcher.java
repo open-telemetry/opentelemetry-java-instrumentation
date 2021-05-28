@@ -142,6 +142,8 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
    *
    * <p>This wrapper exists to allow getting interfaces even if the lookup on one fails.
    */
+  // Private class, let's save the allocation
+  @SuppressWarnings("IterableAndIterator")
   private static class SafeInterfaceIterator
       implements Iterator<TypeDefinition>, Iterable<TypeDefinition> {
     private final TypeDefinition typeDefinition;

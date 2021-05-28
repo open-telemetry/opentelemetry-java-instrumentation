@@ -22,10 +22,10 @@ dependencies {
   api "com.amazonaws:aws-lambda-java-core:1.0.0"
   api "com.amazonaws:aws-lambda-java-events:2.2.1"
 
-  implementation deps.guava
+  implementation "com.google.guava:guava"
 
-  implementation deps.groovy
-  implementation deps.opentelemetryApi
-  implementation deps.spock
-  implementation deps.systemLambda
+  implementation "org.codehaus.groovy:groovy-all"
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "org.spockframework:spock-core"
+  implementation "com.github.stefanbirkner:system-lambda"
 }

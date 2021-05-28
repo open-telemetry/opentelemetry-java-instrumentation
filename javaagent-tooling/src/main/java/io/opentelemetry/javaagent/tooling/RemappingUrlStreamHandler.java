@@ -29,6 +29,7 @@ class RemappingUrlStreamHandler extends URLStreamHandler {
   }
 
   /** {@inheritDoc} */
+  @Override
   protected URLConnection openConnection(URL url) throws IOException {
     String file = url.getFile();
     if ("/".equals(file)) {

@@ -20,7 +20,7 @@ class ApplicationLongValueObserver implements LongValueObserver {
   }
 
   public static class AgentResultLongValueObserver
-      implements Consumer<io.opentelemetry.api.metrics.LongValueObserver.LongResult> {
+      implements Consumer<io.opentelemetry.api.metrics.AsynchronousInstrument.LongResult> {
 
     private final Consumer<LongResult> metricUpdater;
 
@@ -29,18 +29,19 @@ class ApplicationLongValueObserver implements LongValueObserver {
     }
 
     @Override
-    public void accept(io.opentelemetry.api.metrics.LongValueObserver.LongResult result) {
+    public void accept(io.opentelemetry.api.metrics.AsynchronousInstrument.LongResult result) {
       metricUpdater.accept(new ApplicationResultLongValueObserver(result));
     }
   }
 
   public static class ApplicationResultLongValueObserver implements LongResult {
 
-    private final io.opentelemetry.api.metrics.LongValueObserver.LongResult
+    private final io.opentelemetry.api.metrics.AsynchronousInstrument.LongResult
         agentResultLongValueObserver;
 
     public ApplicationResultLongValueObserver(
-        io.opentelemetry.api.metrics.LongValueObserver.LongResult agentResultLongValueObserver) {
+        io.opentelemetry.api.metrics.AsynchronousInstrument.LongResult
+            agentResultLongValueObserver) {
       this.agentResultLongValueObserver = agentResultLongValueObserver;
     }
 

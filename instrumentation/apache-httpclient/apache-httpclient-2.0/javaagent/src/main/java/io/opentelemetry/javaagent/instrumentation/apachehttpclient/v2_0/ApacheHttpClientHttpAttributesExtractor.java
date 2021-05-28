@@ -15,7 +15,7 @@ import org.apache.commons.httpclient.StatusLine;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class ApacheHttpClientHttpAttributesExtractor
-    extends HttpAttributesExtractor<HttpMethod, Void> {
+    extends HttpAttributesExtractor<HttpMethod, HttpMethod> {
 
   @Override
   protected String method(HttpMethod httpMethod) {
@@ -63,26 +63,27 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long requestContentLength(HttpMethod httpMethod, Void unused) {
+  protected Long requestContentLength(HttpMethod httpMethod, @Nullable HttpMethod response) {
     return null;
   }
 
   @Override
   @Nullable
-  protected Long requestContentLengthUncompressed(HttpMethod httpMethod, Void unused) {
+  protected Long requestContentLengthUncompressed(
+      HttpMethod httpMethod, @Nullable HttpMethod response) {
     return null;
   }
 
   @Override
   @Nullable
-  protected Integer statusCode(HttpMethod httpMethod, Void unused) {
-    StatusLine statusLine = httpMethod.getStatusLine();
+  protected Integer statusCode(HttpMethod request, HttpMethod response) {
+    StatusLine statusLine = response.getStatusLine();
     return statusLine == null ? null : statusLine.getStatusCode();
   }
 
   @Override
   @Nullable
-  protected String flavor(HttpMethod httpMethod, Void unused) {
+  protected String flavor(HttpMethod httpMethod, @Nullable HttpMethod response) {
     if (httpMethod instanceof HttpMethodBase) {
       return ((HttpMethodBase) httpMethod).isHttp11()
           ? SemanticAttributes.HttpFlavorValues.HTTP_1_1
@@ -93,19 +94,19 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long responseContentLength(HttpMethod httpMethod, Void unused) {
+  protected Long responseContentLength(HttpMethod httpMethod, HttpMethod response) {
     return null;
   }
 
   @Override
   @Nullable
-  protected Long responseContentLengthUncompressed(HttpMethod httpMethod, Void unused) {
+  protected Long responseContentLengthUncompressed(HttpMethod httpMethod, HttpMethod response) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String serverName(HttpMethod httpMethod, Void unused) {
+  protected String serverName(HttpMethod httpMethod, @Nullable HttpMethod response) {
     return null;
   }
 
@@ -117,7 +118,7 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String clientIp(HttpMethod httpMethod, Void unused) {
+  protected String clientIp(HttpMethod httpMethod, @Nullable HttpMethod response) {
     return null;
   }
 

@@ -7,6 +7,7 @@ package server
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
@@ -50,6 +51,20 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
             ctx.response().setStatusCode(endpoint.status).end(endpoint.body)
+          }
+        })
+      }
+      router.route(INDEXED_CHILD.path).handler { ctx ->
+        breaker.executeCommand({ future ->
+          future.complete(INDEXED_CHILD)
+        }, { it ->
+          if (it.failed()) {
+            throw it.cause()
+          }
+          HttpServerTest.ServerEndpoint endpoint = it.result()
+          controller(endpoint) {
+            endpoint.collectSpanAttributes { ctx.request().params().get(it) }
+            ctx.response().setStatusCode(endpoint.status).end()
           }
         })
       }

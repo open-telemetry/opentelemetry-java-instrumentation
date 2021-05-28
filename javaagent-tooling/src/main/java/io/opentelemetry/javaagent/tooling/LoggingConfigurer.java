@@ -33,6 +33,8 @@ class LoggingConfigurer {
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "io.grpc.internal.ServerImplBuilder", "INFO");
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "io.grpc.ManagedChannelRegistry", "INFO");
       setSystemPropertyDefault(
+          SIMPLE_LOGGER_PREFIX + "io.netty.util.internal.NativeLibraryLoader", "INFO");
+      setSystemPropertyDefault(
           SIMPLE_LOGGER_PREFIX + "io.grpc.internal.ManagedChannelImplBuilder", "INFO");
     } else {
       // by default muzzle warnings are turned off

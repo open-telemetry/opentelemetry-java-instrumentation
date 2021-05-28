@@ -406,6 +406,7 @@ public final class RedisCommandSanitizer {
           try {
             numberOfKeys = Integer.parseInt(argToString(args.get(1)));
           } catch (NumberFormatException ignored) {
+            // Ignore
           }
         }
 

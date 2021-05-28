@@ -23,6 +23,7 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +32,18 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
 
   private static final Logger log = LoggerFactory.getLogger(ServletHttpServerTracer.class);
 
+  public static final String ASYNC_LISTENER_ATTRIBUTE =
+      ServletHttpServerTracer.class.getName() + ".AsyncListener";
+  public static final String ASYNC_LISTENER_RESPONSE_ATTRIBUTE =
+      ServletHttpServerTracer.class.getName() + ".AsyncListenerResponse";
+
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       Config.get()
           .getBooleanProperty("otel.instrumentation.servlet.experimental-span-attributes", false);
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
-  public ServletHttpServerTracer(ServletAccessor<REQUEST, RESPONSE> accessor) {
+  protected ServletHttpServerTracer(ServletAccessor<REQUEST, RESPONSE> accessor) {
     this.accessor = accessor;
   }
 
@@ -138,8 +144,29 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   @Override
   protected abstract TextMapGetter<REQUEST> getGetter();
 
-  public ServletAccessor<REQUEST, RESPONSE> getServletAccessor() {
-    return accessor;
+  /**
+   * Response object must be attached to a request prior to {@link #attachAsyncListener(Object)}
+   * being called, as otherwise in some environments it is not possible to access response from
+   * async event in listeners.
+   */
+  public void setAsyncListenerResponse(REQUEST request, RESPONSE response) {
+    accessor.setRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE, response);
+  }
+
+  public void attachAsyncListener(REQUEST request) {
+    Context context = getServerContext(request);
+
+    if (context != null) {
+      Object response = accessor.getRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
+
+      accessor.addRequestAsyncListener(
+          request, new TagSettingAsyncListener<>(this, new AtomicBoolean(), context), response);
+      accessor.setRequestAttribute(request, ASYNC_LISTENER_ATTRIBUTE, true);
+    }
+  }
+
+  public boolean isAsyncListenerAttached(REQUEST request) {
+    return accessor.getRequestAttribute(request, ASYNC_LISTENER_ATTRIBUTE) != null;
   }
 
   public void addUnwrappedThrowable(Context context, Throwable throwable) {

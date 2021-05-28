@@ -15,6 +15,7 @@ import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Server
 import io.grpc.ServerBuilder
+import io.grpc.Status
 import io.grpc.stub.StreamObserver
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -112,6 +113,8 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SYSTEM.key}" "grpc"
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "Conversation"
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
           }
           (1..(clientMessageCount * serverMessageCount)).each {
             def messageId = it
@@ -133,7 +136,10 @@ abstract class AbstractGrpcStreamingTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "Conversation"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
+            "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
           }
           clientRange.each {
             def messageId = it

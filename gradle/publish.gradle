@@ -18,6 +18,12 @@ publishing {
         }
       }
 
+      versionMapping {
+        allVariants {
+          fromResolutionResult()
+        }
+      }
+
       def stable = findProperty("otel.stable") ?: false
       if (!stable) {
         def versionParts = version.split('-')

@@ -60,6 +60,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     false
   }
 
+  boolean hasHandlerAsControllerParentSpan(ServerEndpoint endpoint) {
+    true
+  }
+
   boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
     !hasHandlerSpan(endpoint)
   }
@@ -134,6 +138,9 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
     AUTH_ERROR("basicsecured/endpoint", 401, null),
     INDEXED_CHILD("child", 200, null),
 
+    public static final String ID_ATTRIBUTE_NAME = "test.request.id"
+    public static final String ID_PARAMETER_NAME = "id"
+
     private final URI uriObj
     private final String path
     final String query
@@ -173,10 +180,30 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       return new URI(uri.scheme, null, uri.host, uri.port, uri.path, uri.query, null)
     }
 
+    /**
+     * Populates custom test attributes for the {@link HttpServerTest#controller} span (which must
+     * be the current span when this is called) based on URL parameters. Required for
+     * {@link #INDEXED_CHILD}.
+     */
+    void collectSpanAttributes(UrlParameterProvider parameterProvider) {
+      if (this == INDEXED_CHILD) {
+        String value = parameterProvider.getParameter(ID_PARAMETER_NAME)
+
+        if (value != null) {
+          Span.current().setAttribute(ID_ATTRIBUTE_NAME, value as long)
+        }
+      }
+    }
+
     private static final Map<String, ServerEndpoint> PATH_MAP = values().collectEntries { [it.path, it] }
 
     static ServerEndpoint forPath(String path) {
       return PATH_MAP.get(path)
+    }
+
+    // Static keyword required for Scala interop
+    static interface UrlParameterProvider {
+      String getParameter(String name)
     }
   }
 
@@ -412,11 +439,11 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       def job = {
         latch.await()
         def url = HttpUrl.get(endpoint.resolvePath(address)).newBuilder()
-          .query("id=$index")
+          .query("${ServerEndpoint.ID_PARAMETER_NAME}=$index")
           .build()
         Request.Builder builder = request(url, "GET", null)
         runUnderTrace("client " + index) {
-          Span.current().setAttribute("test.request.id", index)
+          Span.current().setAttribute(ServerEndpoint.ID_ATTRIBUTE_NAME, index)
           propagator.inject(Context.current(), builder, setter)
           client.newCall(builder.build()).execute()
         }
@@ -435,7 +462,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           def requestId = Integer.parseInt(rootSpan.name.substring("client ".length()))
 
           basicSpan(it, 0, "client " + requestId, null, null) {
-            it."test.request.id" requestId
+            "${ServerEndpoint.ID_ATTRIBUTE_NAME}" requestId
           }
           indexedServerSpan(it, span(0), requestId)
 
@@ -446,7 +473,8 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
             controllerSpanIndex++
           }
 
-          indexedControllerSpan(it, controllerSpanIndex, span(controllerSpanIndex - 1), requestId)
+          def controllerParentSpanIndex = controllerSpanIndex - (hasHandlerAsControllerParentSpan(endpoint) ? 1 : 2)
+          indexedControllerSpan(it, controllerSpanIndex, span(controllerParentSpanIndex), requestId)
         }
       }
     }
@@ -484,7 +512,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
           }
           if (endpoint != NOT_FOUND) {
             def controllerSpanIndex = 0
-            if (hasHandlerSpan(endpoint)) {
+            if (hasHandlerSpan(endpoint) && hasHandlerAsControllerParentSpan(endpoint)) {
               controllerSpanIndex++
             }
             controllerSpan(it, spanIndex++, span(controllerSpanIndex), errorMessage, expectedExceptionClass())
@@ -643,7 +671,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       name "controller"
       childOf((SpanData) parent)
       attributes {
-        it."test.request.id" requestId
+        "${ServerEndpoint.ID_ATTRIBUTE_NAME}" requestId
       }
     }
   }

@@ -3,7 +3,7 @@
 apply plugin: 'scala'
 
 dependencies {
-  testImplementation deps.scala
+  testImplementation "org.scala-lang:scala-library"
 }
 
 tasks.named('compileTestGroovy').configure {

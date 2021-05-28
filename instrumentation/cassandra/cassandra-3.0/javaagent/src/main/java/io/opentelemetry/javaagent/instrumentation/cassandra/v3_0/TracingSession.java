@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v3_0.CassandraDatabaseClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v3_0.CassandraInstrumenters.instrumenter;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.CloseFuture;
@@ -48,86 +48,94 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(String query) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query);
     } catch (Throwable t) {
-      tracer().endExceptionally(context, t);
+      instrumenter().end(context, request, null, t);
       throw t;
     }
-    tracer().end(context, resultSet.getExecutionInfo());
+    instrumenter().end(context, request, resultSet, null);
     return resultSet;
   }
 
   @Override
   public ResultSet execute(String query, Object... values) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query, values);
     } catch (Throwable t) {
-      tracer().endExceptionally(context, t);
+      instrumenter().end(context, request, null, t);
       throw t;
     }
-    tracer().end(context, resultSet.getExecutionInfo());
+    instrumenter().end(context, request, resultSet, null);
     return resultSet;
   }
 
   @Override
   public ResultSet execute(String query, Map<String, Object> values) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query, values);
     } catch (Throwable t) {
-      tracer().endExceptionally(context, t);
+      instrumenter().end(context, request, null, t);
       throw t;
     }
-    tracer().end(context, resultSet.getExecutionInfo());
+    instrumenter().end(context, request, resultSet, null);
     return resultSet;
   }
 
   @Override
   public ResultSet execute(Statement statement) {
-    Context context = tracer().startSpan(Context.current(), session, getQuery(statement));
+    String query = getQuery(statement);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(statement);
     } catch (Throwable t) {
-      tracer().endExceptionally(context, t);
+      instrumenter().end(context, request, null, t);
       throw t;
     }
-    tracer().end(context, resultSet.getExecutionInfo());
+    instrumenter().end(context, request, resultSet, null);
     return resultSet;
   }
 
   @Override
   public ResultSetFuture executeAsync(String query) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query);
-      addCallbackToEndSpan(future, context);
+      addCallbackToEndSpan(future, context, request);
       return future;
     }
   }
 
   @Override
   public ResultSetFuture executeAsync(String query, Object... values) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query, values);
-      addCallbackToEndSpan(future, context);
+      addCallbackToEndSpan(future, context, request);
       return future;
     }
   }
 
   @Override
   public ResultSetFuture executeAsync(String query, Map<String, Object> values) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query, values);
-      addCallbackToEndSpan(future, context);
+      addCallbackToEndSpan(future, context, request);
       return future;
     }
   }
@@ -135,10 +143,11 @@ public class TracingSession implements Session {
   @Override
   public ResultSetFuture executeAsync(Statement statement) {
     String query = getQuery(statement);
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(statement);
-      addCallbackToEndSpan(future, context);
+      addCallbackToEndSpan(future, context, request);
       return future;
     }
   }
@@ -199,18 +208,19 @@ public class TracingSession implements Session {
     return query == null ? "" : query;
   }
 
-  private void addCallbackToEndSpan(ResultSetFuture future, Context context) {
+  private void addCallbackToEndSpan(
+      ResultSetFuture future, Context context, CassandraRequest request) {
     Futures.addCallback(
         future,
         new FutureCallback<ResultSet>() {
           @Override
-          public void onSuccess(ResultSet result) {
-            tracer().end(context, result.getExecutionInfo());
+          public void onSuccess(ResultSet resultSet) {
+            instrumenter().end(context, request, resultSet, null);
           }
 
           @Override
           public void onFailure(Throwable t) {
-            tracer().endExceptionally(context, t);
+            instrumenter().end(context, request, null, t);
           }
         },
         Runnable::run);

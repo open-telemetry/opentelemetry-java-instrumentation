@@ -295,6 +295,11 @@ WHITESPACE        = [ \t\r\n]+
 
   "FROM" {
           if (!insideComment && !extractionDone) {
+            if (operation == NoOp.INSTANCE) {
+              // hql/jpql queries may skip SELECT and start with FROM clause
+              // treat such queries as SELECT queries
+              setOperation(new Select());
+            }
             extractionDone = operation.handleFrom();
           }
           appendCurrentFragment();

@@ -12,9 +12,11 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValu
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -803,10 +805,12 @@ public enum JdbcConnectionUrlParser {
     }
   }
 
-  private final String[] typeKeys;
+  // Wrapped in unmodifiableList
+  @SuppressWarnings("ImmutableEnumChecker")
+  private final List<String> typeKeys;
 
   JdbcConnectionUrlParser(String... typeKeys) {
-    this.typeKeys = typeKeys;
+    this.typeKeys = Collections.unmodifiableList(Arrays.asList(typeKeys));
   }
 
   abstract DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder);

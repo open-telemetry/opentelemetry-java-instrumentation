@@ -26,5 +26,8 @@ public class LibertyStartSpanAdvice {
 
     ctx.setContext(context);
     ctx.setScope(scope);
+
+    // Must be set here since Liberty RequestProcessors can use startAsync outside of servlet scope.
+    tracer().setAsyncListenerResponse(ctx.getRequest(), ctx.getResponse());
   }
 }

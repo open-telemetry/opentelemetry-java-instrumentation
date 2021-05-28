@@ -19,7 +19,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * methods, but implement as many as possible for best compliance with the OpenTelemetry
  * specification.
  */
-public abstract class DbAttributesExtractor<REQUEST> extends AttributesExtractor<REQUEST, Void> {
+public abstract class DbAttributesExtractor<REQUEST, RESPONSE>
+    extends AttributesExtractor<REQUEST, RESPONSE> {
   @Override
   protected void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.DB_SYSTEM, system(request));
@@ -31,7 +32,8 @@ public abstract class DbAttributesExtractor<REQUEST> extends AttributesExtractor
   }
 
   @Override
-  protected final void onEnd(AttributesBuilder attributes, REQUEST request, Void unused) {}
+  protected final void onEnd(
+      AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {}
 
   @Nullable
   protected abstract String system(REQUEST request);

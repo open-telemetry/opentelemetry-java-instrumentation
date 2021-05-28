@@ -17,7 +17,6 @@ import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Factory;
 import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -140,7 +139,8 @@ public final class ReferenceMatcher {
   private List<Mismatch> checkHelperClassMatch(ClassRef helperClass, TypePool typePool) {
     List<Mismatch> mismatches = emptyList();
 
-    HelperReferenceWrapper helperWrapper = new Factory(typePool, references).create(helperClass);
+    HelperReferenceWrapper helperWrapper =
+        new HelperReferenceWrapper.Factory(typePool, references).create(helperClass);
 
     Set<HelperReferenceWrapper.Field> undeclaredFields =
         helperClass.getFields().stream()

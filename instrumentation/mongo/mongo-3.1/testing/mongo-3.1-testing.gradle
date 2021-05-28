@@ -5,7 +5,7 @@ dependencies {
 
   compileOnly "org.mongodb:mongo-java-driver:3.1.0"
 
-  implementation deps.groovy
-  implementation deps.opentelemetryApi
-  implementation deps.spock
+  implementation "org.codehaus.groovy:groovy-all"
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "org.spockframework:spock-core"
 }

@@ -35,7 +35,6 @@ public class FieldMapperTest {
     MethodHandleFactory methodHandleFactory = new MethodHandleFactory();
     Serializer serializer = mock(Serializer.class);
     FieldMapper underTest = new FieldMapper(serializer, methodHandleFactory);
-    Map<String, Collection<WriteRequest>> items = new HashMap();
     UpdateTableRequest sdkRequest =
         UpdateTableRequest.builder()
             .provisionedThroughput(

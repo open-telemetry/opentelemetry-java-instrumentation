@@ -12,6 +12,7 @@ import test.gwt.shared.MessageService;
 @SuppressWarnings("serial")
 public class MessageServiceImpl extends RemoteServiceServlet implements MessageService {
 
+  @Override
   public String sendMessage(String message) throws IllegalArgumentException {
     if (message == null || "Error".equals(message)) {
       throw new IllegalArgumentException();

@@ -22,7 +22,13 @@ muzzle {
 }
 
 dependencies {
-  library "org.elasticsearch.client:transport:5.3.0"
+  compileOnly("org.elasticsearch.client:transport:5.3.0") {
+    transitive = false
+  }
+  compileOnly("org.elasticsearch:elasticsearch:5.3.0") {
+    // We don't need all its transitive dependencies when compiling and run tests against 5.5.0
+    transitive = false
+  }
 
   implementation project(':instrumentation:elasticsearch:elasticsearch-transport-common:library')
 
@@ -33,9 +39,10 @@ dependencies {
   testImplementation "org.apache.logging.log4j:log4j-core:2.11.0"
   testImplementation "org.apache.logging.log4j:log4j-api:2.11.0"
 
+  // Unfortunately spring-data-elasticsearch requires 5.5.0
+  testLibrary "org.elasticsearch.client:transport:5.5.0"
   testLibrary "org.elasticsearch.plugin:transport-netty3-client:5.3.0"
 
-  // Unfortunately this will bump the transport version up to 5.5.0.
   testLibrary "org.springframework.data:spring-data-elasticsearch:3.0.0.RELEASE"
 
   latestDepTestLibrary "org.elasticsearch.plugin:transport-netty3-client:5.+"

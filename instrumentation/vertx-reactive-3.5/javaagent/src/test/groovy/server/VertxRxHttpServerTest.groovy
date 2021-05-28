@@ -7,6 +7,7 @@ package server
 
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.INDEXED_CHILD
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.QUERY_PARAM
@@ -71,6 +72,11 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
     }
   }
 
+  @Override
+  boolean testConcurrency() {
+    return true
+  }
+
   protected Class<AbstractVerticle> verticle() {
     return VertxReactiveWebServer
   }
@@ -85,6 +91,12 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
       router.route(SUCCESS.path).handler { ctx ->
         controller(SUCCESS) {
           ctx.response().setStatusCode(SUCCESS.status).end(SUCCESS.body)
+        }
+      }
+      router.route(INDEXED_CHILD.path).handler { ctx ->
+        controller(INDEXED_CHILD) {
+          INDEXED_CHILD.collectSpanAttributes { ctx.request().params().get(it) }
+          ctx.response().setStatusCode(INDEXED_CHILD.status).end()
         }
       }
       router.route(QUERY_PARAM.path).handler { ctx ->

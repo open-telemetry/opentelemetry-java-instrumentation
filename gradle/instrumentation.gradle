@@ -51,18 +51,18 @@ afterEvaluate {
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk'
       exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-metrics'
     }
-    compileOnly deps.bytebuddy
-    annotationProcessor deps.autoservice
-    compileOnly deps.autoservice
-    compileOnly deps.slf4j
+    compileOnly "net.bytebuddy:byte-buddy"
+    annotationProcessor "com.google.auto.service:auto-service"
+    compileOnly "com.google.auto.service:auto-service"
+    compileOnly "org.slf4j:slf4j-api"
 
-    testImplementation deps.opentelemetryApi
+    testImplementation "io.opentelemetry:opentelemetry-api"
 
     testImplementation project(':testing-common')
-    testAnnotationProcessor deps.autoservice
-    testCompileOnly deps.autoservice
+    testAnnotationProcessor "net.bytebuddy:byte-buddy"
+    testCompileOnly "net.bytebuddy:byte-buddy"
 
-    testImplementation deps.testcontainers
+    testImplementation "org.testcontainers:testcontainers"
 
     toolingRuntime(project(path: ":javaagent-tooling", configuration: 'instrumentationMuzzle'))
     toolingRuntime(project(path: ":javaagent-extension-api", configuration: 'instrumentationMuzzle'))
@@ -77,7 +77,10 @@ afterEvaluate {
 }
 
 configurations {
-  testInstrumentation
+  testInstrumentation {
+    canBeResolved = true
+    canBeConsumed = false
+  }
 }
 
 tasks.named('shadowJar').configure {

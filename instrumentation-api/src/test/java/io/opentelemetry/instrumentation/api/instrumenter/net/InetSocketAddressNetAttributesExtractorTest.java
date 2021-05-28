@@ -23,13 +23,13 @@ class InetSocketAddressNetAttributesExtractorTest {
       extractor =
           new InetSocketAddressNetAttributesExtractor<InetSocketAddress, InetSocketAddress>() {
             @Override
-            protected InetSocketAddress getAddress(
+            public InetSocketAddress getAddress(
                 InetSocketAddress request, InetSocketAddress response) {
               return response != null ? response : request;
             }
 
             @Override
-            protected String transport(InetSocketAddress inetSocketAddress) {
+            public String transport(InetSocketAddress inetSocketAddress) {
               return SemanticAttributes.NetTransportValues.IP_TCP;
             }
           };

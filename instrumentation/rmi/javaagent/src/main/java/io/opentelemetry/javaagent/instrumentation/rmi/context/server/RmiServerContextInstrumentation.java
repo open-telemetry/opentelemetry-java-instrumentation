@@ -32,7 +32,7 @@ public class RmiServerContextInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(isStatic())
             .and(named("getTarget"))
-            .and((takesArgument(0, named("sun.rmi.transport.ObjectEndpoint")))),
+            .and(takesArgument(0, named("sun.rmi.transport.ObjectEndpoint"))),
         getClass().getName() + "$ObjectTableAdvice");
   }
 

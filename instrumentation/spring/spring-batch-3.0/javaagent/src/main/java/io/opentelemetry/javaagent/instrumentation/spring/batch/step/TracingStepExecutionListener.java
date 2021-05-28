@@ -16,7 +16,7 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.core.Ordered;
 
-public class TracingStepExecutionListener implements StepExecutionListener, Ordered {
+public final class TracingStepExecutionListener implements StepExecutionListener, Ordered {
   private final ContextStore<StepExecution, ContextAndScope> executionContextStore;
 
   public TracingStepExecutionListener(
@@ -56,7 +56,7 @@ public class TracingStepExecutionListener implements StepExecutionListener, Orde
     if (this == o) {
       return true;
     }
-    return o != null && getClass() == o.getClass();
+    return o instanceof TracingStepExecutionListener;
   }
 
   @Override

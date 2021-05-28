@@ -41,6 +41,7 @@ public class TestServlets {
       HttpServerTest.controller(
           endpoint,
           new Callable<Object>() {
+            @Override
             public Object call() throws Exception {
               resp.setContentType("text/plain");
               resp.setStatus(endpoint.getStatus());
@@ -60,6 +61,7 @@ public class TestServlets {
       HttpServerTest.controller(
           endpoint,
           new Callable<Object>() {
+            @Override
             public Object call() throws Exception {
               resp.sendRedirect(endpoint.getBody());
               return null;
@@ -69,7 +71,7 @@ public class TestServlets {
   }
 
   @WebServlet("/error-status")
-  public static class Error extends HttpServlet {
+  public static class ErrorServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, final HttpServletResponse resp) {
       final HttpServerTest.ServerEndpoint endpoint =
@@ -77,6 +79,7 @@ public class TestServlets {
       HttpServerTest.controller(
           endpoint,
           new Callable<Object>() {
+            @Override
             public Object call() throws Exception {
               resp.setContentType("text/plain");
               resp.sendError(endpoint.getStatus(), endpoint.getBody());
@@ -95,6 +98,7 @@ public class TestServlets {
       HttpServerTest.controller(
           endpoint,
           new Callable<Object>() {
+            @Override
             public Object call() throws Exception {
               throw new Exception(endpoint.getBody());
             }

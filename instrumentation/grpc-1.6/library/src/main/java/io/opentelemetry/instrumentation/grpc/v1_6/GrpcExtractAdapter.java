@@ -7,18 +7,23 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.Metadata;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class GrpcExtractAdapter implements TextMapGetter<Metadata> {
+final class GrpcExtractAdapter implements TextMapGetter<GrpcRequest> {
 
   static final GrpcExtractAdapter GETTER = new GrpcExtractAdapter();
 
   @Override
-  public Iterable<String> keys(Metadata metadata) {
-    return metadata.keys();
+  public Iterable<String> keys(GrpcRequest request) {
+    return request.getMetadata().keys();
   }
 
   @Override
-  public String get(Metadata carrier, String key) {
-    return carrier.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER));
+  @Nullable
+  public String get(@Nullable GrpcRequest request, String key) {
+    if (request == null) {
+      return null;
+    }
+    return request.getMetadata().get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER));
   }
 }

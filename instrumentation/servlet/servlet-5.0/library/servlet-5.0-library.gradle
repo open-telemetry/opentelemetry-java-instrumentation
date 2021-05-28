@@ -7,5 +7,5 @@ dependencies {
 
   testImplementation "jakarta.servlet:jakarta.servlet-api:5.0.0"
   testImplementation "org.mockito:mockito-core:3.6.0"
-  testImplementation deps.assertj
+  testImplementation "org.assertj:assertj-core"
 }

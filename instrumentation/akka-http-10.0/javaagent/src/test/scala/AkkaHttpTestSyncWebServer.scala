@@ -29,7 +29,13 @@ object AkkaHttpTestSyncWebServer {
           def doCall(): HttpResponse = {
             val resp = HttpResponse(status = endpoint.getStatus)
             endpoint match {
-              case SUCCESS     => resp.withEntity(endpoint.getBody)
+              case SUCCESS => resp.withEntity(endpoint.getBody)
+              case INDEXED_CHILD =>
+                INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
+                  override def getParameter(name: String): String =
+                    uri.query().get(name).orNull
+                })
+                resp.withEntity("")
               case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
               case REDIRECT =>
                 resp.withHeaders(headers.Location(endpoint.getBody))

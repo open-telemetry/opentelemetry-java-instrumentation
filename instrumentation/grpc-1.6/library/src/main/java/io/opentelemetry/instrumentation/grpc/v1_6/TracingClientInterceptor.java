@@ -22,65 +22,64 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
-import java.net.InetSocketAddress;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
 
 final class TracingClientInterceptor implements ClientInterceptor {
 
-  private final GrpcClientTracer tracer;
+  private final Instrumenter<GrpcRequest, Status> instrumenter;
+  private final ContextPropagators propagators;
 
-  TracingClientInterceptor(GrpcClientTracer tracer) {
-    this.tracer = tracer;
+  TracingClientInterceptor(
+      Instrumenter<GrpcRequest, Status> instrumenter, ContextPropagators propagators) {
+    this.instrumenter = instrumenter;
+    this.propagators = propagators;
   }
 
   @Override
   public <REQUEST, RESPONSE> ClientCall<REQUEST, RESPONSE> interceptCall(
       MethodDescriptor<REQUEST, RESPONSE> method, CallOptions callOptions, Channel next) {
-    String methodName = method.getFullMethodName();
-    Context context = tracer.startSpan(methodName);
-    Span span = Span.fromContext(context);
-    GrpcHelper.prepareSpan(span, methodName);
+    GrpcRequest request = new GrpcRequest(method, null, null);
+    Context context = instrumenter.start(Context.current(), request);
     final ClientCall<REQUEST, RESPONSE> result;
     try (Scope ignored = context.makeCurrent()) {
       try {
         // call other interceptors
         result = next.newCall(method, callOptions);
       } catch (Throwable e) {
-        tracer.endExceptionally(context, e);
+        instrumenter.end(context, request, null, e);
         throw e;
       }
     }
 
     SocketAddress address = result.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
-    if (address instanceof InetSocketAddress) {
-      InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
-      NetPeerAttributes.INSTANCE.setNetPeer(span, inetSocketAddress);
-    }
+    request.setRemoteAddress(address);
 
-    return new TracingClientCall<>(result, span, context);
+    return new TracingClientCall<>(result, context, request);
   }
 
   final class TracingClientCall<REQUEST, RESPONSE>
       extends ForwardingClientCall.SimpleForwardingClientCall<REQUEST, RESPONSE> {
 
-    private final Span span;
     private final Context context;
+    private final GrpcRequest request;
 
-    TracingClientCall(ClientCall<REQUEST, RESPONSE> delegate, Span span, Context context) {
+    TracingClientCall(
+        ClientCall<REQUEST, RESPONSE> delegate, Context context, GrpcRequest request) {
       super(delegate);
-      this.span = span;
       this.context = context;
+      this.request = request;
     }
 
     @Override
     public void start(Listener<RESPONSE> responseListener, Metadata headers) {
-      tracer.inject(context, headers, SETTER);
+      propagators.getTextMapPropagator().inject(context, headers, SETTER);
       try (Scope ignored = context.makeCurrent()) {
-        super.start(new TracingClientCallListener<>(responseListener, context), headers);
+        super.start(new TracingClientCallListener<>(responseListener, context, request), headers);
       } catch (Throwable e) {
-        tracer.endExceptionally(context, e);
+        instrumenter.end(context, request, null, e);
         throw e;
       }
     }
@@ -90,7 +89,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
       try (Scope ignored = context.makeCurrent()) {
         super.sendMessage(message);
       } catch (Throwable e) {
-        tracer.endExceptionally(context, e);
+        instrumenter.end(context, request, null, e);
         throw e;
       }
     }
@@ -99,12 +98,14 @@ final class TracingClientInterceptor implements ClientInterceptor {
   final class TracingClientCallListener<RESPONSE>
       extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RESPONSE> {
     private final Context context;
+    private final GrpcRequest request;
 
     private final AtomicLong messageId = new AtomicLong();
 
-    TracingClientCallListener(Listener<RESPONSE> delegate, Context context) {
+    TracingClientCallListener(Listener<RESPONSE> delegate, Context context, GrpcRequest request) {
       super(delegate);
       this.context = context;
+      this.request = request;
     }
 
     @Override
@@ -117,7 +118,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
       try (Scope ignored = context.makeCurrent()) {
         delegate().onMessage(message);
       } catch (Throwable e) {
-        tracer.onException(context, e);
+        instrumenter.end(context, request, null, e);
         throw e;
       }
     }
@@ -127,10 +128,10 @@ final class TracingClientInterceptor implements ClientInterceptor {
       try (Scope ignored = context.makeCurrent()) {
         delegate().onClose(status, trailers);
       } catch (Throwable e) {
-        tracer.endExceptionally(context, e);
+        instrumenter.end(context, request, status, e);
         throw e;
       }
-      tracer.end(context, status);
+      instrumenter.end(context, request, status, status.getCause());
     }
 
     @Override
@@ -138,7 +139,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
       try (Scope ignored = context.makeCurrent()) {
         delegate().onReady();
       } catch (Throwable e) {
-        tracer.endExceptionally(context, e);
+        instrumenter.end(context, request, null, e);
         throw e;
       }
     }

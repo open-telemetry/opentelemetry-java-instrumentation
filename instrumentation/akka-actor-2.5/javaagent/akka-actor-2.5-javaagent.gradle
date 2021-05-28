@@ -13,7 +13,7 @@ dependencies {
   implementation project(':instrumentation:executors:javaagent')
   compileOnly "com.typesafe.akka:akka-actor_2.11:2.5.0"
 
-  testImplementation deps.scala
+  testImplementation "org.scala-lang:scala-library"
   testImplementation "com.typesafe.akka:akka-actor_2.11:2.5.0"
 }
 

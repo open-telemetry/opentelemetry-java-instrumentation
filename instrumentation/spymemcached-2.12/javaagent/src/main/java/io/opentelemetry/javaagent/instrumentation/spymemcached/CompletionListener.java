@@ -28,7 +28,7 @@ public abstract class CompletionListener<T> {
 
   private final Context context;
 
-  public CompletionListener(
+  protected CompletionListener(
       Context parentContext, MemcachedConnection connection, String methodName) {
     context = tracer().startSpan(parentContext, connection, methodName);
   }

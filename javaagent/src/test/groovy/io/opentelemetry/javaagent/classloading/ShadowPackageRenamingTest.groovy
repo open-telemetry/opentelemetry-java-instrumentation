@@ -71,14 +71,14 @@ class ShadowPackageRenamingTest extends Specification {
 
     ClassPath bootstrapClasspath = ClassPath.from(IntegrationTestUtils.getBootstrapProxy())
     Set<String> bootstrapClasses = new HashSet<>()
-    String[] bootstrapPrefixes = IntegrationTestUtils.getBootstrapPackagePrefixes()
+    List<String> bootstrapPrefixes = IntegrationTestUtils.getBootstrapPackagePrefixes()
     List<String> badBootstrapPrefixes = []
     for (ClassPath.ClassInfo info : bootstrapClasspath.getAllClasses()) {
       bootstrapClasses.add(info.getName())
       // make sure all bootstrap classes can be loaded from system
       ClassLoader.getSystemClassLoader().loadClass(info.getName())
       boolean goodPrefix = false
-      for (int i = 0; i < bootstrapPrefixes.length; ++i) {
+      for (int i = 0; i < bootstrapPrefixes.size(); ++i) {
         if (info.getName().startsWith(bootstrapPrefixes[i])) {
           goodPrefix = true
           break

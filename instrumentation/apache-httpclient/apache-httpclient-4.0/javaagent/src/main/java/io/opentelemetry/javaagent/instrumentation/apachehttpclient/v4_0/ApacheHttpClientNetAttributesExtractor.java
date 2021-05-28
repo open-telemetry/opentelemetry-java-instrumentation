@@ -11,22 +11,27 @@ import java.net.URI;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class ApacheHttpClientNetAttributesExtractor
     extends NetAttributesExtractor<HttpUriRequest, HttpResponse> {
 
+  private static final Logger logger =
+      LoggerFactory.getLogger(ApacheHttpClientNetAttributesExtractor.class);
+
   @Override
-  protected String transport(HttpUriRequest request) {
+  public String transport(HttpUriRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
-  protected @Nullable String peerName(HttpUriRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerName(HttpUriRequest request, @Nullable HttpResponse response) {
     return request.getURI().getHost();
   }
 
   @Override
-  protected Integer peerPort(HttpUriRequest request, @Nullable HttpResponse response) {
+  public Integer peerPort(HttpUriRequest request, @Nullable HttpResponse response) {
     URI uri = request.getURI();
     int port = uri.getPort();
     if (port != -1) {
@@ -38,12 +43,13 @@ final class ApacheHttpClientNetAttributesExtractor
       case "https":
         return 443;
       default:
+        logger.debug("no default port mapping for scheme: {}", uri.getScheme());
         return null;
     }
   }
 
   @Override
-  protected @Nullable String peerIp(HttpUriRequest request, @Nullable HttpResponse response) {
+  public @Nullable String peerIp(HttpUriRequest request, @Nullable HttpResponse response) {
     return null;
   }
 }

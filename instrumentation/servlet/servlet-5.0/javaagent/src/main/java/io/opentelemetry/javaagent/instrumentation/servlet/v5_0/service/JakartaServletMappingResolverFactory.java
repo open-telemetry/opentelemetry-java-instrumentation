@@ -21,6 +21,7 @@ public class JakartaServletMappingResolverFactory extends ServletMappingResolver
     this.servletConfig = servletConfig;
   }
 
+  @Override
   public Collection<String> getMappings() {
     String servletName = servletConfig.getServletName();
     ServletContext servletContext = servletConfig.getServletContext();

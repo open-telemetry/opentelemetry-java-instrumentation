@@ -3,10 +3,10 @@ import java.time.Duration
 apply plugin: 'java-library'
 apply plugin: 'groovy'
 apply plugin: 'org.gradle.test-retry'
+apply plugin: 'net.ltgt.errorprone'
 
 apply from: "$rootDir/gradle/spotless.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
-apply from: "$rootDir/gradle/spotbugs.gradle"
 apply from: "$rootDir/gradle/checkstyle.gradle"
 
 afterEvaluate {
@@ -69,20 +69,40 @@ repositories {
   mavenLocal()
 }
 
+evaluationDependsOn(":dependencyManagement")
+configurations {
+  dependencyManagement {
+    canBeConsumed = false
+    canBeResolved = false
+    visible = false
+  }
+}
+afterEvaluate {
+  configurations.configureEach {
+    if (canBeResolved && !canBeConsumed) {
+      extendsFrom(configurations.dependencyManagement)
+    }
+  }
+}
+
 dependencies {
-  compileOnly "org.checkerframework:checker-qual:${versions.checkerFramework}"
+  dependencyManagement platform(project(":dependencyManagement"))
 
-  testImplementation enforcedPlatform("org.junit:junit-bom:${versions.junit5}")
-  testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api'
-  testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params'
-  testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine'
-  testRuntimeOnly group: 'org.junit.vintage', name: 'junit-vintage-engine'
+  compileOnly "org.checkerframework:checker-qual"
 
-  testImplementation deps.spock
-  testImplementation deps.groovy
-  testImplementation deps.testLogging
-  testImplementation "info.solidsoft.spock:spock-global-unroll:0.5.1"
-  testImplementation "com.github.stefanbirkner:system-rules:1.19.0"
+  testImplementation "org.junit.jupiter:junit-jupiter-api"
+  testImplementation "org.junit.jupiter:junit-jupiter-params"
+  testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
+  testRuntimeOnly "org.junit.vintage:junit-vintage-engine"
+
+  testImplementation "org.objenesis:objenesis"
+  testImplementation "org.spockframework:spock-core"
+  testImplementation "ch.qos.logback:logback-classic"
+  testImplementation "org.slf4j:log4j-over-slf4j"
+  testImplementation "org.slf4j:jcl-over-slf4j"
+  testImplementation "org.slf4j:jul-to-slf4j"
+  testImplementation "info.solidsoft.spock:spock-global-unroll"
+  testImplementation "com.github.stefanbirkner:system-rules"
 }
 
 tasks.named('jar').configure {
@@ -219,24 +239,4 @@ tasks.withType(Test).configureEach {
 tasks.withType(AbstractArchiveTask).configureEach {
   preserveFileTimestamps = false
   reproducibleFileOrder = true
-}
-
-plugins.withId('net.ltgt.errorprone') {
-  dependencies {
-    annotationProcessor group: "com.uber.nullaway", name: "nullaway", version: versions.nullaway
-    errorprone group: "com.google.errorprone", name: "error_prone_core", version: versions.errorprone
-  }
-
-  tasks.withType(JavaCompile).configureEach {
-    if (!name.toLowerCase().contains("test")) {
-      options.errorprone {
-        error("NullAway")
-
-        // Doesn't work well with Java 8
-        disable("FutureReturnValueIgnored")
-
-        option("NullAway:AnnotatedPackages", "io.opentelemetry,com.linecorp.armeria,com.google.common")
-      }
-    }
-  }
 }

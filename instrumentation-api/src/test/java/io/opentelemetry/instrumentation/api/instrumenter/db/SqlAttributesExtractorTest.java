@@ -19,8 +19,8 @@ import org.junit.jupiter.api.Test;
 
 class SqlAttributesExtractorTest {
   AttributeKey<String> dbTableAttribute;
-  SqlAttributesExtractor<Map<String, String>> underTest =
-      new SqlAttributesExtractor<Map<String, String>>() {
+  SqlAttributesExtractor<Map<String, String>, Void> underTest =
+      new SqlAttributesExtractor<Map<String, String>, Void>() {
 
         @Override
         protected AttributeKey<String> dbTableAttribute() {

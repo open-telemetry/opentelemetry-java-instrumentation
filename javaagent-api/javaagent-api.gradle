@@ -7,14 +7,15 @@ project.ext.minimumBranchCoverage = 0.0
 project.ext.minimumInstructionCoverage = 0.0
 
 dependencies {
-  api deps.opentelemetryApi
-  compileOnly deps.opentelemetrySdk
-  implementation deps.slf4j
+  api "io.opentelemetry:opentelemetry-api"
+  compileOnly "io.opentelemetry:opentelemetry-sdk"
+  implementation "org.slf4j:slf4j-api"
   implementation project(':instrumentation-api')
-  compileOnly deps.autoValueAnnotations
-  annotationProcessor deps.autoValue
+  compileOnly "com.google.auto.value:auto-value-annotations"
+  annotationProcessor "com.google.auto.value:auto-value"
 
   testImplementation project(':testing-common')
-  testImplementation deps.mockito
-  testImplementation deps.assertj
+  testImplementation "org.mockito:mockito-core"
+  testImplementation "org.mockito:mockito-junit-jupiter"
+  testImplementation "org.assertj:assertj-core"
 }

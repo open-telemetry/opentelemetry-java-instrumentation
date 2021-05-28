@@ -22,7 +22,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *   <li>It enables adding the table name extracted by the sanitizer as a parameter.
  * </ul>
  */
-public abstract class SqlAttributesExtractor<REQUEST> extends DbAttributesExtractor<REQUEST> {
+public abstract class SqlAttributesExtractor<REQUEST, RESPONSE>
+    extends DbAttributesExtractor<REQUEST, RESPONSE> {
 
   @Override
   protected final void onStart(AttributesBuilder attributes, REQUEST request) {
