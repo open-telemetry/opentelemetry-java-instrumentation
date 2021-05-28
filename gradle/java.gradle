@@ -240,23 +240,3 @@ tasks.withType(AbstractArchiveTask).configureEach {
   preserveFileTimestamps = false
   reproducibleFileOrder = true
 }
-
-plugins.withId('net.ltgt.errorprone') {
-  dependencies {
-    annotationProcessor "com.uber.nullaway:nullaway"
-    errorprone "com.google.errorprone:error_prone_core"
-  }
-
-  tasks.withType(JavaCompile).configureEach {
-    if (!name.toLowerCase().contains("test")) {
-      options.errorprone {
-        error("NullAway")
-
-        // Doesn't work well with Java 8
-        disable("FutureReturnValueIgnored")
-
-        option("NullAway:AnnotatedPackages", "io.opentelemetry,com.linecorp.armeria,com.google.common")
-      }
-    }
-  }
-}

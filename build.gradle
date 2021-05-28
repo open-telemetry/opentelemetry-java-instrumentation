@@ -17,6 +17,7 @@ plugins {
   id "com.diffplug.spotless"
   id "com.github.spotbugs" apply false
   id "net.ltgt.errorprone" apply false
+  id "net.ltgt.nullaway" apply false
 }
 
 release {
@@ -69,6 +70,31 @@ allprojects {
     module {
       downloadJavadoc = false
       downloadSources = false
+    }
+  }
+
+  plugins.withId('net.ltgt.errorprone') {
+    plugins.apply('net.ltgt.nullaway')
+    dependencies {
+      errorprone "com.google.errorprone:error_prone_core"
+      errorprone "com.uber.nullaway:nullaway"
+    }
+
+    nullaway {
+      annotatedPackages.addAll("io.opentelemetry", "com.linecorp.armeria,com.google.common")
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+      if (!name.toLowerCase().contains("test")) {
+        options.errorprone {
+          nullaway {
+            severity = net.ltgt.gradle.errorprone.CheckSeverity.ERROR
+          }
+
+          // Doesn't work well with Java 8
+          disable("FutureReturnValueIgnored")
+        }
+      }
     }
   }
 }
