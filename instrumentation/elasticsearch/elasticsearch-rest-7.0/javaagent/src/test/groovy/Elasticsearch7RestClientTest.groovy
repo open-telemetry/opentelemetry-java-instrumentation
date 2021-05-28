@@ -17,43 +17,25 @@ import org.elasticsearch.client.Response
 import org.elasticsearch.client.ResponseListener
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
-import org.elasticsearch.common.io.FileSystemUtils
-import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.common.transport.TransportAddress
-import org.elasticsearch.http.HttpServerTransport
-import org.elasticsearch.node.InternalSettingsPreparer
-import org.elasticsearch.node.Node
-import org.elasticsearch.transport.Netty4Plugin
+import org.testcontainers.elasticsearch.ElasticsearchContainer
 import spock.lang.Shared
 
 class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
   @Shared
-  TransportAddress httpTransportAddress
+  ElasticsearchContainer elasticsearch
+
   @Shared
-  Node testNode
-  @Shared
-  File esWorkingDir
-  @Shared
-  String clusterName = UUID.randomUUID().toString()
+  HttpHost httpHost
 
   @Shared
   RestClient client
 
   def setupSpec() {
+    elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2")
+    elasticsearch.start()
 
-    esWorkingDir = File.createTempDir("test-es-working-dir-", "")
-    esWorkingDir.deleteOnExit()
-    println "ES work dir: $esWorkingDir"
-
-    def settings = Settings.builder()
-      .put("path.home", esWorkingDir.path)
-      .put("cluster.name", clusterName)
-      .build()
-    testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, Collections.emptyMap(), null, { "default node name" }), [Netty4Plugin], true)
-    testNode.start()
-    httpTransportAddress = testNode.injector().getInstance(HttpServerTransport).boundAddress().publishAddress()
-
-    client = RestClient.builder(new HttpHost(httpTransportAddress.address, httpTransportAddress.port))
+    httpHost = HttpHost.create(elasticsearch.getHttpHostAddress())
+    client = RestClient.builder(httpHost)
       .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
         @Override
         RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder builder) {
@@ -61,15 +43,10 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
         }
       })
       .build()
-
   }
 
   def cleanupSpec() {
-    testNode?.close()
-    if (esWorkingDir != null) {
-      FileSystemUtils.deleteSubDirectories(esWorkingDir.toPath())
-      esWorkingDir.delete()
-    }
+    elasticsearch.stop()
   }
 
   def "test elasticsearch status"() {
@@ -90,8 +67,8 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
-            "${SemanticAttributes.NET_PEER_NAME.key}" httpTransportAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key}" httpTransportAddress.port
+            "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
+            "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }
         }
       }
@@ -136,8 +113,8 @@ class Elasticsearch7RestClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
-            "${SemanticAttributes.NET_PEER_NAME.key}" httpTransportAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key}" httpTransportAddress.port
+            "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
+            "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }
         }
       }

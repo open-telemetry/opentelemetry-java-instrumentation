@@ -29,11 +29,8 @@ dependencies {
   testImplementation "org.apache.logging.log4j:log4j-core:2.11.0"
   testImplementation "org.apache.logging.log4j:log4j-api:2.11.0"
 
+  testImplementation "org.testcontainers:elasticsearch:${versions["org.testcontainers"]}"
   testLibrary "org.elasticsearch.client:elasticsearch-rest-client:6.4.0"
-  testLibrary "org.elasticsearch:elasticsearch:6.4.0"
-  testLibrary "org.elasticsearch.plugin:transport-netty4-client:6.4.0"
 
   latestDepTestLibrary "org.elasticsearch.client:elasticsearch-rest-client:6.+"
-  latestDepTestLibrary "org.elasticsearch:elasticsearch:6.+"
-  latestDepTestLibrary "org.elasticsearch.plugin:transport-netty4-client:6.+"
 }
