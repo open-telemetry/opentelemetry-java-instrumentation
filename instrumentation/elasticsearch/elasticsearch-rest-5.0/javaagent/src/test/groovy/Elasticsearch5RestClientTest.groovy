@@ -4,7 +4,6 @@
  */
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 import groovy.json.JsonSlurper
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
@@ -15,46 +14,31 @@ import org.apache.http.util.EntityUtils
 import org.elasticsearch.client.Response
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
-import org.elasticsearch.common.io.FileSystemUtils
-import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.common.transport.TransportAddress
-import org.elasticsearch.env.Environment
-import org.elasticsearch.http.HttpServerTransport
-import org.elasticsearch.node.Node
-import org.elasticsearch.node.internal.InternalSettingsPreparer
-import org.elasticsearch.transport.Netty3Plugin
+import org.testcontainers.elasticsearch.ElasticsearchContainer
 import spock.lang.Shared
 
 class Elasticsearch5RestClientTest extends AgentInstrumentationSpecification {
   @Shared
-  TransportAddress httpTransportAddress
+  ElasticsearchContainer elasticsearch
+
   @Shared
-  Node testNode
-  @Shared
-  File esWorkingDir
-  @Shared
-  String clusterName = UUID.randomUUID().toString()
+  HttpHost httpHost
 
   @Shared
   static RestClient client
 
   def setupSpec() {
+    if (!Boolean.getBoolean("testLatestDeps")) {
+      elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:5.6.16")
+        .withEnv("xpack.ml.enabled", "false")
+        .withEnv("xpack.security.enabled", "false")
+    } else {
+      elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16")
+    }
+    elasticsearch.start()
 
-    esWorkingDir = File.createTempDir("test-es-working-dir-", "")
-    esWorkingDir.deleteOnExit()
-    println "ES work dir: $esWorkingDir"
-
-    def settings = Settings.builder()
-      .put("path.home", esWorkingDir.path)
-      .put("transport.type", "netty3")
-      .put("http.type", "netty3")
-      .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
-      .build()
-    testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
-    testNode.start()
-    httpTransportAddress = testNode.injector().getInstance(HttpServerTransport).boundAddress().publishAddress()
-
-    client = RestClient.builder(new HttpHost(httpTransportAddress.address, httpTransportAddress.port))
+    httpHost = HttpHost.create(elasticsearch.getHttpHostAddress())
+    client = RestClient.builder(httpHost)
       .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
       .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
         @Override
@@ -63,15 +47,10 @@ class Elasticsearch5RestClientTest extends AgentInstrumentationSpecification {
         }
       })
       .build()
-
   }
 
   def cleanupSpec() {
-    testNode?.close()
-    if (esWorkingDir != null) {
-      FileSystemUtils.deleteSubDirectories(esWorkingDir.toPath())
-      esWorkingDir.delete()
-    }
+    elasticsearch.stop()
   }
 
   def "test elasticsearch status"() {
@@ -92,8 +71,8 @@ class Elasticsearch5RestClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
-            "${SemanticAttributes.NET_PEER_NAME.key}" httpTransportAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key}" httpTransportAddress.port
+            "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
+            "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }
         }
       }

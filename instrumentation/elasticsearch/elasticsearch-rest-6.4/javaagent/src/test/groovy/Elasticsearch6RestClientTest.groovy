@@ -14,41 +14,25 @@ import org.apache.http.util.EntityUtils
 import org.elasticsearch.client.Response
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
-import org.elasticsearch.common.io.FileSystemUtils
-import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.common.transport.TransportAddress
-import org.elasticsearch.http.HttpServerTransport
-import org.elasticsearch.node.Node
+import org.testcontainers.elasticsearch.ElasticsearchContainer
 import spock.lang.Shared
 
 class Elasticsearch6RestClientTest extends AgentInstrumentationSpecification {
   @Shared
-  TransportAddress httpTransportAddress
+  ElasticsearchContainer elasticsearch
+
   @Shared
-  Node testNode
-  @Shared
-  File esWorkingDir
-  @Shared
-  String clusterName = UUID.randomUUID().toString()
+  HttpHost httpHost
 
   @Shared
   RestClient client
 
   def setupSpec() {
+    elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16")
+    elasticsearch.start()
 
-    esWorkingDir = File.createTempDir("test-es-working-dir-", "")
-    esWorkingDir.deleteOnExit()
-    println "ES work dir: $esWorkingDir"
-
-    def settings = Settings.builder()
-      .put("path.home", esWorkingDir.path)
-      .put("cluster.name", clusterName)
-      .build()
-    testNode = NodeFactory.newNode(settings)
-    testNode.start()
-    httpTransportAddress = testNode.injector().getInstance(HttpServerTransport).boundAddress().publishAddress()
-
-    client = RestClient.builder(new HttpHost(httpTransportAddress.address, httpTransportAddress.port))
+    httpHost = HttpHost.create(elasticsearch.getHttpHostAddress())
+    client = RestClient.builder(httpHost)
       .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
       .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
         @Override
@@ -61,11 +45,7 @@ class Elasticsearch6RestClientTest extends AgentInstrumentationSpecification {
   }
 
   def cleanupSpec() {
-    testNode?.close()
-    if (esWorkingDir != null) {
-      FileSystemUtils.deleteSubDirectories(esWorkingDir.toPath())
-      esWorkingDir.delete()
-    }
+    elasticsearch.stop()
   }
 
   def "test elasticsearch status"() {
@@ -86,8 +66,8 @@ class Elasticsearch6RestClientTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GET _cluster/health"
-            "${SemanticAttributes.NET_PEER_NAME.key}" httpTransportAddress.address
-            "${SemanticAttributes.NET_PEER_PORT.key}" httpTransportAddress.port
+            "${SemanticAttributes.NET_PEER_NAME.key}" httpHost.hostName
+            "${SemanticAttributes.NET_PEER_PORT.key}" httpHost.port
           }
         }
       }
