@@ -5,6 +5,7 @@
 
 package muzzle;
 
+@SuppressWarnings("UnusedMethod")
 public class HelperReferenceWrapperTestClasses {
   interface Interface1 {
     void foo();

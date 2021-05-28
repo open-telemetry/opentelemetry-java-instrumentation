@@ -7,16 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import io.lettuce.core.protocol.RedisCommand;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 public class LettuceInstrumentationUtil {
 
-  public static final String[] NON_INSTRUMENTING_COMMAND_WORDS =
-      new String[] {"SHUTDOWN", "DEBUG", "OOM", "SEGFAULT"};
-
-  public static final Set<String> nonInstrumentingCommands =
-      new HashSet<>(Arrays.asList(NON_INSTRUMENTING_COMMAND_WORDS));
+  private static final Set<String> nonInstrumentingCommands =
+      Collections.unmodifiableSet(
+          new HashSet<>(Arrays.asList("SHUTDOWN", "DEBUG", "OOM", "SEGFAULT")));
 
   /**
    * Determines whether a redis command should finish its relevant span early (as soon as tags are

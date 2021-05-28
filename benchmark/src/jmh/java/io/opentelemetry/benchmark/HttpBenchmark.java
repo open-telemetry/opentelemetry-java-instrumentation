@@ -16,8 +16,12 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpBenchmark {
+
+  private static final Logger logger = LoggerFactory.getLogger(HttpBenchmark.class);
 
   @State(Scope.Benchmark)
   public static class BenchmarkState {
@@ -40,7 +44,7 @@ public class HttpBenchmark {
       try {
         jettyServer.stop();
       } catch (Exception e) {
-        e.printStackTrace();
+        logger.warn("Error", e);
       } finally {
         jettyServer.destroy();
       }

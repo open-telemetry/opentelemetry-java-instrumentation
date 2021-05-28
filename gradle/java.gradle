@@ -3,10 +3,10 @@ import java.time.Duration
 apply plugin: 'java-library'
 apply plugin: 'groovy'
 apply plugin: 'org.gradle.test-retry'
+apply plugin: 'net.ltgt.errorprone'
 
 apply from: "$rootDir/gradle/spotless.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
-apply from: "$rootDir/gradle/spotbugs.gradle"
 apply from: "$rootDir/gradle/checkstyle.gradle"
 
 afterEvaluate {

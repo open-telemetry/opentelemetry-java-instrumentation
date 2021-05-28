@@ -74,7 +74,7 @@ public class JspTracer extends BaseTracer {
     // normalizing the URL should remove those symbols for readability and consistency
     try {
       span.setAttribute(
-          "jsp.requestURL", (new URI(req.getRequestURL().toString())).normalize().toString());
+          "jsp.requestURL", new URI(req.getRequestURL().toString()).normalize().toString());
     } catch (URISyntaxException e) {
       LoggerFactory.getLogger(HttpJspPage.class)
           .warn("Failed to get and normalize request URL: " + e.getMessage());

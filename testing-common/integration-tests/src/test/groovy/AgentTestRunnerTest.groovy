@@ -22,7 +22,7 @@ class AgentTestRunnerTest extends AgentInstrumentationSpecification {
     setup:
     final List<String> bootstrapClassesIncorrectlyLoaded = []
     for (ClassPath.ClassInfo info : getTestClasspath().getAllClasses()) {
-      for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
+      for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.size(); ++i) {
         if (info.getName().startsWith(Constants.BOOTSTRAP_PACKAGE_PREFIXES[i])) {
           Class<?> bootstrapClass = Class.forName(info.getName())
           def loader

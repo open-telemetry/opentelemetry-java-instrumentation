@@ -14,11 +14,10 @@ import java.net.URLClassLoader;
 import java.util.Collections;
 
 public class MuzzleWeakReferenceTest {
-  /*
-   * Spock holds strong references to all local variables. For weak reference testing we must create our strong references away from Spock in this java class.
-   *
-   * Even returning a WeakReference<ClassLoader> is enough for spock to create a strong ref.
-   */
+
+  // Spock holds strong references to all local variables. For weak reference testing we must create
+  // our strong references away from Spock in this java class.
+  // Even returning a WeakReference<ClassLoader> is enough for spock to create a strong ref.
   public static boolean classLoaderRefIsGarbageCollected() throws InterruptedException {
     ClassLoader loader = new URLClassLoader(new URL[0], null);
     WeakReference<ClassLoader> clRef = new WeakReference<>(loader);

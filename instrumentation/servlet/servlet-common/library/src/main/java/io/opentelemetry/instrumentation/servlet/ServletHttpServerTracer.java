@@ -43,7 +43,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
-  public ServletHttpServerTracer(ServletAccessor<REQUEST, RESPONSE> accessor) {
+  protected ServletHttpServerTracer(ServletAccessor<REQUEST, RESPONSE> accessor) {
     this.accessor = accessor;
   }
 

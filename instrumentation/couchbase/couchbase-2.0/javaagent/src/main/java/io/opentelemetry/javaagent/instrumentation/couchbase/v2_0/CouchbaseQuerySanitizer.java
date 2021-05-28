@@ -75,8 +75,8 @@ public final class CouchbaseQuerySanitizer {
     }
     // Query is present in Couchbase [2.0.0, 2.2.0)
     // Statement is present starting from Couchbase 2.1.0
-    if (QUERY_CLASS != null && QUERY_CLASS.isAssignableFrom(query.getClass())
-        || STATEMENT_CLASS != null && STATEMENT_CLASS.isAssignableFrom(query.getClass())) {
+    if ((QUERY_CLASS != null && QUERY_CLASS.isAssignableFrom(query.getClass()))
+        || (STATEMENT_CLASS != null && STATEMENT_CLASS.isAssignableFrom(query.getClass()))) {
       return sanitizeString(query.toString());
     }
     // SpatialViewQuery is present starting from Couchbase 2.1.0

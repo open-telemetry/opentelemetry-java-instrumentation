@@ -56,7 +56,7 @@ public abstract class InstrumentationModule {
    *       name containing the version should be passed, e.g. {@code instrumented-library-1.0}.
    * </ul>
    */
-  public InstrumentationModule(
+  protected InstrumentationModule(
       String mainInstrumentationName, String... additionalInstrumentationNames) {
     this(toList(mainInstrumentationName, additionalInstrumentationNames));
   }
@@ -66,7 +66,7 @@ public abstract class InstrumentationModule {
    *
    * @see #InstrumentationModule(String, String...)
    */
-  public InstrumentationModule(List<String> instrumentationNames) {
+  protected InstrumentationModule(List<String> instrumentationNames) {
     if (instrumentationNames.isEmpty()) {
       throw new IllegalArgumentException("InstrumentationModules must be named");
     }

@@ -39,11 +39,11 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
 
   protected static final String USER_AGENT = "User-Agent";
 
-  public HttpServerTracer() {
+  protected HttpServerTracer() {
     super();
   }
 
-  public HttpServerTracer(OpenTelemetry openTelemetry) {
+  protected HttpServerTracer(OpenTelemetry openTelemetry) {
     super(openTelemetry);
   }
 

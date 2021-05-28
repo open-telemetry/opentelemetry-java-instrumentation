@@ -96,6 +96,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
         });
   }
 
+  @SuppressWarnings("CheckReturnValue")
   private void handleListProducts(RoutingContext routingContext) {
     Long requestId = extractRequestId(routingContext);
     attachRequestIdToCurrentSpan(requestId);

@@ -1,5 +1,5 @@
 apply from: "$rootDir/gradle/instrumentation-library.gradle"
-apply plugin: "net.ltgt.errorprone"
+apply plugin: "net.ltgt.nullaway"
 
 dependencies {
   library "com.squareup.okhttp3:okhttp:3.0.0"
