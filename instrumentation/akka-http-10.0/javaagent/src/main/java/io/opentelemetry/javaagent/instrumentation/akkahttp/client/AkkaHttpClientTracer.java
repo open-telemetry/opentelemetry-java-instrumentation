@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.akkahttp;
+package io.opentelemetry.javaagent.instrumentation.akkahttp.client;
 
-import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentationModule.InjectAdapter.SETTER;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.client.HttpHeaderSetter.SETTER;
 
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
@@ -13,7 +13,6 @@ import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.tracer.HttpClientTracer;
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
-import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpClientInstrumentationModule.AkkaHttpHeaders;
 import java.net.URI;
 import java.net.URISyntaxException;
 

@@ -5,23 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import javax.ws.rs.client.Client;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class JaxRsClientInstrumentationModule extends InstrumentationModule {
@@ -33,36 +22,5 @@ public class JaxRsClientInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ClientBuilderInstrumentation());
-  }
-
-  public static class ClientBuilderInstrumentation implements TypeInstrumentation {
-    @Override
-    public ElementMatcher<ClassLoader> classLoaderOptimization() {
-      return hasClassesNamed("javax.ws.rs.client.ClientBuilder");
-    }
-
-    @Override
-    public ElementMatcher<TypeDescription> typeMatcher() {
-      return extendsClass(named("javax.ws.rs.client.ClientBuilder"));
-    }
-
-    @Override
-    public void transform(TypeTransformer transformer) {
-      transformer.applyAdviceToMethod(
-          named("build").and(returns(implementsInterface(named("javax.ws.rs.client.Client")))),
-          JaxRsClientInstrumentationModule.class.getName() + "$ClientBuilderAdvice");
-    }
-  }
-
-  public static class ClientBuilderAdvice {
-
-    @Advice.OnMethodExit
-    public static void registerFeature(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Client client) {
-      // Register on the generated client instead of the builder
-      // The build() can be called multiple times and is not thread safe
-      // A client is only created once
-      client.register(ClientTracingFeature.class);
-    }
   }
 }

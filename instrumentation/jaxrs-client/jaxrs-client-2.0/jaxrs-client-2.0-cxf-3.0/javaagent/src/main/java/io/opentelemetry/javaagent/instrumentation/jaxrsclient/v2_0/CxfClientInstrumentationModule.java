@@ -6,19 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient.v2_0;
 
 import static java.util.Arrays.asList;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import java.util.Map;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.cxf.message.Message;
 
 /**
  * JAX-RS Client API doesn't define a good point where we can handle connection failures, so we must
@@ -36,58 +28,5 @@ public class CxfClientInstrumentationModule extends InstrumentationModule {
     return asList(
         new CxfClientConnectionErrorInstrumentation(),
         new CxfAsyncClientConnectionErrorInstrumentation());
-  }
-
-  public static class CxfClientConnectionErrorInstrumentation implements TypeInstrumentation {
-    @Override
-    public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("org.apache.cxf.jaxrs.client.AbstractClient");
-    }
-
-    @Override
-    public void transform(TypeTransformer transformer) {
-      transformer.applyAdviceToMethod(
-          named("preProcessResult").and(takesArgument(0, named("org.apache.cxf.message.Message"))),
-          CxfClientInstrumentationModule.class.getName() + "$ErrorAdvice");
-    }
-  }
-
-  public static class CxfAsyncClientConnectionErrorInstrumentation implements TypeInstrumentation {
-    @Override
-    public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("org.apache.cxf.jaxrs.client.JaxrsClientCallback");
-    }
-
-    @Override
-    public void transform(TypeTransformer transformer) {
-      transformer.applyAdviceToMethod(
-          named("handleException")
-              .and(
-                  takesArgument(0, named(Map.class.getName()))
-                      .and(takesArgument(1, named(Throwable.class.getName())))),
-          CxfClientInstrumentationModule.class.getName() + "$AsyncErrorAdvice");
-    }
-  }
-
-  public static class ErrorAdvice {
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void handleError(
-        @Advice.Argument(0) Message message, @Advice.Thrown Throwable throwable) {
-      if (throwable != null) {
-        CxfClientUtil.handleException(message, throwable);
-      }
-    }
-  }
-
-  public static class AsyncErrorAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void handleError(
-        @Advice.Argument(0) Map<String, Object> map, @Advice.Argument(1) Throwable throwable) {
-      if (throwable != null && map instanceof Message) {
-        CxfClientUtil.handleException((Message) map, throwable);
-      }
-    }
   }
 }

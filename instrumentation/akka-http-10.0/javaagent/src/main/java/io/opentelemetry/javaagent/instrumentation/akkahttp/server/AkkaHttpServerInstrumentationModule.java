@@ -3,26 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.akkahttp;
+package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
-import static io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpServerTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerTracer.tracer;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
@@ -36,49 +29,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new HttpExtInstrumentation());
-  }
-
-  public static class HttpExtInstrumentation implements TypeInstrumentation {
-    @Override
-    public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("akka.http.scaladsl.HttpExt");
-    }
-
-    @Override
-    public void transform(TypeTransformer transformer) {
-      // Instrumenting akka-streams bindAndHandle api was previously attempted.
-      // This proved difficult as there was no clean way to close the async scope
-      // in the graph logic after the user's request handler completes.
-      //
-      // Instead, we're instrumenting the bindAndHandle function helpers by
-      // wrapping the scala functions with our own handlers.
-      transformer.applyAdviceToMethod(
-          named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
-          AkkaHttpServerInstrumentationModule.class.getName() + "$AkkaHttpSyncAdvice");
-      transformer.applyAdviceToMethod(
-          named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
-          AkkaHttpServerInstrumentationModule.class.getName() + "$AkkaHttpAsyncAdvice");
-    }
-  }
-
-  public static class AkkaHttpSyncAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 0, readOnly = false)
-            Function1<HttpRequest, HttpResponse> handler) {
-      handler = new SyncWrapper(handler);
-    }
-  }
-
-  public static class AkkaHttpAsyncAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 0, readOnly = false)
-            Function1<HttpRequest, Future<HttpResponse>> handler,
-        @Advice.Argument(7) Materializer materializer) {
-      handler = new AsyncWrapper(handler, materializer.executionContext());
-    }
+    return singletonList(new HttpExtServerInstrumentation());
   }
 
   public static class SyncWrapper extends AbstractFunction1<HttpRequest, HttpResponse> {

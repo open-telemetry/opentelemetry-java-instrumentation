@@ -74,8 +74,7 @@ public final class DecoratorFunctions {
       }
     }
     // otherwise use the parent span context
-    return contextView.getOrDefault(
-        ReactorNettyInstrumentationModule.MapConnect.CONTEXT_ATTRIBUTE, null);
+    return contextView.getOrDefault(MapConnect.CONTEXT_ATTRIBUTE, null);
   }
 
   private DecoratorFunctions() {}
