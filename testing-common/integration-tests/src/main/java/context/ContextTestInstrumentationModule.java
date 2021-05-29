@@ -28,7 +28,7 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isHelperClass(String className) {
-    return className.equals(getClass().getName() + "$Context");
+    return className.equals(getClass().getPackage().getName() + ".Context");
   }
 
   @Override
