@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.api;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 
 /**
  * A helper for accessing methods that rely on new Java 8 bytecode features such as calling a static
@@ -31,10 +30,5 @@ public final class Java8BytecodeBridge {
   /** Calls {@link Span#fromContext(Context)}. */
   public static Span spanFromContext(Context context) {
     return Span.fromContext(context);
-  }
-
-  /** Calls {@link ErrorCauseExtractor#jdk()}. */
-  public static ErrorCauseExtractor jdkErrorCauseExtractor() {
-    return ErrorCauseExtractor.jdk();
   }
 }
