@@ -236,6 +236,9 @@ public class TracingCqlSession implements CqlSession {
   private static ExecutionInfo getExecutionInfo(@Nullable Throwable throwable) {
     if (throwable instanceof DriverException) {
       return ((DriverException) throwable).getExecutionInfo();
+    } else if (throwable != null && throwable.getCause() instanceof DriverException) {
+      // TODO (trask) find out if this is needed and if so add comment explaining
+      return ((DriverException) throwable.getCause()).getExecutionInfo();
     } else {
       return null;
     }
