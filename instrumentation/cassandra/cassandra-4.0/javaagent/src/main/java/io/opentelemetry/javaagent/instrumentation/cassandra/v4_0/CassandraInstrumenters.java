@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 public final class CassandraInstrumenters {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.cassandra-4.0";
 
-  // using ExecutionInfo because we can get that from both ExecutionInfo and AsyncExecutionInfo
+  // using ExecutionInfo because we can get that from ResultSet, AsyncResultSet and DriverException
   private static final Instrumenter<CassandraRequest, ExecutionInfo> INSTRUMENTER;
 
   static {

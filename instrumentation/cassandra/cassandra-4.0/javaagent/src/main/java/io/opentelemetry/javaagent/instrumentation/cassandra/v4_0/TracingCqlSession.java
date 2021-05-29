@@ -9,9 +9,11 @@ import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.Cassandr
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.DriverException;
 import com.datastax.oss.driver.api.core.context.DriverContext;
 import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.PrepareRequest;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
@@ -21,12 +23,11 @@ import com.datastax.oss.driver.api.core.metadata.Metadata;
 import com.datastax.oss.driver.api.core.metrics.Metrics;
 import com.datastax.oss.driver.api.core.session.Request;
 import com.datastax.oss.driver.api.core.type.reflect.GenericType;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TracingCqlSession implements CqlSession {
   private final CqlSession session;
@@ -36,49 +37,41 @@ public class TracingCqlSession implements CqlSession {
   }
 
   @Override
-  @NonNull
-  public PreparedStatement prepare(@NonNull SimpleStatement statement) {
+  public PreparedStatement prepare(SimpleStatement statement) {
     return session.prepare(statement);
   }
 
   @Override
-  @NonNull
-  public PreparedStatement prepare(@NonNull String query) {
+  public PreparedStatement prepare(String query) {
     return session.prepare(query);
   }
 
   @Override
-  @NonNull
-  public PreparedStatement prepare(@NonNull PrepareRequest request) {
+  public PreparedStatement prepare(PrepareRequest request) {
     return session.prepare(request);
   }
 
   @Override
-  @NonNull
-  public CompletionStage<PreparedStatement> prepareAsync(@NonNull SimpleStatement statement) {
+  public CompletionStage<PreparedStatement> prepareAsync(SimpleStatement statement) {
     return session.prepareAsync(statement);
   }
 
   @Override
-  @NonNull
-  public CompletionStage<PreparedStatement> prepareAsync(@NonNull String query) {
+  public CompletionStage<PreparedStatement> prepareAsync(String query) {
     return session.prepareAsync(query);
   }
 
   @Override
-  @NonNull
   public CompletionStage<PreparedStatement> prepareAsync(PrepareRequest request) {
     return session.prepareAsync(request);
   }
 
   @Override
-  @NonNull
   public String getName() {
     return session.getName();
   }
 
   @Override
-  @NonNull
   public Metadata getMetadata() {
     return session.getMetadata();
   }
@@ -89,25 +82,21 @@ public class TracingCqlSession implements CqlSession {
   }
 
   @Override
-  @NonNull
   public CompletionStage<Metadata> setSchemaMetadataEnabled(@Nullable Boolean newValue) {
     return session.setSchemaMetadataEnabled(newValue);
   }
 
   @Override
-  @NonNull
   public CompletionStage<Metadata> refreshSchemaAsync() {
     return session.refreshSchemaAsync();
   }
 
   @Override
-  @NonNull
   public Metadata refreshSchema() {
     return session.refreshSchema();
   }
 
   @Override
-  @NonNull
   public CompletionStage<Boolean> checkSchemaAgreementAsync() {
     return session.checkSchemaAgreementAsync();
   }
@@ -118,25 +107,21 @@ public class TracingCqlSession implements CqlSession {
   }
 
   @Override
-  @NonNull
   public DriverContext getContext() {
     return session.getContext();
   }
 
   @Override
-  @NonNull
   public Optional<CqlIdentifier> getKeyspace() {
     return session.getKeyspace();
   }
 
   @Override
-  @NonNull
   public Optional<Metrics> getMetrics() {
     return session.getMetrics();
   }
 
   @Override
-  @NonNull
   public CompletionStage<Void> closeFuture() {
     return session.closeFuture();
   }
@@ -147,13 +132,11 @@ public class TracingCqlSession implements CqlSession {
   }
 
   @Override
-  @NonNull
   public CompletionStage<Void> closeAsync() {
     return session.closeAsync();
   }
 
   @Override
-  @NonNull
   public CompletionStage<Void> forceCloseAsync() {
     return session.forceCloseAsync();
   }
@@ -166,20 +149,19 @@ public class TracingCqlSession implements CqlSession {
   @Override
   @Nullable
   public <REQUEST extends Request, RESULT> RESULT execute(
-      @NonNull REQUEST request, @NonNull GenericType<RESULT> resultType) {
+      REQUEST request, GenericType<RESULT> resultType) {
     return session.execute(request, resultType);
   }
 
   @Override
-  @NonNull
-  public ResultSet execute(@NonNull String query) {
+  public ResultSet execute(String query) {
     CassandraRequest request = CassandraRequest.create(session, query);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(query);
     } catch (RuntimeException e) {
-      instrumenter().end(context, request, null, e);
+      instrumenter().end(context, request, getExecutionInfo(e), e);
       throw e;
     }
     instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
@@ -187,8 +169,7 @@ public class TracingCqlSession implements CqlSession {
   }
 
   @Override
-  @NonNull
-  public ResultSet execute(@NonNull Statement<?> statement) {
+  public ResultSet execute(Statement<?> statement) {
     String query = getQuery(statement);
     CassandraRequest request = CassandraRequest.create(session, query);
     Context context = instrumenter().start(Context.current(), request);
@@ -196,7 +177,7 @@ public class TracingCqlSession implements CqlSession {
     try (Scope ignored = context.makeCurrent()) {
       resultSet = session.execute(statement);
     } catch (RuntimeException e) {
-      instrumenter().end(context, request, null, e);
+      instrumenter().end(context, request, getExecutionInfo(e), e);
       throw e;
     }
     instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
@@ -204,8 +185,7 @@ public class TracingCqlSession implements CqlSession {
   }
 
   @Override
-  @NonNull
-  public CompletionStage<AsyncResultSet> executeAsync(@NonNull Statement<?> statement) {
+  public CompletionStage<AsyncResultSet> executeAsync(Statement<?> statement) {
     String query = getQuery(statement);
     CassandraRequest request = CassandraRequest.create(session, query);
     Context context = instrumenter().start(Context.current(), request);
@@ -213,21 +193,22 @@ public class TracingCqlSession implements CqlSession {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(statement);
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
-            instrumenter().end(context, request, asyncResultSet.getExecutionInfo(), throwable);
+            instrumenter()
+                .end(context, request, getExecutionInfo(asyncResultSet, throwable), throwable);
           });
     }
   }
 
   @Override
-  @NonNull
-  public CompletionStage<AsyncResultSet> executeAsync(@NonNull String query) {
+  public CompletionStage<AsyncResultSet> executeAsync(String query) {
     CassandraRequest request = CassandraRequest.create(session, query);
     Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(query);
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
-            instrumenter().end(context, request, asyncResultSet.getExecutionInfo(), throwable);
+            instrumenter()
+                .end(context, request, getExecutionInfo(asyncResultSet, throwable), throwable);
           });
     }
   }
@@ -241,5 +222,22 @@ public class TracingCqlSession implements CqlSession {
     }
 
     return query == null ? "" : query;
+  }
+
+  private static ExecutionInfo getExecutionInfo(
+      @Nullable AsyncResultSet asyncResultSet, @Nullable Throwable throwable) {
+    if (asyncResultSet != null) {
+      return asyncResultSet.getExecutionInfo();
+    } else {
+      return getExecutionInfo(throwable);
+    }
+  }
+
+  private static ExecutionInfo getExecutionInfo(@Nullable Throwable throwable) {
+    if (throwable instanceof DriverException) {
+      return ((DriverException) throwable).getExecutionInfo();
+    } else {
+      return null;
+    }
   }
 }
