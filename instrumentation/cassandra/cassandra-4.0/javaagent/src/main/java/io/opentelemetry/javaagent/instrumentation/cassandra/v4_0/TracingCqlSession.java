@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraDatabaseClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraInstrumenters.instrumenter;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -173,58 +173,47 @@ public class TracingCqlSession implements CqlSession {
   @Override
   @NonNull
   public ResultSet execute(@NonNull String query) {
-
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
+    ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
-      try {
-        ResultSet resultSet = session.execute(query);
-        tracer().onResponse(context, session, resultSet.getExecutionInfo());
-        return resultSet;
-      } catch (RuntimeException e) {
-        tracer().endExceptionally(context, e, session);
-        throw e;
-      } finally {
-        tracer().end(context);
-      }
+      resultSet = session.execute(query);
+    } catch (RuntimeException e) {
+      instrumenter().end(context, request, null, e);
+      throw e;
     }
+    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    return resultSet;
   }
 
   @Override
   @NonNull
   public ResultSet execute(@NonNull Statement<?> statement) {
     String query = getQuery(statement);
-
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
+    ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
-      try {
-        ResultSet resultSet = session.execute(statement);
-        tracer().onResponse(context, session, resultSet.getExecutionInfo());
-        return resultSet;
-      } catch (RuntimeException e) {
-        tracer().endExceptionally(context, e, session);
-        throw e;
-      } finally {
-        tracer().end(context);
-      }
+      resultSet = session.execute(statement);
+    } catch (RuntimeException e) {
+      instrumenter().end(context, request, null, e);
+      throw e;
     }
+    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
+    return resultSet;
   }
 
   @Override
   @NonNull
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull Statement<?> statement) {
     String query = getQuery(statement);
-
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(statement);
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
-            if (throwable != null) {
-              tracer().endExceptionally(context, throwable, session);
-            } else {
-              tracer().onResponse(context, session, asyncResultSet.getExecutionInfo());
-              tracer().end(context);
-            }
+            instrumenter().end(context, request, asyncResultSet.getExecutionInfo(), throwable);
           });
     }
   }
@@ -232,17 +221,13 @@ public class TracingCqlSession implements CqlSession {
   @Override
   @NonNull
   public CompletionStage<AsyncResultSet> executeAsync(@NonNull String query) {
-    Context context = tracer().startSpan(Context.current(), session, query);
+    CassandraRequest request = CassandraRequest.create(session, query);
+    Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(query);
       return stage.whenComplete(
           (asyncResultSet, throwable) -> {
-            if (throwable != null) {
-              tracer().endExceptionally(context, throwable, session);
-            } else {
-              tracer().onResponse(context, session, asyncResultSet.getExecutionInfo());
-              tracer().end(context);
-            }
+            instrumenter().end(context, request, asyncResultSet.getExecutionInfo(), throwable);
           });
     }
   }
