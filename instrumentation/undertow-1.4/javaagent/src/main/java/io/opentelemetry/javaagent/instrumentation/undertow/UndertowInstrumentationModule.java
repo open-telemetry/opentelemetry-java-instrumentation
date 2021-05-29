@@ -5,26 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.undertow.UndertowHttpServerTracer.tracer;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import io.undertow.server.HttpServerExchange;
 import java.util.List;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class UndertowInstrumentationModule extends InstrumentationModule {
@@ -36,65 +22,5 @@ public class UndertowInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new HandlerInstrumentation());
-  }
-
-  public static class HandlerInstrumentation implements TypeInstrumentation {
-
-    @Override
-    public ElementMatcher.Junction<ClassLoader> classLoaderOptimization() {
-      return hasClassesNamed("io.undertow.server.HttpHandler");
-    }
-
-    @Override
-    public ElementMatcher<TypeDescription> typeMatcher() {
-      return implementsInterface(named("io.undertow.server.HttpHandler"));
-    }
-
-    @Override
-    public void transform(TypeTransformer transformer) {
-      transformer.applyAdviceToMethod(
-          named("handleRequest")
-              .and(takesArgument(0, named("io.undertow.server.HttpServerExchange")))
-              .and(isPublic()),
-          UndertowHandlerAdvice.class.getName());
-    }
-
-    public static class UndertowHandlerAdvice {
-      @Advice.OnMethodEnter(suppress = Throwable.class)
-      public static void onEnter(
-          @Advice.Argument(value = 0, readOnly = false) HttpServerExchange exchange,
-          @Advice.Local("otelContext") Context context,
-          @Advice.Local("otelScope") Scope scope) {
-        Context attachedContext = tracer().getServerContext(exchange);
-        if (attachedContext != null) {
-          if (!Java8BytecodeBridge.currentContext().equals(attachedContext)) {
-            // request processing is dispatched to another thread
-            scope = attachedContext.makeCurrent();
-            context = attachedContext;
-            tracer().handlerStarted(attachedContext);
-          }
-          return;
-        }
-
-        context = tracer().startServerSpan(exchange);
-        scope = context.makeCurrent();
-
-        exchange.addExchangeCompleteListener(new EndSpanListener(context));
-      }
-
-      @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-      public static void onExit(
-          @Advice.Argument(0) HttpServerExchange exchange,
-          @Advice.Thrown Throwable throwable,
-          @Advice.Local("otelContext") Context context,
-          @Advice.Local("otelScope") Scope scope) {
-        if (scope == null) {
-          return;
-        }
-        scope.close();
-
-        tracer().handlerCompleted(context, throwable, exchange);
-      }
-    }
   }
 }
