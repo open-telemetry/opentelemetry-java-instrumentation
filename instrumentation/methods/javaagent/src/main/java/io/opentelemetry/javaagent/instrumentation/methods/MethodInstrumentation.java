@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.methods.MethodTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.methods.MethodInstrumenters.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -62,21 +63,23 @@ public class MethodInstrumentation implements TypeInstrumentation {
         @Advice.Origin Method method,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan(method);
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, method)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, method);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Origin Method method,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
       scope.close();
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      instrumenter().end(context, method, null, throwable);
     }
   }
 }
