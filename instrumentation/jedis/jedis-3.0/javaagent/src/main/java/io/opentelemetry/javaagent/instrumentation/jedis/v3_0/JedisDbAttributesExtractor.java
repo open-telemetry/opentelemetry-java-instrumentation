@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -34,11 +33,11 @@ final class JedisDbAttributesExtractor extends DbAttributesExtractor<JedisReques
 
   @Override
   protected String statement(JedisRequest request) {
-    return RedisCommandSanitizer.sanitize(request.getStringCommand(), request.getArgs());
+    return request.getStatement();
   }
 
   @Override
   protected String operation(JedisRequest request) {
-    return request.getStringCommand();
+    return request.getOperation();
   }
 }
