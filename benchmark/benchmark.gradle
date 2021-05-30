@@ -6,6 +6,8 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
+  jmh platform(project(":dependencyManagement"))
+
   jmh "io.opentelemetry:opentelemetry-api"
   jmh "net.bytebuddy:byte-buddy-agent"
 
