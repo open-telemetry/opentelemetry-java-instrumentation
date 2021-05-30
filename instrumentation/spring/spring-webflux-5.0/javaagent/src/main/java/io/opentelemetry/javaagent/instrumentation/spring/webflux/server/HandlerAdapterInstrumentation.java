@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
@@ -31,6 +32,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
+import reactor.core.publisher.Mono;
 
 public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
@@ -63,11 +65,15 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
     public static void methodEnter(
         @Advice.Argument(0) ServerWebExchange exchange,
         @Advice.Argument(1) Object handler,
+        @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope scope) {
 
-      Context context = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
-      if (handler != null && context != null) {
-        Span span = Span.fromContext(context);
+      Context parentContext = exchange.getAttribute(AdviceUtils.CONTEXT_ATTRIBUTE);
+      if (parentContext == null) {
+        return;
+      }
+
+      if (handler != null) {
         String handlerType;
         String operationName;
 
@@ -81,38 +87,43 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
           handlerType = handler.getClass().getName();
         }
 
-        span.updateName(operationName);
+        otelContext = tracer().startSpan(parentContext, operationName, SpanKind.INTERNAL);
+
         if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {
+          Span span = Span.fromContext(otelContext);
           span.setAttribute("spring-webflux.handler.type", handlerType);
         }
 
-        scope = context.makeCurrent();
+        scope = otelContext.makeCurrent();
       }
 
-      if (context != null) {
-        Span serverSpan = ServerSpan.fromContextOrNull(context);
+      Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
 
-        PathPattern bestPattern =
-            exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        if (serverSpan != null && bestPattern != null) {
-          serverSpan.updateName(
-              ServletContextPath.prepend(Context.current(), bestPattern.toString()));
-        }
+      PathPattern bestPattern =
+          exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+      if (serverSpan != null && bestPattern != null) {
+        serverSpan.updateName(
+            ServletContextPath.prepend(Context.current(), bestPattern.toString()));
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Argument(0) ServerWebExchange exchange,
+        @Advice.Return(readOnly = false) Mono mono,
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+      scope.close();
+
       if (throwable != null) {
-        AdviceUtils.finishSpanIfPresent(exchange, throwable);
+        tracer().endExceptionally(otelContext, throwable);
+      } else if (mono != null) {
+        mono = AdviceUtils.setPublisherSpan(mono, otelContext);
       }
-      if (scope != null) {
-        scope.close();
-        // span finished in SpanFinishingSubscriber
-      }
+      // span finished in SpanFinishingSubscriber
     }
   }
 }
