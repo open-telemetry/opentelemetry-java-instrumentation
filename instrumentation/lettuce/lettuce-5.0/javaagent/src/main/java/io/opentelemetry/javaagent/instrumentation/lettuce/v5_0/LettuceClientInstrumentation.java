@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceConnectionDatabaseClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumenters.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
@@ -51,12 +51,13 @@ public class LettuceClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) RedisURI redisUri,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = tracer().startSpan(currentContext(), redisUri, "CONNECT");
+      context = connectInstrumenter().start(currentContext(), redisUri);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Argument(1) RedisURI redisUri,
         @Advice.Thrown Throwable throwable,
         @Advice.Return ConnectionFuture<?> connectionFuture,
         @Advice.Local("otelContext") Context context,
@@ -64,10 +65,10 @@ public class LettuceClientInstrumentation implements TypeInstrumentation {
       scope.close();
 
       if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+        connectInstrumenter().end(context, redisUri, null, throwable);
         return;
       }
-      connectionFuture.handleAsync(new LettuceAsyncBiFunction<>(context));
+      connectionFuture.handleAsync(new EndConnectAsyncBiFunction<>(context, redisUri));
     }
   }
 }

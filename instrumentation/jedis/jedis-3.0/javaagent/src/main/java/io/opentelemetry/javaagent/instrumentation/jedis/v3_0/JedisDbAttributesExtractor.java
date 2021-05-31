@@ -3,44 +3,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.redisson;
+package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class RedissonDbAttributesExtractor extends DbAttributesExtractor<RedissonRequest, Void> {
-
+final class JedisDbAttributesExtractor extends DbAttributesExtractor<JedisRequest, Void> {
   @Override
-  protected String system(RedissonRequest request) {
+  protected String system(JedisRequest request) {
     return SemanticAttributes.DbSystemValues.REDIS;
   }
 
+  @Override
   @Nullable
-  @Override
-  protected String user(RedissonRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  protected String name(RedissonRequest request) {
+  protected String user(JedisRequest request) {
     return null;
   }
 
   @Override
-  protected String connectionString(RedissonRequest request) {
+  protected String name(JedisRequest request) {
     return null;
   }
 
   @Override
-  protected String statement(RedissonRequest request) {
+  protected String connectionString(JedisRequest request) {
+    return null;
+  }
+
+  @Override
+  protected String statement(JedisRequest request) {
     return request.getStatement();
   }
 
-  @Nullable
   @Override
-  protected String operation(RedissonRequest request) {
+  protected String operation(JedisRequest request) {
     return request.getOperation();
   }
 }

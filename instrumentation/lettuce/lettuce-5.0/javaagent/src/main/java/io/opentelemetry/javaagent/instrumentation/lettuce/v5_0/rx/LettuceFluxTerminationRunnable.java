@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumenters.instrumenter;
 
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.trace.Span;
@@ -45,11 +45,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
           span.setAttribute("lettuce.command.cancelled", true);
         }
       }
-      if (throwable == null) {
-        tracer().end(context);
-      } else {
-        tracer().endExceptionally(context, throwable);
-      }
+      instrumenter().end(context, onSubscribeConsumer.command, null, throwable);
     } else {
       LoggerFactory.getLogger(Flux.class)
           .error(
@@ -90,9 +86,9 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
     @Override
     public void accept(Subscription subscription) {
-      owner.context = tracer().startSpan(Context.current(), null, command);
+      owner.context = instrumenter().start(Context.current(), command);
       if (!expectsResponse) {
-        tracer().end(owner.context);
+        instrumenter().end(owner.context, command, null, null);
       }
     }
   }
