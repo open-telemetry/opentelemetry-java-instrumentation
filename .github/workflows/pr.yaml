@@ -78,6 +78,10 @@ jobs:
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
+  # testLatestDep is intentionally not included in the PR workflow
+  # because it can break randomly when a new library version is released
+  # which can be confusing for contributors
+
   smoke-test:
     runs-on: ${{ matrix.os }}
     strategy:
