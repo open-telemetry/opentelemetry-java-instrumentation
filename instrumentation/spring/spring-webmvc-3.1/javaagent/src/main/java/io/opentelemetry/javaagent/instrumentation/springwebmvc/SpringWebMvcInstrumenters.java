@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import org.springframework.web.servlet.ModelAndView;
 
 public final class SpringWebMvcInstrumenters {
@@ -21,7 +20,7 @@ public final class SpringWebMvcInstrumenters {
     HANDLER_INSTRUMENTER =
         Instrumenter.<Object, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, new HandlerSpanNameExtractor())
-            .newInstrumenter(SpanKindExtractor.alwaysInternal());
+            .newInstrumenter();
 
     MODEL_AND_VIEW_INSTRUMENTER =
         Instrumenter.<ModelAndView, Void>newBuilder(
@@ -29,7 +28,7 @@ public final class SpringWebMvcInstrumenters {
                 INSTRUMENTATION_NAME,
                 new ModelAndViewSpanNameExtractor())
             .addAttributesExtractor(new ModelAndViewAttributesExtractor())
-            .newInstrumenter(SpanKindExtractor.alwaysInternal());
+            .newInstrumenter();
   }
 
   public static Instrumenter<Object, Void> handlerInstrumenter() {
