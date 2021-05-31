@@ -32,7 +32,7 @@ public final class CallableWrapper implements Callable {
   public static Callable<?> wrapIfNeeded(Callable<?> task) {
     // We wrap only lambdas' anonymous classes and if given object has not already been wrapped.
     // Anonymous classes have '/' in class name which is not allowed in 'normal' classes.
-    if (task.getClass().getName().contains("/") && (!(task instanceof CallableWrapper))) {
+    if (task.getClass().getName().contains("/") && !(task instanceof CallableWrapper)) {
       log.debug("Wrapping callable task {}", task);
       return new CallableWrapper(task);
     }

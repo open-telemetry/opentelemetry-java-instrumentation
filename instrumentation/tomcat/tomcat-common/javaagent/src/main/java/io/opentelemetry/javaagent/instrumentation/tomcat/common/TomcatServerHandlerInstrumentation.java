@@ -18,12 +18,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
   private final String adviceClassName;
-  private final ElementMatcher<TypeDescription> requestMatcher;
 
-  public TomcatServerHandlerInstrumentation(
-      String adviceClassName, ElementMatcher<TypeDescription> requestMatcher) {
+  public TomcatServerHandlerInstrumentation(String adviceClassName) {
     this.adviceClassName = adviceClassName;
-    this.requestMatcher = requestMatcher;
   }
 
   @Override
@@ -37,7 +34,7 @@ public class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(isPublic())
             .and(named("service"))
-            .and(takesArgument(0, requestMatcher))
+            .and(takesArgument(0, named("org.apache.coyote.Request")))
             .and(takesArgument(1, named("org.apache.coyote.Response"))),
         adviceClassName);
   }

@@ -85,8 +85,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static MinimumVisibilityFlag computeMinimumMethodAccess(
-      Type from, Type to, Type methodType) {
+  private static MinimumVisibilityFlag computeMinimumMethodAccess(Type from, Type to) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return MinimumVisibilityFlag.PRIVATE_OR_HIGHER;
     } else {
@@ -387,7 +386,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
       List<Flag> methodFlags = new ArrayList<>();
       methodFlags.add(
           opcode == Opcodes.INVOKESTATIC ? OwnershipFlag.STATIC : OwnershipFlag.NON_STATIC);
-      methodFlags.add(computeMinimumMethodAccess(refSourceType, ownerType, methodType));
+      methodFlags.add(computeMinimumMethodAccess(refSourceType, ownerType));
 
       addReference(
           ClassRef.newBuilder(ownerType.getClassName())

@@ -33,7 +33,7 @@ dependencies {
   testInstrumentation project(':instrumentation:jdbc:javaagent')
 
   slickTestImplementation project(':testing-common')
-  slickTestImplementation deps.scala
+  slickTestImplementation "org.scala-lang:scala-library"
   slickTestImplementation "com.typesafe.slick:slick_2.11:3.2.0"
   slickTestImplementation "com.h2database:h2:1.4.197"
 }

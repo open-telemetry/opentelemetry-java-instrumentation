@@ -5,10 +5,10 @@ dependencies {
 
   api "io.lettuce:lettuce-core:5.1.0.RELEASE"
 
-  implementation deps.testcontainers
-  implementation deps.guava
+  implementation "org.testcontainers:testcontainers"
+  implementation "com.google.guava:guava"
 
-  implementation deps.groovy
-  implementation deps.opentelemetryApi
-  implementation deps.spock
+  implementation "org.codehaus.groovy:groovy-all"
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "org.spockframework:spock-core"
 }

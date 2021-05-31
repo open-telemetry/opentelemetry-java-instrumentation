@@ -6,7 +6,7 @@ dependencies {
   testImplementation "org.apache.camel:camel-aws:2.20.1"
   testImplementation "org.apache.camel:camel-http:2.20.1"
 
-  testImplementation deps.opentelemetryTraceProps
-  testImplementation deps.opentelemetryExtAws
-  testImplementation deps.assertj
+  testImplementation "io.opentelemetry:opentelemetry-extension-trace-propagators"
+  testImplementation "io.opentelemetry:opentelemetry-extension-aws"
+  testImplementation "org.assertj:assertj-core"
 }

@@ -45,7 +45,7 @@ public class IntegrationTestBase {
       TMPE_FILES.add(file);
       path = file.getCanonicalPath();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.warn("Error creating temporary directory.", e);
     }
     return path;
   }

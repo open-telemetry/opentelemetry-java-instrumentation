@@ -58,7 +58,6 @@ class AbstractMetricsTest {
       if (metricData.getName().equals(metricName)) {
         assertThat(metricData.getDescription()).isNotEmpty();
         assertThat(metricData.getUnit()).isEqualTo(unit);
-        metricData.getDoubleGaugeData().getPoints();
         List<PointData> points = new ArrayList<>();
         points.addAll(metricData.getDoubleGaugeData().getPoints());
         points.addAll(metricData.getDoubleSumData().getPoints());

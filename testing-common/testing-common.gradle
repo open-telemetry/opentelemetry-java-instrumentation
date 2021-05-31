@@ -5,26 +5,29 @@ apply from: "$rootDir/gradle/java.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
-  api deps.groovy
-  api deps.spock
-  implementation deps.junitApi
+  api "org.codehaus.groovy:groovy-all"
+  api "org.spockframework:spock-core"
+  implementation "org.junit.jupiter:junit-jupiter-api"
 
-  api deps.opentelemetryApi
-  api deps.opentelemetrySemConv
-  api deps.opentelemetrySdk
-  api deps.opentelemetrySdkMetrics
-  api deps.opentelemetrySdkTesting
+  api "io.opentelemetry:opentelemetry-api"
+  api "io.opentelemetry:opentelemetry-semconv"
+  api "io.opentelemetry:opentelemetry-sdk"
+  api "io.opentelemetry:opentelemetry-sdk-metrics"
+  api "io.opentelemetry:opentelemetry-sdk-testing"
 
-  implementation(deps.opentelemetryProto) {
+  implementation("io.opentelemetry:opentelemetry-proto") {
     // Only need the proto, not gRPC.
     exclude group: 'io.grpc'
   }
 
-  implementation deps.bytebuddy
-  implementation deps.bytebuddyagent
-  implementation deps.slf4j
-  implementation deps.testLogging
-  implementation deps.opentelemetryExtAnnotations
+  implementation "net.bytebuddy:byte-buddy"
+  implementation "net.bytebuddy:byte-buddy-agent"
+  implementation "org.slf4j:slf4j-api"
+  implementation "ch.qos.logback:logback-classic"
+  implementation "org.slf4j:log4j-over-slf4j"
+  implementation "org.slf4j:jcl-over-slf4j"
+  implementation "org.slf4j:jul-to-slf4j"
+  implementation "io.opentelemetry:opentelemetry-extension-annotations"
   implementation project(':instrumentation-api')
 
   api "com.squareup.okhttp3:okhttp:4.9.0"
@@ -33,10 +36,10 @@ dependencies {
   //TODO replace with Servlet API?
   implementation "org.eclipse.jetty:jetty-server:8.0.0.v20110901"
 
-  annotationProcessor deps.autoservice
-  compileOnly deps.autoservice
+  annotationProcessor "com.google.auto.service:auto-service"
+  compileOnly "com.google.auto.service:auto-service"
 
-  testImplementation deps.assertj
+  testImplementation "org.assertj:assertj-core"
 
   testImplementation project(':javaagent-api')
   testImplementation project(':javaagent-tooling')
@@ -45,8 +48,8 @@ dependencies {
   testImplementation project(':instrumentation:external-annotations:javaagent')
 
   // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
-  testAnnotationProcessor deps.autoservice
-  testCompileOnly deps.autoservice
+  testAnnotationProcessor "com.google.auto.service:auto-service"
+  testCompileOnly "com.google.auto.service:auto-service"
 }
 
 javadoc.enabled = false

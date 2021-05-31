@@ -6,8 +6,8 @@ apply from: "$rootDir/gradle/publish.gradle"
 sourceCompatibility = '8'
 
 dependencies {
-  api group: "org.springframework.boot", name: "spring-boot-starter", version: versions.springboot
+  api group: "org.springframework.boot", name: "spring-boot-starter", version: versions["org.springframework.boot"]
   api project(':instrumentation:spring:starters:spring-starter')
-  api deps.opentelemetryZipkin
+  api "io.opentelemetry:opentelemetry-exporter-zipkin"
 }
 

@@ -99,7 +99,7 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
-  boolean hasClientSpanAttributes(URI uri) {
+  boolean hasClientSpanHttpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://www.google.com:81/": // dropped request

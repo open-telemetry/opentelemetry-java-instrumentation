@@ -105,25 +105,25 @@ class QueryTest extends AbstractHibernateTest {
 
     where:
     queryMethodName       | expectedSpanName            | requiresTransaction | queryInteraction
-    "query/list"          | "from Value"                | false               | { sess ->
+    "query/list"          | "SELECT Value"              | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.list()
     }
-    "query/executeUpdate" | "update Value set name = ?" | true                | { sess ->
-      Query q = sess.createQuery("update Value set name = ?")
-      q.setParameter(0, "alyx")
+    "query/executeUpdate" | "UPDATE Value"              | true                | { sess ->
+      Query q = sess.createQuery("update Value set name = :name")
+      q.setParameter("name", "alyx")
       q.executeUpdate()
     }
-    "query/uniqueResult"  | "from Value where id = ?"   | false               | { sess ->
-      Query q = sess.createQuery("from Value where id = ?")
-      q.setParameter(0, 1L)
+    "query/uniqueResult"  | "SELECT Value"              | false               | { sess ->
+      Query q = sess.createQuery("from Value where id = :id")
+      q.setParameter("id", 1L)
       q.uniqueResult()
     }
-    "iterate"             | "from Value"                | false               | { sess ->
+    "iterate"             | "SELECT Value"              | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.iterate()
     }
-    "query/scroll"        | "from Value"                | false               | { sess ->
+    "query/scroll"        | "SELECT Value"              | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.scroll()
     }
@@ -153,7 +153,7 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          name "from Value"
+          name "SELECT Value"
           kind INTERNAL
           childOf span(0)
           attributes {

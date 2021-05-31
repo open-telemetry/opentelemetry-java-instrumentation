@@ -45,6 +45,7 @@ class PortAllocator {
                     try {
                       socket.close();
                     } catch (IOException ignored) {
+                      // Ignore
                     }
                   }
                 }));

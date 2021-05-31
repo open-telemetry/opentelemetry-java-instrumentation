@@ -10,5 +10,8 @@ dependencies {
   // First version with DropwizardTestSupport:
   testImplementation "io.dropwizard:dropwizard-testing:0.8.0"
   testImplementation "javax.xml.bind:jaxb-api:2.2.3"
-  testImplementation "com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10"
+  testImplementation "com.fasterxml.jackson.module:jackson-module-afterburner"
 }
+
+// Requires old Guava. Can't use enforcedPlatform since predates BOM
+configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"

@@ -10,7 +10,10 @@ dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
   testInstrumentation project(':instrumentation:grizzly-2.0:javaagent')
 
-  testLibrary "org.glassfish.main.extras:glassfish-embedded-all:4.0"
+  // NB: testLibrary fails for some reason.
+  testImplementation "org.glassfish.main.extras:glassfish-embedded-all:4.0"
+
+  latestDepTestLibrary "org.glassfish.main.extras:glassfish-embedded-all:5.1.0"
 }
 
 tasks.withType(Test).configureEach {

@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -70,8 +69,7 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
       }
       Scope parentScope = parentContext.makeCurrent();
       if (channelTraceContext.createConnectionSpan()) {
-        Context errorContext = tracer().startSpan("CONNECT", SpanKind.CLIENT);
-        tracer().endExceptionally(errorContext, cause);
+        tracer().connectionFailure(parentContext, future.getChannel(), cause);
       }
       return parentScope;
     }

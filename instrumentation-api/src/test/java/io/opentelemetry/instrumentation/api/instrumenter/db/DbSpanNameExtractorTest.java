@@ -16,8 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class DbSpanNameExtractorTest {
-  @Mock DbAttributesExtractor<DbRequest> dbAttributesExtractor;
-  @Mock SqlAttributesExtractor<DbRequest> sqlAttributesExtractor;
+  @Mock DbAttributesExtractor<DbRequest, Void> dbAttributesExtractor;
+  @Mock SqlAttributesExtractor<DbRequest, Void> sqlAttributesExtractor;
 
   @Test
   void shouldExtractFullSpanName() {

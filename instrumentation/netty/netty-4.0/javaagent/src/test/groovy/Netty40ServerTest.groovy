@@ -36,7 +36,6 @@ import io.netty.handler.codec.http.QueryStringDecoder
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.CharsetUtil
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 
@@ -73,8 +72,7 @@ class Netty40ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
                       response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
                       break
                     case INDEXED_CHILD:
-                      QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri)
-                      Span.current().setAttribute("test.request.id", queryStringDecoder.parameters().get("id").find() as long)
+                      endpoint.collectSpanAttributes { new QueryStringDecoder(uri).parameters().get(it).find() }
                       response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status))
                       break
                     case QUERY_PARAM:

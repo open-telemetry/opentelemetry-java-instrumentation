@@ -63,12 +63,6 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest>
     false
   }
 
-  // TODO: context not propagated to callback
-  @Override
-  boolean testErrorWithCallback() {
-    return false
-  }
-
   @Override
   List<AttributeKey<?>> extraAttributes() {
     [

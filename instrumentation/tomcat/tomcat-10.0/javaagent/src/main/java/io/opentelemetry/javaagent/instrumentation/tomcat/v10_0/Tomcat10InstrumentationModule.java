@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -15,6 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServerHandlerInstrumentation;
 import java.util.Collections;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class Tomcat10InstrumentationModule extends InstrumentationModule {
@@ -24,14 +23,16 @@ public class Tomcat10InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // only matches tomcat 10.0+
+    return hasClassesNamed("jakarta.servlet.ReadListener");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    // Tomcat 10+ is verified by making sure Request has a methods returning
-    // jakarta.servlet.ReadListener which is returned by getReadListener method on Tomcat 10+
     return Collections.singletonList(
         new TomcatServerHandlerInstrumentation(
             Tomcat10InstrumentationModule.class.getPackage().getName()
-                + ".Tomcat10ServerHandlerAdvice",
-            named("org.apache.coyote.Request")
-                .and(declaresMethod(returns(named("jakarta.servlet.ReadListener"))))));
+                + ".Tomcat10ServerHandlerAdvice"));
   }
 }

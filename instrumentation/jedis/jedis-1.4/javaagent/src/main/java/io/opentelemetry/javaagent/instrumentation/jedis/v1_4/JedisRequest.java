@@ -21,10 +21,6 @@ public abstract class JedisRequest {
 
   public abstract List<byte[]> getArgs();
 
-  public String getConnectionString() {
-    return getConnection().getHost() + ":" + getConnection().getPort();
-  }
-
   public static JedisRequest create(Connection connection, Protocol.Command command) {
     return new AutoValue_JedisRequest(connection, command, emptyList());
   }

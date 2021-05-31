@@ -15,7 +15,7 @@ import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.core.Ordered;
 
-public class TracingChunkExecutionListener implements ChunkListener, Ordered {
+public final class TracingChunkExecutionListener implements ChunkListener, Ordered {
   private final ContextStore<ChunkContext, ContextAndScope> executionContextStore;
 
   public TracingChunkExecutionListener(
@@ -66,7 +66,7 @@ public class TracingChunkExecutionListener implements ChunkListener, Ordered {
     if (this == o) {
       return true;
     }
-    return o != null && getClass() == o.getClass();
+    return o instanceof TracingChunkExecutionListener;
   }
 
   @Override

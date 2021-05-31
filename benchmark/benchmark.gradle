@@ -6,12 +6,14 @@ plugins {
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  jmh deps.opentelemetryApi
-  jmh deps.bytebuddyagent
+  jmh platform(project(":dependencyManagement"))
+
+  jmh "io.opentelemetry:opentelemetry-api"
+  jmh "net.bytebuddy:byte-buddy-agent"
 
   jmh project(':instrumentation-api')
 
-  jmh deps.caffeine
+  jmh "com.github.ben-manes.caffeine:caffeine"
 
   jmh 'javax.servlet:javax.servlet-api:4.0.1'
   jmh 'com.google.http-client:google-http-client:1.19.0'

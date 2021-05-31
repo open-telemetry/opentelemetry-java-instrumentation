@@ -28,7 +28,6 @@ import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatche
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -289,8 +288,7 @@ public class AgentInstaller {
   }
 
   private static List<String> loadBootstrapPackagePrefixes() {
-    List<String> bootstrapPackages =
-        new ArrayList<>(Arrays.asList(Constants.BOOTSTRAP_PACKAGE_PREFIXES));
+    List<String> bootstrapPackages = new ArrayList<>(Constants.BOOTSTRAP_PACKAGE_PREFIXES);
     Iterable<BootstrapPackagesProvider> bootstrapPackagesProviders =
         SafeServiceLoader.load(BootstrapPackagesProvider.class);
     for (BootstrapPackagesProvider provider : bootstrapPackagesProviders) {

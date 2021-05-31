@@ -34,12 +34,14 @@ public class TracingTube extends AbstractFilterTubeImpl {
     return new TracingTube(this, tubeCloner);
   }
 
+  @Override
   public NextAction processRequest(Packet request) {
     tracer().startSpan(endpoint, request);
 
     return super.processRequest(request);
   }
 
+  @Override
   public NextAction processResponse(Packet response) {
     tracer().end(response);
 
@@ -47,6 +49,7 @@ public class TracingTube extends AbstractFilterTubeImpl {
   }
 
   // this is not used for handling exceptions thrown from webservice invocation
+  @Override
   public NextAction processException(Throwable throwable) {
     Packet request = null;
     // we expect this to be called with attached fiber

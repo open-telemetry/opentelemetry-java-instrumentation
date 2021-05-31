@@ -33,20 +33,20 @@ sourceSets.main.java.srcDir(jflexTargetDir)
 dependencies {
   api project(":instrumentation-api-caching")
 
-  api deps.opentelemetryApi
-  api deps.opentelemetryContext
-  api deps.opentelemetrySemConv
+  api "io.opentelemetry:opentelemetry-api"
+  api "io.opentelemetry:opentelemetry-semconv"
 
-  implementation deps.opentelemetryApiMetrics
-  implementation deps.slf4j
+  implementation "io.opentelemetry:opentelemetry-api-metrics"
+  implementation "org.slf4j:slf4j-api"
 
-  compileOnly deps.autoValueAnnotations
-  annotationProcessor deps.autoValue
+  compileOnly "com.google.auto.value:auto-value-annotations"
+  annotationProcessor "com.google.auto.value:auto-value"
 
   testImplementation project(':testing-common')
-  testImplementation deps.mockito
-  testImplementation deps.assertj
-  testImplementation deps.awaitility
-  testImplementation deps.opentelemetrySdkMetrics
-  testImplementation deps.opentelemetrySdkTesting
+  testImplementation "org.mockito:mockito-core"
+  testImplementation "org.mockito:mockito-junit-jupiter"
+  testImplementation "org.assertj:assertj-core"
+  testImplementation "org.awaitility:awaitility"
+  testImplementation "io.opentelemetry:opentelemetry-sdk-metrics"
+  testImplementation "io.opentelemetry:opentelemetry-sdk-testing"
 }

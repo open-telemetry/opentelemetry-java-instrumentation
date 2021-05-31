@@ -60,11 +60,11 @@ public abstract class BaseTracer {
    * @deprecated always pass an OpenTelemetry instance.
    */
   @Deprecated
-  public BaseTracer() {
+  protected BaseTracer() {
     this(GlobalOpenTelemetry.get());
   }
 
-  public BaseTracer(OpenTelemetry openTelemetry) {
+  protected BaseTracer(OpenTelemetry openTelemetry) {
     this.tracer = openTelemetry.getTracer(getInstrumentationName(), getVersion());
     this.propagators = openTelemetry.getPropagators();
   }
@@ -181,43 +181,45 @@ public abstract class BaseTracer {
   /**
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
+   *
+   * @deprecated Use {@link SpanNames#spanNameForMethod(Method)}.
    */
+  @Deprecated
   public static String spanNameForMethod(Method method) {
-    return spanNameForMethod(method.getDeclaringClass(), method.getName());
+    return SpanNames.spanNameForMethod(method);
   }
 
   /**
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
+   *
+   * @deprecated Use {@link SpanNames#spanNameForMethod(Class, Method)}.
    */
+  @Deprecated
   public static String spanNameForMethod(Class<?> clazz, @Nullable Method method) {
-    return spanNameForMethod(clazz, method == null ? "<unknown>" : method.getName());
+    return SpanNames.spanNameForMethod(clazz, method);
   }
 
   /**
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. Anonymous classes are named based on their parent.
+   *
+   * @deprecated Use {@link SpanNames#spanNameForMethod(Class, String)}.
    */
+  @Deprecated
   public static String spanNameForMethod(Class<?> cl, String methodName) {
-    return spanNameForClass(cl) + "." + methodName;
+    return SpanNames.spanNameForMethod(cl, methodName);
   }
 
   /**
    * This method is used to generate an acceptable span (operation) name based on a given class
    * reference. Anonymous classes are named based on their parent.
+   *
+   * @deprecated Use {@link SpanNames#spanNameForClass(Class)}.
    */
+  @Deprecated
   public static String spanNameForClass(Class<?> clazz) {
-    if (!clazz.isAnonymousClass()) {
-      return clazz.getSimpleName();
-    }
-    String className = clazz.getName();
-    if (clazz.getPackage() != null) {
-      String pkgName = clazz.getPackage().getName();
-      if (!pkgName.isEmpty()) {
-        className = className.substring(pkgName.length() + 1);
-      }
-    }
-    return className;
+    return SpanNames.spanNameForClass(clazz);
   }
 
   /** Ends the execution of a span stored in the passed {@code context}. */

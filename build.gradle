@@ -15,8 +15,8 @@ plugins {
   id "com.github.johnrengelman.shadow" apply false
 
   id "com.diffplug.spotless"
-  id "com.github.spotbugs" apply false
   id "net.ltgt.errorprone" apply false
+  id "net.ltgt.nullaway" apply false
 }
 
 release {
@@ -52,7 +52,6 @@ nexusPublishing {
 // tasks.release.finalizedBy tasks.closeAndReleaseRepository
 
 allprojects {
-  apply from: "$rootDir/gradle/dependencies.gradle"
   apply from: "$rootDir/gradle/util.gradle"
 }
 
@@ -65,6 +64,66 @@ allprojects {
     module {
       downloadJavadoc = false
       downloadSources = false
+    }
+  }
+
+  plugins.withId('net.ltgt.errorprone') {
+    dependencies {
+      errorprone "com.google.errorprone:error_prone_core"
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+      options.errorprone {
+        disableWarningsInGeneratedCode = true
+        excludedPaths = ".*/build/generated/.*"
+
+        // Doesn't work well with Java 8
+        disable("FutureReturnValueIgnored")
+
+        // Require Guava
+        disable("AutoValueImmutableFields")
+        disable("StringSplitter")
+
+        // Great check, but for bytecode manipulation it's too common to separate over
+        // onEnter / onExit
+        // TODO(anuraaga): Only disable for auto instrumentation project.
+        disable("MustBeClosedChecker")
+
+        // Common to avoid an allocation. Revisit if it's worth opt-in suppressing instead of
+        // disabling entirely.
+        disable("MixedMutabilityReturnType")
+
+        // We end up using obsolete types if a library we're instrumenting uses them.
+        disable("JdkObsolete")
+
+        // Storing into a variable in onEnter triggers this unfortunately.
+        // TODO(anuraaga): Only disable for auto instrumentation project.
+        disable("UnusedVariable")
+
+        // TODO(anuraaga): Remove this, we use this pattern in several tests and it will mean
+        // some moving.
+        disable("DefaultPackage")
+      }
+    }
+  }
+
+  plugins.withId('net.ltgt.nullaway') {
+    dependencies {
+      errorprone "com.uber.nullaway:nullaway"
+    }
+
+    nullaway {
+      annotatedPackages.addAll("io.opentelemetry", "com.linecorp.armeria,com.google.common")
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+      if (!name.toLowerCase().contains("test")) {
+        options.errorprone {
+          nullaway {
+            severity = net.ltgt.gradle.errorprone.CheckSeverity.ERROR
+          }
+        }
+      }
     }
   }
 }

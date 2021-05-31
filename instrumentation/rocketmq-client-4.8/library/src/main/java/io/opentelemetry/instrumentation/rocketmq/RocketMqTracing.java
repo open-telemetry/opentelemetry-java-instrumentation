@@ -24,7 +24,6 @@ public final class RocketMqTracing {
     return new RocketMqTracingBuilder(openTelemetry);
   }
 
-  private final boolean captureExperimentalSpanAttributes;
   private final boolean propagationEnabled;
 
   private final RocketMqConsumerTracer rocketMqConsumerTracer;
@@ -34,7 +33,6 @@ public final class RocketMqTracing {
       OpenTelemetry openTelemetry,
       boolean captureExperimentalSpanAttributes,
       boolean propagationEnabled) {
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.propagationEnabled = propagationEnabled;
     rocketMqConsumerTracer =
         new RocketMqConsumerTracer(

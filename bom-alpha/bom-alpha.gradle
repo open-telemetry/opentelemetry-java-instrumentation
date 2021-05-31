@@ -9,7 +9,7 @@ group = "io.opentelemetry.instrumentation"
 archivesBaseName = "opentelemetry-instrumentation-bom-alpha"
 
 rootProject.subprojects.forEach { subproject ->
-  if (!project.name.startsWith("bom")) {
+  if (!subproject.name.startsWith("bom")) {
     evaluationDependsOn(subproject.path)
   }
 }
@@ -19,12 +19,13 @@ javaPlatform {
 }
 
 dependencies {
-  api(platform("io.opentelemetry:opentelemetry-bom:${versions.opentelemetry}"))
-  api(platform("io.opentelemetry:opentelemetry-bom-alpha:${versions.opentelemetryAlpha}"))
+  api(platform("io.opentelemetry:opentelemetry-bom:${versions["io.opentelemetry"]}"))
+  api(platform("io.opentelemetry:opentelemetry-bom-alpha:${versions["io.opentelemetry"]}"))
 }
 
 afterEvaluate {
   dependencies {
+
     constraints {
       rootProject.subprojects.sort { "$it.archivesBaseName" }
         .collect { it }

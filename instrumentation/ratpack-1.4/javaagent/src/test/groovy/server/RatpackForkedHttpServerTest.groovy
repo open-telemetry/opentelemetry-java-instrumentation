@@ -13,7 +13,6 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-import io.opentelemetry.api.trace.Span
 import ratpack.exec.Promise
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.test.embed.EmbeddedApp
@@ -48,7 +47,7 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
               INDEXED_CHILD
             }.fork().then {
               controller(INDEXED_CHILD) {
-                Span.current().setAttribute("test.request.id", request.queryParams.get("id") as long)
+                INDEXED_CHILD.collectSpanAttributes { request.queryParams.get(it) }
                 context.response.status(INDEXED_CHILD.status).send()
               }
             }

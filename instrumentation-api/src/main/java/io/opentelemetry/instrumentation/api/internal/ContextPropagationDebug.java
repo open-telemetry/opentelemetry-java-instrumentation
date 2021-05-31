@@ -20,7 +20,7 @@ public final class ContextPropagationDebug {
 
   // locations where the context was propagated to another thread (tracking multiple steps is
   // helpful in akka where there is so much recursive async spawning of new work)
-  private static final ContextKey<List<StackTraceElement[]>> THREAD_PROPAGATION_LOCATIONS =
+  private static final ContextKey<List<Propagation>> THREAD_PROPAGATION_LOCATIONS =
       ContextKey.named("thread-propagation-locations");
 
   private static final boolean THREAD_PROPAGATION_DEBUGGER =
@@ -36,13 +36,14 @@ public final class ContextPropagationDebug {
     return THREAD_PROPAGATION_DEBUGGER;
   }
 
-  public static Context appendLocations(Context context, StackTraceElement[] locations) {
-    List<StackTraceElement[]> currentLocations = ContextPropagationDebug.getLocations(context);
+  public static Context appendLocations(
+      Context context, StackTraceElement[] locations, Object carrier) {
+    List<Propagation> currentLocations = ContextPropagationDebug.getPropagations(context);
     if (currentLocations == null) {
       currentLocations = new CopyOnWriteArrayList<>();
       context = context.with(THREAD_PROPAGATION_LOCATIONS, currentLocations);
     }
-    currentLocations.add(0, locations);
+    currentLocations.add(0, new Propagation(carrier.getClass().getName(), locations));
     return context;
   }
 
@@ -67,18 +68,20 @@ public final class ContextPropagationDebug {
     }
   }
 
-  private static List<StackTraceElement[]> getLocations(Context context) {
+  private static List<Propagation> getPropagations(Context context) {
     return context.get(THREAD_PROPAGATION_LOCATIONS);
   }
 
   private static void debugContextPropagation(Context context) {
-    List<StackTraceElement[]> locations = getLocations(context);
-    if (locations != null) {
+    List<Propagation> propagations = getPropagations(context);
+    if (propagations != null) {
       StringBuilder sb = new StringBuilder();
-      Iterator<StackTraceElement[]> i = locations.iterator();
+      Iterator<Propagation> i = propagations.iterator();
       while (i.hasNext()) {
-        for (StackTraceElement ste : i.next()) {
-          sb.append("\n");
+        Propagation entry = i.next();
+        sb.append("\ncarrier of type: ").append(entry.carrierClassName);
+        for (StackTraceElement ste : entry.location) {
+          sb.append("\n    ");
           sb.append(ste);
         }
         if (i.hasNext()) {
@@ -86,6 +89,16 @@ public final class ContextPropagationDebug {
         }
       }
       log.error("a context leak was detected. it was propagated from:{}", sb);
+    }
+  }
+
+  private static class Propagation {
+    public final String carrierClassName;
+    public final StackTraceElement[] location;
+
+    public Propagation(String carrierClassName, StackTraceElement[] location) {
+      this.carrierClassName = carrierClassName;
+      this.location = location;
     }
   }
 

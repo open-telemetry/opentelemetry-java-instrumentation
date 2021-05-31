@@ -7,7 +7,7 @@ apply from: "$rootDir/gradle/java.gradle"
 dependencies {
   compileOnly 'com.vaadin:vaadin-spring-boot-starter:14.2.0'
 
-  api "org.testcontainers:selenium:${versions.testcontainers}"
+  api "org.testcontainers:selenium:${versions["org.testcontainers"]}"
   implementation(project(':testing-common')) {
     exclude(module: 'jetty-server')
   }

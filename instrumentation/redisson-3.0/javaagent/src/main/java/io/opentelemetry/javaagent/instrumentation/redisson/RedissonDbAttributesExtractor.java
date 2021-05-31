@@ -12,7 +12,6 @@ import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,7 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
 
-final class RedissonDbAttributesExtractor extends DbAttributesExtractor<RedissonRequest> {
+final class RedissonDbAttributesExtractor extends DbAttributesExtractor<RedissonRequest, Void> {
 
   private static final String UNKNOWN_COMMAND = "Redis Command";
 
@@ -43,8 +42,7 @@ final class RedissonDbAttributesExtractor extends DbAttributesExtractor<Redisson
 
   @Override
   protected String connectionString(RedissonRequest request) {
-    InetSocketAddress remoteAddress = request.getAddress();
-    return remoteAddress.getHostString() + ":" + remoteAddress.getPort();
+    return null;
   }
 
   @Override
@@ -67,6 +65,11 @@ final class RedissonDbAttributesExtractor extends DbAttributesExtractor<Redisson
     Object command = request.getCommand();
     if (command instanceof CommandData) {
       return ((CommandData<?, ?>) command).getCommand().getName();
+    } else if (command instanceof CommandsData) {
+      CommandsData commandsData = (CommandsData) command;
+      if (commandsData.getCommands().size() == 1) {
+        return commandsData.getCommands().get(0).getCommand().getName();
+      }
     }
     return null;
   }
