@@ -200,8 +200,11 @@ class SpringIntegrationTracingTest extends LibraryInstrumentationSpecification {
     @Bean
     SubscribableChannel executorChannel() {
       def channel = new ExecutorSubscribableChannel(Executors.newSingleThreadExecutor())
-      // ExecutorSubscribableChannel isn't ChannelInterceptorAware, so we'll inject the interceptor manually
-      channel.addInterceptor(otelInterceptor())
+      if (!Boolean.getBoolean("testLatestDeps")) {
+        // spring does not inject the interceptor in 4.1 because ExecutorSubscribableChannel isn't ChannelInterceptorAware
+        // in later versions spring injects the global interceptor into InterceptableChannel (which ExecutorSubscribableChannel is)
+        channel.addInterceptor(otelInterceptor())
+      }
       channel
     }
 
