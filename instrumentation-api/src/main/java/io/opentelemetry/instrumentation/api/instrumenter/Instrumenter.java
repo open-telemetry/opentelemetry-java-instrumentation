@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -121,11 +119,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
       spanBuilder.setStartTimestamp(startTimeExtractor.extract(request));
     }
 
-    AttributesBuilder attributesBuilder = Attributes.builder();
+    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
       extractor.onStart(attributesBuilder, request);
     }
-    Attributes attributes = attributesBuilder.build();
+    Attributes attributes = attributesBuilder;
 
     Context context = parentContext;
 
@@ -133,7 +131,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       context = requestListener.start(context, attributes);
     }
 
-    attributes.forEach((key, value) -> spanBuilder.setAttribute((AttributeKey) key, value));
+    spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.startSpan();
     context = context.with(span);
     switch (spanKind) {
@@ -155,17 +153,17 @@ public class Instrumenter<REQUEST, RESPONSE> {
   public void end(Context context, REQUEST request, RESPONSE response, @Nullable Throwable error) {
     Span span = Span.fromContext(context);
 
-    AttributesBuilder attributesBuilder = Attributes.builder();
+    UnsafeAttributes attributesBuilder = new UnsafeAttributes();
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
       extractor.onEnd(attributesBuilder, request, response);
     }
-    Attributes attributes = attributesBuilder.build();
+    Attributes attributes = attributesBuilder;
 
     for (RequestListener requestListener : requestListeners) {
       requestListener.end(context, attributes);
     }
 
-    attributes.forEach((key, value) -> span.setAttribute((AttributeKey) key, value));
+    span.setAllAttributes(attributes);
 
     if (error != null) {
       error = errorCauseExtractor.extractCause(error);

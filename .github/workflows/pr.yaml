@@ -35,28 +35,6 @@ jobs:
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
-  example-distro:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK 11 for running checks
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 11
-
-      - name: Restore cache
-        uses: burrunan/gradle-cache-action@v1.10
-        with:
-          job-id: jdk11
-
-      - name: Build
-        run: ./gradlew build --stacktrace
-        working-directory: examples/distro
-
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -161,7 +139,35 @@ jobs:
           distribution: adopt
           java-version: 11
       - name: Run muzzle
-        run: ./gradlew ${{ matrix.module }}:muzzle
+        # using retry because of sporadic gradle download failures
+        uses: nick-invision/retry@v2.4.0
+        with:
+          # timing out has not been a problem, these jobs typically finish in 2-3 minutes
+          timeout_minutes: 15
+          max_attempts: 3
+          command: ./gradlew ${{ matrix.module }}:muzzle
+
+  example-distro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11 for running checks
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 11
+
+      - name: Restore cache
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          job-id: jdk11
+
+      - name: Build
+        run: ./gradlew build --stacktrace
+        working-directory: examples/distro
 
   accept-pr:
     needs: [ build, test, smoke-test, muzzle ]

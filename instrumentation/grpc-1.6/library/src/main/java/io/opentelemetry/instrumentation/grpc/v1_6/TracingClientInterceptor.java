@@ -25,9 +25,13 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.net.SocketAddress;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingClientInterceptor implements ClientInterceptor {
+
+  @SuppressWarnings("rawtypes")
+  private static final AtomicLongFieldUpdater<TracingClientCallListener> MESSAGE_ID_UPDATER =
+      AtomicLongFieldUpdater.newUpdater(TracingClientCallListener.class, "messageId");
 
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final ContextPropagators propagators;
@@ -97,10 +101,13 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
   final class TracingClientCallListener<RESPONSE>
       extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RESPONSE> {
+
     private final Context context;
     private final GrpcRequest request;
 
-    private final AtomicLong messageId = new AtomicLong();
+    // Used by MESSAGE_ID_UPDATER
+    @SuppressWarnings("UnusedVariable")
+    volatile long messageId;
 
     TracingClientCallListener(Listener<RESPONSE> delegate, Context context, GrpcRequest request) {
       super(delegate);
@@ -113,7 +120,10 @@ final class TracingClientInterceptor implements ClientInterceptor {
       Span span = Span.fromContext(context);
       Attributes attributes =
           Attributes.of(
-              GrpcHelper.MESSAGE_TYPE, "SENT", GrpcHelper.MESSAGE_ID, messageId.incrementAndGet());
+              GrpcHelper.MESSAGE_TYPE,
+              "SENT",
+              GrpcHelper.MESSAGE_ID,
+              MESSAGE_ID_UPDATER.incrementAndGet(this));
       span.addEvent("message", attributes);
       try (Scope ignored = context.makeCurrent()) {
         delegate().onMessage(message);
