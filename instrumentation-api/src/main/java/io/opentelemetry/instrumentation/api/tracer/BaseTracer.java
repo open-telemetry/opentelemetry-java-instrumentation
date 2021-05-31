@@ -120,11 +120,11 @@ public abstract class BaseTracer {
     return !suppressed;
   }
 
-  private boolean inClientSpan(Context context) {
+  private static boolean inClientSpan(Context context) {
     return ClientSpan.fromContextOrNull(context) != null;
   }
 
-  private boolean inServerSpan(Context context) {
+  private static boolean inServerSpan(Context context) {
     return ServerSpan.fromContextOrNull(context) != null;
   }
 

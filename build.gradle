@@ -80,6 +80,8 @@ allprojects {
     tasks.withType(JavaCompile).configureEach {
       options.errorprone {
         disableWarningsInGeneratedCode = true
+        allDisabledChecksAsWarnings = true
+
         excludedPaths = ".*/build/generated/.*"
 
         // Doesn't work well with Java 8
@@ -88,6 +90,15 @@ allprojects {
         // Require Guava
         disable("AutoValueImmutableFields")
         disable("StringSplitter")
+
+        // Don't currently use this (to indicate a local variable that's mutated) but could
+        // consider for future.
+        disable("Var")
+
+        // Don't support Android without desugar
+        disable("AndroidJdkLibsChecker")
+        disable("Java7ApiChecker")
+        disable("StaticOrDefaultInterfaceMethod")
 
         // Great check, but for bytecode manipulation it's too common to separate over
         // onEnter / onExit
