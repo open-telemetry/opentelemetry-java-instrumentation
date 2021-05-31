@@ -79,8 +79,11 @@ jobs:
           if-no-files-found: ignore
 
   # testLatestDep is intentionally not included in the PR workflow
-  # because it can break randomly when a new library version is released
-  # which can be confusing for contributors
+  # because any time a new library version is released to maven central
+  # it can fail due to test code incompatibility with the new release,
+  # or due to slight changes in emitted telemetry, which can be confusing for contributors
+  # (muzzle can also fail when a new library version is released to maven central
+  # but that happens much less often)
 
   smoke-test:
     runs-on: ${{ matrix.os }}
