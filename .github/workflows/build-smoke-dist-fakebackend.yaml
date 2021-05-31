@@ -5,7 +5,7 @@ on:
     paths:
       - 'smoke-tests/fake-backend/**'
       - '.github/workflows/build-smoke-dist-fakebackend.yaml'
-    branches: ['main']
+    branches: [ 'main' ]
   workflow_dispatch:
 
 jobs:
@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
         with:
@@ -48,6 +51,8 @@ jobs:
         run: git config --system core.longpaths true
 
       - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 11 for running Gradle
         uses: actions/setup-java@v2
