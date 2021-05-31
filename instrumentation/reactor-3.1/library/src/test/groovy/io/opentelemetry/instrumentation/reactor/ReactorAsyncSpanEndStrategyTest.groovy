@@ -13,6 +13,8 @@ import reactor.core.publisher.UnicastProcessor
 import reactor.test.StepVerifier
 import spock.lang.Specification
 
+import java.util.concurrent.CancellationException
+
 class ReactorAsyncSpanEndStrategyTest extends Specification {
   BaseTracer tracer
 
@@ -129,6 +131,26 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
 
       then:
       1 * tracer.endExceptionally(context, exception)
+    }
+
+    def "ends span when cancelled"() {
+      given:
+      def source = UnicastProcessor.<String>create()
+      def mono = source.singleOrEmpty()
+
+      when:
+      def result = (Mono<?>) underTest.end(tracer, context, mono)
+      def verifier = StepVerifier.create(result)
+        .expectSubscription()
+
+      then:
+      0 * tracer._
+
+      when:
+      verifier.thenCancel().verify()
+
+      then:
+      1 * tracer.endExceptionally(context, _ as CancellationException)
     }
 
     def "ends span once for multiple subscribers"() {
@@ -251,6 +273,26 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
 
       then:
       1 * tracer.endExceptionally(context, exception)
+    }
+
+    def "ends span when cancelled"() {
+      given:
+      def source = UnicastProcessor.<String>create()
+
+      when:
+      def result = (Flux<?>) underTest.end(tracer, context, source)
+      def verifier = StepVerifier.create(result)
+        .expectSubscription()
+
+      then:
+      0 * tracer._
+
+      when:
+      verifier.thenCancel()
+        .verify()
+
+      then:
+      1 * tracer.endExceptionally(context, _ as CancellationException)
     }
 
     def "ends span once for multiple subscribers"() {

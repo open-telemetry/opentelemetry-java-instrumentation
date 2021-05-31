@@ -17,6 +17,7 @@ import io.reactivex.functions.Action;
 import io.reactivex.functions.BiConsumer;
 import io.reactivex.functions.Consumer;
 import io.reactivex.parallel.ParallelFlowable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.reactivestreams.Publisher;
 
@@ -55,7 +56,9 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
 
   private static Completable endWhenComplete(
       Completable completable, EndOnFirstNotificationConsumer<?> notificationConsumer) {
-    return completable.doOnEvent(notificationConsumer);
+    return completable
+        .doOnEvent(notificationConsumer)
+        .doOnDispose(notificationConsumer::onCancelOrDispose);
   }
 
   private static <T> Maybe<T> endWhenMaybeComplete(
@@ -63,7 +66,7 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
     @SuppressWarnings("unchecked")
     EndOnFirstNotificationConsumer<T> typedConsumer =
         (EndOnFirstNotificationConsumer<T>) notificationConsumer;
-    return maybe.doOnEvent(typedConsumer);
+    return maybe.doOnEvent(typedConsumer).doOnDispose(notificationConsumer::onCancelOrDispose);
   }
 
   private static <T> Single<T> endWhenSingleComplete(
@@ -71,25 +74,32 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
     @SuppressWarnings("unchecked")
     EndOnFirstNotificationConsumer<T> typedConsumer =
         (EndOnFirstNotificationConsumer<T>) notificationConsumer;
-    return single.doOnEvent(typedConsumer);
+    return single.doOnEvent(typedConsumer).doOnDispose(notificationConsumer::onCancelOrDispose);
   }
 
   private static Observable<?> endWhenObservableComplete(
       Observable<?> observable, EndOnFirstNotificationConsumer<?> notificationConsumer) {
-    return observable.doOnComplete(notificationConsumer).doOnError(notificationConsumer);
+    return observable
+        .doOnComplete(notificationConsumer)
+        .doOnError(notificationConsumer)
+        .doOnDispose(notificationConsumer::onCancelOrDispose);
   }
 
   private static ParallelFlowable<?> endWhenFirstComplete(
       ParallelFlowable<?> parallelFlowable,
       EndOnFirstNotificationConsumer<?> notificationConsumer) {
-    return parallelFlowable.doOnComplete(notificationConsumer).doOnError(notificationConsumer);
+    return parallelFlowable
+        .doOnComplete(notificationConsumer)
+        .doOnError(notificationConsumer)
+        .doOnCancel(notificationConsumer::onCancelOrDispose);
   }
 
   private static Flowable<?> endWhenPublisherComplete(
       Publisher<?> publisher, EndOnFirstNotificationConsumer<?> notificationConsumer) {
     return Flowable.fromPublisher(publisher)
         .doOnComplete(notificationConsumer)
-        .doOnError(notificationConsumer);
+        .doOnError(notificationConsumer)
+        .doOnCancel(notificationConsumer::onCancelOrDispose);
   }
 
   /**
@@ -111,9 +121,11 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
 
     @Override
     public void run() {
-      if (compareAndSet(false, true)) {
-        tracer.end(context);
-      }
+      accept(null);
+    }
+
+    public void onCancelOrDispose() {
+      accept(new CancellationException());
     }
 
     @Override

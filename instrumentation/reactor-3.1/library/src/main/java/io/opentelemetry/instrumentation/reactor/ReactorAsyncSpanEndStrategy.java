@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.reactor;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.reactivestreams.Publisher;
@@ -29,10 +30,14 @@ public enum ReactorAsyncSpanEndStrategy implements AsyncSpanEndStrategy {
         new EndOnFirstNotificationConsumer(tracer, context);
     if (returnValue instanceof Mono) {
       Mono<?> mono = (Mono<?>) returnValue;
-      return mono.doOnError(notificationConsumer).doOnSuccess(notificationConsumer::onSuccess);
+      return mono.doOnError(notificationConsumer)
+          .doOnSuccess(notificationConsumer::onSuccess)
+          .doOnCancel(notificationConsumer::onCancel);
     } else {
       Flux<?> flux = Flux.from((Publisher<?>) returnValue);
-      return flux.doOnError(notificationConsumer).doOnComplete(notificationConsumer);
+      return flux.doOnError(notificationConsumer)
+          .doOnComplete(notificationConsumer)
+          .doOnCancel(notificationConsumer::onCancel);
     }
   }
 
@@ -55,6 +60,10 @@ public enum ReactorAsyncSpanEndStrategy implements AsyncSpanEndStrategy {
 
     public <T> void onSuccess(T ignored) {
       accept(null);
+    }
+
+    public void onCancel() {
+      accept(new CancellationException());
     }
 
     @Override

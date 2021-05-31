@@ -26,6 +26,8 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Specification
 
+import java.util.concurrent.CancellationException
+
 class RxJava3AsyncSpanEndStrategyTest extends Specification {
   BaseTracer tracer
 
@@ -110,6 +112,25 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       then:
       1 * tracer.endExceptionally(context, exception)
       observer.assertError(exception)
+    }
+
+    def "ends span when cancelled"() {
+      given:
+      def source = CompletableSubject.create()
+      def observer = new TestObserver()
+
+      when:
+      def result = (Completable) underTest.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+
+      when:
+      observer.dispose()
+
+      then:
+      1 * tracer.endExceptionally(context, _ as CancellationException)
     }
 
     def "ends span once for multiple subscribers"() {
@@ -246,6 +267,25 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       observer.assertError(exception)
     }
 
+    def "ends span when cancelled"() {
+      given:
+      def source = MaybeSubject.create()
+      def observer = new TestObserver()
+
+      when:
+      def result = (Maybe<?>) underTest.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+
+      when:
+      observer.dispose()
+
+      then:
+      1 * tracer.endExceptionally(context, _ as CancellationException)
+    }
+
     def "ends span once for multiple subscribers"() {
       given:
       def source = MaybeSubject.create()
@@ -348,6 +388,25 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       then:
       1 * tracer.endExceptionally(context, exception)
       observer.assertError(exception)
+    }
+
+    def "ends span when cancelled"() {
+      given:
+      def source = SingleSubject.create()
+      def observer = new TestObserver()
+
+      when:
+      def result = (Single<?>) underTest.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+
+      when:
+      observer.dispose()
+
+      then:
+      1 * tracer.endExceptionally(context, _ as CancellationException)
     }
 
     def "ends span once for multiple subscribers"() {
@@ -454,6 +513,25 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       observer.assertError(exception)
     }
 
+    def "ends span when cancelled"() {
+      given:
+      def source = UnicastSubject.create()
+      def observer = new TestObserver()
+
+      when:
+      def result = (Observable<?>) underTest.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+
+      when:
+      observer.dispose()
+
+      then:
+      1 * tracer.endExceptionally(context, _ as CancellationException)
+    }
+
     def "ends span once for multiple subscribers"() {
       given:
       def source = ReplaySubject.create()
@@ -553,6 +631,25 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       then:
       1 * tracer.endExceptionally(context, exception)
       observer.assertError(exception)
+    }
+
+    def "ends span when cancelled"() {
+      given:
+      def source = UnicastProcessor.create()
+      def observer = new TestSubscriber()
+
+      when:
+      def result = (Flowable<?>) underTest.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+
+      when:
+      observer.cancel()
+
+      then:
+      1 * tracer.endExceptionally(context, _ as CancellationException)
     }
 
     def "ends span once for multiple subscribers"() {
@@ -655,6 +752,25 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       observer.assertError(exception)
       1 * tracer.endExceptionally(context, exception)
     }
+
+    def "ends span when cancelled"() {
+      given:
+      def source = UnicastProcessor.create()
+      def observer = new TestSubscriber()
+
+      when:
+      def result = (ParallelFlowable<?>) underTest.end(tracer, context, source.parallel())
+      result.sequential().subscribe(observer)
+
+      then:
+      0 * tracer._
+
+      when:
+      observer.cancel()
+
+      then:
+      1 * tracer.endExceptionally(context, _ as CancellationException)
+    }
   }
 
   static class PublisherTest extends RxJava3AsyncSpanEndStrategyTest {
@@ -702,6 +818,25 @@ class RxJava3AsyncSpanEndStrategyTest extends Specification {
       then:
       1 * tracer.endExceptionally(context, exception)
       observer.assertError(exception)
+    }
+
+    def "ends span when cancelled"() {
+      given:
+      def source = new CustomPublisher()
+      def observer = new TestSubscriber()
+
+      when:
+      def result = (Flowable<?>) underTest.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+
+      when:
+      observer.cancel()
+
+      then:
+      1 * tracer.endExceptionally(context, _ as CancellationException)
     }
   }
 
