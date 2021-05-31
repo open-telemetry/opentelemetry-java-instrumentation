@@ -390,7 +390,7 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       observer.assertError(exception)
     }
 
-    def "ends span when errored"() {
+    def "ends span when cancelled"() {
       given:
       def source = SingleSubject.create()
       def observer = new TestObserver()
