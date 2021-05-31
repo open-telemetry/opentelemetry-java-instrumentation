@@ -34,7 +34,10 @@ class SpringIntegrationTracingTest extends LibraryInstrumentationSpecification {
   ConfigurableApplicationContext applicationContext
 
   def setupSpec() {
-    def app = new SpringApplication(MessageChannelsConfig)
+    def app = new SpringApplication(MessageChannelsConfig, GlobalInterceptorSpringConfig)
+    app.setDefaultProperties([
+      "spring.main.web-application-type": "none"
+    ])
     applicationContext = app.run()
   }
 
@@ -147,12 +150,12 @@ class SpringIntegrationTracingTest extends LibraryInstrumentationSpecification {
     }
 
     @Bean
-    SubscribableChannel executorChannel() {
+    SubscribableChannel executorChannel(ChannelInterceptor otelInterceptor) {
       def channel = new ExecutorSubscribableChannel(Executors.newSingleThreadExecutor())
       if (!Boolean.getBoolean("testLatestDeps")) {
         // spring does not inject the interceptor in 4.1 because ExecutorSubscribableChannel isn't ChannelInterceptorAware
         // in later versions spring injects the global interceptor into InterceptableChannel (which ExecutorSubscribableChannel is)
-        channel.addInterceptor(otelInterceptor())
+        channel.addInterceptor(otelInterceptor)
       }
       channel
     }
@@ -172,12 +175,6 @@ class SpringIntegrationTracingTest extends LibraryInstrumentationSpecification {
       linkedChannel1().subscribe { message ->
         linkedChannel2().send(message)
       }
-    }
-
-    @GlobalChannelInterceptor
-    @Bean
-    ChannelInterceptor otelInterceptor() {
-      SpringIntegrationTracing.create(GlobalOpenTelemetry.get()).newChannelInterceptor()
     }
   }
 }

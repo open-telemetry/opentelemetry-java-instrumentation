@@ -35,7 +35,10 @@ class ComplexPropagationTest extends LibraryInstrumentationSpecification {
   ConfigurableApplicationContext applicationContext
 
   def setupSpec() {
-    def app = new SpringApplication(ExternalQueueConfig)
+    def app = new SpringApplication(ExternalQueueConfig, GlobalInterceptorSpringConfig)
+    app.setDefaultProperties([
+      "spring.main.web-application-type": "none"
+    ])
     applicationContext = app.run()
   }
 
@@ -121,12 +124,6 @@ class ComplexPropagationTest extends LibraryInstrumentationSpecification {
           receiveChannel().send(payload.toMessage())
         }
       })
-    }
-
-    @GlobalChannelInterceptor
-    @Bean
-    ChannelInterceptor otelInterceptor() {
-      SpringIntegrationTracing.create(GlobalOpenTelemetry.get()).newChannelInterceptor()
     }
   }
 
