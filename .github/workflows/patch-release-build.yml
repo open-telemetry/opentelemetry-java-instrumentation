@@ -48,6 +48,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    needs: prepare-release-branch
     strategy:
       matrix:
         java: [ 8, 11, 15 ]
@@ -80,6 +81,7 @@ jobs:
 
   testLatestDep:
     runs-on: ubuntu-latest
+    needs: prepare-release-branch
     steps:
       - uses: actions/checkout@v2.3.4
         with:
@@ -102,6 +104,7 @@ jobs:
 
   smoke-test:
     runs-on: ${{ matrix.os }}
+    needs: prepare-release-branch
     strategy:
       matrix:
         os: [ windows-latest, ubuntu-latest ]
@@ -132,6 +135,7 @@ jobs:
 
   example-distro:
     runs-on: ubuntu-latest
+    needs: prepare-release-branch
     steps:
       - uses: actions/checkout@v2.3.4
         with:
