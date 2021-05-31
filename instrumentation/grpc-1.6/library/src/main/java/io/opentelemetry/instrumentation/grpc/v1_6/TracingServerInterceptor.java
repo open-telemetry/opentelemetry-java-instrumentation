@@ -20,9 +20,13 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingServerInterceptor implements ServerInterceptor {
+
+  @SuppressWarnings("rawtypes")
+  private static final AtomicLongFieldUpdater<TracingServerCallListener> MESSAGE_ID_UPDATER =
+      AtomicLongFieldUpdater.newUpdater(TracingServerCallListener.class, "messageId");
 
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
@@ -89,7 +93,9 @@ final class TracingServerInterceptor implements ServerInterceptor {
     private final Context context;
     private final GrpcRequest request;
 
-    private final AtomicLong messageId = new AtomicLong();
+    // Used by MESSAGE_ID_UPDATER
+    @SuppressWarnings("UnusedVariable")
+    volatile long messageId;
 
     TracingServerCallListener(Listener<REQUEST> delegate, Context context, GrpcRequest request) {
       super(delegate);
@@ -105,7 +111,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
               GrpcHelper.MESSAGE_TYPE,
               "RECEIVED",
               GrpcHelper.MESSAGE_ID,
-              messageId.incrementAndGet());
+              MESSAGE_ID_UPDATER.incrementAndGet(this));
       Span.fromContext(context).addEvent("message", attributes);
       delegate().onMessage(message);
     }
