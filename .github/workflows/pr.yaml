@@ -161,7 +161,13 @@ jobs:
           distribution: adopt
           java-version: 11
       - name: Run muzzle
-        run: ./gradlew ${{ matrix.module }}:muzzle
+        # using retry because of sporadic gradle download failures
+        uses: nick-invision/retry@v2.4.0
+        with:
+          # timing out has not been a problem, these jobs typically finish in 2-3 minutes
+          timeout_minutes: 15
+          max_attempts: 3
+          command: ./gradlew ${{ matrix.module }}:muzzle
 
   accept-pr:
     needs: [ build, test, smoke-test, muzzle ]
