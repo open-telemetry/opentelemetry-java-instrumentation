@@ -29,7 +29,7 @@ final class MessageSpanLinkExtractor implements SpanLinkExtractor<MessageWithCha
 
   // SpanContext#equals() includes e.g. remote flag, which we don't really care about here
   // we just want to avoid adding links to spans with the same id, flags don't matter at all
-  private boolean referencesSameSpan(SpanContext spanFromMessage, SpanContext parentSpan) {
+  private static boolean referencesSameSpan(SpanContext spanFromMessage, SpanContext parentSpan) {
     return parentSpan.getTraceId().equals(spanFromMessage.getTraceId())
         && parentSpan.getSpanId().equals(spanFromMessage.getSpanId());
   }

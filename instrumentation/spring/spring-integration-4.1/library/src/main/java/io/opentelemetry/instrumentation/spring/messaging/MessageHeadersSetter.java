@@ -24,7 +24,7 @@ enum MessageHeadersSetter implements TextMapSetter<MessageHeaderAccessor> {
     setNativeHeader(carrier, key, value);
   }
 
-  private void setNativeHeader(MessageHeaderAccessor carrier, String key, String value) {
+  private static void setNativeHeader(MessageHeaderAccessor carrier, String key, String value) {
     Object nativeMap = carrier.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
     if (nativeMap instanceof Map) {
       ((Map<String, List<String>>) nativeMap).put(key, singletonList(value));
