@@ -19,7 +19,7 @@ public final class GwtSingletons {
   public static final ContextKey<Boolean> RPC_CONTEXT_KEY =
       ContextKey.named("opentelemetry-gwt-rpc-context-key");
 
-  public static final Instrumenter<Method, Void> INSTRUMENTER;
+  private static final Instrumenter<Method, Void> INSTRUMENTER;
 
   static {
     RpcAttributesExtractor<Method, Void> rpcAttributes = new GwtRpcAttributesExtractor();
@@ -32,6 +32,10 @@ public final class GwtSingletons {
             // TODO(anuraaga): This should be a server span, but we currently have no way to merge
             // with the HTTP instrumentation's server span.
             .newInstrumenter();
+  }
+
+  public static Instrumenter<Method, Void> instrumenter() {
+    return INSTRUMENTER;
   }
 
   private GwtSingletons() {}

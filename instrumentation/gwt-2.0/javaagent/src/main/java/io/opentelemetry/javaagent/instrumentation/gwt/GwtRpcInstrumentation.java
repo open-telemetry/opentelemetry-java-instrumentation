@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.gwt;
 
-import static io.opentelemetry.javaagent.instrumentation.gwt.GwtSingletons.INSTRUMENTER;
+import static io.opentelemetry.javaagent.instrumentation.gwt.GwtSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -57,7 +57,7 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       context =
-          INSTRUMENTER
+          instrumenter()
               .start(Java8BytecodeBridge.currentContext(), method)
               .with(GwtSingletons.RPC_CONTEXT_KEY, true);
       scope = context.makeCurrent();
@@ -71,7 +71,7 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable) {
       scope.close();
 
-      INSTRUMENTER.end(context, method, null, throwable);
+      instrumenter().end(context, method, null, throwable);
     }
   }
 
