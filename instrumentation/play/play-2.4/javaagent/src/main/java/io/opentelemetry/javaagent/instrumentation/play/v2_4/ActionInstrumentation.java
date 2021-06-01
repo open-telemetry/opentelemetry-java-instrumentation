@@ -26,6 +26,7 @@ import play.api.mvc.Action;
 import play.api.mvc.Headers;
 import play.api.mvc.Request;
 import play.api.mvc.Result;
+import play.libs.Akka;
 import scala.concurrent.Future;
 
 public class ActionInstrumentation implements TypeInstrumentation {
@@ -86,7 +87,7 @@ public class ActionInstrumentation implements TypeInstrumentation {
       // This distinguishes between 2.3 and 2.4, excluding the former
       headers.get("aKey");
       // system() method was removed in 2.6, so this line prevents from applying in play 2.6
-      play.libs.Akka.system();
+      Akka.system();
     }
   }
 }

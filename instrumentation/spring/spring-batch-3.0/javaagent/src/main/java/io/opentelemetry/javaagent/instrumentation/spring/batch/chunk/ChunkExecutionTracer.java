@@ -31,13 +31,13 @@ public class ChunkExecutionTracer extends BaseTracer {
     return parentContext.with(spanBuilder.startSpan());
   }
 
-  private String spanName(ChunkContext chunkContext) {
+  private static String spanName(ChunkContext chunkContext) {
     String jobName = chunkContext.getStepContext().getJobName();
     String stepName = chunkContext.getStepContext().getStepName();
     return "BatchJob " + jobName + "." + stepName + ".Chunk";
   }
 
-  private void linkParentSpan(SpanBuilder spanBuilder, Context parentContext) {
+  private static void linkParentSpan(SpanBuilder spanBuilder, Context parentContext) {
     spanBuilder.setNoParent();
 
     SpanContext parentSpanContext = Span.fromContext(parentContext).getSpanContext();

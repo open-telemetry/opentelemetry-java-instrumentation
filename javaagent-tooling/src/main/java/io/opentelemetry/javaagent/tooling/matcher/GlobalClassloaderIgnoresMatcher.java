@@ -45,7 +45,6 @@ public class GlobalClassloaderIgnoresMatcher
       case ALLOW:
         return false;
       case DEFAULT:
-      default:
     }
 
     if (cl == ClassLoadingStrategy.BOOTSTRAP_LOADER) {

@@ -17,7 +17,7 @@ import net.bytebuddy.jar.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ExceptionHandlers {
+public final class ExceptionHandlers {
   private static final String LOG_FACTORY_NAME = LoggerFactory.class.getName().replace('.', '/');
   private static final String LOGGER_NAME = Logger.class.getName().replace('.', '/');
   // Bootstrap ExceptionHandler.class will always be resolvable, so we'll use it in the log name
@@ -63,7 +63,7 @@ public class ExceptionHandlers {
                   LOG_FACTORY_NAME,
                   "getLogger",
                   "(Ljava/lang/Class;)L" + LOGGER_NAME + ";",
-                  false);
+                  /* isInterface= */ false);
               mv.visitInsn(Opcodes.SWAP); // stack: (top) throwable,logger
               mv.visitLdcInsn(
                   "Failed to handle exception in instrumentation for "
@@ -76,7 +76,7 @@ public class ExceptionHandlers {
                   LOGGER_NAME,
                   "debug",
                   "(Ljava/lang/String;Ljava/lang/Throwable;)V",
-                  true);
+                  /* isInterface= */ true);
               mv.visitLabel(logEnd);
               mv.visitJumpInsn(Opcodes.GOTO, handlerExit);
 
@@ -102,4 +102,6 @@ public class ExceptionHandlers {
   public static ExceptionHandler defaultExceptionHandler() {
     return EXCEPTION_STACK_HANDLER;
   }
+
+  private ExceptionHandlers() {}
 }

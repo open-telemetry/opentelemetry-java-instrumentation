@@ -19,7 +19,8 @@ import java.util.Collections;
 public class OshiMetricsInstaller implements ComponentInstaller {
   @Override
   public void afterByteBuddyAgent(Config config) {
-    if (config.isInstrumentationEnabled(Collections.singleton("oshi"), true)) {
+    if (config.isInstrumentationEnabled(
+        Collections.singleton("oshi"), /* defaultEnabled= */ true)) {
       try {
         // Call oshi.SystemInfo.getCurrentPlatformEnum() to activate SystemMetrics.
         // Oshi instrumentation will intercept this call and enable SystemMetrics.

@@ -8,6 +8,8 @@ package io.opentelemetry.test.annotation;
 import io.opentelemetry.api.trace.Span;
 import java.util.concurrent.Callable;
 
+// To better see which library is tested
+@SuppressWarnings("UnnecessarilyFullyQualified")
 public class SayTracedHello {
 
   @com.appoptics.api.ext.LogMethod
@@ -78,7 +80,7 @@ public class SayTracedHello {
 
   @io.opentracing.contrib.dropwizard.Trace
   public static String sayError() {
-    throw new RuntimeException();
+    throw new IllegalStateException();
   }
 
   public static String fromCallable() {

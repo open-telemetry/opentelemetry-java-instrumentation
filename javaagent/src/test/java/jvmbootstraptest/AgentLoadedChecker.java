@@ -16,7 +16,7 @@ public class AgentLoadedChecker {
         emptyClassLoader.loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
 
     if (agentClass.getClassLoader() != null) {
-      throw new RuntimeException(
+      throw new IllegalStateException(
           "Agent loaded into classloader other than bootstrap: " + agentClass.getClassLoader());
     }
   }

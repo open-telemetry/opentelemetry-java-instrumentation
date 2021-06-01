@@ -74,19 +74,21 @@ final class RedissonDbAttributesExtractor extends DbAttributesExtractor<Redisson
     return null;
   }
 
-  private List<String> sanitizeStatement(RedissonRequest request) {
+  private static List<String> sanitizeStatement(RedissonRequest request) {
     Object command = request.getCommand();
     // get command
     if (command instanceof CommandsData) {
       List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
-      return commands.stream().map(this::normalizeSingleCommand).collect(Collectors.toList());
+      return commands.stream()
+          .map(RedissonDbAttributesExtractor::normalizeSingleCommand)
+          .collect(Collectors.toList());
     } else if (command instanceof CommandData) {
       return singletonList(normalizeSingleCommand((CommandData<?, ?>) command));
     }
     return emptyList();
   }
 
-  private String normalizeSingleCommand(CommandData<?, ?> command) {
+  private static String normalizeSingleCommand(CommandData<?, ?> command) {
     Object[] commandParams = command.getParams();
     List<Object> args = new ArrayList<>(commandParams.length + 1);
     if (command.getCommand().getSubName() != null) {

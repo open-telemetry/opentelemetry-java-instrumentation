@@ -24,7 +24,7 @@ public class AppServerBridge {
    * @return new context with AppServerBridge attached.
    */
   public static Context init(Context ctx) {
-    return init(ctx, true);
+    return init(ctx, /* shouldRecordException= */ true);
   }
 
   /**

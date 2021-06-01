@@ -38,12 +38,12 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
     return bean;
   }
 
-  private WebClient.Builder wrapBuilder(
+  private static WebClient.Builder wrapBuilder(
       OpenTelemetry openTelemetry, WebClient.Builder webClientBuilder) {
     return webClientBuilder.filters(webClientFilterFunctionConsumer(openTelemetry));
   }
 
-  private Consumer<List<ExchangeFilterFunction>> webClientFilterFunctionConsumer(
+  private static Consumer<List<ExchangeFilterFunction>> webClientFilterFunctionConsumer(
       OpenTelemetry openTelemetry) {
     return functions -> {
       if (functions.stream().noneMatch(filter -> filter instanceof WebClientTracingFilter)) {

@@ -33,7 +33,7 @@ public class ListAppender extends AbstractAppender {
   private final List<LoggedEvent> events = Collections.synchronizedList(new ArrayList<>());
 
   public ListAppender() {
-    super("ListAppender", null, null, true);
+    super("ListAppender", null, null, /* ignoreExceptions= */ true);
   }
 
   public List<LoggedEvent> getEvents() {

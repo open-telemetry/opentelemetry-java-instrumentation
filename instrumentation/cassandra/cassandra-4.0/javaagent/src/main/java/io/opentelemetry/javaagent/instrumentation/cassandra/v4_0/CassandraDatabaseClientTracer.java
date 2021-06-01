@@ -46,12 +46,13 @@ public class CassandraDatabaseClientTracer
 
   @Override
   protected SqlStatementInfo sanitizeStatement(String statement) {
-    return SqlStatementSanitizer.sanitize(statement).mapTable(this::stripKeyspace);
+    return SqlStatementSanitizer.sanitize(statement)
+        .mapTable(CassandraDatabaseClientTracer::stripKeyspace);
   }
 
   // account for splitting out the keyspace, <keyspace>.<table>
   @Nullable
-  private String stripKeyspace(String table) {
+  private static String stripKeyspace(String table) {
     int i;
     if (table == null || (i = table.indexOf('.')) == -1) {
       return table;

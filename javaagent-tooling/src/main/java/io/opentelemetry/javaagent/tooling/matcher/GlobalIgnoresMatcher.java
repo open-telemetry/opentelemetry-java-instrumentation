@@ -61,7 +61,6 @@ public class GlobalIgnoresMatcher extends ElementMatcher.Junction.AbstractBase<T
       case ALLOW:
         return false;
       case DEFAULT:
-      default:
     }
 
     String name = target.getActualName();

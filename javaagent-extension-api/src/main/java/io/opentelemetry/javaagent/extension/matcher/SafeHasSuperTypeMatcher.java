@@ -14,6 +14,7 @@ import java.util.Set;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +94,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     return false;
   }
 
-  private Iterable<TypeDefinition> safeGetInterfaces(TypeDefinition typeDefinition) {
+  private static Iterable<TypeDefinition> safeGetInterfaces(TypeDefinition typeDefinition) {
     return new SafeInterfaceIterator(typeDefinition);
   }
 
@@ -147,7 +148,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
   private static class SafeInterfaceIterator
       implements Iterator<TypeDefinition>, Iterable<TypeDefinition> {
     private final TypeDefinition typeDefinition;
-    private final Iterator<TypeDescription.Generic> it;
+    @Nullable private final Iterator<TypeDescription.Generic> it;
     private TypeDefinition next;
 
     private SafeInterfaceIterator(TypeDefinition typeDefinition) {
@@ -190,7 +191,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
       return this;
     }
 
-    private void logException(TypeDefinition typeDefinition, Exception e) {
+    private static void logException(TypeDefinition typeDefinition, Exception e) {
       if (log.isDebugEnabled()) {
         log.debug(
             "{} trying to get interfaces for target {}: {}",

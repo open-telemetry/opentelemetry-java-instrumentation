@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 final class HttpSpanAttributes {
-  void onRequest(SpanBuilder span, APIGatewayProxyRequestEvent request) {
+  static void onRequest(SpanBuilder span, APIGatewayProxyRequestEvent request) {
     String httpMethod = request.getHttpMethod();
     if (httpMethod != null) {
       span.setAttribute(HTTP_METHOD, httpMethod);
@@ -39,7 +39,8 @@ final class HttpSpanAttributes {
     }
   }
 
-  private String getHttpUrl(APIGatewayProxyRequestEvent request, Map<String, String> headers) {
+  private static String getHttpUrl(
+      APIGatewayProxyRequestEvent request, Map<String, String> headers) {
     StringBuilder str = new StringBuilder();
 
     String scheme = headers.get("x-forwarded-proto");
@@ -70,10 +71,12 @@ final class HttpSpanAttributes {
     return str.toString();
   }
 
-  void onResponse(Span span, APIGatewayProxyResponseEvent response) {
+  static void onResponse(Span span, APIGatewayProxyResponseEvent response) {
     Integer statusCode = response.getStatusCode();
     if (statusCode != null) {
       span.setAttribute(HTTP_STATUS_CODE, statusCode);
     }
   }
+
+  private HttpSpanAttributes() {}
 }

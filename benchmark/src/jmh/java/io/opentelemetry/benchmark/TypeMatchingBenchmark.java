@@ -50,7 +50,7 @@ public class TypeMatchingBenchmark {
           }
         }
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw new IllegalStateException(e);
       }
     }
   }

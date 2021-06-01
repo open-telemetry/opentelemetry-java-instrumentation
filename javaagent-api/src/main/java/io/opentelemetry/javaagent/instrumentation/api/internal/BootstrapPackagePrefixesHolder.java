@@ -16,19 +16,21 @@ import java.util.List;
  * The instrumentation does not have access to the installer, therefore this utility class is used
  * to share package prefixes.
  */
-public class BootstrapPackagePrefixesHolder {
+public final class BootstrapPackagePrefixesHolder {
 
-  private static volatile List<String> BOOSTRAP_PACKAGE_PREFIXES;
+  private static volatile List<String> bootstrapPackagePrefixes;
 
   public static List<String> getBoostrapPackagePrefixes() {
-    return BOOSTRAP_PACKAGE_PREFIXES;
+    return bootstrapPackagePrefixes;
   }
 
   public static void setBoostrapPackagePrefixes(List<String> prefixes) {
-    if (BOOSTRAP_PACKAGE_PREFIXES != null) {
+    if (bootstrapPackagePrefixes != null) {
       // Only possible by misuse of this API, just ignore.
       return;
     }
-    BOOSTRAP_PACKAGE_PREFIXES = Collections.unmodifiableList(prefixes);
+    bootstrapPackagePrefixes = Collections.unmodifiableList(prefixes);
   }
+
+  private BootstrapPackagePrefixesHolder() {}
 }

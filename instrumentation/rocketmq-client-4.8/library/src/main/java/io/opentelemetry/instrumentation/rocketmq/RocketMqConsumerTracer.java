@@ -20,8 +20,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class RocketMqConsumerTracer extends BaseTracer {
 
-  private boolean captureExperimentalSpanAttributes;
-  private boolean propagationEnabled;
+  private final boolean captureExperimentalSpanAttributes;
+  private final boolean propagationEnabled;
 
   RocketMqConsumerTracer(
       OpenTelemetry openTelemetry,
@@ -93,12 +93,12 @@ final class RocketMqConsumerTracer extends BaseTracer {
     }
   }
 
-  private String spanNameOnConsume(MessageExt msg) {
+  private static String spanNameOnConsume(MessageExt msg) {
     return msg.getTopic() + " process";
   }
 
   @Nullable
-  private String getBrokerHost(MessageExt msg) {
+  private static String getBrokerHost(MessageExt msg) {
     if (msg.getStoreHost() != null) {
       return msg.getStoreHost().toString().replace("/", "");
     } else {

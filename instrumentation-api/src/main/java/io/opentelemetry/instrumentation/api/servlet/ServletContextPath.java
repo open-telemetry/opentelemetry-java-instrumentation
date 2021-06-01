@@ -18,7 +18,7 @@ import io.opentelemetry.context.ContextKey;
  * the context key, since otherwise instrumentation across different class loaders would use
  * different context keys and not be able to share the servlet context path.
  */
-public class ServletContextPath {
+public final class ServletContextPath {
 
   // Keeps track of the servlet context path that needs to be prepended to the route when updating
   // the span name
@@ -34,4 +34,6 @@ public class ServletContextPath {
       return spanName;
     }
   }
+
+  private ServletContextPath() {}
 }

@@ -61,7 +61,7 @@ public abstract class ServerTestRouteFactory {
                   ServerResponse.ok(),
                   "",
                   () -> {
-                    throw new RuntimeException(endpoint.getBody());
+                    throw new IllegalStateException(endpoint.getBody());
                   });
             })
         .andRoute(

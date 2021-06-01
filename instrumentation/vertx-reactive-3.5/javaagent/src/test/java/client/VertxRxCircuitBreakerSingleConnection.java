@@ -34,11 +34,7 @@ public class VertxRxCircuitBreakerSingleConnection extends VertxRxSingleConnecti
           }
         });
 
-    try {
-      return (HttpResponse<?>) future.get();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    return (HttpResponse<?>) future.join();
   }
 
   private void sendRequestWithCallback(HttpRequest<?> request, Consumer<AsyncResult<?>> consumer) {

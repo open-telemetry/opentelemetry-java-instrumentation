@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class SessionMethodUtils {
+public final class SessionMethodUtils {
 
   public static final Set<String> SCOPE_ONLY_METHODS =
       new HashSet<>(Arrays.asList("immediateLoad", "internalLoad"));
@@ -107,4 +107,6 @@ public class SessionMethodUtils {
 
     targetContextStore.putIfAbsent(target, sessionContext);
   }
+
+  private SessionMethodUtils() {}
 }

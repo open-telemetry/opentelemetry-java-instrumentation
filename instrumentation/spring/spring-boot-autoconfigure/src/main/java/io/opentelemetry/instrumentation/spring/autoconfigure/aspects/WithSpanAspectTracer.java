@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
 import java.lang.reflect.Method;
@@ -41,10 +42,10 @@ class WithSpanAspectTracer extends BaseTracer {
     }
   }
 
-  private String spanName(WithSpan annotation, Method method) {
+  private static String spanName(WithSpan annotation, Method method) {
     String spanName = annotation.value();
     if (spanName.isEmpty()) {
-      return spanNameForMethod(method);
+      return SpanNames.spanNameForMethod(method);
     }
     return spanName;
   }

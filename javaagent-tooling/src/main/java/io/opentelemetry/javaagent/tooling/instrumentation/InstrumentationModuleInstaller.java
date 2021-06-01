@@ -101,7 +101,7 @@ public final class InstrumentationModuleInstaller {
     return agentBuilder;
   }
 
-  private InstrumentationContextProvider createInstrumentationContextProvider(
+  private static InstrumentationContextProvider createInstrumentationContextProvider(
       InstrumentationModule instrumentationModule) {
     Map<String, String> contextStore = instrumentationModule.getMuzzleContextStoreClasses();
     if (!contextStore.isEmpty()) {

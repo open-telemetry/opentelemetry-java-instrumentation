@@ -105,7 +105,7 @@ public class MuzzlePlugin implements Plugin<Project> {
                               .getMethod("printMuzzleReferences", ClassLoader.class);
                       assertionMethod.invoke(null, instrumentationCL);
                     } catch (Exception e) {
-                      throw new RuntimeException(e);
+                      throw new IllegalStateException(e);
                     }
                   });
             });
@@ -191,7 +191,7 @@ public class MuzzlePlugin implements Plugin<Project> {
                   try {
                     return file.toURI().toURL();
                   } catch (MalformedURLException e) {
-                    throw new RuntimeException(e);
+                    throw new IllegalStateException(e);
                   }
                 })
             .toArray(URL[]::new);
@@ -305,7 +305,7 @@ public class MuzzlePlugin implements Plugin<Project> {
                               userCL,
                               muzzleDirective.getAssertPass().get());
                         } catch (Exception e) {
-                          throw new RuntimeException(e);
+                          throw new IllegalStateException(e);
                         } finally {
                           Thread.currentThread().setContextClassLoader(ccl);
                         }
@@ -366,7 +366,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     try {
       rangeResult = system.resolveVersionRange(session, rangeRequest);
     } catch (VersionRangeResolutionException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
 
     Set<Artifact> allVersionArtifacts =
@@ -426,7 +426,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     try {
       allRangeResult = system.resolveVersionRange(session, allRangeRequest);
     } catch (VersionRangeResolutionException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
 
     VersionRangeRequest rangeRequest = new VersionRangeRequest();
@@ -436,7 +436,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     try {
       rangeResult = system.resolveVersionRange(session, rangeRequest);
     } catch (VersionRangeResolutionException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
 
     allRangeResult.getVersions().removeAll(rangeResult.getVersions());

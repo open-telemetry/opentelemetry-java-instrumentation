@@ -64,7 +64,7 @@ public class ClasspathByteBuddyPlugin implements Plugin {
       Class<?> clazz = Class.forName(className, false, classLoader);
       return (Plugin) clazz.getDeclaredConstructor().newInstance();
     } catch (Exception e) {
-      throw new RuntimeException("Failed to create ByteBuddy plugin instance", e);
+      throw new IllegalStateException("Failed to create ByteBuddy plugin instance", e);
     }
   }
 
@@ -84,7 +84,7 @@ public class ClasspathByteBuddyPlugin implements Plugin {
     try {
       return file.toURI().toURL();
     } catch (MalformedURLException e) {
-      throw new RuntimeException("Cannot resolve " + file + " as URL", e);
+      throw new IllegalStateException("Cannot resolve " + file + " as URL", e);
     }
   }
 }

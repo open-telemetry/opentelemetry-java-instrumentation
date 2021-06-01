@@ -19,8 +19,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class HttpClass {
-  private final String contextPath = "/path";
-  private final Integer port = 18888;
+  private static final String contextPath = "/path";
+  private static final Integer port = 18888;
 
   public Server buildJettyServer() {
     System.setProperty("org.eclipse.jetty.util.log.class", "org.eclipse.jetty.util.log.StdErrLog");

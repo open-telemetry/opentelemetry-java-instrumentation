@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -21,6 +20,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.spring.webflux.SpringWebfluxConfig;
@@ -74,7 +74,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         if (handler instanceof HandlerMethod) {
           // Special case for requests mapped with annotations
           HandlerMethod handlerMethod = (HandlerMethod) handler;
-          operationName = tracer().spanNameForMethod(handlerMethod.getMethod());
+          operationName = SpanNames.spanNameForMethod(handlerMethod.getMethod());
           handlerType = handlerMethod.getMethod().getDeclaringClass().getName();
         } else {
           operationName = AdviceUtils.parseOperationName(handler);

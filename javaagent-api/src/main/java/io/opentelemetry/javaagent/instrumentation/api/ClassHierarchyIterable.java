@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Iterates over a class, its superclass, and its interfaces in the following breath-first-like
@@ -43,7 +44,7 @@ public class ClassHierarchyIterable implements Iterable<Class<?>> {
   }
 
   public class ClassIterator implements Iterator<Class<?>> {
-    private Class<?> next;
+    @Nullable private Class<?> next;
     private final Set<Class<?>> queuedInterfaces = new HashSet<>();
     private final Queue<Class<?>> classesToExpand = new ArrayDeque<>();
 

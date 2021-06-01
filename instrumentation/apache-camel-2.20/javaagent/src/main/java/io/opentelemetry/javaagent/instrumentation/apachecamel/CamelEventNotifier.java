@@ -51,7 +51,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
   }
 
   /** Camel about to send (outbound). */
-  private void onExchangeSending(ExchangeSendingEvent ese) {
+  private static void onExchangeSending(ExchangeSendingEvent ese) {
     SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(ese.getEndpoint());
     if (!sd.shouldStartNewSpan()) {
       return;
@@ -69,7 +69,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
   }
 
   /** Camel finished sending (outbound). Finish span and remove it from CAMEL holder. */
-  private void onExchangeSent(ExchangeSentEvent event) {
+  private static void onExchangeSent(ExchangeSentEvent event) {
     ExchangeSentEvent ese = event;
     SpanDecorator sd = CamelTracer.TRACER.getSpanDecorator(ese.getEndpoint());
     if (!sd.shouldStartNewSpan()) {

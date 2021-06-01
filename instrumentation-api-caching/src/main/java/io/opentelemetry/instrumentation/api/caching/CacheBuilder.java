@@ -17,8 +17,7 @@ public final class CacheBuilder {
   private boolean weakKeys;
   private boolean weakValues;
   private long maximumSize = UNSET;
-  @Nullable
-  private Executor executor = null;
+  @Nullable private Executor executor = null;
 
   /** Sets the maximum size of the cache. */
   public CacheBuilder setMaximumSize(long maximumSize) {

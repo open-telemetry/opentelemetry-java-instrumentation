@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class MethodHandleFactory {
 
-  private String lowerCase(String string) {
+  private static String unCapitalize(String string) {
     return string.substring(0, 1).toLowerCase(Locale.ROOT) + string.substring(1);
   }
 
@@ -29,7 +29,8 @@ class MethodHandleFactory {
     MethodHandle methodHandle = getterCache.get(clazz).get(fieldName);
     if (methodHandle == null) {
       // getter in AWS SDK is lowercased field name
-      methodHandle = MethodHandles.publicLookup().unreflect(clazz.getMethod(lowerCase(fieldName)));
+      methodHandle =
+          MethodHandles.publicLookup().unreflect(clazz.getMethod(unCapitalize(fieldName)));
       getterCache.get(clazz).put(fieldName, methodHandle);
     }
     return methodHandle;

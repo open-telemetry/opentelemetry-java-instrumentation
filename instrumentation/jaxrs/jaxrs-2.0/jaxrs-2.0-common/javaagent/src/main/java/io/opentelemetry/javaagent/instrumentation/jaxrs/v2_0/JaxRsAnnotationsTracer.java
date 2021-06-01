@@ -73,13 +73,13 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     }
   }
 
-  private void updateSpanName(Span span, String spanName) {
+  private static void updateSpanName(Span span, String spanName) {
     if (!spanName.isEmpty()) {
       span.updateName(spanName);
     }
   }
 
-  private void setCodeAttributes(SpanBuilder spanBuilder, Class<?> target, Method method) {
+  private static void setCodeAttributes(SpanBuilder spanBuilder, Class<?> target, Method method) {
     spanBuilder.setAttribute(SemanticAttributes.CODE_NAMESPACE, target.getName());
     if (method != null) {
       spanBuilder.setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName());
@@ -143,7 +143,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return spanName;
   }
 
-  private String locateHttpMethod(Method method) {
+  private static String locateHttpMethod(Method method) {
     String httpMethod = null;
     for (Annotation ann : method.getDeclaredAnnotations()) {
       if (ann.annotationType().getAnnotation(HttpMethod.class) != null) {
@@ -153,11 +153,11 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return httpMethod;
   }
 
-  private Path findMethodPath(Method method) {
+  private static Path findMethodPath(Method method) {
     return method.getAnnotation(Path.class);
   }
 
-  private Path findClassPath(Class<?> target) {
+  private static Path findClassPath(Class<?> target) {
     for (Class<?> currentClass : new ClassHierarchyIterable(target)) {
       Path annotation = currentClass.getAnnotation(Path.class);
       if (annotation != null) {
@@ -169,7 +169,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private Method findMatchingMethod(Method baseMethod, Method[] methods) {
+  private static Method findMatchingMethod(Method baseMethod, Method[] methods) {
     nextMethod:
     for (Method method : methods) {
       if (!baseMethod.getReturnType().equals(method.getReturnType())) {
@@ -195,7 +195,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     return null;
   }
 
-  private String buildSpanName(Path classPath, Path methodPath) {
+  private static String buildSpanName(Path classPath, Path methodPath) {
     String spanName;
     StringBuilder spanNameBuilder = new StringBuilder();
     boolean skipSlash = false;

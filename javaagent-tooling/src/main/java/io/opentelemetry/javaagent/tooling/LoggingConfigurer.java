@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import java.util.Locale;
 
-class LoggingConfigurer {
+final class LoggingConfigurer {
 
   private static final String SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY =
       "io.opentelemetry.javaagent.slf4j.simpleLogger.showDateTime";
@@ -69,4 +69,6 @@ class LoggingConfigurer {
     }
     return false;
   }
+
+  private LoggingConfigurer() {}
 }

@@ -60,8 +60,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors;
   private final List<? extends RequestListener> requestListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
-  private final StartTimeExtractor<REQUEST> startTimeExtractor;
-  private final EndTimeExtractor<RESPONSE> endTimeExtractor;
+  @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
+  @Nullable private final EndTimeExtractor<RESPONSE> endTimeExtractor;
 
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
