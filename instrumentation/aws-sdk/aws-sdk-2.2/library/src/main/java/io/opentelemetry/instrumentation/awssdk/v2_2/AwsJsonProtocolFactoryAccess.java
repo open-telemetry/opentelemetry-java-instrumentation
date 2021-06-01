@@ -22,7 +22,7 @@ final class AwsJsonProtocolFactoryAccess {
   private static final OperationInfo OPERATION_INFO =
       OperationInfo.builder().hasPayloadMembers(true).httpMethod(SdkHttpMethod.POST).build();
 
-  private static final MethodHandle INVOKE_CREATE_PROTOCOL_MARSHALLER;
+  @Nullable private static final MethodHandle INVOKE_CREATE_PROTOCOL_MARSHALLER;
 
   static {
     MethodHandle invokeCreateProtocolMarshaller = null;

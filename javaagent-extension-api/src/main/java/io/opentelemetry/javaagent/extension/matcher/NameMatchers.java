@@ -21,7 +21,7 @@ public final class NameMatchers {
    * @return An element matcher checking if an element's exact name is a member of a set.
    */
   public static <T extends NamedElement> ElementMatcher.Junction<T> namedOneOf(String... names) {
-    return new SetMatcher<>(true, names);
+    return new SetMatcher<>(/* include= */ true, names);
   }
 
   /**
@@ -33,7 +33,7 @@ public final class NameMatchers {
    */
   public static <T extends NamedElement> ElementMatcher.Junction<T> namedOneOf(
       Collection<String> names) {
-    return new SetMatcher<>(true, names);
+    return new SetMatcher<>(/* include= */ true, names);
   }
 
   /**
@@ -44,7 +44,7 @@ public final class NameMatchers {
    * @return An element matcher checking if an element's exact name is absent from a set.
    */
   public static <T extends NamedElement> ElementMatcher.Junction<T> namedNoneOf(String... names) {
-    return new SetMatcher<>(false, names);
+    return new SetMatcher<>(/* include= */ false, names);
   }
 
   private static class SetMatcher<T extends NamedElement>

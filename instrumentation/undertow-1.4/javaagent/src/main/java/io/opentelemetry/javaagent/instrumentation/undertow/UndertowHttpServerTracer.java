@@ -73,7 +73,7 @@ public class UndertowHttpServerTracer
     }
   }
 
-  private void endSpan(Context context, Throwable throwable, HttpServerExchange exchange) {
+  private static void endSpan(Context context, Throwable throwable, HttpServerExchange exchange) {
     if (throwable != null) {
       tracer().endExceptionally(context, throwable, exchange);
     } else {

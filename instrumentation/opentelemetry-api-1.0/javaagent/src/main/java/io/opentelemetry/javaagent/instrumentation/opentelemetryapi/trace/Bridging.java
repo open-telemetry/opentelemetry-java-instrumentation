@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Also see comments in this module's gradle file.
  */
+// Our convention for accessing agent package
+@SuppressWarnings("UnnecessarilyFullyQualified")
 public class Bridging {
 
   private static final Logger log = LoggerFactory.getLogger(Bridging.class);
@@ -135,10 +137,9 @@ public class Bridging {
         return io.opentelemetry.api.common.AttributeKey.longArrayKey(applicationKey.getKey());
       case DOUBLE_ARRAY:
         return io.opentelemetry.api.common.AttributeKey.doubleArrayKey(applicationKey.getKey());
-      default:
-        log.debug("unexpected attribute key type: {}", applicationKey.getType());
-        return null;
     }
+    log.debug("unexpected attribute key type: {}", applicationKey.getType());
+    return null;
   }
 
   public static io.opentelemetry.api.trace.StatusCode toAgent(StatusCode applicationStatus) {

@@ -18,7 +18,6 @@ import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcContext;
-import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.RpcInvocation;
 
 @Activate(group = {"consumer", "provider"})
@@ -30,7 +29,7 @@ public class OpenTelemetryFilter implements Filter {
   }
 
   @Override
-  public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+  public Result invoke(Invoker<?> invoker, Invocation invocation) {
     if (!(invocation instanceof RpcInvocation)) {
       return invoker.invoke(invocation);
     }

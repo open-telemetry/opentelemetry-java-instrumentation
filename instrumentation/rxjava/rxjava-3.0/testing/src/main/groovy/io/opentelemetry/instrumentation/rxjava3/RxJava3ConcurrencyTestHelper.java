@@ -35,7 +35,7 @@ public class RxJava3ConcurrencyTestHelper {
       //noinspection ResultOfMethodCallIgnored
       latch.await(timeoutMillis, TimeUnit.MILLISECONDS);
     } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 

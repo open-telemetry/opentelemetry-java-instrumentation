@@ -11,7 +11,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.TimeUnit;
 
-public class Worker {
+public final class Worker {
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
@@ -32,4 +32,6 @@ public class Worker {
       span.end();
     }
   }
+
+  private Worker() {}
 }

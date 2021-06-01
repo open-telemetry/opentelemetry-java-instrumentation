@@ -9,7 +9,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.TextMapExtractAdapter.GETTER;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Command;
@@ -103,9 +102,9 @@ public class RabbitTracer extends BaseTracer {
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES && properties.getTimestamp() != null) {
       // this will be set if the sender sets the timestamp,
       // or if a plugin is installed on the rabbitmq broker
-      long produceTime = properties.getTimestamp().getTime();
-      long consumeTime = NANOSECONDS.toMillis(startTimeMillis);
-      span.setAttribute("rabbitmq.record.queue_time_ms", Math.max(0L, consumeTime - produceTime));
+      long produceTimeMillis = properties.getTimestamp().getTime();
+      span.setAttribute(
+          "rabbitmq.record.queue_time_ms", Math.max(0L, startTimeMillis - produceTimeMillis));
     }
 
     return parentContext.with(span);
@@ -165,11 +164,11 @@ public class RabbitTracer extends BaseTracer {
     }
   }
 
-  private String normalizeExchangeName(String exchange) {
+  private static String normalizeExchangeName(String exchange) {
     return exchange == null || exchange.isEmpty() ? "<default>" : exchange;
   }
 
-  public void onCommand(Span span, Command command) {
+  public static void onCommand(Span span, Command command) {
     String name = command.getMethod().protocolMethodName();
 
     if (!name.equals("basic.publish")) {

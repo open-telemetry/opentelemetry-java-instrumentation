@@ -193,7 +193,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
     def client = new AmazonS3Client(CREDENTIALS_PROVIDER_CHAIN)
     client.addRequestHandler(new RequestHandler2() {
       void beforeRequest(Request<?> request) {
-        throw new RuntimeException("bad handler")
+        throw new IllegalStateException("bad handler")
       }
     })
 
@@ -202,7 +202,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
 
     then:
     !Span.current().getSpanContext().isValid()
-    thrown RuntimeException
+    thrown IllegalStateException
 
     assertTraces(1) {
       trace(0, 1) {
@@ -210,7 +210,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           name "S3.GetObject"
           kind CLIENT
           status ERROR
-          errorEvent RuntimeException, "bad handler"
+          errorEvent IllegalStateException, "bad handler"
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP

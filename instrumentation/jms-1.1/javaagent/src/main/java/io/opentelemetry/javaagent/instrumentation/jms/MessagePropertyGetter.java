@@ -27,7 +27,7 @@ public final class MessagePropertyGetter implements TextMapGetter<MessageWithDes
     try {
       value = carrier.getMessage().getObjectProperty(propName);
     } catch (JMSException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
     if (value instanceof String) {
       return (String) value;

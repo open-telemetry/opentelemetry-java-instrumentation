@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.annotations.UnstableApi;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A builder of {@link Instrumenter}. Instrumentation libraries should generally expose their own
@@ -34,12 +35,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
 
-  SpanKindExtractor<? super REQUEST> spanKindExtractor = null;
+  SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.jdk();
-  StartTimeExtractor<REQUEST> startTimeExtractor = null;
-  EndTimeExtractor<RESPONSE> endTimeExtractor = null;
+  @Nullable StartTimeExtractor<REQUEST> startTimeExtractor = null;
+  @Nullable EndTimeExtractor<RESPONSE> endTimeExtractor = null;
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,

@@ -21,7 +21,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-public class ClasspathUtils {
+public final class ClasspathUtils {
 
   public static byte[] convertToByteArray(InputStream resource) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -159,4 +159,6 @@ public class ClasspathUtils {
       return className;
     }
   }
+
+  private ClasspathUtils() {}
 }

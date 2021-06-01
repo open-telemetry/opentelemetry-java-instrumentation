@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
-public class ParentContextExtractor {
+public final class ParentContextExtractor {
 
   private static final String AWS_TRACE_HEADER_ENV_KEY = "_X_AMZN_TRACE_ID";
 
@@ -73,4 +73,6 @@ public class ParentContextExtractor {
       return map.get(s.toLowerCase(Locale.ROOT));
     }
   }
+
+  private ParentContextExtractor() {}
 }

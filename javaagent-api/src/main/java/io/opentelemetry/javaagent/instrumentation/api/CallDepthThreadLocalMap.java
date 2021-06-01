@@ -20,7 +20,7 @@ package io.opentelemetry.javaagent.instrumentation.api;
  * <p>In short, the semantic of both methods is the same: they will return value 0 if and only if
  * current method invocation is the first one for the current call stack.
  */
-public class CallDepthThreadLocalMap {
+public final class CallDepthThreadLocalMap {
 
   private static final ClassValue<ThreadLocalDepth> TLS =
       new ClassValue<ThreadLocalDepth>() {
@@ -52,4 +52,6 @@ public class CallDepthThreadLocalMap {
       return new CallDepth();
     }
   }
+
+  private CallDepthThreadLocalMap() {}
 }

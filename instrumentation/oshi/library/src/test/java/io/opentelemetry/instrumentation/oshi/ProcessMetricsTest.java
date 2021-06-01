@@ -19,7 +19,11 @@ public class ProcessMetricsTest extends AbstractMetricsTest {
     testMetricExporter.waitForData();
     intervalMetricReader.shutdown();
 
-    verify("runtime.java.memory", "bytes", MetricDataType.LONG_SUM, true);
-    verify("runtime.java.cpu_time", "seconds", MetricDataType.DOUBLE_GAUGE, true);
+    verify("runtime.java.memory", "bytes", MetricDataType.LONG_SUM, /* checkNonZeroValue= */ true);
+    verify(
+        "runtime.java.cpu_time",
+        "seconds",
+        MetricDataType.DOUBLE_GAUGE,
+        /* checkNonZeroValue= */ true);
   }
 }

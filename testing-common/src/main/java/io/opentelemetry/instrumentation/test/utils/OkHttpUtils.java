@@ -12,7 +12,7 @@ import okhttp3.logging.HttpLoggingInterceptor.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OkHttpUtils {
+public final class OkHttpUtils {
 
   private static final Logger CLIENT_LOGGER = LoggerFactory.getLogger("http-client");
 
@@ -49,4 +49,6 @@ public class OkHttpUtils {
   public static OkHttpClient client(boolean followRedirects) {
     return clientBuilder().followRedirects(followRedirects).build();
   }
+
+  private OkHttpUtils() {}
 }

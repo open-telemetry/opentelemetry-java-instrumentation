@@ -208,7 +208,7 @@ public class TracingSession implements Session {
     return query == null ? "" : query;
   }
 
-  private void addCallbackToEndSpan(
+  private static void addCallbackToEndSpan(
       ResultSetFuture future, Context context, CassandraRequest request) {
     Futures.addCallback(
         future,

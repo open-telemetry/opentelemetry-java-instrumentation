@@ -60,7 +60,7 @@ final class MongoClientTracer
         jsonWriterSettings != null
             ? new JsonWriter(stringWriter, jsonWriterSettings)
             : new JsonWriter(stringWriter);
-    writeScrubbed(command, jsonWriter, true);
+    writeScrubbed(command, jsonWriter, /* isRoot= */ true);
     // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
     // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
     StringBuffer buf = stringWriter.getBuffer();
@@ -147,7 +147,7 @@ final class MongoClientTracer
   }
 
   @Nullable
-  private JsonWriterSettings createJsonWriterSettings(int maxNormalizedQueryLength) {
+  private static JsonWriterSettings createJsonWriterSettings(int maxNormalizedQueryLength) {
     JsonWriterSettings settings = null;
     try {
       // The static JsonWriterSettings.builder() method was introduced in the 3.5 release
@@ -234,7 +234,7 @@ final class MongoClientTracer
 
   private static boolean writeScrubbed(BsonValue origin, JsonWriter writer) {
     if (origin.isDocument()) {
-      return writeScrubbed(origin.asDocument(), writer, false);
+      return writeScrubbed(origin.asDocument(), writer, /* isRoot= */ false);
     } else if (origin.isArray()) {
       return writeScrubbed(origin.asArray(), writer);
     } else {

@@ -27,7 +27,7 @@ abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServerTest {
       kind INTERNAL
       if (endpoint == EXCEPTION) {
         status StatusCode.ERROR
-        errorEvent(RuntimeException, EXCEPTION.body)
+        errorEvent(IllegalStateException, EXCEPTION.body)
       } else if (endpoint == NOT_FOUND) {
         status StatusCode.ERROR
         if (Boolean.getBoolean("testLatestDeps")) {

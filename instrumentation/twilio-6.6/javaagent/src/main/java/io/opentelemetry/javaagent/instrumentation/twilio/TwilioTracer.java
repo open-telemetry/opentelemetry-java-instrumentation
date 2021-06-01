@@ -8,12 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -44,8 +46,8 @@ public class TwilioTracer extends BaseTracer {
   }
 
   /** Decorate trace based on service execution metadata. */
-  private String spanNameOnServiceExecution(Object serviceExecutor, String methodName) {
-    return spanNameForMethod(serviceExecutor.getClass(), methodName);
+  private static String spanNameOnServiceExecution(Object serviceExecutor, String methodName) {
+    return SpanNames.spanNameForMethod(serviceExecutor.getClass(), methodName);
   }
 
   /** Annotate the span with the results of the operation. */
@@ -54,7 +56,9 @@ public class TwilioTracer extends BaseTracer {
     // Unwrap ListenableFuture (if present)
     if (result instanceof ListenableFuture) {
       try {
-        result = ((ListenableFuture) result).get(0, TimeUnit.MICROSECONDS);
+        result =
+            Uninterruptibles.getUninterruptibly(
+                (ListenableFuture<?>) result, 0, TimeUnit.MICROSECONDS);
       } catch (Exception e) {
         log.debug("Error unwrapping result", e);
       }
@@ -108,7 +112,7 @@ public class TwilioTracer extends BaseTracer {
    * Helper method for calling a getter using reflection. This will be slow, so only use when
    * required.
    */
-  private void setTagIfPresent(Span span, Object result, String tag, String getter) {
+  private static void setTagIfPresent(Span span, Object result, String tag, String getter) {
     try {
       Method method = result.getClass().getMethod(getter);
       Object value = method.invoke(result);

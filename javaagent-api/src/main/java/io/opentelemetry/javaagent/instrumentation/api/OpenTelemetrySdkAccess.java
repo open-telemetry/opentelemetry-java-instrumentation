@@ -25,11 +25,11 @@ public final class OpenTelemetrySdkAccess {
     void run(int timeout, TimeUnit unit);
   }
 
-  private static volatile ForceFlusher FORCE_FLUSH;
+  private static volatile ForceFlusher forceFlush;
 
   /** Forces flushing of pending spans. */
   public static void forceFlush(int timeout, TimeUnit unit) {
-    FORCE_FLUSH.run(timeout, unit);
+    forceFlush.run(timeout, unit);
   }
 
   /**
@@ -38,11 +38,11 @@ public final class OpenTelemetrySdkAccess {
    * call this.
    */
   public static void internalSetForceFlush(ForceFlusher forceFlush) {
-    if (FORCE_FLUSH != null) {
+    if (OpenTelemetrySdkAccess.forceFlush != null) {
       // Only possible by misuse of this API, just ignore.
       return;
     }
-    FORCE_FLUSH = forceFlush;
+    OpenTelemetrySdkAccess.forceFlush = forceFlush;
   }
 
   private OpenTelemetrySdkAccess() {}

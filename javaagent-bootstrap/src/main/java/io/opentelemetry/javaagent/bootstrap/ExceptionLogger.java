@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>See io.opentelemetry.javaagent.tooling.ExceptionHandlers
  */
-public class ExceptionLogger {
+public final class ExceptionLogger {
   public static final Logger LOGGER = LoggerFactory.getLogger(ExceptionLogger.class);
+
+  private ExceptionLogger() {}
 }

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class TestAgentListenerAccess {
+public final class TestAgentListenerAccess {
 
   private static final MethodHandle reset;
   private static final MethodHandle getInstrumentationErrorCount;
@@ -45,7 +45,7 @@ public class TestAgentListenerAccess {
               "addSkipErrorCondition",
               methodType(void.class, BiFunction.class));
     } catch (Throwable t) {
-      throw new Error("Could not initialize accessors for TestAgentListener.", t);
+      throw new AssertionError("Could not initialize accessors for TestAgentListener.", t);
     }
   }
 
@@ -53,7 +53,7 @@ public class TestAgentListenerAccess {
     try {
       reset.invokeExact();
     } catch (Throwable t) {
-      throw new Error("Could not invoke TestAgentListener.reset", t);
+      throw new AssertionError("Could not invoke TestAgentListener.reset", t);
     }
   }
 
@@ -61,7 +61,8 @@ public class TestAgentListenerAccess {
     try {
       return (int) getInstrumentationErrorCount.invokeExact();
     } catch (Throwable t) {
-      throw new Error("Could not invoke TestAgentListener.getInstrumentationErrorCount", t);
+      throw new AssertionError(
+          "Could not invoke TestAgentListener.getInstrumentationErrorCount", t);
     }
   }
 
@@ -70,7 +71,8 @@ public class TestAgentListenerAccess {
     try {
       return (List<String>) getIgnoredButTransformedClassNames.invokeExact();
     } catch (Throwable t) {
-      throw new Error("Could not invoke TestAgentListener.getIgnoredButTransformedClassNames");
+      throw new AssertionError(
+          "Could not invoke TestAgentListener.getIgnoredButTransformedClassNames", t);
     }
   }
 
@@ -78,7 +80,8 @@ public class TestAgentListenerAccess {
     try {
       addSkipTransformationCondition.invokeExact(condition);
     } catch (Throwable t) {
-      throw new Error("Could not invoke TestAgentListener.addSkipTransformationCondition");
+      throw new AssertionError(
+          "Could not invoke TestAgentListener.addSkipTransformationCondition", t);
     }
   }
 
@@ -86,7 +89,9 @@ public class TestAgentListenerAccess {
     try {
       addSkipErrorCondition.invokeExact(condition);
     } catch (Throwable t) {
-      throw new Error("Could not invoke TestAgentListener.addSkipErrorCondition");
+      throw new AssertionError("Could not invoke TestAgentListener.addSkipErrorCondition", t);
     }
   }
+
+  private TestAgentListenerAccess() {}
 }

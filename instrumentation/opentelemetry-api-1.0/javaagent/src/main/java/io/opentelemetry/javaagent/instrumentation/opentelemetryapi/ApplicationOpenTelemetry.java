@@ -11,6 +11,8 @@ import application.io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propagation.ApplicationContextPropagators;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerProvider;
 
+// Our convention for accessing agent package
+@SuppressWarnings("UnnecessarilyFullyQualified")
 public class ApplicationOpenTelemetry implements OpenTelemetry {
 
   public static final OpenTelemetry INSTANCE = new ApplicationOpenTelemetry();

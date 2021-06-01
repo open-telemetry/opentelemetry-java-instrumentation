@@ -396,7 +396,7 @@ class SpringWebfluxTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           status ERROR
-          errorEvent(RuntimeException, "bad things happen")
+          errorEvent(IllegalStateException, "bad things happen")
           attributes {
             if (annotatedMethod == null) {
               // Functional API

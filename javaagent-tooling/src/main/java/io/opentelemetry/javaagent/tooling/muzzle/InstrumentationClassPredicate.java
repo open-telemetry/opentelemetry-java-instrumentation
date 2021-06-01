@@ -46,7 +46,7 @@ public final class InstrumentationClassPredicate {
     return !isInstrumentationClass(className) && !isProvidedByJavaagent(className);
   }
 
-  private boolean isProvidedByJavaagent(String className) {
+  private static boolean isProvidedByJavaagent(String className) {
     return className.startsWith(JAVAAGENT_API_PACKAGE)
         || className.startsWith(INSTRUMENTATION_API_PACKAGE)
         || className.startsWith("io.opentelemetry.javaagent.bootstrap.")

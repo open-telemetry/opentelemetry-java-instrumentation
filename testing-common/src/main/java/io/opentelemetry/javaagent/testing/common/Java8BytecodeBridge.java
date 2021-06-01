@@ -18,4 +18,6 @@ public final class Java8BytecodeBridge {
   public static Context currentContext() {
     return Context.current();
   }
+
+  private Java8BytecodeBridge() {}
 }

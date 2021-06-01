@@ -10,6 +10,8 @@ import application.io.opentelemetry.api.metrics.LongUpDownSumObserverBuilder;
 import application.io.opentelemetry.api.metrics.common.Labels;
 import java.util.function.Consumer;
 
+// For observers, which have no API, there might be a better pattern than wrapping.
+@SuppressWarnings("FieldCanBeLocal")
 class ApplicationLongUpDownSumObserver implements LongUpDownSumObserver {
 
   private final io.opentelemetry.api.metrics.LongUpDownSumObserver agentLongUpDownSumObserver;

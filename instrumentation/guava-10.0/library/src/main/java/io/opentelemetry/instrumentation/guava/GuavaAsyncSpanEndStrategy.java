@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.guava;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.Uninterruptibles;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
@@ -29,9 +30,9 @@ public enum GuavaAsyncSpanEndStrategy implements AsyncSpanEndStrategy {
     return future;
   }
 
-  private void endSpan(BaseTracer tracer, Context context, ListenableFuture<?> future) {
+  private static void endSpan(BaseTracer tracer, Context context, ListenableFuture<?> future) {
     try {
-      future.get();
+      Uninterruptibles.getUninterruptibly(future);
       tracer.end(context);
     } catch (Throwable exception) {
       tracer.endExceptionally(context, exception);

@@ -105,7 +105,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                     .getDeclaredConstructor()
                     .newInstance();
       } catch (Exception e) {
-        throw new RuntimeException(e);
+        throw new IllegalStateException(e);
       }
       super.visit(version, access, name, signature, superName, interfaces);
     }
@@ -213,7 +213,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                 referenceType.getInternalName(),
                 "newBuilder",
                 Type.getMethodDescriptor(referenceBuilderType, stringType),
-                false);
+                /* isInterface= */ false);
             // stack: map, className, builder
 
             for (Source source : reference.getSources()) {
@@ -224,7 +224,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                   referenceBuilderType.getInternalName(),
                   "addSource",
                   Type.getMethodDescriptor(referenceBuilderType, stringType, Type.INT_TYPE),
-                  false);
+                  /* isInterface= */ false);
             }
             // stack: map, className, builder
             for (Flag flag : reference.getFlags()) {
@@ -236,7 +236,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                   referenceBuilderType.getInternalName(),
                   "addFlag",
                   Type.getMethodDescriptor(referenceBuilderType, referenceFlagType),
-                  false);
+                  /* isInterface= */ false);
             }
             // stack: map, className, builder
             if (null != reference.getSuperClassName()) {
@@ -246,7 +246,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                   referenceBuilderType.getInternalName(),
                   "setSuperClassName",
                   Type.getMethodDescriptor(referenceBuilderType, stringType),
-                  false);
+                  /* isInterface= */ false);
             }
             // stack: map, className, builder
             for (String interfaceName : reference.getInterfaceNames()) {
@@ -256,7 +256,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                   referenceBuilderType.getInternalName(),
                   "addInterfaceName",
                   Type.getMethodDescriptor(referenceBuilderType, stringType),
-                  false);
+                  /* isInterface= */ false);
             }
             // stack: map, className, builder
             for (FieldRef field : reference.getFields()) {
@@ -279,7 +279,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                       stringType,
                       typeType,
                       Type.BOOLEAN_TYPE),
-                  false);
+                  /* isInterface= */ false);
             }
             // stack: map, className, builder
             for (MethodRef method : reference.getMethods()) {
@@ -321,7 +321,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                       stringType,
                       typeType,
                       typeArrayType),
-                  false);
+                  /* isInterface= */ false);
             }
             // stack: map, className, builder
             mv.visitMethodInsn(
@@ -329,7 +329,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                 referenceBuilderType.getInternalName(),
                 "build",
                 Type.getMethodDescriptor(referenceType),
-                false);
+                /* isInterface= */ false);
             // stack: map, className, classRef
 
             mv.visitMethodInsn(
@@ -337,7 +337,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                 "java/util/Map",
                 "put",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                true);
+                /* isInterface= */ true);
             // stack: previousValue
             mv.visitInsn(Opcodes.POP);
             // stack: <empty>
@@ -351,7 +351,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       mv.visitEnd();
     }
 
-    private void writeNewMap(MethodVisitor mv, int size) {
+    private static void writeNewMap(MethodVisitor mv, int size) {
       mv.visitTypeInsn(Opcodes.NEW, "java/util/HashMap");
       // stack: map
       mv.visitInsn(Opcodes.DUP);
@@ -362,10 +362,11 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       // stack: map, map, size
       mv.visitLdcInsn(0.75f);
       // stack: map, map, size, loadFactor
-      mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/HashMap", "<init>", "(IF)V", false);
+      mv.visitMethodInsn(
+          Opcodes.INVOKESPECIAL, "java/util/HashMap", "<init>", "(IF)V", /* isInterface= */ false);
     }
 
-    private void writeSourcesArray(MethodVisitor mv, Set<Source> sources) {
+    private static void writeSourcesArray(MethodVisitor mv, Set<Source> sources) {
       Type referenceSourceType = Type.getType(Source.class);
 
       mv.visitLdcInsn(sources.size());
@@ -385,14 +386,14 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             referenceSourceType.getInternalName(),
             "<init>",
             "(Ljava/lang/String;I)V",
-            false);
+            /* isInterface= */ false);
 
         mv.visitInsn(Opcodes.AASTORE);
         ++i;
       }
     }
 
-    private void writeFlagsArray(MethodVisitor mv, Set<Flag> flags) {
+    private static void writeFlagsArray(MethodVisitor mv, Set<Flag> flags) {
       Type referenceFlagType = Type.getType(Flag.class);
 
       mv.visitLdcInsn(flags.size());
@@ -413,13 +414,13 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
         Pattern.compile("(?<enumClass>.*)\\$[0-9]+$");
 
     // drops "$1" suffix for enum constants that override/implement super class methods
-    private String getEnumClassInternalName(Flag flag) {
+    private static String getEnumClassInternalName(Flag flag) {
       String fullInternalName = Utils.getInternalName(flag.getClass());
       Matcher m = ANONYMOUS_ENUM_CONSTANT_CLASS.matcher(fullInternalName);
       return m.matches() ? m.group("enumClass") : fullInternalName;
     }
 
-    private void writeType(MethodVisitor mv, String descriptor) {
+    private static void writeType(MethodVisitor mv, String descriptor) {
       Type typeType = Type.getType(Type.class);
 
       mv.visitLdcInsn(descriptor);
@@ -428,7 +429,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
           typeType.getInternalName(),
           "getType",
           Type.getMethodDescriptor(typeType, Type.getType(String.class)),
-          false);
+          /* isInterface= */ false);
     }
 
     private void generateMuzzleHelperClassNamesMethod(ReferenceCollector collector) {
@@ -456,7 +457,8 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
       // stack: list, list
       mv.visitLdcInsn(helperClassNames.size());
       // stack: list, list, size
-      mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/ArrayList", "<init>", "(I)V", false);
+      mv.visitMethodInsn(
+          Opcodes.INVOKESPECIAL, "java/util/ArrayList", "<init>", "(I)V", /* isInterface= */ false);
       // stack: list
       mv.visitVarInsn(Opcodes.ASTORE, 1);
       // stack: <empty>
@@ -468,7 +470,11 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
             mv.visitLdcInsn(helperClassName);
             // stack: list, helperClassName
             mv.visitMethodInsn(
-                Opcodes.INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true);
+                Opcodes.INVOKEINTERFACE,
+                "java/util/List",
+                "add",
+                "(Ljava/lang/Object;)Z",
+                /* isInterface= */ true);
             // stack: added
             mv.visitInsn(Opcodes.POP);
             // stack: <empty>
@@ -519,7 +525,7 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
                 "java/util/Map",
                 "put",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                true);
+                /* isInterface= */ true);
             // stack: previousValue
             mv.visitInsn(Opcodes.POP);
             // stack: <empty>

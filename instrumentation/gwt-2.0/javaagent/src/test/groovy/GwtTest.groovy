@@ -146,7 +146,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
           name "test.gwt.shared.MessageService/sendMessage"
           kind SpanKind.INTERNAL
           childOf(span(0))
-          errorEvent(IllegalArgumentException)
+          errorEvent(IOException)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "gwt"
             "${SemanticAttributes.RPC_SERVICE.key}" "test.gwt.shared.MessageService"

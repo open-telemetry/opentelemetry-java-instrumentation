@@ -17,6 +17,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+// Our convention for accessing agent package
+@SuppressWarnings("UnnecessarilyFullyQualified")
 public class OpenTelemetryMetricsInstrumentation implements TypeInstrumentation {
 
   @Override

@@ -39,7 +39,7 @@ class KubernetesRequestDigest {
 
       return new KubernetesRequestDigest(
           urlPath,
-          false,
+          /* isNonResourceRequest= */ false,
           resourceMeta,
           KubernetesVerb.of(
               request.method(), hasNamePathParameter(resourceMeta), hasWatchParameter(request)));
@@ -49,8 +49,7 @@ class KubernetesRequestDigest {
   }
 
   private static KubernetesRequestDigest nonResource(String urlPath) {
-    KubernetesRequestDigest digest = new KubernetesRequestDigest(urlPath, true, null, null);
-    return digest;
+    return new KubernetesRequestDigest(urlPath, /* isNonResourceRequest= */ true, null, null);
   }
 
   public static boolean isResourceRequest(String urlPath) {
