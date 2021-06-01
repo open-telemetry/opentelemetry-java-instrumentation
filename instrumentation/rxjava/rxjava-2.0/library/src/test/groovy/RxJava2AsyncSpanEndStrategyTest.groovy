@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
 import io.opentelemetry.instrumentation.rxjava2.RxJava2AsyncSpanEndStrategy
@@ -26,18 +27,24 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import spock.lang.Specification
 
-import java.util.concurrent.CancellationException
-
 class RxJava2AsyncSpanEndStrategyTest extends Specification {
   BaseTracer tracer
 
   Context context
 
-  def underTest = RxJava2AsyncSpanEndStrategy.INSTANCE
+  Span span
+
+  def underTest = RxJava2AsyncSpanEndStrategy.create()
+
+  def underTestWithExperimentalAttributes = RxJava2AsyncSpanEndStrategy.newBuilder()
+    .setCaptureExperimentalSpanAttributes(true)
+    .build()
 
   void setup() {
     tracer = Mock()
     context = Mock()
+    span = Mock()
+    span.storeInContext(_) >> { callRealMethod() }
   }
 
   static class CompletableTest extends RxJava2AsyncSpanEndStrategyTest {
@@ -118,6 +125,7 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       given:
       def source = CompletableSubject.create()
       def observer = new TestObserver()
+      def context = span.storeInContext(Context.root())
 
       when:
       def result = (Completable) underTest.end(tracer, context, source)
@@ -125,12 +133,36 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
 
       then:
       0 * tracer._
+      0 * span._
 
       when:
       observer.cancel()
 
       then:
-      1 * tracer.endExceptionally(context, _ as CancellationException)
+      1 * tracer.end(context)
+      0 * span.setAttribute(_)
+    }
+
+    def "ends span when cancelled and capturing experimental span attributes"() {
+      given:
+      def source = CompletableSubject.create()
+      def observer = new TestObserver()
+      def context = span.storeInContext(Context.root())
+
+      when:
+      def result = (Completable) underTestWithExperimentalAttributes.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+      0 * span._
+
+      when:
+      observer.cancel()
+
+      then:
+      1 * tracer.end(context)
+      1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
 
     def "ends span once for multiple subscribers"() {
@@ -271,6 +303,7 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       given:
       def source = MaybeSubject.create()
       def observer = new TestObserver()
+      def context = span.storeInContext(Context.root())
 
       when:
       def result = (Maybe<?>) underTest.end(tracer, context, source)
@@ -283,7 +316,30 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       observer.cancel()
 
       then:
-      1 * tracer.endExceptionally(context, _ as CancellationException)
+      1 * tracer.end(context)
+      0 * span.setAttribute(_)
+    }
+
+    def "ends span when cancelled and capturing experimental span attributes"() {
+      given:
+      def source = MaybeSubject.create()
+      def observer = new TestObserver()
+      def context = span.storeInContext(Context.root())
+
+      when:
+      def result = (Maybe<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+      0 * span._
+
+      when:
+      observer.cancel()
+
+      then:
+      1 * tracer.end(context)
+      1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
 
     def "ends span once for multiple subscribers"() {
@@ -394,6 +450,7 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       given:
       def source = SingleSubject.create()
       def observer = new TestObserver()
+      def context = span.storeInContext(Context.root())
 
       when:
       def result = (Single<?>) underTest.end(tracer, context, source)
@@ -406,7 +463,30 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       observer.cancel()
 
       then:
-      1 * tracer.endExceptionally(context, _ as CancellationException)
+      1 * tracer.end(context)
+      0 * span.setAttribute(_)
+    }
+
+    def "ends span when cancelled and capturing experimental span attributes"() {
+      given:
+      def source = SingleSubject.create()
+      def observer = new TestObserver()
+      def context = span.storeInContext(Context.root())
+
+      when:
+      def result = (Single<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+      0 * span._
+
+      when:
+      observer.cancel()
+
+      then:
+      1 * tracer.end(context)
+      1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
 
     def "ends span once for multiple subscribers"() {
@@ -517,6 +597,7 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       given:
       def source = UnicastSubject.create()
       def observer = new TestObserver()
+      def context = span.storeInContext(Context.root())
 
       when:
       def result = (Observable<?>) underTest.end(tracer, context, source)
@@ -529,7 +610,30 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       observer.cancel()
 
       then:
-      1 * tracer.endExceptionally(context, _ as CancellationException)
+      1 * tracer.end(context)
+      0 * span.setAttribute(_)
+    }
+
+    def "ends span when cancelled and capturing experimental span attributes"() {
+      given:
+      def source = UnicastSubject.create()
+      def observer = new TestObserver()
+      def context = span.storeInContext(Context.root())
+
+      when:
+      def result = (Observable<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+      0 * span._
+
+      when:
+      observer.cancel()
+
+      then:
+      1 * tracer.end(context)
+      1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
 
     def "ends span once for multiple subscribers"() {
@@ -637,6 +741,7 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       given:
       def source = UnicastProcessor.create()
       def observer = new TestSubscriber()
+      def context = span.storeInContext(Context.root())
 
       when:
       def result = (Flowable<?>) underTest.end(tracer, context, source)
@@ -649,7 +754,30 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       observer.cancel()
 
       then:
-      1 * tracer.endExceptionally(context, _ as CancellationException)
+      1 * tracer.end(context)
+      0 * span.setAttribute(_)
+    }
+
+    def "ends span when cancelled and capturing experimental span attributes"() {
+      given:
+      def source = UnicastProcessor.create()
+      def observer = new TestSubscriber()
+      def context = span.storeInContext(Context.root())
+
+      when:
+      def result = (Flowable<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+      0 * span._
+
+      when:
+      observer.cancel()
+
+      then:
+      1 * tracer.end(context)
+      1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
 
     def "ends span once for multiple subscribers"() {
@@ -757,6 +885,7 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       given:
       def source = UnicastProcessor.create()
       def observer = new TestSubscriber()
+      def context = span.storeInContext(Context.root())
 
       when:
       def result = (ParallelFlowable<?>) underTest.end(tracer, context, source.parallel())
@@ -769,7 +898,30 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       observer.cancel()
 
       then:
-      1 * tracer.endExceptionally(context, _ as CancellationException)
+      1 * tracer.end(context)
+      0 * span.setAttribute(_)
+    }
+
+    def "ends span when cancelled and capturing experimental span attributes"() {
+      given:
+      def source = UnicastProcessor.create()
+      def observer = new TestSubscriber()
+      def context = span.storeInContext(Context.root())
+
+      when:
+      def result = (ParallelFlowable<?>) underTestWithExperimentalAttributes.end(tracer, context, source.parallel())
+      result.sequential().subscribe(observer)
+
+      then:
+      0 * tracer._
+      0 * span._
+
+      when:
+      observer.cancel()
+
+      then:
+      1 * tracer.end(context)
+      1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
   }
 
@@ -824,6 +976,7 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       given:
       def source = new CustomPublisher()
       def observer = new TestSubscriber()
+      def context = span.storeInContext(Context.root())
 
       when:
       def result = (Flowable<?>) underTest.end(tracer, context, source)
@@ -836,7 +989,30 @@ class RxJava2AsyncSpanEndStrategyTest extends Specification {
       observer.cancel()
 
       then:
-      1 * tracer.endExceptionally(context, _ as CancellationException)
+      1 * tracer.end(context)
+      0 * span.setAttribute(_)
+    }
+
+    def "ends span when cancelled and capturing experimental span attributes"() {
+      given:
+      def source = new CustomPublisher()
+      def observer = new TestSubscriber()
+      def context = span.storeInContext(Context.root())
+
+      when:
+      def result = (Flowable<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      result.subscribe(observer)
+
+      then:
+      0 * tracer._
+      0 * span._
+
+      when:
+      observer.cancel()
+
+      then:
+      1 * tracer.end(context)
+      1 * span.setAttribute({ it.getKey() == "rxjava.canceled" }, true)
     }
   }
 

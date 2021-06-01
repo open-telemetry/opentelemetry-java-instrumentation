@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.reactor
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
 import reactor.core.publisher.Flux
@@ -20,11 +21,19 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
 
   Context context
 
-  def underTest = ReactorAsyncSpanEndStrategy.INSTANCE
+  Span span
+
+  def underTest = ReactorAsyncSpanEndStrategy.create()
+
+  def underTestWithExperimentalAttributes = ReactorAsyncSpanEndStrategy.newBuilder()
+    .setCaptureExperimentalSpanAttributes(true)
+    .build()
 
   void setup() {
     tracer = Mock()
     context = Mock()
+    span = Mock()
+    span.storeInContext(_) >> { callRealMethod() }
   }
 
   static class MonoTest extends ReactorAsyncSpanEndStrategyTest {
@@ -137,6 +146,7 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       given:
       def source = UnicastProcessor.<String>create()
       def mono = source.singleOrEmpty()
+      def context = span.storeInContext(Context.root())
 
       when:
       def result = (Mono<?>) underTest.end(tracer, context, mono)
@@ -150,7 +160,30 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
       verifier.thenCancel().verify()
 
       then:
-      1 * tracer.endExceptionally(context, _ as CancellationException)
+      1 * tracer.end(context)
+      0 * span.setAttribute(_)
+    }
+
+    def "ends span when cancelled and capturing experimental span attributes"() {
+      given:
+      def source = UnicastProcessor.<String>create()
+      def mono = source.singleOrEmpty()
+      def context = span.storeInContext(Context.root())
+
+      when:
+      def result = (Mono<?>) underTestWithExperimentalAttributes.end(tracer, context, mono)
+      def verifier = StepVerifier.create(result)
+        .expectSubscription()
+
+      then:
+      0 * tracer._
+
+      when:
+      verifier.thenCancel().verify()
+
+      then:
+      1 * tracer.end(context)
+      1 * span.setAttribute({ it.getKey() == "reactor.canceled" }, true)
     }
 
     def "ends span once for multiple subscribers"() {
@@ -278,6 +311,7 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
     def "ends span when cancelled"() {
       given:
       def source = UnicastProcessor.<String>create()
+      def context = span.storeInContext(Context.root())
 
       when:
       def result = (Flux<?>) underTest.end(tracer, context, source)
@@ -292,7 +326,30 @@ class ReactorAsyncSpanEndStrategyTest extends Specification {
         .verify()
 
       then:
-      1 * tracer.endExceptionally(context, _ as CancellationException)
+      1 * tracer.end(context)
+      0 * span.setAttribute(_)
+    }
+
+    def "ends span when cancelled and capturing experimental span attributes"() {
+      given:
+      def source = UnicastProcessor.<String>create()
+      def context = span.storeInContext(Context.root())
+
+      when:
+      def result = (Flux<?>) underTestWithExperimentalAttributes.end(tracer, context, source)
+      def verifier = StepVerifier.create(result)
+        .expectSubscription()
+
+      then:
+      0 * tracer._
+
+      when:
+      verifier.thenCancel()
+        .verify()
+
+      then:
+      1 * tracer.end(context)
+      1 * span.setAttribute({ it.getKey() == "reactor.canceled" }, true)
     }
 
     def "ends span once for multiple subscribers"() {

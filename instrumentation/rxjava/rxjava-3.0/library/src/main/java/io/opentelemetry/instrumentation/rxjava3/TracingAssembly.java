@@ -24,6 +24,7 @@ package io.opentelemetry.instrumentation.rxjava3;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.CompletableObserver;
@@ -228,7 +229,14 @@ public final class TracingAssembly {
   }
 
   private static void enableWithSpanStrategy() {
-    AsyncSpanEndStrategies.getInstance().registerStrategy(RxJava3AsyncSpanEndStrategy.INSTANCE);
+    AsyncSpanEndStrategies.getInstance()
+        .registerStrategy(
+            RxJava3AsyncSpanEndStrategy.newBuilder()
+                .setCaptureExperimentalSpanAttributes(
+                    Config.get()
+                        .getBooleanProperty(
+                            "otel.instrumentation.rxjava.experimental-span-attributes", false))
+                .build());
   }
 
   private static void disableParallel() {
@@ -264,7 +272,7 @@ public final class TracingAssembly {
   }
 
   private static void disableWithSpanStrategy() {
-    AsyncSpanEndStrategies.getInstance().unregisterStrategy(RxJava3AsyncSpanEndStrategy.INSTANCE);
+    AsyncSpanEndStrategies.getInstance().unregisterStrategy(RxJava3AsyncSpanEndStrategy.class);
   }
 
   private static <T> Function<? super T, ? extends T> compose(

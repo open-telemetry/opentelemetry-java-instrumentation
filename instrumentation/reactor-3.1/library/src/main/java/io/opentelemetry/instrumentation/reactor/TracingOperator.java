@@ -23,6 +23,7 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -44,13 +45,20 @@ public final class TracingOperator {
    */
   public static void registerOnEachOperator() {
     Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift());
-    AsyncSpanEndStrategies.getInstance().registerStrategy(ReactorAsyncSpanEndStrategy.INSTANCE);
+    AsyncSpanEndStrategies.getInstance()
+        .registerStrategy(
+            ReactorAsyncSpanEndStrategy.newBuilder()
+                .setCaptureExperimentalSpanAttributes(
+                    Config.get()
+                        .getBooleanProperty(
+                            "otel.instrumentation.reactor.experimental-span-attributes", false))
+                .build());
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
   public static void resetOnEachOperator() {
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
-    AsyncSpanEndStrategies.getInstance().unregisterStrategy(ReactorAsyncSpanEndStrategy.INSTANCE);
+    AsyncSpanEndStrategies.getInstance().unregisterStrategy(ReactorAsyncSpanEndStrategy.class);
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift() {

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rxjava2;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
@@ -17,12 +19,26 @@ import io.reactivex.functions.Action;
 import io.reactivex.functions.BiConsumer;
 import io.reactivex.functions.Consumer;
 import io.reactivex.parallel.ParallelFlowable;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.reactivestreams.Publisher;
 
-public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
-  INSTANCE;
+public final class RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
+  private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
+      AttributeKey.booleanKey("reactor.canceled");
+
+  public static RxJava2AsyncSpanEndStrategy create() {
+    return newBuilder().build();
+  }
+
+  public static RxJava2AsyncSpanEndStrategyBuilder newBuilder() {
+    return new RxJava2AsyncSpanEndStrategyBuilder();
+  }
+
+  private final boolean captureExperimentalSpanAttributes;
+
+  RxJava2AsyncSpanEndStrategy(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
 
   @Override
   public boolean supports(Class<?> returnType) {
@@ -107,7 +123,7 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
    * OnError notifications are received. Multiple notifications can happen anytime multiple
    * subscribers subscribe to the same publisher.
    */
-  private static final class EndOnFirstNotificationConsumer<T> extends AtomicBoolean
+  private final class EndOnFirstNotificationConsumer<T> extends AtomicBoolean
       implements Action, Consumer<Throwable>, BiConsumer<T, Throwable> {
 
     private final BaseTracer tracer;
@@ -125,7 +141,12 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
     }
 
     public void onCancelOrDispose() {
-      accept(new CancellationException());
+      if (compareAndSet(false, true)) {
+        if (captureExperimentalSpanAttributes) {
+          Span.fromContext(context).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+        }
+        tracer.end(context);
+      }
     }
 
     @Override
