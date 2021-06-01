@@ -46,6 +46,13 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   protected static final BASIC_AUTH_KEY = "custom-authorization-header"
   protected static final BASIC_AUTH_VAL = "plain text auth token"
 
+  @Shared
+  def server
+
+  def setupSpec() {
+    server = com.linecorp.armeria.Server.builder()
+  }
+
   @AutoCleanup
   @Shared
   def server = httpServer {
