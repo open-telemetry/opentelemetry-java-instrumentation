@@ -87,6 +87,4 @@ public final class TracingOperator {
       return new TracingSubscriber<>(sub, sub.currentContext());
     }
   }
-
-  private TracingOperator() {}
 }
