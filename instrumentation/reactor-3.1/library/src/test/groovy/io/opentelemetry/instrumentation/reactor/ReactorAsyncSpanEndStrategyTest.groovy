@@ -14,8 +14,6 @@ import reactor.core.publisher.UnicastProcessor
 import reactor.test.StepVerifier
 import spock.lang.Specification
 
-import java.util.concurrent.CancellationException
-
 class ReactorAsyncSpanEndStrategyTest extends Specification {
   BaseTracer tracer
 
