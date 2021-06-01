@@ -28,7 +28,7 @@ public final class SpringIntegrationTracingBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
-  public SpringIntegrationTracingBuilder addAttributeExtractor(
+  public SpringIntegrationTracingBuilder addAttributesExtractor(
       AttributesExtractor<MessageWithChannel, Void> attributesExtractor) {
     additionalAttributeExtractors.add(attributesExtractor);
     return this;
