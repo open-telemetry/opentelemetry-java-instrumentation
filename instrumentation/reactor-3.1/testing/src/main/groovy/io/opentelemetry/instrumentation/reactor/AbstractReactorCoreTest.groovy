@@ -334,7 +334,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
 
     when:
     (0L ..< iterations).forEach { iteration ->
-      def inner = Flux.just("a", "b")
+      def outer = Flux.just("a", "b")
         .map({ it })
         .delayElements(Duration.ofMillis(10))
         .map({ it })
@@ -364,7 +364,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
       // Context must propagate even if only subscribe is in root span scope
       TraceUtils.runUnderTrace("outer") {
         Span.current().setAttribute("iteration", iteration)
-        inner.subscribe()
+        outer.subscribe()
       }
     }
 
