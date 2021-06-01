@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
+package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
-import com.datastax.driver.core.ExecutionInfo;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -28,7 +29,7 @@ final class CassandraSqlAttributesExtractor
   @Override
   @Nullable
   protected String name(CassandraRequest request) {
-    return request.getSession().getLoggedKeyspace();
+    return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 
   @Override
