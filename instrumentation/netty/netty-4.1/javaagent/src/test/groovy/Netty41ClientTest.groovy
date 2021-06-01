@@ -25,6 +25,7 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.test.base.SingleConnection
@@ -110,15 +111,14 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   }
 
   @Override
-  boolean hasClientSpanHttpAttributes(URI uri) {
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
-        return false
-      default:
-        return true
+        return []
     }
+    return super.httpAttributes(uri)
   }
 
   @Override

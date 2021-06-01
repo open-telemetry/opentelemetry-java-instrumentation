@@ -6,6 +6,7 @@
 package client
 
 import io.netty.channel.ConnectTimeoutException
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
@@ -130,15 +131,14 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   }
 
   @Override
-  boolean hasClientSpanHttpAttributes(URI uri) {
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
-        return false
-      default:
-        return true
+        return []
     }
+    return super.httpAttributes(uri)
   }
 
   @Override

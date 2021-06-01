@@ -7,6 +7,7 @@ import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_POR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
@@ -84,15 +85,14 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
-  boolean hasClientSpanHttpAttributes(URI uri) {
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
-        return false
-      default:
-        return true
+        return []
     }
+    return super.httpAttributes(uri)
   }
 
   abstract HttpClient createHttpClient()
