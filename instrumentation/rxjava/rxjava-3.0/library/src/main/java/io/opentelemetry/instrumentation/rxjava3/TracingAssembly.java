@@ -24,7 +24,6 @@ package io.opentelemetry.instrumentation.rxjava3;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.CompletableObserver;
@@ -97,50 +96,66 @@ public final class TracingAssembly {
   @GuardedBy("TracingAssembly.class")
   private static boolean enabled;
 
-  private TracingAssembly() {}
-
-  public static synchronized void enable() {
-    if (enabled) {
-      return;
-    }
-
-    enableObservable();
-
-    enableCompletable();
-
-    enableSingle();
-
-    enableMaybe();
-
-    enableFlowable();
-
-    enableParallel();
-
-    enableWithSpanStrategy();
-
-    enabled = true;
+  public static TracingAssembly create() {
+    return newBuilder().build();
   }
 
-  public static synchronized void disable() {
-    if (!enabled) {
-      return;
+  public static TracingAssemblyBuilder newBuilder() {
+    return new TracingAssemblyBuilder();
+  }
+
+  private final boolean captureExperimentalSpanAttributes;
+
+  TracingAssembly(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
+
+  public void enable() {
+    synchronized (TracingAssembly.class) {
+      if (enabled) {
+        return;
+      }
+
+      enableObservable();
+
+      enableCompletable();
+
+      enableSingle();
+
+      enableMaybe();
+
+      enableFlowable();
+
+      enableParallel();
+
+      enableWithSpanStrategy(captureExperimentalSpanAttributes);
+
+      enabled = true;
     }
+  }
 
-    disableObservable();
+  public void disable() {
+    synchronized (TracingAssembly.class) {
+      if (!enabled) {
+        return;
+      }
 
-    disableCompletable();
+      disableObservable();
 
-    disableSingle();
+      disableCompletable();
 
-    disableMaybe();
+      disableSingle();
 
-    disableFlowable();
+      disableMaybe();
 
-    disableParallel();
+      disableFlowable();
 
-    disableWithSpanStrategy();
+      disableParallel();
 
-    enabled = false;
+      disableWithSpanStrategy();
+
+      enabled = false;
+    }
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -228,14 +243,11 @@ public final class TracingAssembly {
                     }));
   }
 
-  private static void enableWithSpanStrategy() {
+  private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
     AsyncSpanEndStrategies.getInstance()
         .registerStrategy(
             RxJava3AsyncSpanEndStrategy.newBuilder()
-                .setCaptureExperimentalSpanAttributes(
-                    Config.get()
-                        .getBooleanProperty(
-                            "otel.instrumentation.rxjava.experimental-span-attributes", false))
+                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
                 .build());
   }
 

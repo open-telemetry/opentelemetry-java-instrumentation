@@ -23,7 +23,6 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -37,26 +36,37 @@ import reactor.core.publisher.Operators;
 /** Based on Spring Sleuth's Reactor instrumentation. */
 public final class TracingOperator {
 
+  public static TracingOperator create() {
+    return newBuilder().build();
+  }
+
+  public static TracingOperatorBuilder newBuilder() {
+    return new TracingOperatorBuilder();
+  }
+
+  private final boolean captureExperimentalSpanAttributes;
+
+  TracingOperator(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
+
   /**
    * Registers a hook that applies to every operator, propagating {@link Context} to downstream
    * callbacks to ensure spans in the {@link Context} are available throughout the lifetime of a
    * reactive stream. This should generally be called in a static initializer block in your
    * application.
    */
-  public static void registerOnEachOperator() {
+  public void registerOnEachOperator() {
     Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift());
     AsyncSpanEndStrategies.getInstance()
         .registerStrategy(
             ReactorAsyncSpanEndStrategy.newBuilder()
-                .setCaptureExperimentalSpanAttributes(
-                    Config.get()
-                        .getBooleanProperty(
-                            "otel.instrumentation.reactor.experimental-span-attributes", false))
+                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
                 .build());
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
-  public static void resetOnEachOperator() {
+  public void resetOnEachOperator() {
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
     AsyncSpanEndStrategies.getInstance().unregisterStrategy(ReactorAsyncSpanEndStrategy.class);
   }

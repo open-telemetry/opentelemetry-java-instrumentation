@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rxjava2;
 
+import io.opentelemetry.instrumentation.api.config.Config;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class TracingAssemblyActivation {
@@ -19,7 +20,13 @@ public final class TracingAssemblyActivation {
 
   public static void activate(Class<?> clz) {
     if (activated.get(clz).compareAndSet(false, true)) {
-      TracingAssembly.enable();
+      TracingAssembly.newBuilder()
+          .setCaptureExperimentalSpanAttributes(
+              Config.get()
+                  .getBooleanProperty(
+                      "otel.instrumentation.rxjava.experimental-span-attributes", false))
+          .build()
+          .enable();
     }
   }
 
