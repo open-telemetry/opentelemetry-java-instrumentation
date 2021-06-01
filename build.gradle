@@ -79,6 +79,7 @@ allprojects {
 
     tasks.withType(JavaCompile).configureEach {
       options.errorprone {
+        enabled = rootProject.findProperty("disableErrorProne") != "true"
         disableWarningsInGeneratedCode = true
         allDisabledChecksAsWarnings = true
 
