@@ -72,7 +72,7 @@ public abstract class ServerTestController {
     return wrapControllerMethod(
         endpoint,
         () -> {
-          throw new RuntimeException(endpoint.getBody());
+          throw new IllegalStateException(endpoint.getBody());
         });
   }
 

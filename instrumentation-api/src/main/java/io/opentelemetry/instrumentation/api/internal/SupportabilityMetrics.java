@@ -123,9 +123,6 @@ public final class SupportabilityMetrics {
         case CONSUMER:
           consumer.increment();
           break;
-        default:
-          // in case a new kind gets added, we don't want to fail.
-          break;
       }
     }
 
@@ -141,10 +138,8 @@ public final class SupportabilityMetrics {
           return producer.sumThenReset();
         case CONSUMER:
           return consumer.sumThenReset();
-        default:
-          // in case a new kind gets added, we don't want to fail.
-          return 0;
       }
+      return 0;
     }
   }
 }

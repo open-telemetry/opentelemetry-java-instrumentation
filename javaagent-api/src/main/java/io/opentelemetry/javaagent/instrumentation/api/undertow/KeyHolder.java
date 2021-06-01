@@ -30,6 +30,8 @@ import java.util.concurrent.ConcurrentMap;
  * instance of the key.
  */
 // TODO allow instrumentation to have their own classes that should go to bootstrap classloader
-public class KeyHolder {
+public final class KeyHolder {
   public static final ConcurrentMap<Class<?>, Object> contextKeys = new ConcurrentHashMap<>();
+
+  private KeyHolder() {}
 }

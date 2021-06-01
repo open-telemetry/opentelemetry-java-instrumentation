@@ -55,7 +55,7 @@ public final class DecoratorFunctions {
 
   public static final class OnRequestDecorator extends OnMessageDecorator<HttpClientRequest> {
     public OnRequestDecorator(BiConsumer<? super HttpClientRequest, ? super Connection> delegate) {
-      super(delegate, false);
+      super(delegate, /* forceParentContext= */ false);
     }
 
     @Override

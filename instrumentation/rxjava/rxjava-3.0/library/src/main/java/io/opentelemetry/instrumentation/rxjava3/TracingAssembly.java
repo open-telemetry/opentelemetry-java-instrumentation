@@ -40,6 +40,7 @@ import io.reactivex.rxjava3.internal.fuseable.ConditionalSubscriber;
 import io.reactivex.rxjava3.parallel.ParallelFlowable;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import org.checkerframework.checker.lock.qual.GuardedBy;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.reactivestreams.Subscriber;
 
 /**
@@ -57,32 +58,38 @@ public final class TracingAssembly {
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<? super Observable, ? super Observer, ? extends Observer>
       oldOnObservableSubscribe;
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<
           ? super Completable, ? super CompletableObserver, ? extends CompletableObserver>
       oldOnCompletableSubscribe;
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<? super Single, ? super SingleObserver, ? extends SingleObserver>
       oldOnSingleSubscribe;
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<? super Maybe, ? super MaybeObserver, ? extends MaybeObserver>
       oldOnMaybeSubscribe;
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<? super Flowable, ? super Subscriber, ? extends Subscriber>
       oldOnFlowableSubscribe;
 
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static Function<? super ParallelFlowable, ? extends ParallelFlowable>
       oldOnParallelAssembly;
 

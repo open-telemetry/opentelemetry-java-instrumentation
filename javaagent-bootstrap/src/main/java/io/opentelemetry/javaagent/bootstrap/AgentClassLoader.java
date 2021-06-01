@@ -22,6 +22,7 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Classloader used to run the core agent.
@@ -274,7 +275,7 @@ public class AgentClassLoader extends URLClassLoader {
         return new URL(jarBase, jarEntry.getName());
       } catch (MalformedURLException e) {
         throw new IllegalStateException(
-            "Failed to construct url for jar entry " + jarEntry.getName());
+            "Failed to construct url for jar entry " + jarEntry.getName(), e);
       }
     }
 
@@ -368,8 +369,8 @@ public class AgentClassLoader extends URLClassLoader {
 
   private static class AgentClassLoaderUrlConnection extends URLConnection {
     private final JarFile jarFile;
-    private final String entryName;
-    private JarEntry jarEntry;
+    @Nullable private final String entryName;
+    @Nullable private JarEntry jarEntry;
 
     AgentClassLoaderUrlConnection(URL url, JarFile jarFile) {
       super(url);

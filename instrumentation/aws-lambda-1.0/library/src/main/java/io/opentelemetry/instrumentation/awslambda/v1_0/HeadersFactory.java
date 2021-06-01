@@ -14,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class HeadersFactory {
+final class HeadersFactory {
 
   private static final Logger log = LoggerFactory.getLogger(HeadersFactory.class);
 
@@ -35,4 +35,6 @@ class HeadersFactory {
     }
     return null;
   }
+
+  private HeadersFactory() {}
 }

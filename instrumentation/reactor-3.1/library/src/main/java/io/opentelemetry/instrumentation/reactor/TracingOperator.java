@@ -34,7 +34,7 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Operators;
 
 /** Based on Spring Sleuth's Reactor instrumentation. */
-public class TracingOperator {
+public final class TracingOperator {
 
   /**
    * Registers a hook that applies to every operator, propagating {@link Context} to downstream
@@ -69,4 +69,6 @@ public class TracingOperator {
       return new TracingSubscriber<>(sub, sub.currentContext());
     }
   }
+
+  private TracingOperator() {}
 }

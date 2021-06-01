@@ -17,11 +17,13 @@ public final class SpringBatchInstrumentationConfig {
 
   // the item level instrumentation is very chatty so it's disabled by default
   private static final boolean ITEM_TRACING_ENABLED =
-      Config.get().isInstrumentationPropertyEnabled(instrumentationNames(), "item.enabled", false);
+      Config.get()
+          .isInstrumentationPropertyEnabled(
+              instrumentationNames(), "item.enabled", /* defaultEnabled= */ false);
   private static final boolean CREATE_ROOT_SPAN_FOR_CHUNK =
       Config.get()
           .isInstrumentationPropertyEnabled(
-              instrumentationNames(), "experimental.chunk.new-trace", false);
+              instrumentationNames(), "experimental.chunk.new-trace", /* defaultEnabled= */ false);
 
   public static List<String> instrumentationNames() {
     return INSTRUMENTATION_NAMES;

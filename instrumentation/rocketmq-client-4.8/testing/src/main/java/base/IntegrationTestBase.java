@@ -26,17 +26,17 @@ import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.apache.rocketmq.test.util.MQAdmin;
 import org.junit.Assert;
 
-public class IntegrationTestBase {
+public final class IntegrationTestBase {
   public static final InternalLogger logger =
       InternalLoggerFactory.getLogger(IntegrationTestBase.class);
 
-  protected static final String BROKER_NAME_PREFIX = "TestBrokerName_";
-  protected static final AtomicInteger BROKER_INDEX = new AtomicInteger(0);
-  protected static final List<File> TMPE_FILES = new ArrayList<>();
-  protected static final List<BrokerController> BROKER_CONTROLLERS = new ArrayList<>();
-  protected static final List<NamesrvController> NAMESRV_CONTROLLERS = new ArrayList<>();
-  protected static final int COMMIT_LOG_SIZE = 1024 * 1024 * 100;
-  protected static final int INDEX_NUM = 1000;
+  static final String BROKER_NAME_PREFIX = "TestBrokerName_";
+  static final AtomicInteger BROKER_INDEX = new AtomicInteger(0);
+  static final List<File> TMPE_FILES = new ArrayList<>();
+  static final List<BrokerController> BROKER_CONTROLLERS = new ArrayList<>();
+  static final List<NamesrvController> NAMESRV_CONTROLLERS = new ArrayList<>();
+  static final int COMMIT_LOG_SIZE = 1024 * 1024 * 100;
+  static final int INDEX_NUM = 1000;
 
   private static String createTempDir() {
     String path = null;
@@ -130,4 +130,6 @@ public class IntegrationTestBase {
   public static void initTopic(String topic, String nsAddr, String clusterName) {
     MQAdmin.createTopic(nsAddr, clusterName, topic, 20);
   }
+
+  private IntegrationTestBase() {}
 }

@@ -11,6 +11,7 @@ import static org.slf4j.event.Level.WARN;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -28,7 +29,7 @@ public final class TransformSafeLogger {
   private static final boolean ENABLE_TRANSFORM_SAFE_LOGGING =
       Boolean.getBoolean("otel.javaagent.testing.transform-safe-logging.enabled");
 
-  private static final BlockingQueue<LogMessage> logMessageQueue;
+  @Nullable private static final BlockingQueue<LogMessage> logMessageQueue;
 
   static {
     if (ENABLE_TRANSFORM_SAFE_LOGGING) {

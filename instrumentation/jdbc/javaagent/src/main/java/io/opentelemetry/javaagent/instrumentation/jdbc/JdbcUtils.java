@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ public final class JdbcUtils {
 
   private static final Logger log = LoggerFactory.getLogger(JdbcUtils.class);
 
-  private static Field c3poField = null;
+  @Nullable private static Field c3poField = null;
 
   /** Returns the unwrapped connection or null if exception was thrown. */
   public static Connection connectionFromStatement(Statement statement) {

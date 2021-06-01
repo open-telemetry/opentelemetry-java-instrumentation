@@ -134,7 +134,7 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
     assertTraces(1) {
       trace(0, 2) {
         serverSpan(it, 0, getContextPath() + "/greeting/greet")
-        basicSpan(it, 1, "MessageServiceImpl.sendMessage", span(0), new IllegalArgumentException())
+        basicSpan(it, 1, "MessageServiceImpl.sendMessage", span(0), new IOException())
       }
     }
 

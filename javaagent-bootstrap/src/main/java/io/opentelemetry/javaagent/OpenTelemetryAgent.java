@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  *   <li>Do dot touch any logging facilities here so we can configure them later
  * </ul>
  */
-public class OpenTelemetryAgent {
+public final class OpenTelemetryAgent {
   private static final Class<?> thisClass = OpenTelemetryAgent.class;
 
   public static void premain(String agentArgs, Instrumentation inst) {
@@ -101,27 +101,29 @@ public class OpenTelemetryAgent {
         if (agentArgument == null) {
           agentArgument = arg;
         } else {
-          throw new RuntimeException(
-              "Multiple javaagents specified and code source unavailable, not installing tracing agent");
+          throw new IllegalStateException(
+              "Multiple javaagents specified and code source unavailable, "
+                  + "not installing tracing agent");
         }
       }
     }
 
     if (agentArgument == null) {
-      throw new RuntimeException(
-          "Could not find javaagent parameter and code source unavailable, not installing tracing agent");
+      throw new IllegalStateException(
+          "Could not find javaagent parameter and code source unavailable, "
+              + "not installing tracing agent");
     }
 
     // argument is of the form -javaagent:/path/to/java-agent.jar=optionalargumentstring
     Matcher matcher = Pattern.compile("-javaagent:([^=]+).*").matcher(agentArgument);
 
     if (!matcher.matches()) {
-      throw new RuntimeException("Unable to parse javaagent parameter: " + agentArgument);
+      throw new IllegalStateException("Unable to parse javaagent parameter: " + agentArgument);
     }
 
     File javaagentFile = new File(matcher.group(1));
     if (!(javaagentFile.exists() || javaagentFile.isFile())) {
-      throw new RuntimeException("Unable to find javaagent file: " + javaagentFile);
+      throw new IllegalStateException("Unable to find javaagent file: " + javaagentFile);
     }
     javaAgentJarUrl = javaagentFile.toURI().toURL();
     JarFile agentJar = new JarFile(javaagentFile, false);
@@ -163,7 +165,8 @@ public class OpenTelemetryAgent {
       } catch (ReflectiveOperationException e1) {
         // Fallback to default
         System.out.println(
-            "WARNING: Unable to get VM args through reflection.  A custom java.util.logging.LogManager may not work correctly");
+            "WARNING: Unable to get VM args through reflection. "
+                + "A custom java.util.logging.LogManager may not work correctly");
 
         return ManagementFactory.getRuntimeMXBean().getInputArguments();
       }
@@ -177,12 +180,13 @@ public class OpenTelemetryAgent {
     if (thisClass.getCanonicalName().equals(mainClass)) {
       return true;
     }
-    throw new RuntimeException(
+    throw new IllegalStateException(
         "opentelemetry-javaagent is not installed, because class '"
             + thisClass.getCanonicalName()
             + "' is located in '"
             + jarUrl
-            + "'. Make sure you don't have this .class file anywhere, besides opentelemetry-javaagent.jar");
+            + "'. Make sure you don't have this .class file anywhere, "
+            + "besides opentelemetry-javaagent.jar");
   }
 
   /**
@@ -198,4 +202,6 @@ public class OpenTelemetryAgent {
       e.printStackTrace();
     }
   }
+
+  private OpenTelemetryAgent() {}
 }

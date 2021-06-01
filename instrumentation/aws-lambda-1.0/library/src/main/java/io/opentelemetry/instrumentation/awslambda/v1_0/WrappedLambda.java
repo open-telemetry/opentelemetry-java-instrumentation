@@ -32,12 +32,12 @@ class WrappedLambda {
 
     String lambdaHandler = System.getenv(OTEL_LAMBDA_HANDLER_ENV_KEY);
     if (lambdaHandler == null || lambdaHandler.isEmpty()) {
-      throw new RuntimeException(OTEL_LAMBDA_HANDLER_ENV_KEY + " was not specified.");
+      throw new IllegalStateException(OTEL_LAMBDA_HANDLER_ENV_KEY + " was not specified.");
     }
     // expect format to be package.ClassName::methodName
     String[] split = lambdaHandler.split("::");
     if (split.length != 2) {
-      throw new RuntimeException(
+      throw new IllegalStateException(
           lambdaHandler
               + " is not a valid handler name. Expected format: package.ClassName::methodName");
     }
@@ -48,7 +48,7 @@ class WrappedLambda {
       targetClass = Class.forName(handlerClassName);
     } catch (ClassNotFoundException e) {
       // no class found
-      throw new RuntimeException(handlerClassName + " not found in classpath");
+      throw new IllegalStateException(handlerClassName + " not found in classpath", e);
     }
     return new WrappedLambda(targetClass, targetMethodName);
   }
@@ -60,26 +60,26 @@ class WrappedLambda {
   }
 
   private Object instantiateTargetClass() {
-
     Object targetObject;
     try {
       Constructor<?> ctor = targetClass.getConstructor();
       targetObject = ctor.newInstance();
     } catch (NoSuchMethodException e) {
-      throw new RuntimeException(
-          targetClass.getName() + " does not have an appropriate constructor");
+      throw new IllegalStateException(
+          targetClass.getName() + " does not have an appropriate constructor", e);
     } catch (InstantiationException e) {
-      throw new RuntimeException(targetClass.getName() + " cannot be an abstract class");
+      throw new IllegalStateException(targetClass.getName() + " cannot be an abstract class", e);
     } catch (IllegalAccessException e) {
-      throw new RuntimeException(targetClass.getName() + "'s constructor is not accessible");
+      throw new IllegalStateException(
+          targetClass.getName() + "'s constructor is not accessible", e);
     } catch (InvocationTargetException e) {
-      throw new RuntimeException(
-          targetClass.getName() + " threw an exception from the constructor");
+      throw new IllegalStateException(
+          targetClass.getName() + " threw an exception from the constructor", e);
     }
     return targetObject;
   }
 
-  private boolean isLastParameterContext(Parameter[] parameters) {
+  private static boolean isLastParameterContext(Parameter[] parameters) {
     if (parameters.length == 0) {
       return false;
     }
@@ -92,10 +92,9 @@ class WrappedLambda {
     Optional<Method> firstOptional =
         methods.stream()
             .filter((Method m) -> m.getName().equals(targetMethodName))
-            .sorted(this::methodComparator)
-            .findFirst();
+            .min(WrappedLambda::methodComparator);
     if (!firstOptional.isPresent()) {
-      throw new RuntimeException("Method " + targetMethodName + " not found");
+      throw new IllegalStateException("Method " + targetMethodName + " not found");
     }
     return firstOptional.get();
   }
@@ -114,7 +113,7 @@ class WrappedLambda {
    - handleA(String, String, Integer), handleB(String, String, Context) - handleB is selected (has Context as the last parameter)
    - generic method handleG(T, U, Context), implementation (T, U - String) handleA(String, String, Context), bridge method handleB(Object, Object, Context) - handleA is selected (non-bridge)
   */
-  private int methodComparator(Method a, Method b) {
+  private static int methodComparator(Method a, Method b) {
     // greater number of params wins
     if (a.getParameterCount() != b.getParameterCount()) {
       return b.getParameterCount() - a.getParameterCount();
@@ -128,7 +127,7 @@ class WrappedLambda {
     return onlyOneIsBridgeMethod(a, b);
   }
 
-  private int onlyOneIsBridgeMethod(Method first, Method second) {
+  private static int onlyOneIsBridgeMethod(Method first, Method second) {
     boolean firstBridge = first.isBridge();
     boolean secondBridge = second.isBridge();
     if (firstBridge && !secondBridge) {
@@ -139,7 +138,7 @@ class WrappedLambda {
     return 0;
   }
 
-  private int onlyOneHasContextAsLastParam(Method first, Method second) {
+  private static int onlyOneHasContextAsLastParam(Method first, Method second) {
     boolean firstCtx = isLastParameterContext(first.getParameters());
     boolean secondCtx = isLastParameterContext(second.getParameters());
     // only one of the methods has last param context ?

@@ -50,7 +50,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
     }
   }
 
-  private Throwable unwrapThrowable(Throwable throwable) {
+  private static Throwable unwrapThrowable(Throwable throwable) {
     if (throwable.getCause() != null
         && (throwable instanceof ExecutionException
             || throwable instanceof CompletionException

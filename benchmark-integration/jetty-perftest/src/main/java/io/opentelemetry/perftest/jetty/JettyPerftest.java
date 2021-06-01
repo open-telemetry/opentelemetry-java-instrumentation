@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-public class JettyPerftest {
+public final class JettyPerftest {
 
   private static final int PORT = 8080;
   private static final String PATH = "/work";
@@ -53,7 +53,7 @@ public class JettyPerftest {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
       if (request.getParameter("error") != null) {
-        throw new RuntimeException("some sync error");
+        throw new IllegalStateException("some sync error");
       }
       String workVal = request.getParameter("workTimeMillis");
       long workTimeMillis = 0L;
@@ -64,7 +64,7 @@ public class JettyPerftest {
       response.getWriter().print("Did " + workTimeMillis + "ms of work.");
     }
 
-    private void scheduleWork(long workTimeMillis) {
+    private static void scheduleWork(long workTimeMillis) {
       Span span = tracer.spanBuilder("work").startSpan();
       try (Scope scope = span.makeCurrent()) {
         if (span != null) {
@@ -79,4 +79,6 @@ public class JettyPerftest {
       }
     }
   }
+
+  private JettyPerftest() {}
 }

@@ -29,7 +29,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def doGet(workTimeMillis: Option[Long], error: Option[String]) = Action {
     implicit request: Request[AnyContent] =>
       error match {
-        case Some(x) => throw new RuntimeException("some sync error")
+        case Some(x) => throw new IllegalStateException("some sync error")
         case None => {
           var workTime = workTimeMillis.getOrElse(0L)
           scheduleWork(workTime)

@@ -6,10 +6,12 @@
 package io.opentelemetry.loadgenerator;
 
 import com.google.common.util.concurrent.RateLimiter;
+import com.google.common.util.concurrent.Uninterruptibles;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -74,7 +76,7 @@ public class LoadGenerator implements Callable<Integer> {
     }
 
     while (true) {
-      Thread.sleep(printInterval * 1000);
+      Uninterruptibles.sleepUninterruptibly(Duration.ofSeconds(printInterval));
 
       long currentTracesSent = tracesSent.get();
       long intervalEnd = System.currentTimeMillis();

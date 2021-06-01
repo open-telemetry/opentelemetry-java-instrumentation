@@ -16,7 +16,7 @@ public class TestSparkJavaApplication {
     Spark.get(
         "/exception/:param",
         (req, res) -> {
-          throw new RuntimeException(req.params("param"));
+          throw new IllegalStateException(req.params("param"));
         });
 
     Spark.awaitInitialization();

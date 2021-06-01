@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 
-public class AttributeKeys {
+public final class AttributeKeys {
 
   public static final AttributeKey<Context> CONNECT_CONTEXT =
       AttributeKey.valueOf(AttributeKeys.class, "connect-context");
@@ -26,4 +26,6 @@ public class AttributeKeys {
 
   public static final AttributeKey<Context> CLIENT_PARENT_CONTEXT =
       AttributeKey.valueOf(AttributeKeys.class, "client-parent-context");
+
+  private AttributeKeys() {}
 }
