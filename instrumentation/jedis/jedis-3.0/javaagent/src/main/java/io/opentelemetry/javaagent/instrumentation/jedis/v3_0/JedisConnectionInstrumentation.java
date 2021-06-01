@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisInstrumenters.instrumenter;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -38,8 +39,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
         this.getClass().getName() + "$SendCommandAdvice");
-    // FIXME: This instrumentation only incorporates sending the command, not processing the
-    // result.
+    // FIXME: This instrumentation only incorporates sending the command, not processing the result.
   }
 
   public static class SendCommandAdvice {
@@ -49,32 +49,31 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.Argument(0) ProtocolCommand command,
         @Advice.Argument(1) byte[][] args,
+        @Advice.Local("otelJedisRequest") JedisRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context =
-          tracer()
-              .startSpan(
-                  currentContext(),
-                  connection,
-                  new JedisClientTracer.CommandWithArgs(command, args));
+      Context parentContext = currentContext();
+      request = JedisRequest.create(connection, command, asList(args));
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelJedisRequest") JedisRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
-      scope.close();
 
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      scope.close();
+      instrumenter().end(context, request, null, throwable);
     }
   }
 }

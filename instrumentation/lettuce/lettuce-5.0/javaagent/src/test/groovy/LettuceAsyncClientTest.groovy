@@ -116,10 +116,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
-            "$SemanticAttributes.NET_PEER_IP.key" PEER_IP
             "$SemanticAttributes.NET_PEER_PORT.key" port
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "CONNECT"
           }
         }
       }
@@ -151,10 +149,8 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           errorEvent AbstractChannel.AnnotatedConnectException, String
           attributes {
             "$SemanticAttributes.NET_PEER_NAME.key" PEER_NAME
-            "$SemanticAttributes.NET_PEER_IP.key" PEER_IP
             "$SemanticAttributes.NET_PEER_PORT.key" incorrectPort
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
-            "$SemanticAttributes.DB_STATEMENT.key" "CONNECT"
           }
         }
       }
@@ -176,6 +172,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SET TESTSETKEY ?"
+            "$SemanticAttributes.DB_OPERATION.key" "SET"
           }
         }
       }
@@ -208,6 +205,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "GET TESTKEY"
+            "$SemanticAttributes.DB_OPERATION.key" "GET"
           }
         }
       }
@@ -254,6 +252,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "GET NON_EXISTENT_KEY"
+            "$SemanticAttributes.DB_OPERATION.key" "GET"
           }
         }
       }
@@ -286,6 +285,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
+            "$SemanticAttributes.DB_OPERATION.key" "RANDOMKEY"
           }
         }
       }
@@ -336,6 +336,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "HMSET TESTHM firstname ? lastname ? age ?"
+            "$SemanticAttributes.DB_OPERATION.key" "HMSET"
           }
         }
       }
@@ -346,6 +347,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "HGETALL TESTHM"
+            "$SemanticAttributes.DB_OPERATION.key" "HGETALL"
           }
         }
       }
@@ -388,6 +390,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "DEL key1 key2"
+            "$SemanticAttributes.DB_OPERATION.key" "DEL"
           }
         }
       }
@@ -422,6 +425,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SADD SKEY ? ?"
+            "$SemanticAttributes.DB_OPERATION.key" "SADD"
             "lettuce.command.cancelled" true
           }
         }
@@ -442,6 +446,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "DEBUG SEGFAULT"
+            "$SemanticAttributes.DB_OPERATION.key" "DEBUG"
           }
         }
       }
@@ -462,6 +467,7 @@ class LettuceAsyncClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SHUTDOWN NOSAVE"
+            "$SemanticAttributes.DB_OPERATION.key" "SHUTDOWN"
           }
         }
       }
