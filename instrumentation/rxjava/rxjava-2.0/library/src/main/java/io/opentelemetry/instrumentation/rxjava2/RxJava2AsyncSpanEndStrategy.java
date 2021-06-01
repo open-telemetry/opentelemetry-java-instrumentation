@@ -24,7 +24,7 @@ import org.reactivestreams.Publisher;
 
 public final class RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
-      AttributeKey.booleanKey("reactor.canceled");
+      AttributeKey.booleanKey("rxjava.canceled");
 
   public static RxJava2AsyncSpanEndStrategy create() {
     return newBuilder().build();
