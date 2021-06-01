@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.gwt;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -19,9 +24,13 @@ public final class GwtSingletons {
   static {
     RpcAttributesExtractor<Method, Void> rpcAttributes = new GwtRpcAttributesExtractor();
     INSTRUMENTER =
-        Instrumenter.<Method, Void>newBuilder(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME,
-            RpcSpanNameExtractor.create(rpcAttributes))
+        Instrumenter.<Method, Void>newBuilder(
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                RpcSpanNameExtractor.create(rpcAttributes))
             .addAttributesExtractor(rpcAttributes)
+            // TODO(anuraaga): This should be a server span, but we currently have no way to merge
+            // with the HTTP instrumentation's server span.
             .newInstrumenter();
   }
 

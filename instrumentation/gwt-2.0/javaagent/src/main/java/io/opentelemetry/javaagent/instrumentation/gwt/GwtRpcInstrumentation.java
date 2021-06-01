@@ -56,8 +56,10 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) Method method,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      context = INSTRUMENTER.start(Java8BytecodeBridge.currentContext(), method)
-          .with(GwtSingletons.RPC_CONTEXT_KEY, true);
+      context =
+          INSTRUMENTER
+              .start(Java8BytecodeBridge.currentContext(), method)
+              .with(GwtSingletons.RPC_CONTEXT_KEY, true);
       scope = context.makeCurrent();
     }
 
