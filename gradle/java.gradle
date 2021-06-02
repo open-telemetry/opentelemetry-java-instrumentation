@@ -85,8 +85,24 @@ afterEvaluate {
   }
 }
 
+abstract class NettyAlignmentRule implements ComponentMetadataRule {
+  void execute(ComponentMetadataContext ctx) {
+    ctx.details.with {
+      if (id.group == "io.netty") {
+        if (id.version.startsWith("4.1.")) {
+          belongsTo("io.netty:netty-bom:4.1.65.Final", false)
+        } else if (id.version.startsWith("4.0.")) {
+          belongsTo("io.netty:netty-bom:4.0.56.Final", false)
+        }
+      }
+    }
+  }
+}
+
 dependencies {
   dependencyManagement platform(project(":dependencyManagement"))
+
+  components.all(NettyAlignmentRule)
 
   compileOnly "org.checkerframework:checker-qual"
 
