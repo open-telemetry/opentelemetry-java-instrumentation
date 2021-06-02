@@ -24,7 +24,7 @@ public final class AgentInitializer {
 
   // Accessed via reflection from tests.
   // fields must be managed under class lock
-  @Nullable private static ClassLoader agentClassloader = null;
+  @Nullable private static ClassLoader agentClassLoader = null;
 
   // called via reflection in the OpenTelemetryAgent class
   public static void initialize(Instrumentation inst, URL bootstrapUrl) throws Exception {
@@ -33,9 +33,8 @@ public final class AgentInitializer {
 
   private static synchronized void startAgent(Instrumentation inst, URL bootstrapUrl)
       throws Exception {
-    if (agentClassloader == null) {
-      ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapUrl);
-      agentClassloader = agentClassLoader;
+    if (agentClassLoader == null) {
+      agentClassLoader = createAgentClassLoader("inst", bootstrapUrl);
 
       Class<?> agentInstallerClass =
           agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller");
@@ -52,8 +51,8 @@ public final class AgentInitializer {
   }
 
   // TODO misleading name
-  public static synchronized ClassLoader getAgentClassloader() {
-    return agentClassloader;
+  public static synchronized ClassLoader getAgentClassLoader() {
+    return agentClassLoader;
   }
 
   /**

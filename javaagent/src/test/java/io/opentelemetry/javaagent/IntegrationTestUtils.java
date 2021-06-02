@@ -37,7 +37,7 @@ public class IntegrationTestUtils {
 
   /** Returns the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
-    return getAgentFieldClassloader("agentClassloader");
+    return getAgentFieldClassloader("agentClassLoader");
   }
 
   private static ClassLoader getAgentFieldClassloader(String fieldName) {
