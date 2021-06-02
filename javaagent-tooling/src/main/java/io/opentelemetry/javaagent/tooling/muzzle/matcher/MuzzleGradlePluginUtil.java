@@ -69,7 +69,7 @@ public final class MuzzleGradlePluginUtil {
             "MUZZLE PASSED "
                 + instrumentationModule.getClass().getSimpleName()
                 + " BUT FAILURE WAS EXPECTED");
-        throw new RuntimeException("Instrumentation unexpectedly passed Muzzle validation");
+        throw new IllegalStateException("Instrumentation unexpectedly passed Muzzle validation");
       } else if (!passed && assertPass) {
         System.err.println(
             "FAILED MUZZLE VALIDATION: "
@@ -83,7 +83,7 @@ public final class MuzzleGradlePluginUtil {
         for (Mismatch mismatch : mismatches) {
           System.err.println("-- " + mismatch);
         }
-        throw new RuntimeException("Instrumentation failed Muzzle validation");
+        throw new IllegalStateException("Instrumentation failed Muzzle validation");
       }
 
       validatedModulesCount++;
@@ -111,7 +111,7 @@ public final class MuzzleGradlePluginUtil {
     if (validatedModulesCount == 0) {
       String errorMessage = "Did not found any InstrumentationModule to validate!";
       System.err.println(errorMessage);
-      throw new RuntimeException(errorMessage);
+      throw new IllegalStateException(errorMessage);
     }
   }
 
@@ -145,7 +145,7 @@ public final class MuzzleGradlePluginUtil {
             "Unexpected exception printing references for "
                 + instrumentationModule.getClass().getName();
         System.out.println(message);
-        throw new RuntimeException(message, e);
+        throw new IllegalStateException(message, e);
       }
     }
   }

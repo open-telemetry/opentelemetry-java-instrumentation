@@ -56,7 +56,7 @@ public class ContextPropagator {
     }
   }
 
-  private boolean checkIfContextCanBePassed(
+  private static boolean checkIfContextCanBePassed(
       ContextStore<Connection, Boolean> knownConnections, Connection c) {
     Boolean storedResult = knownConnections.get(c);
     if (storedResult != null) {
@@ -69,7 +69,7 @@ public class ContextPropagator {
   }
 
   /** Returns true when no error happened during call. */
-  private boolean syntheticCall(Connection c, ContextPayload payload, int operationId) {
+  private static boolean syntheticCall(Connection c, ContextPayload payload, int operationId) {
     StreamRemoteCall shareContextCall = new StreamRemoteCall(c);
     try {
       c.getOutputStream().write(TransportConstants.Call);

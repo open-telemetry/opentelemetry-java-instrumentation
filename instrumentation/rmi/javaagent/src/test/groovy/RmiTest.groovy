@@ -100,7 +100,7 @@ class RmiTest extends AgentInstrumentationSpecification {
     }
 
     then:
-    def thrownException = thrown(RuntimeException)
+    def thrownException = thrown(IllegalStateException)
     assertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "parent", null, thrownException)
@@ -109,7 +109,7 @@ class RmiTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           status ERROR
-          errorEvent(RuntimeException, String)
+          errorEvent(IllegalStateException, String)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"
             "${SemanticAttributes.RPC_SERVICE.key}" "rmi.app.Greeter"
@@ -121,7 +121,7 @@ class RmiTest extends AgentInstrumentationSpecification {
           name "rmi.app.Server/exceptional"
           kind SERVER
           status ERROR
-          errorEvent(RuntimeException, String)
+          errorEvent(IllegalStateException, String)
           attributes {
             "${SemanticAttributes.RPC_SYSTEM.key}" "java_rmi"
             "${SemanticAttributes.RPC_SERVICE.key}" "rmi.app.Server"

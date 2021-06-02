@@ -53,12 +53,12 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
     return endWhenPublisherComplete((Publisher<?>) returnValue, notificationConsumer);
   }
 
-  private Completable endWhenComplete(
+  private static Completable endWhenComplete(
       Completable completable, EndOnFirstNotificationConsumer<?> notificationConsumer) {
     return completable.doOnEvent(notificationConsumer);
   }
 
-  private <T> Maybe<T> endWhenMaybeComplete(
+  private static <T> Maybe<T> endWhenMaybeComplete(
       Maybe<T> maybe, EndOnFirstNotificationConsumer<?> notificationConsumer) {
     @SuppressWarnings("unchecked")
     EndOnFirstNotificationConsumer<T> typedConsumer =
@@ -66,7 +66,7 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
     return maybe.doOnEvent(typedConsumer);
   }
 
-  private <T> Single<T> endWhenSingleComplete(
+  private static <T> Single<T> endWhenSingleComplete(
       Single<T> single, EndOnFirstNotificationConsumer<?> notificationConsumer) {
     @SuppressWarnings("unchecked")
     EndOnFirstNotificationConsumer<T> typedConsumer =
@@ -74,18 +74,18 @@ public enum RxJava2AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
     return single.doOnEvent(typedConsumer);
   }
 
-  private Observable<?> endWhenObservableComplete(
+  private static Observable<?> endWhenObservableComplete(
       Observable<?> observable, EndOnFirstNotificationConsumer<?> notificationConsumer) {
     return observable.doOnComplete(notificationConsumer).doOnError(notificationConsumer);
   }
 
-  private ParallelFlowable<?> endWhenFirstComplete(
+  private static ParallelFlowable<?> endWhenFirstComplete(
       ParallelFlowable<?> parallelFlowable,
       EndOnFirstNotificationConsumer<?> notificationConsumer) {
     return parallelFlowable.doOnComplete(notificationConsumer).doOnError(notificationConsumer);
   }
 
-  private Flowable<?> endWhenPublisherComplete(
+  private static Flowable<?> endWhenPublisherComplete(
       Publisher<?> publisher, EndOnFirstNotificationConsumer<?> notificationConsumer) {
     return Flowable.fromPublisher(publisher)
         .doOnComplete(notificationConsumer)

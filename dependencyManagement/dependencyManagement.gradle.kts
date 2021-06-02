@@ -84,7 +84,7 @@ val DEPENDENCIES = listOf(
   "info.solidsoft.spock:spock-global-unroll:0.5.1",
   "org.assertj:assertj-core:3.19.0",
   "org.awaitility:awaitility:4.0.3",
-  "org.checkerframework:checker-qual:3.6.1",
+  "org.checkerframework:checker-qual:3.13.0",
   "org.codehaus.groovy:groovy-all:${groovyVersion}",
   "org.objenesis:objenesis:3.1",
   "org.spockframework:spock-core:1.3-groovy-2.5",

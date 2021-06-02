@@ -19,11 +19,11 @@ import org.junit.Test;
 
 public class TracingRequestHandlerTest {
 
-  private Response<SendMessageResult> response(Request request) {
+  private static Response<SendMessageResult> response(Request request) {
     return new Response<>(new SendMessageResult(), new HttpResponse(request, new HttpGet()));
   }
 
-  private Request<SendMessageRequest> request() {
+  private static Request<SendMessageRequest> request() {
     Request<SendMessageRequest> request = new DefaultRequest<>(new SendMessageRequest(), "test");
     request.setEndpoint(URI.create("http://test.uri"));
     return request;

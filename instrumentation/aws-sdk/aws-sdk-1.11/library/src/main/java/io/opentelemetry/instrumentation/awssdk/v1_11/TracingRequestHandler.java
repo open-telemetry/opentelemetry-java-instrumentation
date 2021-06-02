@@ -40,7 +40,7 @@ final class TracingRequestHandler extends RequestHandler2 {
     request.addHandlerContext(CONTEXT, context);
   }
 
-  private boolean isSqsProducer(AmazonWebServiceRequest request) {
+  private static boolean isSqsProducer(AmazonWebServiceRequest request) {
     return request
         .getClass()
         .getName()

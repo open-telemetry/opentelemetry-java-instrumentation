@@ -36,7 +36,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
 
   private static final Logger LOG = LoggerFactory.getLogger(CamelRoutePolicy.class);
 
-  private Span spanOnExchangeBegin(
+  private static Span spanOnExchangeBegin(
       Route route, Exchange exchange, SpanDecorator sd, Context parentContext, SpanKind spanKind) {
     Span activeSpan = Span.fromContext(parentContext);
     if (!activeSpan.getSpanContext().isValid()) {
@@ -49,7 +49,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     return Span.fromContext(context);
   }
 
-  private SpanKind spanKind(Context context, SpanDecorator sd) {
+  private static SpanKind spanKind(Context context, SpanDecorator sd) {
     Span activeSpan = Span.fromContext(context);
     // if there's an active span, this is not a root span which we always mark as INTERNAL
     return (activeSpan.getSpanContext().isValid() ? SpanKind.INTERNAL : sd.getReceiverSpanKind());

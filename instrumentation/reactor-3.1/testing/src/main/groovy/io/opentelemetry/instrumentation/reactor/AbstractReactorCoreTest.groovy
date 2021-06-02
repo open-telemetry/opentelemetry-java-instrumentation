@@ -39,7 +39,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
 
   @Shared
   def throwException = {
-    throw new RuntimeException(EXCEPTION_MESSAGE)
+    throw new IllegalStateException(EXCEPTION_MESSAGE)
   }
 
   def "Publisher '#paramName' test"() {
@@ -122,7 +122,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
     runUnderTrace(publisherSupplier)
 
     then:
-    def exception = thrown RuntimeException
+    def exception = thrown IllegalStateException
     exception.message == EXCEPTION_MESSAGE
     and:
     assertTraces(1) {
@@ -130,7 +130,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
         span(0) {
           name "trace-parent"
           status ERROR
-          errorEvent(RuntimeException, EXCEPTION_MESSAGE)
+          errorEvent(IllegalStateException, EXCEPTION_MESSAGE)
           hasNoParent()
         }
 
@@ -277,7 +277,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
           return publisher.toStream().toArray({ size -> new Integer[size] })
         }
 
-        throw new RuntimeException("Unknown publisher: " + publisher)
+        throw new IllegalStateException("Unknown publisher: " + publisher)
       } finally {
         span.end()
         scope.close()

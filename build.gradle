@@ -74,7 +74,10 @@ allprojects {
 
     tasks.withType(JavaCompile).configureEach {
       options.errorprone {
+        enabled = rootProject.findProperty("disableErrorProne") != "true"
         disableWarningsInGeneratedCode = true
+        allDisabledChecksAsWarnings = true
+
         excludedPaths = ".*/build/generated/.*"
 
         // Doesn't work well with Java 8
@@ -83,6 +86,15 @@ allprojects {
         // Require Guava
         disable("AutoValueImmutableFields")
         disable("StringSplitter")
+
+        // Don't currently use this (to indicate a local variable that's mutated) but could
+        // consider for future.
+        disable("Var")
+
+        // Don't support Android without desugar
+        disable("AndroidJdkLibsChecker")
+        disable("Java7ApiChecker")
+        disable("StaticOrDefaultInterfaceMethod")
 
         // Great check, but for bytecode manipulation it's too common to separate over
         // onEnter / onExit
@@ -96,6 +108,9 @@ allprojects {
         // We end up using obsolete types if a library we're instrumenting uses them.
         disable("JdkObsolete")
 
+        // Limits API possibilities
+        disable("NoFunctionalReturnType")
+
         // Storing into a variable in onEnter triggers this unfortunately.
         // TODO(anuraaga): Only disable for auto instrumentation project.
         disable("UnusedVariable")
@@ -103,6 +118,19 @@ allprojects {
         // TODO(anuraaga): Remove this, we use this pattern in several tests and it will mean
         // some moving.
         disable("DefaultPackage")
+
+        // TODO(anuraaga): Remove this, all our advice classes miss constructors but probably should
+        // address this.
+        disable("PrivateConstructorForUtilityClass")
+
+        // TODO(anuraaga): Remove this, probably after instrumenter API migration instead of dealing
+        // with older APIs.
+        disable("InconsistentOverloads")
+        disable("TypeParameterNaming")
+
+        if (name.contains("Jmh") || name.contains("Test")) {
+          disable("FieldMissingNullable")
+        }
       }
     }
   }

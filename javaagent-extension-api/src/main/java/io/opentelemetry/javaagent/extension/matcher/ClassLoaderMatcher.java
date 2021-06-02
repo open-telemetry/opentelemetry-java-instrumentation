@@ -9,10 +9,11 @@ import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.ClassLoaderMatcherCacheHolder;
 import io.opentelemetry.javaagent.instrumentation.api.internal.InClassLoaderMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class ClassLoaderMatcher {
 
-  public static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
+  @Nullable public static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
 
   /** A private constructor that must not be invoked. */
   private ClassLoaderMatcher() {

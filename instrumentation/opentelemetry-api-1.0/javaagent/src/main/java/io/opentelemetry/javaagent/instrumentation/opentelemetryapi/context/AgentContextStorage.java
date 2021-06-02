@@ -14,6 +14,7 @@ import application.io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.baggage.BaggageBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.lang.reflect.Field;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,8 @@ import org.slf4j.LoggerFactory;
  * always stores and retrieves them from the agent context, even when accessed from the application.
  * All other accesses are to the concrete application context.
  */
+// Annotation doesn't work on some fields due to fully qualified name (no clue why it matters...)
+@SuppressWarnings("FieldMissingNullable")
 public class AgentContextStorage implements ContextStorage, AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(AgentContextStorage.class);
@@ -53,11 +56,11 @@ public class AgentContextStorage implements ContextStorage, AutoCloseable {
 
   static final io.opentelemetry.context.ContextKey<io.opentelemetry.api.trace.Span>
       AGENT_SPAN_CONTEXT_KEY;
-  static final ContextKey<Span> APPLICATION_SPAN_CONTEXT_KEY;
+  @Nullable static final ContextKey<Span> APPLICATION_SPAN_CONTEXT_KEY;
 
   static final io.opentelemetry.context.ContextKey<io.opentelemetry.api.baggage.Baggage>
       AGENT_BAGGAGE_CONTEXT_KEY;
-  static final ContextKey<Baggage> APPLICATION_BAGGAGE_CONTEXT_KEY;
+  @Nullable static final ContextKey<Baggage> APPLICATION_BAGGAGE_CONTEXT_KEY;
 
   static {
     io.opentelemetry.context.ContextKey<io.opentelemetry.api.trace.Span> agentSpanContextKey;

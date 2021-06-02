@@ -124,7 +124,7 @@ class AgentTestRunnerTest extends AgentInstrumentationSpecification {
     try {
       return ClassPath.from(testClassLoader)
     } catch (IOException e) {
-      throw new RuntimeException(e)
+      throw new IllegalStateException(e)
     }
   }
 }

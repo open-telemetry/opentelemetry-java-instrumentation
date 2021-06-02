@@ -108,7 +108,7 @@ public final class AgentTestingExporterAccess {
               "forceFlushCalled",
               MethodType.methodType(boolean.class));
     } catch (Exception e) {
-      throw new Error("Error accessing fields with reflection.", e);
+      throw new AssertionError("Error accessing fields with reflection.", e);
     }
   }
 
@@ -116,7 +116,7 @@ public final class AgentTestingExporterAccess {
     try {
       reset.invokeExact();
     } catch (Throwable t) {
-      throw new Error("Could not invoke reset", t);
+      throw new AssertionError("Could not invoke reset", t);
     }
   }
 
@@ -124,7 +124,7 @@ public final class AgentTestingExporterAccess {
     try {
       return (boolean) forceFlushCalled.invokeExact();
     } catch (Throwable t) {
-      throw new Error("Could not invoke forceFlushCalled", t);
+      throw new AssertionError("Could not invoke forceFlushCalled", t);
     }
   }
 
@@ -134,7 +134,7 @@ public final class AgentTestingExporterAccess {
     try {
       exportRequests = (List<byte[]>) getSpanExportRequests.invokeExact();
     } catch (Throwable t) {
-      throw new Error("Could not invoke getSpanExportRequests", t);
+      throw new AssertionError("Could not invoke getSpanExportRequests", t);
     }
 
     List<ResourceSpans> allResourceSpans =
@@ -144,7 +144,7 @@ public final class AgentTestingExporterAccess {
                   try {
                     return ExportTraceServiceRequest.parseFrom(serialized);
                   } catch (InvalidProtocolBufferException e) {
-                    throw new Error(e);
+                    throw new AssertionError(e);
                   }
                 })
             .flatMap(request -> request.getResourceSpansList().stream())
@@ -227,7 +227,7 @@ public final class AgentTestingExporterAccess {
     try {
       exportRequests = (List<byte[]>) getMetricExportRequests.invokeExact();
     } catch (Throwable t) {
-      throw new Error("Could not invoke getMetricExportRequests", t);
+      throw new AssertionError("Could not invoke getMetricExportRequests", t);
     }
 
     List<ResourceMetrics> allResourceMetrics =
@@ -237,7 +237,7 @@ public final class AgentTestingExporterAccess {
                   try {
                     return ExportMetricsServiceRequest.parseFrom(serialized);
                   } catch (InvalidProtocolBufferException e) {
-                    throw new Error(e);
+                    throw new AssertionError(e);
                   }
                 })
             .flatMap(request -> request.getResourceMetricsList().stream())

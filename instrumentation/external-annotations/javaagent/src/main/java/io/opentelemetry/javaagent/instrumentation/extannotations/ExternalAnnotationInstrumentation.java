@@ -69,21 +69,20 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
       "otel.instrumentation.external-annotations.exclude-methods";
 
-  private final Set<String> additionalTraceAnnotations;
   private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
   private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
   /** This matcher matches all methods that should be excluded from transformation. */
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
   public ExternalAnnotationInstrumentation() {
-    additionalTraceAnnotations = configureAdditionalTraceAnnotations(Config.get());
+    Set<String> additionalTraceAnnotations = configureAdditionalTraceAnnotations(Config.get());
 
     if (additionalTraceAnnotations.isEmpty()) {
       classLoaderOptimization = none();
       traceAnnotationMatcher = none();
     } else {
-      ElementMatcher.Junction<ClassLoader> classLoaderMatcher = null;
-      ElementMatcher.Junction<NamedElement> methodTraceMatcher = null;
+      ElementMatcher.Junction<ClassLoader> classLoaderMatcher = none();
+      ElementMatcher.Junction<NamedElement> methodTraceMatcher = none();
       for (String annotationName : additionalTraceAnnotations) {
         if (methodTraceMatcher == null) {
           classLoaderMatcher = hasClassesNamed(annotationName);

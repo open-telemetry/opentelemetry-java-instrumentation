@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.metrics.brid
 import application.io.opentelemetry.api.metrics.Meter;
 import application.io.opentelemetry.api.metrics.MeterProvider;
 
+// Our convention for accessing agent packages.
+@SuppressWarnings("UnnecessarilyFullyQualified")
 public class ApplicationMeterProvider implements MeterProvider {
 
   public static final MeterProvider INSTANCE = new ApplicationMeterProvider();

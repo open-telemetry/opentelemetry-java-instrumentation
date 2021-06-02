@@ -25,12 +25,14 @@ public final class AgentElementMatchers {
 
   public static ElementMatcher.Junction<TypeDescription> implementsInterface(
       ElementMatcher<TypeDescription> matcher) {
-    return new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), true);
+    return new SafeHasSuperTypeMatcher(
+        new SafeErasureMatcher<>(matcher), /* interfacesOnly= */ true);
   }
 
   public static ElementMatcher.Junction<TypeDescription> safeHasSuperType(
       ElementMatcher<TypeDescription> matcher) {
-    return new SafeHasSuperTypeMatcher(new SafeErasureMatcher<>(matcher), false);
+    return new SafeHasSuperTypeMatcher(
+        new SafeErasureMatcher<>(matcher), /* interfacesOnly= */ false);
   }
 
   /**
@@ -70,7 +72,7 @@ public final class AgentElementMatchers {
    */
   public static <T> ElementMatcher.Junction<T> failSafe(
       ElementMatcher<? super T> matcher, String description) {
-    return new LoggingFailSafeMatcher<>(matcher, false, description);
+    return new LoggingFailSafeMatcher<>(matcher, /* fallback= */ false, description);
   }
 
   static String safeTypeDefinitionName(TypeDefinition td) {

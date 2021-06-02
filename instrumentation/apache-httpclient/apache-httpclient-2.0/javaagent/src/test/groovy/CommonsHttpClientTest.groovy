@@ -57,7 +57,7 @@ class CommonsHttpClientTest extends HttpClientTest<HttpMethod> implements AgentT
         request = new TraceMethod(uri.toString())
         break
       default:
-        throw new RuntimeException("Unsupported method: " + method)
+        throw new IllegalStateException("Unsupported method: " + method)
     }
     headers.each { request.setRequestHeader(it.key, it.value) }
     return request

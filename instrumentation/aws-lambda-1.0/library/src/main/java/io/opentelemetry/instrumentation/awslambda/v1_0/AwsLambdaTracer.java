@@ -26,9 +26,11 @@ import java.util.Collections;
 import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+// Context is defined in both OTel and Lambda
+@SuppressWarnings("ParameterPackage")
 public class AwsLambdaTracer extends BaseTracer {
 
-  private static final MethodHandle GET_FUNCTION_ARN;
+  @Nullable private static final MethodHandle GET_FUNCTION_ARN;
 
   static {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
@@ -43,7 +45,6 @@ public class AwsLambdaTracer extends BaseTracer {
     GET_FUNCTION_ARN = getFunctionArn;
   }
 
-  private final HttpSpanAttributes httpSpanAttributes = new HttpSpanAttributes();
   // cached accountId value
   private volatile String accountId;
 
@@ -55,7 +56,7 @@ public class AwsLambdaTracer extends BaseTracer {
     setCommonAttributes(span, context);
     if (input instanceof APIGatewayProxyRequestEvent) {
       span.setAttribute(FAAS_TRIGGER, FaasTriggerValues.HTTP);
-      httpSpanAttributes.onRequest(span, (APIGatewayProxyRequestEvent) input);
+      HttpSpanAttributes.onRequest(span, (APIGatewayProxyRequestEvent) input);
     }
   }
 
@@ -72,7 +73,7 @@ public class AwsLambdaTracer extends BaseTracer {
   }
 
   @Nullable
-  private String getFunctionArn(Context context) {
+  private static String getFunctionArn(Context context) {
     if (GET_FUNCTION_ARN == null) {
       return null;
     }
@@ -101,7 +102,7 @@ public class AwsLambdaTracer extends BaseTracer {
     return accountId;
   }
 
-  private String spanName(Context context, Object input) {
+  private static String spanName(Context context, Object input) {
     String name = null;
     if (input instanceof APIGatewayProxyRequestEvent) {
       name = ((APIGatewayProxyRequestEvent) input).getResource();
@@ -126,7 +127,7 @@ public class AwsLambdaTracer extends BaseTracer {
 
   public void onOutput(io.opentelemetry.context.Context context, Object output) {
     if (output instanceof APIGatewayProxyResponseEvent) {
-      httpSpanAttributes.onResponse(
+      HttpSpanAttributes.onResponse(
           Span.fromContext(context), (APIGatewayProxyResponseEvent) output);
     }
   }

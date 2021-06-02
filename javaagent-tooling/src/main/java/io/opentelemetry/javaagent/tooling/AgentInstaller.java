@@ -69,10 +69,10 @@ public class AgentInstaller {
       "otel.javaagent.testing.additional-library-ignores.enabled";
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
-  private static volatile Instrumentation INSTRUMENTATION;
+  private static volatile Instrumentation instrumentation;
 
   public static Instrumentation getInstrumentation() {
-    return INSTRUMENTATION;
+    return instrumentation;
   }
 
   static {
@@ -116,7 +116,7 @@ public class AgentInstaller {
     Config config = Config.get();
     installComponentsBeforeByteBuddy(componentInstallers, config);
 
-    INSTRUMENTATION = inst;
+    instrumentation = inst;
 
     FieldBackedProvider.resetContextMatchers();
 
@@ -472,10 +472,13 @@ public class AgentInstaller {
     @Override
     public Iterable<Iterable<Class<?>>> resolve(Instrumentation instrumentation) {
       // filter out our agent classes and injected helper classes
-      return () -> streamOf(delegate.resolve(instrumentation)).map(this::filterClasses).iterator();
+      return () ->
+          streamOf(delegate.resolve(instrumentation))
+              .map(RedefinitionDiscoveryStrategy::filterClasses)
+              .iterator();
     }
 
-    private Iterable<Class<?>> filterClasses(Iterable<Class<?>> classes) {
+    private static Iterable<Class<?>> filterClasses(Iterable<Class<?>> classes) {
       return () -> streamOf(classes).filter(c -> !isIgnored(c)).iterator();
     }
 

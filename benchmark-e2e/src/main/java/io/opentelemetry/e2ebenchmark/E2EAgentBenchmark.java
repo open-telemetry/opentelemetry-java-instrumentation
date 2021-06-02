@@ -51,11 +51,11 @@ public class E2EAgentBenchmark {
   }
 
   @Test
-  void run() throws Exception {
+  void run() throws InterruptedException {
     runBenchmark();
   }
 
-  private void runBenchmark() throws Exception {
+  private void runBenchmark() throws InterruptedException {
     String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
 
     // otlp collector container

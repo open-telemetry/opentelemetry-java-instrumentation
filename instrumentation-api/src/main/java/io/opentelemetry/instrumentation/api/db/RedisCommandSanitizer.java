@@ -423,4 +423,6 @@ public final class RedisCommandSanitizer {
       }
     }
   }
+
+  private RedisCommandSanitizer() {}
 }

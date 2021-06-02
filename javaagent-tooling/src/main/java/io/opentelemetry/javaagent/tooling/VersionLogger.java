@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VersionLogger {
+public final class VersionLogger {
 
   private static final Logger log = LoggerFactory.getLogger(VersionLogger.class);
 
@@ -24,4 +24,6 @@ public class VersionLogger {
           System.getProperty("java.vm.version"));
     }
   }
+
+  private VersionLogger() {}
 }

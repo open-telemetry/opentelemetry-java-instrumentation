@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.test.utils;
 
-public class ExceptionUtils {
+public final class ExceptionUtils {
 
   static RuntimeException sneakyThrow(Throwable t) {
     if (t == null) {
@@ -19,4 +19,6 @@ public class ExceptionUtils {
   private static <T extends Throwable> T sneakyThrow0(Throwable t) throws T {
     throw (T) t;
   }
+
+  private ExceptionUtils() {}
 }

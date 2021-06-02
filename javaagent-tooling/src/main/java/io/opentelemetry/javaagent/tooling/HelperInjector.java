@@ -30,6 +30,7 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,7 @@ public class HelperInjector implements Transformer {
 
   private final Set<String> helperClassNames;
   private final Set<String> helperResourceNames;
-  private final ClassLoader helpersSource;
+  @Nullable private final ClassLoader helpersSource;
   private final Map<String, byte[]> dynamicTypeMap = new LinkedHashMap<>();
 
   private final Cache<ClassLoader, Boolean> injectedClassLoaders =
@@ -164,7 +165,7 @@ public class HelperInjector implements Transformer {
                     cl,
                     e);
               }
-              throw new RuntimeException(e);
+              throw new IllegalStateException(e);
             }
             return true;
           });
@@ -188,8 +189,8 @@ public class HelperInjector implements Transformer {
     return builder;
   }
 
-  private Map<String, Class<?>> injectBootstrapClassLoader(Map<String, byte[]> classnameToBytes)
-      throws IOException {
+  private static Map<String, Class<?>> injectBootstrapClassLoader(
+      Map<String, byte[]> classnameToBytes) throws IOException {
     // Mar 2020: Since we're proactively cleaning up tempDirs, we cannot share dirs per thread.
     // If this proves expensive, we could do a per-process tempDir with
     // a reference count -- but for now, starting simple.
@@ -208,7 +209,7 @@ public class HelperInjector implements Transformer {
     }
   }
 
-  private Map<String, Class<?>> injectClassLoader(
+  private static Map<String, Class<?>> injectClassLoader(
       ClassLoader classLoader, Map<String, byte[]> classnameToBytes) {
     return new ClassInjector.UsingReflection(classLoader).injectRaw(classnameToBytes);
   }

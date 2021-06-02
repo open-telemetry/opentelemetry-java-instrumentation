@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses;
 
+@SuppressWarnings("ClassNamedLikeTypeParameter")
 public interface D extends A, B, C {
   @Trace
   void d();

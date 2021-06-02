@@ -5,6 +5,7 @@
 
 package io.opentelemetry.benchmark.classes;
 
+@SuppressWarnings("ClassNamedLikeTypeParameter")
 public abstract class F implements E {
   public abstract void f();
 

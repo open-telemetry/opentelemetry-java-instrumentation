@@ -17,7 +17,8 @@ import java.util.Collections;
 public class RuntimeMetricsInstaller implements ComponentInstaller {
   @Override
   public void afterByteBuddyAgent(Config config) {
-    if (config.isInstrumentationEnabled(Collections.singleton("runtime-metrics"), true)) {
+    if (config.isInstrumentationEnabled(
+        Collections.singleton("runtime-metrics"), /* defaultEnabled= */ true)) {
       GarbageCollector.registerObservers();
       MemoryPools.registerObservers();
     }

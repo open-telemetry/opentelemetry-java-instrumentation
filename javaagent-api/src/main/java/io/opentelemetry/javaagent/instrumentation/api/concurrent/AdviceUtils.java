@@ -10,7 +10,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 
 /** Helper utils for Runnable/Callable instrumentation. */
-public class AdviceUtils {
+public final class AdviceUtils {
 
   /**
    * Start scope for a given task.
@@ -30,4 +30,6 @@ public class AdviceUtils {
     }
     return null;
   }
+
+  private AdviceUtils() {}
 }

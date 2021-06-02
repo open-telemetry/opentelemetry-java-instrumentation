@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.springwebmvc.SpringWebMvcInstrumenters.handlerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -57,14 +57,19 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) Object handler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      // TODO (trask) should there be a way to customize Instrumenter.shouldStart()?
+      if (handler.getClass().getName().startsWith("org.grails.")) {
+        // skip creating handler span for grails, grails instrumentation will take care of it
+        return;
+      }
       Context parentContext = Java8BytecodeBridge.currentContext();
       Span serverSpan = ServerSpan.fromContextOrNull(parentContext);
       // TODO (trask) is it important to check serverSpan != null here?
       if (serverSpan != null) {
         // Name the parent span based on the matching pattern
-        tracer().updateServerSpanName(parentContext, request);
+        ServerNameUpdater.updateServerSpanName(parentContext, request);
         // Now create a span for handler/controller execution.
-        context = tracer().startHandlerSpan(parentContext, handler);
+        context = handlerInstrumenter().start(parentContext, handler);
         if (context != null) {
           scope = context.makeCurrent();
         }
@@ -73,6 +78,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.Argument(2) Object handler,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -80,11 +86,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      if (throwable == null) {
-        tracer().end(context);
-      } else {
-        tracer().endExceptionally(context, throwable);
-      }
+      handlerInstrumenter().end(context, handler, null, throwable);
     }
   }
 }

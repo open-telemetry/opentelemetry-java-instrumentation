@@ -15,7 +15,8 @@ import org.apache.cxf.message.Message;
 public final class CxfClientUtil {
 
   public static void handleException(Message message, Throwable throwable) {
-    ClientRequestContext context = new ClientRequestContextImpl(message, false);
+    ClientRequestContext context =
+        new ClientRequestContextImpl(message, /* responseContext= */ false);
     Object prop = context.getProperty(ClientTracingFilter.CONTEXT_PROPERTY_NAME);
     if (prop instanceof Context) {
       tracer().endExceptionally((Context) prop, throwable);

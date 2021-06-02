@@ -39,7 +39,7 @@ public class ContainerLogFrameConsumer
     }
   }
 
-  private LineType getLineType(Frame frame) {
+  private static LineType getLineType(Frame frame) {
     switch (frame.getStreamType()) {
       case STDOUT:
         return LineType.STDOUT;

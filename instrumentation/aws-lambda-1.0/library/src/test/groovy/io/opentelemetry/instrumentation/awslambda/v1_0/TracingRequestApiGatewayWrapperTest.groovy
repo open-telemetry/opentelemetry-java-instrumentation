@@ -28,7 +28,7 @@ class TracingRequestApiGatewayWrapperTest extends TracingRequestWrapperTestBase 
       } else if (input.getBody() == "empty") {
         return new APIGatewayProxyResponseEvent()
       }
-      throw new RuntimeException("bad request")
+      throw new IllegalStateException("bad request")
     }
   }
 

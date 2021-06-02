@@ -23,7 +23,6 @@ public class Slf4jDockerLogLineListener implements ContainerLogHandler.Listener 
         this.logger.error("STDERR: {}", normalizedText);
         break;
       case STDOUT:
-      default:
         this.logger.info("STDOUT: {}", normalizedText);
         break;
     }

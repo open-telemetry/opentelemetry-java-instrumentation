@@ -10,12 +10,13 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.LoggerContextVO;
 import java.util.Map;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Marker;
 
 final class LoggingEventWrapper implements ILoggingEvent {
   private final ILoggingEvent event;
   private final Map<String, String> mdcPropertyMap;
-  private final LoggerContextVO vo;
+  @Nullable private final LoggerContextVO vo;
 
   LoggingEventWrapper(ILoggingEvent event, Map<String, String> mdcPropertyMap) {
     this.event = event;
