@@ -21,6 +21,7 @@ public abstract class MuzzleDirective {
     getName().convention("");
     getSkipVersions().convention(Collections.emptySet());
     getAdditionalDependencies().convention(Collections.emptyList());
+    getExcludedDependencies().convention(Collections.emptyList());
     getAssertPass().convention(false);
     getAssertInverse().convention(false);
     getCoreJdk().convention(false);
@@ -37,6 +38,8 @@ public abstract class MuzzleDirective {
   public abstract SetProperty<String> getSkipVersions();
 
   public abstract ListProperty<String> getAdditionalDependencies();
+
+  public abstract ListProperty<String> getExcludedDependencies();
 
   public abstract Property<Boolean> getAssertPass();
 
@@ -56,6 +59,15 @@ public abstract class MuzzleDirective {
    */
   public void extraDependency(String compileString) {
     getAdditionalDependencies().add(compileString);
+  }
+
+  /**
+   * Adds transitive dependencies to exclude from the current muzzle test.
+   *
+   * @param excludeString A dependency in the gradle canonical form: '<group_id>:<artifact_id>'
+   */
+  public void excludeDependency(String excludeString) {
+    getExcludedDependencies().add(excludeString);
   }
 
   public void skip(String... version) {
