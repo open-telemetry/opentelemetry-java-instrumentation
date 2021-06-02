@@ -913,7 +913,7 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     }
   }
 
-  def "should capture span for eventually errored ParallelFlowable"() {
+  def "should capture span for canceled ParallelFlowable"() {
     setup:
     def source = UnicastProcessor.<String> create()
     def observer = new TestSubscriber()
