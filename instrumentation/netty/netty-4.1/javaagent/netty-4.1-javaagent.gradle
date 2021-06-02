@@ -54,8 +54,8 @@ test {
 if (!testLatestDeps) {
   // No BOM for 4.1.0 so we can't use enforcedPlatform to override our transitive version
   // management, so hook into the resolutionStrategy.
-  configurations.configureEach {
-    resolutionStrategy.eachDependency {
+  configurations.each {
+    it.resolutionStrategy.eachDependency {
       if (it.requested.group == "io.netty" && it.requested.name != "netty-bom" && !it.requested.name.startsWith("netty-transport-native")) {
         it.useVersion("4.1.0.Final")
       }
