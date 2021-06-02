@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.messaging;
+package io.opentelemetry.instrumentation.spring.integration;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.nio.charset.StandardCharsets;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.messaging;
+package io.opentelemetry.instrumentation.spring.integration;
 
 import com.google.auto.value.AutoValue;
 import org.springframework.messaging.Message;
