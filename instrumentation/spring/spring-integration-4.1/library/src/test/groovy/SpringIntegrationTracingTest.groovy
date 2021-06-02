@@ -8,7 +8,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.TraceId
-import io.opentelemetry.instrumentation.spring.messaging.SpringIntegrationTracing
+import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTracing
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.Executors

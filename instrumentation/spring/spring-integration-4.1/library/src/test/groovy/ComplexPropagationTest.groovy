@@ -6,7 +6,7 @@
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.instrumentation.spring.messaging.SpringIntegrationTracing
+import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTracing
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.BlockingQueue
