@@ -13,7 +13,10 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 /** Extractor of a span link for a request. */
 @FunctionalInterface
 public interface SpanLinkExtractor<REQUEST> {
-  /** Extract a {@link SpanContext} that should be linked to the newly created span. */
+  /**
+   * Extract a {@link SpanContext} that should be linked to the newly created span. Returning {@code
+   * SpanContext.getInvalid()} will not add any link to the span.
+   */
   SpanContext extract(Context parentContext, REQUEST request);
 
   /**

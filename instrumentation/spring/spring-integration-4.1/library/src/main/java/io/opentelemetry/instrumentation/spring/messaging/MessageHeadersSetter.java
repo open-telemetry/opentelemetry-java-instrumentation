@@ -13,6 +13,8 @@ import java.util.Map;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 
+// Setting native headers is required by some protocols, e.g. STOMP
+// see https://github.com/spring-cloud/spring-cloud-sleuth/issues/716 for more details
 // Native headers logic inspired by
 // https://github.com/spring-cloud/spring-cloud-sleuth/blob/main/spring-cloud-sleuth-instrumentation/src/main/java/org/springframework/cloud/sleuth/instrument/messaging/MessageHeaderPropagatorSetter.java
 enum MessageHeadersSetter implements TextMapSetter<MessageHeaderAccessor> {

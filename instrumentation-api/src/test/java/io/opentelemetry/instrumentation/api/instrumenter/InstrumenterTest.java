@@ -362,6 +362,28 @@ class InstrumenterTest {
                     span -> span.hasName("test span").startsAt(startTime).endsAt(endTime)));
   }
 
+  @Test
+  void shouldNotAddInvalidLink() {
+    // given
+    Instrumenter<String, String> instrumenter =
+        Instrumenter.<String, String>newBuilder(
+                otelTesting.getOpenTelemetry(), "test", request -> "test span")
+            .addSpanLinkExtractor((parentContext, request) -> SpanContext.getInvalid())
+            .newInstrumenter();
+
+    // when
+    Context context = instrumenter.start(Context.root(), "request");
+    instrumenter.end(context, "request", "response", null);
+
+    // then
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("test span").hasTotalRecordedLinks(0)));
+  }
+
   private static LinkData expectedSpanLink() {
     return LinkData.create(
         SpanContext.create(
