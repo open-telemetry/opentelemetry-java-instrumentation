@@ -16,9 +16,9 @@ public final class AgentClassLoaderAccess {
       Class<?> agentInitializerClass =
           ClassLoader.getSystemClassLoader()
               .loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
-      Field agentClassloader = agentInitializerClass.getDeclaredField("agentClassloader");
-      agentClassloader.setAccessible(true);
-      agentClassLoader = (ClassLoader) agentClassloader.get(null);
+      Field agentClassLoaderField = agentInitializerClass.getDeclaredField("agentClassLoader");
+      agentClassLoaderField.setAccessible(true);
+      agentClassLoader = (ClassLoader) agentClassLoaderField.get(null);
     } catch (Throwable t) {
       throw new AssertionError("Could not access agent classLoader", t);
     }
