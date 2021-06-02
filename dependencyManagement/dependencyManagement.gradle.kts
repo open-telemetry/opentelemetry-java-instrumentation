@@ -82,6 +82,7 @@ val DEPENDENCIES = listOf(
   "com.google.auto.service:auto-service:1.0",
   "com.uber.nullaway:nullaway:0.9.1",
   "info.solidsoft.spock:spock-global-unroll:0.5.1",
+  "io.netty:netty:3.10.6.Final",
   "org.assertj:assertj-core:3.19.0",
   "org.awaitility:awaitility:4.0.3",
   "org.checkerframework:checker-qual:3.13.0",
