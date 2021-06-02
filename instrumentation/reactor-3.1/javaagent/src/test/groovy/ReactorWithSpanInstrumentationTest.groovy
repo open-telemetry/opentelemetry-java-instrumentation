@@ -130,6 +130,35 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     }
   }
 
+  def "should capture span for canceled Mono"() {
+    setup:
+    def source = UnicastProcessor.<String>create()
+    def mono = source.singleOrEmpty()
+    def result = new TracedWithSpan()
+      .mono(mono)
+    def verifier = StepVerifier.create(result)
+      .expectSubscription()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    verifier.thenCancel().verify()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.mono"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          attributes {
+            "reactor.canceled" true
+          }
+        }
+      }
+    }
+  }
+
   def "should capture span for already completed Flux"() {
     setup:
     def source = Flux.just("Value")
@@ -237,6 +266,37 @@ class ReactorWithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status StatusCode.ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for canceled Flux"() {
+    setup:
+    def error = new IllegalArgumentException("Boom")
+    def source = UnicastProcessor.<String>create()
+    def result = new TracedWithSpan()
+      .flux(source)
+    def verifier = StepVerifier.create(result)
+      .expectSubscription()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    source.onError(error)
+
+    verifier.thenCancel().verify()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.flux"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          attributes {
+            "reactor.canceled" true
           }
         }
       }
