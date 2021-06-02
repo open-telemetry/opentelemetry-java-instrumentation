@@ -68,7 +68,6 @@ public abstract class MuzzleDirective {
    */
   public void excludeDependency(String excludeString) {
     getExcludedDependencies().add(excludeString);
-    ;
   }
 
   public void skip(String... version) {
