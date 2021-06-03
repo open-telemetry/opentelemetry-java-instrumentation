@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
 import static io.opentelemetry.javaagent.tooling.matcher.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -31,10 +30,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -44,6 +45,8 @@ import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.NameMatcher;
+import net.bytebuddy.matcher.StringSetMatcher;
 import net.bytebuddy.utility.JavaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -261,10 +264,10 @@ public class AgentInstaller {
     }
   }
 
-  private static ElementMatcher.Junction<Object> matchesConfiguredExcludes() {
+  private static ElementMatcher.Junction<? super TypeDescription> matchesConfiguredExcludes() {
     List<String> excludedClasses = Config.get().getListProperty(EXCLUDED_CLASSES_CONFIG);
-    ElementMatcher.Junction matcher = none();
-    List<String> literals = new ArrayList<>();
+    ElementMatcher.Junction<? super TypeDescription> matcher = none();
+    Set<String> literals = new HashSet<>();
     List<String> prefixes = new ArrayList<>();
     // first accumulate by operation because a lot of work can be aggregated
     for (String excludedClass : excludedClasses) {
@@ -277,7 +280,7 @@ public class AgentInstaller {
       }
     }
     if (!literals.isEmpty()) {
-      matcher = matcher.or(namedOneOf(literals));
+      matcher = matcher.or(new NameMatcher<>(new StringSetMatcher(literals)));
     }
     for (String prefix : prefixes) {
       // TODO - with a prefix tree this matching logic can be handled by a
