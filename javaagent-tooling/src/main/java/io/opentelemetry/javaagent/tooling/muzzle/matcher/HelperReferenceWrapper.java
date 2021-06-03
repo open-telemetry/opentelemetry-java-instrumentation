@@ -89,6 +89,23 @@ interface HelperReferenceWrapper {
     public int hashCode() {
       return Objects.hash(name, descriptor);
     }
+
+    @Override
+    public String toString() {
+      return "Method{"
+          + "isAbstract="
+          + isAbstract
+          + ", declaringClass='"
+          + declaringClass
+          + '\''
+          + ", name='"
+          + name
+          + '\''
+          + ", descriptor='"
+          + descriptor
+          + '\''
+          + '}';
+    }
   }
 
   final class Field {
@@ -123,6 +140,11 @@ interface HelperReferenceWrapper {
     @Override
     public int hashCode() {
       return Objects.hash(name, descriptor);
+    }
+
+    @Override
+    public String toString() {
+      return "Field{" + "name='" + name + '\'' + ", descriptor='" + descriptor + '\'' + '}';
     }
   }
 

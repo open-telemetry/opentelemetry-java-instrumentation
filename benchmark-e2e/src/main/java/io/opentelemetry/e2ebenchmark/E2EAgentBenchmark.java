@@ -111,19 +111,18 @@ public class E2EAgentBenchmark {
   }
 
   static void printContainerMapping(GenericContainer<?> container) {
-    System.out.println(
-        String.format(
-            "Container %s ports exposed at %s",
-            container.getDockerImageName(),
-            container.getExposedPorts().stream()
-                .map(
-                    port ->
-                        new AbstractMap.SimpleImmutableEntry<>(
-                            port,
-                            "http://"
-                                + container.getContainerIpAddress()
-                                + ":"
-                                + container.getMappedPort(port)))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))));
+    LOG.info(
+        "Container {} ports exposed at {}",
+        container.getDockerImageName(),
+        container.getExposedPorts().stream()
+            .map(
+                port ->
+                    new AbstractMap.SimpleImmutableEntry<>(
+                        port,
+                        "http://"
+                            + container.getContainerIpAddress()
+                            + ":"
+                            + container.getMappedPort(port)))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
   }
 }

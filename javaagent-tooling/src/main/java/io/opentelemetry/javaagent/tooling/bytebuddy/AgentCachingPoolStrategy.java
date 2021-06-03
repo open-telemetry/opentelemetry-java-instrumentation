@@ -199,6 +199,19 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     public final int hashCode() {
       return hashCode;
     }
+
+    @Override
+    public String toString() {
+      return "TypeCacheKey{"
+          + "loaderHash="
+          + loaderHash
+          + ", loaderRef="
+          + loaderRef
+          + ", className='"
+          + className
+          + '\''
+          + '}';
+    }
   }
 
   static final class SharedResolutionCacheAdapter implements TypePool.CacheProvider {

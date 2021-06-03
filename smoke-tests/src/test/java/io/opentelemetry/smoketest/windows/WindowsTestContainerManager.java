@@ -230,7 +230,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     try {
       client.inspectImageCmd(imageName).exec();
       return true;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       return false;
     }
   }

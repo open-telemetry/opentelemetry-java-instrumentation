@@ -50,7 +50,7 @@ class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractBase<T> 
   public boolean matches(T target) {
     try {
       return matcher.matches(target);
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       log.debug(description, e);
       return fallback;
     }
