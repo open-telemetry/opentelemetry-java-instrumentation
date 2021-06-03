@@ -132,22 +132,22 @@ class AgentTestRunnerTest extends AgentInstrumentationSpecification {
    * Parse JVM classpath and return ClassLoader containing all classpath entries. Inspired by Guava.
    */
   private static ClassLoader buildJavaClassPathClassLoader() {
-    List<URL> urls = new ArrayList<>();
+    List<URL> urls = new ArrayList<>()
     for (String entry : getClasspath()) {
       try {
         try {
-          urls.add(new File(entry).toURI().toURL());
+          urls.add(new File(entry).toURI().toURL())
         } catch (SecurityException e) { // File.toURI checks to see if the file is a directory
-          urls.add(new URL("file", null, new File(entry).getAbsolutePath()));
+          urls.add(new URL("file", null, new File(entry).getAbsolutePath()))
         }
       } catch (MalformedURLException e) {
         throw new IllegalStateException(e)
       }
     }
-    return new URLClassLoader(urls.toArray(new URL[0]), null);
+    return new URLClassLoader(urls.toArray(new URL[0]), (ClassLoader) null)
   }
 
   private static String[] getClasspath() {
-    return System.getProperty("java.class.path").split(System.getProperty("path.separator"));
+    return System.getProperty("java.class.path").split(System.getProperty("path.separator"))
   }
 }

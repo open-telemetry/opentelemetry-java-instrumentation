@@ -101,7 +101,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
   static TypeDefinition safeGetSuperClass(TypeDefinition typeDefinition) {
     try {
       return typeDefinition.getSuperClass();
-    } catch (RuntimeException e) {
+    } catch (Throwable e) {
       if (log.isDebugEnabled()) {
         log.debug(
             "{} trying to get super class for target {}: {}",
@@ -156,7 +156,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
       Iterator<TypeDescription.Generic> it = null;
       try {
         it = typeDefinition.getInterfaces().iterator();
-      } catch (RuntimeException e) {
+      } catch (Throwable e) {
         logException(typeDefinition, e);
       }
       this.it = it;
@@ -168,7 +168,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
         try {
           next = it.next();
           return true;
-        } catch (RuntimeException e) {
+        } catch (Throwable e) {
           logException(typeDefinition, e);
           return false;
         }
@@ -191,7 +191,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
       return this;
     }
 
-    private static void logException(TypeDefinition typeDefinition, Exception e) {
+    private static void logException(TypeDefinition typeDefinition, Throwable e) {
       if (log.isDebugEnabled()) {
         log.debug(
             "{} trying to get interfaces for target {}: {}",
