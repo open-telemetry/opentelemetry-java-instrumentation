@@ -42,23 +42,27 @@ public class JettyHttpClient9Tracer extends HttpClientTracer<Request, Request, R
   }
 
   @Override
-  protected @Nullable URI url(Request request) throws URISyntaxException {
+  @Nullable
+  protected URI url(Request request) throws URISyntaxException {
     return request.getURI();
   }
 
   @Override
-  protected @Nullable Integer status(Response response) {
+  @Nullable
+  protected Integer status(Response response) {
     return response.getStatus();
   }
 
   @Override
-  protected @Nullable String requestHeader(Request request, String name) {
+  @Nullable
+  protected String requestHeader(Request request, String name) {
     HttpFields headers = request.getHeaders();
     return extractHeader(headers, name);
   }
 
   @Override
-  protected @Nullable String responseHeader(Response response, String name) {
+  @Nullable
+  protected String responseHeader(Response response, String name) {
     HttpFields headers = response.getHeaders();
     return extractHeader(headers, name);
   }
@@ -82,7 +86,8 @@ public class JettyHttpClient9Tracer extends HttpClientTracer<Request, Request, R
     return SETTER;
   }
 
-  private @Nullable String extractHeader(HttpFields headers, String name) {
+  @Nullable
+  private String extractHeader(HttpFields headers, String name) {
 
     String headerVal = null;
     if (headers != null) {

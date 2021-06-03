@@ -35,7 +35,7 @@ public class JettyHttpClient9TracingInterceptor
   private static final Logger LOG =
       LoggerFactory.getLogger(JettyHttpClient9TracingInterceptor.class);
 
-  private @Nullable Context context;
+  @Nullable private Context context;
 
   @Nullable
   public Context getContext() {

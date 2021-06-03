@@ -4,7 +4,7 @@ muzzle {
   pass {
     group = "org.eclipse.jetty"
     module = 'jetty-client'
-    versions = "[9.1,10)"
+    versions = "[9.2,10)"
     assertInverse = true
   }
 }
@@ -16,11 +16,11 @@ jettyVers.base9 = '9.2.0.v20140526'
 jettyVers.useInTests9 = '9.2.0.v20140526'
 
 dependencies {
-  implementation project(':instrumentation:jetty-httpclient:jetty-httpclient-9.0:library')
+  implementation project(':instrumentation:jetty-httpclient:jetty-httpclient-9.2:library')
 
   library "org.eclipse.jetty:jetty-client:${jettyVers.base9}"
 
-  testImplementation project(':instrumentation:jetty-httpclient:jetty-httpclient-9.0:testing')
+  testImplementation project(':instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing')
   testImplementation("org.eclipse.jetty:jetty-server:${jettyVers.useInTests9}") {
     exclude group: 'org.eclipse.jetty', module: 'jetty-client'
   }
