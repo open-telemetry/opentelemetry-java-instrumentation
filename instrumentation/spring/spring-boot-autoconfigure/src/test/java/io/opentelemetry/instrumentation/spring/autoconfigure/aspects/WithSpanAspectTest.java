@@ -76,6 +76,7 @@ public class WithSpanAspectTest {
 
     @WithSpan
     public String withSpanAttributes(
+        @SpanAttribute String discoveredName,
         @SpanAttribute String implicitName,
         @SpanAttribute("explicitName") String parameter,
         @SpanAttribute("nullAttribute") String nullAttribute,
@@ -94,7 +95,7 @@ public class WithSpanAspectTest {
         new ParameterNameDiscoverer() {
           @Override
           public String[] getParameterNames(Method method) {
-            return null;
+            return new String[] {"discoveredName", null, "parameter", "nullAttribute", "notTraced"};
           }
 
           @Override
@@ -230,7 +231,7 @@ public class WithSpanAspectTest {
   @DisplayName("")
   void withSpanAttributes() throws Throwable {
     // when
-    testing.runWithServerSpan("parent", () -> withSpanTester.withSpanAttributes("foo", "bar", null, "baz"));
+    testing.runWithServerSpan("parent", () -> withSpanTester.withSpanAttributes("foo", "bar", "baz", null, "fizz"));
 
     // then
     List<List<SpanData>> traces = testing.waitForTraces(1);
@@ -244,8 +245,9 @@ public class WithSpanAspectTest {
                             .hasKind(INTERNAL)
                             .hasAttributes(
                                 Attributes.of(
-                                    AttributeKey.stringKey("implicitName"), "foo",
-                                    AttributeKey.stringKey("explicitName"), "bar"))
+                                    AttributeKey.stringKey("discoveredName"), "foo",
+                                    AttributeKey.stringKey("implicitName"), "bar",
+                                    AttributeKey.stringKey("explicitName"), "baz"))
                             .hasParentSpanId(traces.get(0).get(0).getSpanId())));
   }
 
