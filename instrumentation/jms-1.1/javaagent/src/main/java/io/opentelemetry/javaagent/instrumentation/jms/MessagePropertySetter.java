@@ -23,7 +23,7 @@ final class MessagePropertySetter implements TextMapSetter<MessageWithDestinatio
       carrier.getMessage().setStringProperty(propName, value);
     } catch (JMSException e) {
       if (log.isDebugEnabled()) {
-        log.debug("Failure setting jms property: " + propName, e);
+        log.debug("Failure setting jms property: {}", propName, e);
       }
     }
   }

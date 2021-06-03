@@ -313,8 +313,7 @@ public class AgentInstaller {
     public Iterable<? extends List<Class<?>>> onError(
         int index, List<Class<?>> batch, Throwable throwable, List<Class<?>> types) {
       if (log.isDebugEnabled()) {
-        log.debug(
-            "Exception while retransforming " + batch.size() + " classes: " + batch, throwable);
+        log.debug("Exception while retransforming {} classes: {}", batch.size(), batch, throwable);
       }
       return Collections.emptyList();
     }
@@ -534,7 +533,7 @@ public class AgentInstaller {
   private static void logVersionInfo() {
     VersionLogger.logAllVersions();
     log.debug(
-        AgentInstaller.class.getName() + " loaded on " + AgentInstaller.class.getClassLoader());
+        "{} loaded on {}", AgentInstaller.class.getName(), AgentInstaller.class.getClassLoader());
   }
 
   private static class NoopIgnoreMatcherProvider implements IgnoreMatcherProvider {
