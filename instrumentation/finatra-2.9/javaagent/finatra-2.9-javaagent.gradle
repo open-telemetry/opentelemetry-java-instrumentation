@@ -14,12 +14,14 @@ muzzle {
     group = 'com.twitter'
     module = 'finatra-http_2.11'
     versions = '[2.9.0,]'
+    excludeDependency "io.netty:netty-transport-native-epoll"
   }
 
   pass {
     group = 'com.twitter'
     module = 'finatra-http_2.12'
     versions = '[2.9.0,]'
+    excludeDependency "io.netty:netty-transport-native-epoll"
   }
 }
 
