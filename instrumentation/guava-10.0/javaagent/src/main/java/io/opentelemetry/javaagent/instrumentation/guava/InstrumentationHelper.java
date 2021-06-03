@@ -5,12 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.guava;
 
+import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.opentelemetry.instrumentation.guava.GuavaAsyncSpanEndStrategy;
 
 public final class InstrumentationHelper {
   static {
-    AsyncSpanEndStrategies.getInstance().registerStrategy(GuavaAsyncSpanEndStrategy.INSTANCE);
+    registerAsyncSpanEndStrategy();
+  }
+
+  private static void registerAsyncSpanEndStrategy() {
+    AsyncSpanEndStrategies.getInstance()
+        .registerStrategy(
+            GuavaAsyncSpanEndStrategy.newBuilder()
+                .setCaptureExperimentalSpanAttributes(
+                    Config.get()
+                        .getBooleanProperty(
+                            "otel.instrumentation.guava.experimental-span-attributes", false))
+                .build());
   }
 
   /**

@@ -9,6 +9,11 @@ muzzle {
   }
 }
 
+tasks.withType(Test).configureEach {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.guava.experimental-span-attributes=true"
+}
+
 dependencies {
   library "com.google.guava:guava:10.0"
 
