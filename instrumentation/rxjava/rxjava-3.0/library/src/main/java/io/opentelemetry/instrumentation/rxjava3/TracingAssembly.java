@@ -96,50 +96,66 @@ public final class TracingAssembly {
   @GuardedBy("TracingAssembly.class")
   private static boolean enabled;
 
-  private TracingAssembly() {}
-
-  public static synchronized void enable() {
-    if (enabled) {
-      return;
-    }
-
-    enableObservable();
-
-    enableCompletable();
-
-    enableSingle();
-
-    enableMaybe();
-
-    enableFlowable();
-
-    enableParallel();
-
-    enableWithSpanStrategy();
-
-    enabled = true;
+  public static TracingAssembly create() {
+    return newBuilder().build();
   }
 
-  public static synchronized void disable() {
-    if (!enabled) {
-      return;
+  public static TracingAssemblyBuilder newBuilder() {
+    return new TracingAssemblyBuilder();
+  }
+
+  private final boolean captureExperimentalSpanAttributes;
+
+  TracingAssembly(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
+
+  public void enable() {
+    synchronized (TracingAssembly.class) {
+      if (enabled) {
+        return;
+      }
+
+      enableObservable();
+
+      enableCompletable();
+
+      enableSingle();
+
+      enableMaybe();
+
+      enableFlowable();
+
+      enableParallel();
+
+      enableWithSpanStrategy(captureExperimentalSpanAttributes);
+
+      enabled = true;
     }
+  }
 
-    disableObservable();
+  public void disable() {
+    synchronized (TracingAssembly.class) {
+      if (!enabled) {
+        return;
+      }
 
-    disableCompletable();
+      disableObservable();
 
-    disableSingle();
+      disableCompletable();
 
-    disableMaybe();
+      disableSingle();
 
-    disableFlowable();
+      disableMaybe();
 
-    disableParallel();
+      disableFlowable();
 
-    disableWithSpanStrategy();
+      disableParallel();
 
-    enabled = false;
+      disableWithSpanStrategy();
+
+      enabled = false;
+    }
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -227,8 +243,12 @@ public final class TracingAssembly {
                     }));
   }
 
-  private static void enableWithSpanStrategy() {
-    AsyncSpanEndStrategies.getInstance().registerStrategy(RxJava3AsyncSpanEndStrategy.INSTANCE);
+  private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
+    AsyncSpanEndStrategies.getInstance()
+        .registerStrategy(
+            RxJava3AsyncSpanEndStrategy.newBuilder()
+                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+                .build());
   }
 
   private static void disableParallel() {
@@ -264,7 +284,7 @@ public final class TracingAssembly {
   }
 
   private static void disableWithSpanStrategy() {
-    AsyncSpanEndStrategies.getInstance().unregisterStrategy(RxJava3AsyncSpanEndStrategy.INSTANCE);
+    AsyncSpanEndStrategies.getInstance().unregisterStrategy(RxJava3AsyncSpanEndStrategy.class);
   }
 
   private static <T> Function<? super T, ? extends T> compose(

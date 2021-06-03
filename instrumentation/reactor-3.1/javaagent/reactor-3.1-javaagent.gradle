@@ -9,6 +9,11 @@ muzzle {
   }
 }
 
+tasks.withType(Test).configureEach {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.reactor.experimental-span-attributes=true"
+}
+
 dependencies {
   implementation project(':instrumentation:reactor-3.1:library')
 

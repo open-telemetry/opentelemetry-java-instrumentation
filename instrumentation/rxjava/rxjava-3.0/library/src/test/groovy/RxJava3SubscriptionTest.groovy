@@ -6,10 +6,13 @@
 import io.opentelemetry.instrumentation.rxjava3.AbstractRxJava3SubscriptionTest
 import io.opentelemetry.instrumentation.rxjava3.TracingAssembly
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
+import spock.lang.Shared
 
 class RxJava3SubscriptionTest extends AbstractRxJava3SubscriptionTest implements LibraryTestTrait {
+  @Shared
+  TracingAssembly tracingAssembly = TracingAssembly.create()
 
   def setupSpec() {
-    TracingAssembly.enable()
+    tracingAssembly.enable()
   }
 }
