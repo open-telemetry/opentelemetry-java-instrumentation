@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import io.opentelemetry.instrumentation.test.base.SingleConnection
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
