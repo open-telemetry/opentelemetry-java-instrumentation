@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jdbc;
+package io.opentelemetry.javaagent.instrumentation.jdbc.datasource;
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.jdbc.DataSourceTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.datasource.DataSourceInstrumenters.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -39,18 +38,20 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         @Advice.This DataSource ds,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (!Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
         // this instrumentation is already very noisy, and calls to getConnection outside of an
         // existing trace do not tend to be very interesting
         return;
       }
 
-      context = tracer().startSpan(ds.getClass().getSimpleName() + ".getConnection", CLIENT);
+      context = instrumenter().start(parentContext, ds);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
+        @Advice.This DataSource ds,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
@@ -58,12 +59,7 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      } else {
-        tracer().end(context);
-      }
+      instrumenter().end(context, ds, null, throwable);
     }
   }
 }

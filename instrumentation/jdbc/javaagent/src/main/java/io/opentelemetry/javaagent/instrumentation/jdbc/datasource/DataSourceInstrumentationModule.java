@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jdbc;
+package io.opentelemetry.javaagent.instrumentation.jdbc.datasource;
 
 import static java.util.Collections.singletonList;
 
