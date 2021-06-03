@@ -17,7 +17,7 @@
 apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
-  compileOnly project(":instrumentation:logback:logback-1.0:library")
+  compileOnly project(":instrumentation:logback-1.0:library")
 
   api project(':testing-common')
 
