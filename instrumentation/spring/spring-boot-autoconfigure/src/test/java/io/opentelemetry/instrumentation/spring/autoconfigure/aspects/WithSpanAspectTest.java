@@ -12,11 +12,15 @@ import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -27,6 +31,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
+import org.springframework.core.ParameterNameDiscoverer;
 
 /** Spring AOP Test for {@link WithSpanAspect}. */
 public class WithSpanAspectTest {
@@ -68,6 +73,16 @@ public class WithSpanAspectTest {
     public CompletableFuture<String> testAsyncCompletableFuture(CompletableFuture<String> stage) {
       return stage;
     }
+
+    @WithSpan
+    public String withSpanAttributes(
+        @SpanAttribute String implicitName,
+        @SpanAttribute("explicitName") String parameter,
+        @SpanAttribute("nullAttribute") String nullAttribute,
+        String notTraced) {
+
+      return "hello!";
+    }
   }
 
   private WithSpanTester withSpanTester;
@@ -75,7 +90,21 @@ public class WithSpanAspectTest {
   @BeforeEach
   void setup() {
     AspectJProxyFactory factory = new AspectJProxyFactory(new WithSpanTester());
-    WithSpanAspect aspect = new WithSpanAspect(testing.getOpenTelemetry());
+    ParameterNameDiscoverer parameterNameDiscoverer =
+        new ParameterNameDiscoverer() {
+          @Override
+          public String[] getParameterNames(Method method) {
+            return null;
+          }
+
+          @Override
+          public String[] getParameterNames(Constructor<?> constructor) {
+            return null;
+          }
+        };
+    WithSpanAspectAttributeBinder attributeBinder =
+        new WithSpanAspectAttributeBinder(parameterNameDiscoverer);
+    WithSpanAspect aspect = new WithSpanAspect(testing.getOpenTelemetry(), attributeBinder);
     factory.addAspect(aspect);
 
     withSpanTester = factory.getProxy();
@@ -195,6 +224,29 @@ public class WithSpanAspectTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     parentSpan -> parentSpan.hasName("parent").hasKind(SERVER)));
+  }
+
+  @Test
+  @DisplayName("")
+  void withSpanAttributes() throws Throwable {
+    // when
+    testing.runWithServerSpan("parent", () -> withSpanTester.withSpanAttributes("foo", "bar", null, "baz"));
+
+    // then
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    assertThat(traces)
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                    span ->
+                        span.hasName("WithSpanTester.withSpanAttributes")
+                            .hasKind(INTERNAL)
+                            .hasAttributes(
+                                Attributes.of(
+                                    AttributeKey.stringKey("implicitName"), "foo",
+                                    AttributeKey.stringKey("explicitName"), "bar"))
+                            .hasParentSpanId(traces.get(0).get(0).getSpanId())));
   }
 
   @Nested

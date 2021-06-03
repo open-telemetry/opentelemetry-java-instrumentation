@@ -50,3 +50,7 @@ dependencies {
   testImplementation("io.grpc:grpc-api:1.30.2")
   testImplementation("io.grpc:grpc-netty-shaded:1.30.2")
 }
+
+tasks.withType<JavaCompile> {
+  options.compilerArgs.add("-parameters")
+}

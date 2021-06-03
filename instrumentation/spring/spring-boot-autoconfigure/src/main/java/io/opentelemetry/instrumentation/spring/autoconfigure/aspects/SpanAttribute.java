@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.otelannotations;
+package io.opentelemetry.instrumentation.spring.autoconfigure.aspects;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
