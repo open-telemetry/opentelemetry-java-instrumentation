@@ -13,6 +13,10 @@ dependencies {
   testImplementation "net.bytebuddy:byte-buddy:${versions["net.bytebuddy"]}"
 }
 
+tasks.withType(JavaCompile) {
+  options.compilerArgs << '-parameters'
+}
+
 test {
   jvmArgs "-Dotel.instrumentation.opentelemetry-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]"
 }

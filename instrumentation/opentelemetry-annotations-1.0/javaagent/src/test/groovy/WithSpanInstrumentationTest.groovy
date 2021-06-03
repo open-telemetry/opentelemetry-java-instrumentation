@@ -419,4 +419,24 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
       }
     }
   }
+
+  def "should capture attributes"() {
+    setup:
+    new TracedWithSpan().withSpanAttributes("foo", "bar", null, "baz")
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.withSpanAttributes"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "implicitName" "foo"
+            "explicitName" "bar"
+          }
+        }
+      }
+    }
+  }
 }
