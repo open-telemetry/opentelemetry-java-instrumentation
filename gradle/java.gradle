@@ -24,7 +24,6 @@ def applyCodeCoverage = !(
   project.path.startsWith(":smoke-tests") ||
     //TODO why some tests fail on java 11 if jacoco is present?
     project.path == ":javaagent" ||
-    project.path == ":load-generator" ||
     project.path.startsWith(":benchmark") ||
     project.path.startsWith(":instrumentation") ||
     project.path.startsWith(":testing-common"))
