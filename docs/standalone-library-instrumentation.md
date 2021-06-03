@@ -1,0 +1,27 @@
+# Standalone library instrumentation
+
+This repository also publishes standalone instrumentation for several libraries (and growing)
+that can be used if you prefer that over using the Java agent:
+
+* [Apache Dubbo](../instrumentation/apache-dubbo-2.7/library)
+* [Armeria](../instrumentation/armeria-1.3/library)
+* [AWS Lambda](../instrumentation/aws-lambda-1.0/library)
+* [AWS SDK 1.11](../instrumentation/aws-sdk/aws-sdk-1.11/library)
+* [AWS SDK 2.2+](../instrumentation/aws-sdk/aws-sdk-2.2/library)
+* [gRPC](../instrumentation/grpc-1.6/library)
+* [Guava](../instrumentation/guava-10.0/library)
+* [Lettuce](../instrumentation/lettuce/lettuce-5.1/library)
+* [Log4j](../instrumentation/log4j/log4j-2.13.2/library)
+* [Logback](../instrumentation/logback-1.0/library)
+* [MongoDB Driver](../instrumentation/mongo/mongo-3.1/library)
+* [OkHttp](../instrumentation/okhttp/okhttp-3.0/library)
+* [OSHI](../instrumentation/oshi/library)
+* [Reactor](../instrumentation/reactor-3.1/library)
+* [RocketMQ](../instrumentation/rocketmq-client-4.8/library)
+* [Runtime metrics](../instrumentation/runtime-metrics/library)
+* [RxJava 1.0](../instrumentation/rxjava/rxjava-1.0/library)
+* [RxJava 2.0](../instrumentation/rxjava/rxjava-2.0/library)
+* [RxJava 3.0](../instrumentation/rxjava/rxjava-3.0/library)
+* [Spring RestTemplate](../instrumentation/spring/spring-web-3.1/library)
+* [Spring Web MVC](../instrumentation/spring/spring-webmvc-3.1/library)
+* [Spring WebFlux Client](../instrumentation/spring/spring-webflux-5.0/library)
