@@ -13,13 +13,13 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class AkkaActorInstrumentationModule extends InstrumentationModule {
-  public AkkaActorInstrumentationModule() {
-    super("akka-actor", "akka-actor-2.5");
+public class AkkaActorForkJoinInstrumentationModule extends InstrumentationModule {
+  public AkkaActorForkJoinInstrumentationModule() {
+    super("akka-actor", "akka-actor-fork-join", "akka-actor-2.5", "akka-actor-fork-join-2.5");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new AkkaDispatcherInstrumentation(), new AkkaActorCellInstrumentation());
+    return asList(new AkkaForkJoinPoolInstrumentation(), new AkkaForkJoinTaskInstrumentation());
   }
 }
