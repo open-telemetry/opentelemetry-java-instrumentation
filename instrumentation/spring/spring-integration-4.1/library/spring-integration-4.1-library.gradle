@@ -6,11 +6,10 @@ dependencies {
 
   library 'org.springframework.integration:spring-integration-core:4.1.0.RELEASE'
 
-  testImplementation "org.testcontainers:testcontainers"
+  testImplementation project(':instrumentation:spring:spring-integration-4.1:testing')
 
   testLibrary "org.springframework.boot:spring-boot-starter-test:1.5.22.RELEASE"
   testLibrary "org.springframework.boot:spring-boot-starter:1.5.22.RELEASE"
-
   testLibrary "org.springframework.cloud:spring-cloud-stream:2.2.1.RELEASE"
   testLibrary "org.springframework.cloud:spring-cloud-stream-binder-rabbit:2.2.1.RELEASE"
 }

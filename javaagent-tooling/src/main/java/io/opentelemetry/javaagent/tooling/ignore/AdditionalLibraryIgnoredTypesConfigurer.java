@@ -60,7 +60,6 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.jmx.")
         .ignoreClass("org.springframework.jndi.")
         .ignoreClass("org.springframework.lang.")
-        .ignoreClass("org.springframework.messaging.")
         .ignoreClass("org.springframework.objenesis.")
         .ignoreClass("org.springframework.orm.")
         .ignoreClass("org.springframework.remoting.")
@@ -123,7 +122,11 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.context.")
         // More runnables to deal with
         .allowClass("org.springframework.context.support.AbstractApplicationContext$")
-        .allowClass("org.springframework.context.support.ContextTypeMatchClassLoader");
+        .allowClass("org.springframework.context.support.ContextTypeMatchClassLoader")
+        // Allow instrumenting ApplicationContext implementations - to inject beans
+        .allowClass("org.springframework.context.annotation.AnnotationConfigApplicationContext")
+        .allowClass("org.springframework.context.support.AbstractApplicationContext")
+        .allowClass("org.springframework.context.support.GenericApplicationContext");
 
     builder
         .ignoreClass("org.springframework.core.")
@@ -147,6 +150,11 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.jms.listener.")
         .ignoreClass(
             "org.springframework.jms.config.JmsListenerEndpointRegistry$AggregatingCallback");
+
+    builder
+        .ignoreClass("org.springframework.messaging.")
+        .allowClass("org.springframework.messaging.support.ExecutorSubscribableChannel$SendTask")
+        .allowClass("org.springframework.messaging.support.MessageHandlingRunnable");
 
     builder
         .ignoreClass("org.springframework.util.")
