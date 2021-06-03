@@ -19,6 +19,8 @@ dependencies {
   implementation project(':instrumentation:jetty-httpclient:jetty-httpclient-9.2:library')
 
   library "org.eclipse.jetty:jetty-client:${jettyVers.base9}"
+  //This seems to cause class incompatibilitie issues with the JETTY SERVER that is used by the testing framework
+  latestDepTestLibrary "org.eclipse.jetty:jetty-client:10.+"
 
   testImplementation project(':instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing')
   testImplementation("org.eclipse.jetty:jetty-server:${jettyVers.useInTests9}") {
