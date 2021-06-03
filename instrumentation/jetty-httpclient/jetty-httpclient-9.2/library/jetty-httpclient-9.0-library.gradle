@@ -1,0 +1,21 @@
+apply from: "$rootDir/gradle/instrumentation-library.gradle"
+apply plugin: "net.ltgt.errorprone"
+
+def jettyVers = [:]
+
+//Jetty client 9.2 is the best starting point, HttpClient.send() is stable there
+jettyVers.base9 = '9.2.0.v20140526'
+jettyVers.useInTests9 = '9.2.0.v20140526'
+
+dependencies {
+  library "org.eclipse.jetty:jetty-client:${jettyVers.base9}"
+  testImplementation project(':instrumentation:jetty-httpclient::jetty-httpclient-9.0:testing')
+
+  implementation deps.slf4j
+
+  testImplementation("org.eclipse.jetty:jetty-server:${jettyVers.useInTests9}") {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-client'
+  }
+
+}
+

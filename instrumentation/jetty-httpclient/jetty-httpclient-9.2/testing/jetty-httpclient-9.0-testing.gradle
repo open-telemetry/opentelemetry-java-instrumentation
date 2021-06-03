@@ -1,0 +1,20 @@
+apply from: "$rootDir/gradle/java.gradle"
+def jettyVers = [:]
+//Jetty client 9.2 is the best starting point, HttpClient.send() is stable there
+jettyVers.useInTests9 = '9.2.0.v20140526'
+dependencies {
+  api(project(':testing-common')) {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-client'
+    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
+  }
+
+
+  api "org.eclipse.jetty:jetty-client:${jettyVers.useInTests9}"
+
+  implementation deps.guava
+  implementation deps.junitApi
+
+  implementation deps.groovy
+  implementation deps.opentelemetryApi
+  implementation deps.spock
+}
