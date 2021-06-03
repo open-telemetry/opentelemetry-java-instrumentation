@@ -9,13 +9,16 @@ jettyVers.base9 = '9.1.0.v20131115'
 jettyVers.useInTests9 = '9.3.28.v20191105'
 
 dependencies {
-  library "org.eclipse.jetty:jetty-client:${jettyVers.base9}"
+  library "org.eclipse.jetty:jetty-client:${jettyVers.useInTests9}"
+  testLibrary "org.eclipse.jetty:jetty-client:${jettyVers.useInTests9}"
   testImplementation project(':instrumentation:jetty-httpclient::jetty-httpclient-9.0:testing')
 
   implementation deps.slf4j
 
-  testLibrary "org.eclipse.jetty:jetty-server:${jettyVers.useInTests9}"
-  testLibrary "org.eclipse.jetty:jetty-client:${jettyVers.useInTests9}"
+  testImplementation("org.eclipse.jetty:jetty-server:${jettyVers.useInTests9}") {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-client'
+  }
+//  testLibrary "org.eclipse.jetty:jetty-client:${jettyVers.useInTests9}"
 
 
 }

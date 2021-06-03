@@ -5,14 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_0
 
-import io.opentelemetry.context.Context
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import org.eclipse.jetty.client.api.Request
+import org.eclipse.jetty.client.HttpClient
+import org.eclipse.jetty.util.ssl.SslContextFactory
 
 class JettyHttpClient9AgentTest extends AbstractJettyClient9Test implements AgentTestTrait {
+  
+  @Override
+  HttpClient createStandardClient() {
+    return new HttpClient()
+  }
 
   @Override
-  void attachInterceptor(Request jettyRequest, Context parentCtx) {
-    //Do nothing
+  HttpClient createHttpsClient(SslContextFactory sslContextFactory) {
+    return new HttpClient(sslContextFactory)
   }
 }

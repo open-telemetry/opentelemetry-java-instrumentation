@@ -23,11 +23,14 @@ import java.util.concurrent.TimeUnit
 abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
 
-  abstract void attachInterceptor(Request jettyRequest, Context parentContext);
+//  abstract void attachInterceptor(Request jettyRequest, Context parentContext);
+  abstract HttpClient createStandardClient();
+
+  abstract HttpClient createHttpsClient(SslContextFactory sslContextFactory);
 
 
   @Shared
-  def client = new HttpClient()
+  def client = createStandardClient()
   @Shared
   def httpsClient = null
 
@@ -39,9 +42,9 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
       Assertions.fail("Error during jetty client start", t)
     }
 
-    SslContextFactory tlsCtx = new SslContextFactory();
-    tlsCtx.setExcludeProtocols("TLSv1.3");
-    httpsClient = new HttpClient(tlsCtx)
+    SslContextFactory tlsCtx = new SslContextFactory()
+    tlsCtx.setExcludeProtocols("TLSv1.3")
+    httpsClient = createHttpsClient(tlsCtx)
     httpsClient.setFollowRedirects(false)
     try {
       httpsClient.start()
@@ -79,10 +82,10 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 //    def interceptor = createInterceptor(Context.current())
     Context parentContext = Context.current()
     Scope scope = parentContext.makeCurrent()
-    attachInterceptor(request, parentContext)
-
+//    attachInterceptor(request, parentContext)
     ContentResponse response = request.send()
     scope.close()
+
     return response.status
   }
 
@@ -115,7 +118,7 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
     }
     Context parentContext = Context.current()
     Scope scope = parentContext.makeCurrent()
-    attachInterceptor(request, parentContext)
+//    attachInterceptor(request, parentContext)
 
     request.send(new Response.CompleteListener() {
       @Override
@@ -141,5 +144,5 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
   boolean testCausality() {
     true
   }
-  
+
 }

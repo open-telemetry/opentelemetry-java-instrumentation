@@ -7,10 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_0.JettyClientWrapUtil.wrapAndStartTracer;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_0.JettyHttpClient9Tracer.tracer;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -24,7 +23,8 @@ import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.HttpRequest;
+import org.eclipse.jetty.client.api.Response;
 
 @AutoService(InstrumentationModule.class)
 public class JettyHttpClient9InstrumentationModule extends InstrumentationModule {
@@ -47,7 +47,8 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
 
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return hasSuperType(named("org.eclipse.jetty.client.api.Request").and(isInterface()));
+      //      return hasSuperType(named("org.eclipse.jetty.client.api.Request").and(isInterface()));
+      return named("org.eclipse.jetty.client.HttpClient");
     }
 
     @Override
@@ -62,21 +63,22 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addTracingEnter(
+        @Advice.Argument(value = 0, readOnly = false) HttpRequest httpRequest,
+        @Advice.Argument(value = 1, readOnly = false) List<Response.ResponseListener> listeners,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.This Request jettyRequest) {
-
+        @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
       }
-
-      JettyHttpClient9TracingInterceptor interceptor =
+      JettyHttpClient9TracingInterceptor requestInterceptor =
           new JettyHttpClient9TracingInterceptor(parentContext);
-      interceptor.attachToRequest(jettyRequest);
+      requestInterceptor.attachToRequest(httpRequest);
 
-      scope = interceptor.getCtx().makeCurrent();
-      context = interceptor.getCtx();
+      listeners = wrapAndStartTracer(parentContext, httpRequest, listeners);
+
+      scope = requestInterceptor.getCtx().makeCurrent();
+      context = requestInterceptor.getCtx();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)

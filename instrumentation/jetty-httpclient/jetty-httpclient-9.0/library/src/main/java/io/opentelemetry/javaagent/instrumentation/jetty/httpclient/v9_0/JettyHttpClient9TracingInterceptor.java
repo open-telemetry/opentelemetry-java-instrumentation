@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -23,8 +24,7 @@ public class JettyHttpClient9TracingInterceptor
         Request.FailureListener,
         Response.SuccessListener,
         Response.FailureListener,
-        Response.CompleteListener,
-        Request.CommitListener {
+        Response.CompleteListener {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(JettyHttpClient9TracingInterceptor.class);
@@ -46,19 +46,60 @@ public class JettyHttpClient9TracingInterceptor
     List<JettyHttpClient9TracingInterceptor> current =
         jettyRequest.getRequestListeners(JettyHttpClient9TracingInterceptor.class);
 
+    LOG.debug("---------- Attaching to request --------");
     if (!current.isEmpty()) {
       LOG.warn("A tracing interceptor is already in place for this request! ");
       return;
     }
+    startSpan(jettyRequest);
+
+    // wrap all important listeners that may already be attached, null should ensure all listeners
+    // are returned here
+    List<Request.RequestListener> existingListeners = jettyRequest.getRequestListeners(null);
+    wrapRequestListeners(existingListeners);
 
     jettyRequest
         .onRequestBegin(this)
         .onRequestFailure(this)
         .onResponseFailure(this)
-        .onResponseSuccess(this)
-        .onRequestCommit(this);
+        .onResponseSuccess(this);
+  }
 
-    startSpan(jettyRequest);
+  private void wrapRequestListeners(List<Request.RequestListener> requestListeners) {
+
+    List<Request.BeginListener> beginListeners =
+        requestListeners.stream()
+            .filter(rl -> rl instanceof Request.BeginListener)
+            .map(rl -> (Request.BeginListener) rl)
+            .collect(Collectors.toList());
+    List<Request.FailureListener> failureListeners =
+        requestListeners.stream()
+            .filter(rl -> rl instanceof Request.FailureListener)
+            .map(rl -> (Request.FailureListener) rl)
+            .collect(Collectors.toList());
+
+    //    Context context = (this.ctx != null) ? this.ctx : this.parentContext;
+    Context context = this.parentContext;
+    for (Request.BeginListener blOriginal : beginListeners) {
+      requestListeners.set(
+          requestListeners.indexOf(blOriginal),
+          (Request.BeginListener)
+              request -> {
+                try (Scope ignore = context.makeCurrent()) {
+                  blOriginal.onBegin(request);
+                }
+              });
+    }
+    for (Request.FailureListener flOriginal : failureListeners) {
+      requestListeners.set(
+          requestListeners.indexOf(flOriginal),
+          (Request.FailureListener)
+              (request, throwable) -> {
+                try (Scope ignore = context.makeCurrent()) {
+                  flOriginal.onFailure(request, throwable);
+                }
+              });
+    }
   }
 
   private void startSpan(Request request) {
@@ -117,10 +158,5 @@ public class JettyHttpClient9TracingInterceptor
     } else {
       LOG.warn("onComplete - could not find an otel context");
     }
-  }
-
-  @Override
-  public void onCommit(Request request) {
-    // Doing nothing here yet;
   }
 }
