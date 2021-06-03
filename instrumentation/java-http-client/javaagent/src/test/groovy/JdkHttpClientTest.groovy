@@ -76,7 +76,7 @@ class JdkHttpClientTest extends HttpClientTest<HttpRequest> implements AgentTest
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 1 + extraClientSpans()) {
+      trace(0, 1) {
         span(0) {
           hasNoParent()
           name expectedOperationName(method)

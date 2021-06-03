@@ -260,8 +260,14 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     return null
   }
 
-  List<AttributeKey<?>> extraAttributes() {
-    []
+  /** A list of additional HTTP client span attributes extracted by the instrumentation per URI. */
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    [
+      SemanticAttributes.HTTP_URL,
+      SemanticAttributes.HTTP_METHOD,
+      SemanticAttributes.HTTP_FLAVOR,
+      SemanticAttributes.HTTP_USER_AGENT
+    ]
   }
 
   def "basic #method request #url"() {
@@ -271,9 +277,9 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 2 + extraClientSpans()) {
+      trace(0, 2) {
         clientSpan(it, 0, null, method, url)
-        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 1, span(0))
       }
     }
 
@@ -293,10 +299,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 3 + extraClientSpans()) {
+      trace(0, 3) {
         basicSpan(it, 0, "parent")
         clientSpan(it, 1, span(0), method)
-        serverSpan(it, 2 + extraClientSpans(), span(1 + extraClientSpans()))
+        serverSpan(it, 2, span(1))
       }
     }
 
@@ -345,7 +351,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     responseCode == 200
     // only one trace (client).
     assertTraces(1) {
-      trace(0, 2 + extraClientSpans()) {
+      trace(0, 2) {
         basicSpan(it, 0, "parent")
         clientSpan(it, 1, span(0), method)
       }
@@ -371,10 +377,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     requestResult.get() == 200
     // only one trace (client).
     assertTraces(1) {
-      trace(0, 3 + extraClientSpans()) {
+      trace(0, 3) {
         basicSpan(it, 0, "parent")
         clientSpan(it, 1, span(0), method)
-        basicSpan(it, 2 + extraClientSpans(), "child", span(0))
+        basicSpan(it, 2, "child", span(0))
       }
     }
 
@@ -396,7 +402,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     requestResult.get() == 200
     // only one trace (client).
     assertTraces(2) {
-      trace(0, 1 + extraClientSpans()) {
+      trace(0, 1) {
         clientSpan(it, 0, null, method)
       }
       trace(1, 1) {
@@ -422,10 +428,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 3 + extraClientSpans()) {
+      trace(0, 3) {
         clientSpan(it, 0, null, method, uri)
-        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
-        serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 1, span(0))
+        serverSpan(it, 2, span(0))
       }
     }
 
@@ -444,11 +450,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 4 + extraClientSpans()) {
+      trace(0, 4) {
         clientSpan(it, 0, null, method, uri)
-        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
-        serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
-        serverSpan(it, 3 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 1, span(0))
+        serverSpan(it, 2, span(0))
+        serverSpan(it, 3, span(0))
       }
     }
 
@@ -470,11 +476,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     and:
     assertTraces(1) {
-      trace(0, 1 + extraClientSpans() + maxRedirects()) {
+      trace(0, 1 + maxRedirects()) {
         clientSpan(it, 0, null, method, uri, responseCodeOnRedirectError(), thrownException)
-        def start = 1 + extraClientSpans()
-        for (int i = start; i < maxRedirects() + start; i++) {
-          serverSpan(it, i, span(extraClientSpans()))
+        for (int i = 1; i < maxRedirects() + 1; i++) {
+          serverSpan(it, i, span(0))
         }
       }
     }
@@ -495,10 +500,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 3 + extraClientSpans()) {
+      trace(0, 3) {
         clientSpan(it, 0, null, method, uri)
-        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
-        serverSpan(it, 2 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 1, span(0))
+        serverSpan(it, 2, span(0))
       }
     }
 
@@ -518,10 +523,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     then:
     assertTraces(1) {
-      trace(0, 3 + extraClientSpans()) {
+      trace(0, 3) {
         basicSpan(it, 0, "parent", null)
         clientSpan(it, 1, span(0), method, uri, 500)
-        serverSpan(it, 2 + extraClientSpans(), span(1 + extraClientSpans()))
+        serverSpan(it, 2, span(1))
       }
     }
 
@@ -539,13 +544,13 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     then:
     responseCode == 200
     assertTraces(2) {
-      trace(0, 2 + extraClientSpans()) {
+      trace(0, 2) {
         clientSpan(it, 0, null, method, url)
-        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 1, span(0))
       }
-      trace(1, 2 + extraClientSpans()) {
+      trace(1, 2) {
         clientSpan(it, 0, null, method, url)
-        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 1, span(0))
       }
     }
 
@@ -568,9 +573,9 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 2 + extraClientSpans()) {
+      trace(0, 2) {
         clientSpan(it, 0, null, method, url)
-        serverSpan(it, 1 + extraClientSpans(), span(extraClientSpans()))
+        serverSpan(it, 1, span(0))
       }
     }
 
@@ -596,7 +601,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     and:
     assertTraces(1) {
-      trace(0, 2 + extraClientSpans()) {
+      trace(0, 2) {
         basicSpan(it, 0, "parent", null, thrownException)
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
       }
@@ -628,7 +633,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     and:
     assertTraces(1) {
-      trace(0, 3 + extraClientSpans()) {
+      trace(0, 3) {
         basicSpan(it, 0, "parent")
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
         basicSpan(it, 2, "callback", span(0))
@@ -654,7 +659,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def ex = thrown(Exception)
     def thrownException = ex instanceof ExecutionException ? ex.cause : ex
     assertTraces(1) {
-      trace(0, 2 + extraClientSpans()) {
+      trace(0, 2) {
         basicSpan(it, 0, "parent", null, thrownException)
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
       }
@@ -678,7 +683,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def ex = thrown(Exception)
     def thrownException = ex instanceof ExecutionException ? ex.cause : ex
     assertTraces(1) {
-      trace(0, 2 + extraClientSpans()) {
+      trace(0, 2) {
         basicSpan(it, 0, "parent", null, thrownException)
         clientSpan(it, 1, span(0), method, uri, null, thrownException)
       }
@@ -702,7 +707,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 1 + extraClientSpans()) {
+      trace(0, 1) {
         clientSpan(it, 0, null, method, uri)
       }
     }
@@ -820,8 +825,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer responseCode = 200, Throwable exception = null, String httpFlavor = "1.1") {
     def userAgent = userAgent()
-    def extraAttributes = extraAttributes()
-    def hasClientSpanHttpAttributes = hasClientSpanHttpAttributes(uri)
+    def httpClientAttributes = httpAttributes(uri)
     trace.span(index) {
       if (parentSpan == null) {
         hasNoParent()
@@ -854,36 +858,43 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         } else {
           "${SemanticAttributes.NET_PEER_IP.key}" { it == null || it == "127.0.0.1" || it == uri.host  } // Optional
         }
-        if (hasClientSpanHttpAttributes) {
+
+        if (httpClientAttributes.contains(SemanticAttributes.HTTP_URL)) {
           "${SemanticAttributes.HTTP_URL.key}" { it == "${uri}" || it == "${removeFragment(uri)}" }
+        }
+        if (httpClientAttributes.contains(SemanticAttributes.HTTP_METHOD)) {
           "${SemanticAttributes.HTTP_METHOD.key}" method
+        }
+        if (httpClientAttributes.contains(SemanticAttributes.HTTP_FLAVOR)) {
           if (uri.host == "www.google.com") {
             "${SemanticAttributes.HTTP_FLAVOR.key}" { it == httpFlavor || it == "2.0" } // google https request can be http 2.0
           } else {
             "${SemanticAttributes.HTTP_FLAVOR.key}" httpFlavor
           }
+        }
+        if (httpClientAttributes.contains(SemanticAttributes.HTTP_USER_AGENT)) {
           if (userAgent) {
             "${SemanticAttributes.HTTP_USER_AGENT.key}" { it.startsWith(userAgent) }
           }
         }
-        if (responseCode) {
-          "${SemanticAttributes.HTTP_STATUS_CODE.key}" responseCode
-        }
-
-        if (extraAttributes.contains(SemanticAttributes.HTTP_HOST)) {
+        if (httpClientAttributes.contains(SemanticAttributes.HTTP_HOST)) {
           "${SemanticAttributes.HTTP_HOST}" { it == uri.host || it == "${uri.host}:${uri.port}" }
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
+        if (httpClientAttributes.contains(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH}" Long
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
+        if (httpClientAttributes.contains(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH)) {
           "${SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH}" Long
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
+        if (httpClientAttributes.contains(SemanticAttributes.HTTP_SCHEME)) {
           "${SemanticAttributes.HTTP_SCHEME}" uri.scheme
         }
-        if (extraAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
+        if (httpClientAttributes.contains(SemanticAttributes.HTTP_TARGET)) {
           "${SemanticAttributes.HTTP_TARGET}" uri.path + "${uri.query != null ? "?${uri.query}" : ""}"
+        }
+
+        if (responseCode) {
+          "${SemanticAttributes.HTTP_STATUS_CODE.key}" responseCode
         }
       }
     }
@@ -920,14 +931,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Class<Throwable> errorType, message) {
     spanAssert.errorEvent(errorType, message)
-  }
-
-  boolean hasClientSpanHttpAttributes(URI uri) {
-    true
-  }
-
-  int extraClientSpans() {
-    0
   }
 
   boolean testWithClientParent() {

@@ -251,6 +251,10 @@ public class MuzzlePlugin implements Plugin<Project> {
       // longer bundled with the JVM and have to be excluded for the muzzle tests to be able to run.
       exclude(dep, "com.sun.jdmk", "jmxtools");
       exclude(dep, "com.sun.jmx", "jmxri");
+      for (String excluded : muzzleDirective.getExcludedDependencies().get()) {
+        String[] parts = excluded.split(":");
+        exclude(dep, parts[0], parts[1]);
+      }
 
       config.getDependencies().add(dep);
     }
@@ -449,6 +453,7 @@ public class MuzzlePlugin implements Plugin<Project> {
       inverseDirective.getModule().set(muzzleDirective.getModule());
       inverseDirective.getVersions().set(version);
       inverseDirective.getAssertPass().set(!muzzleDirective.getAssertPass().get());
+      inverseDirective.getExcludedDependencies().set(muzzleDirective.getExcludedDependencies());
       inverseDirectives.add(inverseDirective);
     }
 
