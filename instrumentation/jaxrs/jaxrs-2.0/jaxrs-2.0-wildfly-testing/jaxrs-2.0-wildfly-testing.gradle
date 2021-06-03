@@ -19,7 +19,7 @@ dependencies {
   testImplementation "javax:javaee-api:7.0"
 
   testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-arquillian-testing')
-  testImplementation "org.wildfly.arquillian:wildfly-arquillian-container-embedded:2.2.0.Final"
+  testRuntimeOnly "org.wildfly.arquillian:wildfly-arquillian-container-embedded:2.2.0.Final"
 
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
