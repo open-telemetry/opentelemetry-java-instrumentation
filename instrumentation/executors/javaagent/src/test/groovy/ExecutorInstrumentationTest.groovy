@@ -173,12 +173,14 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     pool.awaitTermination(10, TimeUnit.SECONDS)
 
     where:
-    name                | method           | wrap                           | poolImpl
-    "execute Runnable"  | executeRunnable  | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
-    "submit Runnable"   | submitRunnable   | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
-    "submit Callable"   | submitCallable   | { LambdaGen.wrapCallable(it) } | new ScheduledThreadPoolExecutor(1)
-    "schedule Runnable" | scheduleRunnable | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
-    "schedule Callable" | scheduleCallable | { LambdaGen.wrapCallable(it) } | new ScheduledThreadPoolExecutor(1)
+    name                              | method                      | wrap                           | poolImpl
+    "execute Runnable"                | executeRunnable             | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
+    "submit Runnable"                 | submitRunnable              | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
+    "submit Callable"                 | submitCallable              | { LambdaGen.wrapCallable(it) } | new ScheduledThreadPoolExecutor(1)
+    "schedule Runnable"               | scheduleRunnable            | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
+    "schedule Callable"               | scheduleCallable            | { LambdaGen.wrapCallable(it) } | new ScheduledThreadPoolExecutor(1)
+    "scheduleAtFixedRate Runnable"    | scheduleAtFixedRateRunnable | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
+    "scheduleWithFixedDelay Runnable" | scheduleWithFixedDelay      | { LambdaGen.wrapRunnable(it) } | new ScheduledThreadPoolExecutor(1)
     poolName = poolImpl.class.simpleName
   }
 
@@ -236,10 +238,12 @@ class ExecutorInstrumentationTest extends AgentInstrumentationSpecification {
     "submit Callable"   | submitCallable   | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
 
     // Scheduled executor has additional methods and also may get disabled because it wraps tasks
-    "submit Runnable"   | submitRunnable   | new ScheduledThreadPoolExecutor(1)
-    "submit Callable"   | submitCallable   | new ScheduledThreadPoolExecutor(1)
-    "schedule Runnable" | scheduleRunnable | new ScheduledThreadPoolExecutor(1)
-    "schedule Callable" | scheduleCallable | new ScheduledThreadPoolExecutor(1)
+    "submit Runnable"                 | submitRunnable              | new ScheduledThreadPoolExecutor(1)
+    "submit Callable"                 | submitCallable              | new ScheduledThreadPoolExecutor(1)
+    "schedule Runnable"               | scheduleRunnable            | new ScheduledThreadPoolExecutor(1)
+    "schedule Callable"               | scheduleCallable            | new ScheduledThreadPoolExecutor(1)
+    "scheduleAtFixedRate Runnable"    | scheduleAtFixedRateRunnable | new ScheduledThreadPoolExecutor(1)
+    "scheduleWithFixedDelay Runnable" | scheduleWithFixedDelay      | new ScheduledThreadPoolExecutor(1)
 
     // ForkJoinPool has additional set of method overloads for ForkJoinTask to deal with
     "submit Runnable"   | submitRunnable   | new ForkJoinPool()
