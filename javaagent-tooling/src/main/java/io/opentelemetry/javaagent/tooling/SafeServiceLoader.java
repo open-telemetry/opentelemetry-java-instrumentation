@@ -3,12 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api;
+package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.javaagent.extension.Ordered;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +41,16 @@ public final class SafeServiceLoader {
       }
     }
     return result;
+  }
+
+  /**
+   * Same as {@link #load(Class)}, but also orders the returned implementations by comparing their
+   * {@link Ordered#order()}.
+   */
+  public static <T extends Ordered> List<T> loadOrdered(Class<T> serviceClass) {
+    return load(serviceClass).stream()
+        .sorted(Comparator.comparingInt(Ordered::order))
+        .collect(Collectors.toList());
   }
 
   private SafeServiceLoader() {}
