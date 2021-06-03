@@ -7,8 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import application.io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.tracer.AttributeBindings;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
@@ -26,15 +28,22 @@ public class WithSpanTracer extends BaseTracer {
 
   private static final Logger logger = LoggerFactory.getLogger(WithSpanTracer.class);
 
+  private final WithSpanAttributeBinder attributeBinder = new WithSpanAttributeBinder();
   private final AsyncSpanEndStrategies asyncSpanEndStrategies =
       AsyncSpanEndStrategies.getInstance();
 
   public Context startSpan(
-      Context parentContext, WithSpan applicationAnnotation, Method method, SpanKind kind) {
-    Span span =
+      Context parentContext,
+      WithSpan applicationAnnotation,
+      Method method,
+      SpanKind kind,
+      Object[] args) {
+
+    SpanBuilder spanBuilder =
         spanBuilder(
-                parentContext, spanNameForMethodWithAnnotation(applicationAnnotation, method), kind)
-            .startSpan();
+            parentContext, spanNameForMethodWithAnnotation(applicationAnnotation, method), kind);
+    Span span = withSpanAttributes(spanBuilder, method, args).startSpan();
+
     if (kind == SpanKind.SERVER) {
       return withServerSpan(parentContext, span);
     }
@@ -73,6 +82,14 @@ public class WithSpanTracer extends BaseTracer {
       logger.debug("unexpected span kind: {}", applicationSpanKind.name());
       return SpanKind.INTERNAL;
     }
+  }
+
+  public SpanBuilder withSpanAttributes(SpanBuilder spanBuilder, Method method, Object[] args) {
+    if (args == null) {
+      return spanBuilder;
+    }
+    AttributeBindings bindings = attributeBinder.bind(method);
+    return bindings.isEmpty() ? spanBuilder : bindings.apply(spanBuilder, args);
   }
 
   /**

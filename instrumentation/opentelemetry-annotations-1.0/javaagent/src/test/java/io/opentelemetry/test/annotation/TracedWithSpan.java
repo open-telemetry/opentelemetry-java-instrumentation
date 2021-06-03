@@ -7,6 +7,7 @@ package io.opentelemetry.test.annotation;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.javaagent.instrumentation.otelannotations.SpanAttribute;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -54,6 +55,16 @@ public class TracedWithSpan {
 
   @WithSpan(kind = SpanKind.CLIENT)
   public String innerClient() {
+    return "hello!";
+  }
+
+  @WithSpan
+  public String withSpanAttributes(
+      @SpanAttribute String implicitName,
+      @SpanAttribute("explicitName") String parameter,
+      @SpanAttribute("nullAttribute") String nullAttribute,
+      String notTraced) {
+
     return "hello!";
   }
 
