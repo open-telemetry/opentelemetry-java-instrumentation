@@ -9,6 +9,7 @@ import com.ning.http.client.AsyncHttpClientConfig
 import com.ning.http.client.Request
 import com.ning.http.client.RequestBuilder
 import com.ning.http.client.Response
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
@@ -108,15 +109,14 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
   }
 
   @Override
-  boolean hasClientSpanHttpAttributes(URI uri) {
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
-        return false
-      default:
-        return true
+        return []
     }
+    return super.httpAttributes(uri)
   }
 
   @Override
