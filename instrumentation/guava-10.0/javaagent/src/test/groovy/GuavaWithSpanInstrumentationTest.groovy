@@ -101,4 +101,29 @@ class GuavaWithSpanInstrumentationTest extends AgentInstrumentationSpecification
       }
     }
   }
+
+  def "should capture span for canceled ListenableFuture"() {
+    setup:
+    def future = SettableFuture.<String>create()
+    new TracedWithSpan().listenableFuture(future)
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    future.cancel(true)
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.listenableFuture"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+          attributes {
+            "guava.canceled" true
+          }
+        }
+      }
+    }
+  }
 }
