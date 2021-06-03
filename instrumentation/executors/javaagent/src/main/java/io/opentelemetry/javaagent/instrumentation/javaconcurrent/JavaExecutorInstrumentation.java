@@ -60,6 +60,12 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         named("schedule").and(takesArgument(0, Runnable.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
     transformer.applyAdviceToMethod(
+        named("scheduleAtFixedRate").and(takesArgument(0, Runnable.class)),
+        JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
+    transformer.applyAdviceToMethod(
+        named("scheduleWithFixedDelay").and(takesArgument(0, Runnable.class)),
+        JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
+    transformer.applyAdviceToMethod(
         named("schedule").and(takesArgument(0, Callable.class)),
         JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
   }
