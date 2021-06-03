@@ -19,6 +19,13 @@ plugins {
   id 'com.github.burrunan.s3-build-cache' version '1.1'
 }
 
+dependencyResolutionManagement {
+  repositories {
+    mavenCentral()
+    mavenLocal()
+  }
+}
+
 def isCI = System.getenv("CI") != null
 def skipBuildscan = Boolean.valueOf(System.getenv("SKIP_BUILDSCAN"))
 gradleEnterprise {

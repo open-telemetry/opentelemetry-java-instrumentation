@@ -42,6 +42,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.artifacts.repositories.ArtifactRepository;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
@@ -392,16 +393,25 @@ public class MuzzlePlugin implements Plugin<Project> {
   }
 
   private static List<RemoteRepository> getProjectRepositories(Project project) {
-    return project.getRepositories().stream()
-        .filter(MavenArtifactRepository.class::isInstance)
-        .map(
-            repo -> {
-              MavenArtifactRepository mavenRepo = (MavenArtifactRepository) repo;
-              return new RemoteRepository.Builder(
-                      mavenRepo.getName(), "default", mavenRepo.getUrl().toString())
-                  .build();
-            })
-        .collect(Collectors.toList());
+    List<RemoteRepository> repositories = new ArrayList<>();
+    // Manually add mavenCentral until https://github.com/gradle/gradle/issues/17295
+    // Adding mavenLocal is much more complicated but hopefully isn't required for normal usage of
+    // Muzzle.
+    repositories.add(
+        new RemoteRepository.Builder(
+                "MavenCentral", "default", "https://repo.maven.apache.org/maven2/")
+            .build());
+    for (ArtifactRepository repository : project.getRepositories()) {
+      if (repository instanceof MavenArtifactRepository) {
+        repositories.add(
+            new RemoteRepository.Builder(
+                    repository.getName(),
+                    "default",
+                    ((MavenArtifactRepository) repository).getUrl().toString())
+                .build());
+      }
+    }
+    return repositories;
   }
 
   /** Create a list of muzzle directives which assert the opposite of the given MuzzleDirective. */

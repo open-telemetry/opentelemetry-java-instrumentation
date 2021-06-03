@@ -64,11 +64,6 @@ tasks.withType(ScalaCompile).configureEach {
   targetCompatibility = JavaVersion.toVersion(project.ext.release)
 }
 
-repositories {
-  mavenCentral()
-  mavenLocal()
-}
-
 evaluationDependsOn(":dependencyManagement")
 configurations {
   dependencyManagement {

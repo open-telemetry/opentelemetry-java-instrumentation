@@ -55,11 +55,6 @@ allprojects {
   apply from: "$rootDir/gradle/util.gradle"
 }
 
-repositories {
-  mavenLocal()
-  mavenCentral()
-}
-
 description = 'OpenTelemetry instrumentations for Java'
 
 allprojects {
