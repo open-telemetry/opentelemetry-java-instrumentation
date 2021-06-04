@@ -19,12 +19,6 @@ muzzle {
     module = "netty"
     versions = "[,]"
   }
-  pass {
-    group = "io.vertx"
-    module = "vertx-core"
-    versions = "[2.0.0,3.3.0)"
-    assertInverse = true
-  }
 }
 
 dependencies {
