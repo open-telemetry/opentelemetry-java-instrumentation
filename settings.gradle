@@ -62,7 +62,6 @@ include ':javaagent-bootstrap-tests'
 include ':javaagent-extension-api'
 include ':javaagent-tooling'
 include ':javaagent'
-include ':load-generator'
 
 include ':bom-alpha'
 include ':instrumentation-api'
