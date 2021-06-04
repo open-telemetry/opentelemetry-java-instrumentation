@@ -5,9 +5,15 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import io.opentelemetry.api.trace.SpanBuilder;
-
+/** Represents the binding of a method parameter to an attribute of a traced method. */
 @FunctionalInterface
 public interface AttributeBinding {
-  SpanBuilder apply(SpanBuilder builder, Object arg);
+
+  /**
+   * Applies the value of the method argument as an attribute on the span for the traced method.
+   *
+   * @param setter the {@link AttributeSetter} onto which to add the attribute
+   * @param arg the value of the method argument
+   */
+  void apply(AttributeSetter setter, Object arg);
 }

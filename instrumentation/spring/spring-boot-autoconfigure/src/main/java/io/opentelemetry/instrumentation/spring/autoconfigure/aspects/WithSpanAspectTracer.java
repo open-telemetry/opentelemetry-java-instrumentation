@@ -61,7 +61,10 @@ class WithSpanAspectTracer extends BaseTracer {
   public SpanBuilder withSpanAttributes(
       SpanBuilder spanBuilder, Method method, JoinPoint joinPoint) {
     AttributeBindings bindings = withSpanAspectAttributeBinder.bind(method);
-    return bindings.isEmpty() ? spanBuilder : bindings.apply(spanBuilder, joinPoint.getArgs());
+    if (!bindings.isEmpty()) {
+      bindings.apply(spanBuilder::setAttribute, joinPoint.getArgs());
+    }
+    return spanBuilder;
   }
 
   /**

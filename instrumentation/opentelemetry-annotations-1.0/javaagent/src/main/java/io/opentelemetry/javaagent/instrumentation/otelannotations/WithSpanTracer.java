@@ -85,11 +85,13 @@ public class WithSpanTracer extends BaseTracer {
   }
 
   public SpanBuilder withSpanAttributes(SpanBuilder spanBuilder, Method method, Object[] args) {
-    if (args == null) {
-      return spanBuilder;
+    if (args != null && args.length > 0) {
+      AttributeBindings bindings = attributeBinder.bind(method);
+      if (!bindings.isEmpty()) {
+        bindings.apply(spanBuilder::setAttribute, args);
+      }
     }
-    AttributeBindings bindings = attributeBinder.bind(method);
-    return bindings.isEmpty() ? spanBuilder : bindings.apply(spanBuilder, args);
+    return spanBuilder;
   }
 
   /**
