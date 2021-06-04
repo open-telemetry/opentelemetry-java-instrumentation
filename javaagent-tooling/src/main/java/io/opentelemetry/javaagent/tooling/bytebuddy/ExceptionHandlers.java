@@ -27,7 +27,7 @@ public final class ExceptionHandlers {
       new ExceptionHandler.Simple(
           new StackManipulation() {
             // Pops one Throwable off the stack. Maxes the stack to at least 3.
-            private final Size size = new StackManipulation.Size(-1, 3);
+            private final StackManipulation.Size size = new StackManipulation.Size(-1, 3);
 
             @Override
             public boolean isValid() {
@@ -35,7 +35,7 @@ public final class ExceptionHandlers {
             }
 
             @Override
-            public Size apply(MethodVisitor mv, Implementation.Context context) {
+            public StackManipulation.Size apply(MethodVisitor mv, Implementation.Context context) {
               String name = context.getInstrumentedType().getName();
               ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 

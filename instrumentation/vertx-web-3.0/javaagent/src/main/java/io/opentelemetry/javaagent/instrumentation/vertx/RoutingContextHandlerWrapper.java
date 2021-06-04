@@ -37,7 +37,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/465
         serverSpan.updateName(context.currentRoute().getPath());
       }
-    } catch (Exception ex) {
+    } catch (RuntimeException ex) {
       log.error("Failed to update server span name with vert.x route", ex);
     }
     try {

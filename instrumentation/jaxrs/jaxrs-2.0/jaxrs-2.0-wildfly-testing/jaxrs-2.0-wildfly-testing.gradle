@@ -6,7 +6,9 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 // add repo for org.gradle:gradle-tooling-api which org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain
 // which is used by jaxrs-2.0-arquillian-testing depends on
 repositories {
+  mavenCentral()
   maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+  mavenLocal()
 }
 
 configurations {
@@ -17,7 +19,7 @@ dependencies {
   testImplementation "javax:javaee-api:7.0"
 
   testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-arquillian-testing')
-  testImplementation "org.wildfly.arquillian:wildfly-arquillian-container-embedded:2.2.0.Final"
+  testRuntimeOnly "org.wildfly.arquillian:wildfly-arquillian-container-embedded:2.2.0.Final"
 
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
   testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')

@@ -126,7 +126,6 @@ public class VertxReactiveWebServer extends AbstractVerticle {
           .rxQuery("SELECT id" + queryInfix + ", name, price, weight FROM products")
           .flatMap(
               result -> {
-                Thread.dumpStack();
                 JsonArray arr = new JsonArray();
                 result.getRows().forEach(arr::add);
                 return Single.just(arr);

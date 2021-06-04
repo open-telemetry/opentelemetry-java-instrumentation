@@ -25,6 +25,9 @@ public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION> {
 
   protected abstract Collection<String> getServletMappings(String servletName);
 
+  // TODO(anuraaga): We currently treat null as no mappings, and empty as having a default mapping.
+  // Error prone is correctly flagging this behavior as error prone.
+  @SuppressWarnings("ReturnsNullCollection")
   private Collection<String> getMappings() {
     FILTERREGISTRATION filterRegistration = getFilterRegistration();
     if (filterRegistration == null) {

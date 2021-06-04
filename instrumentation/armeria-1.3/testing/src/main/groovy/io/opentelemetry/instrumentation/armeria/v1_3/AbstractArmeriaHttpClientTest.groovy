@@ -64,13 +64,14 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest>
   }
 
   @Override
-  List<AttributeKey<?>> extraAttributes() {
-    [
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_HOST,
       SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
       SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
       SemanticAttributes.HTTP_SCHEME,
       SemanticAttributes.HTTP_TARGET,
     ]
+    super.httpAttributes(uri) + extra
   }
 }

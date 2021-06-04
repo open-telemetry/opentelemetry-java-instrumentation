@@ -24,6 +24,8 @@ dependencies {
   testImplementation "io.vertx:vertx-jdbc-client:${vertxVersion}"
 
   // Vert.x 4.0 is incompatible with our tests.
+  // 3.9.7 Requires Netty 4.1.60, no other version works with it.
+  latestDepTestLibrary enforcedPlatform("io.netty:netty-bom:4.1.60.Final")
   latestDepTestLibrary "io.vertx:vertx-web:3.+"
   latestDepTestLibrary "io.vertx:vertx-web-client:3.+"
 }

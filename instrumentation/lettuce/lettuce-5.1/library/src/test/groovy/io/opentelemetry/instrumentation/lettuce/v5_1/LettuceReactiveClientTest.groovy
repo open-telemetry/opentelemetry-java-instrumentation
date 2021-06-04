@@ -9,8 +9,12 @@ import io.lettuce.core.RedisClient
 import io.lettuce.core.resource.ClientResources
 import io.opentelemetry.instrumentation.reactor.TracingOperator
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
+import spock.lang.Shared
 
 class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implements LibraryTestTrait {
+  @Shared
+  TracingOperator tracingOperator = TracingOperator.create()
+
   @Override
   RedisClient createClient(String uri) {
     return RedisClient.create(
@@ -21,10 +25,10 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
   }
 
   def setupSpec() {
-    TracingOperator.registerOnEachOperator()
+    tracingOperator.registerOnEachOperator()
   }
 
   def cleanupSpec() {
-    TracingOperator.resetOnEachOperator()
+    tracingOperator.resetOnEachOperator()
   }
 }

@@ -42,6 +42,8 @@ import java.util.regex.Pattern;
  *   <li>Do dot touch any logging facilities here so we can configure them later
  * </ul>
  */
+// Too early for logging
+@SuppressWarnings("SystemOut")
 public final class OpenTelemetryAgent {
   private static final Class<?> thisClass = OpenTelemetryAgent.class;
 
@@ -197,7 +199,7 @@ public final class OpenTelemetryAgent {
   public static void main(String... args) {
     try {
       System.out.println(OpenTelemetryAgent.class.getPackage().getImplementationVersion());
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       System.out.println("Failed to parse agent version");
       e.printStackTrace();
     }

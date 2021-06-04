@@ -17,7 +17,6 @@ import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.tooling.AgentTooling;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationClassPredicate;
-import io.opentelemetry.javaagent.tooling.muzzle.matcher.HelperReferenceWrapper.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -121,7 +120,7 @@ public final class ReferenceMatcher {
         }
         return checkThirdPartyTypeMatch(reference, resolution.resolve());
       }
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       if (e.getMessage().startsWith("Cannot resolve type description for ")) {
         // bytebuddy throws an illegal state exception with this message if it cannot resolve types
         // TODO: handle missing type resolutions without catching bytebuddy's exceptions
@@ -188,7 +187,9 @@ public final class ReferenceMatcher {
   }
 
   private static void collectMethodsFromTypeHierarchy(
-      HelperReferenceWrapper type, Set<Method> abstractMethods, Set<Method> plainMethods) {
+      HelperReferenceWrapper type,
+      Set<HelperReferenceWrapper.Method> abstractMethods,
+      Set<HelperReferenceWrapper.Method> plainMethods) {
 
     type.getMethods()
         .forEach(method -> (method.isAbstract() ? abstractMethods : plainMethods).add(method));

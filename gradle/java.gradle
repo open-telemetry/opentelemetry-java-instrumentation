@@ -63,11 +63,6 @@ tasks.withType(ScalaCompile).configureEach {
   targetCompatibility = JavaVersion.toVersion(project.ext.release)
 }
 
-repositories {
-  mavenCentral()
-  mavenLocal()
-}
-
 evaluationDependsOn(":dependencyManagement")
 configurations {
   dependencyManagement {
@@ -84,8 +79,26 @@ afterEvaluate {
   }
 }
 
+// Force 4.0, or 4.1 to the highest version of that branch. Since 4.0 and 4.1 often have
+// compatibility issues we can't just force to the highest version using normal BOM dependencies.
+abstract class NettyAlignmentRule implements ComponentMetadataRule {
+  void execute(ComponentMetadataContext ctx) {
+    ctx.details.with {
+      if (id.group == "io.netty" && id.name != "netty") {
+        if (id.version.startsWith("4.1.")) {
+          belongsTo("io.netty:netty-bom:4.1.65.Final", false)
+        } else if (id.version.startsWith("4.0.")) {
+          belongsTo("io.netty:netty-bom:4.0.56.Final", false)
+        }
+      }
+    }
+  }
+}
+
 dependencies {
   dependencyManagement platform(project(":dependencyManagement"))
+
+  components.all(NettyAlignmentRule)
 
   compileOnly "org.checkerframework:checker-qual"
 

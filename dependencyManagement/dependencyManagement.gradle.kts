@@ -43,7 +43,7 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "com.google.errorprone",
-    "2.4.0",
+    "2.7.1",
     listOf("error_prone_annotations", "error_prone_core")
   ),
   DependencySet(
@@ -92,6 +92,7 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.2",
   "commons-validator:commons-validator:1.7",
   "info.solidsoft.spock:spock-global-unroll:0.5.1",
+  "io.netty:netty:3.10.6.Final",
   "org.assertj:assertj-core:3.19.0",
   "org.awaitility:awaitility:4.0.3",
   "org.checkerframework:checker-qual:3.13.0",

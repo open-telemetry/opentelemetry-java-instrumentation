@@ -44,6 +44,7 @@ public class Servlet3FilterMappingResolverFactory
   }
 
   @Override
+  @SuppressWarnings("ReturnsNullCollection")
   protected Collection<String> getServletMappings(String servletName) {
     ServletRegistration servletRegistration =
         filterConfig.getServletContext().getServletRegistration(servletName);

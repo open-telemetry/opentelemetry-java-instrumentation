@@ -10,6 +10,7 @@ import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
 import java.util.Objects;
 
 public class ChannelTraceContext {
+
   public static class Factory implements ContextStore.Factory<ChannelTraceContext> {
     public static final Factory INSTANCE = new Factory();
 
@@ -73,5 +74,17 @@ public class ChannelTraceContext {
   @Override
   public int hashCode() {
     return Objects.hash(connectionContext, clientParentContext, context);
+  }
+
+  @Override
+  public String toString() {
+    return "ChannelTraceContext{"
+        + "connectionContext="
+        + connectionContext
+        + ", clientParentContext="
+        + clientParentContext
+        + ", context="
+        + context
+        + '}';
   }
 }

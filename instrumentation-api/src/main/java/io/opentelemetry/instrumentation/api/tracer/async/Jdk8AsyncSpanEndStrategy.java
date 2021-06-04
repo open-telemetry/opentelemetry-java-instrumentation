@@ -48,8 +48,8 @@ enum Jdk8AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
       // so that it can be recorded to the span
       try {
         future.join();
-      } catch (Exception exception) {
-        tracer.endExceptionally(context, exception);
+      } catch (Throwable t) {
+        tracer.endExceptionally(context, t);
         return true;
       }
     }

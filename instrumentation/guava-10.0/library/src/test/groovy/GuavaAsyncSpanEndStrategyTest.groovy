@@ -6,6 +6,7 @@
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer
 import io.opentelemetry.instrumentation.guava.GuavaAsyncSpanEndStrategy
@@ -16,11 +17,19 @@ class GuavaAsyncSpanEndStrategyTest extends Specification  {
 
   Context context
 
-  def underTest = GuavaAsyncSpanEndStrategy.INSTANCE
+  Span span
+
+  def underTest = GuavaAsyncSpanEndStrategy.create()
+
+  def underTestWithExperimentalAttributes = GuavaAsyncSpanEndStrategy.newBuilder()
+    .setCaptureExperimentalSpanAttributes(true)
+    .build()
 
   void setup() {
     tracer = Mock()
     context = Mock()
+    span = Mock()
+    span.storeInContext(_) >> { callRealMethod() }
   }
 
   def "ListenableFuture is supported"() {
@@ -85,5 +94,43 @@ class GuavaAsyncSpanEndStrategyTest extends Specification  {
 
     then:
     1 * tracer.endExceptionally(context, { it.getCause() == exception })
+  }
+
+  def "ends span on eventually canceled future"() {
+    given:
+    def future = SettableFuture.<String>create()
+    def context = span.storeInContext(Context.root())
+
+    when:
+    underTest.end(tracer, context, future)
+
+    then:
+    0 * tracer._
+
+    when:
+    future.cancel(true)
+
+    then:
+    1 * tracer.end(context)
+    0 * span.setAttribute(_)
+  }
+
+  def "ends span on eventually canceled future and capturing experimental span attributes"() {
+    given:
+    def future = SettableFuture.<String>create()
+    def context = span.storeInContext(Context.root())
+
+    when:
+    underTestWithExperimentalAttributes.end(tracer, context, future)
+
+    then:
+    0 * tracer._
+
+    when:
+    future.cancel(true)
+
+    then:
+    1 * tracer.end(context)
+    1 * span.setAttribute({ it.getKey() == "guava.canceled" }, true)
   }
 }

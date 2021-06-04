@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.test
 
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf
 import static net.bytebuddy.matcher.ElementMatchers.isMethod
 import static net.bytebuddy.matcher.ElementMatchers.named
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger

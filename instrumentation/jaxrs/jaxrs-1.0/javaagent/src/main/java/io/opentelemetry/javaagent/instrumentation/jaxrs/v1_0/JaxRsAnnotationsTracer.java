@@ -164,7 +164,6 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
   }
 
   private static String buildSpanName(Path classPath, Path methodPath) {
-    String spanName;
     StringBuilder spanNameBuilder = new StringBuilder();
     boolean skipSlash = false;
     if (classPath != null) {
@@ -187,8 +186,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
       spanNameBuilder.append(path);
     }
 
-    spanName = spanNameBuilder.toString().trim();
-    return spanName;
+    return spanNameBuilder.toString().trim();
   }
 
   @Override

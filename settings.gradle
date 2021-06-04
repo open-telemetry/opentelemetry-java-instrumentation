@@ -19,6 +19,13 @@ plugins {
   id 'com.github.burrunan.s3-build-cache' version '1.1'
 }
 
+dependencyResolutionManagement {
+  repositories {
+    mavenCentral()
+    mavenLocal()
+  }
+}
+
 def isCI = System.getenv("CI") != null
 def skipBuildscan = Boolean.valueOf(System.getenv("SKIP_BUILDSCAN"))
 gradleEnterprise {
@@ -73,12 +80,13 @@ include ':testing-common:library-for-integration-tests'
 include ':smoke-tests'
 
 include ':instrumentation:akka-actor-2.5:javaagent'
+include ':instrumentation:akka-actor-fork-join-2.5:javaagent'
 include ':instrumentation:akka-http-10.0:javaagent'
 include ':instrumentation:apache-camel-2.20:javaagent'
 include ':instrumentation:apache-camel-2.20:javaagent-unit-tests'
-include ':instrumentation:apache-dubbo:apache-dubbo-2.7:javaagent'
-include ':instrumentation:apache-dubbo:apache-dubbo-2.7:library'
-include ':instrumentation:apache-dubbo:apache-dubbo-2.7:testing'
+include ':instrumentation:apache-dubbo-2.7:javaagent'
+include ':instrumentation:apache-dubbo-2.7:library'
+include ':instrumentation:apache-dubbo-2.7:testing'
 include ':instrumentation:apache-httpasyncclient-4.1:javaagent'
 include ':instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent'
 include ':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent'
@@ -203,9 +211,9 @@ include ':instrumentation:log4j:log4j-2.7:javaagent'
 include ':instrumentation:log4j:log4j-2.13.2:javaagent'
 include ':instrumentation:log4j:log4j-2.13.2:library'
 include ':instrumentation:log4j:log4j-2-testing'
-include ':instrumentation:logback:logback-1.0:javaagent'
-include ':instrumentation:logback:logback-1.0:library'
-include ':instrumentation:logback:logback-1.0:testing'
+include ':instrumentation:logback-1.0:javaagent'
+include ':instrumentation:logback-1.0:library'
+include ':instrumentation:logback-1.0:testing'
 include ':instrumentation:methods:javaagent'
 include ':instrumentation:mongo:mongo-3.1:javaagent'
 include ':instrumentation:mongo:mongo-3.1:library'
