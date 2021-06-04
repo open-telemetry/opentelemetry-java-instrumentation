@@ -53,7 +53,7 @@ import org.gradle.api.tasks.TaskProvider;
 
 public class MuzzlePlugin implements Plugin<Project> {
   /** Select a random set of versions to test */
-  private static final int RANGE_COUNT_LIMIT = 10;
+  private static final int RANGE_COUNT_LIMIT = 1000000;
 
   private static volatile ClassLoader TOOLING_LOADER;
 
