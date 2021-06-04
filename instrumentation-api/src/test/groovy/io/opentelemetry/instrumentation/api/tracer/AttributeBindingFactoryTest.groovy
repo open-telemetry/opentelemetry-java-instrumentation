@@ -204,6 +204,78 @@ class AttributeBindingFactoryTest extends Specification {
     1 * setter.setAttribute({ it.getType() == AttributeType.STRING_ARRAY && it.getKey() == "key"}, [ "TestClass{value = foo}", "TestClass{value = bar}", null ])
   }
 
+  def "creates attribute binding for EnumSet"() {
+    when:
+    def type = TestFields.getDeclaredField("enumSet").getGenericType()
+    AttributeBindingFactory.createBinding("key", type).apply(setter, EnumSet.of(TestEnum.FOO, TestEnum.BAR))
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.STRING_ARRAY && it.getKey() == "key"}, [ "FOO", "BAR" ])
+  }
+
+  def "creates attribute binding for List<String>"() {
+    when:
+    def type = TestFields.getDeclaredField("stringList").getGenericType()
+    AttributeBindingFactory.createBinding("key", type).apply(setter, [ "x", "y", "z" ])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.STRING_ARRAY && it.getKey() == "key"}, [ "x", "y", "z" ])
+  }
+
+  def "creates attribute binding for List<Integer>"() {
+    when:
+    def type = TestFields.getDeclaredField("integerList").getGenericType()
+    AttributeBindingFactory.createBinding("key", type).apply(setter, [ 1, 2, 3 ])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.LONG_ARRAY && it.getKey() == "key"}, [ 1L, 2L, 3L ])
+  }
+
+  def "creates attribute binding for List<Long>"() {
+    when:
+    def type = TestFields.getDeclaredField("longList").getGenericType()
+    AttributeBindingFactory.createBinding("key", type).apply(setter, [ 1L, 2L, 3L ])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.LONG_ARRAY && it.getKey() == "key"}, [ 1L, 2L, 3L ])
+  }
+
+  def "creates attribute binding for List<Float>"() {
+    when:
+    def type = TestFields.getDeclaredField("floatList").getGenericType()
+    AttributeBindingFactory.createBinding("key", type).apply(setter, [ 1.0F, 2.0F, 3.0F ])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.DOUBLE_ARRAY && it.getKey() == "key"}, [ 1.0, 2.0, 3.0 ])
+  }
+
+  def "creates attribute binding for List<Double>"() {
+    when:
+    def type = TestFields.getDeclaredField("doubleList").getGenericType()
+    AttributeBindingFactory.createBinding("key", type).apply(setter, [ 1.0, 2.0, 3.0 ])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.DOUBLE_ARRAY && it.getKey() == "key"}, [ 1.0, 2.0, 3.0 ])
+  }
+
+  def "creates attribute binding for List<Boolean>"() {
+    when:
+    def type = TestFields.getDeclaredField("booleanList").getGenericType()
+    AttributeBindingFactory.createBinding("key", type).apply(setter, [ true, false, null ])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.BOOLEAN_ARRAY && it.getKey() == "key"}, [ true, false, null ])
+  }
+
+  def "creates attribute binding for List<?>"() {
+    when:
+    def type = TestFields.getDeclaredField("otherList").getGenericType()
+    AttributeBindingFactory.createBinding("key", type).apply(setter, [ new TestClass("foo"), new TestClass("bar") ])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.STRING_ARRAY && it.getKey() == "key"}, [ "TestClass{value = foo}", "TestClass{value = bar}" ])
+  }
+
   class TestClass {
     final String value
 
@@ -215,5 +287,18 @@ class AttributeBindingFactoryTest extends Specification {
     String toString() {
       return "TestClass{value = " + value + "}"
     }
+  }
+
+  enum TestEnum { FOO, BAR, BAZ }
+
+  class TestFields {
+    EnumSet<TestEnum> enumSet
+    List<String> stringList
+    List<Long> longList
+    List<Double> doubleList
+    List<Boolean> booleanList
+    List<Integer> integerList
+    List<Float> floatList
+    List<TestClass> otherList
   }
 }

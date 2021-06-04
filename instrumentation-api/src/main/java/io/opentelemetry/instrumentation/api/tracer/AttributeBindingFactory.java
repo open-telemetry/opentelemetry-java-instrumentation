@@ -6,10 +6,16 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.common.AttributeKey;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Helper class for creating {@link AttributeBinding} instances based on the {@link Type} of the
@@ -47,10 +53,17 @@ class AttributeBindingFactory {
     }
 
     if (isArrayType(type)) {
-      return createArrayBinding(name, type);
+      return arrayBinding(name, type);
     }
 
-    // TODO: List<String>, List<Integer>, List<Long>, List<Boolean>, EnumSet<?>, ? extends List<T>
+    if (isEnumSetType(type)) {
+      return enumSetBinding(name);
+    }
+
+    Type componentType = resolveListComponentType(type);
+    if (componentType != null) {
+      return listBinding(name, componentType);
+    }
 
     return defaultBinding(name);
   }
@@ -62,7 +75,31 @@ class AttributeBindingFactory {
     return false;
   }
 
-  private static AttributeBinding createArrayBinding(String name, Type type) {
+  private static boolean isEnumSetType(Type type) {
+    if (type instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) type;
+      return parameterizedType.getRawType() == EnumSet.class;
+    }
+    return type == EnumSet.class;
+  }
+
+  @Nullable
+  private static Type resolveListComponentType(Type type) {
+    // TODO: ? extends List<T>
+    if (type instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) type;
+      if (isSupportedListType(parameterizedType.getRawType())) {
+        return parameterizedType.getActualTypeArguments()[0];
+      }
+    }
+    return null;
+  }
+
+  private static boolean isSupportedListType(Type type) {
+    return type == List.class || type == ArrayList.class || type == LinkedList.class;
+  }
+
+  private static AttributeBinding arrayBinding(String name, Type type) {
     // Simple array attribute types without conversion
     if (type == String[].class) {
       AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
@@ -104,6 +141,36 @@ class AttributeBindingFactory {
     }
 
     return defaultArrayBinding(name);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static AttributeBinding listBinding(String name, Type type) {
+    if (type == String.class) {
+      AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
+      return (setter, arg) -> setter.setAttribute(key, (List<String>) arg);
+    }
+    if (type == Long.class) {
+      AttributeKey<List<Long>> key = AttributeKey.longArrayKey(name);
+      return (setter, arg) -> setter.setAttribute(key, (List<Long>) arg);
+    }
+    if (type == Double.class) {
+      AttributeKey<List<Double>> key = AttributeKey.doubleArrayKey(name);
+      return (setter, arg) -> setter.setAttribute(key, (List<Double>) arg);
+    }
+    if (type == Boolean.class) {
+      AttributeKey<List<Boolean>> key = AttributeKey.booleanArrayKey(name);
+      return (setter, arg) -> setter.setAttribute(key, (List<Boolean>) arg);
+    }
+    if (type == Integer.class) {
+      AttributeKey<List<Long>> key = AttributeKey.longArrayKey(name);
+      return mappedListBinding(Integer.class, key, Integer::longValue);
+    }
+    if (type == Float.class) {
+      AttributeKey<List<Double>> key = AttributeKey.doubleArrayKey(name);
+      return mappedListBinding(Float.class, key, Float::doubleValue);
+    }
+
+    return defaultListBinding(name);
   }
 
   private static AttributeBinding intArrayBinding(String name) {
@@ -266,6 +333,42 @@ class AttributeBindingFactory {
             }
           };
       setter.setAttribute(key, wrapper);
+    };
+  }
+
+  private static <T, U> AttributeBinding mappedListBinding(
+      Class<T> fromClass, AttributeKey<List<U>> key, Function<T, U> mapping) {
+    return (setter, arg) -> {
+      List<T> list = (List<T>) arg;
+      List<U> wrapper =
+          new AbstractList<U>() {
+            @Override
+            public U get(int index) {
+              T value = list.get(index);
+              return value != null ? mapping.apply(value) : null;
+            }
+
+            @Override
+            public int size() {
+              return list.size();
+            }
+          };
+      setter.setAttribute(key, wrapper);
+    };
+  }
+
+  private static AttributeBinding defaultListBinding(String name) {
+    AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
+    return mappedListBinding(Object.class, key, Object::toString);
+  }
+
+  private static AttributeBinding enumSetBinding(String name) {
+    AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
+    return (setter, arg) -> {
+      EnumSet<?> set = (EnumSet<?>) arg;
+      List<String> list = new ArrayList<>(set.size());
+      set.forEach(value -> list.add(value.name()));
+      setter.setAttribute(key, list);
     };
   }
 
