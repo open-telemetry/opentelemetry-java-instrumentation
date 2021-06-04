@@ -108,6 +108,30 @@ class AttributeBindingFactoryTest extends Specification {
     1 * setter.setAttribute({ it.getType() == AttributeType.STRING_ARRAY && it.getKey() == "key"}, [ "x", "y", "z", null ])
   }
 
+  def "creates attribute binding for int[]"() {
+    when:
+    AttributeBindingFactory.createBinding("key", int[]).apply(setter, [ 1, 2, 3 ] as int[])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.LONG_ARRAY && it.getKey() == "key"}, [ 1L, 2L, 3L ])
+  }
+
+  def "creates attribute binding for Integer[]"() {
+    when:
+    AttributeBindingFactory.createBinding("key", Integer[]).apply(setter, [ 1, 2, 3, null ] as Integer[])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.LONG_ARRAY && it.getKey() == "key"}, [ 1L, 2L, 3L, null ])
+  }
+
+  def "creates attribute binding for long[]"() {
+    when:
+    AttributeBindingFactory.createBinding("key", long[]).apply(setter, [ 1L, 2L, 3L ] as long[])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.LONG_ARRAY && it.getKey() == "key"}, [ 1L, 2L, 3L ])
+  }
+
   def "creates attribute binding for Long[]"() {
     when:
     AttributeBindingFactory.createBinding("key", Long[]).apply(setter, [ 1L, 2L, 3L, null ] as Long[])
@@ -116,12 +140,44 @@ class AttributeBindingFactoryTest extends Specification {
     1 * setter.setAttribute({ it.getType() == AttributeType.LONG_ARRAY && it.getKey() == "key"}, [ 1L, 2L, 3L, null ])
   }
 
+  def "creates attribute binding for float[]"() {
+    when:
+    AttributeBindingFactory.createBinding("key", float[]).apply(setter, [ 1.0F, 2.0F, 3.0F ] as float[])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.DOUBLE_ARRAY && it.getKey() == "key"}, [ 1.0, 2.0, 3.0 ] as List<Double>)
+  }
+
+  def "creates attribute binding for Float[]"() {
+    when:
+    AttributeBindingFactory.createBinding("key", Float[]).apply(setter, [ 1.0F, 2.0F, 3.0F, null ] as Float[])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.DOUBLE_ARRAY && it.getKey() == "key"}, [ 1.0, 2.0, 3.0, null ] as List<Double>)
+  }
+
+  def "creates attribute binding for double[]"() {
+    when:
+    AttributeBindingFactory.createBinding("key", double[]).apply(setter, [ 1.0, 2.0, 3.0 ] as double[])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.DOUBLE_ARRAY && it.getKey() == "key"}, [ 1.0, 2.0, 3.0 ] as List<Double>)
+  }
+
   def "creates attribute binding for Double[]"() {
     when:
     AttributeBindingFactory.createBinding("key", Double[]).apply(setter, [ 1.0, 2.0, 3.0, null ] as Double[])
 
     then:
     1 * setter.setAttribute({ it.getType() == AttributeType.DOUBLE_ARRAY && it.getKey() == "key"}, [ 1.0, 2.0, 3.0, null ] as List<Double>)
+  }
+
+  def "creates attribute binding for boolean[]"() {
+    when:
+    AttributeBindingFactory.createBinding("key", boolean[]).apply(setter, [ true, false ] as boolean[])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.BOOLEAN_ARRAY && it.getKey() == "key"}, [ true, false ] as List<Boolean>)
   }
 
   def "creates attribute binding for Boolean[]"() {
@@ -134,16 +190,30 @@ class AttributeBindingFactoryTest extends Specification {
 
   def "creates default attribute binding"() {
     when:
-    AttributeBindingFactory.createBinding("key", TestClass).apply(setter, new TestClass())
+    AttributeBindingFactory.createBinding("key", TestClass).apply(setter, new TestClass("foo"))
 
     then:
-    1 * setter.setAttribute({ it.getType() == AttributeType.STRING && it.getKey() == "key"}, "TestClass{}")
+    1 * setter.setAttribute({ it.getType() == AttributeType.STRING && it.getKey() == "key"}, "TestClass{value = foo}")
+  }
+
+  def "creates default attribute binding for array"() {
+    when:
+    AttributeBindingFactory.createBinding("key", TestClass[]).apply(setter, [ new TestClass("foo"), new TestClass("bar"), null] as TestClass[])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.STRING_ARRAY && it.getKey() == "key"}, [ "TestClass{value = foo}", "TestClass{value = bar}", null ])
   }
 
   class TestClass {
+    final String value
+
+    TestClass(String value) {
+      this.value = value
+    }
+
     @Override
     String toString() {
-      return "TestClass{}"
+      return "TestClass{value = " + value + "}"
     }
   }
 }
