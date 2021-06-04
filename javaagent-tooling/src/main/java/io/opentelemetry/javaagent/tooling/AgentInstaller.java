@@ -421,7 +421,7 @@ public class AgentInstaller {
       for (ComponentInstaller componentInstaller : componentInstallers) {
         try {
           componentInstaller.afterByteBuddyAgent(config);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
           log.error("Failed to execute {}", componentInstaller.getClass().getName(), e);
         }
       }

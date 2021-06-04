@@ -22,6 +22,8 @@ import java.util.ServiceLoader;
 import net.bytebuddy.dynamic.ClassFileLocator;
 
 /** Entry point for the muzzle gradle plugin. */
+// Runs in special classloader so tedious to provide access to the Gradle logger.
+@SuppressWarnings("SystemOut")
 public final class MuzzleGradlePluginUtil {
   private static final String INDENT = "  ";
 
@@ -101,7 +103,7 @@ public final class MuzzleGradlePluginUtil {
                     createHelperMap(allHelperClasses, agentClassLoader))
                 .transform(null, null, userClassLoader, null);
           }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
           System.err.println(
               "FAILED HELPER INJECTION. Are Helpers being injected in the correct order?");
           throw e;
@@ -140,7 +142,7 @@ public final class MuzzleGradlePluginUtil {
         for (ClassRef ref : instrumentationModule.getMuzzleReferences().values()) {
           System.out.print(prettyPrint(ref));
         }
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         String message =
             "Unexpected exception printing references for "
                 + instrumentationModule.getClass().getName();

@@ -22,6 +22,7 @@ public class Servlet3MappingResolverFactory extends ServletMappingResolverFactor
   }
 
   @Override
+  @SuppressWarnings("ReturnsNullCollection")
   public Collection<String> getMappings() {
     String servletName = servletConfig.getServletName();
     ServletContext servletContext = servletConfig.getServletContext();

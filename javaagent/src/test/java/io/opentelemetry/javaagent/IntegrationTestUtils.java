@@ -251,7 +251,7 @@ public class IntegrationTestUtils {
         String line = null;
         while ((line = reader.readLine()) != null) {
           if (print) {
-            System.out.println(type + "> " + line);
+            logger.info("{}> {}", type, line);
           }
         }
       } catch (IOException e) {

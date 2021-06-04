@@ -22,6 +22,7 @@ import picocli.CommandLine.Option;
 @Command(
     mixinStandardHelpOptions = true,
     description = "Generates traces and spans at a specified rate")
+@SuppressWarnings("SystemOut")
 public class LoadGenerator implements Callable<Integer> {
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");

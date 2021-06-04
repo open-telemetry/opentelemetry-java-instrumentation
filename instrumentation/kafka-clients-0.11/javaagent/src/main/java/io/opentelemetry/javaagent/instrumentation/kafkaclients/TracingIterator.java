@@ -47,13 +47,9 @@ public class TracingIterator implements Iterator<ConsumerRecord<?, ?>> {
 
     ConsumerRecord<?, ?> next = delegateIterator.next();
 
-    try {
-      if (next != null) {
-        currentContext = tracer.startSpan(next);
-        currentScope = currentContext.makeCurrent();
-      }
-    } catch (Exception e) {
-      log.debug("Error during decoration", e);
+    if (next != null) {
+      currentContext = tracer.startSpan(next);
+      currentScope = currentContext.makeCurrent();
     }
     return next;
   }
