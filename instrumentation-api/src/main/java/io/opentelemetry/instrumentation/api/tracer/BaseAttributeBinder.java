@@ -5,10 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-import io.opentelemetry.api.common.AttributeKey;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Base class for instrumentation-specific attribute binding for traced methods. */
@@ -40,8 +38,12 @@ public abstract class BaseAttributeBinder {
         continue;
       }
 
-      AttributeBinding binding = creatingBinding(attributeName, parameter.getParameterizedType());
-      bindings = new CombinedAttributeBindings(bindings, i, binding);
+      bindings =
+          new CombinedAttributeBindings(
+              bindings,
+              i,
+              AttributeBindingFactory.createBinding(
+                  attributeName, parameter.getParameterizedType()));
     }
 
     return bindings;
@@ -99,12 +101,5 @@ public abstract class BaseAttributeBinder {
         }
       }
     }
-  }
-
-  protected static AttributeBinding creatingBinding(String name, Type type) {
-
-    // TODO: Support more attribute types based on the parameter type
-    AttributeKey<String> key = AttributeKey.stringKey(name);
-    return (setter, arg) -> setter.setAttribute(key, arg.toString());
   }
 }

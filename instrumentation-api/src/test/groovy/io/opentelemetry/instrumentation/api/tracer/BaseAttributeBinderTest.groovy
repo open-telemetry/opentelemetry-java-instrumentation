@@ -102,17 +102,6 @@ class BaseAttributeBinderTest extends Specification {
     1 * setter.setAttribute({ it.getKey() == "z" }, "c")
   }
 
-  def "returns binding for String"() {
-    given:
-    def binding = BaseAttributeBinder.creatingBinding("key", String)
-
-    when:
-    binding.apply(setter, "value")
-
-    then:
-    1 * setter.setAttribute({ it.getKey() == "key" }, "value")
-  }
-
   class TestAttributeBinder extends BaseAttributeBinder {
     final String[] attributeNames
 
