@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.akkaactor;
+package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import akka.dispatch.Envelope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
@@ -20,38 +19,33 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
-
+public class DispatcherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("akka.dispatch.Dispatcher");
+    return named("com.squareup.okhttp.Dispatcher");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch")
-            .and(takesArgument(0, named("akka.actor.ActorCell")))
-            .and(takesArgument(1, named("akka.dispatch.Envelope"))),
-        AkkaDispatcherInstrumentation.class.getName() + "$DispatchEnvelopeAdvice");
+        named("enqueue").and(takesArgument(0, named("com.squareup.okhttp.Call$AsyncCall"))),
+        DispatcherInstrumentation.class.getName() + "$AttachStateAdvice");
   }
 
-  @SuppressWarnings("unused")
-  public static class DispatchEnvelopeAdvice {
-
+  public static class AttachStateAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static State enterDispatch(@Advice.Argument(1) Envelope envelope) {
-      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(envelope)) {
-        ContextStore<Envelope, State> contextStore =
-            InstrumentationContext.get(Envelope.class, State.class);
+    public static State onEnter(@Advice.Argument(0) Runnable call) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(call)) {
+        ContextStore<Runnable, State> contextStore =
+            InstrumentationContext.get(Runnable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
-            contextStore, envelope, Java8BytecodeBridge.currentContext());
+            contextStore, call, Java8BytecodeBridge.currentContext());
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exitDispatch(@Advice.Enter State state, @Advice.Thrown Throwable throwable) {
+    public static void onExit(@Advice.Enter State state, @Advice.Thrown Throwable throwable) {
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
     }
   }
