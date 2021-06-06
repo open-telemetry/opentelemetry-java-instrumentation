@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -33,6 +32,8 @@ import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
@@ -65,39 +66,33 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(2) HttpContext httpContext,
-        @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback,
-        @Advice.Local("otelContext") Context context) {
+        @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
       Context parentContext = currentContext();
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
       }
 
-      context = tracer().startSpan(parentContext);
-
-      requestProducer = new DelegatingRequestProducer(context, requestProducer);
-      futureCallback =
-          new TraceContinuedFutureCallback<>(parentContext, context, httpContext, futureCallback);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context) {
-      if (context != null && throwable != null) {
-        tracer().endExceptionally(context, throwable);
-      }
+      WrappedFutureCallback<?> wrappedFutureCallback =
+          new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
+      requestProducer =
+          new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
+      futureCallback = wrappedFutureCallback;
     }
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    private final Context context;
+    private final Context parentContext;
     private final HttpAsyncRequestProducer delegate;
+    private final WrappedFutureCallback<?> wrappedFutureCallback;
 
-    public DelegatingRequestProducer(Context context, HttpAsyncRequestProducer delegate) {
-      this.context = context;
+    public DelegatingRequestProducer(
+        Context parentContext,
+        HttpAsyncRequestProducer delegate,
+        WrappedFutureCallback<?> wrappedFutureCallback) {
+      this.parentContext = parentContext;
       this.delegate = delegate;
+      this.wrappedFutureCallback = wrappedFutureCallback;
     }
 
     @Override
@@ -108,10 +103,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
       HttpRequest request = delegate.generateRequest();
-      tracer().inject(context, request);
-      Span span = Span.fromContext(context);
-      span.updateName(tracer().spanNameForRequest(request));
-      tracer().onRequest(span, request);
+      wrappedFutureCallback.context = tracer().startSpan(parentContext, request, request);
       return request;
     }
 
@@ -144,31 +136,21 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
     public void close() throws IOException {
       delegate.close();
     }
-
-    /**
-     * Exposes context associated with the client invocation. Extending instrumentations can use
-     * this to access client span.
-     *
-     * @return context associated with the invocation.
-     */
-    public Context getContext() {
-      return context;
-    }
   }
 
-  public static class TraceContinuedFutureCallback<T> implements FutureCallback<T> {
+  public static class WrappedFutureCallback<T> implements FutureCallback<T> {
+
+    private static final Logger logger = LoggerFactory.getLogger(WrappedFutureCallback.class);
+
     private final Context parentContext;
-    private final Context context;
     private final HttpContext httpContext;
     private final FutureCallback<T> delegate;
 
-    public TraceContinuedFutureCallback(
-        Context parentContext,
-        Context context,
-        HttpContext httpContext,
-        FutureCallback<T> delegate) {
+    private volatile Context context;
+
+    public WrappedFutureCallback(
+        Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
       this.parentContext = parentContext;
-      this.context = context;
       this.httpContext = httpContext;
       // Note: this can be null in real life, so we have to handle this carefully
       this.delegate = delegate;
@@ -176,42 +158,66 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     @Override
     public void completed(T result) {
+      if (context == null) {
+        // this is unexpected
+        logger.debug("context was never set");
+        completeDelegate(result);
+        return;
+      }
+
       tracer().end(context, getResponse(httpContext));
 
       if (parentContext == null) {
         completeDelegate(result);
-      } else {
-        try (Scope scope = parentContext.makeCurrent()) {
-          completeDelegate(result);
-        }
+        return;
+      }
+
+      try (Scope ignored = parentContext.makeCurrent()) {
+        completeDelegate(result);
       }
     }
 
     @Override
     public void failed(Exception ex) {
+      if (context == null) {
+        // this is unexpected
+        logger.debug("context was never set");
+        failDelegate(ex);
+        return;
+      }
+
       // end span before calling delegate
       tracer().endExceptionally(context, getResponse(httpContext), ex);
 
       if (parentContext == null) {
         failDelegate(ex);
-      } else {
-        try (Scope scope = parentContext.makeCurrent()) {
-          failDelegate(ex);
-        }
+        return;
+      }
+
+      try (Scope ignored = parentContext.makeCurrent()) {
+        failDelegate(ex);
       }
     }
 
     @Override
     public void cancelled() {
+      if (context == null) {
+        // this is unexpected
+        logger.debug("context was never set");
+        cancelDelegate();
+        return;
+      }
+
       // end span before calling delegate
       tracer().end(context, getResponse(httpContext));
 
       if (parentContext == null) {
         cancelDelegate();
-      } else {
-        try (Scope scope = parentContext.makeCurrent()) {
-          cancelDelegate();
-        }
+        return;
+      }
+
+      try (Scope ignored = parentContext.makeCurrent()) {
+        cancelDelegate();
       }
     }
 
