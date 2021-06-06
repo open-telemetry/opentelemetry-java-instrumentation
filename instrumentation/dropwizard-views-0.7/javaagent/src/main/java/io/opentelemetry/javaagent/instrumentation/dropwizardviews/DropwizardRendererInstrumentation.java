@@ -44,6 +44,7 @@ public class DropwizardRendererInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RenderAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class RenderAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
