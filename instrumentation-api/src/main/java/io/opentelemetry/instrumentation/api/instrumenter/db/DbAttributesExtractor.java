@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.db;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
@@ -25,7 +26,10 @@ public abstract class DbAttributesExtractor<REQUEST, RESPONSE>
   protected void onStart(AttributesBuilder attributes, REQUEST request) {
     set(attributes, SemanticAttributes.DB_SYSTEM, system(request));
     set(attributes, SemanticAttributes.DB_USER, user(request));
-    set(attributes, SemanticAttributes.DB_NAME, name(request));
+    AttributeKey<String> nameAttribute = dbNameAttribute();
+    if (nameAttribute != null) {
+      set(attributes, nameAttribute, name(request));
+    }
     set(attributes, SemanticAttributes.DB_CONNECTION_STRING, connectionString(request));
     set(attributes, SemanticAttributes.DB_STATEMENT, statement(request));
     set(attributes, SemanticAttributes.DB_OPERATION, operation(request));
@@ -52,4 +56,8 @@ public abstract class DbAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   protected abstract String operation(REQUEST request);
+
+  protected AttributeKey<String> dbNameAttribute() {
+    return SemanticAttributes.DB_NAME;
+  }
 }

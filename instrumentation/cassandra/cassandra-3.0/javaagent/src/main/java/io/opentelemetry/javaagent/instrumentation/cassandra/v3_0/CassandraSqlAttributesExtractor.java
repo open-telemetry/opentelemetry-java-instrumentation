@@ -38,6 +38,11 @@ final class CassandraSqlAttributesExtractor
   }
 
   @Override
+  protected AttributeKey<String> dbNameAttribute() {
+    return SemanticAttributes.DB_CASSANDRA_KEYSPACE;
+  }
+
+  @Override
   protected AttributeKey<String> dbTableAttribute() {
     return SemanticAttributes.DB_CASSANDRA_TABLE;
   }

@@ -27,6 +27,11 @@ final class CassandraSqlAttributesExtractor
   }
 
   @Override
+  protected AttributeKey<String> dbNameAttribute() {
+    return SemanticAttributes.DB_CASSANDRA_KEYSPACE;
+  }
+
+  @Override
   @Nullable
   protected String name(CassandraRequest request) {
     return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);

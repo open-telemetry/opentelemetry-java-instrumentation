@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
-import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -20,12 +19,7 @@ final class CassandraAttributesExtractor
     extends AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
   @Override
-  protected void onStart(AttributesBuilder attributes, CassandraRequest request) {
-    set(
-        attributes,
-        SemanticAttributes.DB_CASSANDRA_KEYSPACE,
-        request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null));
-  }
+  protected void onStart(AttributesBuilder attributes, CassandraRequest request) {}
 
   @Override
   protected void onEnd(
