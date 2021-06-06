@@ -29,28 +29,28 @@ public class SubscriberWrapper implements Subscriber<Object> {
 
   @Override
   public void onSubscribe(Subscription subscription) {
-    try (Scope ignore = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       delegate.onSubscribe(subscription);
     }
   }
 
   @Override
   public void onNext(Object o) {
-    try (Scope ignore = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       delegate.onNext(o);
     }
   }
 
   @Override
   public void onError(Throwable throwable) {
-    try (Scope ignore = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       delegate.onError(throwable);
     }
   }
 
   @Override
   public void onComplete() {
-    try (Scope ignore = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       delegate.onComplete();
     }
   }
