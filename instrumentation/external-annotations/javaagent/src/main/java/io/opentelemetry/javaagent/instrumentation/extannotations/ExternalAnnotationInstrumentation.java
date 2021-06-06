@@ -81,9 +81,12 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
       classLoaderOptimization = none();
       traceAnnotationMatcher = none();
     } else {
-      String[] classNames = additionalTraceAnnotations.toArray(new String[0]);
-      this.classLoaderOptimization = hasClassesNamed(classNames);
-      this.traceAnnotationMatcher = namedOneOf(classNames);
+      ElementMatcher.Junction<ClassLoader> classLoaderMatcher = none();
+      for (String annotationName : additionalTraceAnnotations) {
+        classLoaderMatcher = classLoaderMatcher.or(hasClassesNamed(annotationName));
+      }
+      this.classLoaderOptimization = classLoaderMatcher;
+      this.traceAnnotationMatcher = namedOneOf(additionalTraceAnnotations.toArray(new String[0]));
     }
 
     excludedMethodsMatcher = configureExcludedMethods();
