@@ -16,10 +16,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 @AutoValue
 public abstract class DbRequest {
-  public abstract DbInfo getDbInfo();
-
-  @Nullable
-  public abstract String getStatement();
 
   @Nullable
   public static DbRequest create(PreparedStatement statement) {
@@ -39,4 +35,9 @@ public abstract class DbRequest {
   public static DbRequest create(DbInfo dbInfo, String statement) {
     return new AutoValue_DbRequest(dbInfo, statement);
   }
+
+  public abstract DbInfo getDbInfo();
+
+  @Nullable
+  public abstract String getStatement();
 }
