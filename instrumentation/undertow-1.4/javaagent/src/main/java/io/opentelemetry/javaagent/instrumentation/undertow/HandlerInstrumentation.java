@@ -40,10 +40,10 @@ public class HandlerInstrumentation implements TypeInstrumentation {
         named("handleRequest")
             .and(takesArgument(0, named("io.undertow.server.HttpServerExchange")))
             .and(isPublic()),
-        UndertowHandlerAdvice.class.getName());
+        this.getClass().getName() + "$HandleRequestAdvice");
   }
 
-  public static class UndertowHandlerAdvice {
+  public static class HandleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpServerExchange exchange,

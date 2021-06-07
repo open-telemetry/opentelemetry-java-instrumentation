@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
+package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import io.lettuce.core.RedisURI;
+import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class LettuceNetAttributesExtractor extends NetAttributesExtractor<RedisURI, Void> {
+final class LettuceConnectNetAttributesExtractor extends NetAttributesExtractor<RedisURI, Void> {
 
   @Override
   @Nullable
@@ -18,18 +18,18 @@ final class LettuceNetAttributesExtractor extends NetAttributesExtractor<RedisUR
   }
 
   @Override
-  public String peerName(RedisURI redisUri, @Nullable Void ignored) {
+  public String peerName(RedisURI redisUri, @Nullable Void unused) {
     return redisUri.getHost();
   }
 
   @Override
-  public Integer peerPort(RedisURI redisUri, @Nullable Void ignored) {
+  public Integer peerPort(RedisURI redisUri, @Nullable Void unused) {
     return redisUri.getPort();
   }
 
   @Override
   @Nullable
-  public String peerIp(RedisURI redisUri, @Nullable Void ignored) {
+  public String peerIp(RedisURI redisUri, @Nullable Void unused) {
     return null;
   }
 }

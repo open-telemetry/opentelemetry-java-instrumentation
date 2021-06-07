@@ -57,7 +57,8 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(named("sendAsync"))
             .and(isPublic())
-            .and(takesArgument(0, named("java.net.http.HttpRequest"))),
+            .and(takesArgument(0, named("java.net.http.HttpRequest")))
+            .and(takesArgument(1, named("java.net.http.HttpResponse$BodyHandler"))),
         HttpClientInstrumentation.class.getName() + "$SendAsyncAdvice");
   }
 
@@ -101,9 +102,13 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
+        @Advice.Argument(value = 1, readOnly = false) HttpResponse.BodyHandler bodyHandler,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
+      if (bodyHandler != null) {
+        bodyHandler = new BodyHandlerWrapper(bodyHandler, parentContext);
+      }
       if (!tracer().shouldStartSpan(parentContext)) {
         return;
       }

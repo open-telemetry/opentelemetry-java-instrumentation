@@ -31,6 +31,15 @@ public abstract class TomcatTracer extends HttpServerTracer<Request, Response, R
 
   private static final Logger log = LoggerFactory.getLogger(TomcatTracer.class);
 
+  public boolean shouldStartSpan(Request request) {
+    Context attachedContext = getServerContext(request);
+    if (attachedContext == null) {
+      return true;
+    }
+    log.debug("Unexpected context found before server handler even started: {}", attachedContext);
+    return false;
+  }
+
   public Context startServerSpan(Request request) {
     return startSpan(request, request, request, "HTTP " + request.method().toString());
   }

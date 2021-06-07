@@ -32,6 +32,7 @@ public class AbstractStreamMessageSubscriptionInstrumentation implements TypeIns
         AbstractStreamMessageSubscriptionInstrumentation.class.getName() + "$WrapSubscriberAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class WrapSubscriberAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void attachContext(

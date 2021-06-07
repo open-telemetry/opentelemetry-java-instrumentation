@@ -21,7 +21,7 @@ final class CassandraNetAttributesExtractor
 
   @Override
   public @Nullable InetSocketAddress getAddress(
-      CassandraRequest request, @Nullable ExecutionInfo response) {
-    return response == null ? null : response.getQueriedHost().getSocketAddress();
+      CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
+    return executionInfo == null ? null : executionInfo.getQueriedHost().getSocketAddress();
   }
 }

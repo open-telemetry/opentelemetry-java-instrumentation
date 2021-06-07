@@ -749,6 +749,56 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
   }
 
+  def "high concurrency test with callback"() {
+    setup:
+    assumeTrue(testCausality())
+    assumeTrue(testCallback())
+    assumeTrue(testCallbackWithParent())
+
+    int count = 50
+    def method = 'GET'
+    def url = server.address.resolve("/success")
+
+    def latch = new CountDownLatch(1)
+
+    def pool = Executors.newFixedThreadPool(4)
+
+    when:
+    count.times { index ->
+      def job = {
+        latch.await()
+        runUnderTrace("Parent span " + index) {
+          Span.current().setAttribute("test.request.id", index)
+          doRequestWithCallback(method, url, ["test-request-id": index.toString()]) {
+            runUnderTrace("child") {}
+          }
+        }
+      }
+      pool.submit(job)
+    }
+    latch.countDown()
+
+    then:
+    assertTraces(count) {
+      count.times { idx ->
+        trace(idx, 4) {
+          def rootSpan = it.span(0)
+          //Traces can be in arbitrary order, let us find out the request id of the current one
+          def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
+
+          basicSpan(it, 0, "Parent span " + requestId, null, null) {
+            it."test.request.id" requestId
+          }
+          clientSpan(it, 1, span(0), method, url)
+          serverSpan(it, 2, span(1)) {
+            it."test.request.id" requestId
+          }
+          basicSpan(it, 3, "child", span(0))
+        }
+      }
+    }
+  }
+
   /**
    * Almost similar to the "high concurrency test" test above, but all requests use the same single
    * connection.

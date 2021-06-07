@@ -23,5 +23,5 @@ final class LettuceConnectAttributesExtractor extends AttributesExtractor<RedisU
   }
 
   @Override
-  protected void onEnd(AttributesBuilder attributes, RedisURI redisUri, Void ignored) {}
+  protected void onEnd(AttributesBuilder attributes, RedisURI redisUri, Void unused) {}
 }
