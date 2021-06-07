@@ -67,7 +67,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
   }
 
   @Unroll
-  def "trace request with propagation (useCaches: #useCaches)"() {
+  def "trace request (useCaches: #useCaches)"() {
     setup:
     def url = server.address.resolve("/success").toURL()
     runUnderTrace("someTrace") {
@@ -144,78 +144,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           attributes {
           }
         }
-      }
-    }
-
-    where:
-    useCaches << [false, true]
-  }
-
-  def "trace request without propagation (useCaches: #useCaches)"() {
-    setup:
-    def url = server.address.resolve("/success").toURL()
-    runUnderTrace("someTrace") {
-      HttpURLConnection connection = url.openConnection()
-      connection.useCaches = useCaches
-      assert Span.current().getSpanContext().isValid()
-      def stream = connection.inputStream
-      connection.inputStream // one more to ensure state is working
-      def lines = stream.readLines()
-      stream.close()
-      assert connection.getResponseCode() == STATUS
-      assert lines == [RESPONSE]
-
-      // call again to ensure the cycling is ok
-      connection = url.openConnection()
-      connection.useCaches = useCaches
-      assert Span.current().getSpanContext().isValid()
-      // call before input stream to test alternate behavior
-      assert connection.getResponseCode() == STATUS
-      stream = connection.inputStream
-      lines = stream.readLines()
-      stream.close()
-      assert lines == [RESPONSE]
-    }
-
-    expect:
-    assertTraces(1) {
-      trace(0, 5) {
-        span(0) {
-          name "someTrace"
-          hasNoParent()
-          attributes {
-          }
-        }
-        span(1) {
-          name expectedOperationName("GET")
-          kind CLIENT
-          childOf span(0)
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-          }
-        }
-        serverSpan(it, 2, span(1))
-        span(3) {
-          name expectedOperationName("GET")
-          kind CLIENT
-          childOf span(0)
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-          }
-        }
-        serverSpan(it, 4, span(3))
       }
     }
 
