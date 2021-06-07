@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension.spi;
+package io.opentelemetry.javaagent.extension;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -16,7 +16,7 @@ import net.bytebuddy.agent.builder.AgentBuilder;
  * <p>This is a service provider interface that requires implementations to be registered in a
  * provider-configuration file stored in the {@code META-INF/services} resource directory.
  */
-public interface AgentExtension {
+public interface AgentExtension extends Ordered {
 
   /**
    * Extend the passed {@code agentBuilder} with custom logic (e.g. instrumentation).
@@ -31,12 +31,4 @@ public interface AgentExtension {
    * human-readable: javaagent uses the extension name in its logs.
    */
   String extensionName();
-
-  /**
-   * Returns the order of adding extensions to the javaagent. Higher values are added later, for
-   * example: an extension with order=1 will run after an extension with order=0.
-   */
-  default int order() {
-    return 0;
-  }
 }

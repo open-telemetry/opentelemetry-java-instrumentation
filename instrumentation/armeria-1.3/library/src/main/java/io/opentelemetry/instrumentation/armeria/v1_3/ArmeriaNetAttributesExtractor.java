@@ -17,15 +17,14 @@ final class ArmeriaNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<RequestContext, RequestLog> {
 
   @Override
-  public String transport(RequestContext requestContext) {
+  public String transport(RequestContext ctx) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getAddress(
-      RequestContext requestContext, @Nullable RequestLog requestLog) {
-    SocketAddress address = requestContext.remoteAddress();
+  public InetSocketAddress getAddress(RequestContext ctx, @Nullable RequestLog requestLog) {
+    SocketAddress address = ctx.remoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }

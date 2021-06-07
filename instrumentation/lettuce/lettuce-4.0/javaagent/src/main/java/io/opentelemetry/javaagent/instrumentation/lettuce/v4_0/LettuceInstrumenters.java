@@ -34,12 +34,14 @@ public final class LettuceInstrumenters {
             .addAttributesExtractor(attributesExtractor)
             .newInstrumenter(SpanKindExtractor.alwaysClient());
 
-    LettuceNetAttributesExtractor netAttributesExtractor = new LettuceNetAttributesExtractor();
+    LettuceConnectNetAttributesExtractor connectNetAttributesExtractor =
+        new LettuceConnectNetAttributesExtractor();
     CONNECT_INSTRUMENTER =
         Instrumenter.<RedisURI, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
-            .addAttributesExtractor(netAttributesExtractor)
-            .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
+            .addAttributesExtractor(connectNetAttributesExtractor)
+            .addAttributesExtractor(
+                PeerServiceAttributesExtractor.create(connectNetAttributesExtractor))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }

@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.extension.Ordered;
 import io.opentelemetry.javaagent.extension.muzzle.ClassRef;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +31,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * META-INF/services/} provider file is created for it to be picked up by the agent. See {@link
  * java.util.ServiceLoader} for more details.
  */
-public abstract class InstrumentationModule {
+public abstract class InstrumentationModule implements Ordered {
   private static final boolean DEFAULT_ENABLED =
       Config.get().getBooleanProperty("otel.instrumentation.common.default-enabled", true);
 
@@ -99,15 +100,6 @@ public abstract class InstrumentationModule {
    */
   protected boolean defaultEnabled() {
     return DEFAULT_ENABLED;
-  }
-
-  /**
-   * Returns the order of adding instrumentation modules to the javaagent. Higher values are added
-   * later, for example: an instrumentation module with order=1 will run after a module with
-   * order=0.
-   */
-  public int order() {
-    return 0;
   }
 
   /**

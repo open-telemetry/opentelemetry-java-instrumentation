@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.muzzle
 
 import io.opentelemetry.javaagent.IntegrationTestUtils
-import io.opentelemetry.javaagent.instrumentation.api.SafeServiceLoader
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import spock.lang.Specification
@@ -19,7 +18,7 @@ class MuzzleBytecodeTransformTest extends Specification {
     List<Class> nonLazyFields = []
     List<Class> unInitFields = []
     def instrumentationModuleClass = IntegrationTestUtils.getAgentClassLoader().loadClass("io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule")
-    for (Object instrumenter : SafeServiceLoader.load(instrumentationModuleClass)) {
+    for (Object instrumenter : ServiceLoader.load(instrumentationModuleClass)) {
       if (!instrumentationModuleClass.isAssignableFrom(instrumenter.getClass())) {
         // muzzle only applies to default instrumenters
         continue
