@@ -89,6 +89,23 @@ interface HelperReferenceWrapper {
     public int hashCode() {
       return Objects.hash(name, descriptor);
     }
+
+    @Override
+    public String toString() {
+      return "Method{"
+          + "isAbstract="
+          + isAbstract
+          + ", declaringClass='"
+          + declaringClass
+          + '\''
+          + ", name='"
+          + name
+          + '\''
+          + ", descriptor='"
+          + descriptor
+          + '\''
+          + '}';
+    }
   }
 
   final class Field {
@@ -123,6 +140,11 @@ interface HelperReferenceWrapper {
     @Override
     public int hashCode() {
       return Objects.hash(name, descriptor);
+    }
+
+    @Override
+    public String toString() {
+      return "Field{" + "name='" + name + '\'' + ", descriptor='" + descriptor + '\'' + '}';
     }
   }
 
@@ -259,10 +281,12 @@ interface HelperReferenceWrapper {
 
       @Override
       public Stream<Method> getMethods() {
-        return type.getDeclaredMethods().stream().filter(this::isOverrideable).map(this::toMethod);
+        return type.getDeclaredMethods().stream()
+            .filter(ClasspathType::isOverrideable)
+            .map(this::toMethod);
       }
 
-      private boolean isOverrideable(InDefinedShape method) {
+      private static boolean isOverrideable(InDefinedShape method) {
         return !(method.isStatic() || method.isPrivate() || method.isConstructor());
       }
 
@@ -273,14 +297,16 @@ interface HelperReferenceWrapper {
 
       @Override
       public Stream<Field> getFields() {
-        return type.getDeclaredFields().stream().filter(this::isNotPrivate).map(this::toField);
+        return type.getDeclaredFields().stream()
+            .filter(ClasspathType::isNotPrivate)
+            .map(ClasspathType::toField);
       }
 
-      private boolean isNotPrivate(FieldDescription.InDefinedShape field) {
+      private static boolean isNotPrivate(FieldDescription.InDefinedShape field) {
         return !field.isPrivate();
       }
 
-      private Field toField(FieldDescription.InDefinedShape field) {
+      private static Field toField(FieldDescription.InDefinedShape field) {
         return new Field(field.getName(), field.getDescriptor());
       }
     }

@@ -31,4 +31,6 @@ public final class Java8BytecodeBridge {
   public static Span spanFromContext(Context context) {
     return Span.fromContext(context);
   }
+
+  private Java8BytecodeBridge() {}
 }

@@ -86,7 +86,7 @@ public class ReferenceCollector {
       throw new IllegalStateException("Error reading resource " + resource, e);
     }
 
-    visitClassesAndCollectReferences(spiImplementations, false);
+    visitClassesAndCollectReferences(spiImplementations, /* startsFromAdviceClass= */ false);
   }
 
   private static final Pattern AWS_SDK_V2_SERVICE_INTERCEPTOR_SPI =
@@ -95,7 +95,7 @@ public class ReferenceCollector {
   private static final Pattern AWS_SDK_V1_SERVICE_INTERCEPTOR_SPI =
       Pattern.compile("com/amazonaws/services/\\w+(/\\w+)?/request.handler2s");
 
-  private boolean isSpiFile(String resource) {
+  private static boolean isSpiFile(String resource) {
     return resource.startsWith("META-INF/services/")
         || resource.equals("software/amazon/awssdk/global/handlers/execution.interceptors")
         || resource.equals("com/amazonaws/global/handlers/request.handler2s")
@@ -114,7 +114,7 @@ public class ReferenceCollector {
    * @see InstrumentationClassPredicate
    */
   public void collectReferencesFromAdvice(String adviceClassName) {
-    visitClassesAndCollectReferences(singleton(adviceClassName), true);
+    visitClassesAndCollectReferences(singleton(adviceClassName), /* startsFromAdviceClass= */ true);
   }
 
   private void visitClassesAndCollectReferences(

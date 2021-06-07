@@ -38,7 +38,7 @@ public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
       throws IOException {
 
     if (!(wrappedLambda.getTargetObject() instanceof RequestStreamHandler)) {
-      throw new RuntimeException(
+      throw new IllegalStateException(
           wrappedLambda.getTargetClass().getName() + " is not an instance of RequestStreamHandler");
     }
 

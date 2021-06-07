@@ -6,13 +6,17 @@
 package io.opentelemetry.instrumentation.reactor
 
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
+import spock.lang.Shared
 
 class ReactorCoreTest extends AbstractReactorCoreTest implements LibraryTestTrait {
+  @Shared
+  TracingOperator tracingOperator = TracingOperator.create()
+
   def setupSpec() {
-    TracingOperator.registerOnEachOperator()
+    tracingOperator.registerOnEachOperator()
   }
 
   def cleanupSpec() {
-    TracingOperator.resetOnEachOperator()
+    tracingOperator.resetOnEachOperator()
   }
 }

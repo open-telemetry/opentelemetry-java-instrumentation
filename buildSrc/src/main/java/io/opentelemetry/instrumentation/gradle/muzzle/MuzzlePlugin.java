@@ -42,6 +42,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.artifacts.repositories.ArtifactRepository;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
@@ -105,7 +106,7 @@ public class MuzzlePlugin implements Plugin<Project> {
                               .getMethod("printMuzzleReferences", ClassLoader.class);
                       assertionMethod.invoke(null, instrumentationCL);
                     } catch (Exception e) {
-                      throw new RuntimeException(e);
+                      throw new IllegalStateException(e);
                     }
                   });
             });
@@ -191,7 +192,7 @@ public class MuzzlePlugin implements Plugin<Project> {
                   try {
                     return file.toURI().toURL();
                   } catch (MalformedURLException e) {
-                    throw new RuntimeException(e);
+                    throw new IllegalStateException(e);
                   }
                 })
             .toArray(URL[]::new);
@@ -251,6 +252,10 @@ public class MuzzlePlugin implements Plugin<Project> {
       // longer bundled with the JVM and have to be excluded for the muzzle tests to be able to run.
       exclude(dep, "com.sun.jdmk", "jmxtools");
       exclude(dep, "com.sun.jmx", "jmxri");
+      for (String excluded : muzzleDirective.getExcludedDependencies().get()) {
+        String[] parts = excluded.split(":");
+        exclude(dep, parts[0], parts[1]);
+      }
 
       config.getDependencies().add(dep);
     }
@@ -305,7 +310,7 @@ public class MuzzlePlugin implements Plugin<Project> {
                               userCL,
                               muzzleDirective.getAssertPass().get());
                         } catch (Exception e) {
-                          throw new RuntimeException(e);
+                          throw new IllegalStateException(e);
                         } finally {
                           Thread.currentThread().setContextClassLoader(ccl);
                         }
@@ -366,7 +371,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     try {
       rangeResult = system.resolveVersionRange(session, rangeRequest);
     } catch (VersionRangeResolutionException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
 
     Set<Artifact> allVersionArtifacts =
@@ -388,16 +393,25 @@ public class MuzzlePlugin implements Plugin<Project> {
   }
 
   private static List<RemoteRepository> getProjectRepositories(Project project) {
-    return project.getRepositories().stream()
-        .filter(MavenArtifactRepository.class::isInstance)
-        .map(
-            repo -> {
-              MavenArtifactRepository mavenRepo = (MavenArtifactRepository) repo;
-              return new RemoteRepository.Builder(
-                      mavenRepo.getName(), "default", mavenRepo.getUrl().toString())
-                  .build();
-            })
-        .collect(Collectors.toList());
+    List<RemoteRepository> repositories = new ArrayList<>();
+    // Manually add mavenCentral until https://github.com/gradle/gradle/issues/17295
+    // Adding mavenLocal is much more complicated but hopefully isn't required for normal usage of
+    // Muzzle.
+    repositories.add(
+        new RemoteRepository.Builder(
+                "MavenCentral", "default", "https://repo.maven.apache.org/maven2/")
+            .build());
+    for (ArtifactRepository repository : project.getRepositories()) {
+      if (repository instanceof MavenArtifactRepository) {
+        repositories.add(
+            new RemoteRepository.Builder(
+                    repository.getName(),
+                    "default",
+                    ((MavenArtifactRepository) repository).getUrl().toString())
+                .build());
+      }
+    }
+    return repositories;
   }
 
   /** Create a list of muzzle directives which assert the opposite of the given MuzzleDirective. */
@@ -426,7 +440,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     try {
       allRangeResult = system.resolveVersionRange(session, allRangeRequest);
     } catch (VersionRangeResolutionException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
 
     VersionRangeRequest rangeRequest = new VersionRangeRequest();
@@ -436,7 +450,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     try {
       rangeResult = system.resolveVersionRange(session, rangeRequest);
     } catch (VersionRangeResolutionException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
 
     allRangeResult.getVersions().removeAll(rangeResult.getVersions());
@@ -449,6 +463,7 @@ public class MuzzlePlugin implements Plugin<Project> {
       inverseDirective.getModule().set(muzzleDirective.getModule());
       inverseDirective.getVersions().set(version);
       inverseDirective.getAssertPass().set(!muzzleDirective.getAssertPass().get());
+      inverseDirective.getExcludedDependencies().set(muzzleDirective.getExcludedDependencies());
       inverseDirectives.add(inverseDirective);
     }
 

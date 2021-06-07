@@ -15,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import net.bytebuddy.jar.asm.Type;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * The builder of {@link ClassRef}.
@@ -31,10 +32,11 @@ public final class ClassRefBuilder {
   private final Set<Source> sources = new LinkedHashSet<>();
   private final Set<Flag> flags = new LinkedHashSet<>();
   private final String className;
-  private String superClassName = null;
   private final Set<String> interfaceNames = new LinkedHashSet<>();
   private final List<FieldRef> fields = new ArrayList<>();
   private final List<MethodRef> methods = new ArrayList<>();
+
+  @Nullable private String superClassName = null;
 
   ClassRefBuilder(String className) {
     this.className = className;

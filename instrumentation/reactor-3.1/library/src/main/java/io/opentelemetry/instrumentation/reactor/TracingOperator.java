@@ -34,7 +34,21 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Operators;
 
 /** Based on Spring Sleuth's Reactor instrumentation. */
-public class TracingOperator {
+public final class TracingOperator {
+
+  public static TracingOperator create() {
+    return newBuilder().build();
+  }
+
+  public static TracingOperatorBuilder newBuilder() {
+    return new TracingOperatorBuilder();
+  }
+
+  private final boolean captureExperimentalSpanAttributes;
+
+  TracingOperator(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
 
   /**
    * Registers a hook that applies to every operator, propagating {@link Context} to downstream
@@ -42,15 +56,19 @@ public class TracingOperator {
    * reactive stream. This should generally be called in a static initializer block in your
    * application.
    */
-  public static void registerOnEachOperator() {
+  public void registerOnEachOperator() {
     Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift());
-    AsyncSpanEndStrategies.getInstance().registerStrategy(ReactorAsyncSpanEndStrategy.INSTANCE);
+    AsyncSpanEndStrategies.getInstance()
+        .registerStrategy(
+            ReactorAsyncSpanEndStrategy.newBuilder()
+                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+                .build());
   }
 
   /** Unregisters the hook registered by {@link #registerOnEachOperator()}. */
-  public static void resetOnEachOperator() {
+  public void resetOnEachOperator() {
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
-    AsyncSpanEndStrategies.getInstance().unregisterStrategy(ReactorAsyncSpanEndStrategy.INSTANCE);
+    AsyncSpanEndStrategies.getInstance().unregisterStrategy(ReactorAsyncSpanEndStrategy.class);
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift() {

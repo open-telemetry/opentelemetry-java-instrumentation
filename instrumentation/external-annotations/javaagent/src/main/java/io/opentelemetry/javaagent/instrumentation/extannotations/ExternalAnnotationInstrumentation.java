@@ -11,7 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.extannotations.External
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
-import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -69,32 +69,24 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
       "otel.instrumentation.external-annotations.exclude-methods";
 
-  private final Set<String> additionalTraceAnnotations;
   private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
   private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
   /** This matcher matches all methods that should be excluded from transformation. */
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
   public ExternalAnnotationInstrumentation() {
-    additionalTraceAnnotations = configureAdditionalTraceAnnotations(Config.get());
+    Set<String> additionalTraceAnnotations = configureAdditionalTraceAnnotations(Config.get());
 
     if (additionalTraceAnnotations.isEmpty()) {
       classLoaderOptimization = none();
       traceAnnotationMatcher = none();
     } else {
-      ElementMatcher.Junction<ClassLoader> classLoaderMatcher = null;
-      ElementMatcher.Junction<NamedElement> methodTraceMatcher = null;
+      ElementMatcher.Junction<ClassLoader> classLoaderMatcher = none();
       for (String annotationName : additionalTraceAnnotations) {
-        if (methodTraceMatcher == null) {
-          classLoaderMatcher = hasClassesNamed(annotationName);
-          methodTraceMatcher = named(annotationName);
-        } else {
-          classLoaderMatcher = classLoaderMatcher.or(hasClassesNamed(annotationName));
-          methodTraceMatcher = methodTraceMatcher.or(named(annotationName));
-        }
+        classLoaderMatcher = classLoaderMatcher.or(hasClassesNamed(annotationName));
       }
       this.classLoaderOptimization = classLoaderMatcher;
-      this.traceAnnotationMatcher = methodTraceMatcher;
+      this.traceAnnotationMatcher = namedOneOf(additionalTraceAnnotations.toArray(new String[0]));
     }
 
     excludedMethodsMatcher = configureExcludedMethods();

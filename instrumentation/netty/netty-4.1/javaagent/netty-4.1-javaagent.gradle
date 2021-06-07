@@ -11,20 +11,13 @@ muzzle {
     group = "io.netty"
     module = "netty-all"
     versions = "[4.1.0.Final,5.0.0)"
-    // Could not find netty-tcnative-2.0.39.Final-${os.detected.classifier}.jar (io.netty:netty-tcnative:2.0.39.Final)
-    skip("4.1.64.Final")
+    excludeDependency 'io.netty:netty-tcnative'
     assertInverse = true
   }
   fail {
     group = "io.netty"
     module = "netty"
     versions = "[,]"
-  }
-  pass {
-    group = "io.vertx"
-    module = "vertx-core"
-    versions = "[3.3.0,)"
-    assertInverse = true
   }
 }
 
@@ -40,6 +33,7 @@ dependencies {
   // first version with kqueue, add it only as a compile time dependency
   testCompileOnly "io.netty:netty-transport-native-kqueue:4.1.11.Final:osx-x86_64"
 
+  latestDepTestLibrary enforcedPlatform("io.netty:netty-bom:(,5.0)")
   latestDepTestLibrary "io.netty:netty-codec-http:(,5.0)"
   latestDepTestLibrary "io.netty:netty-handler:(,5.0)"
   latestDepTestLibrary "io.netty:netty-transport-native-epoll:(,5.0):linux-x86_64"
@@ -48,4 +42,16 @@ dependencies {
 
 test {
   systemProperty "testLatestDeps", testLatestDeps
+}
+
+if (!testLatestDeps) {
+  // No BOM for 4.1.0 so we can't use enforcedPlatform to override our transitive version
+  // management, so hook into the resolutionStrategy.
+  configurations.each {
+    it.resolutionStrategy.eachDependency {
+      if (it.requested.group == "io.netty" && it.requested.name != "netty-bom" && !it.requested.name.startsWith("netty-transport-native")) {
+        it.useVersion("4.1.0.Final")
+      }
+    }
+  }
 }

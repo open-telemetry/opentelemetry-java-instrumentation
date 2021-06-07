@@ -10,6 +10,8 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runInternalSpan
 
 import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.TraceUtils
@@ -39,7 +41,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
 
   @Shared
   def throwException = {
-    throw new RuntimeException(EXCEPTION_MESSAGE)
+    throw new IllegalStateException(EXCEPTION_MESSAGE)
   }
 
   def "Publisher '#paramName' test"() {
@@ -122,7 +124,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
     runUnderTrace(publisherSupplier)
 
     then:
-    def exception = thrown RuntimeException
+    def exception = thrown IllegalStateException
     exception.message == EXCEPTION_MESSAGE
     and:
     assertTraces(1) {
@@ -130,7 +132,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
         span(0) {
           name "trace-parent"
           status ERROR
-          errorEvent(RuntimeException, EXCEPTION_MESSAGE)
+          errorEvent(IllegalStateException, EXCEPTION_MESSAGE)
           hasNoParent()
         }
 
@@ -263,6 +265,154 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
     "basic flux" | 2         | { -> Flux.fromIterable([1, 2]).map(addOne) }
   }
 
+  def "Nested delayed mono with high concurrency"() {
+    setup:
+    def iterations = 100
+    def remainingIterations = new HashSet<>((0L ..< iterations).toList())
+
+    when:
+    (0L ..< iterations).forEach { iteration ->
+      def outer = Mono.just("")
+        .map({ it })
+        .delayElement(Duration.ofMillis(10))
+        .map({ it })
+        .delayElement(Duration.ofMillis(10))
+        .doOnSuccess({
+          def middle = Mono.just("")
+            .map({ it })
+            .delayElement(Duration.ofMillis(10))
+            .doOnSuccess({
+              TraceUtils.runUnderTrace("inner") {
+                Span.current().setAttribute("iteration", iteration)
+              }
+            })
+
+          TraceUtils.runUnderTrace("middle") {
+            Span.current().setAttribute("iteration", iteration)
+            middle.subscribe()
+          }
+        })
+
+      // Context must propagate even if only subscribe is in root span scope
+      TraceUtils.runUnderTrace("outer") {
+        Span.current().setAttribute("iteration", iteration)
+        outer.subscribe()
+      }
+    }
+
+    then:
+    assertTraces(iterations) {
+      for (int i = 0; i < iterations; i++) {
+        trace(i, 3) {
+          long iteration = -1
+          span(0) {
+            name("outer")
+            iteration = span.getAttributes().get(AttributeKey.longKey("iteration")).toLong()
+            assert remainingIterations.remove(iteration)
+          }
+          span(1) {
+            name("middle")
+            childOf(span(0))
+            assert span.getAttributes().get(AttributeKey.longKey("iteration")) == iteration
+          }
+          span(2) {
+            name("inner")
+            childOf(span(1))
+            assert span.getAttributes().get(AttributeKey.longKey("iteration")) == iteration
+          }
+        }
+      }
+    }
+
+    assert remainingIterations.isEmpty()
+  }
+
+  def "Nested delayed flux with high concurrency"() {
+    setup:
+    def iterations = 100
+    def remainingIterations = new HashSet<>((0L ..< iterations).toList())
+
+    when:
+    (0L ..< iterations).forEach { iteration ->
+      def outer = Flux.just("a", "b")
+        .map({ it })
+        .delayElements(Duration.ofMillis(10))
+        .map({ it })
+        .delayElements(Duration.ofMillis(10))
+        .doOnEach({ middleSignal ->
+          if (middleSignal.hasValue()) {
+            def value = middleSignal.get()
+
+            def middle = Flux.just("c", "d")
+              .map({ it })
+              .delayElements(Duration.ofMillis(10))
+              .doOnEach({ innerSignal ->
+                if (innerSignal.hasValue()) {
+                  TraceUtils.runUnderTrace("inner " + value + innerSignal.get()) {
+                    Span.current().setAttribute("iteration", iteration)
+                  }
+                }
+              })
+
+            TraceUtils.runUnderTrace("middle " + value) {
+              Span.current().setAttribute("iteration", iteration)
+              middle.subscribe()
+            }
+          }
+        })
+
+      // Context must propagate even if only subscribe is in root span scope
+      TraceUtils.runUnderTrace("outer") {
+        Span.current().setAttribute("iteration", iteration)
+        outer.subscribe()
+      }
+    }
+
+    then:
+    assertTraces(iterations) {
+      for (int i = 0; i < iterations; i++) {
+        trace(i, 7) {
+          long iteration = -1
+          String middleA = null
+          String middleB = null
+          span(0) {
+            name("outer")
+            iteration = span.getAttributes().get(AttributeKey.longKey("iteration")).toLong()
+            assert remainingIterations.remove(iteration)
+          }
+          span("middle a") {
+            middleA = span.spanId
+            childOf(span(0))
+            assert span.getAttributes().get(AttributeKey.longKey("iteration")) == iteration
+          }
+          span("middle b") {
+            middleB = span.spanId
+            childOf(span(0))
+            assert span.getAttributes().get(AttributeKey.longKey("iteration")) == iteration
+          }
+          span("inner ac") {
+            parentSpanId(middleA)
+            assert span.getAttributes().get(AttributeKey.longKey("iteration")) == iteration
+          }
+          span("inner ad") {
+            parentSpanId(middleA)
+            assert span.getAttributes().get(AttributeKey.longKey("iteration")) == iteration
+          }
+          span("inner bc") {
+            parentSpanId(middleB)
+            assert span.getAttributes().get(AttributeKey.longKey("iteration")) == iteration
+          }
+          span("inner bd") {
+            parentSpanId(middleB)
+            assert span.getAttributes().get(AttributeKey.longKey("iteration")) == iteration
+          }
+        }
+      }
+    }
+
+    assert remainingIterations.isEmpty()
+  }
+
   def runUnderTrace(def publisherSupplier) {
     TraceUtils.runUnderTrace("trace-parent") {
       def tracer = GlobalOpenTelemetry.getTracer("test")
@@ -277,7 +427,7 @@ abstract class AbstractReactorCoreTest extends InstrumentationSpecification {
           return publisher.toStream().toArray({ size -> new Integer[size] })
         }
 
-        throw new RuntimeException("Unknown publisher: " + publisher)
+        throw new IllegalStateException("Unknown publisher: " + publisher)
       } finally {
         span.end()
         scope.close()

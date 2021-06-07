@@ -19,7 +19,7 @@ import java.net.URLClassLoader;
 // TODO find a way to initialize logging before using this class
 // TODO support scanning a folder for several extension jars and keep them isolated from each other
 // Used by AgentInitializer
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "SystemOut"})
 public class ExtensionClassLoader extends URLClassLoader {
   // NOTE it's important not to use slf4j in this class, because this class is used before slf4j is
   // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to

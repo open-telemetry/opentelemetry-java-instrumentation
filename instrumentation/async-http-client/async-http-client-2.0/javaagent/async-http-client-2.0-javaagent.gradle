@@ -19,3 +19,18 @@ dependencies {
 
   testInstrumentation project(':instrumentation:netty:netty-4.0:javaagent')
 }
+
+// async-http-client 2.0.0 does not work with Netty versions newer than this due to referencing an
+// internal file.
+if (!testLatestDeps) {
+  configurations.each {
+    it.resolutionStrategy {
+      eachDependency { DependencyResolveDetails details ->
+        //specifying a fixed version for all libraries with io.netty' group
+        if (details.requested.group == 'io.netty' && details.requested.name != "netty-bom") {
+          details.useVersion "4.0.34.Final"
+        }
+      }
+    }
+  }
+}

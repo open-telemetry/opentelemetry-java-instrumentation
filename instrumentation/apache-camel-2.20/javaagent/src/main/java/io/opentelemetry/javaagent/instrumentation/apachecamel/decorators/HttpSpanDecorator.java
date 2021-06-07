@@ -93,7 +93,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  private boolean shouldSetPathAsName(CamelDirection camelDirection) {
+  private static boolean shouldSetPathAsName(CamelDirection camelDirection) {
     return CamelDirection.INBOUND.equals(camelDirection);
   }
 
@@ -109,7 +109,8 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  private boolean shouldUpdateServerSpanName(Span serverSpan, CamelDirection camelDirection) {
+  private static boolean shouldUpdateServerSpanName(
+      Span serverSpan, CamelDirection camelDirection) {
     return (serverSpan != null && shouldSetPathAsName(camelDirection));
   }
 

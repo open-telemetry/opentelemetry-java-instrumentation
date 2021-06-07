@@ -10,10 +10,14 @@ dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
   testInstrumentation project(':instrumentation:grizzly-2.0:javaagent')
 
-  // NB: testLibrary fails for some reason.
-  testImplementation "org.glassfish.main.extras:glassfish-embedded-all:4.0"
-
-  latestDepTestLibrary "org.glassfish.main.extras:glassfish-embedded-all:5.1.0"
+  testCompileOnly "org.glassfish.main.common:scattered-archive-api:4.0"
+  testCompileOnly "org.glassfish.main.common:simple-glassfish-api:4.0"
+  testCompileOnly "javax.servlet:javax.servlet-api:3.0.1"
+  if (!testLatestDeps) {
+    testRuntimeOnly "org.glassfish.main.extras:glassfish-embedded-all:4.0"
+  } else {
+    testRuntimeOnly "org.glassfish.main.extras:glassfish-embedded-all:5.1.0"
+  }
 }
 
 tasks.withType(Test).configureEach {

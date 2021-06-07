@@ -9,6 +9,11 @@ muzzle {
   }
 }
 
+tasks.withType(Test).configureEach {
+  // TODO run tests both with and without experimental span attributes
+  jvmArgs "-Dotel.instrumentation.rxjava.experimental-span-attributes=true"
+}
+
 dependencies {
   library "io.reactivex.rxjava3:rxjava:3.0.0"
 

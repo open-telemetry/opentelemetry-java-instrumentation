@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceDatabaseClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumenters.instrumenter;
 
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
@@ -27,20 +27,16 @@ public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T,
 
   @Override
   public void accept(R r) {
-    context = tracer().startSpan(Context.current(), null, command);
+    context = instrumenter().start(Context.current(), command);
     if (finishSpanOnClose) {
-      tracer().end(context);
+      instrumenter().end(context, command, null, null);
     }
   }
 
   @Override
   public void accept(T t, Throwable throwable) {
     if (context != null) {
-      if (throwable == null) {
-        tracer().end(context);
-      } else {
-        tracer().endExceptionally(context, throwable);
-      }
+      instrumenter().end(context, command, null, throwable);
     } else {
       LoggerFactory.getLogger(Mono.class)
           .error(

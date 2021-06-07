@@ -22,6 +22,8 @@ import java.util.ServiceLoader;
 import net.bytebuddy.dynamic.ClassFileLocator;
 
 /** Entry point for the muzzle gradle plugin. */
+// Runs in special classloader so tedious to provide access to the Gradle logger.
+@SuppressWarnings("SystemOut")
 public final class MuzzleGradlePluginUtil {
   private static final String INDENT = "  ";
 
@@ -69,7 +71,7 @@ public final class MuzzleGradlePluginUtil {
             "MUZZLE PASSED "
                 + instrumentationModule.getClass().getSimpleName()
                 + " BUT FAILURE WAS EXPECTED");
-        throw new RuntimeException("Instrumentation unexpectedly passed Muzzle validation");
+        throw new IllegalStateException("Instrumentation unexpectedly passed Muzzle validation");
       } else if (!passed && assertPass) {
         System.err.println(
             "FAILED MUZZLE VALIDATION: "
@@ -83,7 +85,7 @@ public final class MuzzleGradlePluginUtil {
         for (Mismatch mismatch : mismatches) {
           System.err.println("-- " + mismatch);
         }
-        throw new RuntimeException("Instrumentation failed Muzzle validation");
+        throw new IllegalStateException("Instrumentation failed Muzzle validation");
       }
 
       validatedModulesCount++;
@@ -101,7 +103,7 @@ public final class MuzzleGradlePluginUtil {
                     createHelperMap(allHelperClasses, agentClassLoader))
                 .transform(null, null, userClassLoader, null);
           }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
           System.err.println(
               "FAILED HELPER INJECTION. Are Helpers being injected in the correct order?");
           throw e;
@@ -111,7 +113,7 @@ public final class MuzzleGradlePluginUtil {
     if (validatedModulesCount == 0) {
       String errorMessage = "Did not found any InstrumentationModule to validate!";
       System.err.println(errorMessage);
-      throw new RuntimeException(errorMessage);
+      throw new IllegalStateException(errorMessage);
     }
   }
 
@@ -140,12 +142,12 @@ public final class MuzzleGradlePluginUtil {
         for (ClassRef ref : instrumentationModule.getMuzzleReferences().values()) {
           System.out.print(prettyPrint(ref));
         }
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         String message =
             "Unexpected exception printing references for "
                 + instrumentationModule.getClass().getName();
         System.out.println(message);
-        throw new RuntimeException(message, e);
+        throw new IllegalStateException(message, e);
       }
     }
   }

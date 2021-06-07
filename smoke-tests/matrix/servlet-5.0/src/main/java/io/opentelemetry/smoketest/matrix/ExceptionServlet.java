@@ -14,6 +14,6 @@ public class ExceptionServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    throw new RuntimeException("This is expected");
+    throw new IllegalStateException("This is expected");
   }
 }

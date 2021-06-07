@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.webflux.server.SpringWebfluxHttpServerTracer.tracer;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
@@ -26,7 +26,7 @@ public class AdviceUtils {
   public static final String CONTEXT_ATTRIBUTE = AdviceUtils.class.getName() + ".Context";
 
   public static String parseOperationName(Object handler) {
-    String className = tracer().spanNameForClass(handler.getClass());
+    String className = SpanNames.spanNameForClass(handler.getClass());
     String operationName;
     int lambdaIdx = className.indexOf("$$Lambda$");
 
@@ -79,17 +79,18 @@ public class AdviceUtils {
 
   private static void finishSpanIfPresentInAttributes(
       Map<String, Object> attributes, Throwable throwable) {
-
     io.opentelemetry.context.Context context =
         (io.opentelemetry.context.Context) attributes.remove(CONTEXT_ATTRIBUTE);
     finishSpanIfPresent(context, throwable);
   }
 
-  public static class SpanFinishingSubscriber<T> implements CoreSubscriber<T> {
+  public static class SpanFinishingSubscriber<T> implements CoreSubscriber<T>, Subscription {
 
     private final CoreSubscriber<? super T> subscriber;
     private final io.opentelemetry.context.Context otelContext;
     private final Context context;
+    private final AtomicBoolean completed = new AtomicBoolean();
+    private Subscription subscription;
 
     public SpanFinishingSubscriber(
         CoreSubscriber<? super T> subscriber, io.opentelemetry.context.Context otelContext) {
@@ -99,34 +100,52 @@ public class AdviceUtils {
     }
 
     @Override
-    public void onSubscribe(Subscription s) {
-      try (Scope scope = otelContext.makeCurrent()) {
-        subscriber.onSubscribe(s);
+    public void onSubscribe(Subscription subscription) {
+      this.subscription = subscription;
+      try (Scope ignored = otelContext.makeCurrent()) {
+        subscriber.onSubscribe(this);
       }
     }
 
     @Override
     public void onNext(T t) {
-      try (Scope scope = otelContext.makeCurrent()) {
+      try (Scope ignored = otelContext.makeCurrent()) {
         subscriber.onNext(t);
       }
     }
 
     @Override
     public void onError(Throwable t) {
-      finishSpanIfPresent(otelContext, t);
+      if (completed.compareAndSet(false, true)) {
+        finishSpanIfPresent(otelContext, t);
+      }
       subscriber.onError(t);
     }
 
     @Override
     public void onComplete() {
-      finishSpanIfPresent(otelContext, null);
+      if (completed.compareAndSet(false, true)) {
+        finishSpanIfPresent(otelContext, null);
+      }
       subscriber.onComplete();
     }
 
     @Override
     public Context currentContext() {
       return context;
+    }
+
+    @Override
+    public void request(long n) {
+      subscription.request(n);
+    }
+
+    @Override
+    public void cancel() {
+      if (completed.compareAndSet(false, true)) {
+        finishSpanIfPresent(otelContext, null);
+      }
+      subscription.cancel();
     }
   }
 }

@@ -11,14 +11,14 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.TimeUnit;
 
-public class Worker {
+public final class Worker {
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   /** Simulate work for the give number of milliseconds. */
   public static void doWork(long workTimeMillis) {
     Span span = tracer.spanBuilder("work").startSpan();
-    try (Scope scope = span.makeCurrent()) {
+    try (Scope ignored = span.makeCurrent()) {
       if (span != null) {
         span.setAttribute("work-time", workTimeMillis);
         span.setAttribute("info", "interesting stuff");
@@ -32,4 +32,6 @@ public class Worker {
       span.end();
     }
   }
+
+  private Worker() {}
 }

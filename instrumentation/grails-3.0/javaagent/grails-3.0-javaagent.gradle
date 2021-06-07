@@ -15,12 +15,14 @@ muzzle {
 }
 
 repositories {
+  mavenCentral()
   maven {
     url "https://repo.grails.org/grails/core"
     mavenContent {
       releasesOnly()
     }
   }
+  mavenLocal()
 }
 
 // first version where our tests work

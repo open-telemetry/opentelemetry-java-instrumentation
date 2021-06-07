@@ -11,17 +11,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-public class ClasspathUtils {
+public final class ClasspathUtils {
 
   public static byte[] convertToByteArray(InputStream resource) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -108,30 +104,6 @@ public class ClasspathUtils {
     jarOutputStream.closeEntry();
   }
 
-  /**
-   * Parse JVM classpath and return ClassLoader containing all classpath entries. Inspired by Guava.
-   */
-  public static ClassLoader buildJavaClassPathClassLoader() {
-    List<URL> urls = new ArrayList<>();
-    for (String entry : getClasspath()) {
-      try {
-        try {
-          urls.add(new File(entry).toURI().toURL());
-        } catch (SecurityException e) { // File.toURI checks to see if the file is a directory
-          urls.add(new URL("file", null, new File(entry).getAbsolutePath()));
-        }
-      } catch (MalformedURLException e) {
-        System.err.printf(
-            "Error injecting bootstrap jar: Malformed classpath entry: %s. %s%n", entry, e);
-      }
-    }
-    return new URLClassLoader(urls.toArray(new URL[0]), null);
-  }
-
-  private static String[] getClasspath() {
-    return System.getProperty("java.class.path").split(System.getProperty("path.separator"));
-  }
-
   // Moved this to a java class because groovy was adding a hard ref to classLoader
   public static boolean isClassLoaded(String className, ClassLoader classLoader) {
     try {
@@ -159,4 +131,6 @@ public class ClasspathUtils {
       return className;
     }
   }
+
+  private ClasspathUtils() {}
 }

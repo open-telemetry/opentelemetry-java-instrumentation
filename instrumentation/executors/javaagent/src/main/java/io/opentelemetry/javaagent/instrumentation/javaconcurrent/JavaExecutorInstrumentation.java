@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.instrumentation.api.concurrent.RunnableWrapper
 import io.opentelemetry.javaagent.instrumentation.api.concurrent.State;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
@@ -185,7 +186,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         tasks = wrappedTasks;
         return tasks;
       }
-      return null;
+      return Collections.emptyList();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -201,7 +202,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
        any parent spans in case of an error.
        (according to ExecutorService docs and AbstractExecutorService code)
       */
-      if (null != throwable && wrappedTasks != null) {
+      if (null != throwable) {
         for (Callable<?> task : wrappedTasks) {
           if (task != null) {
             ContextStore<Callable, State> contextStore =

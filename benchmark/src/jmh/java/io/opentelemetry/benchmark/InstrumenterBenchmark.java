@@ -55,7 +55,8 @@ public class InstrumenterBenchmark {
   }
 
   static class ConstantHttpAttributesExtractor extends HttpAttributesExtractor<Void, Void> {
-    static HttpAttributesExtractor<Void, Void> INSTANCE = new ConstantHttpAttributesExtractor();
+    static final HttpAttributesExtractor<Void, Void> INSTANCE =
+        new ConstantHttpAttributesExtractor();
 
     @Override
     protected @Nullable String method(Void unused) {

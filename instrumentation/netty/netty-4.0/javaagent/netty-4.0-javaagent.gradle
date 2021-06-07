@@ -11,20 +11,13 @@ muzzle {
     group = "io.netty"
     module = "netty-all"
     versions = "[4.0.0.Final,4.1.0.Final)"
-    // Could not find netty-tcnative-2.0.39.Final-${os.detected.classifier}.jar (io.netty:netty-tcnative:2.0.39.Final)
-    skip("4.1.64.Final")
+    excludeDependency 'io.netty:netty-tcnative'
     assertInverse = true
   }
   fail {
     group = "io.netty"
     module = "netty"
     versions = "[,]"
-  }
-  pass {
-    group = "io.vertx"
-    module = "vertx-core"
-    versions = "[2.0.0,3.3.0)"
-    assertInverse = true
   }
 }
 
@@ -35,12 +28,14 @@ dependencies {
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
-configurations.testImplementation {
-  resolutionStrategy {
-    eachDependency { DependencyResolveDetails details ->
-      //specifying a fixed version for all libraries with io.netty' group
-      if (details.requested.group == 'io.netty') {
-        details.useVersion "4.0.0.Final"
+if (!testLatestDeps) {
+  configurations.each {
+    it.resolutionStrategy {
+      eachDependency { DependencyResolveDetails details ->
+        //specifying a fixed version for all libraries with io.netty' group
+        if (details.requested.group == 'io.netty' && details.requested.name != "netty-bom") {
+          details.useVersion "4.0.0.Final"
+        }
       }
     }
   }

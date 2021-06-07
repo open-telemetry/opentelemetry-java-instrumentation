@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.reactor;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
@@ -14,8 +16,23 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public enum ReactorAsyncSpanEndStrategy implements AsyncSpanEndStrategy {
-  INSTANCE;
+public final class ReactorAsyncSpanEndStrategy implements AsyncSpanEndStrategy {
+  private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
+      AttributeKey.booleanKey("reactor.canceled");
+
+  public static ReactorAsyncSpanEndStrategy create() {
+    return newBuilder().build();
+  }
+
+  public static ReactorAsyncSpanEndStrategyBuilder newBuilder() {
+    return new ReactorAsyncSpanEndStrategyBuilder();
+  }
+
+  private final boolean captureExperimentalSpanAttributes;
+
+  ReactorAsyncSpanEndStrategy(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
 
   @Override
   public boolean supports(Class<?> returnType) {
@@ -29,10 +46,14 @@ public enum ReactorAsyncSpanEndStrategy implements AsyncSpanEndStrategy {
         new EndOnFirstNotificationConsumer(tracer, context);
     if (returnValue instanceof Mono) {
       Mono<?> mono = (Mono<?>) returnValue;
-      return mono.doOnError(notificationConsumer).doOnSuccess(notificationConsumer::onSuccess);
+      return mono.doOnError(notificationConsumer)
+          .doOnSuccess(notificationConsumer::onSuccess)
+          .doOnCancel(notificationConsumer::onCancel);
     } else {
       Flux<?> flux = Flux.from((Publisher<?>) returnValue);
-      return flux.doOnError(notificationConsumer).doOnComplete(notificationConsumer);
+      return flux.doOnError(notificationConsumer)
+          .doOnComplete(notificationConsumer)
+          .doOnCancel(notificationConsumer::onCancel);
     }
   }
 
@@ -41,7 +62,7 @@ public enum ReactorAsyncSpanEndStrategy implements AsyncSpanEndStrategy {
    * OnError notifications are received. Multiple notifications can happen anytime multiple
    * subscribers subscribe to the same publisher.
    */
-  private static final class EndOnFirstNotificationConsumer extends AtomicBoolean
+  private final class EndOnFirstNotificationConsumer extends AtomicBoolean
       implements Runnable, Consumer<Throwable> {
 
     private final BaseTracer tracer;
@@ -55,6 +76,15 @@ public enum ReactorAsyncSpanEndStrategy implements AsyncSpanEndStrategy {
 
     public <T> void onSuccess(T ignored) {
       accept(null);
+    }
+
+    public void onCancel() {
+      if (compareAndSet(false, true)) {
+        if (captureExperimentalSpanAttributes) {
+          Span.fromContext(context).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
+        }
+        tracer.end(context);
+      }
     }
 
     @Override

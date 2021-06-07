@@ -63,7 +63,7 @@ abstract class SpringBatchTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(1)
           status ERROR
-          errorEvent RuntimeException, "fail"
+          errorEvent IllegalStateException, "fail"
         }
       }
     }

@@ -87,11 +87,6 @@ class GrailsTest extends HttpServerTest<ConfigurableApplicationContext> implemen
   }
 
   @Override
-  boolean hasExceptionOnServerSpan(ServerEndpoint endpoint) {
-    true
-  }
-
-  @Override
   boolean hasResponseSpan(ServerEndpoint endpoint) {
     endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND
   }

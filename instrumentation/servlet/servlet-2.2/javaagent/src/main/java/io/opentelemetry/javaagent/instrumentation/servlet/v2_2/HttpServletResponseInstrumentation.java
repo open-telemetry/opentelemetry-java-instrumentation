@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;

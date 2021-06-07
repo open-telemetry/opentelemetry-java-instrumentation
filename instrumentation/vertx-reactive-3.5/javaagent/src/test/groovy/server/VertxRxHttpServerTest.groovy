@@ -41,7 +41,7 @@ class VertxRxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTr
         .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
         .setInstances(3)) { res ->
       if (!res.succeeded()) {
-        throw new RuntimeException("Cannot deploy server Verticle", res.cause())
+        throw new IllegalStateException("Cannot deploy server Verticle", res.cause())
       }
       future.complete(null)
     }

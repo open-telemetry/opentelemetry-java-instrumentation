@@ -36,7 +36,7 @@ enum Jdk8AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
    * synchronously ends the span to avoid additional allocations and overhead registering for
    * notification of completion.
    */
-  private boolean endSynchronously(
+  private static boolean endSynchronously(
       CompletableFuture<?> future, BaseTracer tracer, Context context) {
 
     if (!future.isDone()) {
@@ -48,8 +48,8 @@ enum Jdk8AsyncSpanEndStrategy implements AsyncSpanEndStrategy {
       // so that it can be recorded to the span
       try {
         future.join();
-      } catch (Exception exception) {
-        tracer.endExceptionally(context, exception);
+      } catch (Throwable t) {
+        tracer.endExceptionally(context, t);
         return true;
       }
     }

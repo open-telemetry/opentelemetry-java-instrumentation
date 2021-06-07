@@ -58,11 +58,11 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
     try {
       result = (O) targetMethod.invoke(wrappedLambda.getTargetObject(), parameters);
     } catch (IllegalAccessException e) {
-      throw new RuntimeException("Method is inaccessible", e);
+      throw new IllegalStateException("Method is inaccessible", e);
     } catch (InvocationTargetException e) {
       throw (e.getCause() instanceof RuntimeException
           ? (RuntimeException) e.getCause()
-          : new RuntimeException(e.getTargetException()));
+          : new IllegalStateException(e.getTargetException()));
     }
     return result;
   }

@@ -29,7 +29,7 @@ import java.util.concurrent.Executor
 class TestConnection implements Connection {
   TestConnection(boolean throwException) {
     if (throwException) {
-      throw new RuntimeException("connection exception")
+      throw new IllegalStateException("connection exception")
     }
   }
 

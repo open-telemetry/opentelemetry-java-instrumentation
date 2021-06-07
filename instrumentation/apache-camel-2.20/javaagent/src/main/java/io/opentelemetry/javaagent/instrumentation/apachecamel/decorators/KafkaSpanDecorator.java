@@ -89,7 +89,7 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
    * @param header the header name
    * @param type the class type of the exchange header
    */
-  private <T> String getValue(final Exchange exchange, final String header, Class<T> type) {
+  private static <T> String getValue(final Exchange exchange, final String header, Class<T> type) {
     T value = exchange.getIn().getHeader(header, type);
     return value != null ? String.valueOf(value) : exchange.getIn().getHeader(header, String.class);
   }

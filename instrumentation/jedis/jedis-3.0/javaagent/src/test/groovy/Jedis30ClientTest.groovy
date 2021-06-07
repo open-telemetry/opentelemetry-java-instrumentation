@@ -50,7 +50,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.DB_OPERATION.key" "SET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.NET_PEER_PORT.key" port
           }
@@ -75,7 +75,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.DB_OPERATION.key" "SET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.NET_PEER_PORT.key" port
           }
@@ -88,7 +88,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "GET foo"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.DB_OPERATION.key" "GET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.NET_PEER_PORT.key" port
           }
@@ -113,7 +113,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "SET foo ?"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.DB_OPERATION.key" "SET"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.NET_PEER_PORT.key" port
           }
@@ -126,7 +126,7 @@ class Jedis30ClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$SemanticAttributes.DB_SYSTEM.key" "redis"
             "$SemanticAttributes.DB_STATEMENT.key" "RANDOMKEY"
-            "$SemanticAttributes.NET_PEER_IP.key" "127.0.0.1"
+            "$SemanticAttributes.DB_OPERATION.key" "RANDOMKEY"
             "$SemanticAttributes.NET_PEER_NAME.key" "localhost"
             "$SemanticAttributes.NET_PEER_PORT.key" port
           }

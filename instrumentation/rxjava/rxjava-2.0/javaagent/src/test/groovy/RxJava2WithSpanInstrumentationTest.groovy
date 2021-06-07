@@ -136,6 +136,35 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     }
   }
 
+  def "should capture span for canceled Completable"() {
+    setup:
+    def source = CompletableSubject.create()
+    def observer = new TestObserver()
+    new TracedWithSpan()
+      .completable(source)
+      .subscribe(observer)
+    observer.assertSubscribed()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    observer.cancel()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.completable"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "rxjava.canceled" true
+          }
+        }
+      }
+    }
+  }
+
   def "should capture span for already completed Maybe"() {
     setup:
     def observer = new TestObserver()
@@ -271,6 +300,35 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     }
   }
 
+  def "should capture span for canceled Maybe"() {
+    setup:
+    def source = MaybeSubject.<String> create()
+    def observer = new TestObserver()
+    new TracedWithSpan()
+      .maybe(source)
+      .subscribe(observer)
+    observer.assertSubscribed()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    observer.cancel()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.maybe"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "rxjava.canceled" true
+          }
+        }
+      }
+    }
+  }
+
   def "should capture span for already completed Single"() {
     setup:
     def observer = new TestObserver()
@@ -377,6 +435,35 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for canceled Single"() {
+    setup:
+    def source = SingleSubject.<String> create()
+    def observer = new TestObserver()
+    new TracedWithSpan()
+      .single(source)
+      .subscribe(observer)
+    observer.assertSubscribed()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    observer.cancel()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.single"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "rxjava.canceled" true
           }
         }
       }
@@ -506,6 +593,41 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     }
   }
 
+  def "should capture span for canceled Observable"() {
+    setup:
+    def source = UnicastSubject.<String> create()
+    def observer = new TestObserver()
+    new TracedWithSpan()
+      .observable(source)
+      .subscribe(observer)
+    observer.assertSubscribed()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    source.onNext("Value")
+    observer.assertValue("Value")
+
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    observer.cancel()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.observable"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "rxjava.canceled" true
+          }
+        }
+      }
+    }
+  }
+
   def "should capture span for already completed Flowable"() {
     setup:
     def observer = new TestSubscriber()
@@ -623,6 +745,41 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for canceled Flowable"() {
+    setup:
+    def source = UnicastProcessor.<String> create()
+    def observer = new TestSubscriber()
+    new TracedWithSpan()
+      .flowable(source)
+      .subscribe(observer)
+    observer.assertSubscribed()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    source.onNext("Value")
+    observer.assertValue("Value")
+
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    observer.dispose()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.flowable"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "rxjava.canceled" true
           }
         }
       }
@@ -756,6 +913,42 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
     }
   }
 
+  def "should capture span for canceled ParallelFlowable"() {
+    setup:
+    def source = UnicastProcessor.<String> create()
+    def observer = new TestSubscriber()
+    new TracedWithSpan()
+      .parallelFlowable(source.parallel())
+      .sequential()
+      .subscribe(observer)
+    observer.assertSubscribed()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    source.onNext("Value")
+    observer.assertValue("Value")
+
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    observer.cancel()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.parallelFlowable"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "rxjava.canceled" true
+          }
+        }
+      }
+    }
+  }
+
   def "should capture span for eventually completed Publisher"() {
     setup:
     def source = new CustomPublisher()
@@ -811,6 +1004,35 @@ class RxJava2WithSpanInstrumentationTest extends AgentInstrumentationSpecificati
           status ERROR
           errorEvent(IllegalArgumentException, "Boom")
           attributes {
+          }
+        }
+      }
+    }
+  }
+
+  def "should capture span for canceled Publisher"() {
+    setup:
+    def source = new CustomPublisher()
+    def observer = new TestSubscriber()
+    new TracedWithSpan()
+      .publisher(source)
+      .subscribe(observer)
+    observer.assertSubscribed()
+
+    expect:
+    Thread.sleep(500) // sleep a bit just to make sure no span is captured
+    assertTraces(0) {}
+
+    observer.cancel()
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          name "TracedWithSpan.publisher"
+          kind INTERNAL
+          hasNoParent()
+          attributes {
+            "rxjava.canceled" true
           }
         }
       }

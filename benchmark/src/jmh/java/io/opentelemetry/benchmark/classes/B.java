@@ -5,6 +5,7 @@
 
 package io.opentelemetry.benchmark.classes;
 
+@SuppressWarnings("ClassNamedLikeTypeParameter")
 public interface B extends A {
   void b();
 }

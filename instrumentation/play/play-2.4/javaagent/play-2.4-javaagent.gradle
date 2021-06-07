@@ -50,3 +50,18 @@ dependencies {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 }
+
+// async-http-client 2.0 does not work with Netty versions newer than this due to referencing an
+// internal file.
+if (!testLatestDeps) {
+  configurations.configureEach {
+    resolutionStrategy {
+      eachDependency { DependencyResolveDetails details ->
+        //specifying a fixed version for all libraries with io.netty' group
+        if (details.requested.group == 'io.netty' && details.requested.name != "netty-bom" && details.requested.name != "netty") {
+          details.useVersion "4.0.34.Final"
+        }
+      }
+    }
+  }
+}

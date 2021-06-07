@@ -51,11 +51,11 @@ public class E2EAgentBenchmark {
   }
 
   @Test
-  void run() throws Exception {
+  void run() throws InterruptedException {
     runBenchmark();
   }
 
-  private void runBenchmark() throws Exception {
+  private void runBenchmark() throws InterruptedException {
     String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
 
     // otlp collector container
@@ -111,19 +111,18 @@ public class E2EAgentBenchmark {
   }
 
   static void printContainerMapping(GenericContainer<?> container) {
-    System.out.println(
-        String.format(
-            "Container %s ports exposed at %s",
-            container.getDockerImageName(),
-            container.getExposedPorts().stream()
-                .map(
-                    port ->
-                        new AbstractMap.SimpleImmutableEntry<>(
-                            port,
-                            "http://"
-                                + container.getContainerIpAddress()
-                                + ":"
-                                + container.getMappedPort(port)))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))));
+    LOG.info(
+        "Container {} ports exposed at {}",
+        container.getDockerImageName(),
+        container.getExposedPorts().stream()
+            .map(
+                port ->
+                    new AbstractMap.SimpleImmutableEntry<>(
+                        port,
+                        "http://"
+                            + container.getContainerIpAddress()
+                            + ":"
+                            + container.getMappedPort(port)))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
   }
 }

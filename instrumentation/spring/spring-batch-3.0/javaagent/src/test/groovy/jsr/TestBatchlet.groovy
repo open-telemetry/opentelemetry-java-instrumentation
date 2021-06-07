@@ -17,7 +17,7 @@ class TestBatchlet implements Batchlet {
   @Override
   String process() throws Exception {
     if (fail != null && Integer.valueOf(fail) == 1) {
-      throw new RuntimeException("fail")
+      throw new IllegalStateException("fail")
     }
     return "FINISHED"
   }

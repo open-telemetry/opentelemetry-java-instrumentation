@@ -57,7 +57,7 @@ public class TracingSession implements Session {
       instrumenter().end(context, request, null, t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet, null);
+    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
   }
 
@@ -72,7 +72,7 @@ public class TracingSession implements Session {
       instrumenter().end(context, request, null, t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet, null);
+    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
   }
 
@@ -87,7 +87,7 @@ public class TracingSession implements Session {
       instrumenter().end(context, request, null, t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet, null);
+    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
   }
 
@@ -103,7 +103,7 @@ public class TracingSession implements Session {
       instrumenter().end(context, request, null, t);
       throw t;
     }
-    instrumenter().end(context, request, resultSet, null);
+    instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
     return resultSet;
   }
 
@@ -208,14 +208,14 @@ public class TracingSession implements Session {
     return query == null ? "" : query;
   }
 
-  private void addCallbackToEndSpan(
+  private static void addCallbackToEndSpan(
       ResultSetFuture future, Context context, CassandraRequest request) {
     Futures.addCallback(
         future,
         new FutureCallback<ResultSet>() {
           @Override
           public void onSuccess(ResultSet resultSet) {
-            instrumenter().end(context, request, resultSet, null);
+            instrumenter().end(context, request, resultSet.getExecutionInfo(), null);
           }
 
           @Override

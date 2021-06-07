@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.test.utils;
 import ch.qos.logback.classic.Level;
 import org.slf4j.Logger;
 
-public class LoggerUtils {
+public final class LoggerUtils {
   public static void setLevel(Logger logger, Level level) {
     // Some appserver tests (Jetty 11) somehow cause our logback logger not to be used, so we must
     // check the type
@@ -16,4 +16,6 @@ public class LoggerUtils {
       ((ch.qos.logback.classic.Logger) logger).setLevel(level);
     }
   }
+
+  private LoggerUtils() {}
 }

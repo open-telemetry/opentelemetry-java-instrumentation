@@ -51,7 +51,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
 
   @Shared
   def throwException = {
-    throw new RuntimeException(EXCEPTION_MESSAGE)
+    throw new IllegalStateException(EXCEPTION_MESSAGE)
   }
 
   static addOneFunc(int i) {
@@ -406,7 +406,7 @@ abstract class AbstractRxJava2Test extends InstrumentationSpecification {
         return ((Completable) publisher).toMaybe().blockingGet()
       }
 
-      throw new RuntimeException("Unknown publisher: " + publisher)
+      throw new IllegalStateException("Unknown publisher: " + publisher)
     }
   }
 }

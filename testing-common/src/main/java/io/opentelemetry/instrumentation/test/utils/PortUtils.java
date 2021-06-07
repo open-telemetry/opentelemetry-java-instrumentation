@@ -9,9 +9,9 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
-public class PortUtils {
+public final class PortUtils {
 
-  public static int UNUSABLE_PORT = 61;
+  public static final int UNUSABLE_PORT = 61;
 
   private static final PortAllocator portAllocator = new PortAllocator();
 
@@ -45,11 +45,11 @@ public class PortUtils {
         TimeUnit.MILLISECONDS.sleep(100);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        throw new RuntimeException("Interrupted while waiting for " + port + " to be opened");
+        throw new IllegalStateException("Interrupted while waiting for " + port + " to be opened");
       }
     }
 
-    throw new RuntimeException("Timed out waiting for port " + port + " to be opened");
+    throw new IllegalStateException("Timed out waiting for port " + port + " to be opened");
   }
 
   public static void waitForPortToOpen(int port, long timeout, TimeUnit unit, Process process) {
@@ -59,13 +59,13 @@ public class PortUtils {
       try {
         Thread.sleep(100);
       } catch (InterruptedException e) {
-        throw new RuntimeException("Interrupted while waiting for " + port + " to be opened");
+        throw new IllegalStateException("Interrupted while waiting for " + port + " to be opened");
       }
 
       // Note: we should have used `process.isAlive()` here but it is java8 only
       try {
         process.exitValue();
-        throw new RuntimeException("Process died before port " + port + " was opened");
+        throw new IllegalStateException("Process died before port " + port + " was opened");
       } catch (IllegalThreadStateException e) {
         // process is still alive, things are good.
       }
@@ -75,6 +75,8 @@ public class PortUtils {
       }
     }
 
-    throw new RuntimeException("Timed out waiting for port " + port + " to be opened");
+    throw new IllegalStateException("Timed out waiting for port " + port + " to be opened");
   }
+
+  private PortUtils() {}
 }

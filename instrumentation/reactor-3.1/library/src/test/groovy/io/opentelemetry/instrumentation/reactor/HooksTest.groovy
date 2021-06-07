@@ -14,6 +14,7 @@ class HooksTest extends LibraryInstrumentationSpecification {
 
   def "can reset out hooks"() {
     setup:
+    def underTest = TracingOperator.create()
     AtomicReference<CoreSubscriber> subscriber = new AtomicReference<>()
 
     when: "no hook registered"
@@ -23,14 +24,14 @@ class HooksTest extends LibraryInstrumentationSpecification {
     !(subscriber.get() instanceof TracingSubscriber)
 
     when: "hook registered"
-    TracingOperator.registerOnEachOperator()
+    underTest.registerOnEachOperator()
     new CapturingMono(subscriber).map { it + 1 }.subscribe()
 
     then:
     subscriber.get() instanceof TracingSubscriber
 
     when: "hook reset"
-    TracingOperator.resetOnEachOperator()
+    underTest.resetOnEachOperator()
     new CapturingMono(subscriber).map { it + 1 }.subscribe()
 
     then:

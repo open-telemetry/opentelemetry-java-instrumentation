@@ -37,7 +37,7 @@ public class IntegrationTestUtils {
 
   /** Returns the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
-    return getAgentFieldClassloader("AGENT_CLASSLOADER");
+    return getAgentFieldClassloader("agentClassLoader");
   }
 
   private static ClassLoader getAgentFieldClassloader(String fieldName) {
@@ -149,7 +149,7 @@ public class IntegrationTestUtils {
       }
     }
 
-    throw new RuntimeException("Agent jar not found");
+    throw new IllegalStateException("Agent jar not found");
   }
 
   public static int runOnSeparateJvm(
@@ -251,7 +251,7 @@ public class IntegrationTestUtils {
         String line = null;
         while ((line = reader.readLine()) != null) {
           if (print) {
-            System.out.println(type + "> " + line);
+            logger.info("{}> {}", type, line);
           }
         }
       } catch (IOException e) {

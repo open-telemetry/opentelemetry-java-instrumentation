@@ -10,6 +10,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Agent start up logic.
@@ -19,11 +20,11 @@ import java.net.URL;
  * <p>The intention is for this class to be loaded by bootstrap classloader to make sure we have
  * unimpeded access to the rest of agent parts.
  */
-public class AgentInitializer {
+public final class AgentInitializer {
 
   // Accessed via reflection from tests.
   // fields must be managed under class lock
-  private static ClassLoader AGENT_CLASSLOADER = null;
+  @Nullable private static ClassLoader agentClassLoader = null;
 
   // called via reflection in the OpenTelemetryAgent class
   public static void initialize(Instrumentation inst, URL bootstrapUrl) throws Exception {
@@ -32,9 +33,8 @@ public class AgentInitializer {
 
   private static synchronized void startAgent(Instrumentation inst, URL bootstrapUrl)
       throws Exception {
-    if (AGENT_CLASSLOADER == null) {
-      ClassLoader agentClassLoader = createAgentClassLoader("inst", bootstrapUrl);
-      AGENT_CLASSLOADER = agentClassLoader;
+    if (agentClassLoader == null) {
+      agentClassLoader = createAgentClassLoader("inst", bootstrapUrl);
 
       Class<?> agentInstallerClass =
           agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller");
@@ -51,8 +51,8 @@ public class AgentInitializer {
   }
 
   // TODO misleading name
-  public static synchronized ClassLoader getAgentClassloader() {
-    return AGENT_CLASSLOADER;
+  public static synchronized ClassLoader getAgentClassLoader() {
+    return agentClassLoader;
   }
 
   /**
@@ -104,4 +104,6 @@ public class AgentInitializer {
   public static boolean isJavaBefore9() {
     return System.getProperty("java.version").startsWith("1.");
   }
+
+  private AgentInitializer() {}
 }

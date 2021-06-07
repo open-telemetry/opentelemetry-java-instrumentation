@@ -10,14 +10,15 @@ import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class CouchbaseQuerySanitizer {
-  private static final Class<?> QUERY_CLASS;
-  private static final Class<?> STATEMENT_CLASS;
-  private static final Class<?> N1QL_QUERY_CLASS;
-  private static final MethodHandle N1QL_GET_STATEMENT;
-  private static final Class<?> ANALYTICS_QUERY_CLASS;
-  private static final MethodHandle ANALYTICS_GET_STATEMENT;
+  @Nullable private static final Class<?> QUERY_CLASS;
+  @Nullable private static final Class<?> STATEMENT_CLASS;
+  @Nullable private static final Class<?> N1QL_QUERY_CLASS;
+  @Nullable private static final MethodHandle N1QL_GET_STATEMENT;
+  @Nullable private static final Class<?> ANALYTICS_QUERY_CLASS;
+  @Nullable private static final MethodHandle ANALYTICS_GET_STATEMENT;
 
   static {
     Class<?> queryClass;

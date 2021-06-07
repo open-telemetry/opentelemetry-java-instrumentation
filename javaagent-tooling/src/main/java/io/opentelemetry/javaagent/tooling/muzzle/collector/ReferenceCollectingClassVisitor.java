@@ -213,7 +213,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
     addReference(
         ClassRef.newBuilder(refSourceClassName)
             .addSource(refSourceClassName)
-            .addField(new Source[0], new Flag[0], name, fieldType, true)
+            .addField(new Source[0], new Flag[0], name, fieldType, /* isFieldDeclared= */ true)
             .build());
 
     return super.visitField(access, name, descriptor, signature, value);
@@ -327,7 +327,7 @@ class ReferenceCollectingClassVisitor extends ClassVisitor {
                   fieldFlags.toArray(new Flag[0]),
                   name,
                   fieldType,
-                  false)
+                  /* isFieldDeclared= */ false)
               .build());
 
       Type underlyingFieldType = underlyingType(Type.getType(descriptor));

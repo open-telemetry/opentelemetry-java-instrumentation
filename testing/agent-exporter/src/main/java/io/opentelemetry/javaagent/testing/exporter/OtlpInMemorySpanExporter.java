@@ -58,7 +58,7 @@ class OtlpInMemorySpanExporter implements SpanExporter {
     try {
       collector.start();
     } catch (IOException e) {
-      throw new Error("Could not start in-process collector.", e);
+      throw new AssertionError("Could not start in-process collector.", e);
     }
 
     delegate =

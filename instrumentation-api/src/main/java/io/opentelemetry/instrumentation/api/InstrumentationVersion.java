@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.api;
 
-public class InstrumentationVersion {
+public final class InstrumentationVersion {
   public static final String VERSION =
       InstrumentationVersion.class.getPackage().getImplementationVersion();
+
+  private InstrumentationVersion() {}
 }

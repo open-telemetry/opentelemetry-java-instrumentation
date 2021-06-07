@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
-import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
+import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationList;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.MethodList;
@@ -42,7 +41,7 @@ import net.bytebuddy.pool.TypePool;
  * <p>Eviction is handled almost entirely through a size restriction; however, softValues are still
  * used as a further safeguard.
  */
-public class AgentCachingPoolStrategy implements PoolStrategy {
+public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
   // Many things are package visible for testing purposes --
   // others to avoid creation of synthetic accessors
@@ -114,7 +113,7 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
         TypePool.Default.ReaderMode.FAST);
   }
 
-  private TypePool createCachingTypePool(
+  private static TypePool createCachingTypePool(
       TypePool.CacheProvider cacheProvider, ClassFileLocator classFileLocator) {
     return new TypePool.Default.WithLazyResolution(
         cacheProvider, classFileLocator, TypePool.Default.ReaderMode.FAST);
@@ -199,6 +198,19 @@ public class AgentCachingPoolStrategy implements PoolStrategy {
     @Override
     public final int hashCode() {
       return hashCode;
+    }
+
+    @Override
+    public String toString() {
+      return "TypeCacheKey{"
+          + "loaderHash="
+          + loaderHash
+          + ", loaderRef="
+          + loaderRef
+          + ", className='"
+          + className
+          + '\''
+          + '}';
     }
   }
 
