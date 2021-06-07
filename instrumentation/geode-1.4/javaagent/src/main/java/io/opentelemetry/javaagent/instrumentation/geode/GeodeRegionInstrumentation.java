@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.geode.GeodeInstrumenter
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -40,22 +41,23 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(
-                named("clear")
+                namedOneOf(
+                        "clear",
+                        "create",
+                        "destroy",
+                        "entrySet",
+                        "get",
+                        "getAll",
+                        "invalidate",
+                        "replace")
                     .or(nameStartsWith("contains"))
-                    .or(named("create"))
-                    .or(named("destroy"))
-                    .or(named("entrySet"))
-                    .or(named("get"))
-                    .or(named("getAll"))
-                    .or(named("invalidate"))
                     .or(nameStartsWith("keySet"))
                     .or(nameStartsWith("put"))
-                    .or(nameStartsWith("remove"))
-                    .or(named("replace"))),
+                    .or(nameStartsWith("remove"))),
         this.getClass().getName() + "$SimpleAdvice");
     transformer.applyAdviceToMethod(
         isMethod()
-            .and(named("existsValue").or(named("query")).or(named("selectValue")))
+            .and(namedOneOf("existsValue", "query", "selectValue"))
             .and(takesArgument(0, String.class)),
         this.getClass().getName() + "$QueryAdvice");
   }

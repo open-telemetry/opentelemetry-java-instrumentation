@@ -102,14 +102,14 @@ public class AdviceUtils {
     @Override
     public void onSubscribe(Subscription subscription) {
       this.subscription = subscription;
-      try (Scope scope = otelContext.makeCurrent()) {
+      try (Scope ignored = otelContext.makeCurrent()) {
         subscriber.onSubscribe(this);
       }
     }
 
     @Override
     public void onNext(T t) {
-      try (Scope scope = otelContext.makeCurrent()) {
+      try (Scope ignored = otelContext.makeCurrent()) {
         subscriber.onNext(t);
       }
     }

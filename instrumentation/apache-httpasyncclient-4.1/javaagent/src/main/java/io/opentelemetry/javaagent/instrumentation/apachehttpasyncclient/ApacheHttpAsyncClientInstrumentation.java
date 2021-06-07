@@ -59,6 +59,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
         ApacheHttpAsyncClientInstrumentation.class.getName() + "$ClientAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -181,7 +182,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       if (parentContext == null) {
         completeDelegate(result);
       } else {
-        try (Scope scope = parentContext.makeCurrent()) {
+        try (Scope ignored = parentContext.makeCurrent()) {
           completeDelegate(result);
         }
       }
@@ -195,7 +196,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       if (parentContext == null) {
         failDelegate(ex);
       } else {
-        try (Scope scope = parentContext.makeCurrent()) {
+        try (Scope ignored = parentContext.makeCurrent()) {
           failDelegate(ex);
         }
       }
@@ -209,7 +210,7 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       if (parentContext == null) {
         cancelDelegate();
       } else {
-        try (Scope scope = parentContext.makeCurrent()) {
+        try (Scope ignored = parentContext.makeCurrent()) {
           cancelDelegate();
         }
       }

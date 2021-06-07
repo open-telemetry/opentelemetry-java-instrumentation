@@ -34,6 +34,7 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
         AkkaActorCellInstrumentation.class.getName() + "$InvokeStateAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class InvokeStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
