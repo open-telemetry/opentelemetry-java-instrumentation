@@ -101,7 +101,7 @@ class RatpackAsyncHttpServerTest extends RatpackHttpServerTest {
           it.all {context ->
             Promise.sync {
               PATH_PARAM
-            }.fork().then { endpoint ->
+            } then { endpoint ->
               controller(endpoint) {
                 context.response.status(endpoint.status).send(context.pathTokens.id)
               }
