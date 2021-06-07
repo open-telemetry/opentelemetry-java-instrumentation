@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.v1_9;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;

@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.v2_0;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -48,11 +49,11 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) AsyncHandler<?> handler,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!AsyncHttpClientSingletons.instrumenter().shouldStart(parentContext, request)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      Context context = AsyncHttpClientSingletons.instrumenter().start(parentContext, request);
+      Context context = instrumenter().start(parentContext, request);
 
       // TODO (trask) instead of using InstrumentationContext, wrap the AsyncHandler in an
       // instrumented AsyncHandler which delegates to the original AsyncHandler

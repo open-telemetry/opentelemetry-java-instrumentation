@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.v1_9;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import static java.util.Arrays.asList;
 
@@ -15,11 +15,14 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AsyncHttpClientInstrumentationModule extends InstrumentationModule {
   public AsyncHttpClientInstrumentationModule() {
-    super("async-http-client", "async-http-client-1.9");
+    super("async-http-client", "async-http-client-2.0");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new RequestInstrumentation(), new ResponseInstrumentation());
+    return asList(
+        new AsyncHttpClientInstrumentation(),
+        new AsyncCompletionHandlerInstrumentation(),
+        new NettyRequestSenderInstrumentation());
   }
 }
