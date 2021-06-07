@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import org.reactivestreams.Publisher;
 import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 
@@ -21,6 +22,8 @@ public class StreamedAsyncHandlerWrapper extends AsyncHandlerWrapper
 
   @Override
   public State onStream(Publisher publisher) {
-    return streamedDelegate.onStream(publisher);
+    try (Scope ignored = getParentContext().makeCurrent()) {
+      return streamedDelegate.onStream(publisher);
+    }
   }
 }
