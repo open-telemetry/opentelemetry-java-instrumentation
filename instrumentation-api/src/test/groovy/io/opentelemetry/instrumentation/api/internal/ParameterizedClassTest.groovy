@@ -76,7 +76,7 @@ class ParameterizedClassTest extends Specification {
     def underTest = ParameterizedClass.of(stringArrayListType).findParameterizedSuperclass(C)
 
     then:
-    underTest.isEmpty()
+    !underTest.isPresent()
   }
 
   def "does not find parameterized interface that type does not implement"() {
@@ -84,7 +84,7 @@ class ParameterizedClassTest extends Specification {
     def underTest = ParameterizedClass.of(stringArrayListType).findParameterizedSuperclass(I)
 
     then:
-    underTest.isEmpty()
+    !underTest.isPresent()
   }
 
   interface I { }
