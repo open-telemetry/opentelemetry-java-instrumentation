@@ -276,6 +276,15 @@ class AttributeBindingFactoryTest extends Specification {
     1 * setter.setAttribute({ it.getType() == AttributeType.STRING_ARRAY && it.getKey() == "key"}, [ "TestClass{value = foo}", "TestClass{value = bar}" ])
   }
 
+  def "creates attribute binding for ArrayList<Long>"() {
+    when:
+    def type = TestFields.getDeclaredField("longArrayList").getGenericType()
+    AttributeBindingFactory.createBinding("key", type).apply(setter, [ 1L, 2L, 3L ])
+
+    then:
+    1 * setter.setAttribute({ it.getType() == AttributeType.LONG_ARRAY && it.getKey() == "key"}, [ 1L, 2L, 3L ])
+  }
+
   class TestClass {
     final String value
 
@@ -300,5 +309,6 @@ class AttributeBindingFactoryTest extends Specification {
     List<Integer> integerList
     List<Float> floatList
     List<TestClass> otherList
+    ArrayList<Long> longArrayList
   }
 }

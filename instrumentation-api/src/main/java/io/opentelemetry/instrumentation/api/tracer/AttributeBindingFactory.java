@@ -6,16 +6,16 @@
 package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.internal.ParameterizedClass;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Helper class for creating {@link AttributeBinding} instances based on the {@link Type} of the
@@ -60,12 +60,9 @@ class AttributeBindingFactory {
       return enumSetBinding(name);
     }
 
-    Type componentType = resolveListComponentType(type);
-    if (componentType != null) {
-      return listBinding(name, componentType);
-    }
-
-    return defaultBinding(name);
+    return resolveListComponentType(type)
+        .map(componentType -> listBinding(name, componentType))
+        .orElseGet(() -> defaultBinding(name));
   }
 
   private static boolean isArrayType(Type type) {
@@ -83,20 +80,10 @@ class AttributeBindingFactory {
     return type == EnumSet.class;
   }
 
-  @Nullable
-  private static Type resolveListComponentType(Type type) {
-    // TODO: ? extends List<T>
-    if (type instanceof ParameterizedType) {
-      ParameterizedType parameterizedType = (ParameterizedType) type;
-      if (isSupportedListType(parameterizedType.getRawType())) {
-        return parameterizedType.getActualTypeArguments()[0];
-      }
-    }
-    return null;
-  }
-
-  private static boolean isSupportedListType(Type type) {
-    return type == List.class || type == ArrayList.class || type == LinkedList.class;
+  private static Optional<Type> resolveListComponentType(Type type) {
+    return ParameterizedClass.of(type)
+        .findParameterizedSuperclass(List.class)
+        .map(pc -> pc.getActualTypeArguments()[0]);
   }
 
   private static AttributeBinding arrayBinding(String name, Type type) {
@@ -144,28 +131,28 @@ class AttributeBindingFactory {
   }
 
   @SuppressWarnings("unchecked")
-  private static AttributeBinding listBinding(String name, Type type) {
-    if (type == String.class) {
+  private static AttributeBinding listBinding(String name, Type componentType) {
+    if (componentType == String.class) {
       AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
       return (setter, arg) -> setter.setAttribute(key, (List<String>) arg);
     }
-    if (type == Long.class) {
+    if (componentType == Long.class) {
       AttributeKey<List<Long>> key = AttributeKey.longArrayKey(name);
       return (setter, arg) -> setter.setAttribute(key, (List<Long>) arg);
     }
-    if (type == Double.class) {
+    if (componentType == Double.class) {
       AttributeKey<List<Double>> key = AttributeKey.doubleArrayKey(name);
       return (setter, arg) -> setter.setAttribute(key, (List<Double>) arg);
     }
-    if (type == Boolean.class) {
+    if (componentType == Boolean.class) {
       AttributeKey<List<Boolean>> key = AttributeKey.booleanArrayKey(name);
       return (setter, arg) -> setter.setAttribute(key, (List<Boolean>) arg);
     }
-    if (type == Integer.class) {
+    if (componentType == Integer.class) {
       AttributeKey<List<Long>> key = AttributeKey.longArrayKey(name);
       return mappedListBinding(Integer.class, key, Integer::longValue);
     }
-    if (type == Float.class) {
+    if (componentType == Float.class) {
       AttributeKey<List<Double>> key = AttributeKey.doubleArrayKey(name);
       return mappedListBinding(Float.class, key, Float::doubleValue);
     }
@@ -339,6 +326,7 @@ class AttributeBindingFactory {
   private static <T, U> AttributeBinding mappedListBinding(
       Class<T> fromClass, AttributeKey<List<U>> key, Function<T, U> mapping) {
     return (setter, arg) -> {
+      @SuppressWarnings("unchecked")
       List<T> list = (List<T>) arg;
       List<U> wrapper =
           new AbstractList<U>() {
