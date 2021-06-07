@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.mongodb.async.SingleResultCallback;
@@ -22,8 +23,8 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.mongodb.connection.BaseCluster")
-        .or(named("com.mongodb.internal.connection.BaseCluster"));
+    return namedOneOf(
+        "com.mongodb.connection.BaseCluster", "com.mongodb.internal.connection.BaseCluster");
   }
 
   @Override

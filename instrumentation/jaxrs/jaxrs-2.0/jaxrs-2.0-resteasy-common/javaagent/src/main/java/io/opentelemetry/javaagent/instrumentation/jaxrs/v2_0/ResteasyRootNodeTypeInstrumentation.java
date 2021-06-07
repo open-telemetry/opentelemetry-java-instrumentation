@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -33,8 +34,9 @@ public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation 
             .and(
                 takesArgument(
                     1,
-                    named("org.jboss.resteasy.core.ResourceInvoker")
-                        .or(named("org.jboss.resteasy.spi.ResourceInvoker")))),
+                    namedOneOf(
+                        "org.jboss.resteasy.core.ResourceInvoker",
+                        "org.jboss.resteasy.spi.ResourceInvoker"))),
         ResteasyRootNodeTypeInstrumentation.class.getName() + "$AddInvokerAdvice");
   }
 

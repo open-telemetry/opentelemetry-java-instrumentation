@@ -39,6 +39,7 @@ public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentati
   // multiple decorators, one from user app and one from our auto instrumentation. Otherwise, we
   // will end up with double telemetry.
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903
+  @SuppressWarnings("unused")
   public static class SuppressDecoratorAdvice {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static boolean suppressDecorator(@Advice.Argument(0) Function<?, ?> decorator) {
@@ -56,6 +57,7 @@ public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentati
     }
   }
 
+  @SuppressWarnings("unused")
   public static class BuildAdvice {
     @Advice.OnMethodEnter
     public static void build(@Advice.This WebClientBuilder builder) {

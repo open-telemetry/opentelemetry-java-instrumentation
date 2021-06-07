@@ -14,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 final class GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, Status> {
   @Override
-  public StatusCode extract(GrpcRequest grpcRequest, Status status, @Nullable Throwable error) {
+  public StatusCode extract(GrpcRequest request, Status status, @Nullable Throwable error) {
     if (status == null) {
       if (error instanceof StatusRuntimeException) {
         status = ((StatusRuntimeException) error).getStatus();
@@ -28,6 +28,6 @@ final class GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, 
       }
       return StatusCode.ERROR;
     }
-    return SpanStatusExtractor.getDefault().extract(grpcRequest, status, error);
+    return SpanStatusExtractor.getDefault().extract(request, status, error);
   }
 }

@@ -45,6 +45,7 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
         JavaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ForkJoinTaskAdvice {
 
     /**
