@@ -94,6 +94,7 @@ public class FutureInstrumentation implements TypeInstrumentation {
         FutureInstrumentation.class.getName() + "$CanceledFutureAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CanceledFutureAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void exit(@Advice.This Future<?> future) {
