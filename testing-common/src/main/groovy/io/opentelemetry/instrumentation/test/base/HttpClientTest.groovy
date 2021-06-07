@@ -51,6 +51,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def setupSpec() {
     server = com.linecorp.armeria.Server.builder()
+
+      .build()
   }
 
   @AutoCleanup
