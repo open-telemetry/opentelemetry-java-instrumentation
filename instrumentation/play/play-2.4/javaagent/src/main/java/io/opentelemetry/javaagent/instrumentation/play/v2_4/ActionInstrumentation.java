@@ -23,10 +23,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import play.api.mvc.Action;
-import play.api.mvc.Headers;
 import play.api.mvc.Request;
 import play.api.mvc.Result;
-import play.libs.Akka;
 import scala.concurrent.Future;
 
 public class ActionInstrumentation implements TypeInstrumentation {
@@ -80,14 +78,6 @@ public class ActionInstrumentation implements TypeInstrumentation {
       } else {
         tracer().endExceptionally(context, throwable);
       }
-    }
-
-    // Unused method for muzzle
-    public static void muzzleCheck(Headers headers) {
-      // This distinguishes between 2.3 and 2.4, excluding the former
-      headers.get("aKey");
-      // system() method was removed in 2.6, so this line prevents from applying in play 2.6
-      Akka.system();
     }
   }
 }
