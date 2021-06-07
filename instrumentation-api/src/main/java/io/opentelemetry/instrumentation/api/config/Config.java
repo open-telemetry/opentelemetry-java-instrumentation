@@ -25,6 +25,10 @@ public abstract class Config {
   // read system properties
   @Nullable private static volatile Config instance = null;
 
+  public static Config create(Map<String, String> allProperties) {
+    return new AutoValue_Config(allProperties);
+  }
+
   /**
    * Sets the agent configuration singleton. This method is only supposed to be called once, from
    * the agent classloader just before the first instrumentation is loaded (and before {@link
@@ -46,10 +50,6 @@ public abstract class Config {
       instance = new ConfigBuilder().readEnvironmentVariables().readSystemProperties().build();
     }
     return instance;
-  }
-
-  public static Config create(Map<String, String> allProperties) {
-    return new AutoValue_Config(allProperties);
   }
 
   abstract Map<String, String> getAllProperties();

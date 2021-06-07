@@ -16,8 +16,8 @@ final class GrpcNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<GrpcRequest, Status> {
   @Override
   @Nullable
-  public InetSocketAddress getAddress(GrpcRequest grpcRequest, @Nullable Status status) {
-    SocketAddress address = grpcRequest.getRemoteAddress();
+  public InetSocketAddress getAddress(GrpcRequest request, @Nullable Status status) {
+    SocketAddress address = request.getRemoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }
@@ -25,8 +25,7 @@ final class GrpcNetAttributesExtractor
   }
 
   @Override
-  @Nullable
-  public String transport(GrpcRequest grpcRequest) {
+  public String transport(GrpcRequest request) {
     return SemanticAttributes.NetTransportValues.IP_TCP;
   }
 }
