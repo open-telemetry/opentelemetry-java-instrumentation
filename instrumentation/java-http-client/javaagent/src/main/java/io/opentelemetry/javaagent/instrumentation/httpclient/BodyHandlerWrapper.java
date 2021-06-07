@@ -26,16 +26,24 @@ public class BodyHandlerWrapper<T> implements BodyHandler<T> {
 
   @Override
   public BodySubscriber<T> apply(ResponseInfo responseInfo) {
+    BodySubscriber<T> subscriber = delegate.apply(responseInfo);
+    if (subscriber instanceof BodySubscriberWrapper) {
+      return subscriber;
+    }
     return new BodySubscriberWrapper<>(delegate.apply(responseInfo), context);
   }
 
-  private static class BodySubscriberWrapper<T> implements BodySubscriber<T> {
+  public static class BodySubscriberWrapper<T> implements BodySubscriber<T> {
     private final BodySubscriber<T> delegate;
     private final Context context;
 
     public BodySubscriberWrapper(BodySubscriber<T> delegate, Context context) {
       this.delegate = delegate;
       this.context = context;
+    }
+
+    public BodySubscriber<T> getDelegate() {
+      return delegate;
     }
 
     @Override
