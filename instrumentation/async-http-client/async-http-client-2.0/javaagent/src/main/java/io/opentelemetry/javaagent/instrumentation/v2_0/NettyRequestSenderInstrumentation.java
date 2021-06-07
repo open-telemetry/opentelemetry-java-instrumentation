@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
+package io.opentelemetry.javaagent.instrumentation.v2_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.netty.NettyResponseFuture;
 
-public class RequestSenderInstrumentation implements TypeInstrumentation {
+public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,14 +35,14 @@ public class RequestSenderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.asynchttpclient.Request")))
             .and(takesArgument(1, named("org.asynchttpclient.AsyncHandler")))
             .and(isPublic()),
-        RequestSenderInstrumentation.class.getName() + "$AttachContextAdvice");
+        NettyRequestSenderInstrumentation.class.getName() + "$AttachContextAdvice");
 
     transformer.applyAdviceToMethod(
         named("writeRequest")
             .and(takesArgument(0, named("org.asynchttpclient.netty.NettyResponseFuture")))
             .and(takesArgument(1, named("io.netty.channel.Channel")))
             .and(isPublic()),
-        RequestSenderInstrumentation.class.getName() + "$MountContextAdvice");
+        NettyRequestSenderInstrumentation.class.getName() + "$MountContextAdvice");
   }
 
   public static class AttachContextAdvice {

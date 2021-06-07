@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
+package io.opentelemetry.javaagent.instrumentation.v1_9;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.AsyncHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.v1_9.AsyncHttpClientTracer.tracer;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import com.ning.http.client.AsyncHandler;
+import com.ning.http.client.Request;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -21,22 +22,20 @@ import io.opentelemetry.javaagent.instrumentation.api.Pair;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.asynchttpclient.AsyncHandler;
-import org.asynchttpclient.Request;
 
 public class RequestInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("org.asynchttpclient.AsyncHttpClient"));
+    return named("com.ning.http.client.AsyncHttpClient");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("executeRequest")
-            .and(takesArgument(0, named("org.asynchttpclient.Request")))
-            .and(takesArgument(1, named("org.asynchttpclient.AsyncHandler")))
+            .and(takesArgument(0, named("com.ning.http.client.Request")))
+            .and(takesArgument(1, named("com.ning.http.client.AsyncHandler")))
             .and(isPublic()),
         this.getClass().getName() + "$ExecuteAdvice");
   }

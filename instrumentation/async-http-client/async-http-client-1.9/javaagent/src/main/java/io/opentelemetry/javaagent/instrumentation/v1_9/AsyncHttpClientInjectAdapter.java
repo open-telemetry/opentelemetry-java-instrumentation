@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
+package io.opentelemetry.javaagent.instrumentation.v1_9;
 
+import com.ning.http.client.Request;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import org.asynchttpclient.Request;
 
 public class AsyncHttpClientInjectAdapter implements TextMapSetter<Request> {
 
@@ -14,6 +14,6 @@ public class AsyncHttpClientInjectAdapter implements TextMapSetter<Request> {
 
   @Override
   public void set(Request carrier, String key, String value) {
-    carrier.getHeaders().set(key, value);
+    carrier.getHeaders().replaceWith(key, value);
   }
 }
