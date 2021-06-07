@@ -13,27 +13,27 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 final class JdbcAttributesExtractor extends SqlAttributesExtractor<DbRequest, Void> {
   @Nullable
   @Override
-  protected String system(DbRequest dbRequest) {
-    return dbRequest.getDbInfo().getSystem();
+  protected String system(DbRequest request) {
+    return request.getDbInfo().getSystem();
   }
 
   @Nullable
   @Override
-  protected String user(DbRequest dbRequest) {
-    return dbRequest.getDbInfo().getUser();
+  protected String user(DbRequest request) {
+    return request.getDbInfo().getUser();
   }
 
   @Nullable
   @Override
-  protected String name(DbRequest dbRequest) {
-    DbInfo dbInfo = dbRequest.getDbInfo();
+  protected String name(DbRequest request) {
+    DbInfo dbInfo = request.getDbInfo();
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
   }
 
   @Nullable
   @Override
-  protected String connectionString(DbRequest dbRequest) {
-    return dbRequest.getDbInfo().getShortUrl();
+  protected String connectionString(DbRequest request) {
+    return request.getDbInfo().getShortUrl();
   }
 
   @Override
@@ -43,7 +43,7 @@ final class JdbcAttributesExtractor extends SqlAttributesExtractor<DbRequest, Vo
 
   @Nullable
   @Override
-  protected String rawStatement(DbRequest dbRequest) {
-    return dbRequest.getStatement();
+  protected String rawStatement(DbRequest request) {
+    return request.getStatement();
   }
 }
