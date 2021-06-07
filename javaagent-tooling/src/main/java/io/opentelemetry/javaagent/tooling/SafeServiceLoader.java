@@ -47,9 +47,9 @@ public final class SafeServiceLoader {
    * {@link Ordered#order()}.
    */
   public static <T extends Ordered> List<T> loadOrdered(Class<T> serviceClass) {
-    List<T> impls = load(serviceClass);
-    impls.sort(Comparator.comparing(Ordered::order));
-    return impls;
+    List<T> result = load(serviceClass);
+    result.sort(Comparator.comparing(Ordered::order));
+    return result;
   }
 
   private SafeServiceLoader() {}
