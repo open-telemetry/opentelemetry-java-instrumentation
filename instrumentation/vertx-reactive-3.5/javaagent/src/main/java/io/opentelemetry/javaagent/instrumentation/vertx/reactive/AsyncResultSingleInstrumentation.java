@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.reactive;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -31,8 +32,9 @@ public class AsyncResultSingleInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.vertx.reactivex.core.impl.AsyncResultSingle")
-        .or(named("io.vertx.reactivex.impl.AsyncResultSingle"));
+    return namedOneOf(
+        "io.vertx.reactivex.core.impl.AsyncResultSingle",
+        "io.vertx.reactivex.impl.AsyncResultSingle");
   }
 
   @Override

@@ -66,12 +66,10 @@ public final class JettyPerftest {
 
     private static void scheduleWork(long workTimeMillis) {
       Span span = tracer.spanBuilder("work").startSpan();
-      try (Scope scope = span.makeCurrent()) {
-        if (span != null) {
-          span.setAttribute("work-time", workTimeMillis);
-          span.setAttribute("info", "interesting stuff");
-          span.setAttribute("additionalInfo", "interesting stuff");
-        }
+      try (Scope ignored = span.makeCurrent()) {
+        span.setAttribute("work-time", workTimeMillis);
+        span.setAttribute("info", "interesting stuff");
+        span.setAttribute("additionalInfo", "interesting stuff");
         if (workTimeMillis > 0) {
           Worker.doWork(workTimeMillis);
         }

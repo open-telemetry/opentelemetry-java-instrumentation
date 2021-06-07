@@ -64,7 +64,7 @@ public class TracedDelegatingConsumer implements Consumer {
       throws IOException {
     Context context = tracer().startDeliverySpan(queue, envelope, properties, body);
 
-    try (Scope scope = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       // Call delegate.
       delegate.handleDelivery(consumerTag, envelope, properties, body);
       tracer().end(context);

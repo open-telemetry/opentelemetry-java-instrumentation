@@ -231,6 +231,7 @@ unfortunately many standard practices do not apply to them:
 * they SHOULD NOT contain any methods other than `@Advice`-annotated method.
 
 ```java
+@SuppressWarnings("unused")
 public static class MethodAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(/* ... */) {

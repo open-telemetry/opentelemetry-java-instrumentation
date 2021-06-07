@@ -8,22 +8,22 @@ package io.opentelemetry.javaagent.tooling;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder;
+import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.spi.ComponentInstaller;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@AutoService(ComponentInstaller.class)
-public class OpenTelemetryInstaller implements ComponentInstaller {
+@AutoService(AgentListener.class)
+public class OpenTelemetryInstaller implements AgentListener {
   private static final Logger log = LoggerFactory.getLogger(OpenTelemetryInstaller.class);
 
   static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
 
   @Override
-  public void beforeByteBuddyAgent(Config config) {
+  public void beforeAgent(Config config) {
     installAgentTracer(config);
   }
 

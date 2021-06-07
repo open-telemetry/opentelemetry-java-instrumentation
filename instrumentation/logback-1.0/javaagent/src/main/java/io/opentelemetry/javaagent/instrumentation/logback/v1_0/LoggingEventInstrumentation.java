@@ -13,6 +13,7 @@ import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.ha
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -45,7 +46,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
-            .and(named("getMDCPropertyMap").or(named("getMdc")))
+            .and(namedOneOf("getMDCPropertyMap", "getMdc"))
             .and(takesArguments(0)),
         LoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
   }
