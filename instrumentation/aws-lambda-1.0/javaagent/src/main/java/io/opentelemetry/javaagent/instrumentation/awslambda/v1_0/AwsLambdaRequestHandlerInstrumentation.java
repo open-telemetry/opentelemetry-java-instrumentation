@@ -49,6 +49,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
         AwsLambdaRequestHandlerInstrumentation.class.getName() + "$HandleRequestAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

@@ -11,7 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.extannotations.External
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
-import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -82,18 +82,11 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
       traceAnnotationMatcher = none();
     } else {
       ElementMatcher.Junction<ClassLoader> classLoaderMatcher = none();
-      ElementMatcher.Junction<NamedElement> methodTraceMatcher = none();
       for (String annotationName : additionalTraceAnnotations) {
-        if (methodTraceMatcher == null) {
-          classLoaderMatcher = hasClassesNamed(annotationName);
-          methodTraceMatcher = named(annotationName);
-        } else {
-          classLoaderMatcher = classLoaderMatcher.or(hasClassesNamed(annotationName));
-          methodTraceMatcher = methodTraceMatcher.or(named(annotationName));
-        }
+        classLoaderMatcher = classLoaderMatcher.or(hasClassesNamed(annotationName));
       }
       this.classLoaderOptimization = classLoaderMatcher;
-      this.traceAnnotationMatcher = methodTraceMatcher;
+      this.traceAnnotationMatcher = namedOneOf(additionalTraceAnnotations.toArray(new String[0]));
     }
 
     excludedMethodsMatcher = configureExcludedMethods();

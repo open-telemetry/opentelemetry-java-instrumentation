@@ -36,6 +36,7 @@ public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
         AkkaDispatcherInstrumentation.class.getName() + "$DispatcherStateAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class DispatcherStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

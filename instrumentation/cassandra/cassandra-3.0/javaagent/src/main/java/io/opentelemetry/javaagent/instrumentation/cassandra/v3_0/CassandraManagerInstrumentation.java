@@ -32,6 +32,7 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$NewSessionAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class NewSessionAdvice {
     /**
      * Strategy: each time we build a connection to a Cassandra cluster, the

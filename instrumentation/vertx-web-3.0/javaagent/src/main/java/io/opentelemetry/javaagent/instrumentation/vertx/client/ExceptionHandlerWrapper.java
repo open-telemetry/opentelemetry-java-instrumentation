@@ -36,7 +36,7 @@ public class ExceptionHandlerWrapper implements Handler<Throwable> {
 
     tracer().endExceptionally(contexts.context, throwable);
 
-    try (Scope scope = contexts.parentContext.makeCurrent()) {
+    try (Scope ignored = contexts.parentContext.makeCurrent()) {
       callHandler(throwable);
     }
   }

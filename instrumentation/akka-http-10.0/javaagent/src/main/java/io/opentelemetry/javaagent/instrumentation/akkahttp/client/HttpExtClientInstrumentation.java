@@ -41,6 +41,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SingleRequestAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SingleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(

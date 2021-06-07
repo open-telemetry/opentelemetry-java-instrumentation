@@ -33,6 +33,7 @@ public class SessionBuilderInstrumentation implements TypeInstrumentation {
         SessionBuilderInstrumentation.class.getName() + "$BuildAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class BuildAdvice {
     /**
      * Strategy: each time we build a connection to a Cassandra cluster, the

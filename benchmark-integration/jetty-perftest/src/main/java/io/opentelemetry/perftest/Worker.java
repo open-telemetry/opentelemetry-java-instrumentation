@@ -18,7 +18,7 @@ public final class Worker {
   /** Simulate work for the give number of milliseconds. */
   public static void doWork(long workTimeMillis) {
     Span span = tracer.spanBuilder("work").startSpan();
-    try (Scope scope = span.makeCurrent()) {
+    try (Scope ignored = span.makeCurrent()) {
       if (span != null) {
         span.setAttribute("work-time", workTimeMillis);
         span.setAttribute("info", "interesting stuff");
