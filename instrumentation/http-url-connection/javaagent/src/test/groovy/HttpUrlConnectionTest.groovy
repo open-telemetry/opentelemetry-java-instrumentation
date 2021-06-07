@@ -157,7 +157,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
     runUnderTrace("someTrace") {
       HttpURLConnection connection = url.openConnection()
       connection.useCaches = useCaches
-      connection.addRequestProperty("is-test-server", "false")
       assert Span.current().getSpanContext().isValid()
       def stream = connection.inputStream
       connection.inputStream // one more to ensure state is working
@@ -169,7 +168,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
       // call again to ensure the cycling is ok
       connection = url.openConnection()
       connection.useCaches = useCaches
-      connection.addRequestProperty("is-test-server", "false")
       assert Span.current().getSpanContext().isValid()
       // call before input stream to test alternate behavior
       assert connection.getResponseCode() == STATUS
@@ -177,6 +175,63 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
       lines = stream.readLines()
       stream.close()
       assert lines == [RESPONSE]
+    }
+
+    expect:
+    assertTraces(1) {
+      trace(0, 5) {
+        span(0) {
+          name "someTrace"
+          hasNoParent()
+          attributes {
+          }
+        }
+        span(1) {
+          name expectedOperationName("GET")
+          kind CLIENT
+          childOf span(0)
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+          }
+        }
+        serverSpan(it, 2, span(1))
+        span(3) {
+          name expectedOperationName("GET")
+          kind CLIENT
+          childOf span(0)
+          attributes {
+            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.HTTP_URL.key}" "$url"
+            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
+            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
+            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
+          }
+        }
+        serverSpan(it, 4, span(3))
+      }
+    }
+
+    where:
+    useCaches << [false, true]
+  }
+
+  def "test broken API usage"() {
+    setup:
+    def url = server.address.resolve("/success").toURL()
+    HttpURLConnection connection = runUnderTrace("someTrace") {
+      HttpURLConnection connection = url.openConnection()
+      connection.setRequestProperty("Connection", "close")
+      assert Span.current().getSpanContext().isValid()
+      assert connection.getResponseCode() == STATUS
+      return connection
     }
 
     expect:
@@ -193,62 +248,6 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-          }
-        }
-        span(2) {
-          name expectedOperationName("GET")
-          kind CLIENT
-          childOf span(0)
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-          }
-        }
-      }
-    }
-
-    where:
-    useCaches << [false, true]
-  }
-
-  def "test broken API usage"() {
-    setup:
-    def url = server.address.resolve("/success").toURL()
-    HttpURLConnection connection = runUnderTrace("someTrace") {
-      HttpURLConnection connection = url.openConnection()
-      connection.setRequestProperty("Connection", "close")
-      connection.addRequestProperty("is-test-server", "false")
-      assert Span.current().getSpanContext().isValid()
-      assert connection.getResponseCode() == STATUS
-      return connection
-    }
-
-    expect:
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          name "someTrace"
-          hasNoParent()
-          attributes {
-          }
-        }
-        span(1) {
-          name expectedOperationName("GET")
-          kind CLIENT
-          childOf span(0)
-          attributes {
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
             "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
@@ -258,6 +257,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
           }
         }
+        serverSpan(it, 2, span(1))
       }
     }
 
