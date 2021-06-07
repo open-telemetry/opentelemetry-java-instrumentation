@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.chunk;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -24,10 +25,11 @@ public class StepBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // Spring Batch Java DSL and XML config
-    return named("org.springframework.batch.core.step.builder.AbstractTaskletStepBuilder")
+    return namedOneOf(
+        "org.springframework.batch.core.step.builder.AbstractTaskletStepBuilder",
         // JSR-352 XML config
-        .or(named("org.springframework.batch.core.jsr.step.builder.JsrSimpleStepBuilder"))
-        .or(named("org.springframework.batch.core.jsr.step.builder.JsrBatchletStepBuilder"));
+        "org.springframework.batch.core.jsr.step.builder.JsrSimpleStepBuilder",
+        "org.springframework.batch.core.jsr.step.builder.JsrBatchletStepBuilder");
   }
 
   @Override
