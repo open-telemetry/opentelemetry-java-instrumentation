@@ -11,7 +11,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,9 +47,9 @@ public final class SafeServiceLoader {
    * {@link Ordered#order()}.
    */
   public static <T extends Ordered> List<T> loadOrdered(Class<T> serviceClass) {
-    return load(serviceClass).stream()
-        .sorted(Comparator.comparingInt(Ordered::order))
-        .collect(Collectors.toList());
+    List<T> impls = load(serviceClass);
+    impls.sort(Comparator.comparing(Ordered::order));
+    return impls;
   }
 
   private SafeServiceLoader() {}

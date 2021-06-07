@@ -13,8 +13,8 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 
 /**
  * {@link AgentListener} can be used to execute code before/after Java agent installation, for
- * example to install any implementation providers that are used by * instrumentations. For
- * instance, this project uses this SPI to install OpenTelemetry SDK.
+ * example to install any implementation providers that are used by instrumentations. For instance,
+ * this project uses this SPI to install OpenTelemetry SDK.
  *
  * <p>This is a service provider interface that requires implementations to be registered in a
  * provider-configuration file stored in the {@code META-INF/services} resource directory.
