@@ -12,14 +12,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @AutoValue
 public abstract class GeodeRequest {
 
+  public static GeodeRequest create(Region<?, ?> region, String operation, @Nullable String query) {
+    return new AutoValue_GeodeRequest(region, operation, query);
+  }
+
   public abstract Region<?, ?> getRegion();
 
   public abstract String getOperation();
 
   @Nullable
   public abstract String getQuery();
-
-  public static GeodeRequest create(Region<?, ?> region, String operation, @Nullable String query) {
-    return new AutoValue_GeodeRequest(region, operation, query);
-  }
 }

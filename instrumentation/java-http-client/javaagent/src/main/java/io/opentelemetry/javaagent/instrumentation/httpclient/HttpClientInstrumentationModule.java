@@ -20,6 +20,9 @@ public class HttpClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new HttpClientInstrumentation(), new HttpHeadersInstrumentation());
+    return asList(
+        new HttpClientInstrumentation(),
+        new HttpHeadersInstrumentation(),
+        new TrustedSubscriberInstrumentation());
   }
 }

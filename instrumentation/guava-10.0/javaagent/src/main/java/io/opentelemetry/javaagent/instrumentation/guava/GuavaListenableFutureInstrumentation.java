@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.guava;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.google.common.util.concurrent.AbstractFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -65,12 +64,6 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
     public static void addListenerExit(
         @Advice.Enter final State state, @Advice.Thrown final Throwable throwable) {
       ExecutorInstrumentationUtils.cleanUpOnMethodExit(state, throwable);
-    }
-
-    // Used by muzzle
-    @SuppressWarnings("UnusedMethod")
-    private static void muzzleCheck(final AbstractFuture<?> future) {
-      future.addListener(null, null);
     }
   }
 }

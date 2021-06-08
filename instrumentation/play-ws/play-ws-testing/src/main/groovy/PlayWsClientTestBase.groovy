@@ -111,8 +111,12 @@ class PlayScalaWsClientTestBase extends PlayWsClientTestBaseBase<play.api.libs.w
   @Override
   int sendRequest(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers) {
     def futureResponse = request.execute()
-    def response = Await.result(futureResponse, Duration.apply(5, TimeUnit.SECONDS))
-    return response.status()
+    Await.ready(futureResponse, Duration.apply(10, TimeUnit.SECONDS))
+    def value = futureResponse.value().get()
+    if (value.isSuccess()) {
+      return value.get().status()
+    }
+    throw value.failed().get()
   }
 
   @Override
@@ -153,7 +157,7 @@ class PlayScalaStreamedWsClientTestBase extends PlayWsClientTestBaseBase<play.ap
 
   @Override
   int sendRequest(play.api.libs.ws.StandaloneWSRequest request, String method, URI uri, Map<String, String> headers) {
-    Await.result(internalSendRequest(request), Duration.apply(5, TimeUnit.SECONDS)).status()
+    Await.result(internalSendRequest(request), Duration.apply(10, TimeUnit.SECONDS)).status()
   }
 
   @Override

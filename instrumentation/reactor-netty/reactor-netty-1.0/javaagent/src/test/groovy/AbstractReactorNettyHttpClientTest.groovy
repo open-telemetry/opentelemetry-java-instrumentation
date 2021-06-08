@@ -7,6 +7,11 @@ import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_POR
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
+import io.netty.resolver.AddressResolver
+import io.netty.resolver.AddressResolverGroup
+import io.netty.resolver.InetNameResolver
+import io.netty.util.concurrent.EventExecutor
+import io.netty.util.concurrent.Promise
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
@@ -97,6 +102,10 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
 
   abstract HttpClient createHttpClient()
 
+  AddressResolverGroup getAddressResolverGroup() {
+    return CustomNameResolverGroup.INSTANCE
+  }
+
   def "should expose context to http client callbacks"() {
     given:
     def onRequestSpan = new AtomicReference<Span>()
@@ -178,5 +187,41 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     def actualSpanContext = actual.get().spanContext
     assert expectedSpanContext.traceId == actualSpanContext.traceId
     assert expectedSpanContext.spanId == actualSpanContext.spanId
+  }
+
+  // custom address resolver that returns at most one address for each host
+  // adapted from io.netty.resolver.DefaultAddressResolverGroup
+  static class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddress> {
+    public static final CustomNameResolverGroup INSTANCE = new CustomNameResolverGroup()
+
+    private CustomNameResolverGroup() {
+    }
+
+    protected AddressResolver<InetSocketAddress> newResolver(EventExecutor executor) throws Exception {
+      return (new CustomNameResolver(executor)).asAddressResolver()
+    }
+  }
+
+  static class CustomNameResolver extends InetNameResolver {
+    CustomNameResolver(EventExecutor executor) {
+      super(executor)
+    }
+
+    protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
+      try {
+        promise.setSuccess(InetAddress.getByName(inetHost))
+      } catch (UnknownHostException exception) {
+        promise.setFailure(exception)
+      }
+    }
+
+    protected void doResolveAll(String inetHost, Promise<List<InetAddress>> promise) throws Exception {
+      try {
+        // default implementation calls InetAddress.getAllByName
+        promise.setSuccess(Collections.singletonList(InetAddress.getByName(inetHost)))
+      } catch (UnknownHostException exception) {
+        promise.setFailure(exception)
+      }
+    }
   }
 }

@@ -341,26 +341,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   //FIXME: add tests for POST with large/chunked data
 
-  def "trace request without propagation"() {
-    when:
-    def responseCode = runUnderTrace("parent") {
-      doRequest(method, server.address.resolve("/success"), ["is-test-server": "false"])
-    }
-
-    then:
-    responseCode == 200
-    // only one trace (client).
-    assertTraces(1) {
-      trace(0, 2) {
-        basicSpan(it, 0, "parent")
-        clientSpan(it, 1, span(0), method)
-      }
-    }
-
-    where:
-    method = "GET"
-  }
-
   def "trace request with callback and parent"() {
     given:
     assumeTrue(testCallback())
@@ -368,7 +348,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     when:
     def requestResult = runUnderTrace("parent") {
-      doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+      doRequestWithCallback(method, server.address.resolve("/success")) {
         runUnderTrace("child") {}
       }
     }
@@ -377,10 +357,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     requestResult.get() == 200
     // only one trace (client).
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 4) {
         basicSpan(it, 0, "parent")
         clientSpan(it, 1, span(0), method)
-        basicSpan(it, 2, "child", span(0))
+        serverSpan(it, 2, span(1))
+        basicSpan(it, 3, "child", span(0))
       }
     }
 
@@ -393,7 +374,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testCallback())
 
     when:
-    def requestResult = doRequestWithCallback(method, server.address.resolve("/success"), ["is-test-server": "false"]) {
+    def requestResult = doRequestWithCallback(method, server.address.resolve("/success")) {
       runUnderTrace("callback") {
       }
     }
@@ -402,8 +383,9 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     requestResult.get() == 200
     // only one trace (client).
     assertTraces(2) {
-      trace(0, 1) {
+      trace(0, 2) {
         clientSpan(it, 0, null, method)
+        serverSpan(it, 1, span(0))
       }
       trace(1, 1) {
         basicSpan(it, 0, "callback")
@@ -468,7 +450,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     def uri = server.address.resolve("/circular-redirect")
 
     when:
-    doRequest(method, uri)//, ["is-test-server": "false"])
+    doRequest(method, uri)
 
     then:
     def ex = thrown(Exception)
@@ -762,6 +744,56 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
           serverSpan(it, 2, span(1)) {
             it."test.request.id" requestId
           }
+        }
+      }
+    }
+  }
+
+  def "high concurrency test with callback"() {
+    setup:
+    assumeTrue(testCausality())
+    assumeTrue(testCallback())
+    assumeTrue(testCallbackWithParent())
+
+    int count = 50
+    def method = 'GET'
+    def url = server.address.resolve("/success")
+
+    def latch = new CountDownLatch(1)
+
+    def pool = Executors.newFixedThreadPool(4)
+
+    when:
+    count.times { index ->
+      def job = {
+        latch.await()
+        runUnderTrace("Parent span " + index) {
+          Span.current().setAttribute("test.request.id", index)
+          doRequestWithCallback(method, url, ["test-request-id": index.toString()]) {
+            runUnderTrace("child") {}
+          }
+        }
+      }
+      pool.submit(job)
+    }
+    latch.countDown()
+
+    then:
+    assertTraces(count) {
+      count.times { idx ->
+        trace(idx, 4) {
+          def rootSpan = it.span(0)
+          //Traces can be in arbitrary order, let us find out the request id of the current one
+          def requestId = Integer.parseInt(rootSpan.name.substring("Parent span ".length()))
+
+          basicSpan(it, 0, "Parent span " + requestId, null, null) {
+            it."test.request.id" requestId
+          }
+          clientSpan(it, 1, span(0), method, url)
+          serverSpan(it, 2, span(1)) {
+            it."test.request.id" requestId
+          }
+          basicSpan(it, 3, "child", span(0))
         }
       }
     }
