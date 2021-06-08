@@ -109,7 +109,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.activeLocalPort()
             "${SemanticAttributes.HTTP_URL.key}" "$url"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
@@ -130,7 +130,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.activeLocalPort()
             "${SemanticAttributes.HTTP_URL.key}" "$url"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
@@ -177,7 +177,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           childOf span(0)
           attributes {
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.activeLocalPort()
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.HTTP_URL.key}" "$url"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
@@ -236,7 +236,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.activeLocalPort()
             "${SemanticAttributes.HTTP_URL.key}" "$url"
             "${SemanticAttributes.HTTP_METHOD.key}" "POST"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS

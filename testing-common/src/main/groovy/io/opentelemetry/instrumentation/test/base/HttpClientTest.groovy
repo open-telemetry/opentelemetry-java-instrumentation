@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.test.base
 
-import static com.linecorp.armeria.common.MediaType.PLAIN_TEXT_UTF_8
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
@@ -15,18 +14,9 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderParentClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
+import static io.opentelemetry.testing.armeria.common.MediaType.PLAIN_TEXT_UTF_8
 import static org.junit.Assume.assumeTrue
 
-import com.linecorp.armeria.common.HttpData
-import com.linecorp.armeria.common.HttpRequest
-import com.linecorp.armeria.common.HttpResponse
-import com.linecorp.armeria.common.HttpStatus
-import com.linecorp.armeria.common.ResponseHeaders
-import com.linecorp.armeria.common.ResponseHeadersBuilder
-import com.linecorp.armeria.server.DecoratingHttpServiceFunction
-import com.linecorp.armeria.server.HttpService
-import com.linecorp.armeria.server.Server
-import com.linecorp.armeria.server.ServiceRequestContext
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.GlobalOpenTelemetry
@@ -42,6 +32,16 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.testing.armeria.common.HttpData
+import io.opentelemetry.testing.armeria.common.HttpRequest
+import io.opentelemetry.testing.armeria.common.HttpResponse
+import io.opentelemetry.testing.armeria.common.HttpStatus
+import io.opentelemetry.testing.armeria.common.ResponseHeaders
+import io.opentelemetry.testing.armeria.common.ResponseHeadersBuilder
+import io.opentelemetry.testing.armeria.server.DecoratingHttpServiceFunction
+import io.opentelemetry.testing.armeria.server.HttpService
+import io.opentelemetry.testing.armeria.server.Server
+import io.opentelemetry.testing.armeria.server.ServiceRequestContext
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
@@ -68,7 +68,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def setupSpec() {
     server = Server.builder()
       .http(0)
-      .service("/success") {_, req ->
+      .service("/success") {ctx, req ->
         ResponseHeadersBuilder headers = ResponseHeaders.builder(HttpStatus.OK)
         def testRequestId = req.headers().get("test-request-id")
         if (testRequestId != null) {
@@ -76,30 +76,30 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
         }
         HttpResponse.of(headers.build(), HttpData.ofAscii("Hello."))
       }
-      .service("/client-error") {_, req ->
+      .service("/client-error") {ctx, req ->
         HttpResponse.of(HttpStatus.BAD_REQUEST, PLAIN_TEXT_UTF_8, "Invalid RQ")
       }
-      .service("/error") {
+      .service("/error") {ctx, req ->
         HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, PLAIN_TEXT_UTF_8, "Sorry.")
       }
-      .service("/redirect") {
-        HttpResponse.ofRedirect("/success")
+      .service("/redirect") {ctx, req ->
+        HttpResponse.ofRedirect(HttpStatus.FOUND, "/success")
       }
-      .service("/another-redirect") {
-        HttpResponse.ofRedirect("/redirect")
+      .service("/another-redirect") {ctx, req ->
+        HttpResponse.ofRedirect(HttpStatus.FOUND, "/redirect")
       }
-      .service("/circular-redirect") {
-        HttpResponse.ofRedirect("/circular-redirect")
+      .service("/circular-redirect") {ctx, req ->
+        HttpResponse.ofRedirect(HttpStatus.FOUND, "/circular-redirect")
       }
-      .service("/secured") {_, req ->
+      .service("/secured") {ctx, req ->
         if (req.headers().get(BASIC_AUTH_KEY) == BASIC_AUTH_VAL) {
           return HttpResponse.of(HttpStatus.OK, PLAIN_TEXT_UTF_8, "secured string under basic auth")
         } else {
           return HttpResponse.of(HttpStatus.UNAUTHORIZED, PLAIN_TEXT_UTF_8, "Unauthorized")
         }
       }
-      .service("/to-secured") {
-        HttpResponse.ofRedirect("/secured")
+      .service("/to-secured") {ctx, req ->
+        HttpResponse.ofRedirect(HttpStatus.FOUND, "/secured")
       }
       .decorator(new DecoratingHttpServiceFunction() {
         @Override

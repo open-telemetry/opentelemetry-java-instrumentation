@@ -45,7 +45,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     return createHttpClient()
       .followRedirect(true)
       .headers({ h -> headers.each { k, v -> h.add(k, v) } })
-      .baseUrl(server.address.toString())
+      .baseUrl(resolveAddress("").toString())
       ."${method.toLowerCase()}"()
       .uri(uri.toString())
   }
@@ -121,7 +121,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
 
     when:
     runUnderTrace("parent") {
-      httpClient.baseUrl(server.address.toString())
+      httpClient.baseUrl(resolveAddress("").toString())
         .get()
         .uri("/success")
         .response()
@@ -135,7 +135,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
         def nettyClientSpan = span(1)
 
         basicSpan(it, 0, "parent")
-        clientSpan(it, 1, parentSpan, "GET", server.address.resolve("/success"))
+        clientSpan(it, 1, parentSpan, "GET", resolveAddress("/success"))
         serverSpan(it, 2, nettyClientSpan)
 
         assertSameSpan(parentSpan, onRequestSpan)

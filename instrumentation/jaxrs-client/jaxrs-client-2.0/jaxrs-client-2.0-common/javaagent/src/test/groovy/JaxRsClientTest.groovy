@@ -79,7 +79,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
   def "should properly convert HTTP status #statusCode to span error status"() {
     given:
     def method = "GET"
-    def uri = server.address.resolve(path)
+    def uri = resolveAddress(path)
 
     when:
     def actualStatusCode = doRequest(method, uri)

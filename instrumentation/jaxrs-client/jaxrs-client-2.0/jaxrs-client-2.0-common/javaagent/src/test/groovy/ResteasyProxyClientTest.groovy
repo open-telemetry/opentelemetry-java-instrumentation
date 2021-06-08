@@ -23,7 +23,7 @@ class ResteasyProxyClientTest extends HttpClientTest<ResteasyProxyResource> impl
   ResteasyProxyResource buildRequest(String method, URI uri, Map<String, String> headers) {
     return new ResteasyClientBuilder()
       .build()
-      .target(new ResteasyUriBuilder().uri(server.address))
+      .target(new ResteasyUriBuilder().uri(resolveAddress("")))
       .proxy(ResteasyProxyResource)
   }
 

@@ -285,7 +285,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           }
         }
         clientSpan(it, 2, span(1), method)
-        server.distributedRequestSpan(it, 3, span(2))
+        serverSpan(it, 3, span(2))
       }
     }
 
