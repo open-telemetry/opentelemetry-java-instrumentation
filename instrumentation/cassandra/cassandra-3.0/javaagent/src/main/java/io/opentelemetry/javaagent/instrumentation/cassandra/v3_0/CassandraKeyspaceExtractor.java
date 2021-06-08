@@ -21,5 +21,5 @@ final class CassandraKeyspaceExtractor
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, CassandraRequest request, ExecutionInfo response) {}
+      AttributesBuilder attributes, CassandraRequest request, ExecutionInfo executionInfo) {}
 }

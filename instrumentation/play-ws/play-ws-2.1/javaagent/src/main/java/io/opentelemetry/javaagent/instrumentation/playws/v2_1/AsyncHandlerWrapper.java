@@ -33,6 +33,10 @@ public class AsyncHandlerWrapper implements AsyncHandler {
     this.parentContext = parentContext;
   }
 
+  public Context getParentContext() {
+    return parentContext;
+  }
+
   @Override
   public State onBodyPartReceived(HttpResponseBodyPart content) throws Exception {
     builder.accumulate(content);

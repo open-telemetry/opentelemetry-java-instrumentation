@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api;
+package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.javaagent.extension.Ordered;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -37,6 +39,16 @@ public final class SafeServiceLoader {
         log.debug("Unable to load instrumentation class: {}", e.getMessage());
       }
     }
+    return result;
+  }
+
+  /**
+   * Same as {@link #load(Class)}, but also orders the returned implementations by comparing their
+   * {@link Ordered#order()}.
+   */
+  public static <T extends Ordered> List<T> loadOrdered(Class<T> serviceClass) {
+    List<T> result = load(serviceClass);
+    result.sort(Comparator.comparing(Ordered::order));
     return result;
   }
 

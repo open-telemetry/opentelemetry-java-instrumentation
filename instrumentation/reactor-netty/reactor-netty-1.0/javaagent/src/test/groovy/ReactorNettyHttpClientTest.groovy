@@ -14,7 +14,7 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
   HttpClient createHttpClient() {
     return HttpClient.create().tcpConfiguration({ tcpClient ->
       tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
-    })
+    }).resolver(getAddressResolverGroup())
   }
 
   @Override

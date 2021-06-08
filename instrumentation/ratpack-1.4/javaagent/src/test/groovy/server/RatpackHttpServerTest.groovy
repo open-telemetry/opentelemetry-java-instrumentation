@@ -20,78 +20,76 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import ratpack.error.ServerErrorHandler
-import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.handling.Context
-import ratpack.test.embed.EmbeddedApp
+import ratpack.server.RatpackServer
 
-class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> implements AgentTestTrait {
+class RatpackHttpServerTest extends HttpServerTest<RatpackServer> implements AgentTestTrait {
 
   @Override
-  EmbeddedApp startServer(int bindPort) {
-    def ratpack = GroovyEmbeddedApp.ratpack {
-      serverConfig {
-        port bindPort
-        address InetAddress.getByName('localhost')
+  RatpackServer startServer(int bindPort) {
+    def ratpack = RatpackServer.start {
+      it.serverConfig {
+        it.port(bindPort)
+        it.address(InetAddress.getByName("localhost"))
       }
-      bindings {
-        bind TestErrorHandler
-      }
-      handlers {
-        prefix(SUCCESS.rawPath()) {
-          all {
+      it.handlers {
+        it.register {
+          it.add(ServerErrorHandler, new TestErrorHandler())
+        }
+        it.prefix(SUCCESS.rawPath()) {
+          it.all {context ->
             controller(SUCCESS) {
               context.response.status(SUCCESS.status).send(SUCCESS.body)
             }
           }
         }
-        prefix(INDEXED_CHILD.rawPath()) {
-          all {
+        it.prefix(INDEXED_CHILD.rawPath()) {
+          it.all {context ->
             controller(INDEXED_CHILD) {
-              INDEXED_CHILD.collectSpanAttributes { request.queryParams.get(it) }
+              INDEXED_CHILD.collectSpanAttributes { context.request.queryParams.get(it) }
               context.response.status(INDEXED_CHILD.status).send()
             }
           }
         }
-        prefix(QUERY_PARAM.rawPath()) {
-          all {
+        it.prefix(QUERY_PARAM.rawPath()) {
+          it.all { context ->
             controller(QUERY_PARAM) {
-              context.response.status(QUERY_PARAM.status).send(request.query)
+              context.response.status(QUERY_PARAM.status).send(context.request.query)
             }
           }
         }
-        prefix(REDIRECT.rawPath()) {
-          all {
+        it.prefix(REDIRECT.rawPath()) {
+          it.all {context ->
             controller(REDIRECT) {
               context.redirect(REDIRECT.body)
             }
           }
         }
-        prefix(ERROR.rawPath()) {
-          all {
+        it.prefix(ERROR.rawPath()) {
+          it.all {context ->
             controller(ERROR) {
               context.response.status(ERROR.status).send(ERROR.body)
             }
           }
         }
-        prefix(EXCEPTION.rawPath()) {
-          all {
+        it.prefix(EXCEPTION.rawPath()) {
+          it.all {
             controller(EXCEPTION) {
               throw new Exception(EXCEPTION.body)
             }
           }
         }
-        prefix("path/:id/param") {
-          all {
+        it.prefix("path/:id/param") {
+          it.all {context ->
             controller(PATH_PARAM) {
-              context.response.status(PATH_PARAM.status).send(pathTokens.id)
+              context.response.status(PATH_PARAM.status).send(context.pathTokens.id)
             }
           }
         }
       }
     }
-    ratpack.server.start()
 
-    assert ratpack.address.port == bindPort
+    assert ratpack.bindPort == bindPort
     return ratpack
   }
 
@@ -103,8 +101,8 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp> implements Agent
   }
 
   @Override
-  void stopServer(EmbeddedApp server) {
-    server.close()
+  void stopServer(RatpackServer server) {
+    server.stop()
   }
 
   @Override

@@ -14,12 +14,9 @@ import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServerHand
 import net.bytebuddy.asm.Advice;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("unused")
 public class Tomcat10ServerHandlerAdvice {
-  public static final Logger log = LoggerFactory.getLogger(Tomcat10ServerHandlerAdvice.class);
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
@@ -27,9 +24,7 @@ public class Tomcat10ServerHandlerAdvice {
       @Advice.Argument(1) Response response,
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
-    Context attachedContext = tracer().getServerContext(request);
-    if (attachedContext != null) {
-      log.debug("Unexpected context found before server handler even started: {}", attachedContext);
+    if (!tracer().shouldStartSpan(request)) {
       return;
     }
 

@@ -23,11 +23,11 @@ final class CassandraNetAttributesExtractor
 
   @Override
   public @Nullable InetSocketAddress getAddress(
-      CassandraRequest request, @Nullable ExecutionInfo response) {
-    if (response == null) {
+      CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
+    if (executionInfo == null) {
       return null;
     }
-    Node coordinator = response.getCoordinator();
+    Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
       return null;
     }

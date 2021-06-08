@@ -12,8 +12,8 @@ import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.path.PathBinding
+import ratpack.server.RatpackServer
 
 class RatpackOtherTest extends AgentInstrumentationSpecification {
 
@@ -21,42 +21,43 @@ class RatpackOtherTest extends AgentInstrumentationSpecification {
 
   def "test bindings for #path"() {
     setup:
-    def app = GroovyEmbeddedApp.ratpack {
-      handlers {
-        prefix("a") {
-          all {
+    def app = RatpackServer.start {
+      it.handlers {
+        it.prefix("a") {
+          it.all {context ->
             context.render(context.get(PathBinding).description)
           }
         }
-        prefix("b/::\\d+") {
-          all {
+        it.prefix("b/::\\d+") {
+          it.all {context ->
             context.render(context.get(PathBinding).description)
           }
         }
-        prefix("c/:val?") {
-          all {
+        it.prefix("c/:val?") {
+          it.all {context ->
             context.render(context.get(PathBinding).description)
           }
         }
-        prefix("d/:val") {
-          all {
+        it.prefix("d/:val") {
+          it.all {context ->
             context.render(context.get(PathBinding).description)
           }
         }
-        prefix("e/:val?:\\d+") {
-          all {
+        it.prefix("e/:val?:\\d+") {
+          it.all {context ->
             context.render(context.get(PathBinding).description)
           }
         }
-        prefix("f/:val:\\d+") {
-          all {
+        it.prefix("f/:val:\\d+") {
+          it.all {context ->
             context.render(context.get(PathBinding).description)
           }
         }
       }
     }
+    def address = "${app.scheme}://${app.bindHost}:${app.bindPort}"
     def request = new Request.Builder()
-      .url(HttpUrl.get(app.address).newBuilder().addPathSegments(path).build())
+      .url(HttpUrl.get(address).newBuilder().addPathSegments(path).build())
       .get()
       .build()
 
@@ -76,7 +77,7 @@ class RatpackOtherTest extends AgentInstrumentationSpecification {
           attributes {
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
-            "${SemanticAttributes.HTTP_URL.key}" "${app.address.resolve(path)}"
+            "${SemanticAttributes.HTTP_URL.key}" "${address}/${path}"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
@@ -93,6 +94,9 @@ class RatpackOtherTest extends AgentInstrumentationSpecification {
         }
       }
     }
+
+    cleanup:
+    app.stop()
 
     where:
     path    | route

@@ -9,6 +9,7 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.ProcessingException
@@ -128,6 +129,15 @@ class JerseyClientTest extends JaxRsClientTest {
   int maxRedirects() {
     20
   }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    // Jersey JAX-RS client uses HttpURLConnection internally, which does not support pipelining nor
+    // waiting for a connection in the pool to become available. Therefore a high concurrency test
+    // would require manually doing requests one after another which is not meaningful for a high
+    // concurrency test.
+    return null
+  }
 }
 
 class ResteasyClientTest extends JaxRsClientTest {
@@ -141,6 +151,11 @@ class ResteasyClientTest extends JaxRsClientTest {
   boolean testRedirects() {
     false
   }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    return new ResteasySingleConnection(host, port)
+  }
 }
 
 class CxfClientTest extends JaxRsClientTest {
@@ -153,5 +168,14 @@ class CxfClientTest extends JaxRsClientTest {
 
   boolean testRedirects() {
     false
+  }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    // CXF JAX-RS client uses HttpURLConnection internally, which does not support pipelining nor
+    // waiting for a connection in the pool to become available. Therefore a high concurrency test
+    // would require manually doing requests one after another which is not meaningful for a high
+    // concurrency test.
+    return null
   }
 }

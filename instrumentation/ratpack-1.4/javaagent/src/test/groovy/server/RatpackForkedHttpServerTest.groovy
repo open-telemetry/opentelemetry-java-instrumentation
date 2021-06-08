@@ -13,25 +13,26 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
+import ratpack.error.ServerErrorHandler
 import ratpack.exec.Promise
-import ratpack.groovy.test.embed.GroovyEmbeddedApp
-import ratpack.test.embed.EmbeddedApp
+import ratpack.server.RatpackServer
 
 class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
 
   @Override
-  EmbeddedApp startServer(int bindPort) {
-    def ratpack = GroovyEmbeddedApp.ratpack {
-      serverConfig {
-        port bindPort
-        address InetAddress.getByName('localhost')
+  RatpackServer startServer(int bindPort) {
+
+    def ratpack = RatpackServer.start {
+      it.serverConfig {
+        it.port(bindPort)
+        it.address(InetAddress.getByName("localhost"))
       }
-      bindings {
-        bind TestErrorHandler
-      }
-      handlers {
-        prefix(SUCCESS.rawPath()) {
-          all {
+      it.handlers {
+        it.register {
+          it.add(ServerErrorHandler, new TestErrorHandler())
+        }
+        it.prefix(SUCCESS.rawPath()) {
+          it.all {context ->
             Promise.sync {
               SUCCESS
             }.fork().then { endpoint ->
@@ -41,31 +42,31 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
             }
           }
         }
-        prefix(INDEXED_CHILD.rawPath()) {
-          all {
+        it.prefix(INDEXED_CHILD.rawPath()) {
+          it.all {context ->
             Promise.sync {
               INDEXED_CHILD
             }.fork().then {
               controller(INDEXED_CHILD) {
-                INDEXED_CHILD.collectSpanAttributes { request.queryParams.get(it) }
+                INDEXED_CHILD.collectSpanAttributes { context.request.queryParams.get(it) }
                 context.response.status(INDEXED_CHILD.status).send()
               }
             }
           }
         }
-        prefix(QUERY_PARAM.rawPath()) {
-          all {
+        it.prefix(QUERY_PARAM.rawPath()) {
+          it.all { context ->
             Promise.sync {
               QUERY_PARAM
             }.fork().then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(request.query)
+                context.response.status(endpoint.status).send(context.request.query)
               }
             }
           }
         }
-        prefix(REDIRECT.rawPath()) {
-          all {
+        it.prefix(REDIRECT.rawPath()) {
+          it.all {context ->
             Promise.sync {
               REDIRECT
             }.fork().then { endpoint ->
@@ -75,8 +76,8 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
             }
           }
         }
-        prefix(ERROR.rawPath()) {
-          all {
+        it.prefix(ERROR.rawPath()) {
+          it.all {context ->
             Promise.sync {
               ERROR
             }.fork().then { endpoint ->
@@ -86,8 +87,8 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
             }
           }
         }
-        prefix(EXCEPTION.rawPath()) {
-          all {
+        it.prefix(EXCEPTION.rawPath()) {
+          it.all {
             Promise.sync {
               EXCEPTION
             }.fork().then { endpoint ->
@@ -97,22 +98,22 @@ class RatpackForkedHttpServerTest extends RatpackHttpServerTest {
             }
           }
         }
-        prefix("path/:id/param") {
-          all {
+        it.prefix("path/:id/param") {
+          it.all {context ->
             Promise.sync {
               PATH_PARAM
             }.fork().then { endpoint ->
               controller(endpoint) {
-                context.response.status(endpoint.status).send(pathTokens.id)
+                context.response.status(endpoint.status).send(context.pathTokens.id)
               }
             }
           }
         }
       }
     }
-    ratpack.server.start()
 
-    assert ratpack.address.port == bindPort
+    assert ratpack.bindPort == bindPort
+    assert ratpack.bindHost == 'localhost'
     return ratpack
   }
 }

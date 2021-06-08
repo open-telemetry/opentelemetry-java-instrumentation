@@ -13,7 +13,7 @@ dependencies {
 
   implementation project(':instrumentation:netty:netty-4.1:javaagent')
 
-  testLibrary "io.ratpack:ratpack-groovy-test:1.4.0"
+  testLibrary "io.ratpack:ratpack-test:1.4.0"
 
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
     testImplementation "com.sun.activation:jakarta.activation:1.2.2"
