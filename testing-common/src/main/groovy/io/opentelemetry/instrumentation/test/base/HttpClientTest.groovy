@@ -1067,6 +1067,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   protected URI resolveAddress(String path) {
-    return server.httpUri().resolve(path)
+    return URI.create("http://localhost:${server.httpPort()}${path}")
   }
 }
