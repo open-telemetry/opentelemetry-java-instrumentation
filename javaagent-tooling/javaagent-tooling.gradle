@@ -49,6 +49,7 @@ dependencies {
   testImplementation "com.google.guava:guava"
   testImplementation "org.assertj:assertj-core"
   testImplementation "org.mockito:mockito-core"
+  testImplementation "org.mockito:mockito-junit-jupiter"
 
   instrumentationMuzzle sourceSets.main.output
 }

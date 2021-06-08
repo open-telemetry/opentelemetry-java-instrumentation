@@ -8,10 +8,7 @@ package io.opentelemetry.javaagent.tooling;
 import static io.opentelemetry.javaagent.bootstrap.AgentInitializer.isJavaBefore9;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
-import static io.opentelemetry.javaagent.tooling.matcher.GlobalIgnoresMatcher.globalIgnoresMatcher;
 import static net.bytebuddy.matcher.ElementMatchers.any;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
-import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
@@ -25,17 +22,16 @@ import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
+import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatcher;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -44,9 +40,6 @@ import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.NameMatcher;
-import net.bytebuddy.matcher.StringSetMatcher;
 import net.bytebuddy.utility.JavaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +49,6 @@ public class AgentInstaller {
   private static final Logger log;
 
   private static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
-  private static final String EXCLUDED_CLASSES_CONFIG = "otel.javaagent.exclude-classes";
 
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
@@ -122,11 +114,7 @@ public class AgentInstaller {
 
     FieldBackedProvider.resetContextMatchers();
 
-    IgnoreMatcherProvider ignoreMatcherProvider = loadIgnoreMatcherProvider();
-    log.debug(
-        "Ignore matcher provider {} will be used", ignoreMatcherProvider.getClass().getName());
-
-    AgentBuilder.Ignored ignoredAgentBuilder =
+    AgentBuilder agentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
@@ -134,19 +122,13 @@ public class AgentInstaller {
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
             .with(new ClassLoadListener())
-            .with(AgentTooling.locationStrategy())
-            // FIXME: we cannot enable it yet due to BB/JVM bug, see
-            // https://github.com/raphw/byte-buddy/issues/558
-            // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
-            .ignore(any(), GlobalClassloaderIgnoresMatcher.skipClassLoader(ignoreMatcherProvider));
+            .with(AgentTooling.locationStrategy());
+    // FIXME: we cannot enable it yet due to BB/JVM bug, see
+    // https://github.com/raphw/byte-buddy/issues/558
+    // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
 
-    ignoredAgentBuilder =
-        ignoredAgentBuilder.or(
-            globalIgnoresMatcher(ignoreMatcherProvider, loadIgnoredTypesMatcher(config)));
+    agentBuilder = configureIgnoredTypes(config, agentBuilder);
 
-    ignoredAgentBuilder = ignoredAgentBuilder.or(matchesConfiguredExcludes());
-
-    AgentBuilder agentBuilder = ignoredAgentBuilder;
     if (log.isDebugEnabled()) {
       agentBuilder =
           agentBuilder
@@ -180,19 +162,28 @@ public class AgentInstaller {
     return resettableClassFileTransformer;
   }
 
-  private static ElementMatcher<TypeDescription> loadIgnoredTypesMatcher(Config config) {
-    IgnoredTypesBuilderImpl ignoredTypesBuilder = new IgnoredTypesBuilderImpl();
-    for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
-      configurer.configure(config, ignoredTypesBuilder);
-    }
-    return ignoredTypesBuilder.buildIgnoredTypesMatcher();
-  }
-
   private static void runBeforeAgentListeners(
       Iterable<AgentListener> agentListeners, Config config) {
     for (AgentListener agentListener : agentListeners) {
       agentListener.beforeAgent(config);
     }
+  }
+
+  private static AgentBuilder configureIgnoredTypes(Config config, AgentBuilder agentBuilder) {
+    IgnoreMatcherProvider ignoreMatcherProvider = loadIgnoreMatcherProvider();
+    log.debug(
+        "Ignore matcher provider {} will be used", ignoreMatcherProvider.getClass().getName());
+
+    IgnoredTypesBuilderImpl ignoredTypesBuilder = new IgnoredTypesBuilderImpl();
+    for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
+      configurer.configure(config, ignoredTypesBuilder);
+    }
+
+    return agentBuilder
+        .ignore(any(), GlobalClassloaderIgnoresMatcher.skipClassLoader(ignoreMatcherProvider))
+        .or(
+            new IgnoredTypesMatcher(
+                ignoreMatcherProvider, ignoredTypesBuilder.buildIgnoredTypesTrie()));
   }
 
   private static void runAfterAgentListeners(
@@ -254,33 +245,6 @@ public class AgentInstaller {
         System.setProperty(TypeDefinition.RAW_TYPES_PROPERTY, savedPropertyValue);
       }
     }
-  }
-
-  // TODO: rewrite to an IgnoredTypesConfigurer
-  private static ElementMatcher.Junction<? super TypeDescription> matchesConfiguredExcludes() {
-    List<String> excludedClasses = Config.get().getListProperty(EXCLUDED_CLASSES_CONFIG);
-    ElementMatcher.Junction<? super TypeDescription> matcher = none();
-    Set<String> literals = new HashSet<>();
-    List<String> prefixes = new ArrayList<>();
-    // first accumulate by operation because a lot of work can be aggregated
-    for (String excludedClass : excludedClasses) {
-      excludedClass = excludedClass.trim();
-      if (excludedClass.endsWith("*")) {
-        // remove the trailing *
-        prefixes.add(excludedClass.substring(0, excludedClass.length() - 1));
-      } else {
-        literals.add(excludedClass);
-      }
-    }
-    if (!literals.isEmpty()) {
-      matcher = matcher.or(new NameMatcher<>(new StringSetMatcher(literals)));
-    }
-    for (String prefix : prefixes) {
-      // TODO - with a prefix tree this matching logic can be handled by a
-      // single longest common prefix query
-      matcher = matcher.or(nameStartsWith(prefix));
-    }
-    return matcher;
   }
 
   private static List<String> loadBootstrapPackagePrefixes() {
@@ -531,7 +495,9 @@ public class AgentInstaller {
         "{} loaded on {}", AgentInstaller.class.getName(), AgentInstaller.class.getClassLoader());
   }
 
-  private static class NoopIgnoreMatcherProvider implements IgnoreMatcherProvider {
+  /** This class will be removed together with {@link IgnoreMatcherProvider}. */
+  @Deprecated
+  public static final class NoopIgnoreMatcherProvider implements IgnoreMatcherProvider {
     @Override
     public Result classloader(ClassLoader classLoader) {
       return Result.DEFAULT;

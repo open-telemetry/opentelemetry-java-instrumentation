@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.ignore;
 
-enum IgnoreAllow {
+public enum IgnoreAllow {
   IGNORE,
   ALLOW
 }
