@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.spring.integration;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.messaging.Message;
@@ -21,8 +21,9 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.util.LinkedMultiValueMap;
 
 final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
-  private static final String CONTEXT_AND_SCOPE_KEY = ContextAndScope.class.getName();
-  private static final String SCOPE_KEY = TracingChannelInterceptor.class.getName() + ".scope";
+
+  private static final ThreadLocal<Map<MessageChannel, ContextAndScope>> LOCAL_CONTEXT_AND_SCOPE =
+      ThreadLocal.withInitial(IdentityHashMap::new);
 
   private final ContextPropagators propagators;
   private final Instrumenter<MessageWithChannel, Void> instrumenter;
@@ -47,7 +48,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     propagators
         .getTextMapPropagator()
         .inject(context, messageHeaderAccessor, MessageHeadersSetter.INSTANCE);
-    messageHeaderAccessor.setHeader(CONTEXT_AND_SCOPE_KEY, ContextAndScope.makeCurrent(context));
+    LOCAL_CONTEXT_AND_SCOPE.get().put(messageChannel, ContextAndScope.makeCurrent(context));
     return createMessageWithHeaders(message, messageHeaderAccessor);
   }
 
@@ -57,8 +58,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public void afterSendCompletion(
       Message<?> message, MessageChannel messageChannel, boolean sent, Exception e) {
-    ContextAndScope contextAndScope =
-        message.getHeaders().get(CONTEXT_AND_SCOPE_KEY, ContextAndScope.class);
+    ContextAndScope contextAndScope = LOCAL_CONTEXT_AND_SCOPE.get().remove(messageChannel);
     if (contextAndScope != null) {
       contextAndScope.close();
       MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
@@ -88,18 +88,18 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
         propagators
             .getTextMapPropagator()
             .extract(Context.current(), messageWithChannel, MessageHeadersGetter.INSTANCE);
-    Scope scope = context.makeCurrent();
-    MessageHeaderAccessor messageHeaderAccessor = MessageHeaderAccessor.getMutableAccessor(message);
-    messageHeaderAccessor.setHeader(SCOPE_KEY, scope);
-    return createMessageWithHeaders(message, messageHeaderAccessor);
+    // beforeHandle()/afterMessageHandles() always execute in a different thread than send(), so
+    // there's no real risk of overwriting the send() context
+    LOCAL_CONTEXT_AND_SCOPE.get().put(channel, ContextAndScope.makeCurrent(context));
+    return message;
   }
 
   @Override
   public void afterMessageHandled(
       Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
-    Scope scope = message.getHeaders().get(SCOPE_KEY, Scope.class);
-    if (scope != null) {
-      scope.close();
+    ContextAndScope contextAndScope = LOCAL_CONTEXT_AND_SCOPE.get().remove(channel);
+    if (contextAndScope != null) {
+      contextAndScope.close();
     }
   }
 
