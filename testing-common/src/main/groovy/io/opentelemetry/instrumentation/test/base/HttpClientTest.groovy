@@ -40,7 +40,6 @@ import io.opentelemetry.testing.armeria.common.ResponseHeaders
 import io.opentelemetry.testing.armeria.common.ResponseHeadersBuilder
 import io.opentelemetry.testing.armeria.server.DecoratingHttpServiceFunction
 import io.opentelemetry.testing.armeria.server.HttpService
-import io.opentelemetry.testing.armeria.server.Server
 import io.opentelemetry.testing.armeria.server.ServerBuilder
 import io.opentelemetry.testing.armeria.server.ServiceRequestContext
 import io.opentelemetry.testing.armeria.server.logging.LoggingService
