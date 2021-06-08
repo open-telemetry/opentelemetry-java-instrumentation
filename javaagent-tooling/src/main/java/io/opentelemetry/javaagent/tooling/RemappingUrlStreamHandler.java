@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
@@ -20,10 +19,10 @@ import java.util.jar.JarFile;
 class RemappingUrlStreamHandler extends URLStreamHandler {
   private final JarFile delegateJarFile;
 
-  public RemappingUrlStreamHandler(URL delegateJarFileLocation) {
+  public RemappingUrlStreamHandler(File delegateFile) {
     try {
-      delegateJarFile = new JarFile(new File(delegateJarFileLocation.toURI()), false);
-    } catch (URISyntaxException | IOException e) {
+      delegateJarFile = new JarFile(delegateFile, false);
+    } catch (IOException e) {
       throw new IllegalStateException("Unable to read internal jar", e);
     }
   }
