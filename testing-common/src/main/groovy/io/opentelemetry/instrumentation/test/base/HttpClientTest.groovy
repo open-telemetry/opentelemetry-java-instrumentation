@@ -41,7 +41,10 @@ import io.opentelemetry.testing.armeria.common.ResponseHeadersBuilder
 import io.opentelemetry.testing.armeria.server.DecoratingHttpServiceFunction
 import io.opentelemetry.testing.armeria.server.HttpService
 import io.opentelemetry.testing.armeria.server.Server
+import io.opentelemetry.testing.armeria.server.ServerBuilder
 import io.opentelemetry.testing.armeria.server.ServiceRequestContext
+import io.opentelemetry.testing.armeria.server.logging.LoggingService
+import io.opentelemetry.testing.armeria.testing.junit5.server.ServerExtension
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
@@ -63,69 +66,69 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   Tracer tracer = openTelemetry.getTracer("test")
 
   @Shared
-  def server
-
-  def setupSpec() {
-    server = Server.builder()
-      .http(0)
-      .service("/success") {ctx, req ->
-        ResponseHeadersBuilder headers = ResponseHeaders.builder(HttpStatus.OK)
-        def testRequestId = req.headers().get("test-request-id")
-        if (testRequestId != null) {
-          headers.set("test-request-id", testRequestId)
+  def server = new ServerExtension(false) {
+    @Override
+    protected void configure(ServerBuilder sb) throws Exception {
+      sb.http(0)
+        .service("/success") {ctx, req ->
+          ResponseHeadersBuilder headers = ResponseHeaders.builder(HttpStatus.OK)
+          def testRequestId = req.headers().get("test-request-id")
+          if (testRequestId != null) {
+            headers.set("test-request-id", testRequestId)
+          }
+          HttpResponse.of(headers.build(), HttpData.ofAscii("Hello."))
         }
-        HttpResponse.of(headers.build(), HttpData.ofAscii("Hello."))
-      }
-      .service("/client-error") {ctx, req ->
-        HttpResponse.of(HttpStatus.BAD_REQUEST, PLAIN_TEXT_UTF_8, "Invalid RQ")
-      }
-      .service("/error") {ctx, req ->
-        HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, PLAIN_TEXT_UTF_8, "Sorry.")
-      }
-      .service("/redirect") {ctx, req ->
-        HttpResponse.ofRedirect(HttpStatus.FOUND, "/success")
-      }
-      .service("/another-redirect") {ctx, req ->
-        HttpResponse.ofRedirect(HttpStatus.FOUND, "/redirect")
-      }
-      .service("/circular-redirect") {ctx, req ->
-        HttpResponse.ofRedirect(HttpStatus.FOUND, "/circular-redirect")
-      }
-      .service("/secured") {ctx, req ->
-        if (req.headers().get(BASIC_AUTH_KEY) == BASIC_AUTH_VAL) {
-          return HttpResponse.of(HttpStatus.OK, PLAIN_TEXT_UTF_8, "secured string under basic auth")
-        } else {
+        .service("/client-error") {ctx, req ->
+          HttpResponse.of(HttpStatus.BAD_REQUEST, PLAIN_TEXT_UTF_8, "Invalid RQ")
+        }
+        .service("/error") {ctx, req ->
+          HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, PLAIN_TEXT_UTF_8, "Sorry.")
+        }
+        .service("/redirect") {ctx, req ->
+          HttpResponse.ofRedirect(HttpStatus.FOUND, "/success")
+        }
+        .service("/another-redirect") {ctx, req ->
+          HttpResponse.ofRedirect(HttpStatus.FOUND, "/redirect")
+        }
+        .service("/circular-redirect") {ctx, req ->
+          HttpResponse.ofRedirect(HttpStatus.FOUND, "/circular-redirect")
+        }
+        .service("/secured") {ctx, req ->
+          if (req.headers().get(BASIC_AUTH_KEY) == BASIC_AUTH_VAL) {
+            return HttpResponse.of(HttpStatus.OK, PLAIN_TEXT_UTF_8, "secured string under basic auth")
+          }
           return HttpResponse.of(HttpStatus.UNAUTHORIZED, PLAIN_TEXT_UTF_8, "Unauthorized")
         }
-      }
-      .service("/to-secured") {ctx, req ->
-        HttpResponse.ofRedirect(HttpStatus.FOUND, "/secured")
-      }
-      .decorator(new DecoratingHttpServiceFunction() {
-        @Override
-        HttpResponse serve(HttpService delegate, ServiceRequestContext ctx, HttpRequest req) throws Exception {
-          for (String field : openTelemetry.propagators.textMapPropagator.fields()) {
-            if (req.headers().getAll(field).size() > 1) {
-              throw new AssertionError((Object) ("more than one " + field + " header present"))
-            }
-          }
-          SpanBuilder span = tracer.spanBuilder("test-http-server")
-            .setSpanKind(SERVER)
-          // using Context.root() to avoid inheriting any potentially leaked context or the one
-          // created by Armeria instrumentation
-            .setParent(openTelemetry.propagators.textMapPropagator.extract(Context.root(), ctx, RequestContextGetter.INSTANCE))
-
-          def traceRequestId = req.headers().get("test-request-id")
-          if (traceRequestId != null) {
-            span.setAttribute("test.request.id", Integer.parseInt(traceRequestId))
-          }
-          span.startSpan().end()
-
-          return delegate.serve(ctx, req)
+        .service("/to-secured") {ctx, req ->
+          HttpResponse.ofRedirect(HttpStatus.FOUND, "/secured")
         }
-      })
-      .build()
-    server.start().join()
+        .decorator(new DecoratingHttpServiceFunction() {
+          @Override
+          HttpResponse serve(HttpService delegate, ServiceRequestContext ctx, HttpRequest req) {
+            for (String field : openTelemetry.propagators.textMapPropagator.fields()) {
+              if (req.headers().getAll(field).size() > 1) {
+                throw new AssertionError((Object) ("more than one " + field + " header present"))
+              }
+            }
+            SpanBuilder span = tracer.spanBuilder("test-http-server")
+              .setSpanKind(SERVER)
+              .setParent(openTelemetry.propagators.textMapPropagator.extract(Context.current(), ctx, RequestContextGetter.INSTANCE))
+
+            def traceRequestId = req.headers().get("test-request-id")
+            if (traceRequestId != null) {
+              span.setAttribute("test.request.id", Integer.parseInt(traceRequestId))
+            }
+            span.startSpan().end()
+
+            return delegate.serve(ctx, req)
+          }
+        })
+        .decorator(LoggingService.newDecorator())
+    }
+  }
+
+  def setupSpec() {
+    server.start()
   }
 
   def cleanupSpec() {
@@ -849,7 +852,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    */
   def "high concurrency test on single connection"() {
     setup:
-    def singleConnection = createSingleConnection("localhost", server.activeLocalPort())
+    def singleConnection = createSingleConnection("localhost", server.httpPort())
     assumeTrue(singleConnection != null)
     int count = 50
     def method = 'GET'
@@ -1065,6 +1068,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   protected URI resolveAddress(String path) {
-    return URI.create("http://localhost:${server.activeLocalPort()}${path}")
+    return server.httpUri().resolve(path)
   }
 }

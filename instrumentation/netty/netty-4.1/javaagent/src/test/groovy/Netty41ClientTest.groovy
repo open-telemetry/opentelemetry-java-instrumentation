@@ -152,7 +152,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     when:
     // note that this is a purely asynchronous request
     runUnderTrace("parent1") {
-      ch = b.connect("localhost", server.activeLocalPort()).sync().channel()
+      ch = b.connect("localhost", server.httpPort()).sync().channel()
       ch.write(request)
       ch.flush()
     }

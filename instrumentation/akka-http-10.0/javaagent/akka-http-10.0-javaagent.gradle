@@ -2,12 +2,6 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 apply from: "$rootDir/gradle/test-with-scala.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
-testSets {
-  version101Test {
-    dirName = 'test'
-  }
-}
-
 muzzle {
   pass {
     group = 'com.typesafe.akka'
@@ -51,16 +45,9 @@ dependencies {
   library "com.typesafe.akka:akka-http_2.11:10.0.0"
   library "com.typesafe.akka:akka-stream_2.11:2.4.14"
 
-  // There are some internal API changes in 10.1 that we would like to test separately for
-  version101TestImplementation "com.typesafe.akka:akka-http_2.11:10.1.0"
-  version101TestImplementation "com.typesafe.akka:akka-stream_2.11:2.5.11"
-}
-
-test.dependsOn version101Test
-
-compileVersion101TestGroovy {
-  classpath = classpath.plus(files(compileVersion101TestScala.destinationDir))
-  dependsOn compileVersion101TestScala
+  // 10.0.x has some bugs making it incompatible with our test server.
+  testLibrary "com.typesafe.akka:akka-http_2.11:10.1.0"
+  testLibrary "com.typesafe.akka:akka-stream_2.11:2.5.11"
 }
 
 tasks.withType(Test).configureEach {

@@ -15,6 +15,7 @@ import akka.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.test.base.SingleConnection
+import java.util.concurrent.TimeUnit
 import spock.lang.Shared
 
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
@@ -36,7 +37,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
     return Http.get(system)
       .singleRequest(request, materializer)
       .toCompletableFuture()
-      .get()
+      .get(10, TimeUnit.SECONDS)
       .status()
       .intValue()
   }
