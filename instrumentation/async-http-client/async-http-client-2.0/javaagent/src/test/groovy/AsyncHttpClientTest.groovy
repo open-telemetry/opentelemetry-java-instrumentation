@@ -75,7 +75,7 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET,
+      SemanticAttributes.HTTP_TARGET
     ]
     super.httpAttributes(uri) + extra
   }
