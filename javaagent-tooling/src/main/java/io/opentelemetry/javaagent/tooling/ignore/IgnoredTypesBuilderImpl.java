@@ -28,25 +28,25 @@ public class IgnoredTypesBuilderImpl implements IgnoredTypesBuilder {
   @Override
   public IgnoredTypesBuilder ignoreClassLoader(String classNameOrPrefix) {
     // TODO: collect classloader classes into a separate trie
-    return this;
+    throw new UnsupportedOperationException("not implemented yet");
   }
 
   @Override
   public IgnoredTypesBuilder allowClassLoader(String classNameOrPrefix) {
     // TODO: collect classloader classes into a separate trie
-    return this;
+    throw new UnsupportedOperationException("not implemented yet");
   }
 
   @Override
   public IgnoredTypesBuilder ignoreTaskClass(String className) {
     // TODO: collect task classes into a separate trie
-    return this;
+    throw new UnsupportedOperationException("not implemented yet");
   }
 
   @Override
   public IgnoredTypesBuilder allowTaskClass(String className) {
     // TODO: collect task classes into a separate trie
-    return this;
+    throw new UnsupportedOperationException("not implemented yet");
   }
 
   public ElementMatcher<TypeDescription> buildIgnoredTypesMatcher() {

@@ -27,7 +27,8 @@ public interface IgnoredTypesBuilder {
 
   /**
    * Allow the class or package specified by {@code classNameOrPrefix} to be instrumented. Calling
-   * this will overwrite any previous settings for passed prefix.
+   * this will overwrite any previous settings for passed prefix; in particular, calling this method
+   * will override any previous {@link #ignoreClass(String)} setting.
    *
    * <p>{@code classNameOrPrefix} can be the full class name (ex. {@code com.example.MyClass}),
    * package name (ex. {@code com.example.mypackage.}), or outer class name (ex {@code
@@ -51,7 +52,8 @@ public interface IgnoredTypesBuilder {
 
   /**
    * Allow the class loader specified by {@code classNameOrPrefix} to be instrumented. Calling this
-   * will overwrite any previous settings for passed prefix.
+   * will overwrite any previous settings for passed prefix; in particular, calling this method will
+   * override any previous {@link #ignoreClassLoader(String)} setting.
    *
    * <p>{@code classNameOrPrefix} can be the full class name (ex. {@code com.example.MyClass}),
    * package name (ex. {@code com.example.mypackage.}), or outer class name (ex {@code
@@ -73,7 +75,7 @@ public interface IgnoredTypesBuilder {
    *   <li>{@link java.util.concurrent.Future}
    * </ul>
    *
-   * Calling this will overwrite any previous settings for passed prefix.
+   * <p>Calling this will overwrite any previous settings for passed prefix.
    *
    * <p>{@code classNameOrPrefix} can be the full class name (ex. {@code com.example.MyClass}),
    * package name (ex. {@code com.example.mypackage.}), or outer class name (ex {@code
@@ -94,7 +96,8 @@ public interface IgnoredTypesBuilder {
    *   <li>{@link java.util.concurrent.Future}
    * </ul>
    *
-   * Calling this will overwrite any previous settings for passed prefix.
+   * <p>Calling this will will overwrite any previous settings for passed prefix; in particular,
+   * calling this method will override any previous {@link #ignoreTaskClass(String)} setting.
    *
    * <p>{@code classNameOrPrefix} can be the full class name (ex. {@code com.example.MyClass}),
    * package name (ex. {@code com.example.mypackage.}), or outer class name (ex {@code
