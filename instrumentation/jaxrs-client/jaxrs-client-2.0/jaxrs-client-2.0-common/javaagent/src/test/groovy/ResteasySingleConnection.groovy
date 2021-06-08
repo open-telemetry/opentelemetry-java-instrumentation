@@ -8,10 +8,8 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import javax.ws.rs.core.MediaType
-import org.apache.http.client.params.ClientPNames
 import org.jboss.resteasy.client.jaxrs.ResteasyClient
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine
 
 class ResteasySingleConnection implements SingleConnection {
   private final ResteasyClient client
@@ -25,9 +23,6 @@ class ResteasySingleConnection implements SingleConnection {
       .establishConnectionTimeout(5000, TimeUnit.MILLISECONDS)
       .connectionPoolSize(1)
       .build()
-
-    ((ApacheHttpClient4Engine) client.httpEngine()).httpClient.params
-      .setParameter(ClientPNames.CONN_MANAGER_TIMEOUT, 20000L)
   }
 
   @Override
