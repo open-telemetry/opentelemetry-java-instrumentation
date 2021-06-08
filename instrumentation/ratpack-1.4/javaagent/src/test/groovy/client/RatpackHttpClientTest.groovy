@@ -99,7 +99,7 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
     return new SingleConnection() {
       @Override
       int doRequest(String path, Map<String, String> headers) throws ExecutionException, InterruptedException, TimeoutException {
-        def uri = server.address.resolve(path)
+        def uri = resolveAddress(path)
         return exec.yield {
           internalSendRequest(singleConnectionClient, "GET", uri, headers)
         }.valueOrThrow

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.test.base
 
+import static com.linecorp.armeria.common.MediaType.PLAIN_TEXT_UTF_8
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
@@ -17,15 +17,29 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 import static org.junit.Assume.assumeTrue
 
+import com.linecorp.armeria.common.HttpData
+import com.linecorp.armeria.common.HttpRequest
+import com.linecorp.armeria.common.HttpResponse
+import com.linecorp.armeria.common.HttpStatus
+import com.linecorp.armeria.common.ResponseHeaders
+import com.linecorp.armeria.common.ResponseHeadersBuilder
+import com.linecorp.armeria.server.DecoratingHttpServiceFunction
+import com.linecorp.armeria.server.HttpService
+import com.linecorp.armeria.server.Server
+import com.linecorp.armeria.server.ServiceRequestContext
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanBuilder
+import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.AttributesAssert
 import io.opentelemetry.instrumentation.test.asserts.SpanAssert
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
+import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.CountDownLatch
@@ -34,7 +48,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.function.Supplier
-import spock.lang.AutoCleanup
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -47,58 +60,76 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   protected static final BASIC_AUTH_VAL = "plain text auth token"
 
   @Shared
+  Tracer tracer = openTelemetry.getTracer("test")
+
+  @Shared
   def server
 
   def setupSpec() {
-    server = com.linecorp.armeria.Server.builder()
-
-      .build()
-  }
-
-  @AutoCleanup
-  @Shared
-  def server = httpServer {
-    handlers {
-      prefix("success") {
-        handleDistributedRequest()
-        String msg = "Hello."
-        response.status(200).id(request.getHeader("test-request-id")).send(msg)
+    server = Server.builder()
+      .http(0)
+      .service("/success") {_, req ->
+        ResponseHeadersBuilder headers = ResponseHeaders.builder(HttpStatus.OK)
+        def testRequestId = req.headers().get("test-request-id")
+        if (testRequestId != null) {
+          headers.set("test-request-id", testRequestId)
+        }
+        HttpResponse.of(headers.build(), HttpData.ofAscii("Hello."))
       }
-      prefix("client-error") {
-        handleDistributedRequest()
-        String msg = "Invalid RQ"
-        response.status(400).send(msg)
+      .service("/client-error") {_, req ->
+        HttpResponse.of(HttpStatus.BAD_REQUEST, PLAIN_TEXT_UTF_8, "Invalid RQ")
       }
-      prefix("error") {
-        handleDistributedRequest()
-        String msg = "Sorry."
-        response.status(500).send(msg)
+      .service("/error") {
+        HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, PLAIN_TEXT_UTF_8, "Sorry.")
       }
-      prefix("redirect") {
-        handleDistributedRequest()
-        redirect(server.address.resolve("/success").toURL().toString())
+      .service("/redirect") {
+        HttpResponse.ofRedirect("/success")
       }
-      prefix("another-redirect") {
-        handleDistributedRequest()
-        redirect(server.address.resolve("/redirect").toURL().toString())
+      .service("/another-redirect") {
+        HttpResponse.ofRedirect("/redirect")
       }
-      prefix("circular-redirect") {
-        handleDistributedRequest()
-        redirect(server.address.resolve("/circular-redirect").toURL().toString())
+      .service("/circular-redirect") {
+        HttpResponse.ofRedirect("/circular-redirect")
       }
-      prefix("secured") {
-        handleDistributedRequest()
-        if (request.headers.get(BASIC_AUTH_KEY) == BASIC_AUTH_VAL) {
-          response.status(200).send("secured string under basic auth")
+      .service("/secured") {_, req ->
+        if (req.headers().get(BASIC_AUTH_KEY) == BASIC_AUTH_VAL) {
+          return HttpResponse.of(HttpStatus.OK, PLAIN_TEXT_UTF_8, "secured string under basic auth")
         } else {
-          response.status(401).send("Unauthorized")
+          return HttpResponse.of(HttpStatus.UNAUTHORIZED, PLAIN_TEXT_UTF_8, "Unauthorized")
         }
       }
-      prefix("to-secured") {
-        handleDistributedRequest()
-        redirect(server.address.resolve("/secured").toURL().toString())
+      .service("/to-secured") {
+        HttpResponse.ofRedirect("/secured")
       }
-    }
+      .decorator(new DecoratingHttpServiceFunction() {
+        @Override
+        HttpResponse serve(HttpService delegate, ServiceRequestContext ctx, HttpRequest req) throws Exception {
+          for (String field : openTelemetry.propagators.textMapPropagator.fields()) {
+            if (req.headers().getAll(field).size() > 1) {
+              throw new AssertionError((Object) ("more than one " + field + " header present"))
+            }
+          }
+          SpanBuilder span = tracer.spanBuilder("test-http-server")
+            .setSpanKind(SERVER)
+          // using Context.root() to avoid inheriting any potentially leaked context or the one
+          // created by Armeria instrumentation
+            .setParent(openTelemetry.propagators.textMapPropagator.extract(Context.root(), ctx, RequestContextGetter.INSTANCE))
+
+          def traceRequestId = req.headers().get("test-request-id")
+          if (traceRequestId != null) {
+            span.setAttribute("test.request.id", Integer.parseInt(traceRequestId))
+          }
+          span.startSpan().end()
+
+          return delegate.serve(ctx, req)
+        }
+      })
+      .build()
+    server.start().join()
+  }
+
+  def cleanupSpec() {
+    server.stop()
   }
 
   // ideally private, but then groovy closures in this class cannot find them
@@ -296,13 +327,14 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     path << ["/success", "/success?with=params"]
 
     method = "GET"
-    url = server.address.resolve(path)
+    url = resolveAddress(path)
   }
 
   def "basic #method request with parent"() {
     when:
+    def uri = resolveAddress("/success")
     def responseCode = runUnderTrace("parent") {
-      doRequest(method, server.address.resolve("/success"))
+      doRequest(method, uri)
     }
 
     then:
@@ -324,8 +356,9 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testWithClientParent())
 
     when:
+    def uri = resolveAddress("/success")
     def responseCode = runUnderParentClientSpan {
-      doRequest(method, server.address.resolve("/success"))
+      doRequest(method, uri)
     }
 
     then:
@@ -356,8 +389,9 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testCallbackWithParent())
 
     when:
+    def uri = resolveAddress("/success")
     def requestResult = runUnderTrace("parent") {
-      doRequestWithCallback(method, server.address.resolve("/success")) {
+      doRequestWithCallback(method, uri) {
         runUnderTrace("child") {}
       }
     }
@@ -383,7 +417,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testCallback())
 
     when:
-    def requestResult = doRequestWithCallback(method, server.address.resolve("/success")) {
+    def uri = resolveAddress("/success")
+    def requestResult = doRequestWithCallback(method, uri) {
       runUnderTrace("callback") {
       }
     }
@@ -411,7 +446,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     given:
     assumeTrue(testRedirects())
-    def uri = server.address.resolve("/redirect")
+    def uri = resolveAddress("/redirect")
 
     when:
     def responseCode = doRequest(method, uri)
@@ -433,7 +468,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def "basic #method request with 2 redirects"() {
     given:
     assumeTrue(testRedirects())
-    def uri = server.address.resolve("/another-redirect")
+    def uri = resolveAddress("/another-redirect")
 
     when:
     def responseCode = doRequest(method, uri)
@@ -456,7 +491,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def "basic #method request with circular redirects"() {
     given:
     assumeTrue(testRedirects() && testCircularRedirects())
-    def uri = server.address.resolve("/circular-redirect")
+    def uri = resolveAddress("/circular-redirect")
 
     when:
     doRequest(method, uri)
@@ -482,7 +517,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   def "redirect #method to secured endpoint copies auth header"() {
     given:
     assumeTrue(testRedirects())
-    def uri = server.address.resolve("/to-secured")
+    def uri = resolveAddress("/to-secured")
 
     when:
 
@@ -503,7 +538,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   def "error span"() {
-    def uri = server.address.resolve("/error")
+    def uri = resolveAddress("/error")
     when:
     runUnderTrace("parent") {
       try {
@@ -548,7 +583,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     where:
     path = "/success"
     method = "GET"
-    url = server.address.resolve(path)
+    url = resolveAddress(path)
   }
 
   // this test verifies two things:
@@ -573,7 +608,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     where:
     path = "/success"
     method = "GET"
-    url = server.address.resolve(path)
+    url = resolveAddress(path)
   }
 
   def "connection error (unopened port)"() {
@@ -719,7 +754,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(testCausality())
     int count = 50
     def method = 'GET'
-    def url = server.address.resolve("/success")
+    def url = resolveAddress("/success")
 
     def latch = new CountDownLatch(1)
 
@@ -766,7 +801,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     int count = 50
     def method = 'GET'
-    def url = server.address.resolve("/success")
+    def url = resolveAddress("/success")
 
     def latch = new CountDownLatch(1)
 
@@ -814,12 +849,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    */
   def "high concurrency test on single connection"() {
     setup:
-    def singleConnection = createSingleConnection(server.address.host, server.address.port)
+    def singleConnection = createSingleConnection("localhost", server.activeLocalPort())
     assumeTrue(singleConnection != null)
     int count = 50
     def method = 'GET'
     def path = "/success"
-    def url = server.address.resolve(path)
+    def url = resolveAddress(path)
 
     def latch = new CountDownLatch(1)
     def pool = Executors.newFixedThreadPool(4)
@@ -864,7 +899,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = server.address.resolve("/success"), Integer responseCode = 200, Throwable exception = null, String httpFlavor = "1.1") {
+  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = resolveAddress("/success"), Integer responseCode = 200, Throwable exception = null, String httpFlavor = "1.1") {
     def userAgent = userAgent()
     def httpClientAttributes = httpAttributes(uri)
     trace.span(index) {
@@ -1027,5 +1062,9 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   URI removeFragment(URI uri) {
     return new URI(uri.scheme, null, uri.host, uri.port, uri.path, uri.query, null)
+  }
+
+  protected URI resolveAddress(String path) {
+    return URI.create("http://localhost:${server.activeLocalPort()}${path}")
   }
 }

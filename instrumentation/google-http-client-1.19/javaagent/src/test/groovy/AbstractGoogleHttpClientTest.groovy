@@ -63,7 +63,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<HttpRequest> 
 
   def "error traces when exception is not thrown"() {
     given:
-    def uri = server.address.resolve("/error")
+    def uri = resolveAddress("/error")
 
     when:
     def responseCode = doRequest(method, uri)

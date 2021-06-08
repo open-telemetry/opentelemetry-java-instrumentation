@@ -69,7 +69,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
   @Unroll
   def "trace request (useCaches: #useCaches)"() {
     setup:
-    def url = server.address.resolve("/success").toURL()
+    def url = resolveAddress("/success").toURL()
     runUnderTrace("someTrace") {
       HttpURLConnection connection = url.openConnection()
       connection.useCaches = useCaches
@@ -153,7 +153,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
 
   def "test broken API usage"() {
     setup:
-    def url = server.address.resolve("/success").toURL()
+    def url = resolveAddress("/success").toURL()
     HttpURLConnection connection = runUnderTrace("someTrace") {
       HttpURLConnection connection = url.openConnection()
       connection.setRequestProperty("Connection", "close")
@@ -198,7 +198,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
 
   def "test post request"() {
     setup:
-    def url = server.address.resolve("/success").toURL()
+    def url = resolveAddress("/success").toURL()
     runUnderTrace("someTrace") {
       HttpURLConnection connection = url.openConnection()
       connection.setRequestMethod("POST")

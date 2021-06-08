@@ -20,8 +20,9 @@ dependencies {
     exclude group: 'io.grpc'
   }
 
-  implementation "com.linecorp.armeria:armeria:1.3.0"
-  implementation "com.linecorp.armeria:armeria-junit4:1.3.0"
+  implementation("com.linecorp.armeria:armeria-junit4:1.3.0") {
+    exclude group: "io.netty", module: "netty-tcnative-boringssl-static"
+  }
   implementation "net.bytebuddy:byte-buddy"
   implementation "net.bytebuddy:byte-buddy-agent"
   implementation "org.slf4j:slf4j-api"
