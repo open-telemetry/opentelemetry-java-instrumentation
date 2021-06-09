@@ -65,7 +65,7 @@ public class ExtensionLoader {
     File location = new File(locationName);
     if (location.isFile()) {
       addFileUrl(result, location);
-    } else {
+    } else if (location.isDirectory()) {
       File[] files = location.listFiles(f -> f.isFile() && f.getName().endsWith(".jar"));
       if (files != null) {
         // TODO filter out agent file itself
