@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rocketmq
 
-import io.opentelemetery.instrumentation.rocketmq.AbstractRocketMqClientTest
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
