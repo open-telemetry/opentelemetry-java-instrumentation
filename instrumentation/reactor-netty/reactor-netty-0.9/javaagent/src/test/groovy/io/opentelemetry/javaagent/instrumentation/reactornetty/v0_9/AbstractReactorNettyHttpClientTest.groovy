@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9
+
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -47,12 +49,20 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
 
   @Override
   int sendRequest(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers) {
-    return request.response().block().status().code()
+    return request.responseSingle {resp, content ->
+      // Make sure to consume content since that's when we close the span.
+      content.map {
+        resp
+      }
+    }.block().status().code()
   }
 
   @Override
   void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
-    request.response().subscribe({
+    request.responseSingle {resp, content ->
+      // Make sure to consume content since that's when we close the span.
+      content.map { resp }
+    }.subscribe({
       requestResult.complete(it.status().code())
     }, { throwable ->
       requestResult.complete(throwable)
@@ -115,7 +125,10 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       httpClient.baseUrl(resolveAddress("").toString())
         .get()
         .uri("/success")
-        .response()
+        .responseSingle {resp, content ->
+          // Make sure to consume content since that's when we close the span.
+          content.map { resp }
+        }
         .block()
     }
 
@@ -148,7 +161,10 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     runUnderTrace("parent") {
       httpClient.get()
         .uri("http://localhost:$UNUSABLE_PORT/")
-        .response()
+        .responseSingle {resp, content ->
+          // Make sure to consume content since that's when we close the span.
+          content.map { resp }
+        }
         .block()
     }
 

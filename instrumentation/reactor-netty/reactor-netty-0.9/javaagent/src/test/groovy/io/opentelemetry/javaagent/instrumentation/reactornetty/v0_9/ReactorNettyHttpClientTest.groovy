@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9
+
 import io.netty.channel.ChannelOption
 import io.opentelemetry.instrumentation.test.base.SingleConnection
 import java.util.concurrent.ExecutionException
@@ -14,15 +16,21 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
   HttpClient createHttpClient() {
     return HttpClient.create().tcpConfiguration({ tcpClient ->
       tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
-    }).resolver(getAddressResolverGroup())
+    })
   }
 
   @Override
   SingleConnection createSingleConnection(String host, int port) {
+    String url
+    try {
+      url = new URL("http", host, port, "").toString()
+    } catch (MalformedURLException e) {
+      throw new ExecutionException(e)
+    }
+
     def httpClient = HttpClient
       .newConnection()
-      .host(host)
-      .port(port)
+      .baseUrl(url)
 
     return new SingleConnection() {
 
@@ -33,7 +41,10 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
           .get()
           .uri(path)
           .response()
-          .block()
+          .responseSingle {resp, content ->
+            // Make sure to consume content since that's when we close the span.
+            content.map { resp }
+          }
           .status().code()
       }
     }
