@@ -1,0 +1,22 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  implementation("com.linecorp.armeria:armeria-junit5:1.8.0") {
+    // Native dependencies don't get shaded so exclude them to avoid conflicts.
+    exclude group: "io.netty", module: "netty-tcnative-boringssl-static"
+    exclude group: "io.netty", module: "netty-transport-native-epoll"
+    exclude group: "io.netty", module: "netty-transport-native-kqueue"
+    exclude group: "io.netty", module: "netty-transport-native-unix-common"
+  }
+}
+
+shadowJar {
+  // Ensures tests are not affected by Armeria instrumentation
+  relocate "com.linecorp.armeria", "io.opentelemetry.testing.armeria"
+  // Allows tests of Netty instrumentations which would otherwise conflict.
+  relocate "io.netty", "io.opentelemetry.testing.netty"
+}

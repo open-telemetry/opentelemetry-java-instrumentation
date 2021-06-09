@@ -145,14 +145,14 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           pipeline.addLast(new HttpClientCodec())
         }
       })
-    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, server.address.resolve("/success").toString(), Unpooled.EMPTY_BUFFER)
-    request.headers().set(HttpHeaderNames.HOST, server.address.host)
+    def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, resolveAddress("/success").toString(), Unpooled.EMPTY_BUFFER)
+    request.headers().set(HttpHeaderNames.HOST, "localhost")
     Channel ch = null
 
     when:
     // note that this is a purely asynchronous request
     runUnderTrace("parent1") {
-      ch = b.connect(server.address.host, server.address.port).sync().channel()
+      ch = b.connect("localhost", server.httpPort()).sync().channel()
       ch.write(request)
       ch.flush()
     }
@@ -285,7 +285,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           }
         }
         clientSpan(it, 2, span(1), method)
-        server.distributedRequestSpan(it, 3, span(2))
+        serverSpan(it, 3, span(2))
       }
     }
 
@@ -295,8 +295,9 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
   class TracedClass {
     int tracedMethod(String method) {
+      def uri = resolveAddress("/success")
       runUnderTrace("tracedMethod") {
-        doRequest(method, server.address.resolve("/success"))
+        doRequest(method, uri)
       }
     }
   }

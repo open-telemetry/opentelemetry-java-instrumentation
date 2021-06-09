@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9
+
 import io.netty.channel.ChannelOption
 import reactor.netty.http.client.HttpClient
 import reactor.netty.tcp.TcpClient

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9
+
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
@@ -40,19 +42,27 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     return createHttpClient()
       .followRedirect(true)
       .headers({ h -> headers.each { k, v -> h.add(k, v) } })
-      .baseUrl(server.address.toString())
+      .baseUrl(resolveAddress("").toString())
       ."${method.toLowerCase()}"()
       .uri(uri.toString())
   }
 
   @Override
   int sendRequest(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers) {
-    return request.response().block().status().code()
+    return request.responseSingle {resp, content ->
+      // Make sure to consume content since that's when we close the span.
+      content.map {
+        resp
+      }
+    }.block().status().code()
   }
 
   @Override
   void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
-    request.response().subscribe({
+    request.responseSingle {resp, content ->
+      // Make sure to consume content since that's when we close the span.
+      content.map { resp }
+    }.subscribe({
       requestResult.complete(it.status().code())
     }, { throwable ->
       requestResult.complete(throwable)
@@ -112,10 +122,13 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
 
     when:
     runUnderTrace("parent") {
-      httpClient.baseUrl(server.address.toString())
+      httpClient.baseUrl(resolveAddress("").toString())
         .get()
         .uri("/success")
-        .response()
+        .responseSingle {resp, content ->
+          // Make sure to consume content since that's when we close the span.
+          content.map { resp }
+        }
         .block()
     }
 
@@ -126,7 +139,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
         def nettyClientSpan = span(1)
 
         basicSpan(it, 0, "parent")
-        clientSpan(it, 1, parentSpan, "GET", server.address.resolve("/success"))
+        clientSpan(it, 1, parentSpan, "GET", resolveAddress("/success"))
         serverSpan(it, 2, nettyClientSpan)
 
         assertSameSpan(parentSpan, onRequestSpan)
@@ -148,7 +161,10 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     runUnderTrace("parent") {
       httpClient.get()
         .uri("http://localhost:$UNUSABLE_PORT/")
-        .response()
+        .responseSingle {resp, content ->
+          // Make sure to consume content since that's when we close the span.
+          content.map { resp }
+        }
         .block()
     }
 
