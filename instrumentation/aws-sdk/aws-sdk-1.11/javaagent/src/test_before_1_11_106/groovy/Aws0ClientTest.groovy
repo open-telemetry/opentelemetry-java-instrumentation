@@ -5,7 +5,6 @@
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
@@ -29,8 +28,11 @@ import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.atomic.AtomicReference
-import spock.lang.AutoCleanup
+import io.opentelemetry.testing.armeria.common.HttpResponse
+import io.opentelemetry.testing.armeria.common.HttpStatus
+import io.opentelemetry.testing.armeria.common.MediaType
+import io.opentelemetry.testing.armeria.testing.junit5.server.mock.MockWebServerExtension
+import java.time.Duration
 import spock.lang.Shared
 
 class Aws0ClientTest extends AgentInstrumentationSpecification {
@@ -41,26 +43,23 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
     new ProfileCredentialsProvider(),
     new InstanceProfileCredentialsProvider())
 
+  @Shared
+  def server = new MockWebServerExtension()
+
   def setupSpec() {
     System.setProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY, "my-access-key")
     System.setProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY, "my-secret-key")
+    server.start()
   }
 
   def cleanupSpec() {
     System.clearProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY)
     System.clearProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY)
+    server.stop()
   }
 
-  @Shared
-  def responseBody = new AtomicReference<String>()
-  @AutoCleanup
-  @Shared
-  def server = httpServer {
-    handlers {
-      all {
-        response.status(200).send(responseBody.get())
-      }
-    }
+  def setup() {
+    server.beforeTestExecution(null)
   }
 
   def "request handler is hooked up with constructor"() {
@@ -86,7 +85,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
 
   def "send #operation request with mocked response"() {
     setup:
-    responseBody.set(body)
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body))
 
     when:
     def response = call.call(client)
@@ -106,14 +105,14 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "$server.address"
+            "${SemanticAttributes.HTTP_URL.key}" "${server.httpUri()}"
             "${SemanticAttributes.HTTP_METHOD.key}" "$method"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" 200
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
+            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
             "aws.service" { it.contains(service) }
-            "aws.endpoint" "$server.address"
+            "aws.endpoint" "${server.httpUri()}"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
@@ -123,21 +122,23 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
         }
       }
     }
-    server.lastRequest.headers.get("X-Amzn-Trace-Id") != null
-    server.lastRequest.headers.get("traceparent") == null
+
+    def request = server.takeRequest()
+    request.request().headers().get("X-Amzn-Trace-Id") != null
+    request.request().headers().get("traceparent") == null
 
     where:
-    service | operation           | method | path                  | handlerCount | client                                                                      | additionalAttributes              | call                                                                                                                                   | body
-    "S3"    | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | new AmazonS3Client().withEndpoint("http://localhost:$server.address.port")  | ["aws.bucket.name": "testbucket"] | { client -> client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); client.createBucket("testbucket") } | ""
-    "S3"    | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | new AmazonS3Client().withEndpoint("http://localhost:$server.address.port")  | ["aws.bucket.name": "someBucket"] | { client -> client.getObject("someBucket", "someKey") }                                                                                | ""
-    "EC2"   | "AllocateAddress"   | "POST" | "/"                   | 4            | new AmazonEC2Client().withEndpoint("http://localhost:$server.address.port") | [:]                               | { client -> client.allocateAddress() }                                                                                                 | """
+    service | operation           | method | path                  | handlerCount | client                                                    | additionalAttributes              | call                                                                                                                                   | body
+    "S3"    | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "testbucket"] | { client -> client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); client.createBucket("testbucket") } | ""
+    "S3"    | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "someBucket"] | { client -> client.getObject("someBucket", "someKey") }                                                                                | ""
+    "EC2"   | "AllocateAddress"   | "POST" | "/"                   | 4            | new AmazonEC2Client().withEndpoint("${server.httpUri()}") | [:]                               | { client -> client.allocateAddress() }                                                                                                 | """
             <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
                <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
                <publicIp>192.0.2.1</publicIp>
                <domain>standard</domain>
             </AllocateAddressResponse>
             """
-    "RDS"   | "DeleteOptionGroup" | "POST" | "/"                   | 1            | new AmazonRDSClient().withEndpoint("http://localhost:$server.address.port") | [:]                               | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) }                                                                 | """
+    "RDS"   | "DeleteOptionGroup" | "POST" | "/"                   | 1            | new AmazonRDSClient().withEndpoint("${server.httpUri()}") | [:]                               | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) }                                                                 | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata>
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
@@ -148,7 +149,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
 
   def "send #operation request to closed port"() {
     setup:
-    responseBody.set(body)
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body))
 
     when:
     call.call(client)
@@ -232,16 +233,14 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
   // TODO(anuraaga): Add events for retries.
   def "timeout and retry errors not captured"() {
     setup:
-    def server = httpServer {
-      handlers {
-        all {
-          Thread.sleep(500)
-          response.status(200).send()
-        }
-      }
-    }
-    AmazonS3Client client = new AmazonS3Client(new ClientConfiguration().withRequestTimeout(50 /* ms */))
-      .withEndpoint("http://localhost:$server.address.port")
+    def response = HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofMillis(500))
+    // One retry so two requests.
+    server.enqueue(response)
+    server.enqueue(response)
+    AmazonS3Client client = new AmazonS3Client(new ClientConfiguration()
+      .withRequestTimeout(50 /* ms */)
+      .withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(1)))
+      .withEndpoint("${server.httpUri()}")
 
     when:
     client.getObject("someBucket", "someKey")
@@ -260,13 +259,13 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.HTTP_URL.key}" "$server.address"
+            "${SemanticAttributes.HTTP_URL.key}" "${server.httpUri()}"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
+            "${SemanticAttributes.NET_PEER_NAME.key}" "127.0.0.1"
             "aws.service" "Amazon S3"
-            "aws.endpoint" "http://localhost:$server.address.port"
+            "aws.endpoint" "${server.httpUri()}"
             "aws.operation" "GetObject"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
@@ -274,9 +273,6 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
         }
       }
     }
-
-    cleanup:
-    server.close()
   }
 
   String expectedOperationName(String method) {

@@ -214,9 +214,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
    *
    * By splitting this step out separate from {@code sendRequest}, tests and re-execute the same
    * request a second time to verify that the traceparent header is not added multiple times to the
-   * request, and that the last one wins
-   * ({@link io.opentelemetry.instrumentation.test.server.http.TestHttpServer) has explicit logic
-   * to throw exception if there are multiple).
+   * request, and that the last one wins. Tests will fail if the header shows multiple times.
    */
   abstract REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
 
