@@ -40,12 +40,11 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
           .headers({ h -> headers.each { k, v -> h.add(k, v) } })
           .get()
           .uri(path)
-          .response()
           .responseSingle {resp, content ->
             // Make sure to consume content since that's when we close the span.
             content.map { resp }
           }
-          .status().code()
+          .block().status().code()
       }
     }
   }
