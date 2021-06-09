@@ -43,10 +43,6 @@ muzzle {
 dependencies {
   library "com.typesafe.akka:akka-http_2.11:10.0.0"
   library "com.typesafe.akka:akka-stream_2.11:2.4.14"
-
-  // 10.0.x has some bugs making it incompatible with our test server.
-  testLibrary "com.typesafe.akka:akka-http_2.11:10.1.0"
-  testLibrary "com.typesafe.akka:akka-stream_2.11:2.5.11"
 }
 
 tasks.withType(Test).configureEach {
