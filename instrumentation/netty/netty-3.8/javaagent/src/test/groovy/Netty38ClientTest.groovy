@@ -87,7 +87,6 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return "CONNECT"
       default:
@@ -101,7 +100,6 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
       case "http://localhost:61/": // unopened port
         exception = exception.getCause() != null ? exception.getCause() : new ConnectException("Connection refused: localhost/127.0.0.1:61")
         break
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         exception = exception.getCause() != null ? exception.getCause() : new ClosedChannelException()
     }
@@ -112,7 +110,6 @@ class Netty38ClientTest extends HttpClientTest<Request> implements AgentTestTrai
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return []
     }

@@ -61,7 +61,6 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
     if (exception.class == RuntimeException) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
-        case "http://www.google.com:81/": // dropped request
         case "https://192.0.2.1/": // non routable address
           exception = exception.getCause()
       }
