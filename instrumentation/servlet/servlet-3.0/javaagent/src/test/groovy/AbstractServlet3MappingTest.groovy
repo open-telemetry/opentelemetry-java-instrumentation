@@ -8,6 +8,7 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
+import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse
 import javax.servlet.Servlet
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServlet
@@ -16,7 +17,6 @@ import javax.servlet.http.HttpServletResponse
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.RequestBody
-import okhttp3.Response
 import spock.lang.Unroll
 
 abstract class AbstractServlet3MappingTest<SERVER, CONTEXT> extends AgentInstrumentationSpecification implements HttpServerTestTrait<SERVER> {
@@ -44,12 +44,10 @@ abstract class AbstractServlet3MappingTest<SERVER, CONTEXT> extends AgentInstrum
   @Unroll
   def "test path #path"() {
     setup:
-    def url = HttpUrl.get(address.resolve(path)).newBuilder().build()
-    def request = request(url, "GET", null).build()
-    Response response = client.newCall(request).execute()
+    AggregatedHttpResponse response = client.get(address.resolve(path).toString()).aggregate().join()
 
     expect:
-    response.code() == success ? 200 : 404
+    response.status().code() == success ? 200 : 404
 
     and:
     def spanCount = success ? 1 : 2

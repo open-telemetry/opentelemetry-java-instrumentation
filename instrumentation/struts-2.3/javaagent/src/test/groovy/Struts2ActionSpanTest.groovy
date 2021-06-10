@@ -20,7 +20,6 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.struts.GreetingServlet
 import javax.servlet.DispatcherType
-import okhttp3.HttpUrl
 import org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.DefaultServlet
@@ -125,14 +124,11 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
   // does not overwrite server span name given by struts instrumentation.
   def "test dispatch to servlet"() {
     setup:
-    def url = HttpUrl.get(address.resolve("dispatch")).newBuilder()
-      .build()
-    def request = request(url, "GET", null).build()
-    def response = client.newCall(request).execute()
+    def response = client.get(address.resolve("dispatch").toString()).aggregate().join()
 
     expect:
-    response.code() == 200
-    response.body().string() == "greeting"
+    response.status().code() == 200
+    response.contentUtf8() == "greeting"
 
     and:
     assertTraces(1) {
