@@ -46,7 +46,6 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   HttpClient buildHttpClient(Action<? super HttpClientSpec> action) {
     HttpClient.of {
       it.readTimeout(Duration.ofSeconds(2))
-      // Connect timeout added in 1.5
       // execController method added in 1.9
       if (HttpClientSpec.metaClass.getMetaMethod("execController") != null) {
         it.execController(exec.getController())
@@ -81,6 +80,7 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   // overridden in RatpackForkedHttpClientTest
   Promise<Integer> internalSendRequest(HttpClient client, String method, URI uri, Map<String, String> headers) {
     def resp = client.request(uri) { spec ->
+      // Connect timeout for the whole client was added in 1.5 so we need to add timeout for each request
       spec.connectTimeout(Duration.ofSeconds(2))
       spec.method(method)
       spec.headers { headersSpec ->
