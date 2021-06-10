@@ -18,12 +18,6 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.util.concurrent.CompletableFuture
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.HttpUrl
-import okhttp3.Request
-import okhttp3.Response
 import spock.lang.Unroll
 import test.JaxRsTestResource
 
@@ -31,17 +25,11 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
 
   def "test super method without @Path"() {
     given:
-    def url = HttpUrl.get(address.resolve("test-resource-super")).newBuilder()
-      .build()
-    def request = request(url, "GET", null).build()
-    def response = client.newCall(request).execute()
+    def response = client.get(address.resolve("test-resource-super").toString()).aggregate().join()
 
     expect:
-    response.withCloseable {
-      assert response.code() == SUCCESS.status
-      assert response.body().string() == SUCCESS.body
-      true
-    }
+    response.status().code() == SUCCESS.status
+    response.contentUtf8() == SUCCESS.body
 
     assertTraces(1) {
       trace(0, 2) {
@@ -59,17 +47,11 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     assumeTrue(testInterfaceMethodWithPath())
 
     given:
-    def url = HttpUrl.get(address.resolve("test-resource-interface/call")).newBuilder()
-      .build()
-    def request = request(url, "GET", null).build()
-    def response = client.newCall(request).execute()
+    def response = client.get(address.resolve("test-resource-interface/call").toString()).aggregate().join()
 
     expect:
-    response.withCloseable {
-      assert response.code() == SUCCESS.status
-      assert response.body().string() == SUCCESS.body
-      true
-    }
+    response.status().code() == SUCCESS.status
+    response.contentUtf8() == SUCCESS.body
 
     assertTraces(1) {
       trace(0, 2) {
@@ -85,17 +67,11 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
 
   def "test sub resource locator"() {
     given:
-    def url = HttpUrl.get(address.resolve("test-sub-resource-locator/call/sub")).newBuilder()
-      .build()
-    def request = request(url, "GET", null).build()
-    def response = client.newCall(request).execute()
+    def response = client.get(address.resolve("test-sub-resource-locator/call/sub").toString()).aggregate().join()
 
     expect:
-    response.withCloseable {
-      assert response.code() == SUCCESS.status
-      assert response.body().string() == SUCCESS.body
-      true
-    }
+    response.status().code() == SUCCESS.status
+    response.contentUtf8() == SUCCESS.body
 
     assertTraces(1) {
       trace(0, 5) {
@@ -115,13 +91,10 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
   @Unroll
   def "should handle #desc AsyncResponse"() {
     given:
-    def url = HttpUrl.get(address.resolve("async")).newBuilder()
-      .addQueryParameter("action", action)
-      .build()
-    def request = request(url, "GET", null).build()
+    def url = address.resolve("async?action=${action}").toString()
 
     when: "async call is started"
-    def futureResponse = asyncCall(request)
+    def futureResponse = client.get(url).aggregate()
 
     then: "there are no traces yet"
     assertTraces(0) {
@@ -132,8 +105,8 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     def response = futureResponse.join()
 
     then:
-    assert response.code() == statusCode
-    assert bodyPredicate(response.body().string())
+    response.status().code() == statusCode
+    bodyPredicate(response.contentUtf8())
 
     def spanCount = 2
     def hasSendError = asyncCancelHasSendError() && action == "cancel"
@@ -160,15 +133,11 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
   @Unroll
   def "should handle #desc CompletionStage (JAX-RS 2.1+ only)"() {
     assumeTrue(shouldTestCompletableStageAsync())
-
     given:
-    def url = HttpUrl.get(address.resolve("async-completion-stage")).newBuilder()
-      .addQueryParameter("action", action)
-      .build()
-    def request = request(url, "GET", null).build()
+    def url = address.resolve("async-completion-stage?action=${action}").toString()
 
     when: "async call is started"
-    def futureResponse = asyncCall(request)
+    def futureResponse = client.get(url).aggregate()
 
     then: "there are no traces yet"
     assertTraces(0) {
@@ -179,8 +148,8 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
     def response = futureResponse.join()
 
     then:
-    assert response.code() == statusCode
-    assert bodyPredicate(response.body().string())
+    response.status().code() == statusCode
+    bodyPredicate(response.contentUtf8())
 
     assertTraces(1) {
       trace(0, 2) {
@@ -245,9 +214,9 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
 
   void asyncServerSpan(TraceAssert trace,
                        int index,
-                       HttpUrl url,
+                       String url,
                        int statusCode) {
-    def rawUrl = url.url()
+    def rawUrl = URI.create(url).toURL()
     serverSpan(trace, index, null, null, "GET",
       rawUrl.path,
       rawUrl.toURI(),
@@ -327,23 +296,5 @@ abstract class JaxRsHttpServerTest<S> extends HttpServerTest<S> implements Agent
         }
       }
     }
-  }
-
-  private CompletableFuture<Response> asyncCall(Request request) {
-    def future = new CompletableFuture()
-
-    client.newCall(request).enqueue(new Callback() {
-      @Override
-      void onFailure(Call call, IOException e) {
-        future.completeExceptionally(e)
-      }
-
-      @Override
-      void onResponse(Call call, Response response) throws IOException {
-        future.complete(response)
-      }
-    })
-
-    return future
   }
 }
