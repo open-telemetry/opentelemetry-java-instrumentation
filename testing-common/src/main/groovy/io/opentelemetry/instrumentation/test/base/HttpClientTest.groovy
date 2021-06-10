@@ -44,12 +44,14 @@ import io.opentelemetry.testing.armeria.server.ServerBuilder
 import io.opentelemetry.testing.armeria.server.ServiceRequestContext
 import io.opentelemetry.testing.armeria.server.logging.LoggingService
 import io.opentelemetry.testing.armeria.testing.junit5.server.ServerExtension
+import java.security.KeyStore
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.function.Supplier
+import javax.net.ssl.KeyManagerFactory
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -65,10 +67,17 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   Tracer tracer = openTelemetry.getTracer("test")
 
   @Shared
-  def server = new ServerExtension(false) {
+  def server= new ServerExtension(false) {
     @Override
     protected void configure(ServerBuilder sb) throws Exception {
+      KeyStore keystore = KeyStore.getInstance("PKCS12")
+      keystore.load(new FileInputStream(new File(System.getProperty("javax.net.ssl.trustStore"))), "testing".toCharArray())
+      KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
+      kmf.init(keystore, "testing".toCharArray())
+
       sb.http(0)
+        .https(0)
+        .tls(kmf)
         .service("/success") {ctx, req ->
           ResponseHeadersBuilder headers = ResponseHeaders.builder(HttpStatus.OK)
           def testRequestId = req.headers().get("test-request-id")
@@ -725,7 +734,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     given:
     assumeTrue(testRemoteConnection())
     assumeTrue(testHttps())
-    def uri = new URI("https://www.google.com/")
+    def uri = new URI("https://localhost:${server.httpsPort()}/success")
 
     when:
     def responseCode = doRequest(method, uri)
@@ -733,13 +742,14 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     then:
     responseCode == 200
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         clientSpan(it, 0, null, method, uri)
+        serverSpan(it, 1, span(0))
       }
     }
 
     where:
-    method = "HEAD"
+    method = "GET"
   }
 
   /**
