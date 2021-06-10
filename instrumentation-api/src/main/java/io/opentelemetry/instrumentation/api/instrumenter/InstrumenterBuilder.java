@@ -33,6 +33,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
+  final List<SpanLinkExtractor<? super REQUEST>> spanLinkExtractors = new ArrayList<>();
   final List<RequestListener> requestListeners = new ArrayList<>();
 
   SpanKindExtractor<? super REQUEST> spanKindExtractor = SpanKindExtractor.alwaysInternal();
@@ -83,6 +84,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return addAttributesExtractors(Arrays.asList(attributesExtractors));
   }
 
+  /** Adds a {@link SpanLinkExtractor} to extract span link from requests. */
+  public InstrumenterBuilder<REQUEST, RESPONSE> addSpanLinkExtractor(
+      SpanLinkExtractor<REQUEST> spanLinkExtractor) {
+    spanLinkExtractors.add(spanLinkExtractor);
+    return this;
+  }
+
   /** Adds a {@link RequestMetrics} whose metrics will be recorded for request start and stop. */
   @UnstableApi
   public InstrumenterBuilder<REQUEST, RESPONSE> addRequestMetrics(RequestMetrics factory) {
@@ -126,8 +134,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newServerInstrumenter(TextMapGetter<REQUEST> getter) {
-    return newInstrumenter(
-        InstrumenterConstructor.propagatingFromUpstream(getter), SpanKindExtractor.alwaysServer());
+    return newUpstreamPropagatingInstrumenter(SpanKindExtractor.alwaysServer(), getter);
   }
 
   /**
@@ -145,9 +152,17 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
    * requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newConsumerInstrumenter(TextMapGetter<REQUEST> getter) {
+    return newUpstreamPropagatingInstrumenter(SpanKindExtractor.alwaysConsumer(), getter);
+  }
+
+  /**
+   * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
+   * {@code spanKindExtractor} and extract context from requests.
+   */
+  public Instrumenter<REQUEST, RESPONSE> newUpstreamPropagatingInstrumenter(
+      SpanKindExtractor<REQUEST> spanKindExtractor, TextMapGetter<REQUEST> getter) {
     return newInstrumenter(
-        InstrumenterConstructor.propagatingFromUpstream(getter),
-        SpanKindExtractor.alwaysConsumer());
+        InstrumenterConstructor.propagatingFromUpstream(getter), spanKindExtractor);
   }
 
   /**
