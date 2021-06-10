@@ -62,30 +62,22 @@ class ComplexPropagationTest extends LibraryInstrumentationSpecification {
     then:
     messageHandler.join()
 
-    assertTraces(2) {
-      SpanData sendChannelSpan
-
-      trace(0, 2) {
-        sendChannelSpan = span(1)
-
+    assertTraces(1) {
+      trace(0, 4) {
         span(0) {
           name "parent"
         }
         span(1) {
           name "application.sendChannel"
           childOf span(0)
-          hasNoLinks()
         }
-      }
-      trace(1, 2) {
-        span(0) {
+        span(2) {
           name "application.receiveChannel"
-          hasNoParent()
-          hasLink sendChannelSpan
+          childOf span(1)
         }
-        span(1) {
+        span(3) {
           name "handler"
-          childOf span(0)
+          childOf span(2)
         }
       }
     }

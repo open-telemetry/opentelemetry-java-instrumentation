@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.integration;
 
+import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysInternal;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanLinkExtractor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,18 +40,11 @@ public final class SpringIntegrationTracingBuilder {
    * SpringIntegrationTracingBuilder}.
    */
   public SpringIntegrationTracing build() {
-    MessageChannelSpanNameExtractor spanNameExtractor = new MessageChannelSpanNameExtractor();
-    MessageSpanLinkExtractor spanLinkExtractor =
-        new MessageSpanLinkExtractor(
-            SpanLinkExtractor.fromUpstreamRequest(
-                openTelemetry.getPropagators(), MessageHeadersGetter.INSTANCE));
-
     Instrumenter<MessageWithChannel, Void> instrumenter =
         Instrumenter.<MessageWithChannel, Void>newBuilder(
-                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addSpanLinkExtractor(spanLinkExtractor)
+                openTelemetry, INSTRUMENTATION_NAME, new MessageChannelSpanNameExtractor())
             .addAttributesExtractors(additionalAttributeExtractors)
-            .newInstrumenter();
+            .newUpstreamPropagatingInstrumenter(alwaysInternal(), MessageHeadersGetter.INSTANCE);
     return new SpringIntegrationTracing(openTelemetry.getPropagators(), instrumenter);
   }
 }

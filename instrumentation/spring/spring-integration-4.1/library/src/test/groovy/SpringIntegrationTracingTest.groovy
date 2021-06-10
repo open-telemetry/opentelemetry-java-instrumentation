@@ -6,8 +6,6 @@
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.api.trace.SpanId
-import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTracing
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -31,8 +29,6 @@ import spock.lang.Unroll
 
 @Unroll
 class SpringIntegrationTracingTest extends LibraryInstrumentationSpecification {
-  static final String TRACE_ID = TraceId.fromLongs(0, 42)
-  static final String SPAN_ID = SpanId.fromLong(123)
 
   @Shared
   ConfigurableApplicationContext applicationContext
@@ -70,53 +66,6 @@ class SpringIntegrationTracingTest extends LibraryInstrumentationSpecification {
         span(1) {
           name interceptorSpanName
           childOf span(0)
-          hasNoLinks()
-        }
-        span(2) {
-          name "handler"
-          childOf span(1)
-        }
-
-        def interceptorSpan = span(1)
-        verifyCorrectSpanWasPropagated(capturedMessage, interceptorSpan)
-      }
-    }
-
-    cleanup:
-    channel.unsubscribe(messageHandler)
-
-    where:
-    channelName       | interceptorSpanName
-    "directChannel"   | "application.directChannel"
-    "executorChannel" | "executorChannel"
-  }
-
-  def "should add link to span received in message headers (#channelName)"() {
-    given:
-    def channel = applicationContext.getBean(channelName, SubscribableChannel)
-
-    def messageHandler = new CapturingMessageHandler()
-    channel.subscribe(messageHandler)
-
-    when:
-    runUnderTrace("parent") {
-      channel.send(MessageBuilder.withPayload("test")
-        .setHeader("traceparent", "00-$TRACE_ID-$SPAN_ID-01")
-        .build())
-    }
-
-    then:
-    def capturedMessage = messageHandler.join()
-
-    assertTraces(1) {
-      trace(0, 3) {
-        span(0) {
-          name "parent"
-        }
-        span(1) {
-          name interceptorSpanName
-          childOf span(0)
-          hasLink(TRACE_ID, SPAN_ID)
         }
         span(2) {
           name "handler"
