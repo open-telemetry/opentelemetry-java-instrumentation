@@ -64,8 +64,8 @@ public class ExtensionLoader {
     return new MultipleParentClassLoader(parent, delegates);
   }
 
-  private static void includeEmbeddedExtensionsIfFound(ClassLoader parent, List<URL> extensions,
-      JarFile javaagentFile) {
+  private static void includeEmbeddedExtensionsIfFound(
+      ClassLoader parent, List<URL> extensions, JarFile javaagentFile) {
     Enumeration<JarEntry> entryEnumeration = javaagentFile.entries();
     final String prefix = "extensions/";
     try {
@@ -86,7 +86,6 @@ public class ExtensionLoader {
               System.out.println("Failed to create temp file " + tempFile);
             }
           }
-
         }
       }
     } catch (IOException ex) {
@@ -129,8 +128,8 @@ public class ExtensionLoader {
     }
   }
 
-  public static void extractFile(JarFile jarFile, JarEntry jarEntry,
-      File outputFile) throws IOException {
+  private static void extractFile(JarFile jarFile, JarEntry jarEntry, File outputFile)
+      throws IOException {
     try (InputStream in = jarFile.getInputStream(jarEntry);
         ReadableByteChannel rbc = Channels.newChannel(in);
         FileOutputStream fos = new FileOutputStream(outputFile)) {

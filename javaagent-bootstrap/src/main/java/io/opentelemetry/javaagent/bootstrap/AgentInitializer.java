@@ -67,8 +67,8 @@ public final class AgentInitializer {
       agentParent = getPlatformClassLoader();
     }
 
-    ClassLoader agentClassLoader = new AgentClassLoader(javaagentFile, innerJarFilename,
-        agentParent);
+    ClassLoader agentClassLoader =
+        new AgentClassLoader(javaagentFile, innerJarFilename, agentParent);
 
     Class<?> extensionClassLoaderClass =
         agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.ExtensionLoader");

@@ -67,7 +67,8 @@ public class AgentClassLoader extends URLClassLoader {
 
   /**
    * Construct a new AgentClassLoader.
-   *  @param javaagentFile Used for resource lookups.
+   *
+   * @param javaagentFile Used for resource lookups.
    * @param internalJarFileName File name of the internal jar
    * @param parent Classloader parent. Should null (bootstrap), or the platform classloader for java
    */
