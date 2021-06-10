@@ -6,9 +6,15 @@
 package io.opentelemetry.javaagent.tooling;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
@@ -30,25 +36,43 @@ public class ExtensionLoader {
   // configure the logging levels
 
   public static ClassLoader getInstance(ClassLoader parent) {
+    List<URL> extensions = new ArrayList<>();
+
+    includeEmbeddedExtensionsIfFound(parent, extensions);
+
     // TODO add support for old deprecated property otel.javaagent.experimental.exporter.jar
-    List<URL> extension =
+    extensions.addAll(
         parseLocation(
             System.getProperty(
                 "otel.javaagent.experimental.extensions",
-                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS")));
+                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS"))));
 
-    extension.addAll(
+    extensions.addAll(
         parseLocation(
             System.getProperty(
                 "otel.javaagent.experimental.initializer.jar",
                 System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR"))));
     // TODO when logging is configured add warning about deprecated property
 
-    List<ClassLoader> delegates = new ArrayList<>(extension.size());
-    for (URL url : extension) {
+    List<ClassLoader> delegates = new ArrayList<>(extensions.size());
+    for (URL url : extensions) {
       delegates.add(getDelegate(parent, url));
     }
     return new MultipleParentClassLoader(parent, delegates);
+  }
+
+  private static void includeEmbeddedExtensionsIfFound(ClassLoader parent, List<URL> extensions) {
+    URL embeddedExtension = parent.getResource("otel-extensions.jar");
+    if (embeddedExtension != null) {
+      try {
+        File tempFile = Files.createTempFile("otel-extensions", null).toFile();
+        tempFile.deleteOnExit();
+        extractFile(embeddedExtension, tempFile);
+        addFileUrl(extensions, tempFile);
+      } catch (IOException ignored) {
+        System.err.println("Failed to open embedded extensions");
+      }
+    }
   }
 
   private static URLClassLoader getDelegate(ClassLoader parent, URL extensionUrl) {
@@ -83,6 +107,14 @@ public class ExtensionLoader {
       result.add(wrappedUrl);
     } catch (MalformedURLException ignored) {
       System.err.println("Ignoring " + file);
+    }
+  }
+
+  public static void extractFile(URL url, File outputFile) throws IOException {
+    try (InputStream in = url.openStream();
+        ReadableByteChannel rbc = Channels.newChannel(in);
+        FileOutputStream fos = new FileOutputStream(outputFile)) {
+      fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
     }
   }
 }
