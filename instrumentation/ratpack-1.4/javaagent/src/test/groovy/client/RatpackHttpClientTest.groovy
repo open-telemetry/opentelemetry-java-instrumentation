@@ -111,7 +111,6 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return "CONNECT"
       default:
@@ -122,7 +121,6 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   @Override
   void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
     switch (uri.toString()) {
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         spanAssert.errorEvent(ConnectTimeoutException, ~/connection timed out:/)
         return
@@ -134,7 +132,6 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return []
     }

@@ -73,7 +73,6 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return "CONNECT"
       default:
@@ -86,7 +85,6 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     if (exception.class.getName().endsWith("ReactiveException")) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
-        case "http://www.google.com:81/": // dropped request
         case "https://192.0.2.1/": // non routable address
           exception = exception.getCause()
       }
@@ -98,7 +96,6 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return []
     }
