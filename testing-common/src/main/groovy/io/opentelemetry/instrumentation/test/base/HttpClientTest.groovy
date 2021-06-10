@@ -670,31 +670,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     method = "GET"
   }
 
-  def "connection error dropped request"() {
-    given:
-    assumeTrue(testRemoteConnection())
-    // https://stackoverflow.com/a/100859
-    def uri = new URI("http://www.google.com:81/")
-
-    when:
-    runUnderTrace("parent") {
-      doRequest(method, uri)
-    }
-
-    then:
-    def ex = thrown(Exception)
-    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
-    assertTraces(1) {
-      trace(0, 2) {
-        basicSpan(it, 0, "parent", null, thrownException)
-        clientSpan(it, 1, span(0), method, uri, null, thrownException)
-      }
-    }
-
-    where:
-    method = "HEAD"
-  }
-
   def "connection error non routable address"() {
     given:
     assumeTrue(testRemoteConnection())
