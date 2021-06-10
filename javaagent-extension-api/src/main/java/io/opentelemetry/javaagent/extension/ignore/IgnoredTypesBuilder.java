@@ -9,7 +9,7 @@ package io.opentelemetry.javaagent.extension.ignore;
  * This interface defines different ways to ignore/allow instrumenting classes or packages.
  *
  * <p>This interface should not be implemented by the javaagent extension developer - the javaagent
- * will provide the implementation of all transformations described here.
+ * will provide the implementation.
  */
 public interface IgnoredTypesBuilder {
 

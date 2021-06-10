@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.Ordered;
 
 /**
- * An {@link IgnoredTypesConfigurer} can be used to override built-in instrumentation restrictions:
+ * An {@link IgnoredTypesConfigurer} can be used to augment built-in instrumentation restrictions:
  * ignore some classes and exclude them from being instrumented, or explicitly allow them to be
  * instrumented if the agent ignored them by default.
  *

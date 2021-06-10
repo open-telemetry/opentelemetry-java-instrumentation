@@ -23,7 +23,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @Warmup(iterations = 3, time = 1)
 @Measurement(iterations = 10, time = 1)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-@BenchmarkMode(Mode.Throughput)
+@BenchmarkMode(Mode.AverageTime)
 public class IgnoredTypesMatcherBenchmark {
 
   private static final TypeDescription springType =
