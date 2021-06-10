@@ -403,6 +403,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       def job = {
         latch.await()
         HttpRequestBuilder request = HttpRequest.builder()
+          // Force HTTP/1 via h1c so upgrade requests don't show up as traces
           .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
           .queryParam(ServerEndpoint.ID_PARAMETER_NAME, "$index")
         runUnderTrace("client " + index) {
