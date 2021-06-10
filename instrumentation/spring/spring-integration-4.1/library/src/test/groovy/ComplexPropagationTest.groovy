@@ -8,7 +8,6 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTracing
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
-import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -139,7 +138,7 @@ class ComplexPropagationTest extends LibraryInstrumentationSpecification {
       def body = message.payload as String
       Map<String, String> headers = message.headers.entrySet().stream()
         .filter({ kv -> kv.value instanceof String })
-        .collect(Collectors.toMap({ it.key }, {it.value }))
+        .collect(Collectors.toMap({ it.key }, { it.value }))
       new Payload(body: body, headers: headers)
     }
 
