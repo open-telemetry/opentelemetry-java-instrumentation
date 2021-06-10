@@ -105,15 +105,10 @@ task agentManifest(type: Copy) {
 task extendedAgent(type: Jar) {
   dependsOn agentManifest
   archiveFileName = "opentelemetry-javaagent-all.jar"
-  from zipTree(configurations.otel.singleFile)
-  from tasks.shadowJar.archiveFile
   manifest.from "$buildDir/META-INF/MANIFEST.MF"
-  rename { String f ->
-    if (f == tasks.shadowJar.archiveFileName.get()) {
-      return "otel-extensions.jar"
-    } else {
-      return f
-    }
+  from zipTree(configurations.otel.singleFile)
+  from(tasks.shadowJar.archiveFile) {
+    into "extensions"
   }
 }
 

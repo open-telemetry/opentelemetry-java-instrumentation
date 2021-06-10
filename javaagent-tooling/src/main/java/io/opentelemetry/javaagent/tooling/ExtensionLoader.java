@@ -16,7 +16,10 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 
 /**
@@ -35,10 +38,10 @@ public class ExtensionLoader {
   // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
   // configure the logging levels
 
-  public static ClassLoader getInstance(ClassLoader parent) {
+  public static ClassLoader getInstance(ClassLoader parent, JarFile javaagentFile) {
     List<URL> extensions = new ArrayList<>();
 
-    includeEmbeddedExtensionsIfFound(parent, extensions);
+    includeEmbeddedExtensionsIfFound(parent, extensions, javaagentFile);
 
     // TODO add support for old deprecated property otel.javaagent.experimental.exporter.jar
     extensions.addAll(
@@ -61,17 +64,33 @@ public class ExtensionLoader {
     return new MultipleParentClassLoader(parent, delegates);
   }
 
-  private static void includeEmbeddedExtensionsIfFound(ClassLoader parent, List<URL> extensions) {
-    URL embeddedExtension = parent.getResource("otel-extensions.jar");
-    if (embeddedExtension != null) {
-      try {
-        File tempFile = Files.createTempFile("otel-extensions", null).toFile();
-        tempFile.deleteOnExit();
-        extractFile(embeddedExtension, tempFile);
-        addFileUrl(extensions, tempFile);
-      } catch (IOException ignored) {
-        System.err.println("Failed to open embedded extensions");
+  private static void includeEmbeddedExtensionsIfFound(ClassLoader parent, List<URL> extensions,
+      JarFile javaagentFile) {
+    Enumeration<JarEntry> entryEnumeration = javaagentFile.entries();
+    final String prefix = "extensions/";
+    try {
+      if (entryEnumeration.hasMoreElements()) {
+        File tempDirectory = Files.createTempDirectory("otel-extensions").toFile();
+        tempDirectory.deleteOnExit();
+
+        while (entryEnumeration.hasMoreElements()) {
+          JarEntry jarEntry = entryEnumeration.nextElement();
+
+          if (jarEntry.getName().startsWith(prefix) && !jarEntry.isDirectory()) {
+            File tempFile = new File(tempDirectory, jarEntry.getName().substring(prefix.length()));
+            if (tempFile.createNewFile()) {
+              tempFile.deleteOnExit();
+              extractFile(javaagentFile, jarEntry, tempFile);
+              addFileUrl(extensions, tempFile);
+            } else {
+              System.out.println("Failed to create temp file " + tempFile);
+            }
+          }
+
+        }
       }
+    } catch (IOException ex) {
+      System.err.println("Failed to open embedded extensions " + ex.getMessage());
     }
   }
 
@@ -110,8 +129,9 @@ public class ExtensionLoader {
     }
   }
 
-  public static void extractFile(URL url, File outputFile) throws IOException {
-    try (InputStream in = url.openStream();
+  public static void extractFile(JarFile jarFile, JarEntry jarEntry,
+      File outputFile) throws IOException {
+    try (InputStream in = jarFile.getInputStream(jarEntry);
         ReadableByteChannel rbc = Channels.newChannel(in);
         FileOutputStream fos = new FileOutputStream(outputFile)) {
       fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
