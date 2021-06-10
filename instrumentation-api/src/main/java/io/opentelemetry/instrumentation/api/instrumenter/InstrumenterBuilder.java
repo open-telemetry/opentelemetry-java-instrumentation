@@ -157,7 +157,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   /**
    * Returns a new {@link Instrumenter} which will create spans with kind determined by the passed
-   * {@code spanKindExtractor} and extract context from requests
+   * {@code spanKindExtractor} and extract context from requests.
    */
   public Instrumenter<REQUEST, RESPONSE> newUpstreamPropagatingInstrumenter(
       SpanKindExtractor<REQUEST> spanKindExtractor, TextMapGetter<REQUEST> getter) {
