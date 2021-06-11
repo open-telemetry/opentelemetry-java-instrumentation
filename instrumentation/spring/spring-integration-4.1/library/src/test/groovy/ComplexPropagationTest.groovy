@@ -5,8 +5,6 @@
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTracing
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ExecutorService
@@ -22,10 +20,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.event.EventListener
 import org.springframework.integration.channel.DirectChannel
 import org.springframework.integration.channel.ExecutorChannel
-import org.springframework.integration.config.GlobalChannelInterceptor
 import org.springframework.messaging.Message
 import org.springframework.messaging.SubscribableChannel
-import org.springframework.messaging.support.ChannelInterceptor
 import org.springframework.messaging.support.MessageBuilder
 import spock.lang.Shared
 
@@ -35,7 +31,10 @@ class ComplexPropagationTest extends LibraryInstrumentationSpecification {
   ConfigurableApplicationContext applicationContext
 
   def setupSpec() {
-    def app = new SpringApplication(ExternalQueueConfig)
+    def app = new SpringApplication(ExternalQueueConfig, GlobalInterceptorSpringConfig)
+    app.setDefaultProperties([
+      "spring.main.web-application-type": "none"
+    ])
     applicationContext = app.run()
   }
 
@@ -121,12 +120,6 @@ class ComplexPropagationTest extends LibraryInstrumentationSpecification {
           receiveChannel().send(payload.toMessage())
         }
       })
-    }
-
-    @GlobalChannelInterceptor
-    @Bean
-    ChannelInterceptor otelInterceptor() {
-      SpringIntegrationTracing.create(GlobalOpenTelemetry.get()).newChannelInterceptor()
     }
   }
 
