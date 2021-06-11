@@ -62,11 +62,6 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   }
 
   @Override
-  boolean testHttps() {
-    false
-  }
-
-  @Override
   SingleConnection createSingleConnection(String host, int port) {
     // Play HTTP client uses AsyncHttpClient internally which does not support HTTP 1.1 pipelining
     // nor waiting for connection pool slots to free up. Therefore making a single connection test

@@ -33,11 +33,6 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   @Override
-  boolean testHttps() {
-    false
-  }
-
-  @Override
   String userAgent() {
     return "ReactorNetty"
   }

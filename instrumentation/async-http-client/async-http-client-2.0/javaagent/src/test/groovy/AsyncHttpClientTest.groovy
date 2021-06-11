@@ -61,11 +61,6 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   boolean testRedirects() {
     false
   }
-
-  @Override
-  boolean testHttps() {
-    false
-  }
 }
 
 
