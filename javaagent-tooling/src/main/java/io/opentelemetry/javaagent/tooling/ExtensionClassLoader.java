@@ -24,7 +24,7 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 // TODO find a way to initialize logging before using this class
 // Used by AgentInitializer
 @SuppressWarnings({"unused", "SystemOut"})
-public class ExtensionLoader {
+public class ExtensionClassLoader extends URLClassLoader {
   // NOTE it's important not to use slf4j in this class, because this class is used before slf4j is
   // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
   // configure the logging levels
@@ -49,10 +49,6 @@ public class ExtensionLoader {
       delegates.add(getDelegate(parent, url));
     }
     return new MultipleParentClassLoader(parent, delegates);
-  }
-
-  private static URLClassLoader getDelegate(ClassLoader parent, URL extensionUrl) {
-    return new URLClassLoader(new URL[] {extensionUrl}, parent);
   }
 
   private static List<URL> parseLocation(String locationName) {
@@ -85,4 +81,13 @@ public class ExtensionLoader {
       System.err.println("Ignoring " + file);
     }
   }
+
+  private static URLClassLoader getDelegate(ClassLoader parent, URL extensionUrl) {
+    return new ExtensionClassLoader(new URL[] {extensionUrl}, parent);
+  }
+
+  private ExtensionClassLoader(URL[] urls, ClassLoader parent) {
+    super(urls, parent);
+  }
+
 }
