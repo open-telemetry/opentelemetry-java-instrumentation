@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.trace.v1.Span
-import okhttp3.Request
 import spock.lang.Unroll
 
 @AppServer(version = "13.0.0.Final", jdk = "8")
@@ -23,16 +22,13 @@ class WildflySmokeTest extends AppServerTest {
 
   @Unroll
   def "JSP smoke test on WildFly"() {
-    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/app/jsp"
-    def request = new Request.Builder().url(url).get().build()
-
     when:
-    def response = CLIENT.newCall(request).execute()
+    def response = client().get("/app/jsp").aggregate().join()
     TraceInspector traces = new TraceInspector(waitForTraces())
-    String responseBody = response.body().string()
+    String responseBody = response.contentUtf8()
 
     then:
-    response.successful
+    response.status().isSuccess()
     responseBody.contains("Successful JSP test")
 
     traces.countSpansByKind(Span.SpanKind.SPAN_KIND_SERVER) == 1
