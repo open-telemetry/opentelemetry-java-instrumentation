@@ -109,7 +109,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatWebServer$")
         .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader")
         .allowClass("org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$")
-        .allowClass("org.springframework.boot.StartupInfoLogger$");
+        .allowClass("org.springframework.boot.StartupInfoLogger$")
+        .allowClass("org.springframework.boot.SpringApplicationShutdownHook");
 
     builder
         .ignoreClass("org.springframework.cglib.")
