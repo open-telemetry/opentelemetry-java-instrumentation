@@ -22,6 +22,11 @@ public final class Java8BytecodeBridge {
     return Context.current();
   }
 
+  /** Calls {@link Context#root()}. */
+  public static Context rootContext() {
+    return Context.root();
+  }
+
   /** Calls {@link Span#current()}. */
   public static Span currentSpan() {
     return Span.current();
