@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.testing.bytebuddy;
 
-import io.opentelemetry.javaagent.tooling.matcher.AdditionalLibraryIgnoresMatcher;
+import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.tooling.ignore.AdditionalLibraryIgnoredTypesConfigurer;
+import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,8 +28,13 @@ public class TestAgentListener implements AgentBuilder.Listener {
 
   private static final Logger logger = LoggerFactory.getLogger(TestAgentListener.class);
 
-  private static final ElementMatcher.Junction<TypeDescription> GLOBAL_LIBRARIES_IGNORES_MATCHER =
-      AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher();
+  private static final ElementMatcher<TypeDescription> GLOBAL_LIBRARIES_IGNORES_MATCHER;
+
+  static {
+    IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
+    new AdditionalLibraryIgnoredTypesConfigurer().configure(Config.get(), builder);
+    GLOBAL_LIBRARIES_IGNORES_MATCHER = builder.buildIgnoredTypesMatcher();
+  }
 
   public static void reset() {
     INSTANCE.transformedClassesNames.clear();

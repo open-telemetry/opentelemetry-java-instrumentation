@@ -1,9 +1,10 @@
 package com.example.javaagent.instrumentation;
 
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers;
-import io.opentelemetry.javaagent.extension.matcher.NameMatchers;
 import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -17,13 +18,13 @@ public class DemoServlet3Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return AgentElementMatchers.safeHasSuperType(
-        NameMatchers.namedOneOf("javax.servlet.Filter", "javax.servlet.http.HttpServlet"));
+        namedOneOf("javax.servlet.Filter", "javax.servlet.http.HttpServlet"));
   }
 
   @Override
   public void transform(TypeTransformer typeTransformer) {
     typeTransformer.applyAdviceToMethod(
-        NameMatchers.namedOneOf("doFilter", "service")
+        namedOneOf("doFilter", "service")
             .and(
                 ElementMatchers.takesArgument(
                     0, ElementMatchers.named("javax.servlet.ServletRequest")))

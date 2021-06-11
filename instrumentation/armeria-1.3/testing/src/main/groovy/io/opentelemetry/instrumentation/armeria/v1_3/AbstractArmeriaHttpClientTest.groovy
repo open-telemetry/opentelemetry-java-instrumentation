@@ -70,7 +70,7 @@ abstract class AbstractArmeriaHttpClientTest extends HttpClientTest<HttpRequest>
       SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
       SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
       SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET,
+      SemanticAttributes.HTTP_TARGET
     ]
     super.httpAttributes(uri) + extra
   }

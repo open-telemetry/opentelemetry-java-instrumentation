@@ -79,9 +79,9 @@ abstract class IntegrationTest {
 
   protected GenericContainer<?> target;
 
-  void startTarget(int jdk) {
+  void startTarget(String extensionLocation) {
     target =
-        new GenericContainer<>(getTargetImage(jdk))
+        new GenericContainer<>(getTargetImage(11))
             .withExposedPorts(8080)
             .withNetwork(network)
             .withLogConsumer(new Slf4jLogConsumer(logger))
@@ -93,7 +93,7 @@ abstract class IntegrationTest {
             .withEnv("JAVA_TOOL_OPTIONS",
                 "-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true")
             //Asks instrumentation agent to include this extension archive into its runtime
-            .withEnv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS", "/opentelemetry-extensions.jar")
+            .withEnv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS", extensionLocation)
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")

@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import okhttp3.Request
 import spock.lang.IgnoreIf
 
 @IgnoreIf({ os.windows })
@@ -19,15 +18,12 @@ class PlaySmokeTest extends SmokeTest {
   def "play smoke test on JDK #jdk"(int jdk) {
     setup:
     startTarget(jdk)
-    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/welcome?id=1"
-    def request = new Request.Builder().url(url).get().build()
-
     when:
-    def response = CLIENT.newCall(request).execute()
+    def response = client().get("/welcome?id=1").aggregate().join()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
     then:
-    response.body().string() == "Welcome 1."
+    response.contentUtf8() == "Welcome 1."
     //Both play and akka-http support produce spans with the same name.
     //One internal, one SERVER
     countSpansByName(traces, '/welcome') == 2
