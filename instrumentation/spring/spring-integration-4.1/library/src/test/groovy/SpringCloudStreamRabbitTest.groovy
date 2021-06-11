@@ -8,8 +8,6 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import java.time.Duration
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.SpringBootConfiguration
@@ -72,7 +70,6 @@ class SpringCloudStreamRabbitTest extends LibraryInstrumentationSpecification {
   def "should propagate context through RabbitMQ"() {
     when:
     producerContext.getBean("producer", Runnable).run()
-    consumerContext.getBean("latch", CountDownLatch).await(10, TimeUnit.SECONDS)
 
     then:
     assertTraces(1) {
@@ -120,12 +117,6 @@ class SpringCloudStreamRabbitTest extends LibraryInstrumentationSpecification {
     @StreamListener(Sink.INPUT)
     void consume(String ignored) {
       runInternalSpan("consumer")
-      latch().countDown()
-    }
-
-    @Bean
-    CountDownLatch latch() {
-      new CountDownLatch(1)
     }
   }
 }
