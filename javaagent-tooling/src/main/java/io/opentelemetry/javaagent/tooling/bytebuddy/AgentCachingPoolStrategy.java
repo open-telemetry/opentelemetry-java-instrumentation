@@ -100,6 +100,12 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     return createCachingTypePool(loaderHash, loaderRef, classFileLocator);
   }
 
+  @Override
+  public final TypePool typePool(
+      ClassFileLocator classFileLocator, ClassLoader classLoader, String name) {
+    return typePool(classFileLocator, classLoader);
+  }
+
   private TypePool.CacheProvider createCacheProvider(
       int loaderHash, WeakReference<ClassLoader> loaderRef) {
     return new SharedResolutionCacheAdapter(loaderHash, loaderRef, sharedResolutionCache);

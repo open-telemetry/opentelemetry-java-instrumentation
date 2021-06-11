@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0
+
 import io.netty.channel.ChannelOption
 import io.opentelemetry.instrumentation.test.base.SingleConnection
 import java.util.concurrent.ExecutionException
@@ -32,7 +34,10 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
           .headers({ h -> headers.each { k, v -> h.add(k, v) } })
           .get()
           .uri(path)
-          .response()
+          .responseSingle {resp, content ->
+            // Make sure to consume content since that's when we close the span.
+            content.map { resp }
+          }
           .block()
           .status().code()
       }

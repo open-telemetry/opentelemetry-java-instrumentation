@@ -342,6 +342,7 @@ public class AdditionalLibraryIgnoresMatcher
         "org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader");
     instrumented.add("org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$");
     instrumented.add("org.springframework.boot.StartupInfoLogger$");
+    instrumented.add("org.springframework.boot.SpringApplicationShutdownHook");
     INSTRUMENTED_SPRING_BOOT_CLASSES = Collections.unmodifiableSet(instrumented);
   }
 

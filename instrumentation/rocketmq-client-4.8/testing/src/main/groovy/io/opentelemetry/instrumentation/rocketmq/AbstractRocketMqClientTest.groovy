@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetery.instrumentation.rocketmq
+package io.opentelemetry.instrumentation.rocketmq
 
 import base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification

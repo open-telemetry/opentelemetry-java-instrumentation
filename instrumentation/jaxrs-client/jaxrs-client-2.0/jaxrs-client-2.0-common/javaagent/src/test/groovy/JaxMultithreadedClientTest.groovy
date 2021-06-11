@@ -3,32 +3,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.test.server.http.TestHttpServer.httpServer
-
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.testing.armeria.common.HttpResponse
+import io.opentelemetry.testing.armeria.common.HttpStatus
+import io.opentelemetry.testing.armeria.common.MediaType
+import io.opentelemetry.testing.armeria.server.ServerBuilder
+import io.opentelemetry.testing.armeria.testing.junit5.server.ServerExtension
 import javax.ws.rs.client.Client
 import org.glassfish.jersey.client.JerseyClientBuilder
-import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
 class JaxMultithreadedClientTest extends AgentInstrumentationSpecification {
 
-  @AutoCleanup
   @Shared
-  def server = httpServer {
-    handlers {
-      prefix("success") {
-        String msg = "Hello."
-        response.status(200).send(msg)
+  def server = new ServerExtension() {
+    @Override
+    protected void configure(ServerBuilder sb) throws Exception {
+      sb.service("/success") {ctx, req ->
+        HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT, "Hello.")
       }
     }
+  }
+
+  def setupSpec() {
+    server.start()
+  }
+
+  def cleanupSpec() {
+    server.stop()
   }
 
   def "multiple threads using the same builder works"() {
     given:
     def conds = new AsyncConditions(10)
-    def uri = server.address.resolve("/success")
+    def uri = server.httpUri().resolve("/success")
     def builder = new JerseyClientBuilder()
 
     // Start 10 threads and do 50 requests each

@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
@@ -22,6 +23,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Instant;
 import java.util.Collections;
@@ -33,6 +35,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class InstrumenterTest {
+  private static final String LINK_TRACE_ID = TraceId.fromLongs(0, 42);
+  private static final String LINK_SPAN_ID = SpanId.fromLong(123);
 
   private static final Map<String, String> REQUEST =
       Collections.unmodifiableMap(
@@ -40,7 +44,9 @@ class InstrumenterTest {
                   entry("req1", "req1_value"),
                   entry("req2", "req2_value"),
                   entry("req2_2", "req2_2_value"),
-                  entry("req3", "req3_value"))
+                  entry("req3", "req3_value"),
+                  entry("linkTraceId", LINK_TRACE_ID),
+                  entry("linkSpanId", LINK_SPAN_ID))
               .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
   private static final Map<String, String> RESPONSE =
@@ -86,6 +92,17 @@ class InstrumenterTest {
     }
   }
 
+  static class LinkExtractor implements SpanLinkExtractor<Map<String, String>> {
+    @Override
+    public SpanContext extract(Context parentContext, Map<String, String> request) {
+      return SpanContext.create(
+          request.get("linkTraceId"),
+          request.get("linkSpanId"),
+          TraceFlags.getSampled(),
+          TraceState.getDefault());
+    }
+  }
+
   static class MapGetter implements TextMapGetter<Map<String, String>> {
 
     @Override
@@ -108,6 +125,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
+            .addSpanLinkExtractor(new LinkExtractor())
             .newServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
@@ -132,6 +150,7 @@ class InstrumenterTest {
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
+                            .hasLinks(expectedSpanLink())
                             .hasAttributesSatisfying(
                                 attributes ->
                                     assertThat(attributes)
@@ -215,6 +234,7 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>newBuilder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractors(new AttributesExtractor1(), new AttributesExtractor2())
+            .addSpanLinkExtractor(new LinkExtractor())
             .newClientInstrumenter(Map::put);
 
     Map<String, String> request = new HashMap<>(REQUEST);
@@ -240,6 +260,7 @@ class InstrumenterTest {
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
+                            .hasLinks(expectedSpanLink())
                             .hasAttributesSatisfying(
                                 attributes ->
                                     assertThat(attributes)
@@ -339,5 +360,33 @@ class InstrumenterTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("test span").startsAt(startTime).endsAt(endTime)));
+  }
+
+  @Test
+  void shouldNotAddInvalidLink() {
+    // given
+    Instrumenter<String, String> instrumenter =
+        Instrumenter.<String, String>newBuilder(
+                otelTesting.getOpenTelemetry(), "test", request -> "test span")
+            .addSpanLinkExtractor((parentContext, request) -> SpanContext.getInvalid())
+            .newInstrumenter();
+
+    // when
+    Context context = instrumenter.start(Context.root(), "request");
+    instrumenter.end(context, "request", "response", null);
+
+    // then
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("test span").hasTotalRecordedLinks(0)));
+  }
+
+  private static LinkData expectedSpanLink() {
+    return LinkData.create(
+        SpanContext.create(
+            LINK_TRACE_ID, LINK_SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()));
   }
 }

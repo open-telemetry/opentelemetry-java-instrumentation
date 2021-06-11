@@ -3,15 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9
+
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.netty.resolver.AddressResolver
-import io.netty.resolver.AddressResolverGroup
-import io.netty.resolver.InetNameResolver
-import io.netty.util.concurrent.EventExecutor
-import io.netty.util.concurrent.Promise
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
@@ -45,19 +42,27 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     return createHttpClient()
       .followRedirect(true)
       .headers({ h -> headers.each { k, v -> h.add(k, v) } })
-      .baseUrl(server.address.toString())
+      .baseUrl(resolveAddress("").toString())
       ."${method.toLowerCase()}"()
       .uri(uri.toString())
   }
 
   @Override
   int sendRequest(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers) {
-    return request.response().block().status().code()
+    return request.responseSingle {resp, content ->
+      // Make sure to consume content since that's when we close the span.
+      content.map {
+        resp
+      }
+    }.block().status().code()
   }
 
   @Override
   void sendRequestWithCallback(HttpClient.ResponseReceiver request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
-    request.response().subscribe({
+    request.responseSingle {resp, content ->
+      // Make sure to consume content since that's when we close the span.
+      content.map { resp }
+    }.subscribe({
       requestResult.complete(it.status().code())
     }, { throwable ->
       requestResult.complete(throwable)
@@ -68,7 +73,6 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return "CONNECT"
       default:
@@ -81,7 +85,6 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     if (exception.class.getName().endsWith("ReactiveException")) {
       switch (uri.toString()) {
         case "http://localhost:61/": // unopened port
-        case "http://www.google.com:81/": // dropped request
         case "https://192.0.2.1/": // non routable address
           exception = exception.getCause()
       }
@@ -93,7 +96,6 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return []
     }
@@ -101,10 +103,6 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
   }
 
   abstract HttpClient createHttpClient()
-
-  AddressResolverGroup getAddressResolverGroup() {
-    return CustomNameResolverGroup.INSTANCE
-  }
 
   def "should expose context to http client callbacks"() {
     given:
@@ -117,14 +115,17 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
       .doOnRequest({ rq, con -> onRequestSpan.set(Span.current()) })
       .doAfterRequest({ rq, con -> afterRequestSpan.set(Span.current()) })
       .doOnResponse({ rs, con -> onResponseSpan.set(Span.current()) })
-      .doAfterResponseSuccess({ rs, con -> afterResponseSpan.set(Span.current()) })
+      .doAfterResponse({ rs, con -> afterResponseSpan.set(Span.current()) })
 
     when:
     runUnderTrace("parent") {
-      httpClient.baseUrl(server.address.toString())
+      httpClient.baseUrl(resolveAddress("").toString())
         .get()
         .uri("/success")
-        .response()
+        .responseSingle {resp, content ->
+          // Make sure to consume content since that's when we close the span.
+          content.map { resp }
+        }
         .block()
     }
 
@@ -135,7 +136,7 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
         def nettyClientSpan = span(1)
 
         basicSpan(it, 0, "parent")
-        clientSpan(it, 1, parentSpan, "GET", server.address.resolve("/success"))
+        clientSpan(it, 1, parentSpan, "GET", resolveAddress("/success"))
         serverSpan(it, 2, nettyClientSpan)
 
         assertSameSpan(parentSpan, onRequestSpan)
@@ -157,7 +158,10 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     runUnderTrace("parent") {
       httpClient.get()
         .uri("http://localhost:$UNUSABLE_PORT/")
-        .response()
+        .responseSingle {resp, content ->
+          // Make sure to consume content since that's when we close the span.
+          content.map { resp }
+        }
         .block()
     }
 
@@ -182,46 +186,11 @@ abstract class AbstractReactorNettyHttpClientTest extends HttpClientTest<HttpCli
     }
   }
 
+
   private static void assertSameSpan(SpanData expected, AtomicReference<Span> actual) {
     def expectedSpanContext = expected.spanContext
     def actualSpanContext = actual.get().spanContext
     assert expectedSpanContext.traceId == actualSpanContext.traceId
     assert expectedSpanContext.spanId == actualSpanContext.spanId
-  }
-
-  // custom address resolver that returns at most one address for each host
-  // adapted from io.netty.resolver.DefaultAddressResolverGroup
-  static class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddress> {
-    public static final CustomNameResolverGroup INSTANCE = new CustomNameResolverGroup()
-
-    private CustomNameResolverGroup() {
-    }
-
-    protected AddressResolver<InetSocketAddress> newResolver(EventExecutor executor) throws Exception {
-      return (new CustomNameResolver(executor)).asAddressResolver()
-    }
-  }
-
-  static class CustomNameResolver extends InetNameResolver {
-    CustomNameResolver(EventExecutor executor) {
-      super(executor)
-    }
-
-    protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
-      try {
-        promise.setSuccess(InetAddress.getByName(inetHost))
-      } catch (UnknownHostException exception) {
-        promise.setFailure(exception)
-      }
-    }
-
-    protected void doResolveAll(String inetHost, Promise<List<InetAddress>> promise) throws Exception {
-      try {
-        // default implementation calls InetAddress.getAllByName
-        promise.setSuccess(Collections.singletonList(InetAddress.getByName(inetHost)))
-      } catch (UnknownHostException exception) {
-        promise.setFailure(exception)
-      }
-    }
   }
 }

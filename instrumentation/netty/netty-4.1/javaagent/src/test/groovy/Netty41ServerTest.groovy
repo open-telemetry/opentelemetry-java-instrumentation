@@ -71,15 +71,17 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup> implements AgentT
                       response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
                       break
                     case INDEXED_CHILD:
+                      content = Unpooled.EMPTY_BUFFER
                       endpoint.collectSpanAttributes { new QueryStringDecoder(uri).parameters().get(it).find() }
-                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status))
+                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
                       break
                     case QUERY_PARAM:
                       content = Unpooled.copiedBuffer(uri.query, CharsetUtil.UTF_8)
                       response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
                       break
                     case REDIRECT:
-                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status))
+                      content = Unpooled.EMPTY_BUFFER
+                      response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status), content)
                       response.headers().set(HttpHeaderNames.LOCATION, endpoint.body)
                       break
                     case EXCEPTION:

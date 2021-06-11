@@ -10,11 +10,13 @@ import akka.actor.ActorSystem
 import akka.http.javadsl.Http
 import akka.http.javadsl.model.HttpMethods
 import akka.http.javadsl.model.HttpRequest
+import akka.http.javadsl.model.HttpResponse
 import akka.http.javadsl.model.headers.RawHeader
 import akka.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.test.base.SingleConnection
+import java.util.concurrent.TimeUnit
 import spock.lang.Shared
 
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> implements AgentTestTrait {
@@ -33,17 +35,20 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
 
   @Override
   int sendRequest(HttpRequest request, String method, URI uri, Map<String, String> headers) {
-    return Http.get(system)
+    HttpResponse response = Http.get(system)
       .singleRequest(request, materializer)
       .toCompletableFuture()
-      .get()
-      .status()
-      .intValue()
+      .get(10, TimeUnit.SECONDS)
+
+    response.discardEntityBytes(materializer)
+
+    return response.status().intValue()
   }
 
   @Override
   void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     Http.get(system).singleRequest(request, materializer).whenComplete {response, throwable ->
+      response.discardEntityBytes(materializer)
       requestResult.complete({ response.status().intValue() }, throwable)
     }
   }
