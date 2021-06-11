@@ -12,8 +12,6 @@ plugins {
   id 'org.unbroken-dome.test-sets' apply false
   id 'com.github.ben-manes.versions'
 
-  id "com.github.johnrengelman.shadow" apply false
-
   id "com.diffplug.spotless"
   id "net.ltgt.errorprone" apply false
   id "net.ltgt.nullaway" apply false
