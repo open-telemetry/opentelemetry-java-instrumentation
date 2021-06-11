@@ -7,14 +7,13 @@ package io.opentelemetry.instrumentation.api.tracer;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.ParameterizedClass;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -73,11 +72,11 @@ class AttributeBindingFactory {
   }
 
   private static boolean isEnumSetType(Type type) {
-    if (type instanceof ParameterizedType) {
-      ParameterizedType parameterizedType = (ParameterizedType) type;
-      return parameterizedType.getRawType() == EnumSet.class;
-    }
-    return type == EnumSet.class;
+    return ParameterizedClass.of(type)
+        .findParameterizedSuperclass(Set.class)
+        .map(pc -> pc.getActualTypeArguments()[0])
+        .filter(typeArgument -> typeArgument instanceof Class && ((Class<?>) typeArgument).isEnum())
+        .isPresent();
   }
 
   private static Optional<Type> resolveListComponentType(Type type) {
@@ -353,9 +352,9 @@ class AttributeBindingFactory {
   private static AttributeBinding enumSetBinding(String name) {
     AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
     return (setter, arg) -> {
-      EnumSet<?> set = (EnumSet<?>) arg;
+      Set<?> set = (Set<?>) arg;
       List<String> list = new ArrayList<>(set.size());
-      set.forEach(value -> list.add(value.name()));
+      set.forEach(value -> list.add(value.toString()));
       setter.setAttribute(key, list);
     };
   }
