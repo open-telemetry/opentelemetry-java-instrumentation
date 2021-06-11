@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import okhttp3.Request
 import spock.lang.IgnoreIf
 
 @IgnoreIf({ os.windows })
@@ -28,17 +27,14 @@ class ZipkinExporterSmokeTest extends SmokeTest {
     setup:
     startTarget(11)
 
-    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/greeting"
-    def request = new Request.Builder().url(url).get().build()
-
-//    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
+    //    def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION)
 
     when:
-    def response = CLIENT.newCall(request).execute()
+    def response = client().get("/greeting").aggregate().join()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
     then:
-    response.body().string() == "Hi!"
+    response.contentUtf8() == "Hi!"
     countSpansByName(traces, '/greeting') == 1
     countSpansByName(traces, 'webcontroller.greeting') == 1
     countSpansByName(traces, 'webcontroller.withspan') == 1
