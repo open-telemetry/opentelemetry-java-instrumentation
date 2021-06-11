@@ -9,7 +9,6 @@ import static java.util.stream.Collectors.toSet
 
 import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import okhttp3.Request
 import spock.lang.IgnoreIf
 
 abstract class PropagationTest extends SmokeTest {
@@ -22,11 +21,8 @@ abstract class PropagationTest extends SmokeTest {
   def "Should propagate test"() {
     setup:
     startTarget(11)
-    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/front"
-    def request = new Request.Builder().url(url).get().build()
-
     when:
-    def response = CLIENT.newCall(request).execute()
+    def response = client().get("/front").aggregate().join()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
     def traceIds = getSpanStream(traces)
       .map({ TraceId.fromBytes(it.getTraceId().toByteArray()) })
@@ -37,7 +33,7 @@ abstract class PropagationTest extends SmokeTest {
 
     def traceId = traceIds.first()
 
-    response.body().string() == "${traceId};${traceId}"
+    response.contentUtf8() == "${traceId};${traceId}"
 
     cleanup:
     stopTarget()
@@ -94,11 +90,8 @@ class OtTracePropagationTest extends SmokeTest {
   def "Should propagate test"() {
     setup:
     startTarget(11)
-    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/front"
-    def request = new Request.Builder().url(url).get().build()
-
     when:
-    def response = CLIENT.newCall(request).execute()
+    def response = client().get("/front").aggregate().join()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
     def traceIds = getSpanStream(traces)
       .map({ TraceId.fromBytes(it.getTraceId().toByteArray()).substring(16) })
@@ -109,7 +102,7 @@ class OtTracePropagationTest extends SmokeTest {
 
     def traceId = traceIds.first()
 
-    response.body().string().matches(/[0-9a-f]{16}${traceId};[0]{16}${traceId}/)
+    response.contentUtf8().matches(/[0-9a-f]{16}${traceId};[0]{16}${traceId}/)
 
     cleanup:
     stopTarget()

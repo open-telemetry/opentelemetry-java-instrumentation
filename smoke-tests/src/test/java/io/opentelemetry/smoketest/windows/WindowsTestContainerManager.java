@@ -19,6 +19,8 @@ import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import io.opentelemetry.smoketest.AbstractTestContainerManager;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
+import io.opentelemetry.testing.armeria.client.WebClient;
+import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -35,9 +37,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
@@ -410,8 +409,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
   }
 
   private static class HttpWaiter implements Waiter {
-    private static final OkHttpClient CLIENT =
-        new OkHttpClient.Builder().callTimeout(Duration.ofSeconds(1)).build();
+    private static final WebClient CLIENT =
+        WebClient.builder().responseTimeout(Duration.ofSeconds(1)).build();
 
     private final int internalPort;
     private final String path;
@@ -430,16 +429,10 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
 
     @Override
     public void waitFor(Container container) {
-      Request request =
-          new Request.Builder()
-              .url("http://localhost:" + extractMappedPort(container, internalPort) + path)
-              .build();
+      String url = "http://localhost:" + extractMappedPort(container, internalPort) + path;
 
       logger.info(
-          "Waiting for container {}/{} on url {}",
-          container.imageName,
-          container.containerId,
-          request.url());
+          "Waiting for container {}/{} on url {}", container.imageName, container.containerId, url);
 
       try {
         Unreliables.retryUntilSuccess(
@@ -448,15 +441,11 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             () -> {
               rateLimiter.doWhenReady(
                   () -> {
-                    try {
-                      Response response = CLIENT.newCall(request).execute();
+                    AggregatedHttpResponse response = CLIENT.get(url).aggregate().join();
 
-                      if (response.code() != 200) {
-                        throw new IllegalStateException(
-                            "Received status code " + response.code() + " from " + request.url());
-                      }
-                    } catch (IOException e) {
-                      throw new IllegalStateException(e);
+                    if (response.status().code() != 200) {
+                      throw new IllegalStateException(
+                          "Received status code " + response.status().code() + " from " + url);
                     }
                   });
 

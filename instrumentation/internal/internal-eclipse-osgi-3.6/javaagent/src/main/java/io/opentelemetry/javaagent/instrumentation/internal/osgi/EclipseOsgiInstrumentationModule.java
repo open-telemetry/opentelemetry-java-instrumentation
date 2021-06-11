@@ -19,6 +19,12 @@ public class EclipseOsgiInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean defaultEnabled() {
+    // internal instrumentations are always enabled by default
+    return true;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new EclipseOsgiInstrumentation());
   }

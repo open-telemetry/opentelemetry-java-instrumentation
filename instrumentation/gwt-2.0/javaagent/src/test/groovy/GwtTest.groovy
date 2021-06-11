@@ -9,9 +9,6 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import java.util.concurrent.TimeUnit
-import okhttp3.HttpUrl
-import okhttp3.Request
-import okhttp3.RequestBody
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
 import org.eclipse.jetty.webapp.WebAppContext
@@ -167,13 +164,5 @@ class GwtTest extends AgentInstrumentationSpecification implements HttpServerTes
       name spanName
       kind SpanKind.SERVER
     }
-  }
-
-  Request.Builder request(HttpUrl url, String method, RequestBody body) {
-    return new Request.Builder()
-      .url(url)
-      .method(method, body)
-      .header("User-Agent", TEST_USER_AGENT)
-      .header("X-Forwarded-For", TEST_CLIENT_IP)
   }
 }
