@@ -70,7 +70,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.Argument(0) HttpRequest request,
         @Advice.This HttpExt thiz,
-        @Advice.Return Future<HttpResponse> responseFuture,
+        @Advice.Return(readOnly = false) Future<HttpResponse> responseFuture,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -83,6 +83,10 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         responseFuture.onComplete(new OnCompleteHandler(context), thiz.system().dispatcher());
       } else {
         tracer().endExceptionally(context, throwable);
+      }
+      if (responseFuture != null) {
+        responseFuture =
+            FutureWrapper.wrap(responseFuture, thiz.system().dispatcher(), currentContext());
       }
     }
   }

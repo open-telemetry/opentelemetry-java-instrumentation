@@ -43,9 +43,9 @@ muzzle {
 dependencies {
   library "com.typesafe.akka:akka-http_2.11:10.0.0"
   library "com.typesafe.akka:akka-stream_2.11:2.4.14"
-}
 
-tasks.withType(Test).configureEach {
-  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2639
-  jvmArgs "-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false"
+  // these instrumentations are not needed for the tests to pass
+  // they are here to test for context leaks
+  testInstrumentation project(':instrumentation:akka-actor-2.5:javaagent')
+  testInstrumentation project(':instrumentation:akka-actor-fork-join-2.5:javaagent')
 }
