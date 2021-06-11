@@ -84,7 +84,6 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return "CONNECT"
       default:
@@ -96,7 +95,6 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return []
     }

@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -43,6 +44,7 @@ public final class LibraryTestRunner implements InstrumentationTestRunner {
             .setTracerProvider(
                 SdkTracerProvider.builder()
                     .addSpanProcessor(new FlushTrackingSpanProcessor())
+                    .addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()))
                     .addSpanProcessor(SimpleSpanProcessor.create(testExporter))
                     .build())
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))

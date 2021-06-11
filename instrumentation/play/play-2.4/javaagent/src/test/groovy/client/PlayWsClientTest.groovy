@@ -7,6 +7,8 @@ package client
 
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.instrumentation.test.base.SingleConnection
+
 import java.util.concurrent.CompletionStage
 import play.libs.ws.WS
 import play.libs.ws.WSRequest
@@ -62,5 +64,14 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   @Override
   boolean testHttps() {
     false
+  }
+
+  @Override
+  SingleConnection createSingleConnection(String host, int port) {
+    // Play HTTP client uses AsyncHttpClient internally which does not support HTTP 1.1 pipelining
+    // nor waiting for connection pool slots to free up. Therefore making a single connection test
+    // would require manually sequencing the connections, which is not meaningful for a high
+    // concurrency test.
+    return null
   }
 }

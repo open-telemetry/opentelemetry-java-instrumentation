@@ -18,29 +18,29 @@ final class ApacheHttpClientHttpAttributesExtractor
     extends HttpAttributesExtractor<HttpMethod, HttpMethod> {
 
   @Override
-  protected String method(HttpMethod httpMethod) {
-    return httpMethod.getName();
+  protected String method(HttpMethod request) {
+    return request.getName();
   }
 
   @Override
-  protected String url(HttpMethod httpMethod) {
-    return getUrl(httpMethod);
+  protected String url(HttpMethod request) {
+    return getUrl(request);
   }
 
   @Override
-  protected String target(HttpMethod httpMethod) {
-    String queryString = httpMethod.getQueryString();
-    return queryString != null ? httpMethod.getPath() + "?" + queryString : httpMethod.getPath();
+  protected String target(HttpMethod request) {
+    String queryString = request.getQueryString();
+    return queryString != null ? request.getPath() + "?" + queryString : request.getPath();
   }
 
   @Override
   @Nullable
-  protected String host(HttpMethod httpMethod) {
-    Header header = httpMethod.getRequestHeader("Host");
+  protected String host(HttpMethod request) {
+    Header header = request.getRequestHeader("Host");
     if (header != null) {
       return header.getValue();
     }
-    HostConfiguration hostConfiguration = httpMethod.getHostConfiguration();
+    HostConfiguration hostConfiguration = request.getHostConfiguration();
     if (hostConfiguration != null) {
       return hostConfiguration.getVirtualHost();
     }
@@ -49,28 +49,28 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String scheme(HttpMethod httpMethod) {
-    HostConfiguration hostConfiguration = httpMethod.getHostConfiguration();
+  protected String scheme(HttpMethod request) {
+    HostConfiguration hostConfiguration = request.getHostConfiguration();
     return hostConfiguration != null ? hostConfiguration.getProtocol().getScheme() : null;
   }
 
   @Override
   @Nullable
-  protected String userAgent(HttpMethod httpMethod) {
-    Header header = httpMethod.getRequestHeader("User-Agent");
+  protected String userAgent(HttpMethod request) {
+    Header header = request.getRequestHeader("User-Agent");
     return header != null ? header.getValue() : null;
   }
 
   @Override
   @Nullable
-  protected Long requestContentLength(HttpMethod httpMethod, @Nullable HttpMethod response) {
+  protected Long requestContentLength(HttpMethod request, @Nullable HttpMethod response) {
     return null;
   }
 
   @Override
   @Nullable
   protected Long requestContentLengthUncompressed(
-      HttpMethod httpMethod, @Nullable HttpMethod response) {
+      HttpMethod request, @Nullable HttpMethod response) {
     return null;
   }
 
@@ -83,9 +83,9 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected String flavor(HttpMethod httpMethod, @Nullable HttpMethod response) {
-    if (httpMethod instanceof HttpMethodBase) {
-      return ((HttpMethodBase) httpMethod).isHttp11()
+  protected String flavor(HttpMethod request, @Nullable HttpMethod response) {
+    if (request instanceof HttpMethodBase) {
+      return ((HttpMethodBase) request).isHttp11()
           ? SemanticAttributes.HttpFlavorValues.HTTP_1_1
           : SemanticAttributes.HttpFlavorValues.HTTP_1_0;
     }
@@ -94,43 +94,43 @@ final class ApacheHttpClientHttpAttributesExtractor
 
   @Override
   @Nullable
-  protected Long responseContentLength(HttpMethod httpMethod, HttpMethod response) {
+  protected Long responseContentLength(HttpMethod request, HttpMethod response) {
     return null;
   }
 
   @Override
   @Nullable
-  protected Long responseContentLengthUncompressed(HttpMethod httpMethod, HttpMethod response) {
+  protected Long responseContentLengthUncompressed(HttpMethod request, HttpMethod response) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String serverName(HttpMethod httpMethod, @Nullable HttpMethod response) {
+  protected String serverName(HttpMethod request, @Nullable HttpMethod response) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String route(HttpMethod httpMethod) {
+  protected String route(HttpMethod request) {
     return null;
   }
 
   @Override
   @Nullable
-  protected String clientIp(HttpMethod httpMethod, @Nullable HttpMethod response) {
+  protected String clientIp(HttpMethod request, @Nullable HttpMethod response) {
     return null;
   }
 
   // mirroring implementation HttpMethodBase.getURI(), to avoid converting to URI and back to String
-  private static String getUrl(HttpMethod httpMethod) {
-    HostConfiguration hostConfiguration = httpMethod.getHostConfiguration();
+  private static String getUrl(HttpMethod request) {
+    HostConfiguration hostConfiguration = request.getHostConfiguration();
     if (hostConfiguration == null) {
-      String queryString = httpMethod.getQueryString();
+      String queryString = request.getQueryString();
       if (queryString == null) {
-        return httpMethod.getPath();
+        return request.getPath();
       } else {
-        return httpMethod.getPath() + "?" + httpMethod.getQueryString();
+        return request.getPath() + "?" + request.getQueryString();
       }
     } else {
       StringBuilder url = new StringBuilder();
@@ -142,11 +142,11 @@ final class ApacheHttpClientHttpAttributesExtractor
         url.append(":");
         url.append(port);
       }
-      url.append(httpMethod.getPath());
-      String queryString = httpMethod.getQueryString();
+      url.append(request.getPath());
+      String queryString = request.getQueryString();
       if (queryString != null) {
         url.append("?");
-        url.append(httpMethod.getQueryString());
+        url.append(request.getQueryString());
       }
       return url.toString();
     }

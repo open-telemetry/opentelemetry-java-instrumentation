@@ -46,7 +46,6 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   HttpClient buildHttpClient(Action<? super HttpClientSpec> action) {
     HttpClient.of {
       it.readTimeout(Duration.ofSeconds(2))
-      // Connect timeout added in 1.5
       // execController method added in 1.9
       if (HttpClientSpec.metaClass.getMetaMethod("execController") != null) {
         it.execController(exec.getController())
@@ -81,6 +80,7 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   // overridden in RatpackForkedHttpClientTest
   Promise<Integer> internalSendRequest(HttpClient client, String method, URI uri, Map<String, String> headers) {
     def resp = client.request(uri) { spec ->
+      // Connect timeout for the whole client was added in 1.5 so we need to add timeout for each request
       spec.connectTimeout(Duration.ofSeconds(2))
       spec.method(method)
       spec.headers { headersSpec ->
@@ -99,7 +99,7 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
     return new SingleConnection() {
       @Override
       int doRequest(String path, Map<String, String> headers) throws ExecutionException, InterruptedException, TimeoutException {
-        def uri = server.address.resolve(path)
+        def uri = resolveAddress(path)
         return exec.yield {
           internalSendRequest(singleConnectionClient, "GET", uri, headers)
         }.valueOrThrow
@@ -111,7 +111,6 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return "CONNECT"
       default:
@@ -122,7 +121,6 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   @Override
   void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {
     switch (uri.toString()) {
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         spanAssert.errorEvent(ConnectTimeoutException, ~/connection timed out:/)
         return
@@ -134,7 +132,6 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return []
     }

@@ -1,0 +1,22 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+
+dependencies {
+  implementation "com.linecorp.armeria:armeria-junit5:1.8.0"
+}
+
+shadowJar {
+  // Ensures tests are not affected by Armeria instrumentation
+  relocate "com.linecorp.armeria", "io.opentelemetry.testing.armeria"
+  // Allows tests of Netty instrumentations which would otherwise conflict.
+  // The relocation must end with io.netty to allow Netty to detect shaded native libraries.
+  // https://github.com/netty/netty/blob/e69107ceaf247099ad9a198b8ef557bdff994a99/common/src/main/java/io/netty/util/internal/NativeLibraryLoader.java#L120
+  relocate "io.netty", "io.opentelemetry.testing.io.netty"
+  exclude "META-INF/maven/**"
+  relocate "META-INF/native/libnetty", "META-INF/native/libio_opentelemetry_testing_netty"
+  relocate "META-INF/native/netty", "META-INF/native/io_opentelemetry_testing_netty"
+  mergeServiceFiles()
+}

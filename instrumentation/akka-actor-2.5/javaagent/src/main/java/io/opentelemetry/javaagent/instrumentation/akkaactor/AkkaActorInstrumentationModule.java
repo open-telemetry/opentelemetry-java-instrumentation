@@ -20,6 +20,9 @@ public class AkkaActorInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new AkkaDispatcherInstrumentation(), new AkkaActorCellInstrumentation());
+    return asList(
+        new AkkaDispatcherInstrumentation(),
+        new AkkaActorCellInstrumentation(),
+        new AkkaDefaultSystemMessageQueueInstrumentation());
   }
 }

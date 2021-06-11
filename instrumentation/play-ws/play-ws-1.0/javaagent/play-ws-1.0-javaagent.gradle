@@ -33,6 +33,7 @@ dependencies {
   testInstrumentation project(':instrumentation:netty:netty-4.0:javaagent')
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
   testInstrumentation project(':instrumentation:akka-http-10.0:javaagent')
+  testInstrumentation project(':instrumentation:akka-actor-2.5:javaagent')
 
   latestDepTestLibrary group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.+'
 }

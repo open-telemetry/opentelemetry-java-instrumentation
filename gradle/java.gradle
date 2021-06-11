@@ -246,6 +246,14 @@ tasks.withType(Test).configureEach {
   jvmArgs "-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty('enableStrictContext') ?: false}"
   // TODO(anuraaga): Have agent map unshaded to shaded.
   jvmArgs "-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty('enableStrictContext') ?: false}"
+
+  def trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
+  inputs.file(trustStore)
+  // Work around payara not working when this is set for some reason.
+  if (project.name != "jaxrs-2.0-payara-testing") {
+    jvmArgs "-Djavax.net.ssl.trustStore=${trustStore.absolutePath}"
+    jvmArgs "-Djavax.net.ssl.trustStorePassword=testing"
+  }
 }
 
 tasks.withType(AbstractArchiveTask).configureEach {

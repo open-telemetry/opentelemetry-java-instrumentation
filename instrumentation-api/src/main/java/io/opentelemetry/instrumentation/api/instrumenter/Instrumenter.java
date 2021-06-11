@@ -55,7 +55,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
   private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
-  private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> extractors;
+  private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
+      attributesExtractors;
+  private final List<? extends SpanLinkExtractor<? super REQUEST>> spanLinkExtractors;
   private final List<? extends RequestListener> requestListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   @Nullable private final StartTimeExtractor<REQUEST> startTimeExtractor;
@@ -68,7 +70,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
-    this.extractors = new ArrayList<>(builder.attributesExtractors);
+    this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
+    this.spanLinkExtractors = new ArrayList<>(builder.spanLinkExtractors);
     this.requestListeners = new ArrayList<>(builder.requestListeners);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.startTimeExtractor = builder.startTimeExtractor;
@@ -119,8 +122,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
       spanBuilder.setStartTimestamp(startTimeExtractor.extract(request));
     }
 
+    for (SpanLinkExtractor<? super REQUEST> extractor : spanLinkExtractors) {
+      spanBuilder.addLink(extractor.extract(parentContext, request));
+    }
+
     UnsafeAttributes attributesBuilder = new UnsafeAttributes();
-    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
+    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
       extractor.onStart(attributesBuilder, request);
     }
     Attributes attributes = attributesBuilder;
@@ -154,7 +161,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     Span span = Span.fromContext(context);
 
     UnsafeAttributes attributesBuilder = new UnsafeAttributes();
-    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : extractors) {
+    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
       extractor.onEnd(attributesBuilder, request, response);
     }
     Attributes attributes = attributesBuilder;

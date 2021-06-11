@@ -67,9 +67,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
   }
 
   @Unroll
-  def "trace request with propagation (useCaches: #useCaches)"() {
+  def "trace request (useCaches: #useCaches)"() {
     setup:
-    def url = server.address.resolve("/success").toURL()
+    def url = resolveAddress("/success").toURL()
     runUnderTrace("someTrace") {
       HttpURLConnection connection = url.openConnection()
       connection.useCaches = useCaches
@@ -109,7 +109,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
             "${SemanticAttributes.HTTP_URL.key}" "$url"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
@@ -130,7 +130,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
             "${SemanticAttributes.HTTP_URL.key}" "$url"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
@@ -151,32 +151,15 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
     useCaches << [false, true]
   }
 
-  def "trace request without propagation (useCaches: #useCaches)"() {
+  def "test broken API usage"() {
     setup:
-    def url = server.address.resolve("/success").toURL()
-    runUnderTrace("someTrace") {
+    def url = resolveAddress("/success").toURL()
+    HttpURLConnection connection = runUnderTrace("someTrace") {
       HttpURLConnection connection = url.openConnection()
-      connection.useCaches = useCaches
-      connection.addRequestProperty("is-test-server", "false")
+      connection.setRequestProperty("Connection", "close")
       assert Span.current().getSpanContext().isValid()
-      def stream = connection.inputStream
-      connection.inputStream // one more to ensure state is working
-      def lines = stream.readLines()
-      stream.close()
       assert connection.getResponseCode() == STATUS
-      assert lines == [RESPONSE]
-
-      // call again to ensure the cycling is ok
-      connection = url.openConnection()
-      connection.useCaches = useCaches
-      connection.addRequestProperty("is-test-server", "false")
-      assert Span.current().getSpanContext().isValid()
-      // call before input stream to test alternate behavior
-      assert connection.getResponseCode() == STATUS
-      stream = connection.inputStream
-      lines = stream.readLines()
-      stream.close()
-      assert lines == [RESPONSE]
+      return connection
     }
 
     expect:
@@ -193,64 +176,8 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           kind CLIENT
           childOf span(0)
           attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-          }
-        }
-        span(2) {
-          name expectedOperationName("GET")
-          kind CLIENT
-          childOf span(0)
-          attributes {
-            "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
-            "${SemanticAttributes.HTTP_URL.key}" "$url"
-            "${SemanticAttributes.HTTP_METHOD.key}" "GET"
-            "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
-            "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
-          }
-        }
-      }
-    }
-
-    where:
-    useCaches << [false, true]
-  }
-
-  def "test broken API usage"() {
-    setup:
-    def url = server.address.resolve("/success").toURL()
-    HttpURLConnection connection = runUnderTrace("someTrace") {
-      HttpURLConnection connection = url.openConnection()
-      connection.setRequestProperty("Connection", "close")
-      connection.addRequestProperty("is-test-server", "false")
-      assert Span.current().getSpanContext().isValid()
-      assert connection.getResponseCode() == STATUS
-      return connection
-    }
-
-    expect:
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          name "someTrace"
-          hasNoParent()
-          attributes {
-          }
-        }
-        span(1) {
-          name expectedOperationName("GET")
-          kind CLIENT
-          childOf span(0)
-          attributes {
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.HTTP_URL.key}" "$url"
             "${SemanticAttributes.HTTP_METHOD.key}" "GET"
@@ -258,6 +185,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
             "${SemanticAttributes.HTTP_FLAVOR.key}" "1.1"
           }
         }
+        serverSpan(it, 2, span(1))
       }
     }
 
@@ -270,7 +198,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
 
   def "test post request"() {
     setup:
-    def url = server.address.resolve("/success").toURL()
+    def url = resolveAddress("/success").toURL()
     runUnderTrace("someTrace") {
       HttpURLConnection connection = url.openConnection()
       connection.setRequestMethod("POST")
@@ -308,7 +236,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           attributes {
             "${SemanticAttributes.NET_TRANSPORT.key}" IP_TCP
             "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
-            "${SemanticAttributes.NET_PEER_PORT.key}" server.address.port
+            "${SemanticAttributes.NET_PEER_PORT.key}" server.httpPort()
             "${SemanticAttributes.HTTP_URL.key}" "$url"
             "${SemanticAttributes.HTTP_METHOD.key}" "POST"
             "${SemanticAttributes.HTTP_STATUS_CODE.key}" STATUS
