@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.matcher
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader
 import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider
 import io.opentelemetry.javaagent.tooling.ExporterClassLoader
+import java.util.jar.JarFile
 import spock.lang.Specification
 
 class ClassLoaderMatcherTest extends Specification {
@@ -17,7 +18,7 @@ class ClassLoaderMatcherTest extends Specification {
   def "skips agent classloader"() {
     setup:
     URL url = AgentClassLoader.getProtectionDomain().getCodeSource().getLocation()
-    URLClassLoader agentLoader = new AgentClassLoader(url, "", null)
+    URLClassLoader agentLoader = new AgentClassLoader(new JarFile(new File(url.toURI()), false), "", null)
     expect:
     GlobalClassloaderIgnoresMatcher.skipClassLoader(matcherProvider).matches(agentLoader)
   }
