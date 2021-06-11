@@ -90,10 +90,8 @@ class OtTracePropagationTest extends SmokeTest {
   def "Should propagate test"() {
     setup:
     startTarget(11)
-    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/front"
-
     when:
-    def response = client().get(url).aggregate().join()
+    def response = client().get("/front").aggregate().join()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
     def traceIds = getSpanStream(traces)
       .map({ TraceId.fromBytes(it.getTraceId().toByteArray()).substring(16) })
