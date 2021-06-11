@@ -20,7 +20,7 @@ final class AsyncHttpClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerName(Request request, @Nullable Response response) {
+  public String peerName(Request request, @Nullable Response response) {
     return request.getUri().getHost();
   }
 
@@ -30,7 +30,8 @@ final class AsyncHttpClientNetAttributesExtractor
   }
 
   @Override
-  public @Nullable String peerIp(Request request, @Nullable Response response) {
+  @Nullable
+  public String peerIp(Request request, @Nullable Response response) {
     return null;
   }
 }
