@@ -48,28 +48,16 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<HttpRequest> impl
   @Override
   void sendRequestWithCallback(HttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     Http.get(system).singleRequest(request, materializer).whenComplete {response, throwable ->
-      response.discardEntityBytes(materializer)
+      if (throwable == null) {
+        response.discardEntityBytes(materializer)
+      }
       requestResult.complete({ response.status().intValue() }, throwable)
     }
-  }
-
-  // TODO(anuraaga): Context leak seems to prevent us from running asynchronous tests in a row.
-  // Disable for now.
-  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2639
-  @Override
-  boolean testCallback() {
-    false
   }
 
   @Override
   boolean testRedirects() {
     false
-  }
-
-  @Override
-  boolean testRemoteConnection() {
-    // Not sure how to properly set timeouts...
-    return false
   }
 
   @Override

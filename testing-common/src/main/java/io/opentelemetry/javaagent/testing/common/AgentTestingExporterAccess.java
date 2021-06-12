@@ -70,7 +70,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 
 public final class AgentTestingExporterAccess {
   private static final char TRACESTATE_KEY_VALUE_DELIMITER = '=';
@@ -262,7 +261,6 @@ public final class AgentTestingExporterAccess {
     return metrics;
   }
 
-  @NotNull
   private static MetricData createMetricData(
       Metric metric,
       io.opentelemetry.sdk.resources.Resource resource,

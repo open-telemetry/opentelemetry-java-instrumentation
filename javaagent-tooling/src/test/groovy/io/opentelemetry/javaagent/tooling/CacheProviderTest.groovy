@@ -106,7 +106,6 @@ class CacheProviderTest extends Specification {
     then:
     // not strictly guaranteed, but fine for this test
     cacheProvider.find("foo") != null
-    poolStrat.approximateSize() == 1
   }
 
   def "test loader equivalence"() {
@@ -130,7 +129,6 @@ class CacheProviderTest extends Specification {
     cacheProvider1B.find("foo") != null
 
     cacheProvider1A.find("foo").is(cacheProvider1B.find("foo"))
-    poolStrat.approximateSize() == 1
   }
 
   def "test loader separation"() {
@@ -158,48 +156,6 @@ class CacheProviderTest extends Specification {
     cacheProvider2.find("foo") != null
 
     !cacheProvider1.find("foo").is(cacheProvider2.find("foo"))
-    poolStrat.approximateSize() == 2
-  }
-
-  def "test capacity"() {
-    setup:
-    def poolStrat = new AgentCachingPoolStrategy()
-    def capacity = AgentCachingPoolStrategy.TYPE_CAPACITY
-
-    def loader1 = newClassLoader()
-    def loaderHash1 = loader1.hashCode()
-    def loaderRef1 = new WeakReference<ClassLoader>(loader1)
-
-    def loader2 = newClassLoader()
-    def loaderHash2 = loader2.hashCode()
-    def loaderRef2 = new WeakReference<ClassLoader>(loader2)
-
-    def cacheProvider1 = poolStrat.createCacheProvider(loaderHash1, loaderRef1)
-    def cacheProvider2 = poolStrat.createCacheProvider(loaderHash2, loaderRef2)
-
-    def id = 0
-
-    when:
-    (capacity / 2).times {
-      id += 1
-      cacheProvider1.register("foo${id}", newVoid())
-      cacheProvider2.register("foo${id}", newVoid())
-    }
-
-    then:
-    // cache will start to proactively free slots & size calc is approximate
-    poolStrat.approximateSize() >= 0.75 * capacity
-
-    when:
-    10.times {
-      id += 1
-      cacheProvider1.register("foo${id}", newVoid())
-      cacheProvider2.register("foo${id}", newVoid())
-    }
-
-    then:
-    // cache will start to proactively free slots & size calc is approximate
-    poolStrat.approximateSize() > 0.8 * capacity
   }
 
   static newVoid() {

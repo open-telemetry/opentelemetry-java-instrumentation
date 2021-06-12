@@ -53,7 +53,7 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "net.bytebuddy",
-    "1.10.18",
+    "1.11.2",
     listOf("byte-buddy", "byte-buddy-agent")
   ),
   DependencySet(

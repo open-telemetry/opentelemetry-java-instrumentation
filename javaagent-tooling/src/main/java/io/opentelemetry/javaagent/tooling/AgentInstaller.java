@@ -17,12 +17,14 @@ import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.extension.AgentExtension;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
+import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatcher;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Proxy;
@@ -61,12 +63,6 @@ public class AgentInstaller {
   // and continue using the javaagent
   private static final String FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG =
       "otel.javaagent.experimental.force-synchronous-agent-listeners";
-
-  // We set this system property when running the agent with unit tests to allow verifying that we
-  // don't ignore libraries that we actually attempt to instrument. It means either the list is
-  // wrong or a type matcher is.
-  private static final String ADDITIONAL_LIBRARY_IGNORES_ENABLED =
-      "otel.javaagent.testing.additional-library-ignores.enabled";
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
   private static volatile Instrumentation instrumentation;
@@ -140,9 +136,7 @@ public class AgentInstaller {
 
     ignoredAgentBuilder =
         ignoredAgentBuilder.or(
-            globalIgnoresMatcher(
-                config.getBooleanProperty(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true),
-                ignoreMatcherProvider));
+            globalIgnoresMatcher(ignoreMatcherProvider, loadIgnoredTypesMatcher(config)));
 
     ignoredAgentBuilder = ignoredAgentBuilder.or(matchesConfiguredExcludes());
 
@@ -178,6 +172,14 @@ public class AgentInstaller {
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
     runAfterAgentListeners(agentListeners, config);
     return resettableClassFileTransformer;
+  }
+
+  private static ElementMatcher<TypeDescription> loadIgnoredTypesMatcher(Config config) {
+    IgnoredTypesBuilderImpl ignoredTypesBuilder = new IgnoredTypesBuilderImpl();
+    for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
+      configurer.configure(config, ignoredTypesBuilder);
+    }
+    return ignoredTypesBuilder.buildIgnoredTypesMatcher();
   }
 
   private static void runBeforeAgentListeners(
@@ -248,6 +250,7 @@ public class AgentInstaller {
     }
   }
 
+  // TODO: rewrite to an IgnoredTypesConfigurer
   private static ElementMatcher.Junction<? super TypeDescription> matchesConfiguredExcludes() {
     List<String> excludedClasses = Config.get().getListProperty(EXCLUDED_CLASSES_CONFIG);
     ElementMatcher.Junction<? super TypeDescription> matcher = none();

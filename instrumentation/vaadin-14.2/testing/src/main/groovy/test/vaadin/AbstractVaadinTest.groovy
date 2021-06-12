@@ -12,9 +12,6 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import java.util.concurrent.TimeUnit
-import okhttp3.HttpUrl
-import okhttp3.Request
-import okhttp3.RequestBody
 import org.openqa.selenium.chrome.ChromeOptions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -77,14 +74,6 @@ abstract class AbstractVaadinTest extends AgentInstrumentationSpecification impl
   @Override
   String getContextPath() {
     return "/xyz"
-  }
-
-  Request.Builder request(HttpUrl url, String method, RequestBody body) {
-    return new Request.Builder()
-      .url(url)
-      .method(method, body)
-      .header("User-Agent", TEST_USER_AGENT)
-      .header("X-Forwarded-For", TEST_CLIENT_IP)
   }
 
   def waitForStart(driver) {

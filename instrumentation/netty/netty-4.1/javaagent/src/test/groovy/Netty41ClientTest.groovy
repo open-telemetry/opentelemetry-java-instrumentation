@@ -25,6 +25,8 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
+import io.netty.handler.ssl.SslContext
+import io.netty.handler.ssl.SslContextBuilder
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
@@ -39,29 +41,48 @@ import spock.lang.Unroll
 class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implements AgentTestTrait {
 
   @Shared
-  private Bootstrap bootstrap
+  private EventLoopGroup eventLoopGroup = buildEventLoopGroup()
 
-  def setupSpec() {
-    EventLoopGroup group = getEventLoopGroup()
-    bootstrap = new Bootstrap()
-    bootstrap.group(group)
+  @Shared
+  private Bootstrap bootstrap = buildBootstrap(false)
+
+  @Shared
+  private Bootstrap httpsBootstrap = buildBootstrap(true)
+
+  def cleanupSpec() {
+    eventLoopGroup?.shutdownGracefully()
+  }
+
+  Bootstrap buildBootstrap(boolean https) {
+    Bootstrap bootstrap = new Bootstrap()
+    bootstrap.group(eventLoopGroup)
       .channel(getChannelClass())
       .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
       .handler(new ChannelInitializer<SocketChannel>() {
         @Override
         protected void initChannel(SocketChannel socketChannel) throws Exception {
           ChannelPipeline pipeline = socketChannel.pipeline()
+          if (https) {
+            SslContext sslContext = SslContextBuilder.forClient().build()
+            pipeline.addLast(sslContext.newHandler(socketChannel.alloc()))
+          }
           pipeline.addLast(new HttpClientCodec())
         }
       })
+
+    return bootstrap
   }
 
-  EventLoopGroup getEventLoopGroup() {
+  EventLoopGroup buildEventLoopGroup() {
     return new NioEventLoopGroup()
   }
 
   Class<Channel> getChannelClass() {
     return NioSocketChannel
+  }
+
+  Bootstrap getBootstrap(URI uri) {
+    return uri.getScheme() == "https" ? httpsBootstrap : bootstrap
   }
 
   @Override
@@ -74,7 +95,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
   @Override
   int sendRequest(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers) {
-    def channel = bootstrap.connect(uri.host, getPort(uri)).sync().channel()
+    def channel = getBootstrap(uri).connect(uri.host, getPort(uri)).sync().channel()
     def result = new CompletableFuture<Integer>()
     channel.pipeline().addLast(new ClientHandler(result))
     channel.writeAndFlush(request).get()
@@ -85,7 +106,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   void sendRequestWithCallback(DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers, RequestResult requestResult) {
     Channel ch
     try {
-      ch = bootstrap.connect(uri.host, getPort(uri)).sync().channel()
+      ch = getBootstrap(uri).connect(uri.host, getPort(uri)).sync().channel()
     } catch (Exception exception) {
       requestResult.complete(exception)
       return
@@ -121,11 +142,6 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
 
   @Override
   boolean testRedirects() {
-    false
-  }
-
-  @Override
-  boolean testHttps() {
     false
   }
 
