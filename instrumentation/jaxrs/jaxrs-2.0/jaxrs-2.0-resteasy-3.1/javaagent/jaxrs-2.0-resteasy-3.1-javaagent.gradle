@@ -39,7 +39,8 @@ dependencies {
   testLibrary "org.jboss.resteasy:resteasy-servlet-initializer:3.1.0.Final"
 
   // artifact name changed from 'resteasy-jaxrs' to 'resteasy-core' starting from version 4.0.0
-  latestDepTestLibrary "org.jboss.resteasy:resteasy-core:+"
+  // TODO (trask) 4.6.1.Beta3 appears broken, revisit after next release
+  latestDepTestLibrary "org.jboss.resteasy:resteasy-core:4.6.1.Beta2"
 }
 
 test {
