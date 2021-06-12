@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -48,6 +49,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * plugin.
  */
 public class ReferenceCollector {
+
+  // ReferenceCollector's classloader has a parent including the Gradle classpath, such as buildSrc
+  // dependencies. These may have resources take precedence over ones we define, so we need to make
+  // sure to not include them when loading resources.
+  private static final ClassLoader RESOURCE_LOADER =
+      new URLClassLoader(
+          ((URLClassLoader) ReferenceCollector.class.getClassLoader()).getURLs(), null);
+
   private final Map<String, ClassRef> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
   private final Map<String, String> contextStoreClasses = new LinkedHashMap<>();
@@ -164,10 +173,7 @@ public class ReferenceCollector {
 
   private static InputStream getResourceStream(String resource) throws IOException {
     URLConnection connection =
-        checkNotNull(
-                ReferenceCollector.class.getClassLoader().getResource(resource),
-                "Couldn't find resource %s",
-                resource)
+        checkNotNull(RESOURCE_LOADER.getResource(resource), "Couldn't find resource %s", resource)
             .openConnection();
 
     // Since the JarFile cache is not per class loader, but global with path as key, using cache may
