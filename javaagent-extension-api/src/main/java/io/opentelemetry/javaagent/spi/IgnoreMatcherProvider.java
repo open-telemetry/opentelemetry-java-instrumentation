@@ -16,7 +16,11 @@ import net.bytebuddy.description.type.TypeDescription;
  *
  * <p>This is a service provider interface that requires implementations to be registered in {@code
  * META-INF/services} folder. Only a single implementation of this SPI can be provided.
+ *
+ * @deprecated Please use {@link io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer}
+ *     instead.
  */
+@Deprecated
 public interface IgnoreMatcherProvider {
 
   /**

@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.asynchttpclient;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.AsyncHttpClientTracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -17,14 +17,13 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.api.InstrumentationContext;
-import io.opentelemetry.javaagent.instrumentation.api.Pair;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.Request;
 
-public class RequestInstrumentation implements TypeInstrumentation {
+public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,11 +37,11 @@ public class RequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.asynchttpclient.Request")))
             .and(takesArgument(1, named("org.asynchttpclient.AsyncHandler")))
             .and(isPublic()),
-        this.getClass().getName() + "$ExecuteAdvice");
+        this.getClass().getName() + "$ExecuteRequestAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ExecuteAdvice {
+  public static class ExecuteRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -50,13 +49,27 @@ public class RequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) AsyncHandler<?> handler,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      Context context = tracer().startSpan(parentContext, request, request);
-      InstrumentationContext.get(AsyncHandler.class, Pair.class)
-          .put(handler, Pair.of(parentContext, context));
+      Context context = instrumenter().start(parentContext, request);
+
+      // TODO (trask) instead of using InstrumentationContext, wrap the AsyncHandler in an
+      // instrumented AsyncHandler which delegates to the original AsyncHandler
+      // (similar to other http client instrumentations, and needed for library instrumentation)
+      //
+      // when doing this, note that AsyncHttpClient has different behavior if the AsyncHandler also
+      // implements ProgressAsyncHandler or StreamedAsyncHandler (or both)
+      // so four wrappers are needed to match the different combinations so that the wrapper won't
+      // affect the behavior
+      //
+      // when doing this, also note that there was a breaking change in AsyncHandler between 2.0 and
+      // 2.1, so the instrumentation module will need to be essentially duplicated (or a common
+      // module introduced)
+
+      InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class)
+          .put(handler, AsyncHandlerData.create(parentContext, context, request));
       scope = context.makeCurrent();
     }
 

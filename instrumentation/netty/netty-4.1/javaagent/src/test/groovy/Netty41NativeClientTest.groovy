@@ -16,7 +16,7 @@ import org.junit.Assume
 // netty client test with epoll/kqueue native library
 class Netty41NativeClientTest extends Netty41ClientTest {
 
-  EventLoopGroup getEventLoopGroup() {
+  EventLoopGroup buildEventLoopGroup() {
     // linux
     if (Epoll.isAvailable()) {
       return new EpollEventLoopGroup()
@@ -28,7 +28,7 @@ class Netty41NativeClientTest extends Netty41ClientTest {
 
     // skip test when native library was not found
     Assume.assumeTrue("Native library was not found", false)
-    return super.getEventLoopGroup()
+    return super.buildEventLoopGroup()
   }
 
   @Override

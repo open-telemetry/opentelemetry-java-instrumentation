@@ -14,9 +14,6 @@ import javax.servlet.ServletException
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import okhttp3.HttpUrl
-import okhttp3.Request
-import okhttp3.RequestBody
 import spock.lang.Unroll
 
 abstract class AbstractServlet3MappingTest<SERVER, CONTEXT> extends AgentInstrumentationSpecification implements HttpServerTestTrait<SERVER> {
@@ -33,12 +30,6 @@ abstract class AbstractServlet3MappingTest<SERVER, CONTEXT> extends AgentInstrum
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
       response.getWriter().write("Ok")
     }
-  }
-
-  Request.Builder request(HttpUrl url, String method, RequestBody body) {
-    return new Request.Builder()
-      .url(url)
-      .method(method, body)
   }
 
   @Unroll

@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.Dsl
 import org.asynchttpclient.Request
@@ -16,9 +18,11 @@ import spock.lang.Shared
 
 class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTrait {
 
+  // request timeout is needed in addition to connect timeout on async-http-client versions 2.1.0+
   @AutoCleanup
   @Shared
-  def client = Dsl.asyncHttpClient(Dsl.config().setConnectTimeout(CONNECT_TIMEOUT_MS))
+  def client = Dsl.asyncHttpClient(Dsl.config().setConnectTimeout(CONNECT_TIMEOUT_MS)
+    .setRequestTimeout(CONNECT_TIMEOUT_MS))
 
   @Override
   Request buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -63,9 +67,11 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   }
 
   @Override
-  boolean testHttps() {
-    false
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    Set<AttributeKey<?>> extra = [
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_TARGET
+    ]
+    super.httpAttributes(uri) + extra
   }
 }
-
-
