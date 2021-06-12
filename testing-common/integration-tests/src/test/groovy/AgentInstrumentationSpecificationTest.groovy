@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 // this test is run using
 //   -Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass$NestedClass
 // (see integration-tests.gradle)
-class AgentTestRunnerTest extends AgentInstrumentationSpecification {
+class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecification {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
 
   def "classpath setup"() {
@@ -57,7 +57,7 @@ class AgentTestRunnerTest extends AgentInstrumentationSpecification {
 
   def "logging works"() {
     when:
-    LoggerFactory.getLogger(AgentTestRunnerTest).debug("hello")
+    LoggerFactory.getLogger(AgentInstrumentationSpecificationTest).debug("hello")
     then:
     noExceptionThrown()
   }
