@@ -24,8 +24,6 @@ testSets {
   }
 }
 
-// https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/919
-jms2Test.forkEvery 1
 test.dependsOn jms2Test
 dependencies {
   compileOnly "javax.jms:jms-api:1.1-rev-1"
