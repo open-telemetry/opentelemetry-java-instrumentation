@@ -353,12 +353,23 @@ public final class AgentTestingExporterAccess {
   private static List<DoublePointData> getDoublePointDatas(List<NumberDataPoint> points) {
     return points.stream()
         .map(
-            point ->
-                DoublePointData.create(
-                    point.getStartTimeUnixNano(),
-                    point.getTimeUnixNano(),
-                    createLabels(point.getLabelsList()),
-                    point.getAsDouble()))
+            point -> {
+              final double value;
+              switch (point.getValueCase()) {
+                case AS_INT:
+                  value = point.getAsInt();
+                  break;
+                case AS_DOUBLE:
+                default:
+                  value = point.getAsDouble();
+                  break;
+              }
+              return DoublePointData.create(
+                  point.getStartTimeUnixNano(),
+                  point.getTimeUnixNano(),
+                  createLabels(point.getLabelsList()),
+                  value);
+            })
         .collect(toList());
   }
 
