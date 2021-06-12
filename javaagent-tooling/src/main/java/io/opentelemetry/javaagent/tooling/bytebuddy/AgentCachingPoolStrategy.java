@@ -36,7 +36,6 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   // Many things are package visible for testing purposes --
   // others to avoid creation of synthetic accessors
 
-  static final int LOADER_CAPACITY = 64;
   static final int TYPE_CAPACITY = 64;
 
   static final int BOOTSTRAP_HASH = 7236344; // Just a random number
