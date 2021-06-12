@@ -11,7 +11,6 @@ import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import java.util.jar.Attributes
 import java.util.jar.JarFile
-import okhttp3.Request
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
@@ -26,17 +25,14 @@ class SpringBootSmokeTest extends SmokeTest {
   def "spring boot smoke test on JDK #jdk"(int jdk) {
     setup:
     def output = startTarget(jdk)
-    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/greeting"
-    def request = new Request.Builder().url(url).get().build()
-
     def currentAgentVersion = new JarFile(agentPath).getManifest().getMainAttributes().get(Attributes.Name.IMPLEMENTATION_VERSION).toString()
 
     when:
-    def response = CLIENT.newCall(request).execute()
+    def response = client().get("/greeting").aggregate().join()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
     then: "spans are exported"
-    response.body().string() == "Hi!"
+    response.contentUtf8() == "Hi!"
     countSpansByName(traces, '/greeting') == 1
     countSpansByName(traces, 'WebController.greeting') == 1
     countSpansByName(traces, 'WebController.withSpan') == 1

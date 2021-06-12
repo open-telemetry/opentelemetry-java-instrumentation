@@ -9,9 +9,6 @@ import static Resource.Test3
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse
-import okhttp3.HttpUrl
-import okhttp3.Request
-import okhttp3.RequestBody
 import org.apache.cxf.endpoint.Server
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean
 
@@ -43,12 +40,6 @@ class CxfFilterTest extends JaxRsFilterTest implements HttpServerTestTrait<Serve
   @Override
   void stopServer(Server httpServer) {
     httpServer.stop()
-  }
-
-  Request.Builder request(HttpUrl url, String method, RequestBody body) {
-    return new Request.Builder()
-      .url(url)
-      .method(method, body)
   }
 
   @Override

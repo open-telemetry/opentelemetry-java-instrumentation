@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import okhttp3.Request
 import spock.lang.IgnoreIf
 
 @IgnoreIf({ os.windows })
@@ -31,12 +30,9 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
   def "spring boot with probability sampling enabled on JDK #jdk"(int jdk) {
     setup:
     startTarget(jdk)
-    String url = "http://localhost:${containerManager.getTargetMappedPort(8080)}/greeting"
-    def request = new Request.Builder().url(url).get().build()
-
     when:
     for (int i = 1; i <= NUM_TRIES; i++) {
-      CLIENT.newCall(request).execute().close()
+      client().get("/greeting").aggregate().join()
     }
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 

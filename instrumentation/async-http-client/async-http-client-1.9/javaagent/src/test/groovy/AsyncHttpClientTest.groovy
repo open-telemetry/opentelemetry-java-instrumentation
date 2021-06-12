@@ -61,11 +61,6 @@ class AsyncHttpClientTest extends HttpClientTest<Request> implements AgentTestTr
   }
 
   @Override
-  boolean testHttps() {
-    false
-  }
-
-  @Override
   SingleConnection createSingleConnection(String host, int port) {
     // AsyncHttpClient does not support HTTP 1.1 pipelining nor waiting for connection pool slots to
     // free up (it immediately throws "Too many connections" IOException). Therefore making a single

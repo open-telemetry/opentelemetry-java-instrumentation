@@ -148,9 +148,4 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
     // these tests will pass, but they don't really test anything since REQUEST is Void
     false
   }
-
-  @Override
-  boolean testHttps() {
-    false
-  }
 }

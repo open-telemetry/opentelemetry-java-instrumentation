@@ -5,8 +5,6 @@
 
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.instrumentation.spring.integration.SpringIntegrationTracing
 import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.Executors
@@ -18,7 +16,6 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.event.EventListener
 import org.springframework.integration.channel.DirectChannel
-import org.springframework.integration.config.GlobalChannelInterceptor
 import org.springframework.messaging.Message
 import org.springframework.messaging.SubscribableChannel
 import org.springframework.messaging.support.ChannelInterceptor
@@ -34,7 +31,10 @@ class SpringIntegrationTracingTest extends LibraryInstrumentationSpecification {
   ConfigurableApplicationContext applicationContext
 
   def setupSpec() {
-    def app = new SpringApplication(MessageChannelsConfig)
+    def app = new SpringApplication(MessageChannelsConfig, GlobalInterceptorSpringConfig)
+    app.setDefaultProperties([
+      "spring.main.web-application-type": "none"
+    ])
     applicationContext = app.run()
   }
 
@@ -147,12 +147,12 @@ class SpringIntegrationTracingTest extends LibraryInstrumentationSpecification {
     }
 
     @Bean
-    SubscribableChannel executorChannel() {
+    SubscribableChannel executorChannel(ChannelInterceptor otelInterceptor) {
       def channel = new ExecutorSubscribableChannel(Executors.newSingleThreadExecutor())
       if (!Boolean.getBoolean("testLatestDeps")) {
         // spring does not inject the interceptor in 4.1 because ExecutorSubscribableChannel isn't ChannelInterceptorAware
         // in later versions spring injects the global interceptor into InterceptableChannel (which ExecutorSubscribableChannel is)
-        channel.addInterceptor(otelInterceptor())
+        channel.addInterceptor(otelInterceptor)
       }
       channel
     }
@@ -172,12 +172,6 @@ class SpringIntegrationTracingTest extends LibraryInstrumentationSpecification {
       linkedChannel1().subscribe { message ->
         linkedChannel2().send(message)
       }
-    }
-
-    @GlobalChannelInterceptor
-    @Bean
-    ChannelInterceptor otelInterceptor() {
-      SpringIntegrationTracing.create(GlobalOpenTelemetry.get()).newChannelInterceptor()
     }
   }
 }

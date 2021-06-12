@@ -33,12 +33,6 @@ dependencies {
   implementation "io.opentelemetry:opentelemetry-exporter-logging"
   implementation project(':instrumentation-api')
 
-  api "com.squareup.okhttp3:okhttp:4.9.0"
-  api "com.squareup.okhttp3:logging-interceptor:4.9.0"
-
-  //TODO replace with Servlet API?
-  implementation "org.eclipse.jetty:jetty-server:8.0.0.v20110901"
-
   annotationProcessor "com.google.auto.service:auto-service"
   compileOnly "com.google.auto.service:auto-service"
 
