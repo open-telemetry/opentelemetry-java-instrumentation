@@ -66,3 +66,21 @@ rough guideline of what are commonly accepted static imports:
 * Immutable constants (where clearly named)
 * Singleton instances (especially where clearly named an hopefully immutable)
 * `tracer()` methods that expose tracer singleton instances
+
+### Ordering of class contents
+
+The following order is preferred:
+
+* Static fields (final before non-final)
+* Instance fields (final before non-final)
+* Static construction methods (includes static factory methods and builder construction methods)
+* Constructors
+* Methods
+* Nested classes
+
+If methods call each other, it's nice if the calling method is ordered (somewhere) above
+the method that it calls. So, for one example, a private method would be ordered (somewhere) below
+the non-private methods that use it.
+
+In static utility classes (where all members are static), the private constructor
+(used to prevent construction) should be ordered after methods instead of before methods.

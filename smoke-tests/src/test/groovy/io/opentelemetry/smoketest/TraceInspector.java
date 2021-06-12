@@ -6,6 +6,7 @@
 package io.opentelemetry.smoketest;
 
 import com.google.protobuf.ByteString;
+import groovy.lang.GString;
 import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.common.v1.AnyValue;
@@ -51,11 +52,17 @@ public class TraceInspector {
   }
 
   public long countFilteredAttributes(String attributeName, Object attributeValue) {
+    final Object value;
+    if (attributeValue instanceof GString) {
+      value = attributeValue.toString();
+    } else {
+      value = attributeValue;
+    }
     return getSpanStream()
         .flatMap(s -> s.getAttributesList().stream())
         .filter(a -> a.getKey().equals(attributeName))
         .map(a -> a.getValue().getStringValue())
-        .filter(s -> s.equals(attributeValue))
+        .filter(s -> s.equals(value))
         .count();
   }
 

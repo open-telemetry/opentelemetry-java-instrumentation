@@ -28,12 +28,14 @@ import spock.lang.Shared
 class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implements AgentTestTrait {
 
   @Shared
+  private EventLoopGroup eventLoopGroup = new NioEventLoopGroup()
+
+  @Shared
   private Bootstrap bootstrap
 
   def setupSpec() {
-    EventLoopGroup group = new NioEventLoopGroup()
     bootstrap = new Bootstrap()
-    bootstrap.group(group)
+    bootstrap.group(eventLoopGroup)
       .channel(NioSocketChannel)
       .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
       .handler(new ChannelInitializer<SocketChannel>() {
@@ -43,6 +45,10 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
           pipeline.addLast(new HttpClientCodec())
         }
       })
+  }
+
+  def cleanupSpec() {
+    eventLoopGroup?.shutdownGracefully()
   }
 
   @Override
@@ -84,7 +90,6 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return "CONNECT"
       default:
@@ -96,7 +101,6 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
-      case "http://www.google.com:81/": // dropped request
       case "https://192.0.2.1/": // non routable address
         return []
     }

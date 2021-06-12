@@ -16,6 +16,11 @@ import redis.clients.jedis.commands.ProtocolCommand;
 @AutoValue
 public abstract class JedisRequest {
 
+  public static JedisRequest create(
+      Connection connection, ProtocolCommand command, List<byte[]> args) {
+    return new AutoValue_JedisRequest(connection, command, args);
+  }
+
   public abstract Connection getConnection();
 
   public abstract ProtocolCommand getCommand();
@@ -35,10 +40,5 @@ public abstract class JedisRequest {
 
   public String getStatement() {
     return RedisCommandSanitizer.sanitize(getOperation(), getArgs());
-  }
-
-  public static JedisRequest create(
-      Connection connection, ProtocolCommand command, List<byte[]> args) {
-    return new AutoValue_JedisRequest(connection, command, args);
   }
 }

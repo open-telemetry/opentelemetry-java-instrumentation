@@ -17,13 +17,11 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse
 import io.undertow.Handlers
 import io.undertow.Undertow
 import io.undertow.util.Headers
 import io.undertow.util.StatusCodes
-import okhttp3.HttpUrl
-import okhttp3.Response
-
 //TODO make test which mixes handlers and servlets
 class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTrait {
 
@@ -99,13 +97,11 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
   def "test send response"() {
     setup:
     def uri = address.resolve("sendResponse")
-    def url = HttpUrl.get(uri).newBuilder().build()
-    def request = request(url, "GET", null).build()
-    Response response = client.newCall(request).execute()
+    AggregatedHttpResponse response = client.get(uri.toString()).aggregate().join()
 
     expect:
-    response.code() == 200
-    response.body().string().trim() == "sendResponse"
+    response.status().code() == 200
+    response.contentUtf8().trim() == "sendResponse"
 
     and:
     assertTraces(1) {
@@ -141,13 +137,11 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
   def "test send response with exception"() {
     setup:
     def uri = address.resolve("sendResponseWithException")
-    def url = HttpUrl.get(uri).newBuilder().build()
-    def request = request(url, "GET", null).build()
-    Response response = client.newCall(request).execute()
+    AggregatedHttpResponse response = client.get(uri.toString()).aggregate().join()
 
     expect:
-    response.code() == 200
-    response.body().string().trim() == "sendResponseWithException"
+    response.status().code() == 200
+    response.contentUtf8().trim() == "sendResponseWithException"
 
     and:
     assertTraces(1) {

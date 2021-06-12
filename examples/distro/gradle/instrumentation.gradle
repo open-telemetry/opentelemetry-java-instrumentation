@@ -38,6 +38,8 @@ shadowJar {
 }
 
 tasks.withType(Test).configureEach {
+  inputs.file(shadowJar.archiveFile)
+
   jvmArgs "-Dotel.javaagent.debug=true"
   jvmArgs "-javaagent:${configurations.testAgent.files.first().absolutePath}"
   jvmArgs "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"

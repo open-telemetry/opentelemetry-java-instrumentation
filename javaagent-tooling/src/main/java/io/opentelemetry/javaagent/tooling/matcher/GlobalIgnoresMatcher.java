@@ -20,31 +20,27 @@ import net.bytebuddy.matcher.ElementMatcher;
  *       Ignore classes that are unsafe or pointless to transform. 'System' level classes like jvm
  *       classes or groovy classes, other tracers, debuggers, etc.
  * </ul>
- *
- * <ul>
- *   Uses {@link AdditionalLibraryIgnoresMatcher} to also ignore additional classes to minimize
- *   number of classes we apply expensive matchers to.
- * </ul>
  */
+// TODO: rewrite to an IgnoredTypesConfigurer
 public class GlobalIgnoresMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
 
   private static final Pattern COM_MCHANGE_PROXY =
       Pattern.compile("com\\.mchange\\.v2\\.c3p0\\..*Proxy");
 
   public static ElementMatcher.Junction<TypeDescription> globalIgnoresMatcher(
-      boolean additionalLibraryMatcher, IgnoreMatcherProvider ignoreMatcherProviders) {
-    return new GlobalIgnoresMatcher(additionalLibraryMatcher, ignoreMatcherProviders);
+      IgnoreMatcherProvider ignoreMatcherProviders,
+      ElementMatcher<TypeDescription> ignoredTypeMatcher) {
+    return new GlobalIgnoresMatcher(ignoreMatcherProviders, ignoredTypeMatcher);
   }
 
-  private final ElementMatcher<TypeDescription> additionalLibraryIgnoreMatcher =
-      AdditionalLibraryIgnoresMatcher.additionalLibraryIgnoresMatcher();
-  private final boolean additionalLibraryMatcher;
   private final IgnoreMatcherProvider ignoreMatcherProvider;
+  private final ElementMatcher<TypeDescription> ignoredTypeMatcher;
 
   private GlobalIgnoresMatcher(
-      boolean additionalLibraryMatcher, IgnoreMatcherProvider ignoreMatcherProvider) {
-    this.additionalLibraryMatcher = additionalLibraryMatcher;
+      IgnoreMatcherProvider ignoreMatcherProvider,
+      ElementMatcher<TypeDescription> ignoredTypeMatcher) {
     this.ignoreMatcherProvider = ignoreMatcherProvider;
+    this.ignoredTypeMatcher = ignoredTypeMatcher;
   }
 
   /**
@@ -207,32 +203,21 @@ public class GlobalIgnoresMatcher extends ElementMatcher.Junction.AbstractBase<T
       return true;
     }
 
-    if (additionalLibraryMatcher && additionalLibraryIgnoreMatcher.matches(target)) {
-      return true;
-    }
-
-    return false;
+    return ignoredTypeMatcher.matches(target);
   }
 
   @Override
   public String toString() {
-    return "globalIgnoresMatcher(" + additionalLibraryIgnoreMatcher.toString() + ")";
+    return "globalIgnoresMatcher()";
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
-    }
-    if (!(obj instanceof GlobalIgnoresMatcher)) {
-      return false;
-    }
-    GlobalIgnoresMatcher other = (GlobalIgnoresMatcher) obj;
-    return additionalLibraryIgnoreMatcher.equals(other.additionalLibraryIgnoreMatcher);
+    return obj instanceof GlobalIgnoresMatcher;
   }
 
   @Override
   public int hashCode() {
-    return additionalLibraryIgnoreMatcher.hashCode();
+    return 17;
   }
 }

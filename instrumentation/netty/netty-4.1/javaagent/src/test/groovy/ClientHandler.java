@@ -5,8 +5,11 @@
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.util.AttributeKey;
 import java.util.concurrent.CompletableFuture;
 
 /*
@@ -15,6 +18,10 @@ When request initiated by a test gets a response, calls a given callback and com
 future with response's status code.
 */
 public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
+
+  private static final AttributeKey<HttpResponse> HTTP_RESPONSE =
+      AttributeKey.valueOf(ClientHandler.class, "http-response");
+
   private final CompletableFuture<Integer> responseCode;
 
   public ClientHandler(CompletableFuture<Integer> responseCode) {
@@ -23,11 +30,16 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
   @Override
   public void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
-    if (msg instanceof HttpResponse) {
+    if (msg instanceof FullHttpResponse) {
       ctx.pipeline().remove(this);
-
-      HttpResponse response = (HttpResponse) msg;
+      FullHttpResponse response = (FullHttpResponse) msg;
       responseCode.complete(response.getStatus().code());
+    } else if (msg instanceof HttpResponse) {
+      // Headers before body have been received, store them to use when finishing the span.
+      ctx.channel().attr(HTTP_RESPONSE).set((HttpResponse) msg);
+    } else if (msg instanceof LastHttpContent) {
+      ctx.pipeline().remove(this);
+      responseCode.complete(ctx.channel().attr(HTTP_RESPONSE).get().getStatus().code());
     }
   }
 

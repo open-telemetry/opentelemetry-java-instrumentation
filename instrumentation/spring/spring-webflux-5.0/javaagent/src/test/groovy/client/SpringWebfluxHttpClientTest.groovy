@@ -66,7 +66,6 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<WebClient.RequestBodySp
             exception = exception.getCause()
           }
           break
-        case "http://www.google.com:81/": // dropped request
         case "https://192.0.2.1/": // non routable address
           exception = exception.getCause()
       }

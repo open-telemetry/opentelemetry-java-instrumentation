@@ -74,8 +74,10 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
                 response.setContent(responseContent)
                 break
               case INDEXED_CHILD:
+                responseContent = ChannelBuffers.EMPTY_BUFFER
                 endpoint.collectSpanAttributes { new QueryStringDecoder(uri).getParameters().get(it).find() }
                 response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status))
+                response.setContent(responseContent)
                 break
               case QUERY_PARAM:
                 responseContent = ChannelBuffers.copiedBuffer(uri.query, CharsetUtil.UTF_8)
@@ -83,7 +85,9 @@ class Netty38ServerTest extends HttpServerTest<ServerBootstrap> implements Agent
                 response.setContent(responseContent)
                 break
               case REDIRECT:
+                responseContent = ChannelBuffers.EMPTY_BUFFER
                 response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status))
+                response.setContent(responseContent)
                 response.headers().set(LOCATION, endpoint.body)
                 break
               case EXCEPTION:

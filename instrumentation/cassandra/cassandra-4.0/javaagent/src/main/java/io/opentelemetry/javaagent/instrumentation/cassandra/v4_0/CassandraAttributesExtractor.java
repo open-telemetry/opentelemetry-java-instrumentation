@@ -29,12 +29,14 @@ final class CassandraAttributesExtractor
 
   @Override
   protected void onEnd(
-      AttributesBuilder attributes, CassandraRequest request, @Nullable ExecutionInfo response) {
-    if (response == null) {
+      AttributesBuilder attributes,
+      CassandraRequest request,
+      @Nullable ExecutionInfo executionInfo) {
+    if (executionInfo == null) {
       return;
     }
 
-    Node coordinator = response.getCoordinator();
+    Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
       if (coordinator.getDatacenter() != null) {
         set(
@@ -52,9 +54,9 @@ final class CassandraAttributesExtractor
     set(
         attributes,
         SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT,
-        (long) response.getSpeculativeExecutionCount());
+        (long) executionInfo.getSpeculativeExecutionCount());
 
-    Statement<?> statement = response.getStatement();
+    Statement<?> statement = executionInfo.getStatement();
     DriverExecutionProfile config =
         request.getSession().getContext().getConfig().getDefaultProfile();
     if (statement.getConsistencyLevel() != null) {

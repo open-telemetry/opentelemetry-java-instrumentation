@@ -133,6 +133,8 @@ dependencies {
 }
 
 tasks.withType(Test).configureEach {
+  inputs.file(shadowJar.archiveFile)
+
   jvmArgs "-Dotel.javaagent.debug=true"
 
   doFirst {
