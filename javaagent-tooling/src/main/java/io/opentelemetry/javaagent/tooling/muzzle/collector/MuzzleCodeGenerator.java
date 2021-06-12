@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.extension.muzzle.Flag;
 import io.opentelemetry.javaagent.extension.muzzle.MethodRef;
 import io.opentelemetry.javaagent.extension.muzzle.Source;
 import io.opentelemetry.javaagent.tooling.Utils;
+import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -158,7 +159,14 @@ class MuzzleCodeGenerator implements AsmVisitorWrapper {
         typeInstrumentation.transform(adviceClassNameCollector);
       }
 
-      ReferenceCollector collector = new ReferenceCollector(instrumentationModule::isHelperClass);
+      // the classloader has a parent including the Gradle classpath, such as buildSrc dependencies.
+      // These may have resources take precedence over ones we define, so we need to make sure to
+      // not include them when loading resources.
+      ClassLoader resourceLoader =
+          new URLClassLoader(
+              ((URLClassLoader) MuzzleCodeGenerator.class.getClassLoader()).getURLs(), null);
+      ReferenceCollector collector =
+          new ReferenceCollector(instrumentationModule::isHelperClass, resourceLoader);
       for (String adviceClass : adviceClassNameCollector.getAdviceClassNames()) {
         collector.collectReferencesFromAdvice(adviceClass);
       }

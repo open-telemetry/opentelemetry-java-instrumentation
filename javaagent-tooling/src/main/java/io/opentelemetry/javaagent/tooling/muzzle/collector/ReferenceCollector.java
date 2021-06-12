@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -50,22 +49,23 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class ReferenceCollector {
 
-  // ReferenceCollector's classloader has a parent including the Gradle classpath, such as buildSrc
-  // dependencies. These may have resources take precedence over ones we define, so we need to make
-  // sure to not include them when loading resources.
-  private static final ClassLoader RESOURCE_LOADER =
-      new URLClassLoader(
-          ((URLClassLoader) ReferenceCollector.class.getClassLoader()).getURLs(), null);
-
   private final Map<String, ClassRef> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
   private final Map<String, String> contextStoreClasses = new LinkedHashMap<>();
   private final Set<String> visitedClasses = new HashSet<>();
   private final InstrumentationClassPredicate instrumentationClassPredicate;
+  private final ClassLoader resourceLoader;
 
+  // only used by tests
   public ReferenceCollector(Predicate<String> libraryInstrumentationPredicate) {
+    this(libraryInstrumentationPredicate, ReferenceCollector.class.getClassLoader());
+  }
+
+  public ReferenceCollector(
+      Predicate<String> libraryInstrumentationPredicate, ClassLoader resourceLoader) {
     this.instrumentationClassPredicate =
         new InstrumentationClassPredicate(libraryInstrumentationPredicate);
+    this.resourceLoader = resourceLoader;
   }
 
   /**
@@ -167,13 +167,13 @@ public class ReferenceCollector {
     }
   }
 
-  private static InputStream getClassFileStream(String className) throws IOException {
+  private InputStream getClassFileStream(String className) throws IOException {
     return getResourceStream(Utils.getResourceName(className));
   }
 
-  private static InputStream getResourceStream(String resource) throws IOException {
+  private InputStream getResourceStream(String resource) throws IOException {
     URLConnection connection =
-        checkNotNull(RESOURCE_LOADER.getResource(resource), "Couldn't find resource %s", resource)
+        checkNotNull(resourceLoader.getResource(resource), "Couldn't find resource %s", resource)
             .openConnection();
 
     // Since the JarFile cache is not per class loader, but global with path as key, using cache may
