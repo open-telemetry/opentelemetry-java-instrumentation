@@ -68,6 +68,8 @@ dependencies {
 
 afterEvaluate {
   tasks.withType(Test).configureEach {
+    inputs.file(shadowJar.archiveFile)
+
     jvmArgs "-Dotel.javaagent.debug=true"
     jvmArgs "-javaagent:${shadowJar.archiveFile.get().asFile.absolutePath}"
 
