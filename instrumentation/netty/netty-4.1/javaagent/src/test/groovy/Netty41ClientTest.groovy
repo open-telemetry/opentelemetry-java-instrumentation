@@ -27,7 +27,6 @@ import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
@@ -64,7 +63,7 @@ class Netty41ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
         protected void initChannel(SocketChannel socketChannel) throws Exception {
           ChannelPipeline pipeline = socketChannel.pipeline()
           if (https) {
-            SslContext sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build()
+            SslContext sslContext = SslContextBuilder.forClient().build()
             pipeline.addLast(sslContext.newHandler(socketChannel.alloc()))
           }
           pipeline.addLast(new HttpClientCodec())
