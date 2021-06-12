@@ -50,7 +50,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    * </ul>
    */
   final Cache<ClassLoader, WeakReference<ClassLoader>> loaderRefCache =
-      Cache.newBuilder().setWeakKeys().setMaximumSize(LOADER_CAPACITY).build();
+      Cache.newBuilder().setWeakKeys().build();
 
   /**
    * Single shared Type.Resolution cache -- uses a composite key -- conceptually of loader & name
