@@ -44,6 +44,10 @@ public class ExtensionClassLoader extends URLClassLoader {
                 System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR"))));
     // TODO when logging is configured add warning about deprecated property
 
+    if (extension.isEmpty()) {
+      return parent;
+    }
+
     List<ClassLoader> delegates = new ArrayList<>(extension.size());
     for (URL url : extension) {
       delegates.add(getDelegate(parent, url));
