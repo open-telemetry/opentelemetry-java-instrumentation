@@ -44,6 +44,7 @@ dependencies {
   implementation("org.ow2.asm:asm:7.0-beta")
   implementation("org.ow2.asm:asm-tree:7.0-beta")
   implementation("org.apache.httpcomponents:httpclient:4.5.10")
+  // When updating, also update dependencyManagement/dependencyManagement.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.2")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.1")
