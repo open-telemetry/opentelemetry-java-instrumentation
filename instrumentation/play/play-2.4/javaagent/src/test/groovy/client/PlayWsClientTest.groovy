@@ -63,11 +63,6 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   }
 
   @Override
-  boolean testHttps() {
-    false
-  }
-
-  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     Set<AttributeKey<?>> extra = [
       SemanticAttributes.HTTP_SCHEME,

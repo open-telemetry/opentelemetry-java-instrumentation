@@ -35,7 +35,8 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       return;
     }
 
-    Context context = tracer().startSpan(parentContext, ctx, (HttpRequest) msg);
+    NettyRequestWrapper requestWrapper = new NettyRequestWrapper((HttpRequest) msg, ctx);
+    Context context = tracer().startSpan(parentContext, ctx, requestWrapper);
 
     Attribute<Context> clientContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
     Attribute<Context> parentContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);

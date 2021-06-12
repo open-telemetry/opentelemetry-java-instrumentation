@@ -29,7 +29,7 @@ import java.net.URISyntaxException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class NettyHttpClientTracer
-    extends HttpClientTracer<HttpRequest, HttpHeaders, HttpResponse> {
+    extends HttpClientTracer<NettyRequestWrapper, HttpHeaders, HttpResponse> {
   private static final NettyHttpClientTracer TRACER = new NettyHttpClientTracer();
 
   private NettyHttpClientTracer() {
@@ -40,7 +40,8 @@ public class NettyHttpClientTracer
     return TRACER;
   }
 
-  public Context startSpan(Context parentContext, ChannelHandlerContext ctx, HttpRequest request) {
+  public Context startSpan(
+      Context parentContext, ChannelHandlerContext ctx, NettyRequestWrapper request) {
     SpanBuilder spanBuilder = spanBuilder(parentContext, spanNameForRequest(request), CLIENT);
     onRequest(spanBuilder, request);
     NetPeerAttributes.INSTANCE.setNetPeer(
@@ -62,24 +63,24 @@ public class NettyHttpClientTracer
   }
 
   @Override
-  protected String method(HttpRequest httpRequest) {
+  protected String method(NettyRequestWrapper httpRequest) {
     return httpRequest.method().name();
   }
 
   @Override
   @Nullable
-  protected String flavor(HttpRequest httpRequest) {
+  protected String flavor(NettyRequestWrapper httpRequest) {
     return httpRequest.protocolVersion().text();
   }
 
   @Override
-  protected URI url(HttpRequest request) throws URISyntaxException {
+  protected URI url(NettyRequestWrapper request) throws URISyntaxException {
     URI uri = new URI(request.uri());
     if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
-      return new URI("http://" + request.headers().get(HOST) + request.uri());
-    } else {
-      return uri;
+      String protocol = request.isHttps() ? "https://" : "http://";
+      uri = new URI(protocol + request.headers().get(HOST) + request.uri());
     }
+    return uri;
   }
 
   @Override
@@ -88,7 +89,7 @@ public class NettyHttpClientTracer
   }
 
   @Override
-  protected String requestHeader(HttpRequest httpRequest, String name) {
+  protected String requestHeader(NettyRequestWrapper httpRequest, String name) {
     return httpRequest.headers().get(name);
   }
 
