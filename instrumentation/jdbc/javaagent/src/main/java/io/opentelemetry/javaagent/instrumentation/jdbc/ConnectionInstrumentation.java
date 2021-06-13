@@ -41,6 +41,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
         ConnectionInstrumentation.class.getName() + "$PrepareAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class PrepareAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(

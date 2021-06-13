@@ -34,6 +34,7 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
             + "$InvokeExceptionCaughtAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class InvokeExceptionCaughtAdvice {
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.Argument(0) Throwable throwable) {

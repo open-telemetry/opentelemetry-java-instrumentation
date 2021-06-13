@@ -45,6 +45,7 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
         this.getClass().getName() + "$HandleAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

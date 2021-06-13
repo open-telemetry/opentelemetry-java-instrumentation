@@ -48,6 +48,7 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
         AnnotatedMethodInstrumentation.class.getName() + "$AnnotatedMethodAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AnnotatedMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

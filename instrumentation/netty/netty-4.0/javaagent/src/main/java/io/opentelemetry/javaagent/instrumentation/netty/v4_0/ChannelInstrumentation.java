@@ -43,6 +43,7 @@ public class ChannelInstrumentation implements TypeInstrumentation {
         ChannelInstrumentation.class.getName() + "$AttachContextAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AttachContextAdvice {
     @Advice.OnMethodEnter
     public static void attachContext(@Advice.This Channel channel) {

@@ -54,6 +54,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         KafkaConsumerInstrumentation.class.getName() + "$IteratorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class IterableAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -65,6 +66,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ListAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -75,6 +77,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class IteratorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

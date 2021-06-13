@@ -36,6 +36,7 @@ public class ContextDataInjectorFactoryInstrumentation implements TypeInstrument
         this.getClass().getName() + "$CreateInjectorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CreateInjectorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(

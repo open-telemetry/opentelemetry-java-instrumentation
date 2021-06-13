@@ -43,6 +43,7 @@ public class HttpHandlerInstrumentation implements TypeInstrumentation {
         HttpHandlerInstrumentation.class.getName() + "$ServiceAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ServiceAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

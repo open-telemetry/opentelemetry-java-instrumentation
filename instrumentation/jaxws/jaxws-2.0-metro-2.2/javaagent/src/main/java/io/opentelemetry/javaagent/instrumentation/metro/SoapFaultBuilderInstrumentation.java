@@ -33,6 +33,7 @@ public class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
         SoapFaultBuilderInstrumentation.class.getName() + "$CaptureThrowableAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CaptureThrowableAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

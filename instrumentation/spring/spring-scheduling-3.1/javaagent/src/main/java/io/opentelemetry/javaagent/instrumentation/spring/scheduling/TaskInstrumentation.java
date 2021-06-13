@@ -28,6 +28,7 @@ public class TaskInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ConstructorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ConstructorAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onConstruction(

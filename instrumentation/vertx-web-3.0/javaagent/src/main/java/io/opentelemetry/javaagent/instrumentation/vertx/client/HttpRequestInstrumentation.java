@@ -79,6 +79,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         HttpRequestInstrumentation.class.getName() + "$ExceptionHandlerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class EndRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void attachContext(
@@ -112,6 +113,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class HandleExceptionAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void handleException(
@@ -139,6 +141,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class HandleResponseAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void handleResponseEnter(
@@ -166,6 +169,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class MountContextAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void mountContext(
@@ -187,6 +191,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ExceptionHandlerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapExceptionHandler(

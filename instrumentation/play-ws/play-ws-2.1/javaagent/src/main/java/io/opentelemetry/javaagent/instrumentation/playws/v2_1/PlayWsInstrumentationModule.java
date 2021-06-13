@@ -35,6 +35,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         new HandlerPublisherInstrumentation());
   }
 
+  @SuppressWarnings("unused")
   public static class ClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(

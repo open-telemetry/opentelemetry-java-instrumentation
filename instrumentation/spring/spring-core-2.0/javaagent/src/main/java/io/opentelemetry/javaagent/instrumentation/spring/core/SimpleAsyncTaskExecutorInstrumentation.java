@@ -41,6 +41,7 @@ public class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentati
         getClass().getName() + "$ExecuteAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ExecuteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(

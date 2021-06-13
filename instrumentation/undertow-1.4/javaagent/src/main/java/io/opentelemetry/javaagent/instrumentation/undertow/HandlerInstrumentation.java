@@ -43,6 +43,7 @@ public class HandlerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$HandleRequestAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

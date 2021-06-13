@@ -42,6 +42,7 @@ public class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
         ServerErrorHandlerInstrumentation.class.getName() + "$ErrorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ErrorAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void captureThrowable(

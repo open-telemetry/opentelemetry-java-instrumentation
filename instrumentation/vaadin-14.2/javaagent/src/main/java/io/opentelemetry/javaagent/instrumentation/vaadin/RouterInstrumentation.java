@@ -36,6 +36,7 @@ public class RouterInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$NavigateAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class NavigateAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

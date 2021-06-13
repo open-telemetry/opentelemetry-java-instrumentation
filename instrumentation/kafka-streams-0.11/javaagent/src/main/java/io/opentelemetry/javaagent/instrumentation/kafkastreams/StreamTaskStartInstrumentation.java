@@ -37,6 +37,7 @@ public class StreamTaskStartInstrumentation implements TypeInstrumentation {
         StreamTaskStartInstrumentation.class.getName() + "$StartSpanAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class StartSpanAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

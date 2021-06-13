@@ -38,6 +38,7 @@ public class ContinuationInstrumentation implements TypeInstrumentation {
         ContinuationInstrumentation.class.getName() + "$ResumeAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ResumeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

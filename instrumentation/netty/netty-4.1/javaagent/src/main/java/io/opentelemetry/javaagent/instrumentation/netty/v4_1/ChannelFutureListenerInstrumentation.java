@@ -44,6 +44,7 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
         ChannelFutureListenerInstrumentation.class.getName() + "$OperationCompleteAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class OperationCompleteAdvice {
     @Advice.OnMethodEnter
     public static Scope activateScope(@Advice.Argument(0) ChannelFuture future) {

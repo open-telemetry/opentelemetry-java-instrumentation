@@ -39,6 +39,7 @@ public class StepBuilderInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$BuildAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class BuildAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This AbstractTaskletStepBuilder<?> stepBuilder) {

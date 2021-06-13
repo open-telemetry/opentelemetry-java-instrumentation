@@ -51,6 +51,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         LoggingEventInstrumentation.class.getName() + "$GetMdcAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class GetMdcAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(

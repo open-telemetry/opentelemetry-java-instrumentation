@@ -42,6 +42,7 @@ public class DriverInstrumentation implements TypeInstrumentation {
         DriverInstrumentation.class.getName() + "$DriverAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class DriverAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(

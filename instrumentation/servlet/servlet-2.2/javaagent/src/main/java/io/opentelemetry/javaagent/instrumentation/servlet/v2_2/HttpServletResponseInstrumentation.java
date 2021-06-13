@@ -54,6 +54,7 @@ public class HttpServletResponseInstrumentation implements TypeInstrumentation {
         HttpServletResponseInstrumentation.class.getName() + "$Servlet2ResponseRedirectAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class Servlet2ResponseRedirectAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This HttpServletResponse response) {
@@ -61,6 +62,7 @@ public class HttpServletResponseInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class Servlet2ResponseStatusAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

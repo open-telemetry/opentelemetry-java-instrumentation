@@ -46,6 +46,7 @@ public class ContainerRequestFilterInstrumentation implements TypeInstrumentatio
         ContainerRequestFilterInstrumentation.class.getName() + "$RequestFilterAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class RequestFilterAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void setFilterClass(

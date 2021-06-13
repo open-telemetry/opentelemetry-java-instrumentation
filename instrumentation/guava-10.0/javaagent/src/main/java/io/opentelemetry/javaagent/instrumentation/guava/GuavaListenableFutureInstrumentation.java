@@ -38,6 +38,7 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
         this.getClass().getName() + "$AddListenerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AbstractFutureAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruction() {
@@ -45,6 +46,7 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
     }
   }
 
+  @SuppressWarnings("unused")
   public static class AddListenerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State addListenerEnter(

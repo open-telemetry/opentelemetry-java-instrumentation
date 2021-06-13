@@ -13,6 +13,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 
+@SuppressWarnings("unused")
 public class Servlet3AsyncStartAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void startAsyncEnter() {

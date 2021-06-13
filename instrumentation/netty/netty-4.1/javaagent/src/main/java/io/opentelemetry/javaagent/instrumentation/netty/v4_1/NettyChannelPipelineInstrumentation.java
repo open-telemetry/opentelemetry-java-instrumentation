@@ -59,6 +59,7 @@ public class NettyChannelPipelineInstrumentation
    * handlers. If those handlers are later removed, we also remove our handlers. Support for
    * replacing handlers and removeFirst/removeLast is currently not implemented.
    */
+  @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
     @Advice.OnMethodEnter
     public static int trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
@@ -126,6 +127,7 @@ public class NettyChannelPipelineInstrumentation
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ChannelPipelineConnectAdvice {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {

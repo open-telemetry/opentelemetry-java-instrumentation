@@ -51,6 +51,7 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$HandleMatchAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleMatchAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameSpan(

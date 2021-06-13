@@ -39,6 +39,7 @@ public class LoggerInstrumentation implements TypeInstrumentation {
         LoggerInstrumentation.class.getName() + "$CallAppendersAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CallAppendersAdvice {
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.Argument(value = 0, readOnly = false) ILoggingEvent event) {

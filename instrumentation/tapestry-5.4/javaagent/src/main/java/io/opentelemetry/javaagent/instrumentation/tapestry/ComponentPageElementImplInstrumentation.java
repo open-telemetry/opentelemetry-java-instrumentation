@@ -39,6 +39,7 @@ public class ComponentPageElementImplInstrumentation implements TypeInstrumentat
         this.getClass().getName() + "$EventAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class EventAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

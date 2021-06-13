@@ -38,6 +38,7 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$PersistAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ProvideAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -67,6 +68,7 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class TransformAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -96,6 +98,7 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class PersistAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

@@ -38,6 +38,7 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
             + "$NotifyHandlerExceptionAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class NotifyHandlerExceptionAdvice {
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.Argument(0) Throwable throwable) {
