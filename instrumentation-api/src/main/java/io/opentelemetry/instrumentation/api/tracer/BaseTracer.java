@@ -21,12 +21,10 @@ import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Base class for all instrumentation specific tracer implementations.
@@ -176,39 +174,6 @@ public abstract class BaseTracer {
    */
   protected final Context withServerSpan(Context parentContext, Span span) {
     return ServerSpan.with(parentContext.with(span), span);
-  }
-
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given method
-   * reference. Anonymous classes are named based on their parent.
-   *
-   * @deprecated Use {@link SpanNames#spanNameForMethod(Method)}.
-   */
-  @Deprecated
-  public static String spanNameForMethod(Method method) {
-    return SpanNames.spanNameForMethod(method);
-  }
-
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given method
-   * reference. Anonymous classes are named based on their parent.
-   *
-   * @deprecated Use {@link SpanNames#spanNameForMethod(Class, Method)}.
-   */
-  @Deprecated
-  public static String spanNameForMethod(Class<?> clazz, @Nullable Method method) {
-    return SpanNames.spanNameForMethod(clazz, method);
-  }
-
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given method
-   * reference. Anonymous classes are named based on their parent.
-   *
-   * @deprecated Use {@link SpanNames#spanNameForMethod(Class, String)}.
-   */
-  @Deprecated
-  public static String spanNameForMethod(Class<?> cl, String methodName) {
-    return SpanNames.spanNameForMethod(cl, methodName);
   }
 
   /**
