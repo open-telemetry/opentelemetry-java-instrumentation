@@ -24,16 +24,7 @@ testSets {
   }
 }
 
-// https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/919
-jms2Test.forkEvery 1
 test.dependsOn jms2Test
-
-repositories {
-  mavenCentral()
-  maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
-  mavenLocal()
-}
-
 dependencies {
   compileOnly "javax.jms:jms-api:1.1-rev-1"
 
@@ -44,5 +35,8 @@ dependencies {
   }
 
   jms2TestImplementation "org.hornetq:hornetq-jms-client:2.4.7.Final"
-  jms2TestImplementation "org.hornetq:hornetq-jms-server:2.4.7.Final"
+  jms2TestImplementation("org.hornetq:hornetq-jms-server:2.4.7.Final") {
+    // this doesn't exist in maven central, and doesn't seem to be needed anyways
+    exclude group: 'org.jboss.naming', module: 'jnpserver'
+  }
 }
