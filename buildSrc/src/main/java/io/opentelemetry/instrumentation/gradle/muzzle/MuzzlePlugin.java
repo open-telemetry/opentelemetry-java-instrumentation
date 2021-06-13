@@ -212,7 +212,7 @@ public class MuzzlePlugin implements Plugin<Project> {
       Artifact versionArtifact,
       Project instrumentationProject,
       TaskProvider<?> runAfter) {
-    final String taskName;
+    String taskName;
     if (muzzleDirective.getCoreJdk().get()) {
       taskName = "muzzle-Assert" + muzzleDirective;
     } else {
@@ -367,7 +367,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     VersionRangeRequest rangeRequest = new VersionRangeRequest();
     rangeRequest.setRepositories(getProjectRepositories(instrumentationProject));
     rangeRequest.setArtifact(directiveArtifact);
-    final VersionRangeResult rangeResult;
+    VersionRangeResult rangeResult;
     try {
       rangeResult = system.resolveVersionRange(session, rangeRequest);
     } catch (VersionRangeResolutionException e) {
@@ -436,7 +436,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     VersionRangeRequest allRangeRequest = new VersionRangeRequest();
     allRangeRequest.setRepositories(repos);
     allRangeRequest.setArtifact(allVersionsArtifact);
-    final VersionRangeResult allRangeResult;
+    VersionRangeResult allRangeResult;
     try {
       allRangeResult = system.resolveVersionRange(session, allRangeRequest);
     } catch (VersionRangeResolutionException e) {
@@ -446,7 +446,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     VersionRangeRequest rangeRequest = new VersionRangeRequest();
     rangeRequest.setRepositories(repos);
     rangeRequest.setArtifact(directiveArtifact);
-    final VersionRangeResult rangeResult;
+    VersionRangeResult rangeResult;
     try {
       rangeResult = system.resolveVersionRange(session, rangeRequest);
     } catch (VersionRangeResolutionException e) {

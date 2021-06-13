@@ -37,14 +37,14 @@ public class OpenTelemetryFilter implements Filter {
     String interfaceName = invoker.getInterface().getName();
     RpcContext rpcContext = RpcContext.getContext();
     SpanKind kind = rpcContext.isProviderSide() ? SERVER : CLIENT;
-    final Context context;
+    Context context;
     if (kind.equals(CLIENT)) {
       context = tracer.startClientSpan(interfaceName, methodName);
       tracer.inject(context, (RpcInvocation) invocation, DubboInjectAdapter.SETTER);
     } else {
       context = tracer.startServerSpan(interfaceName, methodName, (RpcInvocation) invocation);
     }
-    final Result result;
+    Result result;
     boolean isSynchronous = true;
     try (Scope ignored = context.makeCurrent()) {
       result = invoker.invoke(invocation);

@@ -36,8 +36,8 @@ public final class UnionMap<K, V> extends AbstractMap<K, V> {
       return size;
     }
 
-    final Map<K, V> a;
-    final Map<K, V> b;
+    Map<K, V> a;
+    Map<K, V> b;
     if (first.size() >= second.size()) {
       a = first;
       b = second;
@@ -75,7 +75,7 @@ public final class UnionMap<K, V> extends AbstractMap<K, V> {
 
   @Override
   public V get(Object key) {
-    final V value = first.get(key);
+    V value = first.get(key);
     return value != null ? value : second.get(key);
   }
 
@@ -110,7 +110,7 @@ public final class UnionMap<K, V> extends AbstractMap<K, V> {
       }
     }
 
-    final Set<Entry<K, V>> filteredSecond;
+    Set<Entry<K, V>> filteredSecond;
     if (!secondHasDupes) {
       filteredSecond = second.entrySet();
     } else {

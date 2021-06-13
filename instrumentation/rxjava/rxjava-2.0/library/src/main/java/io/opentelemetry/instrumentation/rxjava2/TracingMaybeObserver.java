@@ -34,13 +34,13 @@ class TracingMaybeObserver<T> implements MaybeObserver<T>, Disposable {
   private final Context context;
   private Disposable disposable;
 
-  TracingMaybeObserver(final MaybeObserver<T> actual, final Context context) {
+  TracingMaybeObserver(MaybeObserver<T> actual, Context context) {
     this.actual = actual;
     this.context = context;
   }
 
   @Override
-  public void onSubscribe(final Disposable d) {
+  public void onSubscribe(Disposable d) {
     if (!DisposableHelper.validate(disposable, d)) {
       return;
     }
@@ -49,14 +49,14 @@ class TracingMaybeObserver<T> implements MaybeObserver<T>, Disposable {
   }
 
   @Override
-  public void onSuccess(final T t) {
+  public void onSuccess(T t) {
     try (Scope ignored = context.makeCurrent()) {
       actual.onSuccess(t);
     }
   }
 
   @Override
-  public void onError(final Throwable e) {
+  public void onError(Throwable e) {
     try (Scope ignored = context.makeCurrent()) {
       actual.onError(e);
     }

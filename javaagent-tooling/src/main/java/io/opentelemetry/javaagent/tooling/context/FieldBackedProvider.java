@@ -312,7 +312,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   /** Get transformer that forces helper injection onto bootstrap classloader. */
   private AgentBuilder.Transformer bootstrapHelperInjector(
-      final Collection<DynamicType.Unloaded<?>> helpers) {
+      Collection<DynamicType.Unloaded<?>> helpers) {
     // TODO: Better to pass through the context of the Instrumenter
     return new AgentBuilder.Transformer() {
       final HelperInjector injector =
@@ -422,8 +422,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     };
   }
 
-  private AsmVisitorWrapper getFieldInjectionVisitor(
-      final String keyClassName, final String contextClassName) {
+  private AsmVisitorWrapper getFieldInjectionVisitor(String keyClassName, String contextClassName) {
     return new AsmVisitorWrapper() {
 
       @Override
@@ -438,7 +437,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
       @Override
       public ClassVisitor wrap(
-          final TypeDescription instrumentedType,
+          TypeDescription instrumentedType,
           ClassVisitor classVisitor,
           Implementation.Context implementationContext,
           TypePool typePool,
@@ -616,7 +615,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
    * @return visitor that adds implementation for methods that need to be generated
    */
   private AsmVisitorWrapper getContextStoreImplementationVisitor(
-      final String keyClassName, final String contextClassName) {
+      String keyClassName, String contextClassName) {
     return new AsmVisitorWrapper() {
 
       @Override
@@ -631,9 +630,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
       @Override
       public ClassVisitor wrap(
-          final TypeDescription instrumentedType,
+          TypeDescription instrumentedType,
           ClassVisitor classVisitor,
-          final Implementation.Context implementationContext,
+          Implementation.Context implementationContext,
           TypePool typePool,
           FieldList<FieldDescription.InDefinedShape> fields,
           MethodList<?> methods,
@@ -980,8 +979,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
         .make();
   }
 
-  private static AgentBuilder.Transformer getTransformerForAsmVisitor(
-      final AsmVisitorWrapper visitor) {
+  private static AgentBuilder.Transformer getTransformerForAsmVisitor(AsmVisitorWrapper visitor) {
     return (builder, typeDescription, classLoader, module) -> builder.visit(visitor);
   }
 

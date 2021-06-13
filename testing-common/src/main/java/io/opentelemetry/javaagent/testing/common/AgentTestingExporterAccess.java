@@ -129,7 +129,7 @@ public final class AgentTestingExporterAccess {
 
   @SuppressWarnings("unchecked")
   public static List<SpanData> getExportedSpans() {
-    final List<byte[]> exportRequests;
+    List<byte[]> exportRequests;
     try {
       exportRequests = (List<byte[]>) getSpanExportRequests.invokeExact();
     } catch (Throwable t) {
@@ -222,7 +222,7 @@ public final class AgentTestingExporterAccess {
 
   @SuppressWarnings("unchecked")
   public static List<MetricData> getExportedMetrics() {
-    final List<byte[]> exportRequests;
+    List<byte[]> exportRequests;
     try {
       exportRequests = (List<byte[]>) getMetricExportRequests.invokeExact();
     } catch (Throwable t) {
@@ -354,7 +354,7 @@ public final class AgentTestingExporterAccess {
     return points.stream()
         .map(
             point -> {
-              final double value;
+              double value;
               switch (point.getValueCase()) {
                 case AS_INT:
                   value = point.getAsInt();
@@ -482,7 +482,7 @@ public final class AgentTestingExporterAccess {
   }
 
   private static StatusData fromProto(Status status) {
-    final StatusCode code;
+    StatusCode code;
     switch (status.getCode()) {
       case STATUS_CODE_OK:
         code = StatusCode.OK;

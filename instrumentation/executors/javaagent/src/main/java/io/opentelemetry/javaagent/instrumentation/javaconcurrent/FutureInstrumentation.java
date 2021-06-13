@@ -73,7 +73,7 @@ public class FutureInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    final ElementMatcher.Junction<TypeDescription> hasFutureInterfaceMatcher =
+    ElementMatcher.Junction<TypeDescription> hasFutureInterfaceMatcher =
         implementsInterface(named(Future.class.getName()));
     return new ElementMatcher.Junction.AbstractBase<TypeDescription>() {
       @Override

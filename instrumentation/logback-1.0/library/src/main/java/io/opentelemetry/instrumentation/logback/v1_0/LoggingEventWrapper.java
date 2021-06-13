@@ -22,7 +22,7 @@ final class LoggingEventWrapper implements ILoggingEvent {
     this.event = event;
     this.mdcPropertyMap = mdcPropertyMap;
 
-    final LoggerContextVO oldVo = event.getLoggerContextVO();
+    LoggerContextVO oldVo = event.getLoggerContextVO();
     if (oldVo != null) {
       vo = new LoggerContextVO(oldVo.getName(), mdcPropertyMap, oldVo.getBirthTime());
     } else {
