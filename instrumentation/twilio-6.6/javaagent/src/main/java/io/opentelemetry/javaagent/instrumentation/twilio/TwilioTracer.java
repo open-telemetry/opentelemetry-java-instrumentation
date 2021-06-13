@@ -47,7 +47,7 @@ public class TwilioTracer extends BaseTracer {
 
   /** Decorate trace based on service execution metadata. */
   private static String spanNameOnServiceExecution(Object serviceExecutor, String methodName) {
-    return SpanNames.from(serviceExecutor.getClass(), methodName);
+    return SpanNames.fromMethod(serviceExecutor.getClass(), methodName);
   }
 
   /** Annotate the span with the results of the operation. */

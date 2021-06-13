@@ -25,6 +25,6 @@ public final class SpringDataTracer extends BaseTracer {
   }
 
   public Context startSpan(Method method) {
-    return startSpan(SpanNames.from(method));
+    return startSpan(SpanNames.fromMethod(method));
   }
 }

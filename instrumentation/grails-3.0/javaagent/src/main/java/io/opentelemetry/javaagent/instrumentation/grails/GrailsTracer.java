@@ -23,7 +23,7 @@ public class GrailsTracer extends BaseTracer {
   }
 
   public Context startSpan(Object controller, String action) {
-    return startSpan(SpanNames.from(controller.getClass(), action));
+    return startSpan(SpanNames.fromMethod(controller.getClass(), action));
   }
 
   public void updateServerSpanName(Context context, GrailsControllerUrlMappingInfo info) {

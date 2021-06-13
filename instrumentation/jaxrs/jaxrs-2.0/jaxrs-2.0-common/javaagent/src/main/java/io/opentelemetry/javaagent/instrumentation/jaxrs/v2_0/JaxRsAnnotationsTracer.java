@@ -70,7 +70,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     } else {
       ServerSpanNaming.updateServerSpanName(
           context, ServerSpanNaming.Source.CONTROLLER, spanNameSupplier);
-      updateSpanName(span, SpanNames.from(target, method));
+      updateSpanName(span, SpanNames.fromMethod(target, method));
     }
   }
 

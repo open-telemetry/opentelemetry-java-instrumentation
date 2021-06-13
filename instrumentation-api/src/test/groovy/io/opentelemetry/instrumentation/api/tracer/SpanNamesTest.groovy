@@ -25,7 +25,7 @@ class SpanNamesTest extends Specification {
 
   def "test from Method"() {
     when:
-    String result = SpanNames.from(method)
+    String result = SpanNames.fromMethod(method)
 
     then:
     result == expected
@@ -38,7 +38,7 @@ class SpanNamesTest extends Specification {
 
   def "test from Class and Method"() {
     when:
-    String result = SpanNames.from(clazz, method)
+    String result = SpanNames.fromMethod(clazz, method)
 
     then:
     result == expected
@@ -51,7 +51,7 @@ class SpanNamesTest extends Specification {
 
   def "test from Class and method name"() {
     when:
-    String result = SpanNames.from(clazz, method)
+    String result = SpanNames.fromMethod(clazz, method)
 
     then:
     result == expected

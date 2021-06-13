@@ -10,26 +10,26 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class SpanNames {
   /**
-   * This method is used to generate an acceptable span name based on a given method reference.
-   * Anonymous classes are named based on their parent.
+   * This method is used to generate a span name based on a method. Anonymous classes are named
+   * based on their parent.
    */
-  public static String from(Method method) {
-    return from(method.getDeclaringClass(), method.getName());
+  public static String fromMethod(Method method) {
+    return fromMethod(method.getDeclaringClass(), method.getName());
   }
 
   /**
-   * This method is used to generate an acceptable span name based on a given method reference.
-   * Anonymous classes are named based on their parent.
+   * This method is used to generate a span name based on a method. Anonymous classes are named
+   * based on their parent.
    */
-  public static String from(Class<?> clazz, @Nullable Method method) {
-    return from(clazz, method == null ? "<unknown>" : method.getName());
+  public static String fromMethod(Class<?> clazz, @Nullable Method method) {
+    return fromMethod(clazz, method == null ? "<unknown>" : method.getName());
   }
 
   /**
-   * This method is used to generate an acceptable span name based on a given method reference.
-   * Anonymous classes are named based on their parent.
+   * This method is used to generate a span name based on a method. Anonymous classes are named
+   * based on their parent.
    */
-  public static String from(Class<?> cl, String methodName) {
+  public static String fromMethod(Class<?> cl, String methodName) {
     return ClassNames.simpleName(cl) + "." + methodName;
   }
 
