@@ -10,20 +10,7 @@ import spock.lang.Specification
 
 class SpanNamesTest extends Specification {
 
-  def "test from Class"() {
-    when:
-    String result = ClassNames.simpleName(clazz)
-
-    then:
-    result == expected
-
-    where:
-    clazz         | expected
-    SpanNamesTest | "SpanNamesTest"
-    SpanNames     | "SpanNames"
-  }
-
-  def "test from Method"() {
+  def "test fromMethod"() {
     when:
     String result = SpanNames.fromMethod(method)
 
@@ -31,12 +18,12 @@ class SpanNamesTest extends Specification {
     result == expected
 
     where:
-    method                                            | expected
-    ReflectionUtil.getMethodByName(SpanNames, "from") | "SpanNames.from"
-    ReflectionUtil.getMethodByName(String, "length")  | "String.length"
+    method                                                  | expected
+    ReflectionUtil.getMethodByName(SpanNames, "fromMethod") | "SpanNames.fromMethod"
+    ReflectionUtil.getMethodByName(String, "length")        | "String.length"
   }
 
-  def "test from Class and Method"() {
+  def "test fromMethod with class and method ref"() {
     when:
     String result = SpanNames.fromMethod(clazz, method)
 
@@ -45,11 +32,11 @@ class SpanNamesTest extends Specification {
 
     where:
     clazz = SpanNames
-    method = ReflectionUtil.getMethodByName(SpanNames, "from")
-    expected = "SpanNames.from"
+    method = ReflectionUtil.getMethodByName(SpanNames, "fromMethod")
+    expected = "SpanNames.fromMethod"
   }
 
-  def "test from Class and method name"() {
+  def "test fromMethod with class and method name"() {
     when:
     String result = SpanNames.fromMethod(clazz, method)
 
