@@ -31,7 +31,7 @@ public class Struts2Tracer extends BaseTracer {
     Class<?> actionClass = action.getClass();
 
     String method = actionInvocation.getProxy().getMethod();
-    String spanName = SpanNames.spanNameForMethod(actionClass, method);
+    String spanName = SpanNames.from(actionClass, method);
 
     SpanBuilder strutsSpan = spanBuilder(parentContext, spanName, INTERNAL);
 

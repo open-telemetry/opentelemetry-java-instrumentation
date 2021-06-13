@@ -48,7 +48,7 @@ public abstract class HttpServerTracer<REQUEST, RESPONSE, CONNECTION, STORAGE> e
   }
 
   public Context startSpan(REQUEST request, CONNECTION connection, STORAGE storage, Method origin) {
-    String spanName = SpanNames.spanNameForMethod(origin);
+    String spanName = SpanNames.from(origin);
     return startSpan(request, connection, storage, spanName);
   }
 

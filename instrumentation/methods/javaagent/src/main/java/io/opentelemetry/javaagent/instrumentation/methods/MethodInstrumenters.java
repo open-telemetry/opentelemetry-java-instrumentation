@@ -19,7 +19,7 @@ public final class MethodInstrumenters {
   private static final Instrumenter<Method, Void> INSTRUMENTER;
 
   static {
-    SpanNameExtractor<Method> spanName = SpanNames::spanNameForMethod;
+    SpanNameExtractor<Method> spanName = SpanNames::from;
 
     INSTRUMENTER =
         Instrumenter.<Method, Void>newBuilder(

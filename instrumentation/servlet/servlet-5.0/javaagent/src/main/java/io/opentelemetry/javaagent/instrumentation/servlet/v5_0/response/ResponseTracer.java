@@ -23,6 +23,6 @@ public class ResponseTracer extends BaseTracer {
   }
 
   public Context startSpan(Method method) {
-    return startSpan(SpanNames.spanNameForMethod(method));
+    return startSpan(SpanNames.from(method));
   }
 }

@@ -24,7 +24,7 @@ public class SpringWsTracer extends BaseTracer {
   public Context startSpan(Method method) {
     Context parentContext = Context.current();
     Span span =
-        spanBuilder(parentContext, SpanNames.spanNameForMethod(method), SpanKind.INTERNAL)
+        spanBuilder(parentContext, SpanNames.from(method), SpanKind.INTERNAL)
             .setAttribute(SemanticAttributes.CODE_NAMESPACE, method.getDeclaringClass().getName())
             .setAttribute(SemanticAttributes.CODE_FUNCTION, method.getName())
             .startSpan();

@@ -39,7 +39,7 @@ public class VaadinTracer extends BaseTracer {
   }
 
   public Context startVaadinServiceSpan(VaadinService vaadinService, Method method) {
-    String spanName = SpanNames.spanNameForMethod(vaadinService.getClass(), method);
+    String spanName = SpanNames.from(vaadinService.getClass(), method);
     Context context = super.startSpan(spanName);
     return context.with(SERVICE_CONTEXT_KEY, new VaadinServiceContext(spanName));
   }
@@ -76,7 +76,7 @@ public class VaadinTracer extends BaseTracer {
       return null;
     }
 
-    String spanName = SpanNames.spanNameForMethod(requestHandler.getClass(), method);
+    String spanName = SpanNames.from(requestHandler.getClass(), method);
     VaadinServiceContext vaadinServiceContext = current.get(SERVICE_CONTEXT_KEY);
     if (vaadinServiceContext != null && !vaadinServiceContext.isRequestHandled()) {
       Span span = ServerSpan.fromContextOrNull(current);
@@ -126,12 +126,12 @@ public class VaadinTracer extends BaseTracer {
   }
 
   public Context startClientCallableSpan(Class<?> componentClass, String methodName) {
-    return super.startSpan(SpanNames.spanNameForMethod(componentClass, methodName));
+    return super.startSpan(SpanNames.from(componentClass, methodName));
   }
 
   public Context startRpcInvocationHandlerSpan(
       RpcInvocationHandler rpcInvocationHandler, Method method, JsonObject jsonObject) {
-    String spanName = SpanNames.spanNameForMethod(rpcInvocationHandler.getClass(), method);
+    String spanName = SpanNames.from(rpcInvocationHandler.getClass(), method);
     if ("event".equals(rpcInvocationHandler.getRpcType())) {
       String eventType = jsonObject.getString("event");
       if (eventType != null) {

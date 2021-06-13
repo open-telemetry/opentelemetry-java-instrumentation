@@ -74,7 +74,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         if (handler instanceof HandlerMethod) {
           // Special case for requests mapped with annotations
           HandlerMethod handlerMethod = (HandlerMethod) handler;
-          operationName = SpanNames.spanNameForMethod(handlerMethod.getMethod());
+          operationName = SpanNames.from(handlerMethod.getMethod());
           handlerType = handlerMethod.getMethod().getDeclaringClass().getName();
         } else {
           operationName = AdviceUtils.parseOperationName(handler);

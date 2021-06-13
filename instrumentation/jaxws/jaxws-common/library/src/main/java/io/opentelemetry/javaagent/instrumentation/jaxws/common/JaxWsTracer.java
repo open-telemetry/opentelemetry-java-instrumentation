@@ -29,7 +29,7 @@ public class JaxWsTracer extends BaseTracer {
   }
 
   public Context startSpan(Class<?> target, Method method) {
-    String spanName = SpanNames.spanNameForMethod(target, method);
+    String spanName = SpanNames.from(target, method);
 
     Context parentContext = Context.current();
     Span serverSpan = ServerSpan.fromContextOrNull(parentContext);

@@ -42,6 +42,6 @@ public class HandlerSpanNameExtractor implements SpanNameExtractor<Object> {
       methodName = "<annotation>";
     }
 
-    return SpanNames.spanNameForMethod(clazz, methodName);
+    return SpanNames.from(clazz, methodName);
   }
 }

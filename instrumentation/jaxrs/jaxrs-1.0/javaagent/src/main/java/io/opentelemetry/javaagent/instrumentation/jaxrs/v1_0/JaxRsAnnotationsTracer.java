@@ -48,7 +48,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     if (serverSpan == null) {
       spanName = pathBasedSpanName;
     } else {
-      spanName = SpanNames.spanNameForMethod(target, method);
+      spanName = SpanNames.from(target, method);
       updateServerSpanName(parentContext, serverSpan, pathBasedSpanName);
     }
 

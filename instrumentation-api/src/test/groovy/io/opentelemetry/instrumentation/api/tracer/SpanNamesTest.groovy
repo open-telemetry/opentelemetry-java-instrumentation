@@ -10,9 +10,9 @@ import spock.lang.Specification
 
 class SpanNamesTest extends Specification {
 
-  def "test spanNameForClass"() {
+  def "test from Class"() {
     when:
-    String result = SpanNames.spanNameForClass(clazz)
+    String result = ClassNames.simpleName(clazz)
 
     then:
     result == expected
@@ -23,29 +23,42 @@ class SpanNamesTest extends Specification {
     SpanNames     | "SpanNames"
   }
 
-  def "test spanNameForMethod"() {
+  def "test from Method"() {
     when:
-    String result = SpanNames.spanNameForMethod(method)
+    String result = SpanNames.from(method)
 
     then:
     result == expected
 
     where:
-    method                                                        | expected
-    ReflectionUtil.getMethodByName(SpanNames, "spanNameForClass") | "SpanNames.spanNameForClass"
-    ReflectionUtil.getMethodByName(String, "length")              | "String.length"
+    method                                            | expected
+    ReflectionUtil.getMethodByName(SpanNames, "from") | "SpanNames.from"
+    ReflectionUtil.getMethodByName(String, "length")  | "String.length"
   }
 
-  def "test spanNameForMethod with class"() {
+  def "test from Class and Method"() {
     when:
-    String result = SpanNames.spanNameForMethod(clazz, method)
+    String result = SpanNames.from(clazz, method)
 
     then:
     result == expected
 
     where:
-    clazz     | method                                                        | expected
-    SpanNames | ReflectionUtil.getMethodByName(SpanNames, "spanNameForClass") | "SpanNames.spanNameForClass"
-    SpanNames | "test"                                                        | "SpanNames.test"
+    clazz = SpanNames
+    method = ReflectionUtil.getMethodByName(SpanNames, "from")
+    expected = "SpanNames.from"
+  }
+
+  def "test from Class and method name"() {
+    when:
+    String result = SpanNames.from(clazz, method)
+
+    then:
+    result == expected
+
+    where:
+    clazz = SpanNames
+    method = "test"
+    expected = "SpanNames.test"
   }
 }

@@ -48,13 +48,13 @@ public class WithSpanTracer extends BaseTracer {
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. It first checks for existence of {@link WithSpan} annotation. If it is present, then
    * tries to derive name from its {@code value} attribute. Otherwise delegates to {@link
-   * SpanNames#spanNameForMethod(Method)}.
+   * SpanNames#from(Method)}.
    */
   public String spanNameForMethodWithAnnotation(WithSpan applicationAnnotation, Method method) {
     if (applicationAnnotation != null && !applicationAnnotation.value().isEmpty()) {
       return applicationAnnotation.value();
     }
-    return SpanNames.spanNameForMethod(method);
+    return SpanNames.from(method);
   }
 
   public SpanKind extractSpanKind(WithSpan applicationAnnotation) {

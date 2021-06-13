@@ -30,9 +30,9 @@ public class SpringSchedulingTracer extends BaseTracer {
   private static String spanNameOnRun(Runnable runnable) {
     if (runnable instanceof ScheduledMethodRunnable) {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;
-      return SpanNames.spanNameForMethod(scheduledMethodRunnable.getMethod());
+      return SpanNames.from(scheduledMethodRunnable.getMethod());
     } else {
-      return SpanNames.spanNameForClass(runnable.getClass()) + "/run";
+      return SpanNames.from(runnable.getClass(), "run");
     }
   }
 }
