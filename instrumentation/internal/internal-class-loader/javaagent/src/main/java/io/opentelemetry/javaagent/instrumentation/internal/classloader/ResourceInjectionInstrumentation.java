@@ -44,6 +44,7 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetResourcesAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This ClassLoader classLoader,

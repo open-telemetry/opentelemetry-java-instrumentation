@@ -40,6 +40,7 @@ public class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrum
 
   @SuppressWarnings("unused")
   public static class ServerSpanNameAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameSpan(@Advice.Argument(2) Object handler) {
 

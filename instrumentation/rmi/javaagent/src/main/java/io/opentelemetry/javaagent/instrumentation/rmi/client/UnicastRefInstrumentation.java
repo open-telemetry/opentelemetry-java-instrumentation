@@ -39,6 +39,7 @@ public class UnicastRefInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class InvokeAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 1) Method method,

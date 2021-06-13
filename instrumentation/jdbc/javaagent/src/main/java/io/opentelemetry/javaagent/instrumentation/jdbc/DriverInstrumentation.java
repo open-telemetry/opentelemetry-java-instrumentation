@@ -44,6 +44,7 @@ public class DriverInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class DriverAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(
         @Advice.Argument(0) String url,

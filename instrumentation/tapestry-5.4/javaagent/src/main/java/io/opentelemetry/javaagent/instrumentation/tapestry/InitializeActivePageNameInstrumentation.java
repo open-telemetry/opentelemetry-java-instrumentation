@@ -53,6 +53,7 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
 
   @SuppressWarnings("unused")
   public static class HandleComponentEventAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) ComponentEventRequestParameters parameters) {
       tracer().updateServerSpanName(parameters.getActivePageName());
@@ -61,6 +62,7 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
 
   @SuppressWarnings("unused")
   public static class HandlePageRenderAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) PageRenderRequestParameters parameters) {
       tracer().updateServerSpanName(parameters.getLogicalPageName());

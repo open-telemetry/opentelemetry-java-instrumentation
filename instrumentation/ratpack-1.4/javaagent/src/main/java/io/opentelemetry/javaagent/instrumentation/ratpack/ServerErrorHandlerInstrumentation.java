@@ -44,6 +44,7 @@ public class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ErrorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void captureThrowable(
         @Advice.Argument(0) Context ctx, @Advice.Argument(1) Throwable throwable) {

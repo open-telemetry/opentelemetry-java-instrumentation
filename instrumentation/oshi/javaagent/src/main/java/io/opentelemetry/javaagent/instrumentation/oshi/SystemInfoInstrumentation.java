@@ -38,6 +38,7 @@ public class SystemInfoInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetCurrentPlatformEnumAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
       SystemMetrics.registerObservers();

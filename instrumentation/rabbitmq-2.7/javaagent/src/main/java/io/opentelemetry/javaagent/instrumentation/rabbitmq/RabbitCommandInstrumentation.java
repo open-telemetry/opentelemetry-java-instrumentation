@@ -45,6 +45,7 @@ public class RabbitCommandInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CommandConstructorAdvice {
+
     @Advice.OnMethodExit
     public static void setSpanNameAddHeaders(@Advice.This Command command) {
 

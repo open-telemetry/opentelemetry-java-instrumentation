@@ -43,6 +43,7 @@ public class BugFixingInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BugFixingAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(value = 0, readOnly = false) List<Property> props) {
       if (props == null) {

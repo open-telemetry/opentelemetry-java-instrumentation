@@ -39,6 +39,7 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class InvokeMethodAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(1) Class<?> componentClass,

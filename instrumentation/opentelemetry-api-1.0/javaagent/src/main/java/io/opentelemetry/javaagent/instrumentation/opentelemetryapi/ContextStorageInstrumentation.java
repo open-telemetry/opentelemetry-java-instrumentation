@@ -39,6 +39,7 @@ public class ContextStorageInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetAdvice {
+
     @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
     public static Object onEnter() {
       return null;

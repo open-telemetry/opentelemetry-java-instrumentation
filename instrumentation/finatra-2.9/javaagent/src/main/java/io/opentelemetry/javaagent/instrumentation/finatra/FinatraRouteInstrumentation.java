@@ -53,6 +53,7 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class HandleMatchAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameSpan(
         @Advice.FieldValue("routeInfo") RouteInfo routeInfo,

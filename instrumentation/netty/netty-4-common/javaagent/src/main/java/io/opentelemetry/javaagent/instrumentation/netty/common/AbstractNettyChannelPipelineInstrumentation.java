@@ -53,6 +53,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
 
   @SuppressWarnings("unused")
   public static class ChannelPipelineRemoveAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) ChannelHandler handler) {
@@ -68,6 +69,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
 
   @SuppressWarnings("unused")
   public static class ChannelPipelineRemoveByNameAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) String name) {
@@ -88,6 +90,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
 
   @SuppressWarnings("unused")
   public static class ChannelPipelineRemoveByClassAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline,

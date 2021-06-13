@@ -57,6 +57,7 @@ public class JwsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class JwsAnnotationsAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startSpan(
         @Advice.This Object target,

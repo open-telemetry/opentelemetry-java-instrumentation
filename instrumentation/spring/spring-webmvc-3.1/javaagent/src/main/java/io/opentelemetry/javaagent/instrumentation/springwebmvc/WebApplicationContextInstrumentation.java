@@ -54,6 +54,7 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class FilterInjectingAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {
       if (beanFactory instanceof BeanDefinitionRegistry

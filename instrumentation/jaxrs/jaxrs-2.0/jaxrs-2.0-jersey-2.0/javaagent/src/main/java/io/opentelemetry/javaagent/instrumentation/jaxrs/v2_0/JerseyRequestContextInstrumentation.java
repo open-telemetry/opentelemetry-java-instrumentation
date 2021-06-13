@@ -31,6 +31,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
 
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
         @Advice.This ContainerRequestContext requestContext,

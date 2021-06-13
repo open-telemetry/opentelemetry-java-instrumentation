@@ -32,6 +32,7 @@ public class Resteasy30RequestContextInstrumentation extends AbstractRequestCont
 
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
         @Advice.This ContainerRequestContext requestContext,

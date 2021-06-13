@@ -41,6 +41,7 @@ public class StepBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This AbstractTaskletStepBuilder<?> stepBuilder) {
       ContextStore<ChunkContext, ContextAndScope> chunkExecutionContextStore =

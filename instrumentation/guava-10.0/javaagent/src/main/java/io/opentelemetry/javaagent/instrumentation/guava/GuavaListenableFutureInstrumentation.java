@@ -40,6 +40,7 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class AbstractFutureAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruction() {
       InstrumentationHelper.initialize();
@@ -48,6 +49,7 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class AddListenerAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State addListenerEnter(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {

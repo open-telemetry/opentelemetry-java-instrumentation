@@ -61,6 +61,7 @@ public class NettyChannelPipelineInstrumentation
    */
   @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
+
     @Advice.OnMethodEnter
     public static int trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
       // Previously we used one unique call depth tracker for all handlers, using
@@ -129,6 +130,7 @@ public class NettyChannelPipelineInstrumentation
 
   @SuppressWarnings("unused")
   public static class ChannelPipelineConnectAdvice {
+
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
       Attribute<Context> attribute = pipeline.channel().attr(AttributeKeys.CONNECT_CONTEXT);

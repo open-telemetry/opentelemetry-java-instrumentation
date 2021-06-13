@@ -38,6 +38,7 @@ public class ContextDataInjectorFactoryInstrumentation implements TypeInstrument
 
   @SuppressWarnings("unused")
   public static class CreateInjectorAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false)

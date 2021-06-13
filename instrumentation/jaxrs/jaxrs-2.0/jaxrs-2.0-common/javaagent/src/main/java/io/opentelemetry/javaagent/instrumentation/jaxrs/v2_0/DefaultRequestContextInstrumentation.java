@@ -31,6 +31,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
 
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void createGenericSpan(
         @Advice.This ContainerRequestContext requestContext,

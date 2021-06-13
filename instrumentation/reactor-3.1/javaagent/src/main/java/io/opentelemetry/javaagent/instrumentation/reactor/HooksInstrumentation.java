@@ -31,6 +31,7 @@ public class HooksInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ResetOnEachOperatorAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void postStaticInitializer() {
       TracingOperator.newBuilder()

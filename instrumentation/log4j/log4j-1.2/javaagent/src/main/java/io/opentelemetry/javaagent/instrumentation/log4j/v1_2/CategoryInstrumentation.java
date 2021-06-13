@@ -40,6 +40,7 @@ public class CategoryInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CallAppendersAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) LoggingEvent event) {
       InstrumentationContext.get(LoggingEvent.class, Span.class)

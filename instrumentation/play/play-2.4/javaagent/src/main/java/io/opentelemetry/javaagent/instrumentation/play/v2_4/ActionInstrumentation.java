@@ -49,6 +49,7 @@ public class ActionInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Request<?> req,

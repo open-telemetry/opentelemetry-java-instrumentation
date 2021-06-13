@@ -53,6 +53,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetMdcAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This ILoggingEvent event,

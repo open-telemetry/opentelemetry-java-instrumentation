@@ -31,6 +31,7 @@ public class JavaScriptBootstrapUiInstrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class ConnectClientAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This UI ui) {
       tracer().updateServerSpanName(ui);

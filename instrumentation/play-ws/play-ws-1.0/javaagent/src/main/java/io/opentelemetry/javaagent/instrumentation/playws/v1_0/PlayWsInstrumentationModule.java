@@ -39,6 +39,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
 
   @SuppressWarnings("unused")
   public static class ClientAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) Request request,

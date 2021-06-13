@@ -46,6 +46,7 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class InvokeAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startSpan(
         @Advice.This Object target,

@@ -51,6 +51,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This HttpRequest request,

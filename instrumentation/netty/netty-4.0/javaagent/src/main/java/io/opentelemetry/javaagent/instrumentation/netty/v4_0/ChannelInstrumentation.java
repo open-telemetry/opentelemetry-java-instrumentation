@@ -45,6 +45,7 @@ public class ChannelInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class AttachContextAdvice {
+
     @Advice.OnMethodEnter
     public static void attachContext(@Advice.This Channel channel) {
       channel

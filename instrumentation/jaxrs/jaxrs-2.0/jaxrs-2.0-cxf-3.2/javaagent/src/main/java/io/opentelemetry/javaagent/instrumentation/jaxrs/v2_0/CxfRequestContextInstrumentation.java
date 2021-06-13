@@ -54,6 +54,7 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
         @Advice.This AbstractRequestContextImpl requestContext,

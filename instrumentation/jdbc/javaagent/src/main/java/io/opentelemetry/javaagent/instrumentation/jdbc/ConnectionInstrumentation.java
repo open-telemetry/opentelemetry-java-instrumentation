@@ -43,6 +43,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PrepareAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(
         @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {

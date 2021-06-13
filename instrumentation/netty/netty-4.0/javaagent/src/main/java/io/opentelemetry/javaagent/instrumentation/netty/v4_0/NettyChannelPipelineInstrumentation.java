@@ -58,6 +58,7 @@ public class NettyChannelPipelineInstrumentation
    */
   @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
+
     @Advice.OnMethodEnter
     public static int trackCallDepth() {
       return CallDepthThreadLocalMap.incrementCallDepth(ChannelPipeline.class);
@@ -105,6 +106,7 @@ public class NettyChannelPipelineInstrumentation
 
   @SuppressWarnings("unused")
   public static class ChannelPipelineConnectAdvice {
+
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This ChannelPipeline pipeline) {
       Context context = Java8BytecodeBridge.currentContext();

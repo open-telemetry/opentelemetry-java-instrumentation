@@ -33,6 +33,7 @@ public class SpanInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CreateAdvice {
+
     // We replace the return value completely so don't need to call the method.
     @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
     public static boolean methodEnter() {

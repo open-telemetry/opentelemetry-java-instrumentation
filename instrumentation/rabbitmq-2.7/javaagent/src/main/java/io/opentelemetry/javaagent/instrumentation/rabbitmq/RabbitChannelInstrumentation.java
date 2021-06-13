@@ -85,6 +85,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   // TODO Why do we start span here and not in ChannelPublishAdvice below?
   @SuppressWarnings("unused")
   public static class ChannelMethodAdvice {
+
     @Advice.OnMethodEnter
     public static void onEnter(
         @Advice.This Channel channel,
@@ -123,6 +124,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ChannelPublishAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void setSpanNameAddHeaders(
         @Advice.Argument(0) String exchange,
@@ -176,6 +178,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ChannelGetAdvice {
+
     @Advice.OnMethodEnter
     public static long takeTimestamp(@Advice.Local("callDepth") int callDepth) {
 
@@ -209,6 +212,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ChannelConsumeAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapConsumer(
         @Advice.Argument(0) String queue,

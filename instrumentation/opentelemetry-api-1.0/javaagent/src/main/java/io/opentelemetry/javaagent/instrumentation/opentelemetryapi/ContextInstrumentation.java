@@ -40,6 +40,7 @@ public class ContextInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetAdvice {
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Return(readOnly = false) Context root) {
       root =

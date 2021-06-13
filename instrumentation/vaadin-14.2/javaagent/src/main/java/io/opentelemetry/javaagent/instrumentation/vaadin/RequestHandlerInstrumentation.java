@@ -46,6 +46,7 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This RequestHandler requestHandler,
