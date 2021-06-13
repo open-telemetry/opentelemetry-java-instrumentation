@@ -6,11 +6,20 @@
 package io.opentelemetry.javaagent.tooling;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 
 /**
@@ -29,30 +38,71 @@ public class ExtensionClassLoader extends URLClassLoader {
   // configured, and so using slf4j here would initialize slf4j-simple before we have a chance to
   // configure the logging levels
 
-  public static ClassLoader getInstance(ClassLoader parent) {
+  static {
+    ClassLoader.registerAsParallelCapable();
+  }
+
+  public static ClassLoader getInstance(ClassLoader parent, JarFile javaagentFile) {
+    List<URL> extensions = new ArrayList<>();
+
+    includeEmbeddedExtensionsIfFound(parent, extensions, javaagentFile);
+
     // TODO add support for old deprecated property otel.javaagent.experimental.exporter.jar
-    List<URL> extension =
+    extensions.addAll(
         parseLocation(
             System.getProperty(
                 "otel.javaagent.experimental.extensions",
-                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS")));
+                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS"))));
 
-    extension.addAll(
+    extensions.addAll(
         parseLocation(
             System.getProperty(
                 "otel.javaagent.experimental.initializer.jar",
                 System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR"))));
     // TODO when logging is configured add warning about deprecated property
 
-    if (extension.isEmpty()) {
+    if (extensions.isEmpty()) {
       return parent;
     }
 
-    List<ClassLoader> delegates = new ArrayList<>(extension.size());
-    for (URL url : extension) {
+    List<ClassLoader> delegates = new ArrayList<>(extensions.size());
+    for (URL url : extensions) {
       delegates.add(getDelegate(parent, url));
     }
     return new MultipleParentClassLoader(parent, delegates);
+  }
+
+  private static void includeEmbeddedExtensionsIfFound(
+      ClassLoader parent, List<URL> extensions, JarFile javaagentFile) {
+    Enumeration<JarEntry> entryEnumeration = javaagentFile.entries();
+    final String prefix = "extensions/";
+    try {
+      if (entryEnumeration.hasMoreElements()) {
+        File tempDirectory = Files.createTempDirectory("otel-extensions").toFile();
+        tempDirectory.deleteOnExit();
+
+        while (entryEnumeration.hasMoreElements()) {
+          JarEntry jarEntry = entryEnumeration.nextElement();
+
+          if (jarEntry.getName().startsWith(prefix) && !jarEntry.isDirectory()) {
+            File tempFile = new File(tempDirectory, jarEntry.getName().substring(prefix.length()));
+            if (tempFile.createNewFile()) {
+              tempFile.deleteOnExit();
+              extractFile(javaagentFile, jarEntry, tempFile);
+              addFileUrl(extensions, tempFile);
+            } else {
+              System.out.println("Failed to create temp file " + tempFile);
+            }
+          }
+        }
+      }
+    } catch (IOException ex) {
+      System.err.println("Failed to open embedded extensions " + ex.getMessage());
+    }
+  }
+
+  private static URLClassLoader getDelegate(ClassLoader parent, URL extensionUrl) {
+    return new URLClassLoader(new URL[] {extensionUrl}, parent);
   }
 
   private static List<URL> parseLocation(String locationName) {
@@ -86,8 +136,13 @@ public class ExtensionClassLoader extends URLClassLoader {
     }
   }
 
-  private static URLClassLoader getDelegate(ClassLoader parent, URL extensionUrl) {
-    return new ExtensionClassLoader(new URL[] {extensionUrl}, parent);
+  private static void extractFile(JarFile jarFile, JarEntry jarEntry, File outputFile)
+      throws IOException {
+    try (InputStream in = jarFile.getInputStream(jarEntry);
+        ReadableByteChannel rbc = Channels.newChannel(in);
+        FileOutputStream fos = new FileOutputStream(outputFile)) {
+      fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+    }
   }
 
   private ExtensionClassLoader(URL[] urls, ClassLoader parent) {
