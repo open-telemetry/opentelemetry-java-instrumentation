@@ -19,14 +19,6 @@ public class ContextTestInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    // this instrumentation is disabled by default, so that it doesn't cause sporadic failures
-    // in other tests that do override AgentTestRunner.onInstrumentationError() to filter out
-    // the instrumentation errors that this instrumentation purposefully introduces
-    return false;
-  }
-
-  @Override
   public boolean isHelperClass(String className) {
     return className.equals(getClass().getPackage().getName() + ".Context");
   }
