@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
 import io.opentelemetry.instrumentation.api.tracer.DatabaseClientTracer;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.instrumentation.api.tracer.net.NetPeerAttributes;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
@@ -26,7 +27,7 @@ public class RediscalaClientTracer
 
   @Override
   protected String sanitizeStatement(RedisCommand<?, ?> redisCommand) {
-    return spanNameForClass(redisCommand.getClass());
+    return SpanNames.spanNameForClass(redisCommand.getClass());
   }
 
   @Override

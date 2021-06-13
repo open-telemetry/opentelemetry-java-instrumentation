@@ -176,17 +176,6 @@ public abstract class BaseTracer {
     return ServerSpan.with(parentContext.with(span), span);
   }
 
-  /**
-   * This method is used to generate an acceptable span (operation) name based on a given class
-   * reference. Anonymous classes are named based on their parent.
-   *
-   * @deprecated Use {@link SpanNames#spanNameForClass(Class)}.
-   */
-  @Deprecated
-  public static String spanNameForClass(Class<?> clazz) {
-    return SpanNames.spanNameForClass(clazz);
-  }
-
   /** Ends the execution of a span stored in the passed {@code context}. */
   public void end(Context context) {
     end(context, -1);
