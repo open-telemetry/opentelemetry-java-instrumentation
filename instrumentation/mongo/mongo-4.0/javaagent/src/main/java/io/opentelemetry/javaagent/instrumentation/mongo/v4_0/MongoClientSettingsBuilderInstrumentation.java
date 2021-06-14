@@ -41,6 +41,7 @@ final class MongoClientSettingsBuilderInstrumentation implements TypeInstrumenta
         this.getClass().getName() + "$BuildAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class BuildAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

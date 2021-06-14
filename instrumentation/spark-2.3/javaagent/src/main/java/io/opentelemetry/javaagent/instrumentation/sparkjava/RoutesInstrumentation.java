@@ -35,6 +35,7 @@ public class RoutesInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$FindAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class FindAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

@@ -31,7 +31,9 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
         named("getHostName"), TestTypeInstrumentation.class.getName() + "$GetHostNameAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class GetHostNameAdvice {
+
     @Advice.OnMethodExit
     public static void methodExit(@Advice.Return(readOnly = false) String hostName) {
       hostName = "not-the-host-name";

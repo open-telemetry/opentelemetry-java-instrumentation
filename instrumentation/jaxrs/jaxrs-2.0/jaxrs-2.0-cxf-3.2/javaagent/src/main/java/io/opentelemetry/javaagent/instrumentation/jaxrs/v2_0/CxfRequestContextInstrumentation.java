@@ -52,7 +52,9 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
         CxfRequestContextInstrumentation.class.getName() + "$ContainerRequestContextAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void decorateAbortSpan(
         @Advice.This AbstractRequestContextImpl requestContext,

@@ -61,7 +61,9 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$StreamRemoteCallConstructorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class StreamRemoteCallConstructorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) Connection c, @Advice.Argument(1) ObjID id) {
       if (!c.isReusable()) {

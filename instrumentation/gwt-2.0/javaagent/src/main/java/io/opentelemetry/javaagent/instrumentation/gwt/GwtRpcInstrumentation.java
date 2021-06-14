@@ -50,7 +50,9 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$EncodeResponseForFailureAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class InvokeAndEncodeResponseAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(1) Method method,
@@ -75,7 +77,9 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class EncodeResponseForFailureAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(1) Throwable throwable) {
       if (throwable == null) {

@@ -38,7 +38,9 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$PublicMethodAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class PublicMethodAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Origin Method method,

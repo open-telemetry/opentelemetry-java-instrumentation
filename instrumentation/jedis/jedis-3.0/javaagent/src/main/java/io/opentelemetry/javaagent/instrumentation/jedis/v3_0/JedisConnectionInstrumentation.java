@@ -42,6 +42,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
     // FIXME: This instrumentation only incorporates sending the command, not processing the result.
   }
 
+  @SuppressWarnings("unused")
   public static class SendCommandAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

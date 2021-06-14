@@ -54,14 +54,18 @@ public class HttpServletResponseInstrumentation implements TypeInstrumentation {
         HttpServletResponseInstrumentation.class.getName() + "$Servlet2ResponseRedirectAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class Servlet2ResponseRedirectAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This HttpServletResponse response) {
       InstrumentationContext.get(ServletResponse.class, Integer.class).put(response, 302);
     }
   }
 
+  @SuppressWarnings("unused")
   public static class Servlet2ResponseStatusAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This HttpServletResponse response, @Advice.Argument(0) Integer status) {

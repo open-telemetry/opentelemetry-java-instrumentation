@@ -35,6 +35,7 @@ public class SessionBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
+
     /**
      * Strategy: each time we build a connection to a Cassandra cluster, the
      * com.datastax.oss.driver.api.core.session.SessionBuilder.buildAsync() method is called. The

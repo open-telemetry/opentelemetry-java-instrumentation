@@ -33,6 +33,7 @@ public class StreamTaskStopInstrumentation implements TypeInstrumentation {
         StreamTaskStopInstrumentation.class.getName() + "$StopSpanAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class StopSpanAdvice {
 
     @Advice.OnMethodEnter

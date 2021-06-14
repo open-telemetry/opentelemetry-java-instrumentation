@@ -30,7 +30,9 @@ public class PoolMasterActorInstrumentation implements TypeInstrumentation {
         ClearContextAdvice.class.getName());
   }
 
+  @SuppressWarnings("unused")
   public static class ClearContextAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter() {
       return Java8BytecodeBridge.rootContext().makeCurrent();
