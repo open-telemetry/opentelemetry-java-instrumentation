@@ -37,7 +37,9 @@ public class RouteInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$HandlerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandlerAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false) Handler<RoutingContext> handler) {

@@ -42,7 +42,9 @@ public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SetListenersAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class InitAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This JobFactoryBean jobFactory) {
       // this will trigger the advice below, which will make sure that the tracing listener is
@@ -51,7 +53,9 @@ public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SetListenersAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(value = 0, readOnly = false) Object[] listeners) {
       ContextStore<JobExecution, ContextAndScope> executionContextStore =

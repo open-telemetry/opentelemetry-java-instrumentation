@@ -44,7 +44,9 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
         NettyChannelInstrumentation.class.getName() + "$ChannelConnectAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ChannelConnectAdvice {
+
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.This Channel channel) {
       Context context = Java8BytecodeBridge.currentContext();

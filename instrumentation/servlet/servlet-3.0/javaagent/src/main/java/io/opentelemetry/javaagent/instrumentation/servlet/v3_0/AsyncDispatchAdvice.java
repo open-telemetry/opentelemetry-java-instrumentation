@@ -15,7 +15,9 @@ import javax.servlet.AsyncContext;
 import javax.servlet.ServletRequest;
 import net.bytebuddy.asm.Advice;
 
+@SuppressWarnings("unused")
 public class AsyncDispatchAdvice {
+
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static boolean enter(
       @Advice.This AsyncContext context, @Advice.AllArguments Object[] args) {

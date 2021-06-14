@@ -40,6 +40,7 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation
             + "$SaveHeadersAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SaveHeadersAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

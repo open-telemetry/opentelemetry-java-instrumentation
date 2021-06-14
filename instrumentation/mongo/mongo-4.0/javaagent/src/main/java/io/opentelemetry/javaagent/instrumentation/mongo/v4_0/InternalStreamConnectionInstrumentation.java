@@ -43,6 +43,7 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
         this.getClass().getName() + "$SingleResultCallbackArg1Advice");
   }
 
+  @SuppressWarnings("unused")
   public static class SingleResultCallbackArg0Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -52,6 +53,7 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SingleResultCallbackArg1Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

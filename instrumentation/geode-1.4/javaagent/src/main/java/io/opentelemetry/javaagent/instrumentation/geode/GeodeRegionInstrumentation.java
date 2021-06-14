@@ -62,7 +62,9 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$QueryAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SimpleAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Region<?, ?> region,
@@ -96,7 +98,9 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class QueryAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Region<?, ?> region,

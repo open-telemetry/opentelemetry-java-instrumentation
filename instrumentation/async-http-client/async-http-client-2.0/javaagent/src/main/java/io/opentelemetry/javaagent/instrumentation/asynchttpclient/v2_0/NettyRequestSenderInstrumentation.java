@@ -47,6 +47,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class AttachContextAdvice {
+
     @Advice.OnMethodEnter
     public static void attachContext(@Advice.Argument(0) Request request) {
       InstrumentationContext.get(Request.class, Context.class)
@@ -56,6 +57,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class MountContextAdvice {
+
     @Advice.OnMethodEnter
     public static Scope mountContext(@Advice.Argument(0) NettyResponseFuture<?> responseFuture) {
       Request request = responseFuture.getCurrentRequest();

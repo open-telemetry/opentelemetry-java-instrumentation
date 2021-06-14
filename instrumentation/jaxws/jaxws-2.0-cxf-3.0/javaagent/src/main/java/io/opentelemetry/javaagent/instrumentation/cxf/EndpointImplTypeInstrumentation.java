@@ -29,6 +29,7 @@ public class EndpointImplTypeInstrumentation implements TypeInstrumentation {
         EndpointImplTypeInstrumentation.class.getName() + "$GetServerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class GetServerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -45,6 +45,7 @@ public class ClientHandlerInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$HandleAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter

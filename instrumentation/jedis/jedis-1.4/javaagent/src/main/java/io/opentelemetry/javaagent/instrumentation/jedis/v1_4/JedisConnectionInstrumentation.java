@@ -49,6 +49,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SendCommandWithArgsAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SendCommandNoArgsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -83,6 +84,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SendCommandWithArgsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

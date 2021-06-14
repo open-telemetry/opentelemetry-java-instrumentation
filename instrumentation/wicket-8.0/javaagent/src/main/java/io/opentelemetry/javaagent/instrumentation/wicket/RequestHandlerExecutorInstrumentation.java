@@ -36,6 +36,7 @@ public class RequestHandlerExecutorInstrumentation implements TypeInstrumentatio
         RequestHandlerExecutorInstrumentation.class.getName() + "$ExecuteAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

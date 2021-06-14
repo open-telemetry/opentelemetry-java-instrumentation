@@ -54,6 +54,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SendAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SendAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
