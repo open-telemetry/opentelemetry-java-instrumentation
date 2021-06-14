@@ -22,6 +22,7 @@ dependencies {
     exclude group: 'io.grpc'
   }
 
+  implementation "com.google.guava:guava"
   implementation "net.bytebuddy:byte-buddy"
   implementation "net.bytebuddy:byte-buddy-agent"
   implementation "org.slf4j:slf4j-api"
