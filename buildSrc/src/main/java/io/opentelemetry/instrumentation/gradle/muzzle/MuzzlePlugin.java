@@ -436,7 +436,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     VersionRangeRequest allRangeRequest = new VersionRangeRequest();
     allRangeRequest.setRepositories(repos);
     allRangeRequest.setArtifact(allVersionsArtifact);
-    VersionRangeResult allRangeResult;
+    final VersionRangeResult allRangeResult;
     try {
       allRangeResult = system.resolveVersionRange(session, allRangeRequest);
     } catch (VersionRangeResolutionException e) {
