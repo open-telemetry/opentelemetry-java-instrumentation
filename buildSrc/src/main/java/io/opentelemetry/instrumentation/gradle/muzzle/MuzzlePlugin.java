@@ -212,7 +212,7 @@ public class MuzzlePlugin implements Plugin<Project> {
       Artifact versionArtifact,
       Project instrumentationProject,
       TaskProvider<?> runAfter) {
-    String taskName;
+    final String taskName;
     if (muzzleDirective.getCoreJdk().get()) {
       taskName = "muzzle-Assert" + muzzleDirective;
     } else {
