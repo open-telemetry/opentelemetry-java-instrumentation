@@ -75,30 +75,36 @@ public class ExtensionClassLoader extends URLClassLoader {
   private static void includeEmbeddedExtensionsIfFound(
       ClassLoader parent, List<URL> extensions, JarFile javaagentFile) {
     Enumeration<JarEntry> entryEnumeration = javaagentFile.entries();
-    final String prefix = "extensions/";
+    String prefix = "extensions/";
+    File tempDirectory = null;
     try {
-      if (entryEnumeration.hasMoreElements()) {
-        File tempDirectory = Files.createTempDirectory("otel-extensions").toFile();
-        tempDirectory.deleteOnExit();
+      while (entryEnumeration.hasMoreElements()) {
+        JarEntry jarEntry = entryEnumeration.nextElement();
 
-        while (entryEnumeration.hasMoreElements()) {
-          JarEntry jarEntry = entryEnumeration.nextElement();
+        if (jarEntry.getName().startsWith(prefix) && !jarEntry.isDirectory()) {
+          tempDirectory = ensureTempDirectoryExists(tempDirectory);
 
-          if (jarEntry.getName().startsWith(prefix) && !jarEntry.isDirectory()) {
-            File tempFile = new File(tempDirectory, jarEntry.getName().substring(prefix.length()));
-            if (tempFile.createNewFile()) {
-              tempFile.deleteOnExit();
-              extractFile(javaagentFile, jarEntry, tempFile);
-              addFileUrl(extensions, tempFile);
-            } else {
-              System.out.println("Failed to create temp file " + tempFile);
-            }
+          File tempFile = new File(tempDirectory, jarEntry.getName().substring(prefix.length()));
+          if (tempFile.createNewFile()) {
+            tempFile.deleteOnExit();
+            extractFile(javaagentFile, jarEntry, tempFile);
+            addFileUrl(extensions, tempFile);
+          } else {
+            System.out.println("Failed to create temp file " + tempFile);
           }
         }
       }
     } catch (IOException ex) {
       System.err.println("Failed to open embedded extensions " + ex.getMessage());
     }
+  }
+
+  private static File ensureTempDirectoryExists(File tempDirectory) throws IOException {
+    if (tempDirectory == null) {
+      tempDirectory = Files.createTempDirectory("otel-extensions").toFile();
+      tempDirectory.deleteOnExit();
+    }
+    return tempDirectory;
   }
 
   private static URLClassLoader getDelegate(ClassLoader parent, URL extensionUrl) {
