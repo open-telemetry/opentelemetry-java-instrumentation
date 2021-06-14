@@ -19,6 +19,6 @@ public class CxfInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new EndpointImplTypeInstrumentation());
+    return Collections.singletonList(new JaxWsServerFactoryBeanInstrumentation());
   }
 }
