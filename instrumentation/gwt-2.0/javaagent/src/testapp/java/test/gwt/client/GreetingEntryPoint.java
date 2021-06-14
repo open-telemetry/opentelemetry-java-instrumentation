@@ -50,7 +50,6 @@ public class GreetingEntryPoint implements EntryPoint {
         messageLabel.setText("");
         messageLabel.setStyleName("");
 
-        try {
           messageServiceAsync.sendMessage(
               message,
               new AsyncCallback<String>() {
@@ -66,9 +65,6 @@ public class GreetingEntryPoint implements EntryPoint {
                   messageLabel.addStyleName("message.received");
                 }
               });
-        } catch (IOException e) {
-          throw new IllegalStateException(e);
-        }
       }
     }
 

@@ -60,7 +60,8 @@ public final class GrpcTracingBuilder {
         .addAttributesExtractors(
             new GrpcNetAttributesExtractor(),
             new GrpcRpcAttributesExtractor(),
-            new GrpcAttributesExtractor());
+            new GrpcAttributesExtractor())
+        .addAttributesExtractors(additionalExtractors);
     return new GrpcTracing(
         instrumenterBuilder.newServerInstrumenter(GrpcExtractAdapter.GETTER),
         // gRPC client interceptors require two phases, one to set up request and one to execute.

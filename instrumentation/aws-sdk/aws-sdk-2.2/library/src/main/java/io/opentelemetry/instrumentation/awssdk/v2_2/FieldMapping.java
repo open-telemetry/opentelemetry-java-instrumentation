@@ -16,7 +16,7 @@ class FieldMapping {
 
   enum Type {
     REQUEST,
-    RESPONSE;
+    RESPONSE
   }
 
   private final Type type;
@@ -49,7 +49,7 @@ class FieldMapping {
     return type;
   }
 
-  static final Map<Type, List<FieldMapping>> groupByType(FieldMapping[] fieldMappings) {
+  static Map<Type, List<FieldMapping>> groupByType(FieldMapping[] fieldMappings) {
 
     EnumMap<Type, List<FieldMapping>> fields = new EnumMap<>(Type.class);
     for (FieldMapping.Type type : FieldMapping.Type.values()) {

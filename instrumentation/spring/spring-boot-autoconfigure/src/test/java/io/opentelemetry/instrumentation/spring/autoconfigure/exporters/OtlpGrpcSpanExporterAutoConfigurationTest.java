@@ -34,10 +34,9 @@ class OtlpGrpcSpanExporterAutoConfigurationTest {
     this.contextRunner
         .withPropertyValues("otel.exporter.otlp.enabled=true")
         .run(
-            (context) -> {
-              assertThat(context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class))
-                  .isNotNull();
-            });
+            context ->
+                assertThat(context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class))
+                    .isNotNull());
   }
 
   @AfterEach
@@ -55,7 +54,7 @@ class OtlpGrpcSpanExporterAutoConfigurationTest {
             "otel.exporter.otlp.endpoint=http://localhost:8080/test",
             "otel.exporter.otlp.timeout=69ms")
         .run(
-            (context) -> {
+            context -> {
               OtlpGrpcSpanExporterProperties otlpSpanExporterProperties =
                   context.getBean(OtlpGrpcSpanExporterProperties.class);
               assertThat(otlpSpanExporterProperties.getEndpoint())
@@ -69,19 +68,15 @@ class OtlpGrpcSpanExporterAutoConfigurationTest {
   void disabledProperty() {
     this.contextRunner
         .withPropertyValues("otel.exporter.otlp.enabled=false")
-        .run(
-            (context) -> {
-              assertThat(context.containsBean("otelOtlpGrpcSpanExporter")).isFalse();
-            });
+        .run(context -> assertThat(context.containsBean("otelOtlpGrpcSpanExporter")).isFalse());
   }
 
   @Test
   @DisplayName("when otlp enabled property is MISSING should initialize OtlpGrpcSpanExporter bean")
   void noProperty() {
     this.contextRunner.run(
-        (context) -> {
-          assertThat(context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class))
-              .isNotNull();
-        });
+        context ->
+            assertThat(context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class))
+                .isNotNull());
   }
 }

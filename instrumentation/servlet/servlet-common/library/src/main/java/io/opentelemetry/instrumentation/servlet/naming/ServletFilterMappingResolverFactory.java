@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.servlet.naming;
 import io.opentelemetry.instrumentation.api.servlet.MappingResolver;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +53,7 @@ public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION> {
 
     List<String> mappingsList = new ArrayList<>(mappings);
     // sort longest mapping first
-    Collections.sort(mappingsList, (s1, s2) -> s2.length() - s1.length());
+    mappingsList.sort((s1, s2) -> s2.length() - s1.length());
 
     return mappingsList;
   }

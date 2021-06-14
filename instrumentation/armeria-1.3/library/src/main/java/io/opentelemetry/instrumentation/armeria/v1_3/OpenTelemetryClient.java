@@ -40,10 +40,7 @@ final class OpenTelemetryClient extends SimpleDecoratingHttpClient {
     if (span.isRecording()) {
       ctx.log()
           .whenComplete()
-          .thenAccept(
-              log -> {
-                instrumenter.end(context, ctx, log, log.responseCause());
-              });
+          .thenAccept(log -> instrumenter.end(context, ctx, log, log.responseCause()));
     }
 
     try (Scope ignored = context.makeCurrent()) {
