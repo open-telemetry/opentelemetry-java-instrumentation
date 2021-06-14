@@ -173,7 +173,7 @@ public final class TracingAssembly {
         biCompose(
             oldOnCompletableSubscribe,
             (completable, observer) -> {
-              final Context context = Context.current();
+              Context context = Context.current();
               try (Scope ignored = context.makeCurrent()) {
                 return new TracingCompletableObserver(observer, context);
               }
@@ -187,7 +187,7 @@ public final class TracingAssembly {
         biCompose(
             oldOnFlowableSubscribe,
             (flowable, subscriber) -> {
-              final Context context = Context.current();
+              Context context = Context.current();
               try (Scope ignored = context.makeCurrent()) {
                 if (subscriber instanceof ConditionalSubscriber) {
                   return new TracingConditionalSubscriber<>(
@@ -206,7 +206,7 @@ public final class TracingAssembly {
         biCompose(
             oldOnObservableSubscribe,
             (observable, observer) -> {
-              final Context context = Context.current();
+              Context context = Context.current();
               try (Scope ignored = context.makeCurrent()) {
                 return new TracingObserver(observer, context);
               }
@@ -220,7 +220,7 @@ public final class TracingAssembly {
         biCompose(
             oldOnSingleSubscribe,
             (single, singleObserver) -> {
-              final Context context = Context.current();
+              Context context = Context.current();
               try (Scope ignored = context.makeCurrent()) {
                 return new TracingSingleObserver(singleObserver, context);
               }
@@ -236,7 +236,7 @@ public final class TracingAssembly {
                 oldOnMaybeSubscribe,
                 (BiFunction<Maybe, MaybeObserver, MaybeObserver>)
                     (maybe, maybeObserver) -> {
-                      final Context context = Context.current();
+                      Context context = Context.current();
                       try (Scope ignored = context.makeCurrent()) {
                         return new TracingMaybeObserver(maybeObserver, context);
                       }

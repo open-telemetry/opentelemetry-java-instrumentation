@@ -158,6 +158,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     return result;
   }
 
+  @SuppressWarnings("unused")
   public static class ExternalAnnotationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

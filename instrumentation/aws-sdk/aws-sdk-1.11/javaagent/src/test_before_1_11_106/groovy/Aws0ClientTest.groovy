@@ -274,8 +274,4 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
       }
     }
   }
-
-  String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : "HTTP request"
-  }
 }

@@ -43,6 +43,7 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$FallbackAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -55,6 +56,7 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class FallbackAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

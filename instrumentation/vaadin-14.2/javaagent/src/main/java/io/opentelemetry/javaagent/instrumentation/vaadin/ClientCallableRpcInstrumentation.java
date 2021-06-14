@@ -37,7 +37,9 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$InvokeMethodAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class InvokeMethodAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(1) Class<?> componentClass,

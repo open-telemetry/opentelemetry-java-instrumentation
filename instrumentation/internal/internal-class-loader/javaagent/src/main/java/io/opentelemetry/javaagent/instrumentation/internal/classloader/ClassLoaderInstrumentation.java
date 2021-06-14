@@ -95,7 +95,9 @@ public class ClassLoaderInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class LoadClassAdvice {
+
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Class<?> onEnter(@Advice.Argument(0) String name) {
       // need to use call depth here to prevent re-entry from call to Class.forName() below

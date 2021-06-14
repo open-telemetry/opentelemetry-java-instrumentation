@@ -54,7 +54,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
         NettyFutureInstrumentation.class.getName() + "$RemoveListenersAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AddListenerAdvice {
+
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
@@ -63,7 +65,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class AddListenersAdvice {
+
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
@@ -80,7 +84,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RemoveListenerAdvice {
+
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)
@@ -89,7 +95,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RemoveListenersAdvice {
+
     @Advice.OnMethodEnter
     public static void wrapListener(
         @Advice.Argument(value = 0, readOnly = false)

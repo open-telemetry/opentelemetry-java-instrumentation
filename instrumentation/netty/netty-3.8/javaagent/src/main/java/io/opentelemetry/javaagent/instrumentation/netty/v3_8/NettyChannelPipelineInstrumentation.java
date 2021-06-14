@@ -105,7 +105,9 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ChannelPipelineAdd2ArgsAdvice {
+
     @Advice.OnMethodEnter
     public static int checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) ChannelHandler handler) {
@@ -134,7 +136,9 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ChannelPipelineAdd3ArgsAdvice {
+
     @Advice.OnMethodEnter
     public static int checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(2) ChannelHandler handler) {

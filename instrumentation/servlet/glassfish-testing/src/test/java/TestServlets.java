@@ -15,8 +15,8 @@ public class TestServlets {
   @WebServlet("/success")
   public static class Success extends HttpServlet {
     @Override
-    protected void service(HttpServletRequest req, final HttpServletResponse resp) {
-      final HttpServerTest.ServerEndpoint endpoint =
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+      HttpServerTest.ServerEndpoint endpoint =
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
@@ -35,8 +35,8 @@ public class TestServlets {
   @WebServlet("/query")
   public static class Query extends HttpServlet {
     @Override
-    protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
-      final HttpServerTest.ServerEndpoint endpoint =
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+      HttpServerTest.ServerEndpoint endpoint =
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
@@ -55,8 +55,8 @@ public class TestServlets {
   @WebServlet("/redirect")
   public static class Redirect extends HttpServlet {
     @Override
-    protected void service(HttpServletRequest req, final HttpServletResponse resp) {
-      final HttpServerTest.ServerEndpoint endpoint =
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+      HttpServerTest.ServerEndpoint endpoint =
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
@@ -73,8 +73,8 @@ public class TestServlets {
   @WebServlet("/error-status")
   public static class ErrorServlet extends HttpServlet {
     @Override
-    protected void service(HttpServletRequest req, final HttpServletResponse resp) {
-      final HttpServerTest.ServerEndpoint endpoint =
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+      HttpServerTest.ServerEndpoint endpoint =
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
@@ -93,7 +93,7 @@ public class TestServlets {
   public static class ExceptionServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
-      final HttpServerTest.ServerEndpoint endpoint =
+      HttpServerTest.ServerEndpoint endpoint =
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,

@@ -56,10 +56,6 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
     system?.terminate()
   }
 
-  String expectedOperationName() {
-    return "play-ws.request"
-  }
-
   @Override
   int maxRedirects() {
     3

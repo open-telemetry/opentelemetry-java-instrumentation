@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.Advice;
 
+@SuppressWarnings("unused")
 public class ResponseSendAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

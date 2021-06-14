@@ -38,7 +38,7 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
   private final Observer<? super T> wrappedObserver;
   private final Context context;
 
-  TracingObserver(final Observer<? super T> actual, final Context context) {
+  TracingObserver(Observer<? super T> actual, Context context) {
     super(actual);
     this.wrappedObserver = actual;
     this.context = context;
@@ -67,9 +67,9 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
 
   @Override
   public int requestFusion(int mode) {
-    final QueueDisposable<T> qd = getQueueDisposable();
+    QueueDisposable<T> qd = getQueueDisposable();
     if (qd != null) {
-      final int m = qd.requestFusion(mode);
+      int m = qd.requestFusion(mode);
       sourceMode = m;
       return m;
     }

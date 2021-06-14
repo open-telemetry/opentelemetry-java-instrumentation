@@ -35,16 +35,9 @@ dependencies {
     exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-common'
   }
 
-  implementation "io.opentelemetry:opentelemetry-exporter-jaeger"
+  // Only the logging exporter is included in our slim distribution so we include it here.
+  // Other exporters are in javaagent-exporters
   implementation "io.opentelemetry:opentelemetry-exporter-logging"
-  implementation "io.opentelemetry:opentelemetry-exporter-otlp"
-  implementation "io.opentelemetry:opentelemetry-exporter-otlp-metrics"
-
-  implementation "io.opentelemetry:opentelemetry-exporter-prometheus"
-  implementation "io.prometheus:simpleclient"
-  implementation "io.prometheus:simpleclient_httpserver"
-
-  implementation "io.opentelemetry:opentelemetry-exporter-zipkin"
 
   api "net.bytebuddy:byte-buddy"
   implementation "net.bytebuddy:byte-buddy-agent"
@@ -53,8 +46,6 @@ dependencies {
   implementation "org.slf4j:slf4j-api"
   implementation "com.google.guava:guava"
 
-  implementation "io.grpc:grpc-netty-shaded:1.35.1"
-
   testImplementation project(':testing-common')
   testImplementation "org.assertj:assertj-core"
   testImplementation "org.mockito:mockito-core"
@@ -62,15 +53,9 @@ dependencies {
   instrumentationMuzzle sourceSets.main.output
 }
 
-test {
-  filter {
-    excludeTestsMatching 'HelperInjectionTest'
-  }
+// Here we only include autoconfigure but don't include OTLP exporters to ensure they are only in
+// the full distribution. We need to override the default exporter setting of OTLP as a result.
+tasks.withType(Test).configureEach {
+  environment "OTEL_TRACES_EXPORTER", "none"
+  environment "OTEL_METRICS_EXPORTER", "none"
 }
-// Needs a fresh classloader.
-// https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/919
-test.finalizedBy(tasks.register('testHelperInjection', Test) {
-  filter {
-    includeTestsMatching 'HelperInjectionTest'
-  }
-})

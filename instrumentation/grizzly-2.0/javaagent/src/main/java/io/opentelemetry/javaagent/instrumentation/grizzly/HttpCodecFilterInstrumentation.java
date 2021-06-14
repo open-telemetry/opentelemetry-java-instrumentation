@@ -47,6 +47,7 @@ public class HttpCodecFilterInstrumentation implements TypeInstrumentation {
         HttpCodecFilterInstrumentation.class.getName() + "$HandleReadOldAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleReadAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -69,6 +70,7 @@ public class HttpCodecFilterInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class HandleReadOldAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

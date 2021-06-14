@@ -53,8 +53,10 @@ CopySpec isolateSpec(Collection<Project> projectsWithShadowJar) {
 
 //Includes everything needed for OOTB experience
 shadowJar {
-  dependsOn ':instrumentation:shadowJar'
-  def projectsWithShadowJar = [project(':instrumentation')]
+  def projectsWithShadowJar = [project(':instrumentation'), project(":javaagent-exporters")]
+  projectsWithShadowJar.each {
+    dependsOn("${it.path}:shadowJar")
+  }
   with isolateSpec(projectsWithShadowJar)
 }
 

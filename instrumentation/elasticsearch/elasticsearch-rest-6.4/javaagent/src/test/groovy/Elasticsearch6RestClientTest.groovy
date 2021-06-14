@@ -73,8 +73,4 @@ class Elasticsearch6RestClientTest extends AgentInstrumentationSpecification {
       }
     }
   }
-
-  String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : "HTTP request"
-  }
 }

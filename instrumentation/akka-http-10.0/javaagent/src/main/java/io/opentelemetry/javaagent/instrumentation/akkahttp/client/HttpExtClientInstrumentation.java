@@ -43,6 +43,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SingleRequestAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request,

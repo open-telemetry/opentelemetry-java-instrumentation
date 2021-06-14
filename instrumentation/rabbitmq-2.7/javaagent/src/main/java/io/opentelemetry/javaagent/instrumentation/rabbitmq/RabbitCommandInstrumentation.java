@@ -43,7 +43,9 @@ public class RabbitCommandInstrumentation implements TypeInstrumentation {
     public static final ThreadLocal<Context> CURRENT_RABBIT_CONTEXT = new ThreadLocal<>();
   }
 
+  @SuppressWarnings("unused")
   public static class CommandConstructorAdvice {
+
     @Advice.OnMethodExit
     public static void setSpanNameAddHeaders(@Advice.This Command command) {
 

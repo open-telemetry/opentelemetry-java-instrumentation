@@ -40,6 +40,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CouchbaseCoreAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
 

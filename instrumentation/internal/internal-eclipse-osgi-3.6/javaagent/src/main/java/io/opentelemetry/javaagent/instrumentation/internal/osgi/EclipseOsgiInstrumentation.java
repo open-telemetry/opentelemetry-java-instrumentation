@@ -39,6 +39,7 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$IsDynamicallyImportedAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class IsDynamicallyImportedAdvice {
 
     // "skipOn" is used to skip execution of the instrumented method when a ClassLoaderMatcher is

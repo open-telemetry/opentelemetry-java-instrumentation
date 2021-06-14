@@ -34,6 +34,7 @@ public class AbstractStreamMessageSubscriptionInstrumentation implements TypeIns
 
   @SuppressWarnings("unused")
   public static class WrapSubscriberAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void attachContext(
         @Advice.Argument(value = 1, readOnly = false) Subscriber subscriber) {
