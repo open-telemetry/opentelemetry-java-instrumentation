@@ -2,7 +2,7 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 
 dependencies {
   implementation "io.opentelemetry:opentelemetry-api"

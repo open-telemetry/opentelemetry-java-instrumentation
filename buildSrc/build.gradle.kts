@@ -44,8 +44,10 @@ dependencies {
   implementation("org.ow2.asm:asm:7.0-beta")
   implementation("org.ow2.asm:asm-tree:7.0-beta")
   implementation("org.apache.httpcomponents:httpclient:4.5.10")
+  implementation("org.gradle:test-retry-gradle-plugin:1.2.1")
   // When updating, also update dependencyManagement/dependencyManagement.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.11.2")
+  implementation("net.ltgt.gradle:gradle-errorprone-plugin:2.0.1")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.1")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.1")

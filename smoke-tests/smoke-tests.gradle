@@ -8,7 +8,7 @@ ext {
   maxJavaVersionForTests = JavaVersion.VERSION_11
 }
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 
 description = 'smoke-tests'
 
