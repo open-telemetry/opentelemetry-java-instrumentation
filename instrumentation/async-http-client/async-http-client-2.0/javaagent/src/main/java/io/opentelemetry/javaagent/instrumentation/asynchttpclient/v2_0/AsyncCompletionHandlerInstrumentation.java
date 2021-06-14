@@ -55,7 +55,7 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
-      ContextStore<AsyncHandler, AsyncHandlerData> contextStore =
+      ContextStore<AsyncHandler<?>, AsyncHandlerData> contextStore =
           InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class);
       AsyncHandlerData data = contextStore.get(handler);
       if (data == null) {
@@ -81,7 +81,7 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
-      ContextStore<AsyncHandler, AsyncHandlerData> contextStore =
+      ContextStore<AsyncHandler<?>, AsyncHandlerData> contextStore =
           InstrumentationContext.get(AsyncHandler.class, AsyncHandlerData.class);
       AsyncHandlerData data = contextStore.get(handler);
       if (data == null) {
