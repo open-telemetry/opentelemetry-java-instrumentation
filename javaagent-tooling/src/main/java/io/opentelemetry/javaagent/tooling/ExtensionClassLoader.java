@@ -52,13 +52,15 @@ public class ExtensionClassLoader extends URLClassLoader {
         parseLocation(
             System.getProperty(
                 "otel.javaagent.experimental.extensions",
-                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS")), javaagentFile));
+                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS")),
+            javaagentFile));
 
     extensions.addAll(
         parseLocation(
             System.getProperty(
                 "otel.javaagent.experimental.initializer.jar",
-                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR")), javaagentFile));
+                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR")),
+            javaagentFile));
     // TODO when logging is configured add warning about deprecated property
 
     if (extensions.isEmpty()) {

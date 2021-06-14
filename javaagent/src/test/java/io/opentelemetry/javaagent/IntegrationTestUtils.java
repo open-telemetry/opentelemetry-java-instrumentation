@@ -58,7 +58,7 @@ public class IntegrationTestUtils {
     }
   }
 
-  //TODO this works only accidentally now, because we don't have extensions in tests.
+  // TODO this works only accidentally now, because we don't have extensions in tests.
   /** Returns the URL to the jar the agent appended to the bootstrap classpath. */
   public static ClassLoader getBootstrapProxy() throws Exception {
     ClassLoader agentClassLoader = getAgentClassLoader();
