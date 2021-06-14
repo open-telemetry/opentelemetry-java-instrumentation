@@ -17,6 +17,9 @@ configurations {
 }
 
 dependencies {
+  // Only used during compilation by bytebuddy plugin
+  compileOnly "com.google.guava:guava"
+
   implementation project(':javaagent-bootstrap')
   implementation project(':javaagent-extension-api')
   implementation project(':javaagent-api')
@@ -30,10 +33,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   implementation "io.opentelemetry:opentelemetry-extension-aws"
   implementation "io.opentelemetry:opentelemetry-extension-trace-propagators"
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-resources") {
-    // exclude sdk-common to avoid bumping guava version
-    exclude group: 'io.opentelemetry', module: 'opentelemetry-sdk-common'
-  }
+  implementation "io.opentelemetry:opentelemetry-sdk-extension-resources"
 
   // Only the logging exporter is included in our slim distribution so we include it here.
   // Other exporters are in javaagent-exporters
@@ -42,9 +42,8 @@ dependencies {
   api "net.bytebuddy:byte-buddy"
   implementation "net.bytebuddy:byte-buddy-agent"
   annotationProcessor "com.google.auto.service:auto-service"
-  implementation "com.google.auto.service:auto-service"
+  compileOnly "com.google.auto.service:auto-service"
   implementation "org.slf4j:slf4j-api"
-  implementation "com.google.guava:guava"
 
   testImplementation project(':testing-common')
   testImplementation "org.assertj:assertj-core"
