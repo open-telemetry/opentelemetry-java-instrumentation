@@ -367,7 +367,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     VersionRangeRequest rangeRequest = new VersionRangeRequest();
     rangeRequest.setRepositories(getProjectRepositories(instrumentationProject));
     rangeRequest.setArtifact(directiveArtifact);
-    VersionRangeResult rangeResult;
+    final VersionRangeResult rangeResult;
     try {
       rangeResult = system.resolveVersionRange(session, rangeRequest);
     } catch (VersionRangeResolutionException e) {
@@ -446,7 +446,7 @@ public class MuzzlePlugin implements Plugin<Project> {
     VersionRangeRequest rangeRequest = new VersionRangeRequest();
     rangeRequest.setRepositories(repos);
     rangeRequest.setArtifact(directiveArtifact);
-    VersionRangeResult rangeResult;
+    final VersionRangeResult rangeResult;
     try {
       rangeResult = system.resolveVersionRange(session, rangeRequest);
     } catch (VersionRangeResolutionException e) {

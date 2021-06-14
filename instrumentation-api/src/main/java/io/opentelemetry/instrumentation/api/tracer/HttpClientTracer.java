@@ -185,7 +185,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       URI url = url(request);
       if (url != null) {
         netPeerAttributes.setNetPeer(setter, url.getHost(), null, url.getPort());
-        URI sanitized;
+        final URI sanitized;
         if (url.getUserInfo() != null) {
           sanitized =
               new URI(

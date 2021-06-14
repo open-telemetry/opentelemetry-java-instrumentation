@@ -23,7 +23,7 @@ public final class MessagePropertyGetter implements TextMapGetter<MessageWithDes
   @Override
   public String get(MessageWithDestination carrier, String key) {
     String propName = key.replace("-", MessagePropertySetter.DASH);
-    Object value;
+    final Object value;
     try {
       value = carrier.getMessage().getObjectProperty(propName);
     } catch (JMSException e) {

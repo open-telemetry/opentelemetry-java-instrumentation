@@ -31,7 +31,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       return;
     }
 
-    ChannelPromise writePromise;
+    final ChannelPromise writePromise;
 
     if (msg instanceof LastHttpContent) {
       if (prm.isVoid()) {
