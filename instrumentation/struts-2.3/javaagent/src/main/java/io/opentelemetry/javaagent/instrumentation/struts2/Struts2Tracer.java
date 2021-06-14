@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServerSpanNaming;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
 public class Struts2Tracer extends BaseTracer {
@@ -30,7 +31,7 @@ public class Struts2Tracer extends BaseTracer {
     Class<?> actionClass = action.getClass();
 
     String method = actionInvocation.getProxy().getMethod();
-    String spanName = spanNameForMethod(actionClass, method);
+    String spanName = SpanNames.fromMethod(actionClass, method);
 
     SpanBuilder strutsSpan = spanBuilder(parentContext, spanName, INTERNAL);
 

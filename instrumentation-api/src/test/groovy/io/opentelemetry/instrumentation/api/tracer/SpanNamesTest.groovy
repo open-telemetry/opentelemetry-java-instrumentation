@@ -10,42 +10,42 @@ import spock.lang.Specification
 
 class SpanNamesTest extends Specification {
 
-  def "test spanNameForClass"() {
+  def "test fromMethod"() {
     when:
-    String result = SpanNames.spanNameForClass(clazz)
+    String result = SpanNames.fromMethod(method)
 
     then:
     result == expected
 
     where:
-    clazz         | expected
-    SpanNamesTest | "SpanNamesTest"
-    SpanNames     | "SpanNames"
+    method                                                  | expected
+    ReflectionUtil.getMethodByName(SpanNames, "fromMethod") | "SpanNames.fromMethod"
+    ReflectionUtil.getMethodByName(String, "length")        | "String.length"
   }
 
-  def "test spanNameForMethod"() {
+  def "test fromMethod with class and method ref"() {
     when:
-    String result = SpanNames.spanNameForMethod(method)
+    String result = SpanNames.fromMethod(clazz, method)
 
     then:
     result == expected
 
     where:
-    method                                                        | expected
-    ReflectionUtil.getMethodByName(SpanNames, "spanNameForClass") | "SpanNames.spanNameForClass"
-    ReflectionUtil.getMethodByName(String, "length")              | "String.length"
+    clazz = SpanNames
+    method = ReflectionUtil.getMethodByName(SpanNames, "fromMethod")
+    expected = "SpanNames.fromMethod"
   }
 
-  def "test spanNameForMethod with class"() {
+  def "test fromMethod with class and method name"() {
     when:
-    String result = SpanNames.spanNameForMethod(clazz, method)
+    String result = SpanNames.fromMethod(clazz, method)
 
     then:
     result == expected
 
     where:
-    clazz     | method                                                        | expected
-    SpanNames | ReflectionUtil.getMethodByName(SpanNames, "spanNameForClass") | "SpanNames.spanNameForClass"
-    SpanNames | "test"                                                        | "SpanNames.test"
+    clazz = SpanNames
+    method = "test"
+    expected = "SpanNames.test"
   }
 }
