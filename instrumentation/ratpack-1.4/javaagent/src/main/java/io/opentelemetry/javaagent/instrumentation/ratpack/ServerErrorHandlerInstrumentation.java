@@ -50,7 +50,9 @@ public class ServerErrorHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Context ctx, @Advice.Argument(1) Throwable throwable) {
       Optional<io.opentelemetry.context.Context> otelContext =
           ctx.maybeGet(io.opentelemetry.context.Context.class);
-      otelContext.ifPresent(context -> tracer().onException(context, throwable));
+      if (otelContext.isPresent()) {
+        tracer().onException(otelContext.get(), throwable);
+      }
     }
   }
 }
