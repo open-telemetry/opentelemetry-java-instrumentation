@@ -2,7 +2,7 @@
 plugins {
   id "otel.shadow-conventions"
 }
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 
 Project instr_project = project
 subprojects {

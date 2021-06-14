@@ -1,4 +1,4 @@
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 
 // liberty jars are not available as a maven dependency so we provide stripped
 // down versions of liberty classes that we can use from integration code without

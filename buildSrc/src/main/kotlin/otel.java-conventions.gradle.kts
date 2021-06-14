@@ -9,6 +9,10 @@ plugins {
   id("net.ltgt.errorprone")
 }
 
+apply(from="$rootDir/gradle/spotless.gradle")
+apply(from="$rootDir/gradle/codenarc.gradle")
+apply(from="$rootDir/gradle/checkstyle.gradle")
+
 // Version to use to compile code and run tests.
 val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_11
 
@@ -20,10 +24,11 @@ val applyCodeCoverage = !project.path.run {
 }
 
 if (applyCodeCoverage) {
-  apply(from = "${rootDir}/gradle/jacoco.gradle")
+  apply(from="${rootDir}/gradle/jacoco.gradle")
 }
 
-val minJavaVersionSupported = project.findProperty("minJavaVersionSupported")?.let(JavaVersion::toVersion) ?: JavaVersion.VERSION_1_8
+val minJavaVersionSupported = project.findProperty("minJavaVersionSupported")?.let(JavaVersion::toVersion)
+  ?: JavaVersion.VERSION_1_8
 val maxJavaVersionForTests = project.findProperty("maxJavaVersionForTests")?.let(JavaVersion::toVersion)
 
 java {
@@ -86,9 +91,9 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
 }
 
 dependencies {
-  add(dependencyManagementConf.name, project(":dependencyManagement"))
+  add(dependencyManagementConf.name, platform(project(":dependencyManagement")))
 
-  components.all(NettyAlignmentRule::class)
+  components.all<NettyAlignmentRule>()
 
   compileOnly("org.checkerframework:checker-qual")
 
@@ -218,9 +223,11 @@ tasks.withType<Test>().configureEach {
       })
     }
   }
+}
 
-  afterEvaluate {
-    if (plugins.hasPlugin("org.unbroken-dome.test-sets") && configurations.findByName("latestDepTestRuntime") != null) {
+afterEvaluate {
+  if (plugins.hasPlugin("org.unbroken-dome.test-sets") && configurations.findByName("latestDepTestRuntime") != null) {
+    tasks.withType<Test>().configureEach {
       doFirst {
         val testArtifacts = configurations.testRuntimeClasspath.get().resolvedConfiguration.resolvedArtifacts
         val latestTestArtifacts = configurations.getByName("latestDepTestRuntimeClasspath").resolvedConfiguration.resolvedArtifacts

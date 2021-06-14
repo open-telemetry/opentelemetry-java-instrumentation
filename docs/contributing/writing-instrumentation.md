@@ -155,7 +155,7 @@ from instrumented server or library will be used.
 
 Create a module called `compile-stub` and add `compile-stub.gradle` with following content
 ```
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 ```
 In javaagent module add compile only dependency with
 ```

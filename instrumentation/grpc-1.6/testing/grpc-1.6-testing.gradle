@@ -3,7 +3,7 @@ plugins {
   id "com.google.protobuf" version "0.8.16"
 }
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 
 def grpcVersion = '1.6.0'
 

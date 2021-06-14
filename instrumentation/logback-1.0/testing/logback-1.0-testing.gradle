@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 
 dependencies {
   compileOnly project(":instrumentation:logback-1.0:library")
