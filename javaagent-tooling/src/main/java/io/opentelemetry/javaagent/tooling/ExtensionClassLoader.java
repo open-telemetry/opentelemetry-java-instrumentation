@@ -93,7 +93,7 @@ public class ExtensionClassLoader extends URLClassLoader {
             extractFile(jarFile, jarEntry, tempFile);
             addFileUrl(extensions, tempFile);
           } else {
-            System.out.println("Failed to create temp file " + tempFile);
+            System.err.println("Failed to create temp file " + tempFile);
           }
         }
       }
@@ -111,7 +111,7 @@ public class ExtensionClassLoader extends URLClassLoader {
   }
 
   private static URLClassLoader getDelegate(ClassLoader parent, URL extensionUrl) {
-    return new URLClassLoader(new URL[] {extensionUrl}, parent);
+    return new ExtensionClassLoader(new URL[] {extensionUrl}, parent);
   }
 
   private static List<URL> parseLocation(String locationName, File javaagentFile) {
