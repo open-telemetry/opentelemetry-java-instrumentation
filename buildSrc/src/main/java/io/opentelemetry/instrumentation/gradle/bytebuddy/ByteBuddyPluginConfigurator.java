@@ -81,13 +81,7 @@ public class ByteBuddyPluginConfigurator {
             .collect(Collectors.toList());
 
     TaskProvider<?> byteBuddyTask =
-        project
-            .getTasks()
-            .register(
-                taskName,
-                task -> {
-                  task.dependsOn(languageTasks);
-                });
+        project.getTasks().register(taskName, task -> task.dependsOn(languageTasks));
 
     project
         .getTasks()

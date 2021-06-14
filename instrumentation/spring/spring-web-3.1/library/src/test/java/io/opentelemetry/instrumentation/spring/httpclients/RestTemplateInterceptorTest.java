@@ -27,7 +27,7 @@ class RestTemplateInterceptorTest {
 
   @Mock HttpRequest httpRequestMock;
   @Mock ClientHttpRequestExecution requestExecutionMock;
-  byte[] requestBody = new byte[0];
+  static final byte[] requestBody = new byte[0];
 
   @Test
   void shouldSkipWhenContextHasClientSpan() throws Exception {

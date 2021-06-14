@@ -4,7 +4,6 @@
  */
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
-import java.util.concurrent.Callable;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -20,14 +19,11 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-              resp.setContentType("text/plain");
-              resp.setStatus(endpoint.getStatus());
-              resp.getWriter().print(endpoint.getBody());
-              return null;
-            }
+          () -> {
+            resp.setContentType("text/plain");
+            resp.setStatus(endpoint.getStatus());
+            resp.getWriter().print(endpoint.getBody());
+            return null;
           });
     }
   }
@@ -40,14 +36,11 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-              resp.setContentType("text/plain");
-              resp.setStatus(endpoint.getStatus());
-              resp.getWriter().print(req.getQueryString());
-              return null;
-            }
+          () -> {
+            resp.setContentType("text/plain");
+            resp.setStatus(endpoint.getStatus());
+            resp.getWriter().print(req.getQueryString());
+            return null;
           });
     }
   }
@@ -60,12 +53,9 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-              resp.sendRedirect(endpoint.getBody());
-              return null;
-            }
+          () -> {
+            resp.sendRedirect(endpoint.getBody());
+            return null;
           });
     }
   }
@@ -78,13 +68,10 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-              resp.setContentType("text/plain");
-              resp.sendError(endpoint.getStatus(), endpoint.getBody());
-              return null;
-            }
+          () -> {
+            resp.setContentType("text/plain");
+            resp.sendError(endpoint.getStatus(), endpoint.getBody());
+            return null;
           });
     }
   }
@@ -97,11 +84,8 @@ public class TestServlets {
           HttpServerTest.ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
-          new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-              throw new Exception(endpoint.getBody());
-            }
+          () -> {
+            throw new Exception(endpoint.getBody());
           });
     }
   }

@@ -107,15 +107,12 @@ final class AwsSdkClientTracer extends HttpClientTracer<Request<?>, Request<?>, 
 
   private String qualifiedOperation(String service, Class<?> operation) {
     ConcurrentHashMap<String, String> cache = namesCache.get(operation);
-    String qualified = cache.get(service);
-    if (qualified == null) {
-      qualified =
-          service.replace("Amazon", "").trim()
-              + '.'
-              + operation.getSimpleName().replace("Request", "");
-      cache.put(service, qualified);
-    }
-    return qualified;
+    return cache.computeIfAbsent(
+        service,
+        s ->
+            s.replace("Amazon", "").trim()
+                + '.'
+                + operation.getSimpleName().replace("Request", ""));
   }
 
   @Override

@@ -9,8 +9,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 public class ServerLegacy extends UnicastRemoteObject implements Greeter {
-  @SuppressWarnings("ConstantField")
-  static String RMI_ID = ServerLegacy.class.getSimpleName();
+  static final String RMI_ID = ServerLegacy.class.getSimpleName();
 
   private static final long serialVersionUID = 1L;
 
