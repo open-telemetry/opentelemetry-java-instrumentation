@@ -13,6 +13,14 @@ apply(from="$rootDir/gradle/spotless.gradle")
 apply(from="$rootDir/gradle/codenarc.gradle")
 apply(from="$rootDir/gradle/checkstyle.gradle")
 
+afterEvaluate {
+  if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
+    base.archivesBaseName = "opentelemetry-javaagent-${base.archivesBaseName}"
+  } else {
+    base.archivesBaseName = "opentelemetry-${base.archivesBaseName}"
+  }
+}
+
 // Version to use to compile code and run tests.
 val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_11
 
