@@ -153,8 +153,6 @@ normalization {
 
 tasks.named('javadoc').configure {
   options.addStringOption('Xdoclint:none', '-quiet')
-  // non-standard option to fail on warnings, see https://bugs.openjdk.java.net/browse/JDK-8200363
-  options.addStringOption('Xwerror', '-quiet')
 
   doFirst {
     if (project.ext.has("apiLinks")) {
