@@ -5,7 +5,8 @@ on:
     paths:
       - 'smoke-tests/springboot/**'
       - '.github/workflows/build-springboot-smoke-dist.yaml'
-    branches: 'main'
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
