@@ -18,7 +18,7 @@ class AgentClassLoaderTest extends Specification {
     def className2 = 'some/class/Name2'
     // any jar would do, use opentelemety sdk
     URL testJarLocation = JavaVersionSpecific.getProtectionDomain().getCodeSource().getLocation()
-    AgentClassLoader loader = new AgentClassLoader(testJarLocation, "", null)
+    AgentClassLoader loader = new AgentClassLoader(new File(testJarLocation.toURI()), "", null)
     Phaser threadHoldLockPhase = new Phaser(2)
     Phaser acquireLockFromMainThreadPhase = new Phaser(2)
 
@@ -57,7 +57,7 @@ class AgentClassLoaderTest extends Specification {
     boolean jdk8 = "1.8" == System.getProperty("java.specification.version")
     // sdk is a multi release jar
     URL multiReleaseJar = JavaVersionSpecific.getProtectionDomain().getCodeSource().getLocation()
-    AgentClassLoader loader = new AgentClassLoader(multiReleaseJar, "", null) {
+    AgentClassLoader loader = new AgentClassLoader(new File(multiReleaseJar.toURI()), "", null) {
       @Override
       protected String getClassSuffix() {
         return ""
