@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.tracer;
 
-public class ClassNames {
+public final class ClassNames {
 
   private static final ClassValue<String> simpleNames =
       new ClassValue<String>() {
@@ -32,4 +32,6 @@ public class ClassNames {
   public static String simpleName(Class<?> type) {
     return simpleNames.get(type);
   }
+
+  private ClassNames() {}
 }
