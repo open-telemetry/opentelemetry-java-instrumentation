@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.code;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
+import io.opentelemetry.instrumentation.api.tracer.ClassNames;
 
 /**
  * A helper {@link SpanNameExtractor} implementation for instrumentations that target specific Java
@@ -32,8 +32,7 @@ public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
   @Override
   public String extract(REQUEST request) {
     Class<?> cls = attributesExtractor.codeClass(request);
-    // TODO: avoid using SpanNames, encapsulate the logic here
-    String className = cls != null ? SpanNames.spanNameForClass(cls) : "<unknown>";
+    String className = cls != null ? ClassNames.simpleName(cls) : "<unknown>";
     String methodName = defaultString(attributesExtractor.methodName(request));
     return className + "." + methodName;
   }

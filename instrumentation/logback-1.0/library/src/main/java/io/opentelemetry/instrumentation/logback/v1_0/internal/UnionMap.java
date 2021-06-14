@@ -75,7 +75,7 @@ public final class UnionMap<K, V> extends AbstractMap<K, V> {
 
   @Override
   public V get(Object key) {
-    final V value = first.get(key);
+    V value = first.get(key);
     return value != null ? value : second.get(key);
   }
 

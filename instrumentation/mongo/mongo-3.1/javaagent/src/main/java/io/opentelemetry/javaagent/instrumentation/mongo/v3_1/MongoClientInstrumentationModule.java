@@ -58,6 +58,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class MongoClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

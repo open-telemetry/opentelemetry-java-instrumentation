@@ -72,7 +72,7 @@ public final class OpenTelemetryAgent {
 
       if (javaagentFile.isFile()) {
         JarFile agentJar = new JarFile(javaagentFile, false);
-        checkJarManifestMainClassIsThis(javaagentFile, agentJar);
+        verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
         inst.appendToBootstrapClassLoaderSearch(agentJar);
         return javaagentFile;
       }
@@ -119,7 +119,7 @@ public final class OpenTelemetryAgent {
     }
 
     JarFile agentJar = new JarFile(javaagentFile, false);
-    checkJarManifestMainClassIsThis(javaagentFile, agentJar);
+    verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
     inst.appendToBootstrapClassLoaderSearch(agentJar);
     return javaagentFile;
   }
@@ -164,7 +164,7 @@ public final class OpenTelemetryAgent {
     }
   }
 
-  private static void checkJarManifestMainClassIsThis(File jarFile, JarFile agentJar)
+  private static void verifyJarManifestMainClassIsThis(File jarFile, JarFile agentJar)
       throws IOException {
     Manifest manifest = agentJar.getManifest();
     String mainClass = manifest.getMainAttributes().getValue("Main-Class");

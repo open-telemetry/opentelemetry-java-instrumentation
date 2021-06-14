@@ -40,7 +40,9 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
         this.getClass().getName() + "$ExecuteAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ExecuteAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(1) ChunkContext chunkContext, @Advice.Local("otelScope") Scope scope) {

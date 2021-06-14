@@ -254,6 +254,9 @@ tasks.withType(Test).configureEach {
     jvmArgs "-Djavax.net.ssl.trustStore=${trustStore.absolutePath}"
     jvmArgs "-Djavax.net.ssl.trustStorePassword=testing"
   }
+
+  def resourceClassesCsv = ['Host', 'Os', 'Process', 'ProcessRuntime'].collect { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }.join(",")
+  jvmArgs "-Dotel.java.disabled.resource.providers=${resourceClassesCsv}"
 }
 
 tasks.withType(AbstractArchiveTask).configureEach {

@@ -50,7 +50,9 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         HandlerAdapterInstrumentation.class.getName() + "$ControllerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ControllerAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResourceAndStartSpan(
         @Advice.Argument(0) HttpServletRequest request,

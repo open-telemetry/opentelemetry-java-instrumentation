@@ -33,7 +33,9 @@ public class UiInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SetCurrentAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SetCurrentAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) UI ui) {
       tracer().updateServerSpanName(ui);

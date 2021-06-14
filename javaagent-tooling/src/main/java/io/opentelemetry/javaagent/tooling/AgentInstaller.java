@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -86,6 +87,11 @@ public class AgentInstaller {
     // loading java.lang.reflect.Proxy early here still allows it to be retransformed by the
     // internal-proxy instrumentation module after the bytebuddy transformer is set up
     Proxy.class.getName();
+
+    // caffeine can trigger first access of ForkJoinPool under transform(), which leads ForkJoinPool
+    // not to get transformed itself.
+    // loading it early here still allows it to be retransformed as part of agent installation below
+    ForkJoinPool.class.getName();
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {

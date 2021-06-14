@@ -42,7 +42,7 @@ class OpenTelemetryAutoConfigurationTest {
         .withUserConfiguration(CustomTracerConfiguration.class)
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .run(
-            (context) -> {
+            context -> {
               assertThat(context.containsBean("customOpenTelemetry")).isTrue();
               assertThat(context.containsBean("openTelemetry")).isFalse();
             });
@@ -54,6 +54,6 @@ class OpenTelemetryAutoConfigurationTest {
   void initializeTracer() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run((context) -> assertThat(context.containsBean("openTelemetry")).isTrue());
+        .run(context -> assertThat(context.containsBean("openTelemetry")).isTrue());
   }
 }

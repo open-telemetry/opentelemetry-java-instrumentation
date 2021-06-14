@@ -85,13 +85,12 @@ class WebClientBeanPostProcessorTest {
     ((WebClient) processedWebClient)
         .mutate()
         .filters(
-            functions -> {
-              assertThat(
-                      functions.stream()
-                          .filter(wctf -> wctf instanceof WebClientTracingFilter)
-                          .count())
-                  .isEqualTo(1);
-            });
+            functions ->
+                assertThat(
+                        functions.stream()
+                            .filter(wctf -> wctf instanceof WebClientTracingFilter)
+                            .count())
+                    .isEqualTo(1));
 
     verify(openTelemetryProvider).getIfUnique();
   }
@@ -110,13 +109,12 @@ class WebClientBeanPostProcessorTest {
     ((WebClient) processedWebClient)
         .mutate()
         .filters(
-            functions -> {
-              assertThat(
-                      functions.stream()
-                          .filter(wctf -> wctf instanceof WebClientTracingFilter)
-                          .count())
-                  .isEqualTo(0);
-            });
+            functions ->
+                assertThat(
+                        functions.stream()
+                            .filter(wctf -> wctf instanceof WebClientTracingFilter)
+                            .count())
+                    .isEqualTo(0));
 
     verify(openTelemetryProvider).getIfUnique();
   }
@@ -136,11 +134,12 @@ class WebClientBeanPostProcessorTest {
         webClientBuilder, "testWebClientBuilder");
 
     webClientBuilder.filters(
-        functions -> {
-          assertThat(
-                  functions.stream().filter(wctf -> wctf instanceof WebClientTracingFilter).count())
-              .isEqualTo(1);
-        });
+        functions ->
+            assertThat(
+                    functions.stream()
+                        .filter(wctf -> wctf instanceof WebClientTracingFilter)
+                        .count())
+                .isEqualTo(1));
 
     verify(openTelemetryProvider, times(3)).getIfUnique();
   }

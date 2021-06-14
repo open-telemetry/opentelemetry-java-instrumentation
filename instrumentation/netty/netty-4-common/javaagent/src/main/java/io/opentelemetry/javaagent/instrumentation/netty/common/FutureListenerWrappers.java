@@ -35,7 +35,7 @@ public final class FutureListenerWrappers {
     }
     return wrappers.computeIfAbsent(
         delegate,
-        (key) -> {
+        key -> {
           if (delegate instanceof GenericProgressiveFutureListener) {
             return new WrappedProgressiveFutureListener(
                 context, (GenericProgressiveFutureListener<ProgressiveFuture<?>>) delegate);

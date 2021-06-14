@@ -77,7 +77,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             .exec()
             .getId();
 
-    String backendSuffix = "-windows-20210427.788400024";
+    String backendSuffix = "-windows-20210611.927888723";
 
     String backendImageName =
         "ghcr.io/open-telemetry/java-test-containers:smoke-fake-backend" + backendSuffix;
@@ -183,19 +183,18 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     target =
         startContainer(
             targetImageName,
-            command -> {
-              command
-                  .withExposedPorts(ExposedPort.tcp(TARGET_PORT))
-                  .withHostConfig(
-                      HostConfig.newHostConfig()
-                          .withAutoRemove(true)
-                          .withNetworkMode(natNetworkId)
-                          .withPortBindings(
-                              new PortBinding(
-                                  new Ports.Binding(null, null), ExposedPort.tcp(TARGET_PORT))))
-                  .withEnv(environment);
-            },
-            (containerId) -> {
+            command ->
+                command
+                    .withExposedPorts(ExposedPort.tcp(TARGET_PORT))
+                    .withHostConfig(
+                        HostConfig.newHostConfig()
+                            .withAutoRemove(true)
+                            .withNetworkMode(natNetworkId)
+                            .withPortBindings(
+                                new PortBinding(
+                                    new Ports.Binding(null, null), ExposedPort.tcp(TARGET_PORT))))
+                    .withEnv(environment),
+            containerId -> {
               try (InputStream agentFileStream = new FileInputStream(agentPath)) {
                 copyFileToContainer(
                     containerId, IOUtils.toByteArray(agentFileStream), "/" + TARGET_AGENT_FILENAME);

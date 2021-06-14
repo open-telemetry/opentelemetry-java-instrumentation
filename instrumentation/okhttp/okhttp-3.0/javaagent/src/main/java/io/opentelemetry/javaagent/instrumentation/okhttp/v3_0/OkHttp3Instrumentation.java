@@ -28,7 +28,9 @@ public class OkHttp3Instrumentation implements TypeInstrumentation {
         isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ConstructorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void trackCallDepth(@Advice.Local("callDepth") int callDepth) {
       callDepth = CallDepthThreadLocalMap.incrementCallDepth(OkHttpClient.Builder.class);

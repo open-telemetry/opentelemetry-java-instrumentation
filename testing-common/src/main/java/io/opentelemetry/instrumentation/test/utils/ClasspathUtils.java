@@ -31,14 +31,9 @@ public final class ClasspathUtils {
   }
 
   public static byte[] convertToByteArray(Class<?> clazz) throws IOException {
-    InputStream inputStream = null;
-    try {
-      inputStream = clazz.getClassLoader().getResourceAsStream(getResourceName(clazz.getName()));
+    try (InputStream inputStream =
+        clazz.getClassLoader().getResourceAsStream(getResourceName(clazz.getName()))) {
       return convertToByteArray(inputStream);
-    } finally {
-      if (inputStream != null) {
-        inputStream.close();
-      }
     }
   }
 
@@ -53,20 +48,14 @@ public final class ClasspathUtils {
    */
   public static URL createJarWithClasses(ClassLoader loader, String... resourceNames)
       throws IOException {
-    File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar");
+    File tmpJar = File.createTempFile(UUID.randomUUID() + "", ".jar");
     tmpJar.deleteOnExit();
 
     Manifest manifest = new Manifest();
     JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
     for (String resourceName : resourceNames) {
-      InputStream is = null;
-      try {
-        is = loader.getResourceAsStream(resourceName);
+      try (InputStream is = loader.getResourceAsStream(resourceName)) {
         addToJar(resourceName, convertToByteArray(is), target);
-      } finally {
-        if (null != is) {
-          is.close();
-        }
       }
     }
     target.close();
@@ -83,7 +72,7 @@ public final class ClasspathUtils {
    * @return the location of the newly created jar.
    */
   public static URL createJarWithClasses(Class<?>... classes) throws IOException {
-    File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar");
+    File tmpJar = File.createTempFile(UUID.randomUUID() + "", ".jar");
     tmpJar.deleteOnExit();
 
     Manifest manifest = new Manifest();

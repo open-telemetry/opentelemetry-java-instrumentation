@@ -138,8 +138,7 @@ public abstract class HttpClientTracer<REQUEST, CARRIER, RESPONSE> extends BaseT
       spanBuilder.setStartTimestamp(startTimeNanos, TimeUnit.NANOSECONDS);
     }
     onRequest(spanBuilder, request);
-    Span span = spanBuilder.startSpan();
-    return span;
+    return spanBuilder.startSpan();
   }
 
   protected void onRequest(SpanBuilder spanBuilder, REQUEST request) {

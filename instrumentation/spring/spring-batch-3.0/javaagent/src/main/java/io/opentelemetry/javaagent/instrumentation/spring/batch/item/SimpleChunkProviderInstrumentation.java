@@ -34,7 +34,9 @@ public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ReadAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ReadAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Local("otelContext") Context context, @Advice.Local("otelScope") Scope scope) {

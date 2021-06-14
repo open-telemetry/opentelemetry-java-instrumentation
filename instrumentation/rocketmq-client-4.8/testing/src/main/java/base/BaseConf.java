@@ -20,7 +20,7 @@ import org.apache.rocketmq.test.util.RandomUtil;
 public final class BaseConf {
   public static final String nsAddr;
   public static final String broker1Addr;
-  static String broker1Name;
+  static final String broker1Name;
   static final String clusterName;
   static final NamesrvController namesrvController;
   static final BrokerController brokerController;

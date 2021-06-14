@@ -36,6 +36,7 @@ public class JerseyResourceMethodDispatcherInstrumentation implements TypeInstru
         JerseyResourceMethodDispatcherInstrumentation.class.getName() + "$DispatchAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

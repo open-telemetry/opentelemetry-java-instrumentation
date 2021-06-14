@@ -30,6 +30,7 @@ public class HandlerPublisherInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class WrapSubscriberAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void enter(
         @Advice.Argument(value = 0, readOnly = false) Subscriber<?> subscriber) {

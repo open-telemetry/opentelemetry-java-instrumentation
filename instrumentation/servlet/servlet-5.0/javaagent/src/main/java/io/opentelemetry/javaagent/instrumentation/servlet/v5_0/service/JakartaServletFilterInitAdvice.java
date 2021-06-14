@@ -11,6 +11,7 @@ import jakarta.servlet.Filter;
 import jakarta.servlet.FilterConfig;
 import net.bytebuddy.asm.Advice;
 
+@SuppressWarnings("unused")
 public class JakartaServletFilterInitAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)

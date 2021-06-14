@@ -32,6 +32,7 @@ public class TrustedSubscriberInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class NeedsExecutorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpResponse.BodySubscriber bodySubscriber) {

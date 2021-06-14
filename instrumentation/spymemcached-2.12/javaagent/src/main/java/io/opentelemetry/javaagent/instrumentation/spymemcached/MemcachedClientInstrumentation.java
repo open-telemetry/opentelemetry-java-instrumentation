@@ -52,6 +52,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SyncOperationAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AsyncOperationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -78,6 +79,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class AsyncGetAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -104,6 +106,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class AsyncBulkAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -130,6 +133,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SyncOperationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -34,13 +34,13 @@ class TracingCompletableObserver implements CompletableObserver, Disposable {
   private final Context context;
   private Disposable disposable;
 
-  TracingCompletableObserver(final CompletableObserver actual, final Context context) {
+  TracingCompletableObserver(CompletableObserver actual, Context context) {
     this.actual = actual;
     this.context = context;
   }
 
   @Override
-  public void onSubscribe(final Disposable d) {
+  public void onSubscribe(Disposable d) {
     if (!DisposableHelper.validate(disposable, d)) {
       return;
     }
@@ -56,7 +56,7 @@ class TracingCompletableObserver implements CompletableObserver, Disposable {
   }
 
   @Override
-  public void onError(final Throwable e) {
+  public void onError(Throwable e) {
     try (Scope ignored = context.makeCurrent()) {
       actual.onError(e);
     }

@@ -4,8 +4,9 @@ on:
   push:
     paths:
       - 'smoke-tests/play/**'
-      - '.github/workflows/build-play-smoke-dist.yaml'
-    branches: 'main'
+      - '.github/workflows/build-play-smoke-dist.yml'
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:

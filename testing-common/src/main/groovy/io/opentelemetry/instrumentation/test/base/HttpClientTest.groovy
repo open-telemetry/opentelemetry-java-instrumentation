@@ -969,12 +969,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     }
   }
 
-  String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : "HTTP request"
-  }
-
   String expectedClientSpanName(URI uri, String method) {
-    return expectedOperationName(method)
+    return method != null ? "HTTP $method" : "HTTP request"
   }
 
   void assertClientSpanErrorEvent(SpanAssert spanAssert, URI uri, Throwable exception) {

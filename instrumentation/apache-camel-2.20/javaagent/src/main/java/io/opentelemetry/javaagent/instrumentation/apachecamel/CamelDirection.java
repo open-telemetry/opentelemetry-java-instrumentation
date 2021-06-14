@@ -7,5 +7,5 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 public enum CamelDirection {
   INBOUND,
-  OUTBOUND;
+  OUTBOUND
 }

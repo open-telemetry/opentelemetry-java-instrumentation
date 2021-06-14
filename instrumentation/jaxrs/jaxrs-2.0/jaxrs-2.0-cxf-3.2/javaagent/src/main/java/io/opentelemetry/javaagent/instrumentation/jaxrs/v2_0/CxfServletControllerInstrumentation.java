@@ -38,6 +38,7 @@ public class CxfServletControllerInstrumentation implements TypeInstrumentation 
         CxfServletControllerInstrumentation.class.getName() + "$InvokeAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class InvokeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

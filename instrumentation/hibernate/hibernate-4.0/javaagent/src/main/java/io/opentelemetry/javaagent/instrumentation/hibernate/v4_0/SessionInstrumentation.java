@@ -92,6 +92,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
         SessionInstrumentation.class.getName() + "$GetCriteriaAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SessionCloseAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -112,6 +113,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SessionMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -157,6 +159,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class GetQueryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -173,6 +176,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class GetTransactionAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -189,6 +193,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class GetCriteriaAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

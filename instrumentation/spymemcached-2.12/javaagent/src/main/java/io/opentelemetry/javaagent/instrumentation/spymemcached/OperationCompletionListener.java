@@ -11,8 +11,7 @@ import java.util.concurrent.ExecutionException;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.OperationFuture;
 
-public class OperationCompletionListener
-    extends CompletionListener<OperationFuture<? extends Object>>
+public class OperationCompletionListener extends CompletionListener<OperationFuture<?>>
     implements net.spy.memcached.internal.OperationCompletionListener {
   public OperationCompletionListener(
       Context parentContext, MemcachedConnection connection, String methodName) {
@@ -20,12 +19,12 @@ public class OperationCompletionListener
   }
 
   @Override
-  public void onComplete(OperationFuture<? extends Object> future) {
+  public void onComplete(OperationFuture<?> future) {
     closeAsyncSpan(future);
   }
 
   @Override
-  protected void processResult(Span span, OperationFuture<? extends Object> future)
+  protected void processResult(Span span, OperationFuture<?> future)
       throws ExecutionException, InterruptedException {
     future.get();
   }

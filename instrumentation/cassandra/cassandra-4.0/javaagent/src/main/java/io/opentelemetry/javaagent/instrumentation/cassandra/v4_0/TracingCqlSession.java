@@ -192,10 +192,9 @@ public class TracingCqlSession implements CqlSession {
     try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(statement);
       return stage.whenComplete(
-          (asyncResultSet, throwable) -> {
-            instrumenter()
-                .end(context, request, getExecutionInfo(asyncResultSet, throwable), throwable);
-          });
+          (asyncResultSet, throwable) ->
+              instrumenter()
+                  .end(context, request, getExecutionInfo(asyncResultSet, throwable), throwable));
     }
   }
 
@@ -206,10 +205,9 @@ public class TracingCqlSession implements CqlSession {
     try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = session.executeAsync(query);
       return stage.whenComplete(
-          (asyncResultSet, throwable) -> {
-            instrumenter()
-                .end(context, request, getExecutionInfo(asyncResultSet, throwable), throwable);
-          });
+          (asyncResultSet, throwable) ->
+              instrumenter()
+                  .end(context, request, getExecutionInfo(asyncResultSet, throwable), throwable));
     }
   }
 

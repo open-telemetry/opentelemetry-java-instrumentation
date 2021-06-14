@@ -108,7 +108,7 @@ public abstract class AbstractExecutorInstrumentation implements TypeInstrumenta
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     ElementMatcher.Junction<TypeDescription> matcher = any();
-    final ElementMatcher.Junction<TypeDescription> hasExecutorInterfaceMatcher =
+    ElementMatcher.Junction<TypeDescription> hasExecutorInterfaceMatcher =
         implementsInterface(named(Executor.class.getName()));
     if (!INCLUDE_ALL) {
       matcher =

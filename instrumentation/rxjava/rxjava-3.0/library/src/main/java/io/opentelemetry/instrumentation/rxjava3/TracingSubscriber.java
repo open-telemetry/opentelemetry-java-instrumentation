@@ -32,7 +32,7 @@ class TracingSubscriber<T> extends BasicFuseableSubscriber<T, T> {
 
   private final Context context;
 
-  TracingSubscriber(final Subscriber<? super T> downstream, final Context context) {
+  TracingSubscriber(Subscriber<? super T> downstream, Context context) {
     super(downstream);
     this.context = context;
   }
@@ -60,9 +60,9 @@ class TracingSubscriber<T> extends BasicFuseableSubscriber<T, T> {
 
   @Override
   public int requestFusion(int mode) {
-    final QueueSubscription<T> qs = this.qs;
+    QueueSubscription<T> qs = this.qs;
     if (qs != null) {
-      final int m = qs.requestFusion(mode);
+      int m = qs.requestFusion(mode);
       sourceMode = m;
       return m;
     }

@@ -38,7 +38,9 @@ public class JobBuilderHelperInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$EnhanceAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class EnhanceAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This JobBuilderHelper<?> jobBuilder) {
       ContextStore<JobExecution, ContextAndScope> executionContextStore =

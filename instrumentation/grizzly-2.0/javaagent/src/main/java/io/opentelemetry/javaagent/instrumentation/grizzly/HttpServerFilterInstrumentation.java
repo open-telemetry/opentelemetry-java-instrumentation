@@ -38,6 +38,7 @@ public class HttpServerFilterInstrumentation implements TypeInstrumentation {
         HttpServerFilterInstrumentation.class.getName() + "$PrepareResponseAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class PrepareResponseAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

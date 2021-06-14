@@ -70,6 +70,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$OnErrorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CreateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -87,7 +88,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class OnRequestAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
@@ -98,7 +101,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class OnRequestErrorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
@@ -109,7 +114,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class OnResponseAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
@@ -122,7 +129,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class OnResponseErrorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)
@@ -133,7 +142,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class OnErrorAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false)

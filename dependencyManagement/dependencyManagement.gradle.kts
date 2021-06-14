@@ -30,8 +30,8 @@ val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.12.3",
   "com.google.guava:guava-bom:30.1.1-jre",
   "org.codehaus.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:1.2.0",
-  "io.opentelemetry:opentelemetry-bom-alpha:1.2.0-alpha",
+  "io.opentelemetry:opentelemetry-bom:1.3.0",
+  "io.opentelemetry:opentelemetry-bom-alpha:1.3.0-alpha",
   "org.junit:junit-bom:5.7.1"
 )
 
@@ -53,6 +53,7 @@ val DEPENDENCY_SETS = listOf(
   ),
   DependencySet(
     "net.bytebuddy",
+    // When updating, also update buildSrc/build.gradle.kts
     "1.11.2",
     listOf("byte-buddy", "byte-buddy-agent")
   ),

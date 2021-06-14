@@ -18,7 +18,7 @@ final class CamelPropagationUtil {
 
   private CamelPropagationUtil() {}
 
-  static Context extractParent(final Map<String, Object> exchangeHeaders, Endpoint endpoint) {
+  static Context extractParent(Map<String, Object> exchangeHeaders, Endpoint endpoint) {
     return (isAwsPropagated(endpoint)
         ? extractAwsPropagationParent(exchangeHeaders)
         : extractHttpPropagationParent(exchangeHeaders));
@@ -28,7 +28,7 @@ final class CamelPropagationUtil {
     return endpoint.getClass().getName().endsWith("SqsEndpoint");
   }
 
-  private static Context extractAwsPropagationParent(final Map<String, Object> exchangeHeaders) {
+  private static Context extractAwsPropagationParent(Map<String, Object> exchangeHeaders) {
     return AwsXrayPropagator.getInstance()
         .extract(
             Context.current(),
@@ -36,13 +36,13 @@ final class CamelPropagationUtil {
             MapGetter.INSTANCE);
   }
 
-  private static Context extractHttpPropagationParent(final Map<String, Object> exchangeHeaders) {
+  private static Context extractHttpPropagationParent(Map<String, Object> exchangeHeaders) {
     return GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
         .extract(Context.current(), exchangeHeaders, MapGetter.INSTANCE);
   }
 
-  static void injectParent(Context context, final Map<String, Object> exchangeHeaders) {
+  static void injectParent(Context context, Map<String, Object> exchangeHeaders) {
     GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
         .inject(context, exchangeHeaders, MapSetter.INSTANCE);

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.lang.reflect.Method;
 
 public class ExternalAnnotationTracer extends BaseTracer {
@@ -22,6 +23,6 @@ public class ExternalAnnotationTracer extends BaseTracer {
   }
 
   public Context startSpan(Method method) {
-    return startSpan(spanNameForMethod(method));
+    return startSpan(SpanNames.fromMethod(method));
   }
 }

@@ -52,6 +52,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         JmsMessageProducerInstrumentation.class.getName() + "$ProducerWithDestinationAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ProducerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -99,6 +100,7 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ProducerWithDestinationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

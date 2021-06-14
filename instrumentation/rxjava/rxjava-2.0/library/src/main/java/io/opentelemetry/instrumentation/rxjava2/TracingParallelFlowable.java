@@ -33,21 +33,21 @@ class TracingParallelFlowable<T> extends ParallelFlowable<T> {
   private final ParallelFlowable<T> source;
   private final Context context;
 
-  TracingParallelFlowable(final ParallelFlowable<T> source, final Context context) {
+  TracingParallelFlowable(ParallelFlowable<T> source, Context context) {
     this.source = source;
     this.context = context;
   }
 
   @SuppressWarnings("unchecked")
   @Override
-  public void subscribe(final Subscriber<? super T>[] subscribers) {
+  public void subscribe(Subscriber<? super T>[] subscribers) {
     if (!validate(subscribers)) {
       return;
     }
-    final int n = subscribers.length;
-    final Subscriber<? super T>[] parents = new Subscriber[n];
+    int n = subscribers.length;
+    Subscriber<? super T>[] parents = new Subscriber[n];
     for (int i = 0; i < n; i++) {
-      final Subscriber<? super T> z = subscribers[i];
+      Subscriber<? super T> z = subscribers[i];
       if (z instanceof ConditionalSubscriber) {
         parents[i] =
             new TracingConditionalSubscriber<>((ConditionalSubscriber<? super T>) z, context);

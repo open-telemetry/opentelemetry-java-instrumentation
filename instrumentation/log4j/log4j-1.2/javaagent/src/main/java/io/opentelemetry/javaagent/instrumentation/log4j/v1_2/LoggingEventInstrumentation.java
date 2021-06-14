@@ -47,7 +47,9 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         LoggingEventInstrumentation.class.getName() + "$GetMdcCopyAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class GetMdcAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This LoggingEvent event,
@@ -82,7 +84,9 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class GetMdcCopyAdvice {
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
