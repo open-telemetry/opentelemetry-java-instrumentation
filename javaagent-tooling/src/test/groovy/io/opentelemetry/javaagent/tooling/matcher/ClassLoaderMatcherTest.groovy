@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling.matcher
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader
 import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider
 import io.opentelemetry.javaagent.tooling.ExporterClassLoader
-import java.util.jar.JarFile
 import spock.lang.Specification
 
 class ClassLoaderMatcherTest extends Specification {

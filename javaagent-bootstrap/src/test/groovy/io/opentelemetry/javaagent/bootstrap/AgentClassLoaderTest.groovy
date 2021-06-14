@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.bootstrap
 import io.opentelemetry.sdk.internal.JavaVersionSpecific
 import java.lang.reflect.Field
 import java.util.concurrent.Phaser
-import java.util.jar.JarFile
 import spock.lang.Specification
 
 class AgentClassLoaderTest extends Specification {
