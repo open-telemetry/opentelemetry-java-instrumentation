@@ -1,10 +1,9 @@
 // Project to collect and shade exporter dependencies included in the agent's full distribution.
 
 plugins {
+  id "otel.java-conventions"
   id "otel.shadow-conventions"
 }
-
-apply from: "$rootDir/gradle/java.gradle"
 
 dependencies {
   implementation "io.opentelemetry:opentelemetry-exporter-jaeger"
