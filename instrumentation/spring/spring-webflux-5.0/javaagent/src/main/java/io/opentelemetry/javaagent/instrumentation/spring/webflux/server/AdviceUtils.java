@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.server;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.tracer.SpanNames;
+import io.opentelemetry.instrumentation.api.tracer.ClassNames;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -26,7 +26,7 @@ public class AdviceUtils {
   public static final String CONTEXT_ATTRIBUTE = AdviceUtils.class.getName() + ".Context";
 
   public static String spanNameForHandler(Object handler) {
-    String className = SpanNames.spanNameForClass(handler.getClass());
+    String className = ClassNames.simpleName(handler.getClass());
     int lambdaIdx = className.indexOf("$$Lambda$");
 
     if (lambdaIdx > -1) {

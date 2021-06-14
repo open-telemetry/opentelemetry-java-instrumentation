@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 
 public class ProxyInvocationHandler implements InvocationHandler {
 
-  WebServiceDefinitionInterface target;
+  final WebServiceDefinitionInterface target;
 
   public ProxyInvocationHandler(WebServiceFromInterface webServiceFromInterface) {
     target = webServiceFromInterface;

@@ -183,19 +183,18 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     target =
         startContainer(
             targetImageName,
-            command -> {
-              command
-                  .withExposedPorts(ExposedPort.tcp(TARGET_PORT))
-                  .withHostConfig(
-                      HostConfig.newHostConfig()
-                          .withAutoRemove(true)
-                          .withNetworkMode(natNetworkId)
-                          .withPortBindings(
-                              new PortBinding(
-                                  new Ports.Binding(null, null), ExposedPort.tcp(TARGET_PORT))))
-                  .withEnv(environment);
-            },
-            (containerId) -> {
+            command ->
+                command
+                    .withExposedPorts(ExposedPort.tcp(TARGET_PORT))
+                    .withHostConfig(
+                        HostConfig.newHostConfig()
+                            .withAutoRemove(true)
+                            .withNetworkMode(natNetworkId)
+                            .withPortBindings(
+                                new PortBinding(
+                                    new Ports.Binding(null, null), ExposedPort.tcp(TARGET_PORT))))
+                    .withEnv(environment),
+            containerId -> {
               try (InputStream agentFileStream = new FileInputStream(agentPath)) {
                 copyFileToContainer(
                     containerId, IOUtils.toByteArray(agentFileStream), "/" + TARGET_AGENT_FILENAME);

@@ -15,7 +15,7 @@ public final class WrapperConfiguration {
       "OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT";
   public static final Duration OTEL_LAMBDA_FLUSH_TIMEOUT_DEFAULT = Duration.ofSeconds(10);
 
-  public static final Duration flushTimeout() {
+  public static Duration flushTimeout() {
     String lambdaFlushTimeout = System.getenv(OTEL_LAMBDA_FLUSH_TIMEOUT_ENV_KEY);
     if (lambdaFlushTimeout != null && !lambdaFlushTimeout.isEmpty()) {
       try {

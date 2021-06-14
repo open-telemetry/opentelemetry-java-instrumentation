@@ -779,9 +779,8 @@ public enum JdbcConnectionUrlParser {
         }
       } else {
         builder.subtype("directory").host(null).port(null);
-        String urlInstance = details;
-        if (!urlInstance.isEmpty()) {
-          instance = urlInstance;
+        if (!details.isEmpty()) {
+          instance = details;
         }
       }
 
@@ -898,8 +897,7 @@ public enum JdbcConnectionUrlParser {
     return queryPairs;
   }
 
-  private static void populateStandardProperties(
-      DbInfo.Builder builder, Map<? extends Object, ? extends Object> props) {
+  private static void populateStandardProperties(DbInfo.Builder builder, Map<?, ?> props) {
     if (props != null && !props.isEmpty()) {
       if (props.containsKey("user")) {
         builder.user((String) props.get("user"));

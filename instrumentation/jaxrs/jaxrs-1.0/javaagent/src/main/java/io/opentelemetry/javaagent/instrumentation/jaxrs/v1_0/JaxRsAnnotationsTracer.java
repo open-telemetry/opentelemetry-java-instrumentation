@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.javaagent.instrumentation.api.ClassHierarchyIterable;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.lang.annotation.Annotation;
@@ -47,7 +48,7 @@ public class JaxRsAnnotationsTracer extends BaseTracer {
     if (serverSpan == null) {
       spanName = pathBasedSpanName;
     } else {
-      spanName = spanNameForMethod(target, method);
+      spanName = SpanNames.fromMethod(target, method);
       updateServerSpanName(parentContext, serverSpan, pathBasedSpanName);
     }
 

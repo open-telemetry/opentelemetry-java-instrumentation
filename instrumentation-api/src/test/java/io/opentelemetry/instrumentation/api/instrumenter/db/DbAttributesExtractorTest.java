@@ -17,7 +17,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class DbAttributesExtractorTest {
-  DbAttributesExtractor<Map<String, String>, Void> underTest =
+  static final DbAttributesExtractor<Map<String, String>, Void> underTest =
       new DbAttributesExtractor<Map<String, String>, Void>() {
         @Override
         protected String system(Map<String, String> map) {

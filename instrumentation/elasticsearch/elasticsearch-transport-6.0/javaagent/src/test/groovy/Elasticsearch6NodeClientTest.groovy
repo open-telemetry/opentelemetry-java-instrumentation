@@ -102,7 +102,7 @@ class Elasticsearch6NodeClientTest extends AgentInstrumentationSpecification {
           name "GetAction"
           kind CLIENT
           status ERROR
-          errorEvent IndexNotFoundException, ~/no such index( \[invalid-index\])?/
+          errorEvent IndexNotFoundException, ~/no such index( \[invalid-index])?/
           attributes {
             "${SemanticAttributes.DB_SYSTEM.key}" "elasticsearch"
             "${SemanticAttributes.DB_OPERATION.key}" "GetAction"

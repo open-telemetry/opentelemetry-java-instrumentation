@@ -82,7 +82,7 @@ public final class OpenTelemetryAgent {
 
       if (!bootstrapFile.isDirectory()) {
         JarFile agentJar = new JarFile(bootstrapFile, false);
-        checkJarManifestMainClassIsThis(javaAgentJarUrl, agentJar);
+        verifyJarManifestMainClassIsThis(javaAgentJarUrl, agentJar);
         inst.appendToBootstrapClassLoaderSearch(agentJar);
         return javaAgentJarUrl;
       }
@@ -129,7 +129,7 @@ public final class OpenTelemetryAgent {
     }
     javaAgentJarUrl = javaagentFile.toURI().toURL();
     JarFile agentJar = new JarFile(javaagentFile, false);
-    checkJarManifestMainClassIsThis(javaAgentJarUrl, agentJar);
+    verifyJarManifestMainClassIsThis(javaAgentJarUrl, agentJar);
     inst.appendToBootstrapClassLoaderSearch(agentJar);
 
     return javaAgentJarUrl;
@@ -175,20 +175,19 @@ public final class OpenTelemetryAgent {
     }
   }
 
-  private static boolean checkJarManifestMainClassIsThis(URL jarUrl, JarFile agentJar)
+  private static void verifyJarManifestMainClassIsThis(URL jarUrl, JarFile agentJar)
       throws IOException {
     Manifest manifest = agentJar.getManifest();
     String mainClass = manifest.getMainAttributes().getValue("Main-Class");
-    if (thisClass.getCanonicalName().equals(mainClass)) {
-      return true;
+    if (!thisClass.getCanonicalName().equals(mainClass)) {
+      throw new IllegalStateException(
+          "opentelemetry-javaagent is not installed, because class '"
+              + thisClass.getCanonicalName()
+              + "' is located in '"
+              + jarUrl
+              + "'. Make sure you don't have this .class file anywhere, "
+              + "besides opentelemetry-javaagent.jar");
     }
-    throw new IllegalStateException(
-        "opentelemetry-javaagent is not installed, because class '"
-            + thisClass.getCanonicalName()
-            + "' is located in '"
-            + jarUrl
-            + "'. Make sure you don't have this .class file anywhere, "
-            + "besides opentelemetry-javaagent.jar");
   }
 
   /**

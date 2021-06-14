@@ -24,15 +24,13 @@ class KubernetesResource {
     if (!matcher.matches()) {
       throw new ParseKubernetesResourceException();
     }
-    KubernetesResource resource =
-        new KubernetesResource(
-            "",
-            "v1",
-            matcher.group("resource"),
-            matcher.group("subresource"),
-            matcher.group("namespace"),
-            matcher.group("name"));
-    return resource;
+    return new KubernetesResource(
+        "",
+        "v1",
+        matcher.group("resource"),
+        matcher.group("subresource"),
+        matcher.group("namespace"),
+        matcher.group("name"));
   }
 
   public static KubernetesResource parseRegularResource(String urlPath)
@@ -41,15 +39,13 @@ class KubernetesResource {
     if (!matcher.matches()) {
       throw new ParseKubernetesResourceException();
     }
-    KubernetesResource resource =
-        new KubernetesResource(
-            matcher.group("group"),
-            matcher.group("version"),
-            matcher.group("resource"),
-            matcher.group("subresource"),
-            matcher.group("namespace"),
-            matcher.group("name"));
-    return resource;
+    return new KubernetesResource(
+        matcher.group("group"),
+        matcher.group("version"),
+        matcher.group("resource"),
+        matcher.group("subresource"),
+        matcher.group("namespace"),
+        matcher.group("name"));
   }
 
   KubernetesResource(

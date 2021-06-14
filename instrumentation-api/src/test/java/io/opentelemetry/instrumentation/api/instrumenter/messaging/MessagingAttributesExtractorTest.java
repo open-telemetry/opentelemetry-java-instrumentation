@@ -26,7 +26,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
-  MessagingAttributesExtractor<Map<String, String>, String> underTest =
+  static final MessagingAttributesExtractor<Map<String, String>, String> underTest =
       new MessagingAttributesExtractor<Map<String, String>, String>() {
         @Override
         protected String system(Map<String, String> request) {
