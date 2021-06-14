@@ -52,3 +52,10 @@ dependencies {
 
   instrumentationMuzzle sourceSets.main.output
 }
+
+// Here we only include autoconfigure but don't include OTLP exporters to ensure they are only in
+// the full distribution. We need to override the default exporter setting of OTLP as a result.
+tasks.withType(Test).configureEach {
+  environment "OTEL_TRACES_EXPORTER", "none"
+  environment "OTEL_METRICS_EXPORTER", "none"
+}
