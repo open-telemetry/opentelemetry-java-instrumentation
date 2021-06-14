@@ -56,7 +56,7 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
-      ContextStore<AsyncHandler<?>, Pair<?, ?>> contextStore =
+      ContextStore<AsyncHandler, Pair> contextStore =
           InstrumentationContext.get(AsyncHandler.class, Pair.class);
       Pair<Context, Context> parentAndChildContext = contextStore.get(handler);
       if (parentAndChildContext == null) {
