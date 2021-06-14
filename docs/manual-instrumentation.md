@@ -11,8 +11,8 @@ or they might want to manually create spans for their own custom code.
   * [Maven](#maven)
   * [Gradle](#gradle)
 - [Adding attributes to the current span](#adding-attributes-to-the-current-span)
-- [Creating spans around methods with `@WithSpan`](#creating-spans-around-methods-with---withspan-)
-  * [Suppressing `@WithSpan` instrumentation](#suppressing---withspan--instrumentation)
+- [Creating spans around methods with `@WithSpan`](#creating-spans-around-methods-with-withspan)
+  * [Suppressing `@WithSpan` instrumentation](#suppressing-withspan-instrumentation)
   * [Creating spans around methods with `otel.instrumentation.methods.include`](#creating-spans-around-methods-with-otelinstrumentationmethodsinclude)
 - [Creating spans manually with a Tracer](#creating-spans-manually-with-a-tracer)
 

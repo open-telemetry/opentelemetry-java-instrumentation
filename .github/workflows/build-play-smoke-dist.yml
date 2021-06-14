@@ -5,7 +5,8 @@ on:
     paths:
       - 'smoke-tests/play/**'
       - '.github/workflows/build-play-smoke-dist.yml'
-    branches: 'main'
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
