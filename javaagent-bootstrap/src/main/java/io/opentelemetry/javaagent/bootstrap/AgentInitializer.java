@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.jar.JarFile;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -26,7 +26,7 @@ public final class AgentInitializer {
   @Nullable private static ClassLoader agentClassLoader = null;
 
   // called via reflection in the OpenTelemetryAgent class
-  public static void initialize(Instrumentation inst, JarFile javaagentFile) throws Exception {
+  public static void initialize(Instrumentation inst, File javaagentFile) throws Exception {
     if (agentClassLoader == null) {
       agentClassLoader = createAgentClassLoader("inst", javaagentFile);
 
@@ -57,7 +57,7 @@ public final class AgentInitializer {
    *     classloader
    * @return Agent Classloader
    */
-  private static ClassLoader createAgentClassLoader(String innerJarFilename, JarFile javaagentFile)
+  private static ClassLoader createAgentClassLoader(String innerJarFilename, File javaagentFile)
       throws Exception {
     ClassLoader agentParent;
     if (isJavaBefore9()) {
@@ -74,7 +74,7 @@ public final class AgentInitializer {
         agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.ExtensionClassLoader");
     return (ClassLoader)
         extensionClassLoaderClass
-            .getDeclaredMethod("getInstance", ClassLoader.class, JarFile.class)
+            .getDeclaredMethod("getInstance", ClassLoader.class, File.class)
             .invoke(null, agentClassLoader, javaagentFile);
   }
 

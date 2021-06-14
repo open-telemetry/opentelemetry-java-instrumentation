@@ -52,7 +52,7 @@ public final class OpenTelemetryAgent {
 
   public static void agentmain(String agentArgs, Instrumentation inst) {
     try {
-      JarFile javaagentFile = installBootstrapJar(inst);
+      File javaagentFile = installBootstrapJar(inst);
       AgentInitializer.initialize(inst, javaagentFile);
     } catch (Throwable ex) {
       // Don't rethrow.  We don't have a log manager here, so just print.
@@ -61,7 +61,7 @@ public final class OpenTelemetryAgent {
     }
   }
 
-  private static synchronized JarFile installBootstrapJar(Instrumentation inst)
+  private static synchronized File installBootstrapJar(Instrumentation inst)
       throws IOException, URISyntaxException {
 
     // First try Code Source
@@ -74,7 +74,7 @@ public final class OpenTelemetryAgent {
         JarFile agentJar = new JarFile(javaagentFile, false);
         checkJarManifestMainClassIsThis(javaagentFile, agentJar);
         inst.appendToBootstrapClassLoaderSearch(agentJar);
-        return agentJar;
+        return javaagentFile;
       }
     }
 
@@ -121,7 +121,7 @@ public final class OpenTelemetryAgent {
     JarFile agentJar = new JarFile(javaagentFile, false);
     checkJarManifestMainClassIsThis(javaagentFile, agentJar);
     inst.appendToBootstrapClassLoaderSearch(agentJar);
-    return agentJar;
+    return javaagentFile;
   }
 
   private static List<String> getVmArgumentsThroughReflection() {

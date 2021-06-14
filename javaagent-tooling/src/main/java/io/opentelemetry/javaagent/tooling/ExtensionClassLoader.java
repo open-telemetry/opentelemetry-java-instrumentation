@@ -42,7 +42,7 @@ public class ExtensionClassLoader extends URLClassLoader {
     ClassLoader.registerAsParallelCapable();
   }
 
-  public static ClassLoader getInstance(ClassLoader parent, JarFile javaagentFile) {
+  public static ClassLoader getInstance(ClassLoader parent, File javaagentFile) {
     List<URL> extensions = new ArrayList<>();
 
     includeEmbeddedExtensionsIfFound(parent, extensions, javaagentFile);
@@ -52,13 +52,13 @@ public class ExtensionClassLoader extends URLClassLoader {
         parseLocation(
             System.getProperty(
                 "otel.javaagent.experimental.extensions",
-                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS"))));
+                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS")), javaagentFile));
 
     extensions.addAll(
         parseLocation(
             System.getProperty(
                 "otel.javaagent.experimental.initializer.jar",
-                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR"))));
+                System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR")), javaagentFile));
     // TODO when logging is configured add warning about deprecated property
 
     if (extensions.isEmpty()) {
@@ -73,11 +73,12 @@ public class ExtensionClassLoader extends URLClassLoader {
   }
 
   private static void includeEmbeddedExtensionsIfFound(
-      ClassLoader parent, List<URL> extensions, JarFile javaagentFile) {
-    Enumeration<JarEntry> entryEnumeration = javaagentFile.entries();
-    String prefix = "extensions/";
-    File tempDirectory = null;
+      ClassLoader parent, List<URL> extensions, File javaagentFile) {
     try {
+      JarFile jarFile = new JarFile(javaagentFile, false);
+      Enumeration<JarEntry> entryEnumeration = jarFile.entries();
+      String prefix = "extensions/";
+      File tempDirectory = null;
       while (entryEnumeration.hasMoreElements()) {
         JarEntry jarEntry = entryEnumeration.nextElement();
 
@@ -87,7 +88,7 @@ public class ExtensionClassLoader extends URLClassLoader {
           File tempFile = new File(tempDirectory, jarEntry.getName().substring(prefix.length()));
           if (tempFile.createNewFile()) {
             tempFile.deleteOnExit();
-            extractFile(javaagentFile, jarEntry, tempFile);
+            extractFile(jarFile, jarEntry, tempFile);
             addFileUrl(extensions, tempFile);
           } else {
             System.out.println("Failed to create temp file " + tempFile);
@@ -111,7 +112,7 @@ public class ExtensionClassLoader extends URLClassLoader {
     return new URLClassLoader(new URL[] {extensionUrl}, parent);
   }
 
-  private static List<URL> parseLocation(String locationName) {
+  private static List<URL> parseLocation(String locationName, File javaagentFile) {
     List<URL> result = new ArrayList<>();
 
     if (locationName == null) {
@@ -124,9 +125,10 @@ public class ExtensionClassLoader extends URLClassLoader {
     } else if (location.isDirectory()) {
       File[] files = location.listFiles(f -> f.isFile() && f.getName().endsWith(".jar"));
       if (files != null) {
-        // TODO filter out agent file itself
         for (File file : files) {
-          addFileUrl(result, file);
+          if (!file.getAbsolutePath().equals(javaagentFile.getAbsolutePath())) {
+            addFileUrl(result, file);
+          }
         }
       }
     }

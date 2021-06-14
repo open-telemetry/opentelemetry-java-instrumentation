@@ -67,12 +67,11 @@ public class AgentClassLoader extends URLClassLoader {
 
   /**
    * Construct a new AgentClassLoader.
-   *
    * @param javaagentFile Used for resource lookups.
    * @param internalJarFileName File name of the internal jar
    * @param parent Classloader parent. Should null (bootstrap), or the platform classloader for java
    */
-  public AgentClassLoader(JarFile javaagentFile, String internalJarFileName, ClassLoader parent) {
+  public AgentClassLoader(File javaagentFile, String internalJarFileName, ClassLoader parent) {
     super(new URL[] {}, parent);
     if (javaagentFile == null) {
       throw new IllegalArgumentException("Agent jar location should be set");
@@ -87,13 +86,13 @@ public class AgentClassLoader extends URLClassLoader {
         internalJarFileName
             + (internalJarFileName.isEmpty() || internalJarFileName.endsWith("/") ? "" : "/");
     try {
-      jarFile = javaagentFile;
+      jarFile = new JarFile(javaagentFile, false);
       // base url for constructing jar entry urls
       // we use a custom protocol instead of typical jar:file: because we don't want to be affected
       // by user code disabling URLConnection caching for jar protocol e.g. tomcat does this
       jarBase =
           new URL("x-internal-jar", null, 0, "/", new AgentClassLoaderUrlStreamHandler(jarFile));
-      codeSource = new CodeSource(jarBase, (Certificate[]) null);
+      codeSource = new CodeSource(javaagentFile.toURI().toURL(), (Certificate[]) null);
       manifest = getManifest(jarFile, jarEntryPrefix + META_INF_MANIFEST_MF);
     } catch (IOException e) {
       throw new IllegalStateException("Unable to open agent jar", e);
