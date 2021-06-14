@@ -193,7 +193,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: false}")
 
   // Disable default resource providers since they cause lots of output we don't need.
-  jvmArgs "-Dotel.java.disabled.resource.providers=${resourceClassesCsv}"
+  jvmArgs("-Dotel.java.disabled.resource.providers=${resourceClassesCsv}")
 
   val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
   inputs.file(trustStore)
