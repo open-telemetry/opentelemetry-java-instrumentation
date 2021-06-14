@@ -231,7 +231,7 @@ afterEvaluate {
       doFirst {
         val testArtifacts = configurations.testRuntimeClasspath.get().resolvedConfiguration.resolvedArtifacts
         val latestTestArtifacts = configurations.getByName("latestDepTestRuntimeClasspath").resolvedConfiguration.resolvedArtifacts
-        if (testArtifacts != latestTestArtifacts) {
+        if (testArtifacts == latestTestArtifacts) {
           throw IllegalStateException("latestDepTest dependencies are identical to test")
         }
       }
