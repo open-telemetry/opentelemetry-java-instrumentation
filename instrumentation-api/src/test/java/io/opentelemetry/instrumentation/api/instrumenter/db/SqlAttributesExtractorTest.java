@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 class SqlAttributesExtractorTest {
   AttributeKey<String> dbTableAttribute;
-  final SqlAttributesExtractor<Map<String, String>, Void> underTest =
+  static final SqlAttributesExtractor<Map<String, String>, Void> underTest =
       new SqlAttributesExtractor<Map<String, String>, Void>() {
 
         @Override
