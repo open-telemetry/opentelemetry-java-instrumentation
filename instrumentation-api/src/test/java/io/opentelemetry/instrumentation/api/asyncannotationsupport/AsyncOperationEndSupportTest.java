@@ -22,14 +22,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class AsyncEndSupportTest {
+class AsyncOperationEndSupportTest {
   @Mock Instrumenter<String, String> instrumenter;
 
   @Test
   void shouldEndImmediatelyWhenExceptionWasPassed() {
     // given
-    AsyncEndSupport<String> underTest =
-        AsyncEndSupport.create(instrumenter, CompletableFuture.class);
+    AsyncOperationEndSupport<String> underTest =
+        AsyncOperationEndSupport.create(instrumenter, CompletableFuture.class);
 
     Context context = Context.root();
     Exception exception = new RuntimeException("boom!");
@@ -47,7 +47,8 @@ class AsyncEndSupportTest {
   @Test
   void shouldEndImmediatelyWhenWrongReturnTypeWasPassed() {
     // given
-    AsyncEndSupport<String> underTest = AsyncEndSupport.create(instrumenter, Future.class);
+    AsyncOperationEndSupport<String> underTest =
+        AsyncOperationEndSupport.create(instrumenter, Future.class);
 
     Context context = Context.root();
     CompletableFuture<String> future = new CompletableFuture<>();
@@ -64,8 +65,8 @@ class AsyncEndSupportTest {
   @Test
   void shouldEndImmediatelyWhenAsyncWrapperisOfWrongType() {
     // given
-    AsyncEndSupport<String> underTest =
-        AsyncEndSupport.create(instrumenter, CompletableFuture.class);
+    AsyncOperationEndSupport<String> underTest =
+        AsyncOperationEndSupport.create(instrumenter, CompletableFuture.class);
 
     Context context = Context.root();
 
@@ -81,7 +82,8 @@ class AsyncEndSupportTest {
   @Test
   void shouldReturnedDecoratedAsyncWrapper() {
     // given
-    AsyncEndSupport<String> underTest = AsyncEndSupport.create(instrumenter, CompletionStage.class);
+    AsyncOperationEndSupport<String> underTest =
+        AsyncOperationEndSupport.create(instrumenter, CompletionStage.class);
 
     Context context = Context.root();
     CompletableFuture<String> future = new CompletableFuture<>();

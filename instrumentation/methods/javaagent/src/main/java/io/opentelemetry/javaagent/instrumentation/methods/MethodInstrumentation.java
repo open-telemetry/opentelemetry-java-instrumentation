@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.asyncannotationsupport.AsyncEndSupport;
+import io.opentelemetry.instrumentation.api.asyncannotationsupport.AsyncOperationEndSupport;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
@@ -77,7 +77,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
       scope.close();
 
       returnValue =
-          AsyncEndSupport.create(instrumenter(), method.getReturnType())
+          AsyncOperationEndSupport.create(instrumenter(), method.getReturnType())
               .asyncEnd(context, method, returnValue, throwable);
     }
   }

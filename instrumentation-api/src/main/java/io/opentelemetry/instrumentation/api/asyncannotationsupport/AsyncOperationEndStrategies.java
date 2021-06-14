@@ -12,7 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** A global registry of {@link AsyncOperationEndStrategy} implementations. */
-public final class AsyncEndStrategies {
+public final class AsyncOperationEndStrategies {
   private static final List<AsyncOperationEndStrategy> STRATEGIES = new CopyOnWriteArrayList<>();
 
   static {

@@ -16,23 +16,23 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
  * receives in the {@link #asyncEnd(Context, Object, Object, Throwable)} call, so it will always
  * pass {@code null} as the response to the wrapped {@link Instrumenter}.
  */
-public final class AsyncEndSupport<REQUEST> {
+public final class AsyncOperationEndSupport<REQUEST> {
 
   /**
-   * Returns a new {@link AsyncEndSupport} that wraps over passed {@code syncInstrumenter},
+   * Returns a new {@link AsyncOperationEndSupport} that wraps over passed {@code syncInstrumenter},
    * configured for usage with asynchronous computations that are instances of {@code asyncType}.
    */
-  public static <REQUEST> AsyncEndSupport<REQUEST> create(
+  public static <REQUEST> AsyncOperationEndSupport<REQUEST> create(
       Instrumenter<REQUEST, ?> syncInstrumenter, Class<?> asyncType) {
-    return new AsyncEndSupport<>(
-        syncInstrumenter, asyncType, AsyncEndStrategies.resolveStrategy(asyncType));
+    return new AsyncOperationEndSupport<>(
+        syncInstrumenter, asyncType, AsyncOperationEndStrategies.resolveStrategy(asyncType));
   }
 
   private final Instrumenter<REQUEST, ?> instrumenter;
   private final Class<?> asyncType;
   private final AsyncOperationEndStrategy asyncOperationEndStrategy;
 
-  private AsyncEndSupport(
+  private AsyncOperationEndSupport(
       Instrumenter<REQUEST, ?> instrumenter,
       Class<?> asyncType,
       AsyncOperationEndStrategy asyncOperationEndStrategy) {
