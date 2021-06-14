@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.bootstrap
 import io.opentelemetry.sdk.internal.JavaVersionSpecific
 import java.lang.reflect.Field
 import java.util.concurrent.Phaser
+import java.util.jar.JarFile
 import spock.lang.Specification
 
 class AgentClassLoaderTest extends Specification {
@@ -18,7 +19,7 @@ class AgentClassLoaderTest extends Specification {
     def className2 = 'some/class/Name2'
     // any jar would do, use opentelemety sdk
     URL testJarLocation = JavaVersionSpecific.getProtectionDomain().getCodeSource().getLocation()
-    AgentClassLoader loader = new AgentClassLoader(testJarLocation, "", null)
+    AgentClassLoader loader = new AgentClassLoader(new JarFile(new File(testJarLocation.toURI())), "", null)
     Phaser threadHoldLockPhase = new Phaser(2)
     Phaser acquireLockFromMainThreadPhase = new Phaser(2)
 
@@ -57,7 +58,7 @@ class AgentClassLoaderTest extends Specification {
     boolean jdk8 = "1.8" == System.getProperty("java.specification.version")
     // sdk is a multi release jar
     URL multiReleaseJar = JavaVersionSpecific.getProtectionDomain().getCodeSource().getLocation()
-    AgentClassLoader loader = new AgentClassLoader(multiReleaseJar, "", null) {
+    AgentClassLoader loader = new AgentClassLoader(new JarFile(new File(multiReleaseJar.toURI())), "", null) {
       @Override
       protected String getClassSuffix() {
         return ""
