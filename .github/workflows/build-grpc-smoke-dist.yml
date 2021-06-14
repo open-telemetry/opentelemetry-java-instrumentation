@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'smoke-tests/grpc/**'
-      - '.github/workflows/build-grpc-smoke-dist.yaml'
+      - '.github/workflows/build-grpc-smoke-dist.yml'
     branches: 'main'
   workflow_dispatch:
 

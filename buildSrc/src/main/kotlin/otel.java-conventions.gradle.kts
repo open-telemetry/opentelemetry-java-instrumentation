@@ -9,9 +9,9 @@ plugins {
   id("net.ltgt.errorprone")
 }
 
-apply(from="$rootDir/gradle/spotless.gradle")
-apply(from="$rootDir/gradle/codenarc.gradle")
-apply(from="$rootDir/gradle/checkstyle.gradle")
+apply(from = "$rootDir/gradle/spotless.gradle")
+apply(from = "$rootDir/gradle/codenarc.gradle")
+apply(from = "$rootDir/gradle/checkstyle.gradle")
 
 afterEvaluate {
   if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
@@ -32,7 +32,7 @@ val applyCodeCoverage = !project.path.run {
 }
 
 if (applyCodeCoverage) {
-  apply(from="${rootDir}/gradle/jacoco.gradle")
+  apply(from = "${rootDir}/gradle/jacoco.gradle")
 }
 
 val minJavaVersionSupported = project.findProperty("minJavaVersionSupported")?.let(JavaVersion::toVersion)
@@ -182,6 +182,7 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
 }
 
 val testJavaVersion = rootProject.findProperty("testJavaVersion")?.let(JavaVersion::toVersion)
+val resourceClassesCsv = listOf("Host", "Os", "Process", "ProcessRuntime").map { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }.joinToString(",")
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 
@@ -190,6 +191,9 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: false}")
   // TODO(anuraaga): Have agent map unshaded to shaded.
   jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: false}")
+
+  // Disable default resource providers since they cause lots of output we don't need.
+  jvmArgs "-Dotel.java.disabled.resource.providers=${resourceClassesCsv}"
 
   val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
   inputs.file(trustStore)
