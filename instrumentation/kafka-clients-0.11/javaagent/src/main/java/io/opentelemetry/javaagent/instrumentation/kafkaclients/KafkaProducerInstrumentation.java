@@ -42,6 +42,7 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
         KafkaProducerInstrumentation.class.getName() + "$ProducerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ProducerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

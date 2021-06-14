@@ -51,6 +51,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
 
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,

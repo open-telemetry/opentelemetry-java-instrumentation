@@ -48,6 +48,7 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
         JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseCancelAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AsyncResponseAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -64,6 +65,7 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class AsyncResponseThrowableAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -81,6 +83,7 @@ public class JaxRsAsyncResponseInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class AsyncResponseCancelAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

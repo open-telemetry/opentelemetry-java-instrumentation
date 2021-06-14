@@ -11,11 +11,6 @@ import spock.lang.Specification
 
 class InstrumentationModuleTest extends Specification {
 
-  def setup() {
-    assert System.getenv().findAll { it.key.startsWith("OTEL_") }.isEmpty()
-    assert System.getProperties().findAll { it.key.toString().startsWith("otel.") }.isEmpty()
-  }
-
   def "default enabled"() {
     setup:
     def target = new TestInstrumentationModule(["test"])

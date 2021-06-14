@@ -25,22 +25,14 @@ dependencies {
 
 test {
   filter {
-    excludeTestsMatching 'context.FieldBackedProviderTest'
     excludeTestsMatching 'context.FieldInjectionDisabledTest'
   }
-  // this is needed for AgentTestRunnerTest
+  // this is needed for AgentInstrumentationSpecificationTest
   jvmArgs '-Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass$NestedClass'
 }
-test.finalizedBy(tasks.register("testFieldBackedProvider", Test) {
-  filter {
-    includeTestsMatching 'context.FieldBackedProviderTest'
-  }
-  jvmArgs '-Dotel.instrumentation.context-test-instrumentation.enabled=true'
-})
 test.finalizedBy(tasks.register("testFieldInjectionDisabled", Test) {
   filter {
     includeTestsMatching 'context.FieldInjectionDisabledTest'
   }
   jvmArgs '-Dotel.javaagent.experimental.field-injection.enabled=false'
-  jvmArgs '-Dotel.instrumentation.context-test-instrumentation.enabled=true'
 })

@@ -34,7 +34,7 @@ abstract class ApiGatewayProxyRequest {
             fields.iterator().next());
   }
 
-  static ApiGatewayProxyRequest forStream(final InputStream source) throws IOException {
+  static ApiGatewayProxyRequest forStream(InputStream source) throws IOException {
 
     if (noHttpPropagationNeeded()) {
       return new NoopRequest(source);

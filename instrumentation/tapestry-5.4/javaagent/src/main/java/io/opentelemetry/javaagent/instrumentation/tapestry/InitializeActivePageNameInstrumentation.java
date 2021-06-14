@@ -51,14 +51,18 @@ public class InitializeActivePageNameInstrumentation implements TypeInstrumentat
         this.getClass().getName() + "$HandlePageRenderAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleComponentEventAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) ComponentEventRequestParameters parameters) {
       tracer().updateServerSpanName(parameters.getActivePageName());
     }
   }
 
+  @SuppressWarnings("unused")
   public static class HandlePageRenderAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) PageRenderRequestParameters parameters) {
       tracer().updateServerSpanName(parameters.getLogicalPageName());

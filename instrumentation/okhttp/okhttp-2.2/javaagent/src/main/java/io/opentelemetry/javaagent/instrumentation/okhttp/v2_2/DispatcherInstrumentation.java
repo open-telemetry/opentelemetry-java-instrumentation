@@ -32,7 +32,9 @@ public class DispatcherInstrumentation implements TypeInstrumentation {
         DispatcherInstrumentation.class.getName() + "$AttachStateAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AttachStateAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State onEnter(@Advice.Argument(0) Runnable call) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(call)) {

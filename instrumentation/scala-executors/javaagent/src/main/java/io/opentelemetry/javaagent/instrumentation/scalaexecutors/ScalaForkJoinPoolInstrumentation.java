@@ -45,6 +45,7 @@ public class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
         ScalaForkJoinPoolInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SetScalaForkJoinStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

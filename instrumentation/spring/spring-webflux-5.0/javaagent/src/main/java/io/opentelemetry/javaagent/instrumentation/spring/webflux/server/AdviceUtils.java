@@ -25,17 +25,14 @@ public class AdviceUtils {
 
   public static final String CONTEXT_ATTRIBUTE = AdviceUtils.class.getName() + ".Context";
 
-  public static String parseOperationName(Object handler) {
+  public static String spanNameForHandler(Object handler) {
     String className = ClassNames.simpleName(handler.getClass());
-    String operationName;
     int lambdaIdx = className.indexOf("$$Lambda$");
 
     if (lambdaIdx > -1) {
-      operationName = className.substring(0, lambdaIdx) + ".lambda";
-    } else {
-      operationName = className + ".handle";
+      return className.substring(0, lambdaIdx) + ".lambda";
     }
-    return operationName;
+    return className + ".handle";
   }
 
   public static <T> Mono<T> setPublisherSpan(

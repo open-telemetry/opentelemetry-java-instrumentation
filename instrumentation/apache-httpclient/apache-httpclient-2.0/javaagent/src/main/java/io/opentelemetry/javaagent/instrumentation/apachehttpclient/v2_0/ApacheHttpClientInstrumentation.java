@@ -46,6 +46,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ExecuteMethodAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(1) HttpMethod httpMethod,

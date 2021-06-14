@@ -71,7 +71,7 @@ public class ByteBuddyPluginConfigurator {
                   if (!project.getTasks().getNames().contains(compileTaskName)) {
                     return null;
                   }
-                  final TaskProvider<?> compileTask = project.getTasks().named(compileTaskName);
+                  TaskProvider<?> compileTask = project.getTasks().named(compileTaskName);
 
                   // We also process resources for SPI classes.
                   return createLanguageTask(

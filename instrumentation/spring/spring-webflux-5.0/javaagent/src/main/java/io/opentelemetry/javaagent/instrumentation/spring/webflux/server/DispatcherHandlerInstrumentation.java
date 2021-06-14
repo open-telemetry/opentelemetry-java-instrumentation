@@ -45,6 +45,7 @@ public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
    * This is 'top level' advice for Webflux instrumentation. This handles creating and finishing
    * Webflux span.
    */
+  @SuppressWarnings("unused")
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

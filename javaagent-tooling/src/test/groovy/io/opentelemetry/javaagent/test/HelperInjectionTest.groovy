@@ -24,8 +24,12 @@ class HelperInjectionTest extends Specification {
 
   def "helpers injected to non-delegating classloader"() {
     setup:
+    URL[] helpersSourceUrls = new URL[1]
+    helpersSourceUrls[0] = HelperClass.getProtectionDomain().getCodeSource().getLocation()
+    ClassLoader helpersSourceLoader = new URLClassLoader(helpersSourceUrls)
+
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
-    HelperInjector injector = new HelperInjector("test", [helperClassName], [], this.class.classLoader)
+    HelperInjector injector = new HelperInjector("test", [helperClassName], [], helpersSourceLoader)
     AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], (ClassLoader) null))
 
     when:
@@ -38,8 +42,8 @@ class HelperInjectionTest extends Specification {
     emptyLoader.get().loadClass(helperClassName)
     then:
     isClassLoaded(helperClassName, emptyLoader.get())
-    // injecting into emptyLoader should not load on agent's classloader
-    !isClassLoaded(helperClassName, Utils.getAgentClassLoader())
+    // injecting into emptyLoader should not cause helper class to be load in the helper source classloader
+    !isClassLoaded(helperClassName, helpersSourceLoader)
 
     when: "references to emptyLoader are gone"
     emptyLoader.get().close() // cleanup

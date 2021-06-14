@@ -43,6 +43,7 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
         CriteriaInstrumentation.class.getName() + "$CriteriaMethodAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CriteriaMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

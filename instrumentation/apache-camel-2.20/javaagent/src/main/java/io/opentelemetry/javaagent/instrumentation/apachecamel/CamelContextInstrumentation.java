@@ -40,7 +40,7 @@ public class CamelContextInstrumentation implements TypeInstrumentation {
   public static class StartAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onContextStart(@Advice.This final CamelContext context) throws Exception {
+    public static void onContextStart(@Advice.This CamelContext context) throws Exception {
 
       if (context.hasService(CamelTracingService.class) == null) {
         // start this service eager so we init before Camel is starting up

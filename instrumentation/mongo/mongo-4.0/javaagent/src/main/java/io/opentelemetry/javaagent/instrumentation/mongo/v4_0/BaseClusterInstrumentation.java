@@ -36,6 +36,7 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$SingleResultCallbackArg1Advice");
   }
 
+  @SuppressWarnings("unused")
   public static class SingleResultCallbackArg1Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

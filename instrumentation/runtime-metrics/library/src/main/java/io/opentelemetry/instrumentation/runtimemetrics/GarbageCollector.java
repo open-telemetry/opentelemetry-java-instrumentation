@@ -37,7 +37,7 @@ public final class GarbageCollector {
     List<GarbageCollectorMXBean> garbageCollectors = ManagementFactory.getGarbageCollectorMXBeans();
     Meter meter = GlobalMeterProvider.getMeter(GarbageCollector.class.getName());
     List<Labels> labelSets = new ArrayList<>(garbageCollectors.size());
-    for (final GarbageCollectorMXBean gc : garbageCollectors) {
+    for (GarbageCollectorMXBean gc : garbageCollectors) {
       labelSets.add(Labels.of(GC_LABEL_KEY, gc.getName()));
     }
     meter

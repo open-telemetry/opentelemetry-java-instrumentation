@@ -37,6 +37,7 @@ public class ClientBuilderInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$BuildAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class BuildAdvice {
 
     @Advice.OnMethodExit

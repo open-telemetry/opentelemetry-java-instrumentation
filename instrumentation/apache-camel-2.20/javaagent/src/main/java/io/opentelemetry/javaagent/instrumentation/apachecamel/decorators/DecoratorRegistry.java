@@ -58,7 +58,7 @@ public class DecoratorRegistry {
     return result;
   }
 
-  public SpanDecorator forComponent(final String component) {
+  public SpanDecorator forComponent(String component) {
 
     return DECORATORS.getOrDefault(component, DEFAULT);
   }

@@ -42,6 +42,7 @@ public class JerseyClientConnectionErrorInstrumentation implements TypeInstrumen
         this.getClass().getName() + "$SubmitAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class InvokeAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -53,6 +54,7 @@ public class JerseyClientConnectionErrorInstrumentation implements TypeInstrumen
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SubmitAdvice {
 
     // using dynamic typing because parameter type is package private

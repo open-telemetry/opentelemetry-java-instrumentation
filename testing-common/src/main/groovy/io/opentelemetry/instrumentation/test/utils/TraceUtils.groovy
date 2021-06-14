@@ -25,13 +25,13 @@ class TraceUtils {
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test")
 
-  static <T> T runUnderServerTrace(final String rootOperationName, final Callable<T> r) {
-    return ServerTraceUtils.runUnderServerTrace(rootOperationName, r)
+  static <T> T runUnderServerTrace(String spanName, Callable<T> r) {
+    return ServerTraceUtils.runUnderServerTrace(spanName, r)
   }
 
-  static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
+  static <T> T runUnderTrace(String spanName, Callable<T> r) {
     try {
-      final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(SpanKind.INTERNAL).startSpan()
+      Span span = tracer.spanBuilder(spanName).setSpanKind(SpanKind.INTERNAL).startSpan()
 
       try {
         def result = span.makeCurrent().withCloseable {
@@ -39,7 +39,7 @@ class TraceUtils {
         }
         span.end()
         return result
-      } catch (final Exception e) {
+      } catch (Exception e) {
         span.setStatus(StatusCode.ERROR)
         span.recordException(e instanceof ExecutionException ? e.getCause() : e)
         span.end()
@@ -100,8 +100,8 @@ class TraceUtils {
     }
   }
 
-  static <T> T runUnderTraceWithoutExceptionCatch(final String rootOperationName, final Callable<T> r) {
-    final Span span = tracer.spanBuilder(rootOperationName).setSpanKind(SpanKind.INTERNAL).startSpan()
+  static <T> T runUnderTraceWithoutExceptionCatch(String spanName, Callable<T> r) {
+    Span span = tracer.spanBuilder(spanName).setSpanKind(SpanKind.INTERNAL).startSpan()
 
     try {
       return span.makeCurrent().withCloseable {
