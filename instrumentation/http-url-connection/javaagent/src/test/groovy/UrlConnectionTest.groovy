@@ -38,7 +38,7 @@ class UrlConnectionTest extends AgentInstrumentationSpecification {
           errorEvent ConnectException, String
         }
         span(1) {
-          name expectedOperationName("GET")
+          name "HTTP GET"
           kind CLIENT
           childOf span(0)
           status ERROR
@@ -59,9 +59,5 @@ class UrlConnectionTest extends AgentInstrumentationSpecification {
     scheme << ["http", "https"]
 
     url = new URI("$scheme://localhost:$UNUSABLE_PORT").toURL()
-  }
-
-  String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : "HTTP request"
   }
 }

@@ -103,7 +103,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           }
         }
         span(1) {
-          name expectedOperationName("GET")
+          name "HTTP GET"
           kind CLIENT
           childOf span(0)
           attributes {
@@ -124,7 +124,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           }
         }
         span(3) {
-          name expectedOperationName("GET")
+          name "HTTP GET"
           kind CLIENT
           childOf span(0)
           attributes {
@@ -172,7 +172,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           }
         }
         span(1) {
-          name expectedOperationName("GET")
+          name "HTTP GET"
           kind CLIENT
           childOf span(0)
           attributes {
@@ -230,7 +230,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpURLConnection> implements
           }
         }
         span(1) {
-          name expectedOperationName("POST")
+          name "HTTP POST"
           kind CLIENT
           childOf span(0)
           attributes {

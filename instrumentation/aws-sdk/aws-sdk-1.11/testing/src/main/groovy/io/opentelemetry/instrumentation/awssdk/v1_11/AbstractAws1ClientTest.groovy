@@ -244,8 +244,4 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
       }
     }
   }
-
-  String expectedOperationName(String method) {
-    return method != null ? "HTTP $method" : "HTTP request"
-  }
 }
