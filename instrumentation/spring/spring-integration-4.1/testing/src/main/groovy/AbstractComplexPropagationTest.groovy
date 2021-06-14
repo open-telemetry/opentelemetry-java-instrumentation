@@ -6,8 +6,6 @@
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
-import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -140,7 +138,7 @@ abstract class AbstractComplexPropagationTest extends InstrumentationSpecificati
       def body = message.payload as String
       Map<String, String> headers = message.headers.entrySet().stream()
         .filter({ kv -> kv.value instanceof String })
-        .collect(Collectors.toMap({ it.key }, {it.value }))
+        .collect(Collectors.toMap({ it.key }, { it.value }))
       new Payload(body: body, headers: headers)
     }
 

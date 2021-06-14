@@ -22,23 +22,23 @@ import org.testcontainers.containers.GenericContainer
 
 trait WithRabbitProducerConsumerTrait {
 
-  static GenericContainer rabbitMQContainer
+  static GenericContainer rabbitMqContainer
   static ConfigurableApplicationContext producerContext
   static ConfigurableApplicationContext consumerContext
 
   def startRabbit(Class<?> additionalContext = null) {
-    rabbitMQContainer = new GenericContainer('rabbitmq:latest')
+    rabbitMqContainer = new GenericContainer('rabbitmq:latest')
       .withExposedPorts(5672)
       .withStartupTimeout(Duration.ofSeconds(120))
-    rabbitMQContainer.start()
+    rabbitMqContainer.start()
 
     def producerApp = new SpringApplication(getContextClasses(ProducerConfig, additionalContext))
     producerApp.setDefaultProperties([
       "spring.application.name"                        : "testProducer",
       "spring.jmx.enabled"                             : false,
       "spring.main.web-application-type"               : "none",
-      "spring.rabbitmq.host"                           : rabbitMQContainer.containerIpAddress,
-      "spring.rabbitmq.port"                           : rabbitMQContainer.getMappedPort(5672),
+      "spring.rabbitmq.host"                           : rabbitMqContainer.containerIpAddress,
+      "spring.rabbitmq.port"                           : rabbitMqContainer.getMappedPort(5672),
       "spring.cloud.stream.bindings.output.destination": "testTopic"
     ])
     producerContext = producerApp.run()
@@ -48,8 +48,8 @@ trait WithRabbitProducerConsumerTrait {
       "spring.application.name"                       : "testConsumer",
       "spring.jmx.enabled"                            : false,
       "spring.main.web-application-type"              : "none",
-      "spring.rabbitmq.host"                          : rabbitMQContainer.containerIpAddress,
-      "spring.rabbitmq.port"                          : rabbitMQContainer.getMappedPort(5672),
+      "spring.rabbitmq.host"                          : rabbitMqContainer.containerIpAddress,
+      "spring.rabbitmq.port"                          : rabbitMqContainer.getMappedPort(5672),
       "spring.cloud.stream.bindings.input.destination": "testTopic"
     ])
     consumerContext = consumerApp.run()
@@ -64,8 +64,8 @@ trait WithRabbitProducerConsumerTrait {
   }
 
   def stopRabbit() {
-    rabbitMQContainer?.stop()
-    rabbitMQContainer = null
+    rabbitMqContainer?.stop()
+    rabbitMqContainer = null
     producerContext?.close()
     producerContext = null
     consumerContext?.close()

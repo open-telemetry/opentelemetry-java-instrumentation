@@ -8,7 +8,6 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.instrumentation.test.LibraryInstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.Executors
 import org.springframework.boot.SpringApplication
@@ -22,7 +21,6 @@ import org.springframework.integration.channel.DirectChannel
 import org.springframework.integration.channel.interceptor.GlobalChannelInterceptorWrapper
 import org.springframework.messaging.Message
 import org.springframework.messaging.SubscribableChannel
-import org.springframework.messaging.support.ChannelInterceptor
 import org.springframework.messaging.support.ExecutorSubscribableChannel
 import org.springframework.messaging.support.MessageBuilder
 import spock.lang.Shared
