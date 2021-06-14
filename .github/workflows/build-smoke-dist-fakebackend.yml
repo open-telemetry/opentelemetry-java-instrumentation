@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'smoke-tests/fake-backend/**'
-      - '.github/workflows/build-smoke-dist-fakebackend.yaml'
+      - '.github/workflows/build-smoke-dist-fakebackend.yml'
     branches: [ 'main' ]
   workflow_dispatch:
 
