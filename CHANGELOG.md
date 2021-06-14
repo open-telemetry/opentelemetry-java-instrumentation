@@ -14,7 +14,7 @@
 - Add attributes to netty connection failure span (#3115)
 - Defer initialization of OpenTelemetry in spring-boot-autoconfigure (#3171)
 - Support couchbase 3.1.6 (#3194)
-- New support for agent extensions (#2881, #3071, #3226)
+- New experimental support for agent extensions (#2881, #3071, #3226)
 - Propagate context to akka http callbacks (#3263)
 
 ### Behavioral changes
