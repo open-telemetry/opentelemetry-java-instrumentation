@@ -87,6 +87,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     return result;
   }
 
+  @SuppressWarnings("unused")
   public static class WithSpanAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

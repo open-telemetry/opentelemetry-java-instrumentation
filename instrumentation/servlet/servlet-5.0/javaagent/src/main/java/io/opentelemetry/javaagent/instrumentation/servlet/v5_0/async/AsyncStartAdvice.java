@@ -13,7 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
+@SuppressWarnings("unused")
 public class AsyncStartAdvice {
+
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void startAsyncEnter() {
     // This allows to detect the outermost invocation of startAsync in method exit

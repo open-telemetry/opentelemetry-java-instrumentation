@@ -31,6 +31,7 @@ public class ActionListenerImplInstrumentation implements TypeInstrumentation {
         ActionListenerImplInstrumentation.class.getName() + "$ProcessActionAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ProcessActionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -48,6 +48,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
         MethodInstrumentation.class.getName() + "$MethodAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class MethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

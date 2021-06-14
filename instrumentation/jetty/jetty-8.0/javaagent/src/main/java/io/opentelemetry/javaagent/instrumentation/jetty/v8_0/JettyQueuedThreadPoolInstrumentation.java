@@ -35,6 +35,7 @@ public class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation
         this.getClass().getName() + "$DispatchAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -61,6 +61,7 @@ public class ResteasyClientInstrumentationModule extends InstrumentationModule {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class InvokeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -39,7 +39,7 @@ jobs:
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
-  testLatestDep:
+  testLatestDeps:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4

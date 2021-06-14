@@ -123,6 +123,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class RequestAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) ClassicHttpRequest request,
@@ -235,6 +236,7 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class RequestWithHostAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) HttpHost host,

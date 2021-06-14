@@ -38,7 +38,9 @@ public class DefaultGrailsControllerClassInstrumentation implements TypeInstrume
         DefaultGrailsControllerClassInstrumentation.class.getName() + "$ControllerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ControllerAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startSpan(
         @Advice.Argument(0) Object controller,

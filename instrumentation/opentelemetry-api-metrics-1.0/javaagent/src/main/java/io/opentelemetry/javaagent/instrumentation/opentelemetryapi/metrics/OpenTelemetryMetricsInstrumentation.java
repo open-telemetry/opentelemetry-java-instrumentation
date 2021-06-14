@@ -33,6 +33,7 @@ public class OpenTelemetryMetricsInstrumentation implements TypeInstrumentation 
         OpenTelemetryMetricsInstrumentation.class.getName() + "$GetGlobalMetricsAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class GetGlobalMetricsAdvice {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)

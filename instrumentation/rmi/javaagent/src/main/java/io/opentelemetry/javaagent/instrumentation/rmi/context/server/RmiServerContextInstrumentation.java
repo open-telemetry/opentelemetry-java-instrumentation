@@ -36,6 +36,7 @@ public class RmiServerContextInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ObjectTableAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ObjectTableAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

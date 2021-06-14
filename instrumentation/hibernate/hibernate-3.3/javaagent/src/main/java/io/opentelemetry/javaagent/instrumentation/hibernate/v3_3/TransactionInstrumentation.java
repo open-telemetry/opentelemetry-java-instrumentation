@@ -42,6 +42,7 @@ public class TransactionInstrumentation implements TypeInstrumentation {
         TransactionInstrumentation.class.getName() + "$TransactionCommitAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class TransactionCommitAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

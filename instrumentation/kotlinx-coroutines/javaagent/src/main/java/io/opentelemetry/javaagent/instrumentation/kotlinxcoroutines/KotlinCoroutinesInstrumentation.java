@@ -34,7 +34,9 @@ public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RunBlockingAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class LaunchAdvice {
+
     @Advice.OnMethodEnter
     public static void enter(
         @Advice.Argument(value = 1, readOnly = false) CoroutineContext coroutineContext) {
@@ -43,7 +45,9 @@ public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RunBlockingAdvice {
+
     @Advice.OnMethodEnter
     public static void enter(
         @Advice.Argument(value = 0, readOnly = false) CoroutineContext coroutineContext) {
