@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'smoke-tests/matrix/**'
-      - '.github/workflows/build-test-matrix.yaml'
+      - '.github/workflows/build-test-matrix.yml'
     branches: [ 'main' ]
   workflow_dispatch:
 

@@ -1,10 +1,10 @@
-name: Build Spring Boot smoke test distribution
+name: Build Play smoke test distribution
 
 on:
   push:
     paths:
-      - 'smoke-tests/springboot/**'
-      - '.github/workflows/build-springboot-smoke-dist.yaml'
+      - 'smoke-tests/play/**'
+      - '.github/workflows/build-play-smoke-dist.yml'
     branches: 'main'
   workflow_dispatch:
 
@@ -25,7 +25,7 @@ jobs:
       - name: Cache gradle dependencies
         uses: burrunan/gradle-cache-action@v1.10
         with:
-          job-id: springboot-smoke
+          job-id: play-smoke
 
       - name: Login to GitHub Package Registry
         uses: docker/login-action@v1.9.0
@@ -38,7 +38,7 @@ jobs:
         run: |
           TAG="$(date '+%Y%m%d').$GITHUB_RUN_ID"
           echo "Pushing to tag $TAG"
-          ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
-          ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
-          ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain --stacktrace -Ptag=$TAG
-        working-directory: smoke-tests/springboot
+          ./gradlew jib -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
+          ./gradlew jib -PtargetJDK=15 -Djib.httpTimeout=120000 -Djib.console=plain -Ptag=$TAG
+        working-directory: smoke-tests/play
