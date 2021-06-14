@@ -73,7 +73,6 @@ The following order is preferred:
 
 * Static fields (final before non-final)
 * Instance fields (final before non-final)
-* Static construction methods (includes static factory methods and builder construction methods)
 * Constructors
 * Methods
 * Nested classes
