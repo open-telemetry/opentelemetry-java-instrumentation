@@ -3,7 +3,7 @@ apply from: "$rootDir/gradle/instrumentation.gradle"
 ext {
   // context "leak" here is intentional: spring-integration instrumentation will always override
   // "local" span context with one extracted from the incoming message
-  doNotFailOnContextLeak = true
+  failOnContextLeak = false
 }
 
 muzzle {
