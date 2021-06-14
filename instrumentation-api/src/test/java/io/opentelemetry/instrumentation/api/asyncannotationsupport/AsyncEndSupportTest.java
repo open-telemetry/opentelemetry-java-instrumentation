@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter.async;
+package io.opentelemetry.instrumentation.api.asyncannotationsupport;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -22,14 +22,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class AsyncInstrumenterTest {
+class AsyncEndSupportTest {
   @Mock Instrumenter<String, String> instrumenter;
 
   @Test
   void shouldEndImmediatelyWhenExceptionWasPassed() {
     // given
-    AsyncInstrumenter<String> underTest =
-        AsyncInstrumenter.create(instrumenter, CompletableFuture.class);
+    AsyncEndSupport<String> underTest =
+        AsyncEndSupport.create(instrumenter, CompletableFuture.class);
 
     Context context = Context.root();
     Exception exception = new RuntimeException("boom!");
@@ -47,7 +47,7 @@ class AsyncInstrumenterTest {
   @Test
   void shouldEndImmediatelyWhenWrongReturnTypeWasPassed() {
     // given
-    AsyncInstrumenter<String> underTest = AsyncInstrumenter.create(instrumenter, Future.class);
+    AsyncEndSupport<String> underTest = AsyncEndSupport.create(instrumenter, Future.class);
 
     Context context = Context.root();
     CompletableFuture<String> future = new CompletableFuture<>();
@@ -64,8 +64,8 @@ class AsyncInstrumenterTest {
   @Test
   void shouldEndImmediatelyWhenAsyncWrapperisOfWrongType() {
     // given
-    AsyncInstrumenter<String> underTest =
-        AsyncInstrumenter.create(instrumenter, CompletableFuture.class);
+    AsyncEndSupport<String> underTest =
+        AsyncEndSupport.create(instrumenter, CompletableFuture.class);
 
     Context context = Context.root();
 
@@ -81,8 +81,7 @@ class AsyncInstrumenterTest {
   @Test
   void shouldReturnedDecoratedAsyncWrapper() {
     // given
-    AsyncInstrumenter<String> underTest =
-        AsyncInstrumenter.create(instrumenter, CompletionStage.class);
+    AsyncEndSupport<String> underTest = AsyncEndSupport.create(instrumenter, CompletionStage.class);
 
     Context context = Context.root();
     CompletableFuture<String> future = new CompletableFuture<>();

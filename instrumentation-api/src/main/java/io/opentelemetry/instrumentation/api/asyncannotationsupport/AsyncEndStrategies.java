@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter.async;
+package io.opentelemetry.instrumentation.api.asyncannotationsupport;
 
 import static java.util.Objects.requireNonNull;
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter.async;
+package io.opentelemetry.instrumentation.api.asyncannotationsupport;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -16,15 +16,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
  * receives in the {@link #asyncEnd(Context, Object, Object, Throwable)} call, so it will always
  * pass {@code null} as the response to the wrapped {@link Instrumenter}.
  */
-public final class AsyncInstrumenter<REQUEST> {
+public final class AsyncEndSupport<REQUEST> {
 
   /**
-   * Returns a new {@link AsyncInstrumenter} that wraps over passed {@code syncInstrumenter},
+   * Returns a new {@link AsyncEndSupport} that wraps over passed {@code syncInstrumenter},
    * configured for usage with asynchronous computations that are instances of {@code asyncType}.
    */
-  public static <REQUEST> AsyncInstrumenter<REQUEST> create(
+  public static <REQUEST> AsyncEndSupport<REQUEST> create(
       Instrumenter<REQUEST, ?> syncInstrumenter, Class<?> asyncType) {
-    return new AsyncInstrumenter<>(
+    return new AsyncEndSupport<>(
         syncInstrumenter, asyncType, AsyncEndStrategies.resolveStrategy(asyncType));
   }
 
@@ -32,23 +32,13 @@ public final class AsyncInstrumenter<REQUEST> {
   private final Class<?> asyncType;
   private final AsyncOperationEndStrategy asyncOperationEndStrategy;
 
-  private AsyncInstrumenter(
+  private AsyncEndSupport(
       Instrumenter<REQUEST, ?> instrumenter,
       Class<?> asyncType,
       AsyncOperationEndStrategy asyncOperationEndStrategy) {
     this.instrumenter = instrumenter;
     this.asyncType = asyncType;
     this.asyncOperationEndStrategy = asyncOperationEndStrategy;
-  }
-
-  /** Same as calling {@link Instrumenter#shouldStart(Context, Object)}. */
-  public boolean shouldStart(Context parentContext, REQUEST request) {
-    return instrumenter.shouldStart(parentContext, request);
-  }
-
-  /** Same as calling {@link Instrumenter#start(Context, Object)}. */
-  public Context start(Context parentContext, REQUEST request) {
-    return instrumenter.start(parentContext, request);
   }
 
   /**
