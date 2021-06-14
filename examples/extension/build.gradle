@@ -116,16 +116,12 @@ tasks {
   test {
     useJUnitPlatform()
 
-    def extensionJar = tasks.extendedAgent
-    inputs.files(layout.files(extensionJar))
+    inputs.files(layout.files(tasks.shadowJar))
+    inputs.files(layout.files(tasks.extendedAgent))
 
-    doFirst {
-      //To run our tests with the javaagent published by OpenTelemetry Java instrumentation project
-      jvmArgs("-Dio.opentelemetry.smoketest.agentPath=${extensionJar.archiveFile.get()}")
-      //Instructs our integration test where to find our extension archive
-      //Needed for tests which use external extension jar as opposed to one embedded into agent itself
-      jvmArgs("-Dio.opentelemetry.smoketest.extensionPath=${extensionJar.archiveFile.get()}")
-    }
+    systemProperty 'io.opentelemetry.smoketest.agentPath', configurations.otel.singleFile.absolutePath
+    systemProperty 'io.opentelemetry.smoketest.extendedAgentPath', tasks.extendedAgent.archiveFile.get().asFile.absolutePath
+    systemProperty 'io.opentelemetry.smoketest.extensionPath', tasks.shadowJar.archiveFile.get().asFile.absolutePath
   }
 
   compileJava {

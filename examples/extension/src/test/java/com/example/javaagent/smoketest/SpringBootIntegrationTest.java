@@ -38,7 +38,7 @@ class SpringBootIntegrationTest extends IntegrationTest {
 
   @Test
   public void extensionsAreLoadedFromJavaagent() throws IOException, InterruptedException {
-    startTarget(null);
+    startTargetWithExtendedAgent();
 
     testAndVerify();
 

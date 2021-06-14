@@ -38,6 +38,9 @@ abstract class IntegrationTest {
   private static final Network network = Network.newNetwork();
   protected static final String agentPath =
       System.getProperty("io.opentelemetry.smoketest.agentPath");
+  //Javaagent with extensions embedded inside it
+  protected static final String extendedAgentPath =
+      System.getProperty("io.opentelemetry.smoketest.extendedAgentPath");
   protected static final String extensionPath =
       System.getProperty("io.opentelemetry.smoketest.extensionPath");
 
@@ -80,14 +83,24 @@ abstract class IntegrationTest {
   protected GenericContainer<?> target;
 
   void startTarget(String extensionLocation) {
-    target =
+    target = buildTargetContainer(agentPath, extensionLocation);
+    target.start();
+  }
+
+  void startTargetWithExtendedAgent() {
+    target = buildTargetContainer(extendedAgentPath, null);
+    target.start();
+  }
+
+  private GenericContainer<?> buildTargetContainer(String agentPath, String extensionLocation) {
+    GenericContainer<?> result =
         new GenericContainer<>(getTargetImage(11))
             .withExposedPorts(8080)
             .withNetwork(network)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
-            //Adds instrumentation agent with debug configuration to the targe application
+            //Adds instrumentation agent with debug configuration to the target application
             .withEnv("JAVA_TOOL_OPTIONS",
                 "-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true")
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
@@ -97,12 +110,11 @@ abstract class IntegrationTest {
     //If external extensions are requested
     if (extensionLocation != null) {
       //Asks instrumentation agent to include extensions from given location into its runtime
-      target = target.withCopyFileToContainer(
+      result = result.withCopyFileToContainer(
           MountableFile.forHostPath(extensionPath), "/opentelemetry-extensions.jar")
           .withEnv("OTEL_JAVAAGENT_EXPERIMENTAL_EXTENSIONS", extensionLocation);
     }
-
-    target.start();
+    return result;
   }
 
   @AfterEach
