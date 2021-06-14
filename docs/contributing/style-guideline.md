@@ -84,3 +84,16 @@ the non-private methods that use it.
 
 In static utility classes (where all members are static), the private constructor
 (used to prevent construction) should be ordered after methods instead of before methods.
+
+### `final` keyword usage
+
+Public classes should be declared `final` where possible.
+
+Methods should only be declared `final` if they are in non-final public classes.
+
+Fields should be declared `final` where possible.
+
+Method parameters should never be declared `final`.
+
+Local variables should only be declared `final` if they are not initialized inline
+(declaring these vars `final` can help prevent accidental double-initialization).
