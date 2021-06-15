@@ -84,10 +84,9 @@ public final class OpenTelemetryAgent {
     System.out.println("Could not get bootstrap jar from code source, using -javaagent arg");
 
     // ManagementFactory indirectly references java.util.logging.LogManager
-    // - On Oracle-based JDKs after 1.8
-    // - On IBM-based JDKs since at least 1.7
-    // This prevents custom log managers from working correctly
-    // Use reflection to bypass the loading of the class
+    // on IBM-based JDKs since at least 1.7.
+    // This prevents custom log managers from working correctly.
+    // Use reflection to bypass the loading of the class.
     List<String> arguments = getVmArgumentsThroughReflection();
 
     String agentArgument = null;
