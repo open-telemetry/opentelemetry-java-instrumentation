@@ -12,7 +12,7 @@ import io.opentelemetry.context.ContextKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * This class encapsulates the context key for storing the current {@link SpanKind#CLIENT span in
+ * This class encapsulates the context key for storing the current {@link SpanKind#CLIENT} span in
  * the {@link Context}.
  */
 public final class ClientSpan {
