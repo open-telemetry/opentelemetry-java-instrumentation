@@ -22,10 +22,6 @@ abstract class ContextAndScope {
     getScope().close();
   }
 
-  static ContextAndScope makeCurrent(Context context) {
-    return create(context, context.makeCurrent());
-  }
-
   static ContextAndScope create(Context context, Scope scope) {
     return new AutoValue_ContextAndScope(context, scope);
   }

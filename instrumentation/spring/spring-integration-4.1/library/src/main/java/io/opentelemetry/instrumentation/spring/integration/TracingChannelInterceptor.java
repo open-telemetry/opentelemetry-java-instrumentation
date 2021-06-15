@@ -48,7 +48,8 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     // parent
     if (instrumenter.shouldStart(parentContext, messageWithChannel)) {
       context = instrumenter.start(parentContext, messageWithChannel);
-      messageHeaderAccessor.setHeader(CONTEXT_AND_SCOPE_KEY, ContextAndScope.makeCurrent(context));
+      messageHeaderAccessor.setHeader(
+          CONTEXT_AND_SCOPE_KEY, ContextAndScope.create(context, context.makeCurrent()));
     } else {
       // if there was a top-level span detected it means that there's another messaging
       // instrumentation that creates CONSUMER/PRODUCER spans; in that case, back off and just
@@ -72,10 +73,14 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
       Message<?> message, MessageChannel messageChannel, boolean sent, Exception e) {
     Object contextAndScope = message.getHeaders().get(CONTEXT_AND_SCOPE_KEY);
     if (contextAndScope instanceof ContextAndScope) {
-      ((ContextAndScope) contextAndScope).close();
-      MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
-      instrumenter.end(
-          ((ContextAndScope) contextAndScope).getContext(), messageWithChannel, null, e);
+      ContextAndScope cas = (ContextAndScope) contextAndScope;
+      cas.close();
+      Context context = cas.getContext();
+
+      if (context != null) {
+        MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
+        instrumenter.end(context, messageWithChannel, null, e);
+      }
     }
   }
 
