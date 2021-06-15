@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.integration;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysInternal;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -44,7 +42,7 @@ public final class SpringIntegrationTracingBuilder {
         Instrumenter.<MessageWithChannel, Void>newBuilder(
                 openTelemetry, INSTRUMENTATION_NAME, new MessageChannelSpanNameExtractor())
             .addAttributesExtractors(additionalAttributeExtractors)
-            .newUpstreamPropagatingInstrumenter(alwaysInternal(), MessageHeadersGetter.INSTANCE);
+            .newConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
     return new SpringIntegrationTracing(openTelemetry.getPropagators(), instrumenter);
   }
 }

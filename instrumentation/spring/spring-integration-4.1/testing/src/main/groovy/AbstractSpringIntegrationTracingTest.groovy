@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
-import io.opentelemetry.api.trace.SpanId
-import io.opentelemetry.api.trace.TraceId
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import java.util.concurrent.Executors
@@ -28,8 +27,6 @@ import spock.lang.Unroll
 
 @Unroll
 abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpecification {
-  static final String TRACE_ID = TraceId.fromLongs(0, 42)
-  static final String SPAN_ID = SpanId.fromLong(123)
 
   abstract Class<?> additionalContextClass()
 
@@ -77,6 +74,7 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
         span(1) {
           name interceptorSpanName
           childOf span(0)
+          kind CONSUMER
         }
         span(2) {
           name "handler"
@@ -115,26 +113,21 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
     def capturedMessage = messageHandler.join()
 
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 3) {
         span(0) {
           name "parent"
         }
         span(1) {
           name "application.linkedChannel1"
           childOf span(0)
-          hasNoLinks()
+          kind CONSUMER
         }
         span(2) {
-          name "application.linkedChannel2"
-          childOf span(1)
-          hasNoLinks()
-        }
-        span(3) {
           name "handler"
-          childOf span(2)
+          childOf span(1)
         }
 
-        def lastChannelSpan = span(2)
+        def lastChannelSpan = span(1)
         verifyCorrectSpanWasPropagated(capturedMessage, lastChannelSpan)
       }
     }

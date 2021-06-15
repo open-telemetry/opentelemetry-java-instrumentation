@@ -12,7 +12,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.ChannelInterceptor;
 
-/** Entrypoint for tracing Spring Integration {@link MessageChannel}s. */
+/** Entrypoint for instrumenting Spring Integration {@link MessageChannel}s. */
 public final class SpringIntegrationTracing {
 
   /**
@@ -40,8 +40,9 @@ public final class SpringIntegrationTracing {
   }
 
   /**
-   * Returns a new {@link ChannelInterceptor} that traces {@link MessageChannel#send(Message)} calls
-   * and propagates context through {@link Message}s.
+   * Returns a new {@link ChannelInterceptor} that propagates context through {@link Message}s and
+   * when no other messaging instrumentation is detected, traces {@link
+   * MessageChannel#send(Message)} calls.
    *
    * @see org.springframework.integration.channel.ChannelInterceptorAware
    * @see org.springframework.messaging.support.InterceptableChannel

@@ -107,7 +107,7 @@ public class RabbitTracer extends BaseTracer {
           "rabbitmq.record.queue_time_ms", Math.max(0L, startTimeMillis - produceTimeMillis));
     }
 
-    return parentContext.with(span);
+    return withConsumerSpan(parentContext, span);
   }
 
   public void onPublish(Span span, String exchange, String routingKey) {

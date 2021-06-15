@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
+
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 
 abstract class AbstractSpringCloudStreamRabbitTest extends InstrumentationSpecification implements WithRabbitProducerConsumerTrait {
@@ -30,10 +32,12 @@ abstract class AbstractSpringCloudStreamRabbitTest extends InstrumentationSpecif
         span(1) {
           name "testProducer.output"
           childOf span(0)
+          kind CONSUMER
         }
         span(2) {
           name "testConsumer.input"
           childOf span(1)
+          kind CONSUMER
         }
         span(3) {
           name "consumer"

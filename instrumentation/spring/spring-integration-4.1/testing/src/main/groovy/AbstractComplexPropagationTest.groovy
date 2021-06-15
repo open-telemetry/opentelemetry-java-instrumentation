@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -72,13 +73,18 @@ abstract class AbstractComplexPropagationTest extends InstrumentationSpecificati
         span(0) {
           name "parent"
         }
+        // there's no top-level SERVER or CONSUMER span, so spring-integration adds a CONSUMER one
         span(1) {
           name "application.sendChannel"
           childOf span(0)
+          kind CONSUMER
         }
+        // message is received in a separate thread without any context, so a CONSUMER span with parent
+        // extracted from the incoming message is created
         span(2) {
           name "application.receiveChannel"
           childOf span(1)
+          kind CONSUMER
         }
         span(3) {
           name "handler"
