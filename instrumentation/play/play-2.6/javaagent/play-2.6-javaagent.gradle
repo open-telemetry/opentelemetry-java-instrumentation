@@ -1,8 +1,3 @@
-ext {
-  // Play doesn't work with Java 9+ until 2.6.12
-  maxJavaVersionForTests = JavaVersion.VERSION_1_8
-}
-
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 def scalaVersion = '2.11'
@@ -30,6 +25,11 @@ muzzle {
     versions = "[$playVersion,)"
     assertInverse = true
   }
+}
+
+otelJava {
+  // Play doesn't work with Java 9+ until 2.6.12
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 dependencies {

@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
 import java.time.Duration
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
@@ -12,6 +13,8 @@ plugins {
 apply(from = "$rootDir/gradle/spotless.gradle")
 apply(from = "$rootDir/gradle/codenarc.gradle")
 apply(from = "$rootDir/gradle/checkstyle.gradle")
+
+val otelJava = extensions.create<OtelJavaExtension>("otelJava")
 
 afterEvaluate {
   if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
@@ -35,14 +38,9 @@ if (applyCodeCoverage) {
   apply(from = "${rootDir}/gradle/jacoco.gradle")
 }
 
-val minJavaVersionSupported = project.findProperty("minJavaVersionSupported")?.let(JavaVersion::toVersion)
-  ?: JavaVersion.VERSION_1_8
-val maxJavaVersionForTests = project.findProperty("maxJavaVersionForTests")?.let(JavaVersion::toVersion)
-
 java {
   toolchain {
-    languageVersion.set(JavaLanguageVersion.of(
-      Math.max(minJavaVersionSupported.majorVersion.toInt(), DEFAULT_JAVA_VERSION.majorVersion.toInt())))
+    languageVersion.set(otelJava.minJavaVersionSupported.map { JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), DEFAULT_JAVA_VERSION.majorVersion.toInt())) })
   }
 
   // See https://docs.gradle.org/current/userguide/upgrading_version_5.html, Automatic target JVM version
@@ -53,19 +51,21 @@ java {
 
 tasks.withType<JavaCompile>().configureEach {
   with(options) {
-    release.set(minJavaVersionSupported.majorVersion.toInt())
+    release.set(otelJava.minJavaVersionSupported.map { it.majorVersion.toInt() })
     compilerArgs.add("-Werror")
   }
 }
 
 // Groovy and Scala compilers don't actually understand --release option
-tasks.withType<GroovyCompile>().configureEach {
-  sourceCompatibility = minJavaVersionSupported.majorVersion
-  targetCompatibility = minJavaVersionSupported.majorVersion
-}
-tasks.withType<ScalaCompile>().configureEach {
-  sourceCompatibility = minJavaVersionSupported.majorVersion
-  targetCompatibility = minJavaVersionSupported.majorVersion
+afterEvaluate {
+  tasks.withType<GroovyCompile>().configureEach {
+    sourceCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
+    targetCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
+  }
+  tasks.withType<ScalaCompile>().configureEach {
+    sourceCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
+    targetCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
+  }
 }
 
 evaluationDependsOn(":dependencyManagement")
@@ -172,16 +172,16 @@ normalization {
 }
 
 fun isJavaVersionAllowed(version: JavaVersion): Boolean {
-  if (minJavaVersionSupported.compareTo(version) > 0) {
+  if (otelJava.minJavaVersionSupported.get().compareTo(version) > 0) {
     return false
   }
-  if (maxJavaVersionForTests != null && maxJavaVersionForTests.compareTo(version) < 0) {
+  if (otelJava.maxJavaVersionForTests.isPresent() && otelJava.maxJavaVersionForTests.get().compareTo(version) < 0) {
     return false
   }
   return true
 }
 
-val testJavaVersion = rootProject.findProperty("testJavaVersion")?.let(JavaVersion::toVersion)
+val testJavaVersion = gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
 val resourceClassesCsv = listOf("Host", "Os", "Process", "ProcessRuntime").map { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }.joinToString(",")
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
@@ -219,27 +219,27 @@ tasks.withType<Test>().configureEach {
   testLogging {
     exceptionFormat = TestExceptionFormat.FULL
   }
-
-  if (testJavaVersion != null) {
-    javaLauncher.set(javaToolchains.launcherFor {
-      languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
-    })
-    isEnabled = isJavaVersionAllowed(testJavaVersion)
-  } else {
-    // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
-    // the default test task's version so commands like `./gradlew check` can test all projects regardless
-    // of Java version.
-    if (!isJavaVersionAllowed(DEFAULT_JAVA_VERSION) && maxJavaVersionForTests != null) {
-      javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(maxJavaVersionForTests.majorVersion))
-      })
-    }
-  }
 }
 
 afterEvaluate {
-  if (plugins.hasPlugin("org.unbroken-dome.test-sets") && configurations.findByName("latestDepTestRuntime") != null) {
-    tasks.withType<Test>().configureEach {
+  tasks.withType<Test>().configureEach {
+    if (testJavaVersion != null) {
+      javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
+      })
+      isEnabled = isJavaVersionAllowed(testJavaVersion)
+    } else {
+      // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
+      // the default test task's version so commands like `./gradlew check` can test all projects regardless
+      // of Java version.
+      if (!isJavaVersionAllowed(DEFAULT_JAVA_VERSION) && otelJava.maxJavaVersionForTests.isPresent) {
+        javaLauncher.set(javaToolchains.launcherFor {
+          languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
+        })
+      }
+    }
+
+    if (plugins.hasPlugin("org.unbroken-dome.test-sets") && configurations.findByName("latestDepTestRuntime") != null) {
       doFirst {
         val testArtifacts = configurations.testRuntimeClasspath.get().resolvedConfiguration.resolvedArtifacts
         val latestTestArtifacts = configurations.getByName("latestDepTestRuntimeClasspath").resolvedConfiguration.resolvedArtifacts

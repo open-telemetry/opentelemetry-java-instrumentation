@@ -1,9 +1,12 @@
 ext {
-  maxJavaVersionForTests = JavaVersion.VERSION_1_8
   skipPublish = true
 }
 
 apply from: "$rootDir/gradle/instrumentation.gradle"
+
+otelJava {
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
 
 dependencies {
   testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
