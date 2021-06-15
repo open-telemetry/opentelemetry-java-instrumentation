@@ -176,7 +176,7 @@ public final class OpenTelemetryAgent {
   private static void verifyJarManifestMainClassIsThis(File jarFile, JarFile agentJar)
       throws IOException {
     Manifest manifest = agentJar.getManifest();
-    if (!manifest.getMainAttributes().containsKey("Premain-Class")) {
+    if (manifest.getMainAttributes().getValue("Premain-Class") == null) {
       throw new IllegalStateException(
           "The agent was not installed, because the agent was found in '"
               + jarFile
