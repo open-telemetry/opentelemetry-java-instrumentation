@@ -90,7 +90,6 @@ public class IntegrationTestUtils {
       Attributes mainAttributes = manifest.getMainAttributes();
       mainAttributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
       mainAttributes.put(Attributes.Name.MAIN_CLASS, mainClassname);
-      mainAttributes.put(new Attributes.Name("Premain-Class"), mainClassname);
     }
     JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
     for (Class<?> clazz : classes) {
