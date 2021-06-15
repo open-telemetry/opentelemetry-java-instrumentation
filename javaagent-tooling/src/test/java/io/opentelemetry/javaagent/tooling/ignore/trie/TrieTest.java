@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.ignore;
+package io.opentelemetry.javaagent.tooling.ignore.trie;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import io.opentelemetry.javaagent.tooling.ignore.trie.Trie;
 import org.junit.jupiter.api.Test;
 
 class TrieTest {
