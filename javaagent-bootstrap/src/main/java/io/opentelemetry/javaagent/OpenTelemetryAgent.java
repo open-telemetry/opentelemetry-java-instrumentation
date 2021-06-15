@@ -167,12 +167,16 @@ public final class OpenTelemetryAgent {
     }
   }
 
-  // this is to protect against someone by mistake adding the content of the agent jar to an
-  // application level "uber.jar"
+  // this protects against the case where someone adds the contents of opentelemetry-javaagent.jar
+  // by mistake to their application's "uber.jar"
   //
-  // because if they add the agent jar to their uber jar, and we proceed with adding the uber jar
-  // file to the bootstrap classpath, we can cause problems in user code that never expects
-  // Class.getClassLoader() to return null
+  // the reason this can cause issues is because we locate the agent jar based on the CodeSource of
+  // the OpenTelemetryAgent class, and then we add that jar file to the bootstrap class path
+  //
+  // but if we find the OpenTelemetryAgent class in an uber jar file, and we add that (whole) uber
+  // jar file to the bootstrap class loader, that can cause some applications to break, as there's a
+  // lot of application and library code that doesn't handle getClassLoader() returning null
+  // (e.g. https://github.com/qos-ch/logback/pull/291)
   private static void verifyJarManifestMainClassIsThis(File jarFile, JarFile agentJar)
       throws IOException {
     Manifest manifest = agentJar.getManifest();
