@@ -3,9 +3,6 @@ group = 'io.opentelemetry.javaagent'
 apply plugin: "otel.java-conventions"
 apply from: "$rootDir/gradle/publish.gradle"
 
-project.ext.minimumBranchCoverage = 0.0
-project.ext.minimumInstructionCoverage = 0.0
-
 dependencies {
   api "io.opentelemetry:opentelemetry-api"
   compileOnly "io.opentelemetry:opentelemetry-sdk"

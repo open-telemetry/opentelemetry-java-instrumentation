@@ -3,10 +3,6 @@ group = 'io.opentelemetry.javaagent'
 apply plugin: "otel.java-conventions"
 apply from: "$rootDir/gradle/publish.gradle"
 
-// FIXME: Improve test coverage.
-minimumBranchCoverage = 0.0
-minimumInstructionCoverage = 0.0
-
 // patch inner class from Caffeine to avoid ForkJoinTask from being loaded too early
 sourceSets {
   patch {
