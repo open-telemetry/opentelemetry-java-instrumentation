@@ -1,4 +1,4 @@
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
+apply plugin: "otel.library-instrumentation"
 
 dependencies {
   compileOnly "javax.servlet:javax.servlet-api:3.0.1"

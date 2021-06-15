@@ -1,6 +1,5 @@
 /** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
 
-
 /**
  * We define three dependency configurations to use when adding dependencies to libraries being
  * instrumented.
@@ -24,30 +23,33 @@
  *   example to restrict to just a major version by specifying `2.+`.
  */
 
-ext.testLatestDeps = findProperty('testLatestDeps')
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+extra["testLatestDeps"] = testLatestDeps
+
 configurations {
-  // library is where to define dependencies on the library that is being instrumented. It will not
-  // be packaged in the agent but will be available at runtime for tests.
-  library {
-    canBeResolved = false
-    canBeConsumed = false
+  val library by creating {
+    isCanBeResolved = false
+    isCanBeConsumed = false
   }
-  testLibrary {
-    canBeResolved = false
-    canBeConsumed = false
+  val testLibrary by creating {
+    isCanBeResolved = false
+    isCanBeConsumed = false
   }
-  latestDepTestLibrary {
-    canBeResolved = false
-    canBeConsumed = false
+  val latestDepTestLibrary by creating {
+    isCanBeResolved = false
+    isCanBeConsumed = false
   }
-  [library, testLibrary].each { configuration ->
+
+  val testImplementation by getting
+
+  listOf(library, testLibrary).forEach { configuration ->
     // We use whenObjectAdded and copy into the real configurations instead of extension to allow
     // mutating the version for latest dep tests.
     configuration.dependencies.whenObjectAdded {
-      def dep = it.copy()
+      val dep = copy()
       if (testLatestDeps) {
-        dep.version {
-          it.require '+'
+        (dep as ExternalDependency).version {
+          require("+")
         }
       }
       testImplementation.dependencies.add(dep)
@@ -55,33 +57,39 @@ configurations {
   }
   if (testLatestDeps) {
     latestDepTestLibrary.dependencies.whenObjectAdded {
-      def dep = it.copy()
-      def declaredVersion = dep.version
-      dep.version {
-        it.strictly declaredVersion
+      val dep = copy()
+      val declaredVersion = dep.version
+      if (declaredVersion != null) {
+        (dep as ExternalDependency).version {
+          strictly(declaredVersion)
+        }
       }
       testImplementation.dependencies.add(dep)
     }
   }
-  compileOnly.extendsFrom(library)
+  named("compileOnly") {
+    extendsFrom(library)
+  }
 }
 
 if (testLatestDeps) {
   afterEvaluate {
-    if (tasks.names.contains('latestDepTest')) {
-      def latestDepTest = tasks.named('latestDepTest')
-      tasks.named('test').configure {
+    if (tasks.names.contains("latestDepTest")) {
+      val latestDepTest by tasks.existing
+      tasks.named("test").configure {
         dependsOn(latestDepTest)
       }
     }
   }
 }
 
-if (['javaagent', 'library', 'testing'].contains(projectDir.name)) {
-  // We don't use this group anywhere in our config, but we need to make sure it is unique per
-  // instrumentation so Gradle doesn't merge projects with same name due to a bug in Gradle.
-  // https://github.com/gradle/gradle/issues/847
-  // In otel.publish-conventions, we set the maven group, which is what matters, to the correct
-  // value.
-  group = "io.opentelemetry.${projectDir.parentFile.name}"
+when (projectDir.name) {
+  "javaagent", "library", "testing" -> {
+    // We don't use this group anywhere in our config, but we need to make sure it is unique per
+    // instrumentation so Gradle doesn't merge projects with same name due to a bug in Gradle.
+    // https://github.com/gradle/gradle/issues/847
+    // In otel.publish-conventions, we set the maven group, which is what matters, to the correct
+    // value.
+    group = "io.opentelemetry.${projectDir.parentFile.name}"
+  }
 }

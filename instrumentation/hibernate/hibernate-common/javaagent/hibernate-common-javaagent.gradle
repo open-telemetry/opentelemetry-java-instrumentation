@@ -2,7 +2,7 @@
  * Classes that are common to all versions of the Hibernate instrumentation.
  */
 
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
+apply plugin: "otel.library-instrumentation"
 
 dependencies {
   compileOnly project(':javaagent-api')

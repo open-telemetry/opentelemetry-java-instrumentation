@@ -15,7 +15,7 @@ if (project.ext.find("skipPublish") != true) {
   apply plugin: "otel.publish-conventions"
 }
 
-apply from: "$rootDir/gradle/instrumentation-common.gradle"
+apply plugin: "otel.instrumentation-conventions"
 
 if (projectDir.name == 'javaagent') {
   apply plugin: 'muzzle'
