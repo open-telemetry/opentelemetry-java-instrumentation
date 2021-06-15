@@ -1,1 +1,3 @@
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
+plugins {
+  id("otel.library-instrumentation")
+}
