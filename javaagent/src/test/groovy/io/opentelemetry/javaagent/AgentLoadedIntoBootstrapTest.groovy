@@ -24,10 +24,10 @@ class AgentLoadedIntoBootstrapTest extends Specification {
   // to their application's "uber.jar"
   //
   // the reason this can cause issues is because we locate the agent jar based on the CodeSource of
-  // the AgentBootstrap class, and then we add that jar file to the bootstrap class path
+  // the OpenTelemetryAgent class, and then we add that jar file to the bootstrap class path
   //
-  // but if we find the AgentBootstrap class in an uber jar file, and we add that (whole) uber jar
-  // file to the bootstrap class loader, that can cause some applications to break, as there's a
+  // but if we find the OpenTelemetryAgent class in an uber jar file, and we add that (whole) uber
+  // jar file to the bootstrap class loader, that can cause some applications to break, as there's a
   // lot of application and library code that doesn't handle getClassLoader() returning null
   // (e.g. https://github.com/qos-ch/logback/pull/291)
   def "application uber jar should not be added to the bootstrap class loader"() {

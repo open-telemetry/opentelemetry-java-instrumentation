@@ -5,21 +5,66 @@
 
 package io.opentelemetry.javaagent.tooling.ignore;
 
+import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
 import io.opentelemetry.javaagent.tooling.ignore.trie.Trie;
+import java.util.regex.Pattern;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class IgnoredTypesMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
+public class IgnoredTypesMatcher extends ElementMatcher.Junction.AbstractBase<TypeDescription> {
+
+  private static final Pattern COM_MCHANGE_PROXY =
+      Pattern.compile("com\\.mchange\\.v2\\.c3p0\\..*Proxy");
+
+  private final IgnoreMatcherProvider ignoreMatcherProvider;
   private final Trie<IgnoreAllow> ignoredTypes;
 
-  IgnoredTypesMatcher(Trie<IgnoreAllow> ignoredTypes) {
+  public IgnoredTypesMatcher(
+      IgnoreMatcherProvider ignoreMatcherProvider, Trie<IgnoreAllow> ignoredTypes) {
+    this.ignoreMatcherProvider = ignoreMatcherProvider;
     this.ignoredTypes = ignoredTypes;
   }
 
   @Override
   public boolean matches(TypeDescription target) {
-    IgnoreAllow ignored = ignoredTypes.getOrNull(target.getActualName());
-    // ALLOW or null (default) mean that the type should not be ignored
-    return ignored == IgnoreAllow.IGNORE;
+    String name = target.getActualName();
+
+    // TODO: will be removed together with IgnoreMatcherProvider
+    IgnoreMatcherProvider.Result ignoreResult = ignoreMatcherProvider.type(target);
+    if (ignoreResult == IgnoreMatcherProvider.Result.ALLOW) {
+      return false;
+    } else if (ignoreResult == IgnoreMatcherProvider.Result.IGNORE) {
+      return true;
+    }
+
+    IgnoreAllow ignored = ignoredTypes.getOrNull(name);
+    if (ignored == IgnoreAllow.ALLOW) {
+      return false;
+    } else if (ignored == IgnoreAllow.IGNORE) {
+      return true;
+    }
+
+    // bytecode proxies typically have $$ in their name
+    if (name.contains("$$")) {
+      // allow scala anonymous classes
+      return !name.contains("$$anon$");
+    }
+
+    if (name.contains("$JaxbAccessor")
+        || name.contains("CGLIB$$")
+        || name.contains("javassist")
+        || name.contains(".asm.")
+        || name.contains("$__sisu")
+        || name.contains("$$EnhancerByProxool$$")
+        // glassfish ejb proxy
+        // We skip instrumenting these because some instrumentations e.g. jax-rs instrument methods
+        // that are annotated with @Path in an interface implemented by the class. We don't really
+        // want to instrument these methods in generated classes as this would create spans that
+        // have the generated class name in them instead of the actual class that handles the call.
+        || name.contains("__EJB31_Generated__")) {
+      return true;
+    }
+
+    return COM_MCHANGE_PROXY.matcher(name).matches();
   }
 }

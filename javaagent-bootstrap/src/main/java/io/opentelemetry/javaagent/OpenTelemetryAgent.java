@@ -71,6 +71,9 @@ public final class OpenTelemetryAgent {
       File javaagentFile = new File(codeSource.getLocation().toURI());
 
       if (javaagentFile.isFile()) {
+        // passing verify false for vendors who sign the agent jar, because jar file signature
+        // verification is very slow before the JIT compiler starts up, which on Java 8 is not until
+        // after premain executes
         JarFile agentJar = new JarFile(javaagentFile, false);
         verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
         inst.appendToBootstrapClassLoaderSearch(agentJar);
@@ -164,18 +167,25 @@ public final class OpenTelemetryAgent {
     }
   }
 
+  // this protects against the case where someone adds the contents of opentelemetry-javaagent.jar
+  // by mistake to their application's "uber.jar"
+  //
+  // the reason this can cause issues is because we locate the agent jar based on the CodeSource of
+  // the OpenTelemetryAgent class, and then we add that jar file to the bootstrap class path
+  //
+  // but if we find the OpenTelemetryAgent class in an uber jar file, and we add that (whole) uber
+  // jar file to the bootstrap class loader, that can cause some applications to break, as there's a
+  // lot of application and library code that doesn't handle getClassLoader() returning null
+  // (e.g. https://github.com/qos-ch/logback/pull/291)
   private static void verifyJarManifestMainClassIsThis(File jarFile, JarFile agentJar)
       throws IOException {
     Manifest manifest = agentJar.getManifest();
-    String mainClass = manifest.getMainAttributes().getValue("Main-Class");
-    if (!thisClass.getCanonicalName().equals(mainClass)) {
+    if (manifest.getMainAttributes().getValue("Premain-Class") == null) {
       throw new IllegalStateException(
-          "opentelemetry-javaagent is not installed, because class '"
-              + thisClass.getCanonicalName()
-              + "' is located in '"
+          "The agent was not installed, because the agent was found in '"
               + jarFile
-              + "'. Make sure you don't have this .class file anywhere, "
-              + "besides opentelemetry-javaagent.jar");
+              + "', which doesn't contain a Premain-Class manifest attribute. Make sure that you"
+              + " haven't included the agent jar file inside of an application uber jar.");
     }
   }
 

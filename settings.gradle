@@ -1,6 +1,5 @@
 pluginManagement {
   plugins {
-    id "com.diffplug.spotless" version "5.12.4"
     id 'com.github.ben-manes.versions' version '0.27.0'
     id "io.github.gradle-nexus.publish-plugin" version "1.0.0"
     id "me.champeau.jmh" version "0.6.4"
@@ -266,7 +265,6 @@ include ':instrumentation:rxjava:rxjava-3.0:library'
 include ':instrumentation:rxjava:rxjava-3.0:testing'
 include ':instrumentation:rxjava:rxjava-3.0:javaagent'
 include ':instrumentation:scala-executors:javaagent'
-include ':instrumentation:servlet:glassfish-testing'
 include ':instrumentation:servlet:servlet-common:library'
 include ':instrumentation:servlet:servlet-common:javaagent'
 include ':instrumentation:servlet:servlet-javax-common:library'

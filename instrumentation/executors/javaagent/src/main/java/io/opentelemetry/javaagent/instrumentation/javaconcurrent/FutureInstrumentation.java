@@ -102,7 +102,7 @@ public class FutureInstrumentation implements TypeInstrumentation {
       // Try to clear parent span even if future was not cancelled:
       // the expectation is that parent span should be cleared after 'cancel'
       // is called, one way or another
-      ContextStore<Future, State> contextStore =
+      ContextStore<Future<?>, State> contextStore =
           InstrumentationContext.get(Future.class, State.class);
       State state = contextStore.get(future);
       if (state != null) {

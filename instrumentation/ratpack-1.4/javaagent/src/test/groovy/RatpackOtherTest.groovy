@@ -8,7 +8,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.testing.armeria.client.WebClient
+import io.opentelemetry.testing.internal.armeria.client.WebClient
 import ratpack.path.PathBinding
 import ratpack.server.RatpackServer
 import spock.lang.Shared

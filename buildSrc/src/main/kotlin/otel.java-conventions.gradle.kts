@@ -5,14 +5,14 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 plugins {
   `java-library`
   groovy
+  checkstyle
+  codenarc
 
   id("org.gradle.test-retry")
   id("net.ltgt.errorprone")
-}
 
-apply(from = "$rootDir/gradle/spotless.gradle")
-apply(from = "$rootDir/gradle/codenarc.gradle")
-apply(from = "$rootDir/gradle/checkstyle.gradle")
+  id("otel.spotless-conventions")
+}
 
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
 
@@ -249,4 +249,16 @@ afterEvaluate {
       }
     }
   }
+}
+
+codenarc {
+  configFile = rootProject.file("gradle/enforcement/codenarc.groovy")
+  toolVersion = "2.0.0"
+}
+
+checkstyle {
+  configFile = rootProject.file("gradle/enforcement/checkstyle.xml")
+  // this version should match the version of google_checks.xml used as basis for above configuration
+  toolVersion = "8.37"
+  maxWarnings = 0
 }

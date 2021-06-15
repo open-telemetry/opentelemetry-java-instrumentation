@@ -17,10 +17,10 @@ import io.kubernetes.client.openapi.apis.CoreV1Api
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.testing.armeria.common.HttpResponse
-import io.opentelemetry.testing.armeria.common.HttpStatus
-import io.opentelemetry.testing.armeria.common.MediaType
-import io.opentelemetry.testing.armeria.testing.junit5.server.mock.MockWebServerExtension
+import io.opentelemetry.testing.internal.armeria.common.HttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpStatus
+import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 import spock.lang.Shared

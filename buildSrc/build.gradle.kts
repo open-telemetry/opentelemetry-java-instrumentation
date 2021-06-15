@@ -1,7 +1,8 @@
 plugins {
   `java-gradle-plugin`
   `kotlin-dsl`
-  id("com.diffplug.spotless") version "5.12.4"
+  // When updating, update below in dependencies too
+  id("com.diffplug.spotless") version "5.13.0"
 }
 
 spotless {
@@ -39,6 +40,8 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
+  // When updating, update above in plugins too
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:5.13.0")
   implementation("com.google.guava:guava:30.1-jre")
   implementation("gradle.plugin.com.github.jengelman.gradle.plugins:shadow:7.0.0")
   implementation("org.ow2.asm:asm:7.0-beta")

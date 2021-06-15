@@ -9,15 +9,14 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
-import io.opentelemetry.javaagent.tooling.matcher.GlobalIgnoresMatcher;
 
 /**
  * Additional global ignore settings that are used to reduce number of classes we try to apply
  * expensive matchers to.
  *
- * <p>This is separated from {@link GlobalIgnoresMatcher} to allow for better testing. The idea is
- * that we should be able to remove this matcher from the agent and all tests should still pass.
- * Moreover, no classes matched by this matcher should be modified during test run.
+ * <p>This is separated from {@link GlobalIgnoredTypesConfigurer} to allow for better testing. The
+ * idea is that we should be able to remove this matcher from the agent and all tests should still
+ * pass. Moreover, no classes matched by this matcher should be modified during test run.
  */
 @AutoService(IgnoredTypesConfigurer.class)
 public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConfigurer {

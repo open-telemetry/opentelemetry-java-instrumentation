@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.tooling.ignore;
 
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.tooling.ignore.trie.Trie;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
 
 public class IgnoredTypesBuilderImpl implements IgnoredTypesBuilder {
   private final Trie.Builder<IgnoreAllow> ignoreMatcherTrie = Trie.newBuilder();
@@ -49,7 +47,7 @@ public class IgnoredTypesBuilderImpl implements IgnoredTypesBuilder {
     throw new UnsupportedOperationException("not implemented yet");
   }
 
-  public ElementMatcher<TypeDescription> buildIgnoredTypesMatcher() {
-    return new IgnoredTypesMatcher(ignoreMatcherTrie.build());
+  public Trie<IgnoreAllow> buildIgnoredTypesTrie() {
+    return ignoreMatcherTrie.build();
   }
 }

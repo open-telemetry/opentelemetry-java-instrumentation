@@ -9,10 +9,10 @@ import ch.qos.logback.classic.Level
 import io.opentelemetry.instrumentation.test.RetryOnAddressAlreadyInUseTrait
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.testing.armeria.client.ClientFactory
-import io.opentelemetry.testing.armeria.client.WebClient
-import io.opentelemetry.testing.armeria.client.logging.LoggingClient
-import io.opentelemetry.testing.armeria.common.HttpHeaderNames
+import io.opentelemetry.testing.internal.armeria.client.ClientFactory
+import io.opentelemetry.testing.internal.armeria.client.WebClient
+import io.opentelemetry.testing.internal.armeria.client.logging.LoggingClient
+import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames
 import java.time.Duration
 import org.junit.AfterClass
 import org.junit.BeforeClass

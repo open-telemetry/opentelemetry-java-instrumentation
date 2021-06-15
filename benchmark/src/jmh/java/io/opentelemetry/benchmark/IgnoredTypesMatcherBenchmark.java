@@ -6,8 +6,10 @@
 package io.opentelemetry.benchmark;
 
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.ignore.AdditionalLibraryIgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
+import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import java.util.concurrent.TimeUnit;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,7 +38,9 @@ public class IgnoredTypesMatcherBenchmark {
   static {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     new AdditionalLibraryIgnoredTypesConfigurer().configure(Config.get(), builder);
-    ignoredTypesMatcher = builder.buildIgnoredTypesMatcher();
+    ignoredTypesMatcher =
+        new IgnoredTypesMatcher(
+            new AgentInstaller.NoopIgnoreMatcherProvider(), builder.buildIgnoredTypesTrie());
   }
 
   @Benchmark

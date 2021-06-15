@@ -13,7 +13,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import static org.junit.Assume.assumeTrue
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException

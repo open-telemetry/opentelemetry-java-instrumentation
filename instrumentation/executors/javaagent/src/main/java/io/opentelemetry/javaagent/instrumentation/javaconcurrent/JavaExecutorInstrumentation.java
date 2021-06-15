@@ -95,7 +95,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
     public static State enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) ForkJoinTask<?> task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
-        ContextStore<ForkJoinTask, State> contextStore =
+        ContextStore<ForkJoinTask<?>, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
             contextStore, task, Java8BytecodeBridge.currentContext());
@@ -132,7 +132,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future<?> future) {
       if (state != null && future != null) {
-        ContextStore<Future, State> contextStore =
+        ContextStore<Future<?>, State> contextStore =
             InstrumentationContext.get(Future.class, State.class);
         contextStore.put(future, state);
       }
@@ -148,7 +148,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
         task = CallableWrapper.wrapIfNeeded(task);
-        ContextStore<Callable, State> contextStore =
+        ContextStore<Callable<?>, State> contextStore =
             InstrumentationContext.get(Callable.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
             contextStore, task, Java8BytecodeBridge.currentContext());
@@ -162,7 +162,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future<?> future) {
       if (state != null && future != null) {
-        ContextStore<Future, State> contextStore =
+        ContextStore<Future<?>, State> contextStore =
             InstrumentationContext.get(Future.class, State.class);
         contextStore.put(future, state);
       }
@@ -180,9 +180,9 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
         Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
         for (Callable<?> task : tasks) {
           if (task != null) {
-            Callable newTask = CallableWrapper.wrapIfNeeded(task);
+            Callable<?> newTask = CallableWrapper.wrapIfNeeded(task);
             wrappedTasks.add(newTask);
-            ContextStore<Callable, State> contextStore =
+            ContextStore<Callable<?>, State> contextStore =
                 InstrumentationContext.get(Callable.class, State.class);
             ExecutorInstrumentationUtils.setupState(
                 contextStore, newTask, Java8BytecodeBridge.currentContext());
@@ -210,7 +210,7 @@ public class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation
       if (null != throwable) {
         for (Callable<?> task : wrappedTasks) {
           if (task != null) {
-            ContextStore<Callable, State> contextStore =
+            ContextStore<Callable<?>, State> contextStore =
                 InstrumentationContext.get(Callable.class, State.class);
             State state = contextStore.get(task);
             if (state != null) {

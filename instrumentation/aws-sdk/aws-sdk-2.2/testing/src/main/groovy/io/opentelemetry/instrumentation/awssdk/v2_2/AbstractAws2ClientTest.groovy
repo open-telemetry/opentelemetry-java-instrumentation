@@ -12,10 +12,10 @@ import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTr
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.testing.armeria.common.HttpResponse
-import io.opentelemetry.testing.armeria.common.HttpStatus
-import io.opentelemetry.testing.armeria.common.MediaType
-import io.opentelemetry.testing.armeria.testing.junit5.server.mock.MockWebServerExtension
+import io.opentelemetry.testing.internal.armeria.common.HttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpStatus
+import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension
 import java.time.Duration
 import java.util.concurrent.Future
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials

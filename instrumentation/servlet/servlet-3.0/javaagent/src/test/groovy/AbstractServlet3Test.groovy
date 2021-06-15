@@ -14,7 +14,7 @@ import static io.opentelemetry.instrumentation.test.base.HttpServerTest.ServerEn
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
-import io.opentelemetry.testing.armeria.common.AggregatedHttpRequest
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import javax.servlet.Servlet
 
 abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER> implements AgentTestTrait {
