@@ -18,7 +18,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 
 public class RouteOnSuccessOrError implements BiConsumer<HandlerFunction<?>, Throwable> {
 
-  private static final Pattern SPECIAL_CHARACTERS_REGEX = Pattern.compile("[\\(\\)&|]");
+  private static final Pattern SPECIAL_CHARACTERS_REGEX = Pattern.compile("[()&|]");
   private static final Pattern SPACES_REGEX = Pattern.compile("[ \\t]+");
   private static final Pattern METHOD_REGEX =
       Pattern.compile("^(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH) ");

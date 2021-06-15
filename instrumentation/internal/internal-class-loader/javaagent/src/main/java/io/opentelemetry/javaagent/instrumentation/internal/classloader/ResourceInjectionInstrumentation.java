@@ -42,7 +42,9 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
         ResourceInjectionInstrumentation.class.getName() + "$GetResourcesAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class GetResourcesAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This ClassLoader classLoader,

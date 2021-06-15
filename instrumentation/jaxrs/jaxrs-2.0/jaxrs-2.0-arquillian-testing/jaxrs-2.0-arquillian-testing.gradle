@@ -1,7 +1,7 @@
 ext {
   skipPublish = true
 }
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 
 // add repo for org.gradle:gradle-tooling-api which org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain depends on
 repositories {

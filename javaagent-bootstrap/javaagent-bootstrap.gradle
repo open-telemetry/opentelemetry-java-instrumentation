@@ -1,6 +1,6 @@
 group = 'io.opentelemetry.javaagent'
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 apply from: "$rootDir/gradle/publish.gradle"
 
 // FIXME: Improve test coverage.

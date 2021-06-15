@@ -18,6 +18,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.servlet.ServletContextPath;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.lang.reflect.Method;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -38,7 +39,7 @@ public class VaadinTracer extends BaseTracer {
   }
 
   public Context startVaadinServiceSpan(VaadinService vaadinService, Method method) {
-    String spanName = spanNameForMethod(vaadinService.getClass(), method);
+    String spanName = SpanNames.fromMethod(vaadinService.getClass(), method);
     Context context = super.startSpan(spanName);
     return context.with(SERVICE_CONTEXT_KEY, new VaadinServiceContext(spanName));
   }
@@ -75,7 +76,7 @@ public class VaadinTracer extends BaseTracer {
       return null;
     }
 
-    String spanName = spanNameForMethod(requestHandler.getClass(), method);
+    String spanName = SpanNames.fromMethod(requestHandler.getClass(), method);
     VaadinServiceContext vaadinServiceContext = current.get(SERVICE_CONTEXT_KEY);
     if (vaadinServiceContext != null && !vaadinServiceContext.isRequestHandled()) {
       Span span = ServerSpan.fromContextOrNull(current);
@@ -125,12 +126,12 @@ public class VaadinTracer extends BaseTracer {
   }
 
   public Context startClientCallableSpan(Class<?> componentClass, String methodName) {
-    return super.startSpan(spanNameForMethod(componentClass, methodName));
+    return super.startSpan(SpanNames.fromMethod(componentClass, methodName));
   }
 
   public Context startRpcInvocationHandlerSpan(
       RpcInvocationHandler rpcInvocationHandler, Method method, JsonObject jsonObject) {
-    String spanName = spanNameForMethod(rpcInvocationHandler.getClass(), method);
+    String spanName = SpanNames.fromMethod(rpcInvocationHandler.getClass(), method);
     if ("event".equals(rpcInvocationHandler.getRpcType())) {
       String eventType = jsonObject.getString("event");
       if (eventType != null) {

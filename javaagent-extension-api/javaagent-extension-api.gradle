@@ -1,6 +1,6 @@
 group = 'io.opentelemetry.javaagent'
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 apply from: "$rootDir/gradle/publish.gradle"
 
 // TODO this is not the desired state, only reflects current reality

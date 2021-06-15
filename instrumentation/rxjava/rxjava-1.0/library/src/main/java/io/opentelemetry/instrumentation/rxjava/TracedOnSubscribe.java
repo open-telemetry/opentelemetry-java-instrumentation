@@ -16,18 +16,15 @@ import rx.__OpenTelemetryTracingUtil;
 
 public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
   private final Observable.OnSubscribe<T> delegate;
-  private final String operationName;
+  private final String spanName;
   private final Context parentContext;
   private final BaseTracer tracer;
   private final SpanKind spanKind;
 
   public TracedOnSubscribe(
-      Observable<T> originalObservable,
-      String operationName,
-      BaseTracer tracer,
-      SpanKind spanKind) {
+      Observable<T> originalObservable, String spanName, BaseTracer tracer, SpanKind spanKind) {
     delegate = __OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
-    this.operationName = operationName;
+    this.spanName = spanName;
     this.tracer = tracer;
     this.spanKind = spanKind;
 
@@ -36,7 +33,7 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
 
   @Override
   public void call(Subscriber<? super T> subscriber) {
-    Context context = tracer.startSpan(parentContext, operationName, spanKind);
+    Context context = tracer.startSpan(parentContext, spanName, spanKind);
     decorateSpan(Span.fromContext(context));
     try (Scope ignored = context.makeCurrent()) {
       delegate.call(new TracedSubscriber<>(context, subscriber, tracer));

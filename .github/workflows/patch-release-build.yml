@@ -9,6 +9,7 @@ on:
         required: true
       commits:
         description: Comma separated list of commit shas to cherrypick
+        required: false
 
 jobs:
   prepare-release-branch:
@@ -79,7 +80,7 @@ jobs:
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
-  testLatestDep:
+  testLatestDeps:
     runs-on: ubuntu-latest
     needs: prepare-release-branch
     steps:

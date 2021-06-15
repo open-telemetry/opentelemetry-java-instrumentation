@@ -1,7 +1,7 @@
 description = 'OpenTelemetry Javaagent testing commons'
 group = 'io.opentelemetry.javaagent'
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
@@ -22,6 +22,7 @@ dependencies {
     exclude group: 'io.grpc'
   }
 
+  implementation "com.google.guava:guava"
   implementation "net.bytebuddy:byte-buddy"
   implementation "net.bytebuddy:byte-buddy-agent"
   implementation "org.slf4j:slf4j-api"

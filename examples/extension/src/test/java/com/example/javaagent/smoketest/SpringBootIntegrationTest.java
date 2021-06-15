@@ -36,6 +36,14 @@ class SpringBootIntegrationTest extends IntegrationTest {
     stopTarget();
   }
 
+  @Test
+  public void extensionsAreLoadedFromJavaagent() throws IOException, InterruptedException {
+    startTargetWithExtendedAgent();
+
+    testAndVerify();
+
+    stopTarget();
+  }
 
   private void testAndVerify() throws IOException, InterruptedException {
     String url = String.format("http://localhost:%d/greeting", target.getMappedPort(8080));

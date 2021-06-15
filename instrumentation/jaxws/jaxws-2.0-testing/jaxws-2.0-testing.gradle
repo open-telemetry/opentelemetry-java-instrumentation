@@ -2,7 +2,7 @@ plugins {
   id "org.unbroken-dome.xjc" version "2.0.0"
 }
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 
 checkstyle {
   // exclude generated web service classes

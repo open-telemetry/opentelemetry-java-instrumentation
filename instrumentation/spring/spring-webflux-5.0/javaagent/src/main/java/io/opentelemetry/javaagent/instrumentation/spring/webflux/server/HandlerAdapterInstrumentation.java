@@ -57,6 +57,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$HandleAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -69,19 +70,19 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       if (handler != null && context != null) {
         Span span = Span.fromContext(context);
         String handlerType;
-        String operationName;
+        String spanName;
 
         if (handler instanceof HandlerMethod) {
           // Special case for requests mapped with annotations
           HandlerMethod handlerMethod = (HandlerMethod) handler;
-          operationName = SpanNames.spanNameForMethod(handlerMethod.getMethod());
+          spanName = SpanNames.fromMethod(handlerMethod.getMethod());
           handlerType = handlerMethod.getMethod().getDeclaringClass().getName();
         } else {
-          operationName = AdviceUtils.parseOperationName(handler);
+          spanName = AdviceUtils.spanNameForHandler(handler);
           handlerType = handler.getClass().getName();
         }
 
-        span.updateName(operationName);
+        span.updateName(spanName);
         if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {
           span.setAttribute("spring-webflux.handler.type", handlerType);
         }

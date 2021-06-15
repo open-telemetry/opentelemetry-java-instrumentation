@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.springwebmvc;
 
-import static io.opentelemetry.instrumentation.api.tracer.SpanNames.spanNameForMethod;
-
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.lang.reflect.Method;
 import javax.servlet.Servlet;
 import org.springframework.web.HttpRequestHandler;
@@ -43,6 +42,6 @@ public class HandlerSpanNameExtractor implements SpanNameExtractor<Object> {
       methodName = "<annotation>";
     }
 
-    return spanNameForMethod(clazz, methodName);
+    return SpanNames.fromMethod(clazz, methodName);
   }
 }

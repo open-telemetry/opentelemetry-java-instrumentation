@@ -9,7 +9,7 @@ or [contributing](../CONTRIBUTING.md).
 
 ## Contents
 
-  * [Libraries / Frameworks](#libraries---frameworks)
+  * [Libraries / Frameworks](#libraries--frameworks)
   * [Application Servers](#application-servers)
   * [JVMs and Operating Systems](#jvms-and-operating-systems)
   * [Disabled instrumentations](#disabled-instrumentations)

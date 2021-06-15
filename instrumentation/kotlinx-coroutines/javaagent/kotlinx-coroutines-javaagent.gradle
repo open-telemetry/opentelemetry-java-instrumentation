@@ -19,6 +19,7 @@ muzzle {
 }
 dependencies {
   compileOnly "io.opentelemetry:opentelemetry-extension-kotlin"
+  compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
   testImplementation "io.opentelemetry:opentelemetry-extension-kotlin"
   testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"

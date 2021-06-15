@@ -36,7 +36,9 @@ public class VaadinServiceInstrumentation implements TypeInstrumentation {
         VaadinServiceInstrumentation.class.getName() + "$HandleRequestAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This VaadinService vaadinService,

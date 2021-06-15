@@ -54,6 +54,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
    * which allows the mappings to be evaluated at the beginning of the filter chain. This evaluation
    * is done inside the Servlet3Decorator.onContext method.
    */
+  @SuppressWarnings("unused")
   public static class HandlerMappingAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -70,6 +71,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RenderAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

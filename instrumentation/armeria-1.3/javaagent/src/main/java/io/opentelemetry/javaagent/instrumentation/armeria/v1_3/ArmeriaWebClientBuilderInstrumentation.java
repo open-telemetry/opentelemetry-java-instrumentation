@@ -41,6 +41,7 @@ public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentati
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903
   @SuppressWarnings("unused")
   public static class SuppressDecoratorAdvice {
+
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static boolean suppressDecorator(@Advice.Argument(0) Function<?, ?> decorator) {
       return decorator != ArmeriaDecorators.CLIENT_DECORATOR;
@@ -59,6 +60,7 @@ public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentati
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
+
     @Advice.OnMethodEnter
     public static void build(@Advice.This WebClientBuilder builder) {
       builder.decorator(ArmeriaDecorators.CLIENT_DECORATOR);

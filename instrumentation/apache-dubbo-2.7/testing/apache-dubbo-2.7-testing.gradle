@@ -2,7 +2,7 @@ plugins {
   id "java-library"
 }
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 
 def apacheDubboVersion = '2.7.5'
 

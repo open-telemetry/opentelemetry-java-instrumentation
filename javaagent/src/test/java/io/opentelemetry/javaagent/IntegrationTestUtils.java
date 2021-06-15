@@ -58,6 +58,7 @@ public class IntegrationTestUtils {
     }
   }
 
+  // TODO this works only accidentally now, because we don't have extensions in tests.
   /** Returns the URL to the jar the agent appended to the bootstrap classpath. */
   public static ClassLoader getBootstrapProxy() throws Exception {
     ClassLoader agentClassLoader = getAgentClassLoader();
@@ -81,7 +82,7 @@ public class IntegrationTestUtils {
    */
   public static URL createJarWithClasses(String mainClassname, Class<?>... classes)
       throws IOException {
-    File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "-", ".jar");
+    File tmpJar = File.createTempFile(UUID.randomUUID() + "-", ".jar");
     tmpJar.deleteOnExit();
 
     Manifest manifest = new Manifest();
@@ -233,9 +234,9 @@ public class IntegrationTestUtils {
   }
 
   private static class StreamGobbler extends Thread {
-    InputStream stream;
-    String type;
-    boolean print;
+    final InputStream stream;
+    final String type;
+    final boolean print;
 
     private StreamGobbler(InputStream stream, String type, boolean print) {
       this.stream = stream;

@@ -510,7 +510,7 @@ public final class AgentTestingExporterAccess {
       case SPAN_KIND_CONSUMER:
         return SpanKind.CONSUMER;
       default:
-        return SpanKind.INTERNAL;
+        throw new IllegalArgumentException("Unexpected span kind: " + kind);
     }
   }
 

@@ -38,10 +38,9 @@ class JaegerSpanExporterAutoConfigurationTest {
     this.contextRunner
         .withPropertyValues("otel.exporter.jaeger.enabled=true")
         .run(
-            (context) -> {
-              assertThat(context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class))
-                  .isNotNull();
-            });
+            context ->
+                assertThat(context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class))
+                    .isNotNull());
   }
 
   @Test
@@ -54,7 +53,7 @@ class JaegerSpanExporterAutoConfigurationTest {
             "otel.exporter.jaeger.endpoint=http://localhost:8080/test",
             "otel.exporter.jaeger.timeout=420ms")
         .run(
-            (context) -> {
+            context -> {
               JaegerSpanExporterProperties jaegerSpanExporterProperties =
                   context.getBean(JaegerSpanExporterProperties.class);
               assertThat(jaegerSpanExporterProperties.getEndpoint())
@@ -68,10 +67,7 @@ class JaegerSpanExporterAutoConfigurationTest {
   void disabledProperty() {
     this.contextRunner
         .withPropertyValues("otel.exporter.jaeger.enabled=false")
-        .run(
-            (context) -> {
-              assertThat(context.containsBean("otelJaegerSpanExporter")).isFalse();
-            });
+        .run(context -> assertThat(context.containsBean("otelJaegerSpanExporter")).isFalse());
   }
 
   @Test
@@ -79,9 +75,8 @@ class JaegerSpanExporterAutoConfigurationTest {
       "when jaeger enabled property is MISSING should initialize JaegerGrpcSpanExporter bean")
   void noProperty() {
     this.contextRunner.run(
-        (context) -> {
-          assertThat(context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class))
-              .isNotNull();
-        });
+        context ->
+            assertThat(context.getBean("otelJaegerSpanExporter", JaegerGrpcSpanExporter.class))
+                .isNotNull());
   }
 }

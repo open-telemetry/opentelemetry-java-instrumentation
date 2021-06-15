@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent;
 
+import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.CodeSource;
 import java.util.Arrays;
 import java.util.List;
@@ -53,15 +52,8 @@ public final class OpenTelemetryAgent {
 
   public static void agentmain(String agentArgs, Instrumentation inst) {
     try {
-
-      URL bootstrapUrl = installBootstrapJar(inst);
-
-      Class<?> agentInitializerClass =
-          ClassLoader.getSystemClassLoader()
-              .loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
-      Method startMethod =
-          agentInitializerClass.getMethod("initialize", Instrumentation.class, URL.class);
-      startMethod.invoke(null, inst, bootstrapUrl);
+      File javaagentFile = installBootstrapJar(inst);
+      AgentInitializer.initialize(inst, javaagentFile);
     } catch (Throwable ex) {
       // Don't rethrow.  We don't have a log manager here, so just print.
       System.err.println("ERROR " + thisClass.getName());
@@ -69,22 +61,20 @@ public final class OpenTelemetryAgent {
     }
   }
 
-  private static synchronized URL installBootstrapJar(Instrumentation inst)
+  private static synchronized File installBootstrapJar(Instrumentation inst)
       throws IOException, URISyntaxException {
-    URL javaAgentJarUrl = null;
 
     // First try Code Source
     CodeSource codeSource = thisClass.getProtectionDomain().getCodeSource();
 
     if (codeSource != null) {
-      javaAgentJarUrl = codeSource.getLocation();
-      File bootstrapFile = new File(javaAgentJarUrl.toURI());
+      File javaagentFile = new File(codeSource.getLocation().toURI());
 
-      if (!bootstrapFile.isDirectory()) {
-        JarFile agentJar = new JarFile(bootstrapFile, false);
-        checkJarManifestMainClassIsThis(javaAgentJarUrl, agentJar);
+      if (javaagentFile.isFile()) {
+        JarFile agentJar = new JarFile(javaagentFile, false);
+        verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
         inst.appendToBootstrapClassLoaderSearch(agentJar);
-        return javaAgentJarUrl;
+        return javaagentFile;
       }
     }
 
@@ -124,15 +114,14 @@ public final class OpenTelemetryAgent {
     }
 
     File javaagentFile = new File(matcher.group(1));
-    if (!(javaagentFile.exists() || javaagentFile.isFile())) {
+    if (!javaagentFile.isFile()) {
       throw new IllegalStateException("Unable to find javaagent file: " + javaagentFile);
     }
-    javaAgentJarUrl = javaagentFile.toURI().toURL();
-    JarFile agentJar = new JarFile(javaagentFile, false);
-    checkJarManifestMainClassIsThis(javaAgentJarUrl, agentJar);
-    inst.appendToBootstrapClassLoaderSearch(agentJar);
 
-    return javaAgentJarUrl;
+    JarFile agentJar = new JarFile(javaagentFile, false);
+    verifyJarManifestMainClassIsThis(javaagentFile, agentJar);
+    inst.appendToBootstrapClassLoaderSearch(agentJar);
+    return javaagentFile;
   }
 
   private static List<String> getVmArgumentsThroughReflection() {
@@ -175,20 +164,19 @@ public final class OpenTelemetryAgent {
     }
   }
 
-  private static boolean checkJarManifestMainClassIsThis(URL jarUrl, JarFile agentJar)
+  private static void verifyJarManifestMainClassIsThis(File jarFile, JarFile agentJar)
       throws IOException {
     Manifest manifest = agentJar.getManifest();
     String mainClass = manifest.getMainAttributes().getValue("Main-Class");
-    if (thisClass.getCanonicalName().equals(mainClass)) {
-      return true;
+    if (!thisClass.getCanonicalName().equals(mainClass)) {
+      throw new IllegalStateException(
+          "opentelemetry-javaagent is not installed, because class '"
+              + thisClass.getCanonicalName()
+              + "' is located in '"
+              + jarFile
+              + "'. Make sure you don't have this .class file anywhere, "
+              + "besides opentelemetry-javaagent.jar");
     }
-    throw new IllegalStateException(
-        "opentelemetry-javaagent is not installed, because class '"
-            + thisClass.getCanonicalName()
-            + "' is located in '"
-            + jarUrl
-            + "'. Make sure you don't have this .class file anywhere, "
-            + "besides opentelemetry-javaagent.jar");
   }
 
   /**

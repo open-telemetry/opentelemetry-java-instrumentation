@@ -29,6 +29,7 @@ public class ServerTubeAssemblerContextInstrumentation implements TypeInstrument
         ServerTubeAssemblerContextInstrumentation.class.getName() + "$AddTracingAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class AddTracingAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

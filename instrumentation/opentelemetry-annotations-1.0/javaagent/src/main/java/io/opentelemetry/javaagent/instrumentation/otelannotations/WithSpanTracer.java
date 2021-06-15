@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.tracer.BaseTracer;
+import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategies;
 import io.opentelemetry.instrumentation.api.tracer.async.AsyncSpanEndStrategy;
 import java.lang.reflect.Method;
@@ -47,13 +48,13 @@ public class WithSpanTracer extends BaseTracer {
    * This method is used to generate an acceptable span (operation) name based on a given method
    * reference. It first checks for existence of {@link WithSpan} annotation. If it is present, then
    * tries to derive name from its {@code value} attribute. Otherwise delegates to {@link
-   * #spanNameForMethod(Method)}.
+   * SpanNames#fromMethod(Method)}.
    */
   public String spanNameForMethodWithAnnotation(WithSpan applicationAnnotation, Method method) {
     if (applicationAnnotation != null && !applicationAnnotation.value().isEmpty()) {
       return applicationAnnotation.value();
     }
-    return spanNameForMethod(method);
+    return SpanNames.fromMethod(method);
   }
 
   public SpanKind extractSpanKind(WithSpan applicationAnnotation) {

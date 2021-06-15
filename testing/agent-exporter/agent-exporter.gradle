@@ -2,7 +2,7 @@ plugins {
   id "otel.shadow-conventions"
 }
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 
 dependencies {
   compileOnly("net.bytebuddy:byte-buddy")

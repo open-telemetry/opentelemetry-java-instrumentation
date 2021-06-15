@@ -40,7 +40,7 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
     if (!started) {
       started = true;
       startEnvironment();
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> stopEnvironment()));
+      Runtime.getRuntime().addShutdownHook(new Thread(this::stopEnvironment));
     }
   }
 }

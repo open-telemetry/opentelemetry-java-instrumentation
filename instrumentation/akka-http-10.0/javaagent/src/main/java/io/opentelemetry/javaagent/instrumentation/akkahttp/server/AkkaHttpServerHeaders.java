@@ -26,10 +26,6 @@ public class AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
   @Override
   public String get(HttpRequest carrier, String key) {
     Optional<HttpHeader> header = carrier.getHeader(key);
-    if (header.isPresent()) {
-      return header.get().value();
-    } else {
-      return null;
-    }
+    return header.map(HttpHeader::value).orElse(null);
   }
 }

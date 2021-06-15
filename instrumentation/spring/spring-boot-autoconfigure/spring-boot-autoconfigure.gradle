@@ -1,6 +1,6 @@
 group = 'io.opentelemetry.instrumentation'
 
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 apply from: "$rootDir/gradle/publish.gradle"
 
 sourceCompatibility = '8'

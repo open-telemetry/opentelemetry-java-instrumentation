@@ -37,7 +37,9 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
         this.getClass().getName() + "$WriteAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ProcessAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.FieldValue("itemProcessor") ItemProcessor<?, ?> itemProcessor,
@@ -71,7 +73,9 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
     }
   }
 
+  @SuppressWarnings("unused")
   public static class WriteAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.FieldValue("itemWriter") ItemWriter<?> itemWriter,

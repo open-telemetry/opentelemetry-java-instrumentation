@@ -32,6 +32,7 @@ public class CxfAsyncClientConnectionErrorInstrumentation implements TypeInstrum
         this.getClass().getName() + "$HandleExceptionAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class HandleExceptionAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)

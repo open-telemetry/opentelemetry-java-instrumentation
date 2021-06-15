@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
@@ -69,15 +68,13 @@ public class AgentClassLoader extends URLClassLoader {
   /**
    * Construct a new AgentClassLoader.
    *
-   * @param bootstrapJarLocation Used for resource lookups.
+   * @param javaagentFile Used for resource lookups.
    * @param internalJarFileName File name of the internal jar
    * @param parent Classloader parent. Should null (bootstrap), or the platform classloader for java
-   *     9+.
    */
-  public AgentClassLoader(
-      URL bootstrapJarLocation, String internalJarFileName, ClassLoader parent) {
+  public AgentClassLoader(File javaagentFile, String internalJarFileName, ClassLoader parent) {
     super(new URL[] {}, parent);
-    if (bootstrapJarLocation == null) {
+    if (javaagentFile == null) {
       throw new IllegalArgumentException("Agent jar location should be set");
     }
     if (internalJarFileName == null) {
@@ -90,18 +87,17 @@ public class AgentClassLoader extends URLClassLoader {
         internalJarFileName
             + (internalJarFileName.isEmpty() || internalJarFileName.endsWith("/") ? "" : "/");
     try {
-      // open jar with verification disabled
-      jarFile = new JarFile(new File(bootstrapJarLocation.toURI()), false);
+      jarFile = new JarFile(javaagentFile, false);
       // base url for constructing jar entry urls
       // we use a custom protocol instead of typical jar:file: because we don't want to be affected
       // by user code disabling URLConnection caching for jar protocol e.g. tomcat does this
       jarBase =
           new URL("x-internal-jar", null, 0, "/", new AgentClassLoaderUrlStreamHandler(jarFile));
-    } catch (URISyntaxException | IOException e) {
+      codeSource = new CodeSource(javaagentFile.toURI().toURL(), (Certificate[]) null);
+      manifest = getManifest(jarFile, jarEntryPrefix + META_INF_MANIFEST_MF);
+    } catch (IOException e) {
       throw new IllegalStateException("Unable to open agent jar", e);
     }
-    codeSource = new CodeSource(bootstrapJarLocation, (Certificate[]) null);
-    manifest = getManifest(jarFile, jarEntryPrefix + META_INF_MANIFEST_MF);
 
     if (!AGENT_INITIALIZER_JAR.isEmpty()) {
       URL url;

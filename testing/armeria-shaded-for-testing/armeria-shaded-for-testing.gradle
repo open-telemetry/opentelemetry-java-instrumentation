@@ -2,7 +2,10 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
-apply from: "$rootDir/gradle/java.gradle"
+group = 'io.opentelemetry.javaagent'
+
+apply plugin: "otel.java-conventions"
+apply from: "$rootDir/gradle/publish.gradle"
 
 dependencies {
   implementation "com.linecorp.armeria:armeria-junit5:1.8.0"

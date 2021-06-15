@@ -71,7 +71,7 @@ public class ByteBuddyPluginConfigurator {
                   if (!project.getTasks().getNames().contains(compileTaskName)) {
                     return null;
                   }
-                  final TaskProvider<?> compileTask = project.getTasks().named(compileTaskName);
+                  TaskProvider<?> compileTask = project.getTasks().named(compileTaskName);
 
                   // We also process resources for SPI classes.
                   return createLanguageTask(
@@ -81,13 +81,7 @@ public class ByteBuddyPluginConfigurator {
             .collect(Collectors.toList());
 
     TaskProvider<?> byteBuddyTask =
-        project
-            .getTasks()
-            .register(
-                taskName,
-                task -> {
-                  task.dependsOn(languageTasks);
-                });
+        project.getTasks().register(taskName, task -> task.dependsOn(languageTasks));
 
     project
         .getTasks()

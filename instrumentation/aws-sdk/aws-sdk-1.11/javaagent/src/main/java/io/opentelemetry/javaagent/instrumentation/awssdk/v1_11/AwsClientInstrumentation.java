@@ -37,6 +37,7 @@ public class AwsClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class AwsClientAdvice {
+
     // Since we're instrumenting the constructor, we can't add onThrowable.
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addHandler(
