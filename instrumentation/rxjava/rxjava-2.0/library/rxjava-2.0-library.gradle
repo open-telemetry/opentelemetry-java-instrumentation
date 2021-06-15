@@ -1,4 +1,4 @@
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
+apply plugin: "otel.library-instrumentation"
 
 dependencies {
   library "io.reactivex.rxjava2:rxjava:2.1.3"

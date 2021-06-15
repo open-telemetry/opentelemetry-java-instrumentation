@@ -1,4 +1,4 @@
-apply from: "$rootDir/gradle/instrumentation-library.gradle"
+apply plugin: "otel.library-instrumentation"
 
 dependencies {
   library "org.apache.logging.log4j:log4j-core:2.13.2"
