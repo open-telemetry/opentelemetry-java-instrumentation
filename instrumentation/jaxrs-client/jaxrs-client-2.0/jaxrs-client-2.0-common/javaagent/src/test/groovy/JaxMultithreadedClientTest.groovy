@@ -4,11 +4,11 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.testing.armeria.common.HttpResponse
-import io.opentelemetry.testing.armeria.common.HttpStatus
-import io.opentelemetry.testing.armeria.common.MediaType
-import io.opentelemetry.testing.armeria.server.ServerBuilder
-import io.opentelemetry.testing.armeria.testing.junit5.server.ServerExtension
+import io.opentelemetry.testing.internal.armeria.common.HttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpStatus
+import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.server.ServerBuilder
+import io.opentelemetry.testing.internal.armeria.testing.junit5.server.ServerExtension
 import javax.ws.rs.client.Client
 import org.glassfish.jersey.client.JerseyClientBuilder
 import spock.lang.Shared

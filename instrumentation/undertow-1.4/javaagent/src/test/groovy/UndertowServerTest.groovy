@@ -17,7 +17,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.undertow.Handlers
 import io.undertow.Undertow
 import io.undertow.util.Headers

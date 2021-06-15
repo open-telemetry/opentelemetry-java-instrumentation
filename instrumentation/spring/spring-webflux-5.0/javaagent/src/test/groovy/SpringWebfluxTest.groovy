@@ -9,13 +9,13 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.testing.armeria.client.ClientRequestContext
-import io.opentelemetry.testing.armeria.client.DecoratingHttpClientFunction
-import io.opentelemetry.testing.armeria.client.HttpClient
-import io.opentelemetry.testing.armeria.client.WebClient
-import io.opentelemetry.testing.armeria.common.HttpHeaderNames
-import io.opentelemetry.testing.armeria.common.HttpRequest
-import io.opentelemetry.testing.armeria.common.HttpResponse
+import io.opentelemetry.testing.internal.armeria.client.ClientRequestContext
+import io.opentelemetry.testing.internal.armeria.client.DecoratingHttpClientFunction
+import io.opentelemetry.testing.internal.armeria.client.HttpClient
+import io.opentelemetry.testing.internal.armeria.client.WebClient
+import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames
+import io.opentelemetry.testing.internal.armeria.common.HttpRequest
+import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory

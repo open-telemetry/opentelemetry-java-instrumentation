@@ -8,7 +8,7 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
-import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import jakarta.servlet.Servlet
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServlet

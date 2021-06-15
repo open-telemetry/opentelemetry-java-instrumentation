@@ -8,7 +8,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicServer
 import hello.HelloApplication
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
-import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import javax.servlet.DispatcherType
 import org.apache.wicket.protocol.http.WicketFilter
 import org.eclipse.jetty.server.Server

@@ -14,7 +14,7 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.basicSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderParentClientSpan
 import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTrace
 import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
-import static io.opentelemetry.testing.armeria.common.MediaType.PLAIN_TEXT_UTF_8
+import static io.opentelemetry.testing.internal.armeria.common.MediaType.PLAIN_TEXT_UTF_8
 import static org.junit.Assume.assumeTrue
 
 import groovy.transform.stc.ClosureParams
@@ -32,18 +32,18 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.testing.armeria.common.HttpData
-import io.opentelemetry.testing.armeria.common.HttpRequest
-import io.opentelemetry.testing.armeria.common.HttpResponse
-import io.opentelemetry.testing.armeria.common.HttpStatus
-import io.opentelemetry.testing.armeria.common.ResponseHeaders
-import io.opentelemetry.testing.armeria.common.ResponseHeadersBuilder
-import io.opentelemetry.testing.armeria.server.DecoratingHttpServiceFunction
-import io.opentelemetry.testing.armeria.server.HttpService
-import io.opentelemetry.testing.armeria.server.ServerBuilder
-import io.opentelemetry.testing.armeria.server.ServiceRequestContext
-import io.opentelemetry.testing.armeria.server.logging.LoggingService
-import io.opentelemetry.testing.armeria.testing.junit5.server.ServerExtension
+import io.opentelemetry.testing.internal.armeria.common.HttpData
+import io.opentelemetry.testing.internal.armeria.common.HttpRequest
+import io.opentelemetry.testing.internal.armeria.common.HttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpStatus
+import io.opentelemetry.testing.internal.armeria.common.ResponseHeaders
+import io.opentelemetry.testing.internal.armeria.common.ResponseHeadersBuilder
+import io.opentelemetry.testing.internal.armeria.server.DecoratingHttpServiceFunction
+import io.opentelemetry.testing.internal.armeria.server.HttpService
+import io.opentelemetry.testing.internal.armeria.server.ServerBuilder
+import io.opentelemetry.testing.internal.armeria.server.ServiceRequestContext
+import io.opentelemetry.testing.internal.armeria.server.logging.LoggingService
+import io.opentelemetry.testing.internal.armeria.testing.junit5.server.ServerExtension
 import java.security.KeyStore
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
