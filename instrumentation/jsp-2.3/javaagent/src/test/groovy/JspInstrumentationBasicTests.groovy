@@ -9,11 +9,11 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.testing.armeria.client.WebClient
-import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse
-import io.opentelemetry.testing.armeria.common.HttpMethod
-import io.opentelemetry.testing.armeria.common.MediaType
-import io.opentelemetry.testing.armeria.common.RequestHeaders
+import io.opentelemetry.testing.internal.armeria.client.WebClient
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod
+import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.common.RequestHeaders
 import java.nio.file.Files
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat

@@ -8,7 +8,7 @@ import static Resource.Test2
 import static Resource.Test3
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
-import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import org.apache.cxf.endpoint.Server
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean
 

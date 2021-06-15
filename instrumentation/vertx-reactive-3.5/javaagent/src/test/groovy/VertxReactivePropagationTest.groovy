@@ -19,9 +19,9 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.testing.armeria.client.WebClient
-import io.opentelemetry.testing.armeria.common.HttpRequest
-import io.opentelemetry.testing.armeria.common.HttpRequestBuilder
+import io.opentelemetry.testing.internal.armeria.client.WebClient
+import io.opentelemetry.testing.internal.armeria.common.HttpRequest
+import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
 import io.vertx.reactivex.core.Vertx
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors

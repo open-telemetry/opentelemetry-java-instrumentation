@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.test.server.http;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.testing.armeria.server.ServiceRequestContext;
-import io.opentelemetry.testing.io.netty.util.AsciiString;
+import io.opentelemetry.testing.internal.armeria.server.ServiceRequestContext;
+import io.opentelemetry.testing.internal.io.netty.util.AsciiString;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;

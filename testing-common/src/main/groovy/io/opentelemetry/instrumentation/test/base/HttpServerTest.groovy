@@ -28,11 +28,11 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import io.opentelemetry.testing.armeria.common.AggregatedHttpRequest
-import io.opentelemetry.testing.armeria.common.AggregatedHttpResponse
-import io.opentelemetry.testing.armeria.common.HttpMethod
-import io.opentelemetry.testing.armeria.common.HttpRequest
-import io.opentelemetry.testing.armeria.common.HttpRequestBuilder
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod
+import io.opentelemetry.testing.internal.armeria.common.HttpRequest
+import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors

@@ -12,7 +12,7 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
 import io.opentelemetry.proto.common.v1.AnyValue
 import io.opentelemetry.proto.trace.v1.Span
 import io.opentelemetry.smoketest.windows.WindowsTestContainerManager
-import io.opentelemetry.testing.armeria.client.WebClient
+import io.opentelemetry.testing.internal.armeria.client.WebClient
 import java.util.regex.Pattern
 import java.util.stream.Stream
 import org.testcontainers.containers.output.ToStringConsumer
