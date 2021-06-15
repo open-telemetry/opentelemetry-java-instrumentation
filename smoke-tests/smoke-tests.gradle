@@ -1,16 +1,16 @@
 import java.time.Duration
 
-ext {
+apply plugin: "otel.java-conventions"
+
+description = 'smoke-tests'
+
+otelJava {
   // we only need to run the Spock test itself under a single Java version, and the Spock test in
   // turn is parameterized and runs the test using different docker containers that run different
   // Java versions
   minJavaVersionSupported = JavaVersion.VERSION_11
   maxJavaVersionForTests = JavaVersion.VERSION_11
 }
-
-apply plugin: "otel.java-conventions"
-
-description = 'smoke-tests'
 
 def dockerJavaVersion = "3.2.5"
 dependencies {

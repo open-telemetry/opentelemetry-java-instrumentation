@@ -1,8 +1,3 @@
-ext {
-  //AHC uses Unsafe and so does not run on later java version
-  maxJavaVersionForTests = JavaVersion.VERSION_1_8
-}
-
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 muzzle {
@@ -21,6 +16,11 @@ dependencies {
   annotationProcessor "com.google.auto.value:auto-value"
 
   testInstrumentation project(':instrumentation:netty:netty-4.0:javaagent')
+}
+
+otelJava {
+  //AHC uses Unsafe and so does not run on later java version
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 // async-http-client 2.0.0 does not work with Netty versions newer than this due to referencing an

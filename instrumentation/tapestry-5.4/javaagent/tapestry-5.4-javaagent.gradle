@@ -1,7 +1,3 @@
-ext {
-  maxJavaVersionForTests = JavaVersion.VERSION_1_8
-}
-
 apply from: "$rootDir/gradle/instrumentation.gradle"
 
 muzzle {
@@ -11,6 +7,10 @@ muzzle {
     versions = "[5.4.0,)"
     assertInverse = true
   }
+}
+
+otelJava {
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 dependencies {
