@@ -2,7 +2,7 @@ plugins {
   id("java-platform")
 }
 
-apply from: "$rootDir/gradle/publish.gradle"
+apply plugin: "otel.publish-conventions"
 
 description = "OpenTelemetry Instrumentation Bill of Materials (Alpha)"
 group = "io.opentelemetry.instrumentation"
