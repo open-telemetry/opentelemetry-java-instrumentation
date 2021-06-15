@@ -54,7 +54,8 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
       // instrumentation that creates CONSUMER/PRODUCER spans; in that case, back off and just
       // inject the current context into the message
       context = parentContext;
-      messageHeaderAccessor.setHeader(SCOPE_KEY, context.makeCurrent());
+      messageHeaderAccessor.setHeader(
+          CONTEXT_AND_SCOPE_KEY, ContextAndScope.create(null, context.makeCurrent()));
     }
 
     propagators
@@ -69,25 +70,12 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public void afterSendCompletion(
       Message<?> message, MessageChannel messageChannel, boolean sent, Exception e) {
-    endConsumerSpanIfPresent(message, messageChannel, e);
-    closeScopeIfPresent(message);
-  }
-
-  private void endConsumerSpanIfPresent(
-      Message<?> message, MessageChannel messageChannel, Exception e) {
-    ContextAndScope contextAndScope =
-        message.getHeaders().get(CONTEXT_AND_SCOPE_KEY, ContextAndScope.class);
-    if (contextAndScope != null) {
-      contextAndScope.close();
+    Object contextAndScope = message.getHeaders().get(CONTEXT_AND_SCOPE_KEY);
+    if (contextAndScope instanceof ContextAndScope) {
+      ((ContextAndScope) contextAndScope).close();
       MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
-      instrumenter.end(contextAndScope.getContext(), messageWithChannel, null, e);
-    }
-  }
-
-  private static void closeScopeIfPresent(Message<?> message) {
-    Scope scope = message.getHeaders().get(SCOPE_KEY, Scope.class);
-    if (scope != null) {
-      scope.close();
+      instrumenter.end(
+          ((ContextAndScope) contextAndScope).getContext(), messageWithChannel, null, e);
     }
   }
 
@@ -121,7 +109,10 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public void afterMessageHandled(
       Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
-    closeScopeIfPresent(message);
+    Object scope = message.getHeaders().get(SCOPE_KEY);
+    if (scope instanceof Scope) {
+      ((Scope) scope).close();
+    }
   }
 
   private static MessageHeaderAccessor createMutableHeaderAccessor(Message<?> message) {

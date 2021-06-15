@@ -126,6 +126,15 @@ public class RabbitTracer extends BaseTracer {
     }
   }
 
+  public void onProps(Span span, AMQP.BasicProperties props) {
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      Integer deliveryMode = props.getDeliveryMode();
+      if (deliveryMode != null) {
+        span.setAttribute("rabbitmq.delivery_mode", deliveryMode);
+      }
+    }
+  }
+
   public String spanNameOnGet(String queue) {
     return (queue.startsWith("amq.gen-") ? "<generated>" : queue) + " receive";
   }

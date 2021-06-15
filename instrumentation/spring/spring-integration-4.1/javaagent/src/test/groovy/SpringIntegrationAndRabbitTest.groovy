@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.server.ServerTraceUtils.runUnderServerTrace
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 
 class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification implements WithRabbitProducerConsumerTrait {
   def setupSpec() {
@@ -33,20 +34,38 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
         span(0) {
           name "HTTP GET"
           kind SERVER
+          attributes {}
         }
         span(1) {
           name "producer"
           childOf span(0)
+          attributes {}
         }
         span(2) {
           name "exchange.declare"
           childOf span(1)
           kind CLIENT
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == null || it == "localhost" }
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" { it == null || it instanceof Long }
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
+          }
         }
         span(3) {
           name "testTopic -> testTopic send"
           childOf span(1)
           kind PRODUCER
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+          }
         }
         // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue immediately after receiving
         // that's why the rabbitmq CONSUMER span will never have any child span (and propagate context, actually)
@@ -55,15 +74,24 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           name ~/testTopic.anonymous.[-\w]+ process/
           childOf span(3)
           kind CONSUMER
+          attributes {
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
+            "${SemanticAttributes.MESSAGING_DESTINATION.key}" "testTopic"
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
+            "${SemanticAttributes.MESSAGING_OPERATION.key}" "process"
+            "${SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES.key}" Long
+          }
         }
         span(5) {
           name "testConsumer.input"
           childOf span(3)
           kind CONSUMER
+          attributes {}
         }
         span(6) {
           name "consumer"
           childOf span(5)
+          attributes {}
         }
       }
 
@@ -71,6 +99,13 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
         span(0) {
           name "basic.ack"
           kind CLIENT
+          attributes {
+            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
+            "${SemanticAttributes.NET_PEER_PORT.key}" Long
+            "${SemanticAttributes.MESSAGING_SYSTEM.key}" "rabbitmq"
+            "${SemanticAttributes.MESSAGING_DESTINATION_KIND.key}" "queue"
+          }
         }
       }
     }
