@@ -3,57 +3,45 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.matcher;
+package io.opentelemetry.javaagent.tooling.ignore;
 
 import io.opentelemetry.instrumentation.api.caching.Cache;
 import io.opentelemetry.javaagent.bootstrap.PatchLogger;
-import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
+import io.opentelemetry.javaagent.tooling.ignore.trie.Trie;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GlobalClassloaderIgnoresMatcher
-    extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
-  private static final Logger log = LoggerFactory.getLogger(GlobalClassloaderIgnoresMatcher.class);
+public class IgnoredClassLoadersMatcher extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
+  private static final Logger log = LoggerFactory.getLogger(IgnoredClassLoadersMatcher.class);
 
   /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
-  private static final String AGENT_CLASSLOADER_NAME =
-      "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
-  private static final String EXPORTER_CLASSLOADER_NAME =
-      "io.opentelemetry.javaagent.tooling.ExporterClassLoader";
   private static final Cache<ClassLoader, Boolean> skipCache =
       Cache.newBuilder().setWeakKeys().build();
 
-  public static ElementMatcher.Junction.AbstractBase<ClassLoader> skipClassLoader(
-      IgnoreMatcherProvider ignoreMatcherProvider) {
-    return new GlobalClassloaderIgnoresMatcher(ignoreMatcherProvider);
-  }
+  private final Trie<IgnoreAllow> ignoredClassLoaders;
 
-  private final IgnoreMatcherProvider ignoreMatcherProviders;
-
-  private GlobalClassloaderIgnoresMatcher(IgnoreMatcherProvider ignoreMatcherProviders) {
-    this.ignoreMatcherProviders = ignoreMatcherProviders;
+  public IgnoredClassLoadersMatcher(Trie<IgnoreAllow> ignoredClassLoaders) {
+    this.ignoredClassLoaders = ignoredClassLoaders;
   }
 
   @Override
   public boolean matches(ClassLoader cl) {
-    IgnoreMatcherProvider.Result ignoreResult = ignoreMatcherProviders.classloader(cl);
-    switch (ignoreResult) {
-      case IGNORE:
-        return true;
-      case ALLOW:
-        return false;
-      case DEFAULT:
-    }
-
     if (cl == ClassLoadingStrategy.BOOTSTRAP_LOADER) {
       // Don't skip bootstrap loader
       return false;
     }
-    if (canSkipClassLoaderByName(cl)) {
+
+    String name = cl.getClass().getName();
+
+    IgnoreAllow ignored = ignoredClassLoaders.getOrNull(name);
+    if (ignored == IgnoreAllow.ALLOW) {
+      return false;
+    } else if (ignored == IgnoreAllow.IGNORE) {
       return true;
     }
+
     return skipCache.computeIfAbsent(
         cl,
         c -> {
@@ -72,34 +60,6 @@ public class GlobalClassloaderIgnoresMatcher
           // seem to justify introducing either of these new concepts)
           return !delegatesToBootstrap(cl);
         });
-  }
-
-  private static boolean canSkipClassLoaderByName(ClassLoader loader) {
-    String name = loader.getClass().getName();
-    // check by FQCN
-    switch (name) {
-      case "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader":
-      case "sun.reflect.DelegatingClassLoader":
-      case "jdk.internal.reflect.DelegatingClassLoader":
-      case "clojure.lang.DynamicClassLoader":
-      case "org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader":
-      case "sun.misc.Launcher$ExtClassLoader":
-      case AGENT_CLASSLOADER_NAME:
-      case EXPORTER_CLASSLOADER_NAME:
-        return true;
-      default:
-        // noop
-    }
-    // check by package prefix
-    if (name.startsWith("datadog.")
-        || name.startsWith("com.dynatrace.")
-        || name.startsWith("com.appdynamics.")
-        || name.startsWith("com.newrelic.agent.")
-        || name.startsWith("com.newrelic.api.agent.")
-        || name.startsWith("com.nr.agent.")) {
-      return true;
-    }
-    return false;
   }
 
   /**
