@@ -38,6 +38,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
         named("removeContextCount"), this.getClass().getName() + "$RemoveApiUsageAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class MarkInstrumentedAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.Return(readOnly = false) boolean isInstrumented) {
@@ -45,6 +46,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class StoreAndIncrementApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(
@@ -56,6 +58,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class StoreAndIncrementWithFactoryApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(
@@ -67,6 +70,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class GetApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(
@@ -78,6 +82,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class PutApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz, @Advice.Argument(0) int value) {
@@ -89,6 +94,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
     }
   }
 
+  @SuppressWarnings("unused")
   public static class RemoveApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz) {

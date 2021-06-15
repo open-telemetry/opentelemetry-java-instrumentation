@@ -52,7 +52,7 @@ public class ScalaForkJoinPoolInstrumentation implements TypeInstrumentation {
     public static State enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) ForkJoinTask<?> task) {
       if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task)) {
-        ContextStore<ForkJoinTask, State> contextStore =
+        ContextStore<ForkJoinTask<?>, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ExecutorInstrumentationUtils.setupState(
             contextStore, task, Java8BytecodeBridge.currentContext());
