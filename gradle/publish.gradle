@@ -73,7 +73,6 @@ publishing {
           description = project.description ?: 'Instrumentation of Java libraries using OpenTelemetry.'
         }
       }
-
     }
   }
 }
