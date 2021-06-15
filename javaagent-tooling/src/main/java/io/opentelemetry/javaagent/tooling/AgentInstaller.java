@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -84,6 +85,10 @@ public class AgentInstaller {
     // not to get transformed itself.
     // loading it early here still allows it to be retransformed as part of agent installation below
     ForkJoinPool.class.getName();
+
+    // caffeine uses AtomicReferenceArray, ensure it is loaded to avoid ClassCircularityError during
+    // transform.
+    AtomicReferenceArray.class.getName();
   }
 
   public static void installBytebuddyAgent(Instrumentation inst) {
