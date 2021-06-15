@@ -14,7 +14,7 @@
 - Add attributes to netty connection failure span (#3115)
 - Defer initialization of OpenTelemetry in spring-boot-autoconfigure (#3171)
 - Support couchbase 3.1.6 (#3194)
-- New experimental support for agent extensions (#2881, #3071, #3226)
+- New experimental support for agent extensions (#2881, #3071, #3226, #3237)
 - Propagate context to akka http callbacks (#3263)
 
 ### Behavioral changes
@@ -36,6 +36,8 @@
 - Create Netty connection failure span only when first operation fails (#3228)
 - Internal instrumentation should always be enabled by default (#3257)
 - Fix context propagation leak in Akka HTTP instrumentation (#3264)
+- Only include exporters in the `-all` jar (#3286)
+- Fix ForkJoinPool sometimes not instrumented (#3293)
 
 ### 🧰 Tooling
 
@@ -49,6 +51,8 @@
 - Update ByteBuddy (#3254)
 - Introduce IgnoredTypesConfigurer SPI to enable defining per-module ignores (#3219)
 - Extract agent shadow configuration to conventions script (#3256)
+- Deprecate SpanExporterFactory in favor of ConfigurableSpanExporterProvider (#3299)
+- Refactor span names class (#3281)
 
 ## Version 1.2.0 - 2021-05-14
 
