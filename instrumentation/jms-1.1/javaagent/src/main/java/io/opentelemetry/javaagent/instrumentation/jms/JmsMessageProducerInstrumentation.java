@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jms;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenters.producerInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jms.JmsSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;

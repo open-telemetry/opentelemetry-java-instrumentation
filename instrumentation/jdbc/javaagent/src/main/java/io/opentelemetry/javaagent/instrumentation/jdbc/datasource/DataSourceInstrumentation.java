@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc.datasource;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.jdbc.datasource.DataSourceInstrumenters.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.datasource.DataSourceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;

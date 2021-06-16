@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 
-public final class GeodeInstrumenters {
+public final class GeodeSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.geode-1.4";
 
   private static final Instrumenter<GeodeRequest, Void> INSTRUMENTER;
@@ -33,5 +33,5 @@ public final class GeodeInstrumenters {
     return INSTRUMENTER;
   }
 
-  private GeodeInstrumenters() {}
+  private GeodeSingletons() {}
 }

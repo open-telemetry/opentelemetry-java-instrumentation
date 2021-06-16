@@ -18,7 +18,7 @@ import java.util.function.Function;
 
 // Holds singleton references to decorators to match against during suppression.
 // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903
-public final class ArmeriaDecorators {
+public final class ArmeriaSingletons {
   public static final Function<? super HttpClient, ? extends HttpClient> CLIENT_DECORATOR;
 
   public static final Function<? super HttpService, ? extends HttpService> SERVER_DECORATOR;
@@ -37,4 +37,6 @@ public final class ArmeriaDecorators {
     CLIENT_DECORATOR = tracing.newClientDecorator();
     SERVER_DECORATOR = tracing.newServiceDecorator();
   }
+
+  private ArmeriaSingletons() {}
 }

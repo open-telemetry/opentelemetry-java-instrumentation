@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 
-public final class CassandraInstrumenters {
+public final class CassandraSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.cassandra-4.0";
 
   // using ExecutionInfo because we can get that from ResultSet, AsyncResultSet and DriverException
@@ -37,5 +37,5 @@ public final class CassandraInstrumenters {
     return INSTRUMENTER;
   }
 
-  private CassandraInstrumenters() {}
+  private CassandraSingletons() {}
 }

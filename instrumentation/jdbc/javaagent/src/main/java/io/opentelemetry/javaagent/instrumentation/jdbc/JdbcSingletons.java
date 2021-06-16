@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
+package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -13,29 +13,28 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtracto
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
-public final class JedisInstrumenters {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jedis-3.0";
+public final class JdbcSingletons {
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jdbc";
 
-  private static final Instrumenter<JedisRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<DbRequest, Void> INSTRUMENTER;
 
   static {
-    DbAttributesExtractor<JedisRequest, Void> attributesExtractor =
-        new JedisDbAttributesExtractor();
-    SpanNameExtractor<JedisRequest> spanName = DbSpanNameExtractor.create(attributesExtractor);
-    JedisNetAttributesExtractor netAttributesExtractor = new JedisNetAttributesExtractor();
+    DbAttributesExtractor<DbRequest, Void> dbAttributesExtractor = new JdbcAttributesExtractor();
+    SpanNameExtractor<DbRequest> spanName = DbSpanNameExtractor.create(dbAttributesExtractor);
+    JdbcNetAttributesExtractor netAttributesExtractor = new JdbcNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<JedisRequest, Void>newBuilder(
+        Instrumenter.<DbRequest, Void>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanName)
-            .addAttributesExtractor(attributesExtractor)
+            .addAttributesExtractor(dbAttributesExtractor)
             .addAttributesExtractor(netAttributesExtractor)
             .addAttributesExtractor(PeerServiceAttributesExtractor.create(netAttributesExtractor))
             .newInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<JedisRequest, Void> instrumenter() {
+  public static Instrumenter<DbRequest, Void> instrumenter() {
     return INSTRUMENTER;
   }
 
-  private JedisInstrumenters() {}
+  private JdbcSingletons() {}
 }

@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtr
 import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 import javax.sql.DataSource;
 
-public final class DataSourceInstrumenters {
+public final class DataSourceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jdbc";
 
   private static final Instrumenter<DataSource, Void> INSTRUMENTER;

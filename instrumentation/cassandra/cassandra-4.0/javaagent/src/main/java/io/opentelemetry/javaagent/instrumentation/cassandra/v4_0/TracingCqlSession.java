@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraInstrumenters.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraSingletons.instrumenter;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;

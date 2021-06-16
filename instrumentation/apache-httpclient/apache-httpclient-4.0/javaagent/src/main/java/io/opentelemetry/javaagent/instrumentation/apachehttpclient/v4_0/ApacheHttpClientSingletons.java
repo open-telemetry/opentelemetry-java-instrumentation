@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -13,27 +13,27 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtr
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
-import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.apache.hc.core5.http.HttpResponse;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
 
-public final class ApacheHttpClientInstrumenters {
+public final class ApacheHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.javaagent.apache-httpclient-5.0";
+      "io.opentelemetry.javaagent.apache-httpclient-4.0";
 
-  private static final Instrumenter<ClassicHttpRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<HttpUriRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    HttpAttributesExtractor<ClassicHttpRequest, HttpResponse> httpAttributesExtractor =
+    HttpAttributesExtractor<HttpUriRequest, HttpResponse> httpAttributesExtractor =
         new ApacheHttpClientHttpAttributesExtractor();
-    SpanNameExtractor<? super ClassicHttpRequest> spanNameExtractor =
+    SpanNameExtractor<? super HttpUriRequest> spanNameExtractor =
         HttpSpanNameExtractor.create(httpAttributesExtractor);
-    SpanStatusExtractor<? super ClassicHttpRequest, ? super HttpResponse> spanStatusExtractor =
+    SpanStatusExtractor<? super HttpUriRequest, ? super HttpResponse> spanStatusExtractor =
         HttpSpanStatusExtractor.create(httpAttributesExtractor);
     ApacheHttpClientNetAttributesExtractor netAttributesExtractor =
         new ApacheHttpClientNetAttributesExtractor();
 
     INSTRUMENTER =
-        Instrumenter.<ClassicHttpRequest, HttpResponse>newBuilder(
+        Instrumenter.<HttpUriRequest, HttpResponse>newBuilder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(spanStatusExtractor)
             .addAttributesExtractor(httpAttributesExtractor)
@@ -42,9 +42,9 @@ public final class ApacheHttpClientInstrumenters {
             .newClientInstrumenter(new HttpHeaderSetter());
   }
 
-  public static Instrumenter<ClassicHttpRequest, HttpResponse> instrumenter() {
+  public static Instrumenter<HttpUriRequest, HttpResponse> instrumenter() {
     return INSTRUMENTER;
   }
 
-  private ApacheHttpClientInstrumenters() {}
+  private ApacheHttpClientSingletons() {}
 }
