@@ -1,4 +1,4 @@
-apply plugin: "otel.javaagent-instrumentation"
+apply from: "$rootDir/gradle/instrumentation.gradle"
 
 dependencies {
   compileOnly "javax.servlet:javax.servlet-api:3.0.1"
