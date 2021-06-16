@@ -42,6 +42,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {}
         }
         span(2) {
+          // span created by rabbitmq instrumentation
           name "exchange.declare"
           childOf span(1)
           kind CLIENT
@@ -54,6 +55,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           }
         }
         span(3) {
+          // span created by rabbitmq instrumentation
           name "testTopic -> testTopic send"
           childOf span(1)
           kind PRODUCER
@@ -71,6 +73,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
         // that's why the rabbitmq CONSUMER span will never have any child span (and propagate context, actually)
         // and that's why spring-integration creates another CONSUMER span
         span(4) {
+          // span created by rabbitmq instrumentation
           name ~/testTopic.anonymous.[-\w]+ process/
           childOf span(3)
           kind CONSUMER
@@ -83,7 +86,8 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           }
         }
         span(5) {
-          name "testConsumer.input"
+          // span created by spring-integration instrumentation
+          name "testConsumer.input process"
           childOf span(3)
           kind CONSUMER
           attributes {}
@@ -97,6 +101,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
 
       trace(1, 1) {
         span(0) {
+          // span created by rabbitmq instrumentation
           name "basic.ack"
           kind CLIENT
           attributes {

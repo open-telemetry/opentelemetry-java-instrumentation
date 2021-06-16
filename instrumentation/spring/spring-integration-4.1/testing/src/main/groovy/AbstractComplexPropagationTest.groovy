@@ -75,14 +75,14 @@ abstract class AbstractComplexPropagationTest extends InstrumentationSpecificati
         }
         // there's no top-level SERVER or CONSUMER span, so spring-integration adds a CONSUMER one
         span(1) {
-          name "application.sendChannel"
+          name "application.sendChannel process"
           childOf span(0)
           kind CONSUMER
         }
         // message is received in a separate thread without any context, so a CONSUMER span with parent
         // extracted from the incoming message is created
         span(2) {
-          name "application.receiveChannel"
+          name "application.receiveChannel process"
           childOf span(1)
           kind CONSUMER
         }

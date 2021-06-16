@@ -30,12 +30,12 @@ abstract class AbstractSpringCloudStreamRabbitTest extends InstrumentationSpecif
           name "producer"
         }
         span(1) {
-          name "testProducer.output"
+          name "testProducer.output process"
           childOf span(0)
           kind CONSUMER
         }
         span(2) {
-          name "testConsumer.input"
+          name "testConsumer.input process"
           childOf span(1)
           kind CONSUMER
         }

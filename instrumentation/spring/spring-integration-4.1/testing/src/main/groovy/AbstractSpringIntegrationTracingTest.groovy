@@ -91,8 +91,8 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
 
     where:
     channelName       | interceptorSpanName
-    "directChannel"   | "application.directChannel"
-    "executorChannel" | "executorChannel"
+    "directChannel"   | "application.directChannel process"
+    "executorChannel" | "executorChannel process"
   }
 
   def "should handle multiple message channels in a chain"() {
@@ -118,7 +118,7 @@ abstract class AbstractSpringIntegrationTracingTest extends InstrumentationSpeci
           name "parent"
         }
         span(1) {
-          name "application.linkedChannel1"
+          name "application.linkedChannel1 process"
           childOf span(0)
           kind CONSUMER
         }
