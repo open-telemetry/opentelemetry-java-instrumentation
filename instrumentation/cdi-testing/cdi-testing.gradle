@@ -1,7 +1,7 @@
 ext {
   skipPublish = true
 }
-apply from: "$rootDir/gradle/instrumentation.gradle"
+apply from: apply plugin: "otel.javaagent-instrumentation"
 
 dependencies {
   testLibrary "org.jboss.weld:weld-core:2.3.0.Final"

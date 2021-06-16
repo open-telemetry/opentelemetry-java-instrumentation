@@ -1,7 +1,7 @@
 ext {
   skipPublish = true
 }
-apply from: "$rootDir/gradle/instrumentation.gradle"
+apply from: apply plugin: "otel.javaagent-instrumentation"
 
 dependencies {
   testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0:javaagent')
