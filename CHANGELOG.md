@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 🌟 New javaagent instrumentation
+
+- Spring Integration javaagent instrumentation (#3295)
+
 ### 🌟 New library instrumentation
 
 - Spring Integration library instrumentation (#3120)
