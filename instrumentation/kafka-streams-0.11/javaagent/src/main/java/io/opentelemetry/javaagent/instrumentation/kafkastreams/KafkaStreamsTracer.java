@@ -36,7 +36,7 @@ public class KafkaStreamsTracer extends BaseTracer {
             .setAttribute(SemanticAttributes.MESSAGING_OPERATION, "process")
             .startSpan();
     onConsume(span, record);
-    return parentContext.with(span);
+    return withConsumerSpan(parentContext, span);
   }
 
   public String spanNameForConsume(StampedRecord record) {

@@ -38,16 +38,30 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     Context parentContext = Context.current();
     MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
 
-    if (!instrumenter.shouldStart(parentContext, messageWithChannel)) {
-      return message;
-    }
-    Context context = instrumenter.start(parentContext, messageWithChannel);
-
+    final Context context;
     MessageHeaderAccessor messageHeaderAccessor = createMutableHeaderAccessor(message);
+
+    // when there's no CONSUMER span created by another instrumentation, start it; there's no other
+    // messaging instrumentation that can do this, so spring-integration must ensure proper context
+    // propagation
+    // the new CONSUMER span will use the span context extracted from the incoming message as the
+    // parent
+    if (instrumenter.shouldStart(parentContext, messageWithChannel)) {
+      context = instrumenter.start(parentContext, messageWithChannel);
+      messageHeaderAccessor.setHeader(
+          CONTEXT_AND_SCOPE_KEY, ContextAndScope.create(context, context.makeCurrent()));
+    } else {
+      // if there was a top-level span detected it means that there's another messaging
+      // instrumentation that creates CONSUMER/PRODUCER spans; in that case, back off and just
+      // inject the current context into the message
+      context = parentContext;
+      messageHeaderAccessor.setHeader(
+          CONTEXT_AND_SCOPE_KEY, ContextAndScope.create(null, context.makeCurrent()));
+    }
+
     propagators
         .getTextMapPropagator()
         .inject(context, messageHeaderAccessor, MessageHeadersSetter.INSTANCE);
-    messageHeaderAccessor.setHeader(CONTEXT_AND_SCOPE_KEY, ContextAndScope.makeCurrent(context));
     return createMessageWithHeaders(message, messageHeaderAccessor);
   }
 
@@ -57,12 +71,16 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public void afterSendCompletion(
       Message<?> message, MessageChannel messageChannel, boolean sent, Exception e) {
-    ContextAndScope contextAndScope =
-        message.getHeaders().get(CONTEXT_AND_SCOPE_KEY, ContextAndScope.class);
-    if (contextAndScope != null) {
-      contextAndScope.close();
-      MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
-      instrumenter.end(contextAndScope.getContext(), messageWithChannel, null, e);
+    Object contextAndScope = message.getHeaders().get(CONTEXT_AND_SCOPE_KEY);
+    if (contextAndScope instanceof ContextAndScope) {
+      ContextAndScope cas = (ContextAndScope) contextAndScope;
+      cas.close();
+      Context context = cas.getContext();
+
+      if (context != null) {
+        MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
+        instrumenter.end(context, messageWithChannel, null, e);
+      }
     }
   }
 
@@ -88,18 +106,17 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
         propagators
             .getTextMapPropagator()
             .extract(Context.current(), messageWithChannel, MessageHeadersGetter.INSTANCE);
-    Scope scope = context.makeCurrent();
     MessageHeaderAccessor messageHeaderAccessor = MessageHeaderAccessor.getMutableAccessor(message);
-    messageHeaderAccessor.setHeader(SCOPE_KEY, scope);
+    messageHeaderAccessor.setHeader(SCOPE_KEY, context.makeCurrent());
     return createMessageWithHeaders(message, messageHeaderAccessor);
   }
 
   @Override
   public void afterMessageHandled(
       Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
-    Scope scope = message.getHeaders().get(SCOPE_KEY, Scope.class);
-    if (scope != null) {
-      scope.close();
+    Object scope = message.getHeaders().get(SCOPE_KEY);
+    if (scope instanceof Scope) {
+      ((Scope) scope).close();
     }
   }
 

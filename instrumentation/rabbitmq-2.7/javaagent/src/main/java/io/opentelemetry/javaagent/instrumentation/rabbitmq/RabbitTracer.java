@@ -107,7 +107,7 @@ public class RabbitTracer extends BaseTracer {
           "rabbitmq.record.queue_time_ms", Math.max(0L, startTimeMillis - produceTimeMillis));
     }
 
-    return parentContext.with(span);
+    return withConsumerSpan(parentContext, span);
   }
 
   public void onPublish(Span span, String exchange, String routingKey) {
@@ -122,6 +122,15 @@ public class RabbitTracer extends BaseTracer {
       span.setAttribute("rabbitmq.command", "basic.publish");
       if (routingKey != null && !routingKey.isEmpty()) {
         span.setAttribute("rabbitmq.routing_key", routingKey);
+      }
+    }
+  }
+
+  public void onProps(Span span, AMQP.BasicProperties props) {
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      Integer deliveryMode = props.getDeliveryMode();
+      if (deliveryMode != null) {
+        span.setAttribute("rabbitmq.delivery_mode", deliveryMode);
       }
     }
   }

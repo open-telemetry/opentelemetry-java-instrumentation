@@ -12,13 +12,16 @@ import org.springframework.messaging.MessageChannel;
 final class MessageChannelSpanNameExtractor implements SpanNameExtractor<MessageWithChannel> {
   @Override
   public String extract(MessageWithChannel messageWithChannel) {
+    final String channelName;
     MessageChannel channel = messageWithChannel.getMessageChannel();
     if (channel instanceof AbstractMessageChannel) {
-      return ((AbstractMessageChannel) channel).getFullChannelName();
+      channelName = ((AbstractMessageChannel) channel).getFullChannelName();
+    } else if (channel instanceof org.springframework.messaging.support.AbstractMessageChannel) {
+      channelName =
+          ((org.springframework.messaging.support.AbstractMessageChannel) channel).getBeanName();
+    } else {
+      channelName = channel.getClass().getSimpleName();
     }
-    if (channel instanceof org.springframework.messaging.support.AbstractMessageChannel) {
-      return ((org.springframework.messaging.support.AbstractMessageChannel) channel).getBeanName();
-    }
-    return channel.getClass().getSimpleName();
+    return channelName + " process";
   }
 }

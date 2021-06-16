@@ -42,7 +42,7 @@ class BaseTracerTest extends Specification {
 
     where:
     kind              | context                                   | expected
-    SpanKind.CLIENT   | root | true
+    SpanKind.CLIENT   | root                                      | true
     SpanKind.SERVER   | root                                      | true
     SpanKind.INTERNAL | root                                      | true
     SpanKind.PRODUCER | root                                      | true
@@ -54,7 +54,7 @@ class BaseTracerTest extends Specification {
     SpanKind.PRODUCER | tracer.withClientSpan(root, existingSpan) | true
     SpanKind.SERVER   | tracer.withServerSpan(root, existingSpan) | false
     SpanKind.INTERNAL | tracer.withServerSpan(root, existingSpan) | true
-    SpanKind.CONSUMER | tracer.withServerSpan(root, existingSpan) | true
+    SpanKind.CONSUMER | tracer.withServerSpan(root, existingSpan) | false
     SpanKind.PRODUCER | tracer.withServerSpan(root, existingSpan) | true
     SpanKind.CLIENT   | tracer.withServerSpan(root, existingSpan) | true
   }

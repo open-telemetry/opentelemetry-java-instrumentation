@@ -12,21 +12,23 @@ import io.opentelemetry.context.ContextKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * This class encapsulates the context key for storing the current {@link SpanKind#SERVER} span in
+ * This class encapsulates the context key for storing the current {@link SpanKind#CONSUMER} span in
  * the {@link Context}.
  */
-public final class ServerSpan {
-  // Keeps track of the server span for the current trace.
+public final class ConsumerSpan {
+  // Keeps track of the consumer span for the current trace.
   private static final ContextKey<Span> KEY =
-      ContextKey.named("opentelemetry-traces-server-span-key");
+      ContextKey.named("opentelemetry-traces-consumer-span-key");
 
-  /** Returns true when a {@link SpanKind#SERVER} span is present in the passed {@code context}. */
+  /**
+   * Returns true when a {@link SpanKind#CONSUMER} span is present in the passed {@code context}.
+   */
   public static boolean exists(Context context) {
     return fromContextOrNull(context) != null;
   }
 
   /**
-   * Returns span of type {@link SpanKind#SERVER} from the given context or {@code null} if not
+   * Returns span of type {@link SpanKind#CONSUMER} from the given context or {@code null} if not
    * found.
    */
   @Nullable
@@ -34,9 +36,9 @@ public final class ServerSpan {
     return context.get(KEY);
   }
 
-  public static Context with(Context context, Span serverSpan) {
-    return context.with(KEY, serverSpan);
+  public static Context with(Context context, Span consumerSpan) {
+    return context.with(KEY, consumerSpan);
   }
 
-  private ServerSpan() {}
+  private ConsumerSpan() {}
 }

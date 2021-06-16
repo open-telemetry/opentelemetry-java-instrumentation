@@ -8,20 +8,18 @@ package io.opentelemetry.instrumentation.spring.integration;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @AutoValue
 abstract class ContextAndScope {
 
+  @Nullable
   abstract Context getContext();
 
   abstract Scope getScope();
 
   void close() {
     getScope().close();
-  }
-
-  static ContextAndScope makeCurrent(Context context) {
-    return create(context, context.makeCurrent());
   }
 
   static ContextAndScope create(Context context, Scope scope) {
