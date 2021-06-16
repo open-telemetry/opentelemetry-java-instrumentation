@@ -31,7 +31,7 @@ trait RetryOnAddressAlreadyInUseTrait {
     } catch (Throwable t) {
       // typically this is "java.net.BindException: Address already in use", but also can be
       // "io.netty.channel.unix.Errors$NativeIoException: bind() failed: Address already in use"
-      if (numRetries == 0 || !t.getMessage().contains("Address already in use")) {
+      if (numRetries == 0 || t.getMessage() == null || !t.getMessage().contains("Address already in use")) {
         throw t
       }
       log.debug("retrying due to bind exception: {}", t.getMessage(), t)

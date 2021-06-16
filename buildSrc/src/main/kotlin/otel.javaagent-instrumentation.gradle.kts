@@ -36,41 +36,43 @@ val bootstrapRuntime by configurations.creating {
   isCanBeResolved = true
 }
 
-dependencies {
-  compileOnly(project(":instrumentation-api"))
-  compileOnly(project(":javaagent-api"))
-  compileOnly(project(":javaagent-bootstrap"))
-  // Apply common dependencies for instrumentation.
-  compileOnly(project(":javaagent-extension-api")) {
-    // OpenTelemetry SDK is not needed for compilation
-    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
-    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
-  }
-  compileOnly(project(":javaagent-tooling")) {
-    // OpenTelemetry SDK is not needed for compilation
-    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
-    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
-  }
-  compileOnly("net.bytebuddy:byte-buddy")
-  annotationProcessor("com.google.auto.service:auto-service")
-  compileOnly("com.google.auto.service:auto-service")
-  compileOnly("org.slf4j:slf4j-api")
-
-  testImplementation("io.opentelemetry:opentelemetry-api")
-
-  testImplementation(project(":testing-common"))
-  testAnnotationProcessor("net.bytebuddy:byte-buddy")
-  testCompileOnly("net.bytebuddy:byte-buddy")
-
-  testImplementation("org.testcontainers:testcontainers")
-
-  toolingRuntime(project(path = ":javaagent-tooling", configuration = "instrumentationMuzzle"))
-  toolingRuntime(project(path = ":javaagent-extension-api", configuration = "instrumentationMuzzle"))
-
-  bootstrapRuntime(project(path = ":javaagent-bootstrap", configuration = "instrumentationMuzzle"))
-}
-
 afterEvaluate {
+  // TODO(anuraaga): There is no obvious reason this needs to be in afterEvaluate but it breaks
+  // Finatra tests. Fix it.
+  dependencies {
+    compileOnly(project(":instrumentation-api"))
+    compileOnly(project(":javaagent-api"))
+    compileOnly(project(":javaagent-bootstrap"))
+    // Apply common dependencies for instrumentation.
+    compileOnly(project(":javaagent-extension-api")) {
+      // OpenTelemetry SDK is not needed for compilation
+      exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
+      exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
+    }
+    compileOnly(project(":javaagent-tooling")) {
+      // OpenTelemetry SDK is not needed for compilation
+      exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
+      exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-metrics")
+    }
+    compileOnly("net.bytebuddy:byte-buddy")
+    annotationProcessor("com.google.auto.service:auto-service")
+    compileOnly("com.google.auto.service:auto-service")
+    compileOnly("org.slf4j:slf4j-api")
+
+    testImplementation("io.opentelemetry:opentelemetry-api")
+
+    testImplementation(project(":testing-common"))
+    testAnnotationProcessor("net.bytebuddy:byte-buddy")
+    testCompileOnly("net.bytebuddy:byte-buddy")
+
+    testImplementation("org.testcontainers:testcontainers")
+
+    toolingRuntime(project(path = ":javaagent-tooling", configuration = "instrumentationMuzzle"))
+    toolingRuntime(project(path = ":javaagent-extension-api", configuration = "instrumentationMuzzle"))
+
+    bootstrapRuntime(project(path = ":javaagent-bootstrap", configuration = "instrumentationMuzzle"))
+  }
+
   val pluginName = "io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin"
   ByteBuddyPluginConfigurator(project, sourceSets.main.get(), pluginName,
     toolingRuntime.plus(configurations.runtimeClasspath.get()))
