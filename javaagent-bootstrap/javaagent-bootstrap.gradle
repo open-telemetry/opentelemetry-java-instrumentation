@@ -29,7 +29,7 @@ dependencies {
   api "io.opentelemetry:opentelemetry-api-metrics"
   compileOnly "io.opentelemetry:opentelemetry-sdk"
   implementation "org.slf4j:slf4j-api"
-  implementation "org.slf4j:slf4j-simple:${versions["org.slf4j"]}"
+  implementation "org.slf4j:slf4j-simple"
   // ^ Generally a bad idea for libraries, but we're shadowing.
 
   implementation project(':javaagent-api')

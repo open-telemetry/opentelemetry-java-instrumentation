@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id 'com.github.ben-manes.versions' version '0.27.0'
+    id 'com.github.ben-manes.versions' version '0.39.0'
     id "io.github.gradle-nexus.publish-plugin" version "1.0.0"
     id "me.champeau.jmh" version "0.6.4"
     id "net.ltgt.nullaway" version "1.1.0"
