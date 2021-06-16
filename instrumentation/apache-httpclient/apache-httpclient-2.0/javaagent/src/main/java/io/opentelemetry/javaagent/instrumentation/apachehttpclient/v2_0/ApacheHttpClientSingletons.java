@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtr
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import org.apache.commons.httpclient.HttpMethod;
 
-public final class ApacheHttpClientInstrumenters {
+public final class ApacheHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.javaagent.apache-httpclient-2.0";
 
@@ -45,5 +45,5 @@ public final class ApacheHttpClientInstrumenters {
     return INSTRUMENTER;
   }
 
-  private ApacheHttpClientInstrumenters() {}
+  private ApacheHttpClientSingletons() {}
 }

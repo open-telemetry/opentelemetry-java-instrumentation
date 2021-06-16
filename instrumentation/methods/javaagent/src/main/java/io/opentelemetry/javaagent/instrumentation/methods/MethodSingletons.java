@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.tracer.SpanNames;
 import java.lang.reflect.Method;
 
-public final class MethodInstrumenters {
+public final class MethodSingletons {
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.javaagent.external-annotations";
 
@@ -31,5 +31,5 @@ public final class MethodInstrumenters {
     return INSTRUMENTER;
   }
 
-  private MethodInstrumenters() {}
+  private MethodSingletons() {}
 }

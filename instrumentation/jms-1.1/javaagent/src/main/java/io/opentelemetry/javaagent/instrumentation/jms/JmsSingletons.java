@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import java.time.Instant;
 
-public final class JmsInstrumenters {
+public final class JmsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jms-1.1";
 
   private static final Instrumenter<MessageWithDestination, Void> PRODUCER_INSTRUMENTER;
@@ -57,5 +57,5 @@ public final class JmsInstrumenters {
     return LISTENER_INSTRUMENTER;
   }
 
-  private JmsInstrumenters() {}
+  private JmsSingletons() {}
 }

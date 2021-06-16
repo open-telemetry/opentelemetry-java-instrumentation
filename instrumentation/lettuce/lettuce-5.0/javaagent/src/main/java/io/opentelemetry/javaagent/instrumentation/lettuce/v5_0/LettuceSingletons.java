@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtracto
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
-public final class LettuceInstrumenters {
+public final class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jedis-5.0";
 
   private static final Instrumenter<RedisCommand<?, ?, ?>, Void> INSTRUMENTER;
@@ -54,5 +54,5 @@ public final class LettuceInstrumenters {
     return CONNECT_INSTRUMENTER;
   }
 
-  private LettuceInstrumenters() {}
+  private LettuceSingletons() {}
 }
