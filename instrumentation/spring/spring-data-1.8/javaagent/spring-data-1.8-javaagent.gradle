@@ -1,4 +1,4 @@
-apply from: apply plugin: "otel.javaagent-instrumentation"
+apply plugin: "otel.javaagent-instrumentation"
 
 muzzle {
   // We have two independent covariants, so we have to test them independently.

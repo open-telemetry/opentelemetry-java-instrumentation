@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-apply from: apply plugin: "otel.javaagent-instrumentation"
+apply plugin: "otel.javaagent-instrumentation"
 
 muzzle {
   pass {

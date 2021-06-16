@@ -1,6 +1,6 @@
 ext.skipPublish = true
 
-apply from: apply plugin: "otel.javaagent-instrumentation"
+apply plugin: "otel.javaagent-instrumentation"
 
 dependencies {
   implementation project(':testing-common:library-for-integration-tests')
