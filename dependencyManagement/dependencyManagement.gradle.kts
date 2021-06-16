@@ -94,7 +94,7 @@ val DEPENDENCIES = listOf(
   "commons-validator:commons-validator:1.7",
   "info.solidsoft.spock:spock-global-unroll:0.5.1",
   "io.netty:netty:3.10.6.Final",
-  "org.assertj:assertj-core:3.20.0",
+  "org.assertj:assertj-core:3.19.0",
   "org.awaitility:awaitility:4.1.0",
   "org.checkerframework:checker-qual:3.14.0",
   "org.codehaus.groovy:groovy-all:${groovyVersion}",
