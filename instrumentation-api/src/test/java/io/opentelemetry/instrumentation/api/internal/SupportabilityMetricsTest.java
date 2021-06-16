@@ -19,8 +19,7 @@ class SupportabilityMetricsTest {
   void disabled() {
     List<String> reports = new ArrayList<>();
     SupportabilityMetrics metrics =
-        new SupportabilityMetrics(
-            Config.create(Collections.singletonMap("otel.javaagent.debug", "false")), reports::add);
+        new SupportabilityMetrics(configWithJavaagentDebug(false), reports::add);
 
     metrics.recordSuppressedSpan(SpanKind.CLIENT, "favoriteInstrumentation");
     metrics.recordSuppressedSpan(SpanKind.SERVER, "favoriteInstrumentation");
@@ -39,8 +38,7 @@ class SupportabilityMetricsTest {
   void reportsMetrics() {
     List<String> reports = new ArrayList<>();
     SupportabilityMetrics metrics =
-        new SupportabilityMetrics(
-            Config.create(Collections.singletonMap("otel.javaagent.debug", "true")), reports::add);
+        new SupportabilityMetrics(configWithJavaagentDebug(true), reports::add);
 
     metrics.recordSuppressedSpan(SpanKind.CLIENT, "favoriteInstrumentation");
     metrics.recordSuppressedSpan(SpanKind.SERVER, "favoriteInstrumentation");
@@ -65,8 +63,7 @@ class SupportabilityMetricsTest {
   void resetsCountsEachReport() {
     List<String> reports = new ArrayList<>();
     SupportabilityMetrics metrics =
-        new SupportabilityMetrics(
-            Config.create(Collections.singletonMap("otel.javaagent.debug", "true")), reports::add);
+        new SupportabilityMetrics(configWithJavaagentDebug(true), reports::add);
 
     metrics.recordSuppressedSpan(SpanKind.CLIENT, "favoriteInstrumentation");
     metrics.incrementCounter("some counter");
@@ -78,5 +75,11 @@ class SupportabilityMetricsTest {
         .containsExactlyInAnyOrder(
             "Suppressed Spans by 'favoriteInstrumentation' (CLIENT) : 1",
             "Counter 'some counter' : 1");
+  }
+
+  private static Config configWithJavaagentDebug(boolean enabled) {
+    return Config.newBuilder()
+        .readProperties(Collections.singletonMap("otel.javaagent.debug", Boolean.toString(enabled)))
+        .build();
   }
 }

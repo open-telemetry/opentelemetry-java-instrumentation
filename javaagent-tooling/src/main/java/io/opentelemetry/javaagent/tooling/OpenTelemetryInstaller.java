@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.config.ConfigBuilder;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.instrumentation.api.OpenTelemetrySdkAccess;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.OpenTelemetrySdkAutoConfiguration;
+import java.util.Map;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,12 +50,12 @@ public class OpenTelemetryInstaller implements AgentListener {
   // TODO(anuraaga): Make this less hacky
   private static void copySystemProperties(Config config) {
     Properties allProperties = config.asJavaProperties();
-    Properties environmentProperties =
-        new ConfigBuilder()
+    Map<String, String> environmentProperties =
+        Config.newBuilder()
             .readEnvironmentVariables()
             .readSystemProperties()
             .build()
-            .asJavaProperties();
+            .getAllProperties();
 
     allProperties.forEach(
         (key, value) -> {

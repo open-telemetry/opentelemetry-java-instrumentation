@@ -25,7 +25,12 @@ public abstract class Config {
   // read system properties
   @Nullable private static volatile Config instance = null;
 
-  public static Config create(Map<String, String> allProperties) {
+  /** Start building a new {@link Config} instance. */
+  public static ConfigBuilder newBuilder() {
+    return new ConfigBuilder();
+  }
+
+  static Config create(Map<String, String> allProperties) {
     return new AutoValue_Config(allProperties);
   }
 
@@ -47,12 +52,13 @@ public abstract class Config {
       // this should only happen in library instrumentation
       //
       // no need to synchronize because worst case is creating INSTANCE more than once
-      instance = new ConfigBuilder().readEnvironmentVariables().readSystemProperties().build();
+      instance = newBuilder().readEnvironmentVariables().readSystemProperties().build();
     }
     return instance;
   }
 
-  abstract Map<String, String> getAllProperties();
+  /** Returns all properties stored in this instance. The returned map is unmodifiable. */
+  public abstract Map<String, String> getAllProperties();
 
   /**
    * Returns a string property value or null if a property with name {@code name} did not exist.
@@ -90,6 +96,18 @@ public abstract class Config {
    */
   public boolean getBooleanProperty(String name, boolean defaultValue) {
     return getTypedProperty(name, Boolean::parseBoolean, defaultValue);
+  }
+
+  /**
+   * Returns a long property value or {@code defaultValue} if a property with name {@code name} did
+   * not exist.
+   *
+   * <p>This property may be used by vendor distributions to get numerical values.
+   *
+   * @see #getProperty(String, String)
+   */
+  public long getLongProperty(String name, long defaultValue) {
+    return getTypedProperty(name, Long::parseLong, defaultValue);
   }
 
   /**
