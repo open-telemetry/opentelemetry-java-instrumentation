@@ -44,7 +44,7 @@ public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static boolean suppressDecorator(@Advice.Argument(0) Function<?, ?> decorator) {
-      return decorator != ArmeriaDecorators.CLIENT_DECORATOR;
+      return decorator != ArmeriaSingletons.CLIENT_DECORATOR;
     }
 
     @Advice.OnMethodExit
@@ -63,7 +63,7 @@ public class ArmeriaWebClientBuilderInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter
     public static void build(@Advice.This WebClientBuilder builder) {
-      builder.decorator(ArmeriaDecorators.CLIENT_DECORATOR);
+      builder.decorator(ArmeriaSingletons.CLIENT_DECORATOR);
     }
   }
 }

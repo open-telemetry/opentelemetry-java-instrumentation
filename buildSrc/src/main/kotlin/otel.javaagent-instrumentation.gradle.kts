@@ -107,7 +107,8 @@ afterEvaluate {
     jvmArgs("-javaagent:${agentShadowJar.archiveFile.get().asFile.absolutePath}")
     jvmArgs("-Dotel.javaagent.experimental.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}")
     jvmArgs("-Dotel.javaagent.testing.additional-library-ignores.enabled=false")
-    jvmArgs("-Dotel.javaagent.testing.fail-on-context-leak=true")
+    val failOnContextLeak = findProperty("failOnContextLeak")
+    jvmArgs("-Dotel.javaagent.testing.fail-on-context-leak=${failOnContextLeak != false}")
     // prevent sporadic gradle deadlocks, see SafeLogger for more details
     jvmArgs("-Dotel.javaagent.testing.transform-safe-logging.enabled=true")
 

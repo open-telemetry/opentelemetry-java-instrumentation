@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id 'com.github.ben-manes.versions' version '0.27.0'
+    id 'com.github.ben-manes.versions' version '0.39.0'
     id "io.github.gradle-nexus.publish-plugin" version "1.0.0"
     id "me.champeau.jmh" version "0.6.4"
     id "net.ltgt.nullaway" version "1.1.0"
@@ -279,7 +279,9 @@ include ':instrumentation:spark-2.3:javaagent'
 include ':instrumentation:spring:spring-batch-3.0:javaagent'
 include ':instrumentation:spring:spring-core-2.0:javaagent'
 include ':instrumentation:spring:spring-data-1.8:javaagent'
+include ':instrumentation:spring:spring-integration-4.1:javaagent'
 include ':instrumentation:spring:spring-integration-4.1:library'
+include ':instrumentation:spring:spring-integration-4.1:testing'
 include ':instrumentation:spring:spring-scheduling-3.1:javaagent'
 include ':instrumentation:spring:spring-web-3.1:library'
 include ':instrumentation:spring:spring-webmvc-3.1:javaagent'

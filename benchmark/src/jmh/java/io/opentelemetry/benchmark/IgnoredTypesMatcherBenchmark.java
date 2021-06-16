@@ -6,7 +6,6 @@
 package io.opentelemetry.benchmark;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.ignore.AdditionalLibraryIgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
@@ -38,9 +37,7 @@ public class IgnoredTypesMatcherBenchmark {
   static {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     new AdditionalLibraryIgnoredTypesConfigurer().configure(Config.get(), builder);
-    ignoredTypesMatcher =
-        new IgnoredTypesMatcher(
-            new AgentInstaller.NoopIgnoreMatcherProvider(), builder.buildIgnoredTypesTrie());
+    ignoredTypesMatcher = new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie());
   }
 
   @Benchmark

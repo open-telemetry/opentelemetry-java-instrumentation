@@ -94,6 +94,14 @@ public final class ExecutorInstrumentationUtils {
                 .equals("org.hornetq.utils.OrderedExecutorFactory$OrderedExecutor")) {
               return false;
             }
+
+            // Avoid instrumenting internal rabbit consumer task
+            if (enclosingClass
+                .getName()
+                .equals(
+                    "org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer")) {
+              return false;
+            }
           }
 
           // Don't trace runnables from libraries that are packaged inside the agent.

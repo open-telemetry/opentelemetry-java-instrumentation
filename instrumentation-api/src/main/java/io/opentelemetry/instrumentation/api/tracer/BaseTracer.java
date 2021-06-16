@@ -104,10 +104,11 @@ public abstract class BaseTracer {
     boolean suppressed = false;
     switch (proposedKind) {
       case CLIENT:
-        suppressed = inClientSpan(context);
+        suppressed = ClientSpan.exists(context);
         break;
       case SERVER:
-        suppressed = inServerSpan(context);
+      case CONSUMER:
+        suppressed = ServerSpan.exists(context) || ConsumerSpan.exists(context);
         break;
       default:
         break;
@@ -116,14 +117,6 @@ public abstract class BaseTracer {
       supportability.recordSuppressedSpan(proposedKind, getInstrumentationName());
     }
     return !suppressed;
-  }
-
-  private static boolean inClientSpan(Context context) {
-    return ClientSpan.fromContextOrNull(context) != null;
-  }
-
-  private static boolean inServerSpan(Context context) {
-    return ServerSpan.fromContextOrNull(context) != null;
   }
 
   /**
@@ -174,6 +167,16 @@ public abstract class BaseTracer {
    */
   protected final Context withServerSpan(Context parentContext, Span span) {
     return ServerSpan.with(parentContext.with(span), span);
+  }
+
+  /**
+   * Returns a {@link Context} containing the passed {@code span} marked as the current {@link
+   * SpanKind#CONSUMER} span.
+   *
+   * @see #shouldStartSpan(Context, SpanKind)
+   */
+  protected final Context withConsumerSpan(Context parentContext, Span span) {
+    return ConsumerSpan.with(parentContext.with(span), span);
   }
 
   /** Ends the execution of a span stored in the passed {@code context}. */

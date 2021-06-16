@@ -27,17 +27,6 @@ afterEvaluate {
 // Version to use to compile code and run tests.
 val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_11
 
-val applyCodeCoverage = !project.path.run {
-  startsWith(":smoke-tests") ||
-    startsWith(":benchmark") ||
-    startsWith(":instrumentation") ||
-    startsWith(":testing-common")
-}
-
-if (applyCodeCoverage) {
-  apply(from = "${rootDir}/gradle/jacoco.gradle")
-}
-
 java {
   toolchain {
     languageVersion.set(otelJava.minJavaVersionSupported.map { JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), DEFAULT_JAVA_VERSION.majorVersion.toInt())) })

@@ -49,10 +49,6 @@ nexusPublishing {
 // Enable after verifying Maven Central publishing once through manual closing
 // tasks.release.finalizedBy tasks.closeAndReleaseRepository
 
-allprojects {
-  apply from: "$rootDir/gradle/util.gradle"
-}
-
 description = 'OpenTelemetry instrumentations for Java'
 
 allprojects {

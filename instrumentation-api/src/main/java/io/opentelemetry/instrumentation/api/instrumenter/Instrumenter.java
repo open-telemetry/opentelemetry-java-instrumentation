@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.InstrumentationVersion;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import io.opentelemetry.instrumentation.api.tracer.ClientSpan;
+import io.opentelemetry.instrumentation.api.tracer.ConsumerSpan;
 import io.opentelemetry.instrumentation.api.tracer.ServerSpan;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,10 +90,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
     SpanKind spanKind = spanKindExtractor.extract(request);
     switch (spanKind) {
       case SERVER:
-        suppressed = ServerSpan.fromContextOrNull(parentContext) != null;
+      case CONSUMER:
+        suppressed = ServerSpan.exists(parentContext) || ConsumerSpan.exists(parentContext);
         break;
       case CLIENT:
-        suppressed = ClientSpan.fromContextOrNull(parentContext) != null;
+        suppressed = ClientSpan.exists(parentContext);
         break;
       default:
         break;
@@ -146,6 +148,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
         return ServerSpan.with(context, span);
       case CLIENT:
         return ClientSpan.with(context, span);
+      case CONSUMER:
+        return ConsumerSpan.with(context, span);
       default:
         return context;
     }

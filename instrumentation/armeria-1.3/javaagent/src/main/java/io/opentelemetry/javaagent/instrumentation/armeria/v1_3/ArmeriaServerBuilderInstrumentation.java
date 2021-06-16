@@ -35,7 +35,7 @@ public class ArmeriaServerBuilderInstrumentation implements TypeInstrumentation 
 
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.This ServerBuilder builder) {
-      builder.decorator(ArmeriaDecorators.SERVER_DECORATOR);
+      builder.decorator(ArmeriaSingletons.SERVER_DECORATOR);
     }
   }
 }

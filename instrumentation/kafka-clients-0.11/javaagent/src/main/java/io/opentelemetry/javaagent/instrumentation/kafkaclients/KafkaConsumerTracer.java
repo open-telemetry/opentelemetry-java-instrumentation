@@ -40,7 +40,7 @@ public class KafkaConsumerTracer extends BaseTracer {
             .startSpan();
 
     onConsume(span, now, record);
-    return parentContext.with(span);
+    return withConsumerSpan(parentContext, span);
   }
 
   private Context extractParent(ConsumerRecord<?, ?> record) {

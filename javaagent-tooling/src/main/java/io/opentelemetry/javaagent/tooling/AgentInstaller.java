@@ -18,18 +18,16 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
-import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
+import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
-import io.opentelemetry.javaagent.tooling.matcher.GlobalClassloaderIgnoresMatcher;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
@@ -175,20 +173,14 @@ public class AgentInstaller {
   }
 
   private static AgentBuilder configureIgnoredTypes(Config config, AgentBuilder agentBuilder) {
-    IgnoreMatcherProvider ignoreMatcherProvider = loadIgnoreMatcherProvider();
-    log.debug(
-        "Ignore matcher provider {} will be used", ignoreMatcherProvider.getClass().getName());
-
-    IgnoredTypesBuilderImpl ignoredTypesBuilder = new IgnoredTypesBuilderImpl();
+    IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
-      configurer.configure(config, ignoredTypesBuilder);
+      configurer.configure(config, builder);
     }
 
     return agentBuilder
-        .ignore(any(), GlobalClassloaderIgnoresMatcher.skipClassLoader(ignoreMatcherProvider))
-        .or(
-            new IgnoredTypesMatcher(
-                ignoreMatcherProvider, ignoredTypesBuilder.buildIgnoredTypesTrie()));
+        .ignore(any(), new IgnoredClassLoadersMatcher(builder.buildIgnoredClassLoadersTrie()))
+        .or(new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie()));
   }
 
   private static void runAfterAgentListeners(
@@ -222,17 +214,6 @@ public class AgentInstaller {
         agentListener.afterAgent(config);
       }
     }
-  }
-
-  private static IgnoreMatcherProvider loadIgnoreMatcherProvider() {
-    Iterable<IgnoreMatcherProvider> ignoreMatcherProviders =
-        SafeServiceLoader.load(IgnoreMatcherProvider.class);
-
-    Iterator<IgnoreMatcherProvider> iterator = ignoreMatcherProviders.iterator();
-    if (iterator.hasNext()) {
-      return iterator.next();
-    }
-    return new NoopIgnoreMatcherProvider();
   }
 
   private static void addByteBuddyRawSetting() {
@@ -498,20 +479,6 @@ public class AgentInstaller {
     VersionLogger.logAllVersions();
     log.debug(
         "{} loaded on {}", AgentInstaller.class.getName(), AgentInstaller.class.getClassLoader());
-  }
-
-  /** This class will be removed together with {@link IgnoreMatcherProvider}. */
-  @Deprecated
-  public static final class NoopIgnoreMatcherProvider implements IgnoreMatcherProvider {
-    @Override
-    public Result classloader(ClassLoader classLoader) {
-      return Result.DEFAULT;
-    }
-
-    @Override
-    public Result type(TypeDescription target) {
-      return Result.DEFAULT;
-    }
   }
 
   private AgentInstaller() {}

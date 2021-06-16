@@ -5,6 +5,7 @@ plugins {
 group = 'io.opentelemetry.instrumentation'
 
 apply plugin: "otel.java-conventions"
+apply plugin: "otel.jacoco-conventions"
 apply plugin: "otel.publish-conventions"
 
 def jflexTargetDir = file"${project.buildDir}/generated/jflex/sql"
