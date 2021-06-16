@@ -2,8 +2,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.opentelemetry.instrumentation.gradle.bytebuddy.ByteBuddyPluginConfigurator
 
 plugins {
-  base
-
   id("net.bytebuddy.byte-buddy")
 
   id("otel.java-conventions")
@@ -14,7 +12,9 @@ extra["mavenGroupId"] = "io.opentelemetry.javaagent.instrumentation"
 // Shadow is only for testing, not publishing.
 extra["noShadowPublish"] = true
 
-if (extra["skipPublish"] != true) {
+val skipPublish: Boolean? by extra
+
+if (skipPublish != true) {
   apply(plugin = "otel.publish-conventions")
 }
 
@@ -96,7 +96,7 @@ afterEvaluate {
     val shadowJar = tasks.shadowJar.get()
     val agentShadowJar = project(":testing:agent-for-testing").tasks.shadowJar.get()
 
-    inputs.file(shadowJar)
+    inputs.file(shadowJar.archiveFile)
 
     dependsOn(shadowJar)
     dependsOn(agentShadowJar)
