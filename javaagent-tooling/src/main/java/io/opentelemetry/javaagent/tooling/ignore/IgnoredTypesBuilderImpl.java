@@ -9,30 +9,31 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.tooling.ignore.trie.Trie;
 
 public class IgnoredTypesBuilderImpl implements IgnoredTypesBuilder {
-  private final Trie.Builder<IgnoreAllow> ignoreMatcherTrie = Trie.newBuilder();
+  private final Trie.Builder<IgnoreAllow> ignoredTypesTrie = Trie.newBuilder();
+  private final Trie.Builder<IgnoreAllow> ignoredClassLoadersTrie = Trie.newBuilder();
 
   @Override
-  public IgnoredTypesBuilder ignoreClass(String className) {
-    ignoreMatcherTrie.put(className, IgnoreAllow.IGNORE);
+  public IgnoredTypesBuilder ignoreClass(String classNameOrPrefix) {
+    ignoredTypesTrie.put(classNameOrPrefix, IgnoreAllow.IGNORE);
     return this;
   }
 
   @Override
-  public IgnoredTypesBuilder allowClass(String className) {
-    ignoreMatcherTrie.put(className, IgnoreAllow.ALLOW);
+  public IgnoredTypesBuilder allowClass(String classNameOrPrefix) {
+    ignoredTypesTrie.put(classNameOrPrefix, IgnoreAllow.ALLOW);
     return this;
   }
 
   @Override
   public IgnoredTypesBuilder ignoreClassLoader(String classNameOrPrefix) {
-    // TODO: collect classloader classes into a separate trie
-    throw new UnsupportedOperationException("not implemented yet");
+    ignoredClassLoadersTrie.put(classNameOrPrefix, IgnoreAllow.IGNORE);
+    return this;
   }
 
   @Override
   public IgnoredTypesBuilder allowClassLoader(String classNameOrPrefix) {
-    // TODO: collect classloader classes into a separate trie
-    throw new UnsupportedOperationException("not implemented yet");
+    ignoredClassLoadersTrie.put(classNameOrPrefix, IgnoreAllow.ALLOW);
+    return this;
   }
 
   @Override
@@ -48,6 +49,10 @@ public class IgnoredTypesBuilderImpl implements IgnoredTypesBuilder {
   }
 
   public Trie<IgnoreAllow> buildIgnoredTypesTrie() {
-    return ignoreMatcherTrie.build();
+    return ignoredTypesTrie.build();
+  }
+
+  public Trie<IgnoreAllow> buildIgnoredClassLoadersTrie() {
+    return ignoredClassLoadersTrie.build();
   }
 }

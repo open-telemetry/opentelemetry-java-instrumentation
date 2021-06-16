@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.ignore;
 
-import io.opentelemetry.javaagent.spi.IgnoreMatcherProvider;
 import io.opentelemetry.javaagent.tooling.ignore.trie.Trie;
 import java.util.regex.Pattern;
 import net.bytebuddy.description.type.TypeDescription;
@@ -16,26 +15,15 @@ public class IgnoredTypesMatcher extends ElementMatcher.Junction.AbstractBase<Ty
   private static final Pattern COM_MCHANGE_PROXY =
       Pattern.compile("com\\.mchange\\.v2\\.c3p0\\..*Proxy");
 
-  private final IgnoreMatcherProvider ignoreMatcherProvider;
   private final Trie<IgnoreAllow> ignoredTypes;
 
-  public IgnoredTypesMatcher(
-      IgnoreMatcherProvider ignoreMatcherProvider, Trie<IgnoreAllow> ignoredTypes) {
-    this.ignoreMatcherProvider = ignoreMatcherProvider;
+  public IgnoredTypesMatcher(Trie<IgnoreAllow> ignoredTypes) {
     this.ignoredTypes = ignoredTypes;
   }
 
   @Override
   public boolean matches(TypeDescription target) {
     String name = target.getActualName();
-
-    // TODO: will be removed together with IgnoreMatcherProvider
-    IgnoreMatcherProvider.Result ignoreResult = ignoreMatcherProvider.type(target);
-    if (ignoreResult == IgnoreMatcherProvider.Result.ALLOW) {
-      return false;
-    } else if (ignoreResult == IgnoreMatcherProvider.Result.IGNORE) {
-      return true;
-    }
 
     IgnoreAllow ignored = ignoredTypes.getOrNull(name);
     if (ignored == IgnoreAllow.ALLOW) {

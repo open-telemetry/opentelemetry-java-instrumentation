@@ -7,14 +7,22 @@ package io.opentelemetry.javaagent.tooling.ignore;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.api.config.Config;
+import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.javaagent.tooling.ExporterClassLoader;
+import io.opentelemetry.javaagent.tooling.ExtensionClassLoader;
 
 @AutoService(IgnoredTypesConfigurer.class)
 public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
   public void configure(Config config, IgnoredTypesBuilder builder) {
+    configureIgnoredTypes(builder);
+    configureIgnoredClassLoaders(builder);
+  }
+
+  private static void configureIgnoredTypes(IgnoredTypesBuilder builder) {
     builder
         .ignoreClass("org.gradle.")
         .ignoreClass("net.bytebuddy.")
@@ -93,5 +101,26 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         // is no common prefix for its proxies other than "$". ByteBuddy fails to instrument this
         // proxy, and as there is no reason why it should be instrumented anyway, exclude it.
         .ignoreClass("$HttpServletRequest_");
+  }
+
+  private static void configureIgnoredClassLoaders(IgnoredTypesBuilder builder) {
+    builder
+        .ignoreClassLoader("org.codehaus.groovy.runtime.callsite.CallSiteClassLoader")
+        .ignoreClassLoader("sun.reflect.DelegatingClassLoader")
+        .ignoreClassLoader("jdk.internal.reflect.DelegatingClassLoader")
+        .ignoreClassLoader("clojure.lang.DynamicClassLoader")
+        .ignoreClassLoader("org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader")
+        .ignoreClassLoader("sun.misc.Launcher$ExtClassLoader")
+        .ignoreClassLoader(AgentClassLoader.class.getName())
+        .ignoreClassLoader(ExporterClassLoader.class.getName())
+        .ignoreClassLoader(ExtensionClassLoader.class.getName());
+
+    builder
+        .ignoreClassLoader("datadog.")
+        .ignoreClassLoader("com.dynatrace.")
+        .ignoreClassLoader("com.appdynamics.")
+        .ignoreClassLoader("com.newrelic.agent.")
+        .ignoreClassLoader("com.newrelic.api.agent.")
+        .ignoreClassLoader("com.nr.agent.");
   }
 }
