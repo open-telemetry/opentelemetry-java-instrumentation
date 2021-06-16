@@ -26,6 +26,8 @@ dependencies {
   latestDepTestLibrary "org.apache.kafka:kafka-clients:2.3.+"
   latestDepTestLibrary "org.springframework.kafka:spring-kafka:2.2.+"
   latestDepTestLibrary "org.springframework.kafka:spring-kafka-test:2.2.+"
+  // assertj-core:3.20.0 is incompatible with spring-kafka-test:2.7.2
+  latestDepTestLibrary "org.assertj:assertj-core:3.19.0"
 }
 
 tasks.withType(Test).configureEach {
