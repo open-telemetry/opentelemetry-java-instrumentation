@@ -57,6 +57,7 @@
 - Extract agent shadow configuration to conventions script (#3256)
 - Deprecate SpanExporterFactory in favor of ConfigurableSpanExporterProvider (#3299)
 - Refactor span names class (#3281)
+- Move http client/server testing dependencies to internal package (#3305)
 
 ## Version 1.2.0 - 2021-05-14
 
