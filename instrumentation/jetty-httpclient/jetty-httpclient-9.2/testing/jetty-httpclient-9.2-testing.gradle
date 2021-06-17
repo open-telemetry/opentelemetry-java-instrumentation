@@ -11,10 +11,10 @@ dependencies {
 
   api "org.eclipse.jetty:jetty-client:${jettyVers.useInTests9}"
 
-  implementation deps.guava
-  implementation deps.junitApi
+//  implementation deps.guava
+  implementation "org.junit.jupiter:junit-jupiter-api"
 
-  implementation deps.groovy
-  implementation deps.opentelemetryApi
-  implementation deps.spock
+  implementation "org.codehaus.groovy:groovy-all"
+  implementation "io.opentelemetry:opentelemetry-api"
+  implementation "org.spockframework:spock-core"
 }

@@ -5,17 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
-import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyHttpClient9Tracer.tracer;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.api.Result;
+import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +46,12 @@ public class JettyHttpClient9TracingInterceptor
 
   private final Context parentContext;
 
-  public JettyHttpClient9TracingInterceptor(Context parentCtx) {
+  private final Instrumenter<Request, Response> instrumenter;
+
+  public JettyHttpClient9TracingInterceptor(
+      Context parentCtx, Instrumenter<Request, Response> instrumenter) {
     this.parentContext = parentCtx;
+    this.instrumenter = instrumenter;
   }
 
   public void attachToRequest(Request jettyRequest) {
@@ -59,7 +65,6 @@ public class JettyHttpClient9TracingInterceptor
     startSpan(jettyRequest);
 
     // wrap all important request-based listeners that may already be attached, null should ensure
-    // all listeners
     // are returned here
     List<Request.RequestListener> existingListeners = jettyRequest.getRequestListeners(null);
     wrapRequestListeners(existingListeners);
@@ -84,7 +89,6 @@ public class JettyHttpClient9TracingInterceptor
             .map(rl -> (Request.FailureListener) rl)
             .collect(Collectors.toList());
 
-    //    Context context = (this.ctx != null) ? this.ctx : this.parentContext;
     Context context = this.parentContext;
     for (Request.BeginListener blOriginal : beginListeners) {
       requestListeners.set(
@@ -110,33 +114,18 @@ public class JettyHttpClient9TracingInterceptor
 
   private void startSpan(Request request) {
 
-    if (this.parentContext != null) {
-      if (!tracer().shouldStartSpan(this.parentContext)) {
-        return;
-      }
-      Context context = tracer().startSpan(this.parentContext, request, request);
-      this.context = context;
-
-    } else {
-      LOG.warn("StartSpan - could not find an otel context");
+    if (!instrumenter.shouldStart(this.parentContext, request)) {
+      return;
     }
+    this.context = instrumenter.start(this.parentContext, request);
   }
 
   @Override
   public void onBegin(Request request) {
     if (this.context != null) {
       Span span = Span.fromContext(this.context);
-      tracer().onRequest(span, request);
-      tracer().updateSpanName(span, request);
-
-      try (Scope scope = span.makeCurrent()) {}
-    }
-  }
-
-  @Override
-  public void onFailure(Request request, Throwable t) {
-    if (this.context != null) {
-      tracer().endExceptionally(this.context, t);
+      HttpField agentField = request.getHeaders().getField(HttpHeader.USER_AGENT);
+      span.setAttribute(SemanticAttributes.HTTP_USER_AGENT, agentField.getValue());
     }
   }
 
@@ -151,18 +140,25 @@ public class JettyHttpClient9TracingInterceptor
   }
 
   @Override
+  public void onFailure(Request request, Throwable t) {
+    if (this.context != null) {
+      instrumenter.end(this.context, request, null, t);
+    }
+  }
+
+  @Override
   public void onFailure(Response response, Throwable t) {
     if (this.context != null) {
-      tracer().endExceptionally(this.context, t);
+      instrumenter.end(this.context, null, response, t);
     }
   }
 
   private void closeIfPossible(Response response) {
 
     if (this.context != null) {
-      tracer().end(this.context, response);
+      instrumenter.end(this.context, null, response, null);
     } else {
-      LOG.warn("onComplete - could not find an otel context");
+      LOG.debug("onComplete - could not find an otel context");
     }
   }
 }

@@ -11,7 +11,7 @@ dependencies {
   library "org.eclipse.jetty:jetty-client:${jettyVers.base9}"
   testImplementation project(':instrumentation:jetty-httpclient::jetty-httpclient-9.2:testing')
 
-  implementation deps.slf4j
+  implementation "org.slf4j:slf4j-api"
 
   testImplementation("org.eclipse.jetty:jetty-server:${jettyVers.useInTests9}") {
     exclude group: 'org.eclipse.jetty', module: 'jetty-client'

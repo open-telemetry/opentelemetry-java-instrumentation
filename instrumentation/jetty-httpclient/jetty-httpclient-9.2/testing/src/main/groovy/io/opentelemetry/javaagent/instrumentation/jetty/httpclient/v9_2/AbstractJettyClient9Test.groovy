@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2
 
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.Scope
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
+import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.client.HttpClient
 import org.eclipse.jetty.client.api.ContentResponse
 import org.eclipse.jetty.client.api.Request
@@ -16,7 +18,6 @@ import org.eclipse.jetty.client.api.Result
 import org.eclipse.jetty.http.HttpMethod
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import org.junit.Rule
-import org.junit.jupiter.api.Assertions
 import org.junit.rules.TestName
 import spock.lang.Shared
 
@@ -24,8 +25,6 @@ import java.util.concurrent.TimeUnit
 
 abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
-
-//  abstract void attachInterceptor(Request jettyRequest, Context parentContext);
   abstract HttpClient createStandardClient();
 
   abstract HttpClient createHttpsClient(SslContextFactory sslContextFactory);
@@ -41,22 +40,14 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
   def setupSpec() {
 
-    try {
-      client.start()
-    } catch (Throwable t) {
-      Assertions.fail("Error during jetty client start", t)
-    }
+    //Start the main Jetty HttpClient
+    client.start()
 
     SslContextFactory tlsCtx = new SslContextFactory()
     tlsCtx.setExcludeProtocols("TLSv1.3")
     httpsClient = createHttpsClient(tlsCtx)
     httpsClient.setFollowRedirects(false)
-    try {
-      httpsClient.start()
-    } catch (Throwable t) {
-      Assertions.fail("Error during jetty client https start", t)
-    }
-
+    httpsClient.start()
   }
 
   @Override
@@ -87,12 +78,7 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
       request.header(k, v)
     }
 
-//    def interceptor = createInterceptor(Context.current())
-    Context parentContext = Context.current()
-    Scope scope = parentContext.makeCurrent()
-//    attachInterceptor(request, parentContext)
     ContentResponse response = request.send()
-    scope.close()
 
     return response.status
   }
@@ -151,6 +137,16 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
   @Override
   boolean testCausality() {
     true
+  }
+
+  @Override
+  Set<AttributeKey<?>> httpAttributes(URI uri) {
+    Set<AttributeKey<?>> extra = [
+      SemanticAttributes.HTTP_SCHEME,
+      SemanticAttributes.HTTP_TARGET,
+      SemanticAttributes.HTTP_HOST
+    ]
+    super.httpAttributes(uri) + extra
   }
 
 }

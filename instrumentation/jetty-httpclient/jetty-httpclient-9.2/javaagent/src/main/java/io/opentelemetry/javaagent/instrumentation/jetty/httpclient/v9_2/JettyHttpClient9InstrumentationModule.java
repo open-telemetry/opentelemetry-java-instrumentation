@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyClientWrapUtil.wrapResponseListeners;
-import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyHttpClient9Tracer.tracer;
+import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyHttpClientInstrumenters.instrumenter;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -30,7 +30,7 @@ import org.eclipse.jetty.client.api.Response;
 public class JettyHttpClient9InstrumentationModule extends InstrumentationModule {
 
   public JettyHttpClient9InstrumentationModule() {
-    super("jetty-httpclient", "jetty-httpclient-9");
+    super("jetty-httpclient", "jetty-httpclient-9.2");
   }
 
   @Override
@@ -38,17 +38,16 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
     return singletonList(new JettyHttpClient9Instrumentation());
   }
 
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // AbstractTypedContentProvider  showed up in version Jetty Client 9.2 on to 10.x
+    return hasClassesNamed("org.eclipse.jetty.client.util.AbstractTypedContentProvider");
+  }
+
   public static class JettyHttpClient9Instrumentation implements TypeInstrumentation {
 
     @Override
-    public ElementMatcher<ClassLoader> classLoaderOptimization() {
-      // AbstractTypedContentProvider  showed up in version Jetty Client 9.2 on to 10.0
-      return hasClassesNamed("org.eclipse.jetty.client.util.AbstractTypedContentProvider");
-    }
-
-    @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      //      return hasSuperType(named("org.eclipse.jetty.client.api.Request").and(isInterface()));
       return named("org.eclipse.jetty.client.HttpClient");
     }
 
@@ -64,25 +63,25 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addTracingEnter(
-        @Advice.Argument(value = 0, readOnly = false) HttpRequest httpRequest,
+        @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(value = 1, readOnly = false) List<Response.ResponseListener> listeners,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!tracer().shouldStartSpan(parentContext)) {
+      if (!instrumenter().shouldStart(parentContext, httpRequest)) {
         return;
       }
 
       // First step is to attach the tracer to the Jetty request. Request listeners are wrapped here
       JettyHttpClient9TracingInterceptor requestInterceptor =
-          new JettyHttpClient9TracingInterceptor(parentContext);
+          new JettyHttpClient9TracingInterceptor(parentContext, instrumenter());
       requestInterceptor.attachToRequest(httpRequest);
 
       // Second step is to wrap all the important result callback
       listeners = wrapResponseListeners(parentContext, listeners);
 
-      scope = requestInterceptor.getContext().makeCurrent();
       context = requestInterceptor.getContext();
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
@@ -91,12 +90,13 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      if (throwable != null) {
-        tracer().endExceptionally(context, throwable);
+      if (scope == null) {
+        return;
       }
 
-      if (scope != null) {
-        scope.close();
+      scope.close();
+      if (throwable != null) {
+        instrumenter().end(context, null, null, throwable);
       }
     }
   }

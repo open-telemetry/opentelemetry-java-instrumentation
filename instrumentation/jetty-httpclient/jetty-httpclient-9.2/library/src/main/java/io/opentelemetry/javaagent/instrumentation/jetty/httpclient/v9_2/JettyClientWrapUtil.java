@@ -7,7 +7,9 @@ import io.opentelemetry.context.Scope;
 import java.util.List;
 import org.eclipse.jetty.client.api.Response;
 
-public class JettyClientWrapUtil {
+public final class JettyClientWrapUtil {
+
+  private JettyClientWrapUtil() {}
 
   /**
    * Utility to wrap the response listeners only, this includes the important CompleteListener
@@ -19,24 +21,24 @@ public class JettyClientWrapUtil {
   public static List<Response.ResponseListener> wrapResponseListeners(
       Context parentContext, List<Response.ResponseListener> listeners) {
 
-    List<Response.ResponseListener> wrapped =
-        listeners.stream()
-            .map(
-                listener -> {
-                  Response.ResponseListener wrappedListener = listener;
-                  if (listener instanceof Response.CompleteListener
-                      && !(listener instanceof JettyHttpClient9TracingInterceptor)) {
-                    wrappedListener =
-                        (Response.CompleteListener)
-                            result -> {
-                              try (Scope ignored = parentContext.makeCurrent()) {
-                                ((Response.CompleteListener) listener).onComplete(result);
-                              }
-                            };
-                  }
-                  return wrappedListener;
-                })
-            .collect(toList());
-    return wrapped;
+    return listeners.stream()
+        .map(listener -> wrapTheListener(listener, parentContext))
+        .collect(toList());
+  }
+
+  private static Response.ResponseListener wrapTheListener(
+      Response.ResponseListener listener, Context context) {
+    Response.ResponseListener wrappedListener = listener;
+    if (listener instanceof Response.CompleteListener
+        && !(listener instanceof JettyHttpClient9TracingInterceptor)) {
+      wrappedListener =
+          (Response.CompleteListener)
+              result -> {
+                try (Scope ignored = context.makeCurrent()) {
+                  ((Response.CompleteListener) listener).onComplete(result);
+                }
+              };
+    }
+    return wrappedListener;
   }
 }
