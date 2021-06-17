@@ -6,13 +6,11 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import static io.opentelemetry.javaagent.tooling.ignore.UserExcludedClassesConfigurer.EXCLUDED_CLASSES_CONFIG;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.config.ConfigBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import org.junit.jupiter.api.Test;
@@ -29,7 +27,7 @@ class UserExcludedClassesConfigurerTest {
   @Test
   void shouldAddNothingToBuilderWhenPropertyIsEmpty() {
     // when
-    underTest.configure(Config.create(emptyMap()), builder);
+    underTest.configure(Config.newBuilder().build(), builder);
 
     // then
     verifyNoInteractions(builder);
@@ -39,7 +37,7 @@ class UserExcludedClassesConfigurerTest {
   void shouldIgnoreClassesAndPackages() {
     // given
     Config config =
-        new ConfigBuilder()
+        Config.newBuilder()
             .readProperties(
                 singletonMap(
                     EXCLUDED_CLASSES_CONFIG,

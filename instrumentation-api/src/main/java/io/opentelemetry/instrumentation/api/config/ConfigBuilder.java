@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public class ConfigBuilder {
+public final class ConfigBuilder {
 
   private final Map<String, String> allProperties = new HashMap<>();
 
@@ -43,6 +44,6 @@ public class ConfigBuilder {
   }
 
   public Config build() {
-    return Config.create(allProperties);
+    return Config.create(Collections.unmodifiableMap(new HashMap<>(allProperties)));
   }
 }

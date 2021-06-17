@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.instrumentation.api.config.Config;
-import io.opentelemetry.instrumentation.api.config.ConfigBuilder;
 import io.opentelemetry.javaagent.spi.config.PropertySource;
 import io.opentelemetry.javaagent.tooling.SafeServiceLoader;
 import java.io.File;
@@ -31,7 +30,7 @@ public final class ConfigInitializer {
 
   // visible for testing
   static Config create(Properties spiConfiguration, Properties configurationFile) {
-    return new ConfigBuilder()
+    return Config.newBuilder()
         .readProperties(spiConfiguration)
         .readProperties(configurationFile)
         .readEnvironmentVariables()
