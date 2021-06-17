@@ -90,3 +90,16 @@ fun artifactPrefix(p: Project, archivesBaseName: String): String {
   }
   return "opentelemetry-"
 }
+
+rootProject.tasks.named("release").configure {
+  finalizedBy(tasks["publishToSonatype"])
+}
+
+// Stub out entire signing block off of CI since Gradle provides no way of lazy configuration of
+// signing tasks.
+if (System.getenv("CI") != null) {
+  signing {
+    useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSWORD"))
+    sign(publishing.publications["maven"])
+  }
+}
