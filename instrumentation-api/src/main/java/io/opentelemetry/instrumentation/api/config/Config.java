@@ -176,6 +176,12 @@ public abstract class Config {
     return anyEnabled;
   }
 
+  /**
+   * Converts this config instance to Java {@link Properties}.
+   *
+   * @deprecated Use {@link #getAllProperties()} instead.
+   */
+  @Deprecated
   public Properties asJavaProperties() {
     Properties properties = new Properties();
     properties.putAll(getAllProperties());
