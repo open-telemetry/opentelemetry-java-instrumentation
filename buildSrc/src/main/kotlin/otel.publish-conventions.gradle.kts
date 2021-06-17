@@ -8,7 +8,7 @@ plugins {
 publishing {
   publications {
     register<MavenPublication>("maven") {
-      if (tasks.names.contains("shadowJar") && findProperty("noShadowPublish") != "true") {
+      if (tasks.names.contains("shadowJar") && findProperty("noShadowPublish") != true) {
         the<ShadowExtension>().component(this)
       } else {
         plugins.withId("java-platform") {
