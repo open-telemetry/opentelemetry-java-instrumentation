@@ -7,7 +7,7 @@ plugins {
 
 extra["mavenGroupId"] = "io.opentelemetry.instrumentation"
 
-base.archivesBaseName = projectDir.parentFile.name
+base.archivesName.set(projectDir.parentFile.name)
 
 dependencies {
   api(project(":instrumentation-api"))

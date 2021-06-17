@@ -103,13 +103,13 @@ public class ByteBuddyPluginConfigurator {
               Task maybeCompileTask = compileTaskProvider.get();
               if (maybeCompileTask instanceof AbstractCompile) {
                 AbstractCompile compileTask = (AbstractCompile) maybeCompileTask;
-                File classesDirectory = compileTask.getDestinationDir();
+                File classesDirectory = compileTask.getDestinationDirectory().getAsFile().get();
                 File rawClassesDirectory =
                     new File(classesDirectory.getParent(), classesDirectory.getName() + "raw")
                         .getAbsoluteFile();
 
                 task.dependsOn(compileTask);
-                compileTask.setDestinationDir(rawClassesDirectory);
+                compileTask.getDestinationDirectory().set(rawClassesDirectory);
 
                 task.setSource(rawClassesDirectory);
                 task.setTarget(classesDirectory);
