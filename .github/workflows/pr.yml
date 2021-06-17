@@ -84,7 +84,7 @@ jobs:
 
   # testLatestDeps is intentionally not included in the PR workflow
   # because any time a new library version is released to maven central
-  # it can fail due to test code incompatibility with the new release,
+  # it can fail due to test code incompatibility with the new library version,
   # or due to slight changes in emitted telemetry, which can be confusing for contributors
   # (muzzle can also fail when a new library version is released to maven central
   # but that happens much less often)
