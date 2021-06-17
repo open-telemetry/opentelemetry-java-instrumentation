@@ -1,6 +1,65 @@
 # Changelog
 
-## Version 1.1.0 - 2021-05-14
+## Unreleased
+
+### 🌟 New javaagent instrumentation
+
+- Spring Integration javaagent instrumentation (#3295)
+
+### 🌟 New library instrumentation
+
+- Spring Integration library instrumentation (#3120)
+
+### 📈 Enhancements
+
+- Support peer-service-mapping in OkHttp3 instrumentation (#3063)
+- Low cardinality span names for Hibernate spans (#3106)
+- Propagate context to armeria callbacks (#3108)
+- Add attributes to netty connection failure span (#3115)
+- Defer initialization of OpenTelemetry in spring-boot-autoconfigure (#3171)
+- Support couchbase 3.1.6 (#3194)
+- New experimental support for agent extensions (#2881, #3071, #3226, #3237)
+- Propagate context to akka http callbacks (#3263)
+
+### Behavioral changes
+
+- Update agent logger prefix (#3007)
+- Remove khttp instrumentation (#3087)
+- Enable akka actor instrumentation by default (#3173)
+
+### 🛠️ Bug fixes
+
+- Remove Netty instrumented handler wrapper when original handler is removed (#3026)
+- Fix memory leak when Netty handler is a lambda (#3059)
+- Fix race condition on Undertow (#2992)
+- Remove db.connection_string from redis instrumentation (#3094)
+- Fix context propagation leak in Akka instrumentation (#3099)
+- Fix webflux handler span sporadically not ending (#3150)
+- End span on cancellation of subscription to reactive publishers (#3153)
+- End span on cancellation of Guava future (#3175)
+- Create Netty connection failure span only when first operation fails (#3228)
+- Internal instrumentation should always be enabled by default (#3257)
+- Fix context propagation leak in Akka HTTP instrumentation (#3264)
+- Only include exporters in the `-all` jar (#3286)
+- Fix ForkJoinPool sometimes not instrumented (#3293)
+
+### 🧰 Tooling
+
+- Migrate MuzzlePlugin to Java (#2996, #3017)
+- Refactor TypeInstrumentation#transformers() method (#3019)
+- Change a couple of Longs to Integers in Instrumenter API (#3043)
+- Add peer.service to Instrumenter API (#3050)
+- Add response type parameter to db attributes extractor (#3093)
+- Add optimized Attributes implementation for Instrumenter (#3136)
+- Rename ComponentInstaller to AgentListener and add #order() method (#3182)
+- Update ByteBuddy (#3254)
+- Introduce IgnoredTypesConfigurer SPI to enable defining per-module ignores (#3219)
+- Extract agent shadow configuration to conventions script (#3256)
+- Deprecate SpanExporterFactory in favor of ConfigurableSpanExporterProvider (#3299)
+- Refactor span names class (#3281)
+- Move http client/server testing dependencies to internal package (#3305)
+
+## Version 1.2.0 - 2021-05-14
 
 ### 🌟 New javaagent instrumentation
 
