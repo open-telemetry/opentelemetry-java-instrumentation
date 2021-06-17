@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.amqp;
+package io.opentelemetry.javaagent.instrumentation.spring.rabbit;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import org.checkerframework.checker.nullness.qual.Nullable;

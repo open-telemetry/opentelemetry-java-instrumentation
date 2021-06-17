@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.amqp;
+package io.opentelemetry.javaagent.instrumentation.spring.rabbit;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.amqp.SpringAmqpSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.SpringRabbitSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.amqp.core.Message;
 
-public class AbstractMessageListenerInstrumentation implements TypeInstrumentation {
+public class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer");

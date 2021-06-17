@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.amqp;
+package io.opentelemetry.javaagent.instrumentation.spring.rabbit;
 
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.amqp.core.Message;
 
-final class SpringAmqpMessageAttributesExtractor
+final class SpringRabbitMessageAttributesExtractor
     extends MessagingAttributesExtractor<Message, Void> {
   @Override
   protected String system(Message message) {
