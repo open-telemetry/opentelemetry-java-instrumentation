@@ -18,9 +18,9 @@ val otelJava = extensions.create<OtelJavaExtension>("otelJava")
 
 afterEvaluate {
   if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
-    base.archivesBaseName = "opentelemetry-javaagent-${base.archivesBaseName}"
+    base.archivesName.set("opentelemetry-javaagent-${base.archivesName.get()}")
   } else {
-    base.archivesBaseName = "opentelemetry-${base.archivesBaseName}"
+    base.archivesName.set("opentelemetry-${base.archivesName.get()}")
   }
 }
 

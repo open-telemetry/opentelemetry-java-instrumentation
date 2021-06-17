@@ -11,9 +11,7 @@ dependencies {
 tasks {
   named<GroovyCompile>("compileTestGroovy") {
     sourceSets.test {
-      withConvention(ScalaSourceSet::class) {
-        classpath = classpath.plus(files(scala.classesDirectory))
-      }
+      classpath = classpath.plus(files(scala.classesDirectory))
     }
   }
 }

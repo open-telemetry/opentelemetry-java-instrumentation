@@ -11,11 +11,12 @@ muzzle {
 
 sourceSets {
   testapp {
-    java
+    java {
+      destinationDirectory.set(file("${buildDir}/testapp/classes"))
+    }
     resources {
       srcDirs("src/webapp")
     }
-    java.outputDir = file("$buildDir/testapp/classes")
     compileClasspath += sourceSets.main.compileClasspath
   }
 }
@@ -60,7 +61,7 @@ task compileGwt(dependsOn: classes, type: JavaExec) {
   outputs.dir extraDir
   outputs.dir warDir
 
-  main = 'com.google.gwt.dev.Compiler'
+  mainClass.set("com.google.gwt.dev.Compiler")
 
   classpath {
     [

@@ -3,7 +3,7 @@ plugins {
 }
 
 jacoco {
-  toolVersion = "0.8.6"
+  toolVersion = "0.8.7"
 }
 
 tasks {
@@ -11,9 +11,9 @@ tasks {
     dependsOn("test")
 
     reports {
-      xml.isEnabled = true
-      csv.isEnabled = false
-      html.destination = file("${buildDir}/reports/jacoco/")
+      xml.required.set(true)
+      csv.required.set(false)
+      html.outputLocation.set(file("${buildDir}/reports/jacoco/"))
     }
   }
 }
