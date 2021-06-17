@@ -10,6 +10,9 @@ publishing {
     register<MavenPublication>("maven") {
       if (tasks.names.contains("shadowJar") && findProperty("noShadowPublish") != true) {
         the<ShadowExtension>().component(this)
+        // These two are here just to satisfy Maven Central
+        artifact(tasks["sourcesJar"])
+        artifact(tasks["javadocJar"])
       } else {
         plugins.withId("java-platform") {
           from(components["javaPlatform"])
