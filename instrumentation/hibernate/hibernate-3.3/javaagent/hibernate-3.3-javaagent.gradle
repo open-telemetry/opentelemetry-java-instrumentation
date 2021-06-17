@@ -5,7 +5,7 @@
  * instrumentation isn't able to reference it.
  */
 
-apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: "otel.javaagent-instrumentation"
 
 muzzle {
   pass {

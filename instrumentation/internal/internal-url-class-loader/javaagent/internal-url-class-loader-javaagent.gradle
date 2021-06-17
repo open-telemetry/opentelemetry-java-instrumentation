@@ -1,1 +1,1 @@
-apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: "otel.javaagent-instrumentation"

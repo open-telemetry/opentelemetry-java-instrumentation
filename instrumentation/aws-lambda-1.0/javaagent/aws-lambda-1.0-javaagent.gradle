@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: "otel.javaagent-instrumentation"
 
 muzzle {
   pass {

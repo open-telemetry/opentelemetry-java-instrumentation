@@ -2,7 +2,7 @@ plugins {
   id 'org.jetbrains.kotlin.jvm'
 }
 
-apply from: "$rootDir/gradle/instrumentation.gradle"
+apply plugin: "otel.javaagent-instrumentation"
 
 muzzle {
   pass {
