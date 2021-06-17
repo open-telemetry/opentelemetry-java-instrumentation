@@ -1,4 +1,4 @@
-apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "otel.java-conventions"
 def jettyVers = [:]
 //Jetty client 9.2 is the best starting point, HttpClient.send() is stable there
 jettyVers.useInTests9 = '9.2.0.v20140526'
