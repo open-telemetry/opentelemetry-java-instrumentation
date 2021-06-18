@@ -1,4 +1,6 @@
-apply from: "$rootDir/gradle/instrumentation.gradle"
+plugins {
+  id("otel.javaagent-instrumentation")
+}
 
 muzzle {
   pass {
