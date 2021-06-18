@@ -43,13 +43,12 @@ public class TracingDataSource implements DataSource, AutoCloseable {
   private final boolean withActiveSpanOnly;
   private final Set<String> ignoreStatements;
 
-  public TracingDataSource(final Tracer tracer,
-      final DataSource underlying) {
-    this(tracer, underlying, null, DEFAULT_WITH_ACTIVE_SPAN_ONLY,
-        DEFAULT_IGNORED_STATEMENTS);
+  public TracingDataSource(final Tracer tracer, final DataSource underlying) {
+    this(tracer, underlying, null, DEFAULT_WITH_ACTIVE_SPAN_ONLY, DEFAULT_IGNORED_STATEMENTS);
   }
 
-  public TracingDataSource(final Tracer tracer,
+  public TracingDataSource(
+      final Tracer tracer,
       final DataSource underlying,
       final ConnectionInfo connectionInfo,
       final boolean withActiveSpanOnly,
@@ -81,25 +80,39 @@ public class TracingDataSource implements DataSource, AutoCloseable {
 
   @Override
   public Connection getConnection() throws SQLException {
-    final Connection connection = JdbcTracingUtils
-        .call("AcquireConnection", underlying::getConnection,
-            null, connectionInfo, withActiveSpanOnly, null, tracer);
+    final Connection connection =
+        JdbcTracingUtils.call(
+            "AcquireConnection",
+            underlying::getConnection,
+            null,
+            connectionInfo,
+            withActiveSpanOnly,
+            null,
+            tracer);
 
-    return WrapperProxy
-        .wrap(connection, new TracingConnection(connection, connectionInfo, withActiveSpanOnly,
-            ignoreStatements, tracer));
+    return WrapperProxy.wrap(
+        connection,
+        new TracingConnection(
+            connection, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer));
   }
 
   @Override
   public Connection getConnection(final String username, final String password)
       throws SQLException {
-    final Connection connection = JdbcTracingUtils.call("AcquireConnection", () ->
-            underlying.getConnection(username, password), null, connectionInfo,
-        withActiveSpanOnly, null, tracer);
+    final Connection connection =
+        JdbcTracingUtils.call(
+            "AcquireConnection",
+            () -> underlying.getConnection(username, password),
+            null,
+            connectionInfo,
+            withActiveSpanOnly,
+            null,
+            tracer);
 
-    return WrapperProxy
-        .wrap(connection, new TracingConnection(connection, connectionInfo, withActiveSpanOnly,
-            ignoreStatements, tracer));
+    return WrapperProxy.wrap(
+        connection,
+        new TracingConnection(
+            connection, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer));
   }
 
   @Override
@@ -143,5 +156,4 @@ public class TracingDataSource implements DataSource, AutoCloseable {
       ((AutoCloseable) underlying).close();
     }
   }
-
 }

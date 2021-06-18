@@ -25,5 +25,4 @@ public class MariadbURLParser extends MysqlURLParser {
   protected String dbType() {
     return "mariadb";
   }
-
 }

@@ -80,8 +80,10 @@ public class SqlServerURLParser implements ConnectionURLParser {
       return null;
     }
 
-    return new ConnectionInfo.Builder(serverName, port).dbType(dbType())
-        .dbInstance(dbInstance).build();
+    return new ConnectionInfo.Builder(serverName, port)
+        .dbType(dbType())
+        .dbInstance(dbInstance)
+        .build();
   }
 
   private Map<String, String> parseQueryParams(String query, String separator) {
@@ -94,11 +96,14 @@ public class SqlServerURLParser implements ConnectionURLParser {
       try {
         int idx = pair.indexOf("=");
         String key =
-            idx > 0 ? URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8.name())
+            idx > 0
+                ? URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8.name())
                 : pair;
         if (!queryParams.containsKey(key)) {
-          String value = idx > 0 && pair.length() > idx + 1 ? URLDecoder
-              .decode(pair.substring(idx + 1), StandardCharsets.UTF_8.name()) : null;
+          String value =
+              idx > 0 && pair.length() > idx + 1
+                  ? URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8.name())
+                  : null;
           queryParams.put(key, value);
         }
       } catch (UnsupportedEncodingException e) {
@@ -107,5 +112,4 @@ public class SqlServerURLParser implements ConnectionURLParser {
     }
     return queryParams;
   }
-
 }

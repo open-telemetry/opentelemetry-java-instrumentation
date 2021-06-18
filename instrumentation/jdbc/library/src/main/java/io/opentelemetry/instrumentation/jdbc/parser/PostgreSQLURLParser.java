@@ -64,14 +64,18 @@ public class PostgreSQLURLParser extends AbstractURLParser {
       if (',' == sb.charAt(sb.length() - 1)) {
         sb.deleteCharAt(sb.length() - 1);
       }
-      return new ConnectionInfo.Builder(sb.toString()).dbType(DB_TYPE)
-          .dbInstance(fetchDatabaseNameFromURL(url)).build();
+      return new ConnectionInfo.Builder(sb.toString())
+          .dbType(DB_TYPE)
+          .dbInstance(fetchDatabaseNameFromURL(url))
+          .build();
     } else {
       URI uri = parseHost(hostSegment[0]);
       int port = uri.getPort() == -1 ? DEFAULT_PORT : uri.getPort();
 
       return new ConnectionInfo.Builder(uri.getHost(), port)
-          .dbType(DB_TYPE).dbInstance(fetchDatabaseNameFromURL(url)).build();
+          .dbType(DB_TYPE)
+          .dbInstance(fetchDatabaseNameFromURL(url))
+          .build();
     }
   }
 
@@ -82,5 +86,4 @@ public class PostgreSQLURLParser extends AbstractURLParser {
       throw new IllegalArgumentException(e);
     }
   }
-
 }

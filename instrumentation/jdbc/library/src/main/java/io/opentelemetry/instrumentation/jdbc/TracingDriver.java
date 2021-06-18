@@ -48,7 +48,8 @@ public class TracingDriver implements Driver {
 
   protected static final String WITH_ACTIVE_SPAN_ONLY = TRACE_WITH_ACTIVE_SPAN_ONLY + "=true";
 
-  public static final String IGNORE_FOR_TRACING_REGEX = "ignoreForTracing=\"((?:\\\\\"|[^\"])*)\"[;]*";
+  public static final String IGNORE_FOR_TRACING_REGEX =
+      "ignoreForTracing=\"((?:\\\\\"|[^\"])*)\"[;]*";
 
   protected static final Pattern PATTERN_FOR_IGNORING = Pattern.compile(IGNORE_FOR_TRACING_REGEX);
 
@@ -60,9 +61,7 @@ public class TracingDriver implements Driver {
     }
   }
 
-  /**
-   * @return The singleton instance of the {@code TracingDriver}.
-   */
+  /** @return The singleton instance of the {@code TracingDriver}. */
   public static Driver load() {
     return INSTANCE;
   }
@@ -72,7 +71,7 @@ public class TracingDriver implements Driver {
    * "interceptor mode" works. WARNING: Driver like Oracle JDBC may fail since it's destroyed
    * forever after deregistration.
    */
-  public synchronized static void ensureRegisteredAsTheFirstDriver() {
+  public static synchronized void ensureRegisteredAsTheFirstDriver() {
     try {
       Enumeration<Driver> enumeration = DriverManager.getDrivers();
       List<Driver> drivers = null;
@@ -172,21 +171,26 @@ public class TracingDriver implements Driver {
     final Tracer currentTracer = getTracer();
     final ConnectionInfo connectionInfo = URLParser.parse(url);
     final String realUrl = url;
-    final Connection connection = JdbcTracingUtils.call("AcquireConnection", () ->
-            wrappedDriver.connect(realUrl, info), null, connectionInfo, withActiveSpanOnly,
-        null, currentTracer);
+    final Connection connection =
+        JdbcTracingUtils.call(
+            "AcquireConnection",
+            () -> wrappedDriver.connect(realUrl, info),
+            null,
+            connectionInfo,
+            withActiveSpanOnly,
+            null,
+            currentTracer);
 
-    return WrapperProxy
-        .wrap(connection, new TracingConnection(connection, connectionInfo, withActiveSpanOnly,
-            ignoreStatements, currentTracer));
+    return WrapperProxy.wrap(
+        connection,
+        new TracingConnection(
+            connection, connectionInfo, withActiveSpanOnly, ignoreStatements, currentTracer));
   }
 
   @Override
   public boolean acceptsURL(String url) throws SQLException {
-    return url != null && (
-        url.startsWith(getUrlPrefix()) ||
-            (interceptorMode && url.startsWith("jdbc:"))
-    );
+    return url != null
+        && (url.startsWith(getUrlPrefix()) || (interceptorMode && url.startsWith("jdbc:")));
   }
 
   @Override
@@ -245,7 +249,8 @@ public class TracingDriver implements Driver {
 
   protected String extractRealUrl(String url) {
     String extracted = url.startsWith(getUrlPrefix()) ? url.replace(getUrlPrefix(), "jdbc:") : url;
-    return extracted.replaceAll(TRACE_WITH_ACTIVE_SPAN_ONLY + "=(true|false)[;]*", "")
+    return extracted
+        .replaceAll(TRACE_WITH_ACTIVE_SPAN_ONLY + "=(true|false)[;]*", "")
         .replaceAll(IGNORE_FOR_TRACING_REGEX, "")
         .replaceAll("\\?$", "");
   }
@@ -271,5 +276,4 @@ public class TracingDriver implements Driver {
     }
     return tracer;
   }
-
 }

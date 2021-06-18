@@ -41,13 +41,17 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.Set;
 
-public class TracingCallableStatement extends TracingPreparedStatement implements
-    CallableStatement {
+public class TracingCallableStatement extends TracingPreparedStatement
+    implements CallableStatement {
 
   private final CallableStatement statement;
 
-  public TracingCallableStatement(CallableStatement statement, String query,
-      ConnectionInfo connectionInfo, boolean withActiveSpanOnly, Set<String> ignoreStatements,
+  public TracingCallableStatement(
+      CallableStatement statement,
+      String query,
+      ConnectionInfo connectionInfo,
+      boolean withActiveSpanOnly,
+      Set<String> ignoreStatements,
       Tracer tracer) {
     super(statement, query, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
     this.statement = statement;
@@ -627,5 +631,4 @@ public class TracingCallableStatement extends TracingPreparedStatement implement
   public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
     return statement.getObject(parameterName, type);
   }
-
 }

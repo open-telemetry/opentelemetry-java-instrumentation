@@ -25,5 +25,4 @@ import io.opentelemetry.instrumentation.jdbc.ConnectionInfo;
 public interface ConnectionURLParser {
 
   ConnectionInfo parse(final String url);
-
 }

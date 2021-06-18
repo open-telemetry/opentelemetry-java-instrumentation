@@ -22,8 +22,8 @@ package io.opentelemetry.instrumentation.jdbc;
 
 public class ConnectionInfo {
 
-  public static ConnectionInfo UNKNOWN_CONNECTION_INFO = new Builder("unknown_peer")
-      .dbType("unknown_type").dbInstance("unknown_instance").build();
+  public static final ConnectionInfo UNKNOWN_CONNECTION_INFO =
+      new Builder("unknown_peer").dbType("unknown_type").dbInstance("unknown_instance").build();
 
   private final String dbType;
   private final String dbUser;
@@ -31,8 +31,8 @@ public class ConnectionInfo {
   private final String dbPeer;
   private final String dbPeerService;
 
-  private ConnectionInfo(String dbType, String dbUser, String dbInstance, String dbHost,
-      Integer dbPort) {
+  private ConnectionInfo(
+      String dbType, String dbUser, String dbInstance, String dbHost, Integer dbPort) {
     this.dbType = dbType;
     this.dbUser = dbUser;
     this.dbInstance = dbInstance;
@@ -54,9 +54,7 @@ public class ConnectionInfo {
     this.dbPeerService = makePeerService();
   }
 
-  /**
-   * Make a unique serviceName that could be used in dependency diagram.
-   */
+  /** Make a unique serviceName that could be used in dependency diagram. */
   private String makePeerService() {
     if (null != dbInstance && !dbInstance.isEmpty()) {
       return dbInstance + "[" + dbType + "(" + dbPeer + ")]";
@@ -122,10 +120,8 @@ public class ConnectionInfo {
       if (this.dbPeer != null && !dbPeer.isEmpty()) {
         return new ConnectionInfo(this.dbType, this.dbUser, this.dbInstance, this.dbPeer);
       }
-      return new ConnectionInfo(this.dbType, this.dbUser, this.dbInstance, this.dbHost,
-          this.dbPort);
+      return new ConnectionInfo(
+          this.dbType, this.dbUser, this.dbInstance, this.dbHost, this.dbPort);
     }
-
   }
-
 }

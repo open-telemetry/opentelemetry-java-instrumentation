@@ -97,20 +97,24 @@ public class MysqlURLParser extends AbstractURLParser {
       if (',' == sb.charAt(sb.length() - 1)) {
         sb.deleteCharAt(sb.length() - 1);
       }
-      return new ConnectionInfo.Builder(sb.toString()).dbType(dbType())
-          .dbInstance(fetchDatabaseNameFromURL(url)).build();
+      return new ConnectionInfo.Builder(sb.toString())
+          .dbType(dbType())
+          .dbInstance(fetchDatabaseNameFromURL(url))
+          .build();
     } else {
       String[] hostAndPort = hostSegment[0].split(":");
       if (hostAndPort.length != 1) {
         return new ConnectionInfo.Builder(hostAndPort[0], Integer.valueOf(hostAndPort[1]))
-            .dbType(dbType()).dbInstance(fetchDatabaseNameFromURL(url, location.endIndex()))
+            .dbType(dbType())
+            .dbInstance(fetchDatabaseNameFromURL(url, location.endIndex()))
             .build();
       } else {
 
-        return new ConnectionInfo.Builder(hostAndPort[0], DEFAULT_PORT).dbType(dbType())
-            .dbInstance(fetchDatabaseNameFromURL(url, location.endIndex())).build();
+        return new ConnectionInfo.Builder(hostAndPort[0], DEFAULT_PORT)
+            .dbType(dbType())
+            .dbInstance(fetchDatabaseNameFromURL(url, location.endIndex()))
+            .build();
       }
     }
   }
-
 }

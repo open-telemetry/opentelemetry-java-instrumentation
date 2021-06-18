@@ -37,5 +37,4 @@ public class URLLocation {
   public int endIndex() {
     return endIndex;
   }
-
 }

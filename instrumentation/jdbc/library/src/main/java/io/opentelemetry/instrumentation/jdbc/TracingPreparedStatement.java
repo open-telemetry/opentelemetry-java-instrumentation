@@ -48,8 +48,12 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
   private final PreparedStatement preparedStatement;
   private final String query;
 
-  public TracingPreparedStatement(PreparedStatement preparedStatement, String query,
-      ConnectionInfo connectionInfo, boolean withActiveSpanOnly, Set<String> ignoreStatements,
+  public TracingPreparedStatement(
+      PreparedStatement preparedStatement,
+      String query,
+      ConnectionInfo connectionInfo,
+      boolean withActiveSpanOnly,
+      Set<String> ignoreStatements,
       Tracer tracer) {
     super(preparedStatement, query, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
     this.preparedStatement = preparedStatement;
@@ -58,20 +62,38 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return JdbcTracingUtils.call("Query", preparedStatement::executeQuery,
-        query, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
+    return JdbcTracingUtils.call(
+        "Query",
+        preparedStatement::executeQuery,
+        query,
+        connectionInfo,
+        withActiveSpanOnly,
+        ignoreStatements,
+        tracer);
   }
 
   @Override
   public int executeUpdate() throws SQLException {
-    return JdbcTracingUtils.call("Update", preparedStatement::executeUpdate,
-        query, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
+    return JdbcTracingUtils.call(
+        "Update",
+        preparedStatement::executeUpdate,
+        query,
+        connectionInfo,
+        withActiveSpanOnly,
+        ignoreStatements,
+        tracer);
   }
 
   @Override
   public boolean execute() throws SQLException {
-    return JdbcTracingUtils.call("Execute", preparedStatement::execute,
-        query, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
+    return JdbcTracingUtils.call(
+        "Execute",
+        preparedStatement::execute,
+        query,
+        connectionInfo,
+        withActiveSpanOnly,
+        ignoreStatements,
+        tracer);
   }
 
   @Override
@@ -335,9 +357,9 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.setBlob(parameterIndex, inputStream);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNClob(int parameterIndex, Reader reader) throws SQLException {
     preparedStatement.setNClob(parameterIndex, reader);
   }
-
 }

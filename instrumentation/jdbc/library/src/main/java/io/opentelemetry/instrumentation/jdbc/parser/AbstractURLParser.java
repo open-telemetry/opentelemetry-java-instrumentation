@@ -64,5 +64,4 @@ public abstract class AbstractURLParser implements ConnectionURLParser {
   protected String fetchDatabaseNameFromURL(String url, int[] indexRange) {
     return url.substring(indexRange[0], indexRange[1]);
   }
-
 }

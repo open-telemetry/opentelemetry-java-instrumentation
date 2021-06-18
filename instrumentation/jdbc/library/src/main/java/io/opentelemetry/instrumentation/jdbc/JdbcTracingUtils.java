@@ -39,7 +39,8 @@ class JdbcTracingUtils {
   // TODO is it requires for OTEL?
   static final AttributeKey<Long> SAMPLING_PRIORITY = AttributeKey.longKey("sampling.priority");
 
-  static Span buildSpan(String operationName,
+  static Span buildSpan(
+      String operationName,
       String sql,
       ConnectionInfo connectionInfo,
       boolean withActiveSpanOnly,
@@ -54,8 +55,7 @@ class JdbcTracingUtils {
       return Span.getInvalid();
     }
 
-    SpanBuilder spanBuilder = tracer.spanBuilder(operationName)
-        .setSpanKind(SpanKind.CLIENT);
+    SpanBuilder spanBuilder = tracer.spanBuilder(operationName).setSpanKind(SpanKind.CLIENT);
 
     Span span = spanBuilder.startSpan();
     decorate(span, sql, connectionInfo);
@@ -63,23 +63,28 @@ class JdbcTracingUtils {
     return span;
   }
 
-  static <E extends Exception> void execute(String operationName,
+  static <E extends Exception> void execute(
+      String operationName,
       CheckedRunnable<E> runnable,
       String sql,
       ConnectionInfo connectionInfo,
       boolean withActiveSpanOnly,
       Set<String> ignoreStatements,
-      Tracer tracer) throws E {
+      Tracer tracer)
+      throws E {
     if (!JdbcTracing.isTraceEnabled()
         || (withActiveSpanOnly && Span.fromContextOrNull(Context.current()) == null)) {
       runnable.run();
       return;
     }
 
-    final Span span = buildSpan(operationName, sql, connectionInfo, withActiveSpanOnly,
-        ignoreStatements, tracer);
-    long startTime = (JdbcTracing.getSlowQueryThresholdMs() > 0
-        || JdbcTracing.getExcludeFastQueryThresholdMs() > 0) ? System.nanoTime() : 0;
+    final Span span =
+        buildSpan(operationName, sql, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
+    long startTime =
+        (JdbcTracing.getSlowQueryThresholdMs() > 0
+                || JdbcTracing.getExcludeFastQueryThresholdMs() > 0)
+            ? System.nanoTime()
+            : 0;
     try (Scope ignored = span.makeCurrent()) {
       runnable.run();
     } catch (Exception e) {
@@ -91,20 +96,22 @@ class JdbcTracingUtils {
     }
   }
 
-  static <T, E extends Exception> T call(String operationName,
+  static <T, E extends Exception> T call(
+      String operationName,
       CheckedCallable<T, E> callable,
       String sql,
       ConnectionInfo connectionInfo,
       boolean withActiveSpanOnly,
       Set<String> ignoreStatements,
-      Tracer tracer) throws E {
+      Tracer tracer)
+      throws E {
     if (!JdbcTracing.isTraceEnabled()
         || (withActiveSpanOnly && Span.fromContextOrNull(Context.current()) == null)) {
       return callable.call();
     }
 
-    final Span span = buildSpan(operationName, sql, connectionInfo, withActiveSpanOnly,
-        ignoreStatements, tracer);
+    final Span span =
+        buildSpan(operationName, sql, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
     long startTime = JdbcTracing.getSlowQueryThresholdMs() > 0 ? System.nanoTime() : 0;
     try (Scope ignored = span.makeCurrent()) {
       return callable.call();
@@ -121,9 +128,7 @@ class JdbcTracingUtils {
     return s != null && !"".contentEquals(s);
   }
 
-  /**
-   * Add tags to span. Skip empty tags to avoid reported NPE in tracers.
-   */
+  /** Add tags to span. Skip empty tags to avoid reported NPE in tracers. */
   private static void decorate(Span span, String sql, ConnectionInfo connectionInfo) {
     if (isNotEmpty(sql)) {
       span.setAttribute(SemanticAttributes.DB_STATEMENT, sql);
@@ -155,12 +160,13 @@ class JdbcTracingUtils {
 
   private static void queryThresholdChecks(Span span, long startTime) {
     long completionTime = System.nanoTime() - startTime;
-    if (JdbcTracing.getExcludeFastQueryThresholdMs() > 0 && completionTime < TimeUnit.MILLISECONDS
-        .toNanos(JdbcTracing.getExcludeFastQueryThresholdMs())) {
+    if (JdbcTracing.getExcludeFastQueryThresholdMs() > 0
+        && completionTime
+            < TimeUnit.MILLISECONDS.toNanos(JdbcTracing.getExcludeFastQueryThresholdMs())) {
       span.setAttribute(SAMPLING_PRIORITY, 0);
     }
-    if (JdbcTracing.getSlowQueryThresholdMs() > 0 && completionTime > TimeUnit.MILLISECONDS
-        .toNanos(JdbcTracing.getSlowQueryThresholdMs())) {
+    if (JdbcTracing.getSlowQueryThresholdMs() > 0
+        && completionTime > TimeUnit.MILLISECONDS.toNanos(JdbcTracing.getSlowQueryThresholdMs())) {
       span.setAttribute(SLOW, true);
     }
   }
@@ -169,14 +175,11 @@ class JdbcTracingUtils {
   interface CheckedRunnable<E extends Throwable> {
 
     void run() throws E;
-
   }
 
   @FunctionalInterface
   interface CheckedCallable<T, E extends Throwable> {
 
     T call() throws E;
-
   }
-
 }

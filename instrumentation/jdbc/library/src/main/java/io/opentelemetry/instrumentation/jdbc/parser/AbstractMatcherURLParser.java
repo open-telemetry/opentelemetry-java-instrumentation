@@ -45,7 +45,7 @@ public abstract class AbstractMatcherURLParser implements ConnectionURLParser {
    * Useful to modify ConnectionInfo before build
    *
    * @param matcher The matcher to apply. Note that the matcher must have a group named host, and
-   *                optionally, a group named port and  another named instance
+   *     optionally, a group named port and another named instance
    * @return
    */
   protected ConnectionInfo.Builder initBuilder(Matcher matcher) {
@@ -71,9 +71,7 @@ public abstract class AbstractMatcherURLParser implements ConnectionURLParser {
     } catch (IllegalArgumentException e) {
       // The pattern has no instance group
     }
-    return builder
-        .dbType(this.dbType)
-        .dbInstance(instance);
+    return builder.dbType(this.dbType).dbInstance(instance);
   }
 
   @Override
@@ -85,5 +83,4 @@ public abstract class AbstractMatcherURLParser implements ConnectionURLParser {
       return ConnectionInfo.UNKNOWN_CONNECTION_INFO;
     }
   }
-
 }
