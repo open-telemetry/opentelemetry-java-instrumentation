@@ -1,7 +1,6 @@
-ext {
-  skipPublish = true
+plugins {
+  id("otel.javaagent-testing")
 }
-apply plugin: "otel.javaagent-instrumentation"
 
 // add repo for org.gradle:gradle-tooling-api which org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain
 // which is used by jaxrs-2.0-arquillian-testing depends on

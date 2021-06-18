@@ -1,7 +1,6 @@
-ext {
-  skipPublish = true
+plugins {
+  id("otel.javaagent-testing")
 }
-apply plugin: "otel.javaagent-instrumentation"
 
 dependencies {
   testLibrary "org.jboss.weld:weld-core:2.3.0.Final"
