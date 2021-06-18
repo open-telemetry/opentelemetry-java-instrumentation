@@ -79,7 +79,14 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.amqp.")
-        .allowClass("org.springframework.amqp.rabbit.connection.");
+        .allowClass("org.springframework.amqp.rabbit.connection.")
+        .allowClass("org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer")
+        // these implement Runnable, so tests currently force these allows
+        // though not sure if it's important or not that they get instrumented
+        .allowClass(
+            "org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$AsyncMessageProcessingConsumer")
+        .allowClass(
+            "org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry$AggregatingCallback");
 
     builder
         .ignoreClass("org.springframework.beans.")
