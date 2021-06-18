@@ -46,6 +46,11 @@ public final class AgentTestRunner implements InstrumentationTestRunner {
     assert TestAgentListenerAccess.getInstrumentationErrorCount() == 0
         : TestAgentListenerAccess.getInstrumentationErrorCount()
             + " Instrumentation errors during test";
+    // additional library ignores are ignored during tests, because they can make it really
+    // confusing for contributors wondering why their instrumentation is not applied
+    //
+    // but we then need to make sure that the additional library ignores won't then silently prevent
+    // the instrumentation from being applied in real life outside of these tests
     assert TestAgentListenerAccess.getIgnoredButTransformedClassNames().isEmpty()
         : "Transformed classes match global libraries ignore matcher: "
             + TestAgentListenerAccess.getIgnoredButTransformedClassNames();
