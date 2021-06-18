@@ -1,20 +1,19 @@
 package com.example.javaagent.instrumentation;
 
-import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
-
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.safeHasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
-import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.*;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 
 public class DemoServlet3Instrumentation implements TypeInstrumentation {
   @Override
@@ -23,9 +22,8 @@ public class DemoServlet3Instrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(
-        namedOneOf("doFilter", "service")
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(namedOneOf("doFilter", "service")
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
