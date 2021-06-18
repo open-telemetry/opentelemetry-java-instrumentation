@@ -39,6 +39,11 @@ jobs:
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false
 
+  # testLatestDeps is intentionally not included in the release workflow
+  # because any time a new library version is released to maven central
+  # it can fail due to test code incompatibility with the new library version,
+  # or due to slight changes in emitted telemetry
+
   smoke-test:
     runs-on: ${{ matrix.os }}
     strategy:
