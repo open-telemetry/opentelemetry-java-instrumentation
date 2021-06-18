@@ -29,10 +29,13 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
   @Override
   public void configure(Config config, IgnoredTypesBuilder builder) {
-    if (!config.getBooleanProperty(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
-      return;
+    if (config.getBooleanProperty(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
+      configure(builder);
     }
+  }
 
+  // only used by tests (to bypass the ignores check)
+  public void configure(IgnoredTypesBuilder builder) {
     builder
         .ignoreClass("com.beust.jcommander.")
         .ignoreClass("com.fasterxml.classmate.")
@@ -146,8 +149,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.jms.")
-        .ignoreClass("org.springframework.jms.listener.")
-        .ignoreClass(
+        .allowClass("org.springframework.jms.listener.")
+        .allowClass(
             "org.springframework.jms.config.JmsListenerEndpointRegistry$AggregatingCallback");
 
     builder
