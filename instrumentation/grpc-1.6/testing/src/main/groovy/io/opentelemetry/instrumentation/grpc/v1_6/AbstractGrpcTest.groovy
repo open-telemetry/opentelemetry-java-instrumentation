@@ -121,7 +121,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            // "localhost" on linux, "127.0.0.1" on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.Code.OK.value()
@@ -155,7 +156,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     // Depending on the version of gRPC usePlainText may or may not take an argument.
     try {
       channelBuilder.usePlaintext()
-    } catch (MissingMethodException e) {
+    } catch (MissingMethodException ignored) {
       channelBuilder.usePlaintext(true)
     }
     ManagedChannel channel = channelBuilder.build()
@@ -204,7 +205,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            // "localhost" on linux, "127.0.0.1" on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_TRANSPORT}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.RPC_GRPC_STATUS_CODE}" grpcStatus.code.value()
@@ -244,7 +246,7 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
     // Depending on the version of gRPC usePlainText may or may not take an argument.
     try {
       channelBuilder.usePlaintext()
-    } catch (MissingMethodException e) {
+    } catch (MissingMethodException ignored) {
       channelBuilder.usePlaintext(true)
     }
     ManagedChannel channel = channelBuilder.build()
@@ -294,7 +296,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            // "localhost" on linux, "127.0.0.1" on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
           }
@@ -455,7 +458,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            // "localhost" on linux, "127.0.0.1" on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
@@ -566,7 +570,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "example.Greeter"
             "${SemanticAttributes.RPC_METHOD.key}" "SayHello"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            // "localhost" on linux, "127.0.0.1" on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
           }
@@ -665,7 +670,8 @@ abstract class AbstractGrpcTest extends InstrumentationSpecification {
             "${SemanticAttributes.RPC_SERVICE.key}" "grpc.reflection.v1alpha.ServerReflection"
             "${SemanticAttributes.RPC_METHOD.key}" "ServerReflectionInfo"
             "${SemanticAttributes.NET_PEER_IP.key}" "127.0.0.1"
-            "${SemanticAttributes.NET_PEER_NAME.key}" "localhost"
+            // "localhost" on linux, "127.0.0.1" on windows
+            "${SemanticAttributes.NET_PEER_NAME.key}" { it == "localhost" || it == "127.0.0.1" }
             "${SemanticAttributes.NET_PEER_PORT.key}" Long
             "${SemanticAttributes.NET_TRANSPORT.key}" SemanticAttributes.NetTransportValues.IP_TCP
             "${SemanticAttributes.RPC_GRPC_STATUS_CODE.key}" Status.OK.code.value()
