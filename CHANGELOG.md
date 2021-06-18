@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.3.0 - 2021-06-17
 
 ### 🌟 New javaagent instrumentation
 
@@ -21,7 +21,7 @@
 - New experimental support for agent extensions (#2881, #3071, #3226, #3237)
 - Propagate context to akka http callbacks (#3263)
 
-### Behavioral changes
+### 🌶️ Behavioral changes
 
 - Update agent logger prefix (#3007)
 - Remove khttp instrumentation (#3087)
@@ -84,7 +84,7 @@
 - Context propagated to reactor-netty callbacks
   ([#2850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2850))
 
-### Behavioral changes
+### 🌶️ Behavioral changes
 
 - AWS lambda flush timeout raised to 10 seconds
   ([#2855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2855))
