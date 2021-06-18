@@ -61,7 +61,9 @@ public class TracingDriver implements Driver {
     }
   }
 
-  /** @return The singleton instance of the {@code TracingDriver}. */
+  /**
+   * Returns the singleton instance of the {@code TracingDriver}.
+   */
   public static Driver load() {
     return INSTANCE;
   }
@@ -127,6 +129,7 @@ public class TracingDriver implements Driver {
    *
    * @param withActiveSpanOnly The {@code withActiveSpanOnly} value.
    */
+  @SuppressWarnings("UngroupedOverloads")
   public static void setInterceptorProperty(final boolean withActiveSpanOnly) {
     TracingDriver.withActiveSpanOnly = withActiveSpanOnly;
   }
@@ -138,6 +141,7 @@ public class TracingDriver implements Driver {
    *
    * @param ignoreStatements The {@code ignoreStatements} value.
    */
+  @SuppressWarnings("UngroupedOverloads")
   public static void setInterceptorProperty(final Set<String> ignoreStatements) {
     TracingDriver.ignoreStatements = ignoreStatements;
   }

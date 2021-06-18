@@ -79,7 +79,7 @@ public class PostgreSQLURLParser extends AbstractURLParser {
     }
   }
 
-  private URI parseHost(String host) {
+  private static URI parseHost(String host) {
     try {
       return new URI("proto://" + host);
     } catch (URISyntaxException e) {

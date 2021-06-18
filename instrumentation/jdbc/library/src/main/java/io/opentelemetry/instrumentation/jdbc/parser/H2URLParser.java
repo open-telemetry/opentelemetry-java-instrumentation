@@ -26,13 +26,21 @@ public class H2URLParser extends AbstractURLParser {
 
   private static final String LOCALHOST = "localhost";
   private static final int DEFAULT_PORT = 8084;
-  /** Flag that H2 running with memory mode. */
+  /**
+   * Flag that H2 running with memory mode.
+   */
   private static final String MEMORY_MODE_FLAG = "mem";
-  /** Flag that H2 running with tcp mode. */
+  /**
+   * Flag that H2 running with tcp mode.
+   */
   private static final String TCP_MODE_FLAG = "h2:tcp";
-  /** Flag that H2 running with file mode. */
+  /**
+   * Flag that H2 running with file mode.
+   */
   private static final String FILE_MODE_FLAG = "file";
-  /** Flag that H2 running with implicit file mode. */
+  /**
+   * Flag that H2 running with implicit file mode.
+   */
   private static final String IMPLICIT_FILE_MODE_FLAG = "jdbc:h2";
 
   private static final String H2_DB_TYPE = "h2";
@@ -100,7 +108,7 @@ public class H2URLParser extends AbstractURLParser {
    *
    * @return range index that the database name.
    */
-  private int[] fetchDatabaseNameRangeIndexFromURLForH2FileMode(String url) {
+  private static int[] fetchDatabaseNameRangeIndexFromURLForH2FileMode(String url) {
     int fileLabelIndex = url.indexOf(FILE_MODE_FLAG);
     int parameterLabelIndex = url.indexOf(";", fileLabelIndex);
     if (parameterLabelIndex == -1) {
@@ -108,7 +116,7 @@ public class H2URLParser extends AbstractURLParser {
     }
 
     if (fileLabelIndex != -1) {
-      return new int[] {fileLabelIndex + FILE_MODE_FLAG.length() + 1, parameterLabelIndex};
+      return new int[]{fileLabelIndex + FILE_MODE_FLAG.length() + 1, parameterLabelIndex};
     } else {
       return null;
     }
@@ -120,7 +128,7 @@ public class H2URLParser extends AbstractURLParser {
    *
    * @return range index that the database name.
    */
-  private int[] fetchDatabaseNameRangeIndexFromURLForH2ImplicitFileMode(String url) {
+  private static int[] fetchDatabaseNameRangeIndexFromURLForH2ImplicitFileMode(String url) {
     if (url.contains(TCP_MODE_FLAG)) {
       return null;
     }
@@ -131,7 +139,7 @@ public class H2URLParser extends AbstractURLParser {
     }
 
     if (fileLabelIndex != -1) {
-      return new int[] {fileLabelIndex + IMPLICIT_FILE_MODE_FLAG.length() + 1, parameterLabelIndex};
+      return new int[]{fileLabelIndex + IMPLICIT_FILE_MODE_FLAG.length() + 1, parameterLabelIndex};
     } else {
       return null;
     }
@@ -143,7 +151,7 @@ public class H2URLParser extends AbstractURLParser {
    *
    * @return range index that the database name.
    */
-  private int[] fetchDatabaseNameRangeIndexFromURLForH2MemMode(String url) {
+  private static int[] fetchDatabaseNameRangeIndexFromURLForH2MemMode(String url) {
     int fileLabelIndex = url.indexOf(MEMORY_MODE_FLAG);
     int parameterLabelIndex = url.indexOf(";", fileLabelIndex);
     if (parameterLabelIndex == -1) {
@@ -151,7 +159,7 @@ public class H2URLParser extends AbstractURLParser {
     }
 
     if (fileLabelIndex != -1) {
-      return new int[] {fileLabelIndex + MEMORY_MODE_FLAG.length() + 1, parameterLabelIndex};
+      return new int[]{fileLabelIndex + MEMORY_MODE_FLAG.length() + 1, parameterLabelIndex};
     } else {
       return null;
     }

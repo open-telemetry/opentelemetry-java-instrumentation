@@ -32,7 +32,7 @@ public class OracleURLParser implements ConnectionURLParser {
   public static final String PREFIX_THIN = "jdbc:oracle:thin:";
   public static final String PREFIX_OCI = "jdbc:oracle:oci:";
   public static final int DEFAULT_PORT = 1521;
-  private static Pattern EASY_CONNECT_PATTERN =
+  private static final Pattern EASY_CONNECT_PATTERN =
       Pattern.compile(
           "(?<username>.*)@(?<ldap>ldap:)?(//)?(?<host>[^:/]+)(?<port>:[0-9]+)?(?<service>[:/][^:/]+)?(?<server>:[^:/]+)?(?<instance>/[^:/]+)?");
 
@@ -62,7 +62,7 @@ public class OracleURLParser implements ConnectionURLParser {
     return null;
   }
 
-  private OracleConnectionInfo parseTnsName(final String url) {
+  private static OracleConnectionInfo parseTnsName(final String url) {
     final String hosts = parseDatabaseHostsFromTnsUrl(url);
     if (hosts != null) {
       final int idxServiceName = url.indexOf("SERVICE_NAME");
@@ -121,8 +121,7 @@ public class OracleURLParser implements ConnectionURLParser {
   }
 
   /**
-   * Implementation according to
-   * https://www.oracle.com/technetwork/database/enterprise-edition/oraclenetservices-neteasyconnect-133058.pdf
+   * Implementation according to https://www.oracle.com/technetwork/database/enterprise-edition/oraclenetservices-neteasyconnect-133058.pdf
    *
    * @param url the url without the oracle jdbc prefix
    * @return the oracle connection info if the url could be parsed, or null otherwise.

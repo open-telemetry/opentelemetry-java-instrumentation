@@ -22,6 +22,7 @@ package io.opentelemetry.instrumentation.jdbc.parser;
 
 public class MariadbURLParser extends MysqlURLParser {
 
+  @Override
   protected String dbType() {
     return "mariadb";
   }

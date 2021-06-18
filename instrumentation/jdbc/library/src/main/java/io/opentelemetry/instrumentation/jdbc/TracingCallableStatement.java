@@ -57,11 +57,13 @@ public class TracingCallableStatement extends TracingPreparedStatement
     this.statement = statement;
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void registerOutParameter(int parameterIndex, int sqlType) throws SQLException {
     statement.registerOutParameter(parameterIndex, sqlType);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void registerOutParameter(int parameterIndex, int sqlType, int scale) throws SQLException {
     statement.registerOutParameter(parameterIndex, sqlType, scale);
@@ -72,145 +74,173 @@ public class TracingCallableStatement extends TracingPreparedStatement
     return statement.wasNull();
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public String getString(int parameterIndex) throws SQLException {
     return statement.getString(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public boolean getBoolean(int parameterIndex) throws SQLException {
     return statement.getBoolean(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public byte getByte(int parameterIndex) throws SQLException {
     return statement.getByte(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public short getShort(int parameterIndex) throws SQLException {
     return statement.getShort(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public int getInt(int parameterIndex) throws SQLException {
     return statement.getInt(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public long getLong(int parameterIndex) throws SQLException {
     return statement.getLong(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public float getFloat(int parameterIndex) throws SQLException {
     return statement.getFloat(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public double getDouble(int parameterIndex) throws SQLException {
     return statement.getDouble(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   @Deprecated
   public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
     return statement.getBigDecimal(parameterIndex, scale);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public byte[] getBytes(int parameterIndex) throws SQLException {
     return statement.getBytes(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Date getDate(int parameterIndex) throws SQLException {
     return statement.getDate(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Time getTime(int parameterIndex) throws SQLException {
     return statement.getTime(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Timestamp getTimestamp(int parameterIndex) throws SQLException {
     return statement.getTimestamp(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Object getObject(int parameterIndex) throws SQLException {
     return statement.getObject(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
     return statement.getBigDecimal(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Object getObject(int parameterIndex, Map<String, Class<?>> map) throws SQLException {
     return statement.getObject(parameterIndex, map);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Ref getRef(int parameterIndex) throws SQLException {
     return statement.getRef(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Blob getBlob(int parameterIndex) throws SQLException {
     return statement.getBlob(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Clob getClob(int parameterIndex) throws SQLException {
     return statement.getClob(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Array getArray(int parameterIndex) throws SQLException {
     return statement.getArray(parameterIndex);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Date getDate(int parameterIndex, Calendar cal) throws SQLException {
     return statement.getDate(parameterIndex, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Time getTime(int parameterIndex, Calendar cal) throws SQLException {
     return statement.getTime(parameterIndex, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Timestamp getTimestamp(int parameterIndex, Calendar cal) throws SQLException {
     return statement.getTimestamp(parameterIndex, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void registerOutParameter(int parameterIndex, int sqlType, String typeName)
       throws SQLException {
     statement.registerOutParameter(parameterIndex, sqlType, typeName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void registerOutParameter(String parameterName, int sqlType) throws SQLException {
     statement.registerOutParameter(parameterName, sqlType);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void registerOutParameter(String parameterName, int sqlType, int scale)
       throws SQLException {
     statement.registerOutParameter(parameterName, sqlType, scale);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void registerOutParameter(String parameterName, int sqlType, String typeName)
       throws SQLException {
     statement.registerOutParameter(parameterName, sqlType, typeName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public URL getURL(int parameterIndex) throws SQLException {
     return statement.getURL(parameterIndex);
@@ -221,6 +251,7 @@ public class TracingCallableStatement extends TracingPreparedStatement
     statement.setURL(parameterName, val);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNull(String parameterName, int sqlType) throws SQLException {
     statement.setNull(parameterName, sqlType);
@@ -276,6 +307,7 @@ public class TracingCallableStatement extends TracingPreparedStatement
     statement.setBytes(parameterName, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setDate(String parameterName, Date x) throws SQLException {
     statement.setDate(parameterName, x);
@@ -286,16 +318,19 @@ public class TracingCallableStatement extends TracingPreparedStatement
     statement.setTime(parameterName, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTimestamp(String parameterName, Timestamp x) throws SQLException {
     statement.setTimestamp(parameterName, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setAsciiStream(String parameterName, InputStream x, int length) throws SQLException {
     statement.setAsciiStream(parameterName, x, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBinaryStream(String parameterName, InputStream x, int length) throws SQLException {
     statement.setBinaryStream(parameterName, x, length);
@@ -317,102 +352,122 @@ public class TracingCallableStatement extends TracingPreparedStatement
     statement.setObject(parameterName, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setCharacterStream(String parameterName, Reader reader, int length)
       throws SQLException {
     statement.setCharacterStream(parameterName, reader, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setDate(String parameterName, Date x, Calendar cal) throws SQLException {
     statement.setDate(parameterName, x, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTime(String parameterName, Time x, Calendar cal) throws SQLException {
     statement.setTime(parameterName, x, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTimestamp(String parameterName, Timestamp x, Calendar cal) throws SQLException {
     statement.setTimestamp(parameterName, x, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNull(String parameterName, int sqlType, String typeName) throws SQLException {
     statement.setNull(parameterName, sqlType, typeName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public String getString(String parameterName) throws SQLException {
     return statement.getString(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public boolean getBoolean(String parameterName) throws SQLException {
     return statement.getBoolean(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public byte getByte(String parameterName) throws SQLException {
     return statement.getByte(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public short getShort(String parameterName) throws SQLException {
     return statement.getShort(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public int getInt(String parameterName) throws SQLException {
     return statement.getInt(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public long getLong(String parameterName) throws SQLException {
     return statement.getLong(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public float getFloat(String parameterName) throws SQLException {
     return statement.getFloat(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public double getDouble(String parameterName) throws SQLException {
     return statement.getDouble(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public byte[] getBytes(String parameterName) throws SQLException {
     return statement.getBytes(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Date getDate(String parameterName) throws SQLException {
     return statement.getDate(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Time getTime(String parameterName) throws SQLException {
     return statement.getTime(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Timestamp getTimestamp(String parameterName) throws SQLException {
     return statement.getTimestamp(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Object getObject(String parameterName) throws SQLException {
     return statement.getObject(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public BigDecimal getBigDecimal(String parameterName) throws SQLException {
     return statement.getBigDecimal(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Object getObject(String parameterName, Map<String, Class<?>> map) throws SQLException {
     return statement.getObject(parameterName, map);
@@ -433,26 +488,31 @@ public class TracingCallableStatement extends TracingPreparedStatement
     return statement.getClob(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Array getArray(String parameterName) throws SQLException {
     return statement.getArray(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Date getDate(String parameterName, Calendar cal) throws SQLException {
     return statement.getDate(parameterName, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Time getTime(String parameterName, Calendar cal) throws SQLException {
     return statement.getTime(parameterName, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public Timestamp getTimestamp(String parameterName, Calendar cal) throws SQLException {
     return statement.getTimestamp(parameterName, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public URL getURL(String parameterName) throws SQLException {
     return statement.getURL(parameterName);
@@ -478,28 +538,33 @@ public class TracingCallableStatement extends TracingPreparedStatement
     statement.setNString(parameterName, value);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNCharacterStream(String parameterName, Reader value, long length)
       throws SQLException {
     statement.setNCharacterStream(parameterName, value, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNClob(String parameterName, NClob value) throws SQLException {
     statement.setNClob(parameterName, value);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setClob(String parameterName, Reader reader, long length) throws SQLException {
     statement.setClob(parameterName, reader, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBlob(String parameterName, InputStream inputStream, long length)
       throws SQLException {
     statement.setBlob(parameterName, inputStream, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNClob(String parameterName, Reader reader, long length) throws SQLException {
     statement.setNClob(parameterName, reader, length);
@@ -560,73 +625,87 @@ public class TracingCallableStatement extends TracingPreparedStatement
     return statement.getCharacterStream(parameterName);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBlob(String parameterName, Blob x) throws SQLException {
     statement.setBlob(parameterName, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setClob(String parameterName, Clob x) throws SQLException {
     statement.setClob(parameterName, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
     statement.setAsciiStream(parameterName, x, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBinaryStream(String parameterName, InputStream x, long length)
       throws SQLException {
     statement.setBinaryStream(parameterName, x, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setCharacterStream(String parameterName, Reader reader, long length)
       throws SQLException {
     statement.setCharacterStream(parameterName, reader, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setAsciiStream(String parameterName, InputStream x) throws SQLException {
     statement.setAsciiStream(parameterName, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBinaryStream(String parameterName, InputStream x) throws SQLException {
     statement.setBinaryStream(parameterName, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setCharacterStream(String parameterName, Reader reader) throws SQLException {
     statement.setCharacterStream(parameterName, reader);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNCharacterStream(String parameterName, Reader value) throws SQLException {
     statement.setNCharacterStream(parameterName, value);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setClob(String parameterName, Reader reader) throws SQLException {
     statement.setClob(parameterName, reader);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBlob(String parameterName, InputStream inputStream) throws SQLException {
     statement.setBlob(parameterName, inputStream);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNClob(String parameterName, Reader reader) throws SQLException {
     statement.setNClob(parameterName, reader);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
     return statement.getObject(parameterIndex, type);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
     return statement.getObject(parameterName, type);

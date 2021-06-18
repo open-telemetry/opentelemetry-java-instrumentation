@@ -52,7 +52,10 @@ public class URLParser {
     parserRegister.put(AS400_JDBC_URL_PREFIX, new AS400URLParser());
   }
 
-  /** parse the url to the ConnectionInfo */
+  /**
+   * parse the url to the ConnectionInfo
+   */
+  @SuppressWarnings("CatchingUnchecked")
   public static ConnectionInfo parse(String url) {
     if (null == url) {
       return ConnectionInfo.UNKNOWN_CONNECTION_INFO;
@@ -70,7 +73,9 @@ public class URLParser {
     return ConnectionInfo.UNKNOWN_CONNECTION_INFO;
   }
 
-  /** @deprecated use {@link #parse(String)} instead */
+  /**
+   * @deprecated use {@link #parse(String)} instead
+   */
   @Deprecated
   public static ConnectionInfo parser(String url) {
     return parse(url);
@@ -85,7 +90,9 @@ public class URLParser {
     return null;
   }
 
-  /** register new ConnectionURLParser. Can override existing parser. */
+  /**
+   * register new ConnectionURLParser. Can override existing parser.
+   */
   public static void registerConnectionParser(String urlPrefix, ConnectionURLParser parser) {
     if (null == urlPrefix || parser == null) {
       throw new IllegalArgumentException("urlPrefix and parser can not be null");

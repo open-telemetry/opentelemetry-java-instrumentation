@@ -194,6 +194,7 @@ public class TracingConnection implements Connection {
         "Commit", connection::commit, null, connectionInfo, withActiveSpanOnly, null, tracer);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void rollback() throws SQLException {
     JdbcTracingUtils.execute(
@@ -301,6 +302,7 @@ public class TracingConnection implements Connection {
     return connection.setSavepoint(name);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void rollback(Savepoint savepoint) throws SQLException {
     connection.rollback(savepoint);

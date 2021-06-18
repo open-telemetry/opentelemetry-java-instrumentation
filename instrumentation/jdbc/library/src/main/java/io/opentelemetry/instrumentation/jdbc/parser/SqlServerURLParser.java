@@ -55,7 +55,8 @@ public class SqlServerURLParser implements ConnectionURLParser {
         String portNumber = props.get("portNumber");
         try {
           port = Integer.parseInt(portNumber);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException ignored) {
+          // nothing to do, expected
         }
       }
     }
@@ -86,7 +87,7 @@ public class SqlServerURLParser implements ConnectionURLParser {
         .build();
   }
 
-  private Map<String, String> parseQueryParams(String query, String separator) {
+  private static Map<String, String> parseQueryParams(String query, String separator) {
     if (query == null || query.isEmpty()) {
       return Collections.emptyMap();
     }

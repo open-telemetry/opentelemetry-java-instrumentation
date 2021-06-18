@@ -96,6 +96,7 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
         tracer);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNull(int parameterIndex, int sqlType) throws SQLException {
     preparedStatement.setNull(parameterIndex, sqlType);
@@ -151,21 +152,25 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.setBytes(parameterIndex, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setDate(int parameterIndex, Date x) throws SQLException {
     preparedStatement.setDate(parameterIndex, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTime(int parameterIndex, Time x) throws SQLException {
     preparedStatement.setTime(parameterIndex, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
     preparedStatement.setTimestamp(parameterIndex, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
     preparedStatement.setAsciiStream(parameterIndex, x, length);
@@ -177,6 +182,7 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.setUnicodeStream(parameterIndex, x, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBinaryStream(int parameterIndex, InputStream x, int length) throws SQLException {
     preparedStatement.setBinaryStream(parameterIndex, x, length);
@@ -187,11 +193,13 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.clearParameters();
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
     preparedStatement.setObject(parameterIndex, x, targetSqlType);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setObject(int parameterIndex, Object x) throws SQLException {
     preparedStatement.setObject(parameterIndex, x);
@@ -202,6 +210,7 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.addBatch();
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setCharacterStream(int parameterIndex, Reader reader, int length)
       throws SQLException {
@@ -218,6 +227,7 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.setBlob(parameterIndex, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setClob(int parameterIndex, Clob x) throws SQLException {
     preparedStatement.setClob(parameterIndex, x);
@@ -233,6 +243,7 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     return preparedStatement.getMetaData();
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
     preparedStatement.setDate(parameterIndex, x, cal);
@@ -243,11 +254,13 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.setTime(parameterIndex, x, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
     preparedStatement.setTimestamp(parameterIndex, x, cal);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
     preparedStatement.setNull(parameterIndex, sqlType, typeName);
@@ -273,6 +286,7 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.setNString(parameterIndex, value);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNCharacterStream(int parameterIndex, Reader value, long length)
       throws SQLException {
@@ -284,6 +298,7 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.setNClob(parameterIndex, value);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
     preparedStatement.setClob(parameterIndex, reader, length);
@@ -311,27 +326,32 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
     preparedStatement.setAsciiStream(parameterIndex, x, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
     preparedStatement.setBinaryStream(parameterIndex, x, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setCharacterStream(int parameterIndex, Reader reader, long length)
       throws SQLException {
     preparedStatement.setCharacterStream(parameterIndex, reader, length);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
     preparedStatement.setAsciiStream(parameterIndex, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
     preparedStatement.setBinaryStream(parameterIndex, x);
@@ -342,16 +362,19 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
     preparedStatement.setCharacterStream(parameterIndex, reader);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
     preparedStatement.setNCharacterStream(parameterIndex, value);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setClob(int parameterIndex, Reader reader) throws SQLException {
     preparedStatement.setClob(parameterIndex, reader);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
     preparedStatement.setBlob(parameterIndex, inputStream);
