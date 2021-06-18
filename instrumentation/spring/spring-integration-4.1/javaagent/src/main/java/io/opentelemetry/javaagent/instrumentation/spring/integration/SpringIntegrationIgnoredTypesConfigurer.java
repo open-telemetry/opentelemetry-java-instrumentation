@@ -16,5 +16,8 @@ public class SpringIntegrationIgnoredTypesConfigurer implements IgnoredTypesConf
   public void configure(Config config, IgnoredTypesBuilder builder) {
     // we don't instrument any messaging classes
     builder.ignoreClass("org.springframework.messaging");
+
+    // TODO: move to spring-rabbit and include it in tests:
+    builder.ignoreClass("org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer");
   }
 }
