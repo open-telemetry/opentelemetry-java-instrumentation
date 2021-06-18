@@ -1,8 +1,6 @@
 package com.example.javaagent.instrumentation;
 
-import static io.opentelemetry.javaagent.extension.matcher.NameMatchers.namedOneOf;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;

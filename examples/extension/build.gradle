@@ -18,10 +18,10 @@ version '1.0'
 
 ext {
   versions = [
-    opentelemetry              : "1.2.0",
-    opentelemetryAlpha         : "1.2.0-alpha",
-    opentelemetryJavaagent     : "1.3.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "1.3.0-alpha-SNAPSHOT",
+    opentelemetry              : "1.3.0",
+    opentelemetryAlpha         : "1.3.0-alpha",
+    opentelemetryJavaagent     : "1.3.0",
+    opentelemetryJavaagentAlpha: "1.3.0-alpha",
   ]
 
   deps = [
@@ -30,7 +30,6 @@ ext {
 }
 
 repositories {
-  mavenLocal()
   mavenCentral()
   maven {
     url = uri("https://oss.sonatype.org/content/repositories/snapshots")
