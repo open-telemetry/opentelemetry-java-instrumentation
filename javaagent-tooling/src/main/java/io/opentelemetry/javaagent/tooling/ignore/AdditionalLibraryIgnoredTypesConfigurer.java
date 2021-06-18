@@ -62,6 +62,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.jmx.")
         .ignoreClass("org.springframework.jndi.")
         .ignoreClass("org.springframework.lang.")
+        .ignoreClass("org.springframework.messaging.")
         .ignoreClass("org.springframework.objenesis.")
         .ignoreClass("org.springframework.orm.")
         .ignoreClass("org.springframework.remoting.")
@@ -81,10 +82,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.amqp.")
         .allowClass("org.springframework.amqp.rabbit.connection.")
         .allowClass("org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer")
-        // these implement Runnable, so tests currently force these allows
+        // this one implements Runnable, so tests currently force these allows
         // though not sure if it's important or not that they get instrumented
-        .allowClass(
-            "org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$AsyncMessageProcessingConsumer")
         .allowClass(
             "org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry$AggregatingCallback");
 
@@ -159,11 +158,6 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.jms.listener.")
         .allowClass(
             "org.springframework.jms.config.JmsListenerEndpointRegistry$AggregatingCallback");
-
-    builder
-        .ignoreClass("org.springframework.messaging.")
-        .allowClass("org.springframework.messaging.support.ExecutorSubscribableChannel$SendTask")
-        .allowClass("org.springframework.messaging.support.MessageHandlingRunnable");
 
     builder
         .ignoreClass("org.springframework.util.")
