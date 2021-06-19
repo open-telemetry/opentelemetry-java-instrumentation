@@ -1,5 +1,9 @@
 /** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
 
+plugins {
+  id("otel.java-conventions")
+}
+
 /**
  * We define three dependency configurations to use when adding dependencies to libraries being
  * instrumented.
