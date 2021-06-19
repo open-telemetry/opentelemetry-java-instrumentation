@@ -111,7 +111,9 @@ class AbstractMetricsTest {
     }
 
     public void waitForData() throws InterruptedException {
-      latch.await(1, TimeUnit.SECONDS);
+      if (!latch.await(5, TimeUnit.SECONDS)) {
+        throw new AssertionError("timed out waiting for metrics");
+      }
     }
   }
 }
