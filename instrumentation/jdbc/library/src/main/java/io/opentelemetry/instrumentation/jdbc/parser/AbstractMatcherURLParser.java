@@ -45,7 +45,7 @@ public abstract class AbstractMatcherURLParser implements ConnectionURLParser {
    * Useful to modify ConnectionInfo before build
    *
    * @param matcher The matcher to apply. Note that the matcher must have a group named host, and
-   *                optionally, a group named port and another named instance
+   *     optionally, a group named port and another named instance
    */
   protected ConnectionInfo.Builder initBuilder(Matcher matcher) {
     String host = matcher.group("host");

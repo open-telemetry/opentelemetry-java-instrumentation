@@ -61,9 +61,7 @@ public class TracingDriver implements Driver {
     }
   }
 
-  /**
-   * Returns the singleton instance of the {@code TracingDriver}.
-   */
+  /** Returns the singleton instance of the {@code TracingDriver}. */
   public static Driver load() {
     return INSTANCE;
   }

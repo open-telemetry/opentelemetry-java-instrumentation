@@ -121,7 +121,8 @@ public class OracleURLParser implements ConnectionURLParser {
   }
 
   /**
-   * Implementation according to https://www.oracle.com/technetwork/database/enterprise-edition/oraclenetservices-neteasyconnect-133058.pdf
+   * Implementation according to
+   * https://www.oracle.com/technetwork/database/enterprise-edition/oraclenetservices-neteasyconnect-133058.pdf
    *
    * @param url the url without the oracle jdbc prefix
    * @return the oracle connection info if the url could be parsed, or null otherwise.
