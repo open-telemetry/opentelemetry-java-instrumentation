@@ -46,7 +46,6 @@ import java.util.Set;
 public class TracingPreparedStatement extends TracingStatement implements PreparedStatement {
 
   private final PreparedStatement preparedStatement;
-  private final String query;
 
   public TracingPreparedStatement(
       PreparedStatement preparedStatement,
@@ -57,43 +56,23 @@ public class TracingPreparedStatement extends TracingStatement implements Prepar
       Tracer tracer) {
     super(preparedStatement, query, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
     this.preparedStatement = preparedStatement;
-    this.query = query;
   }
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return JdbcTracingUtils.call(
-        "Query",
-        preparedStatement::executeQuery,
-        query,
-        connectionInfo,
-        withActiveSpanOnly,
-        ignoreStatements,
-        tracer);
+    return JdbcTracingUtils.executePreparedStatement(
+        preparedStatement, preparedStatement::executeQuery);
   }
 
   @Override
   public int executeUpdate() throws SQLException {
-    return JdbcTracingUtils.call(
-        "Update",
-        preparedStatement::executeUpdate,
-        query,
-        connectionInfo,
-        withActiveSpanOnly,
-        ignoreStatements,
-        tracer);
+    return JdbcTracingUtils.executePreparedStatement(
+        preparedStatement, preparedStatement::executeUpdate);
   }
 
   @Override
   public boolean execute() throws SQLException {
-    return JdbcTracingUtils.call(
-        "Execute",
-        preparedStatement::execute,
-        query,
-        connectionInfo,
-        withActiveSpanOnly,
-        ignoreStatements,
-        tracer);
+    return JdbcTracingUtils.executePreparedStatement(preparedStatement, preparedStatement::execute);
   }
 
   @SuppressWarnings("UngroupedOverloads")
