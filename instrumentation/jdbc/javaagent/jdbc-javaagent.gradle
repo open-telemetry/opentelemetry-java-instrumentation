@@ -7,6 +7,7 @@ muzzle {
 }
 
 dependencies {
+  implementation project(':instrumentation:jdbc:library')
 
   compileOnly "com.google.auto.value:auto-value-annotations"
   annotationProcessor "com.google.auto.value:auto-value"
