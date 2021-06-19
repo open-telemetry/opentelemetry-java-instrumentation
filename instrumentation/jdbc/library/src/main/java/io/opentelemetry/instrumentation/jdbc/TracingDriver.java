@@ -23,6 +23,9 @@ package io.opentelemetry.instrumentation.jdbc;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.jdbc.parser.URLParser;
+import io.opentelemetry.javaagent.instrumentation.jdbc.DbInfo;
+import io.opentelemetry.javaagent.instrumentation.jdbc.JdbcConnectionUrlParser;
+import io.opentelemetry.javaagent.instrumentation.jdbc.JdbcMaps;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -182,6 +185,9 @@ public class TracingDriver implements Driver {
             withActiveSpanOnly,
             null,
             currentTracer);
+
+    DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, info);
+    JdbcMaps.connectionInfo.put(connection, dbInfo);
 
     return WrapperProxy.wrap(
         connection,
