@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import com.google.auto.value.AutoValue;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @AutoValue
 public abstract class DbInfo {
