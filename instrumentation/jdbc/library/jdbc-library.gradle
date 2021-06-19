@@ -17,8 +17,8 @@
 apply plugin: "otel.library-instrumentation"
 
 dependencies {
-  compileOnly project(':instrumentation-api')
-  compileOnly project(':javaagent-api')
+  implementation project(':instrumentation-api')
+  implementation project(':javaagent-api')
 
   compileOnly "com.google.auto.value:auto-value-annotations"
   annotationProcessor "com.google.auto.value:auto-value"
