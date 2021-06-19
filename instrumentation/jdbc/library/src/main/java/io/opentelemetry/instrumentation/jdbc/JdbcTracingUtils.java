@@ -88,7 +88,7 @@ class JdbcTracingUtils {
         buildSpan(operationName, sql, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
     long startTime =
         (JdbcTracing.getSlowQueryThresholdMs() > 0
-                || JdbcTracing.getExcludeFastQueryThresholdMs() > 0)
+            || JdbcTracing.getExcludeFastQueryThresholdMs() > 0)
             ? System.nanoTime()
             : 0;
     try (Scope ignored = span.makeCurrent()) {
@@ -143,19 +143,24 @@ class JdbcTracingUtils {
       return callable.call();
     }
 
-    Context parentContext = Context.current();
-    DbRequest request = DbRequest.create(preparedStatement);
+    try {
+      Context parentContext = Context.current();
+      DbRequest request = DbRequest.create(preparedStatement);
 
-    if (request == null || !instrumenter().shouldStart(parentContext, request)) {
-      return callable.call();
-    }
+      if (request == null || !instrumenter().shouldStart(parentContext, request)) {
+        return callable.call();
+      }
 
-    Context context = instrumenter().start(parentContext, request);
-    try (Scope ignored = context.makeCurrent()) {
-      return callable.call();
-    } catch (Throwable throwable) {
-      instrumenter().end(context, request, null, throwable);
-      throw throwable;
+      Context context = instrumenter().start(parentContext, request);
+      T result;
+      try (Scope ignored = context.makeCurrent()) {
+        result = callable.call();
+      } catch (Throwable t) {
+        instrumenter().end(context, request, null, t);
+        throw t;
+      }
+      instrumenter().end(context, request, null, null);
+      return result;
     } finally {
       CallDepthThreadLocalMap.reset(Statement.class);
     }
@@ -174,19 +179,24 @@ class JdbcTracingUtils {
       return callable.call();
     }
 
-    Context parentContext = Context.current();
-    DbRequest request = DbRequest.create(statement, sql);
+    try {
+      Context parentContext = Context.current();
+      DbRequest request = DbRequest.create(statement, sql);
 
-    if (request == null || !instrumenter().shouldStart(parentContext, request)) {
-      return callable.call();
-    }
+      if (request == null || !instrumenter().shouldStart(parentContext, request)) {
+        return callable.call();
+      }
 
-    Context context = instrumenter().start(parentContext, request);
-    try (Scope ignored = context.makeCurrent()) {
-      return callable.call();
-    } catch (Throwable throwable) {
-      instrumenter().end(context, request, null, throwable);
-      throw throwable;
+      Context context = instrumenter().start(parentContext, request);
+      T result;
+      try (Scope ignored = context.makeCurrent()) {
+        result = callable.call();
+      } catch (Throwable t) {
+        instrumenter().end(context, request, null, t);
+        throw t;
+      }
+      instrumenter().end(context, request, null, null);
+      return result;
     } finally {
       CallDepthThreadLocalMap.reset(Statement.class);
     }
@@ -196,7 +206,9 @@ class JdbcTracingUtils {
     return s != null && !"".contentEquals(s);
   }
 
-  /** Add tags to span. Skip empty tags to avoid reported NPE in tracers. */
+  /**
+   * Add tags to span. Skip empty tags to avoid reported NPE in tracers.
+   */
   private static void decorate(Span span, String sql, ConnectionInfo connectionInfo) {
     if (isNotEmpty(sql)) {
       span.setAttribute(SemanticAttributes.DB_STATEMENT, sql);
@@ -230,7 +242,7 @@ class JdbcTracingUtils {
     long completionTime = System.nanoTime() - startTime;
     if (JdbcTracing.getExcludeFastQueryThresholdMs() > 0
         && completionTime
-            < TimeUnit.MILLISECONDS.toNanos(JdbcTracing.getExcludeFastQueryThresholdMs())) {
+        < TimeUnit.MILLISECONDS.toNanos(JdbcTracing.getExcludeFastQueryThresholdMs())) {
       span.setAttribute(SAMPLING_PRIORITY, 0);
     }
     if (JdbcTracing.getSlowQueryThresholdMs() > 0
