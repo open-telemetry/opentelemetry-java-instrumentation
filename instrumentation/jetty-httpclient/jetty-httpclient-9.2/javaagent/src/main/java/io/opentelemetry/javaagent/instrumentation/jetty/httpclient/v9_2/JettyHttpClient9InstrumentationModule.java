@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
+import static io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientWrapUtil.wrapResponseListeners;
 import static io.opentelemetry.javaagent.extension.matcher.ClassLoaderMatcher.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.api.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyHttpClientSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.internal.JettyClientWrapUtil.wrapResponseListeners;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,10 +16,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClient9TracingInterceptor;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClient9TracingInterceptor;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -87,6 +87,7 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void exitTracingInterceptor(
+        @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -95,9 +96,10 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
         return;
       }
 
+      // not ending span here unless error, span ended in the interceptor
       scope.close();
       if (throwable != null) {
-        instrumenter().end(context, null, null, throwable);
+        instrumenter().end(context, httpRequest, null, throwable);
       }
     }
   }

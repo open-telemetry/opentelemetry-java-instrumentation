@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2
+package io.opentelemetry.instrumentation.jetty.httpclient.v9_2
 
 import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.context.Context
-import io.opentelemetry.context.Scope
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import org.eclipse.jetty.client.HttpClient
@@ -42,11 +40,10 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
   def setupSpec() {
 
-    //Start the main Jetty HttpClient
+    //Start the main Jetty HttpClient and a https client
     client.start()
 
     SslContextFactory tlsCtx = new SslContextFactory()
-//    tlsCtx.setExcludeProtocols("TLSv1.3")
     httpsClient = createHttpsClient(tlsCtx)
     httpsClient.setFollowRedirects(false)
     httpsClient.start()
@@ -114,13 +111,11 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
     headers.each { k, v ->
       request.header(k, v)
     }
-    Context parentContext = Context.current()
-    Scope scope = parentContext.makeCurrent()
-//    attachInterceptor(request, parentContext)
 
     request.send(new Response.CompleteListener() {
       @Override
       void onComplete(Result result) {
+
         if (jcl.failure != null) {
           requestResult.complete(jcl.failure)
           return
@@ -129,7 +124,6 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
         requestResult.complete(result.response.status)
       }
     })
-    scope.close()
   }
 
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.internal;
+package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -11,7 +11,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.ListIterator;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -78,37 +78,27 @@ public class JettyHttpClient9TracingInterceptor
 
   private void wrapRequestListeners(List<Request.RequestListener> requestListeners) {
 
-    List<Request.BeginListener> beginListeners =
-        requestListeners.stream()
-            .filter(rl -> rl instanceof Request.BeginListener)
-            .map(rl -> (Request.BeginListener) rl)
-            .collect(Collectors.toList());
-    List<Request.FailureListener> failureListeners =
-        requestListeners.stream()
-            .filter(rl -> rl instanceof Request.FailureListener)
-            .map(rl -> (Request.FailureListener) rl)
-            .collect(Collectors.toList());
-
-    Context context = this.parentContext;
-    for (Request.BeginListener blOriginal : beginListeners) {
-      requestListeners.set(
-          requestListeners.indexOf(blOriginal),
-          (Request.BeginListener)
-              request -> {
-                try (Scope ignore = context.makeCurrent()) {
-                  blOriginal.onBegin(request);
-                }
-              });
-    }
-    for (Request.FailureListener flOriginal : failureListeners) {
-      requestListeners.set(
-          requestListeners.indexOf(flOriginal),
-          (Request.FailureListener)
-              (request, throwable) -> {
-                try (Scope ignore = context.makeCurrent()) {
-                  flOriginal.onFailure(request, throwable);
-                }
-              });
+    ListIterator<Request.RequestListener> iterator = requestListeners.listIterator();
+    while (iterator.hasNext()) {
+      Request.RequestListener requestListener = iterator.next();
+      if (requestListener instanceof Request.FailureListener) {
+        iterator.set(
+            (Request.FailureListener)
+                (request, throwable) -> {
+                  try (Scope ignore = context.makeCurrent()) {
+                    ((Request.FailureListener) requestListener).onFailure(request, throwable);
+                  }
+                });
+      }
+      if (requestListener instanceof Request.BeginListener) {
+        iterator.set(
+            (Request.FailureListener)
+                (request, throwable) -> {
+                  try (Scope ignore = context.makeCurrent()) {
+                    ((Request.BeginListener) requestListener).onBegin(request);
+                  }
+                });
+      }
     }
   }
 

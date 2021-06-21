@@ -3,24 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
+package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterBuilder;
 import org.eclipse.jetty.client.HttpClientTransport;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
-public class JettyClientTracingBuilder {
+public final class JettyClientTracingBuilder {
 
-  private OpenTelemetry openTelemetry;
+  private final OpenTelemetry openTelemetry;
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;
 
-  public JettyClientTracingBuilder setOpenTelemetry(OpenTelemetry openTelemetry) {
+  public JettyClientTracingBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-    return this;
   }
 
   public JettyClientTracingBuilder setHttpClientTransport(HttpClientTransport httpClientTransport) {
@@ -38,12 +38,9 @@ public class JettyClientTracingBuilder {
         new JettyClientInstrumenterBuilder(this.openTelemetry);
     Instrumenter<Request, Response> instrumenter = instrumenterBuilder.build();
 
-    TracingHttpClientBuilder tracingHttpClientBuilder = new TracingHttpClientBuilder();
-    tracingHttpClientBuilder
-        .setInstrumenter(instrumenter)
-        .setHttpClientTransport(this.httpClientTransport)
-        .setSslContextFactory(this.sslContextFactory);
+    TracingHttpClient tracingHttpClient =
+        TracingHttpClient.buildNew(instrumenter, this.sslContextFactory, this.httpClientTransport);
 
-    return new JettyClientTracing(instrumenter, tracingHttpClientBuilder.build());
+    return new JettyClientTracing(instrumenter, tracingHttpClient);
   }
 }

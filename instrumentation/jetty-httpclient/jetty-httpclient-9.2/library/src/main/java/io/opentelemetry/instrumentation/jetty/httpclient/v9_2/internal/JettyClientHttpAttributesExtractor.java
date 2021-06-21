@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
+package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -15,11 +15,9 @@ import org.eclipse.jetty.http.HttpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
+final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<Request, Response> {
   private static final Logger LOG =
       LoggerFactory.getLogger(JettyClientHttpAttributesExtractor.class);
-
-  private static final String[] httpFlavors = {"0.9", "1.0", "1.1", "2.0"};
 
   @Override
   @Nullable
@@ -61,22 +59,21 @@ public class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<
   @Override
   @Nullable
   protected String userAgent(Request request) {
-    if (request != null) {
-      HttpField agentField = request.getHeaders().getField(HttpHeader.USER_AGENT);
-      return agentField != null ? agentField.getValue() : null;
-    }
-    return null;
+    HttpField agentField = request.getHeaders().getField(HttpHeader.USER_AGENT);
+    return agentField != null ? agentField.getValue() : null;
   }
 
   @Override
   @Nullable
   protected Long requestContentLength(Request request, @Nullable Response response) {
     Long reqContentLength = null;
+
     if (request != null) {
       HttpField requestContentLengthField =
           request.getHeaders().getField(HttpHeader.CONTENT_LENGTH);
       reqContentLength = getLongFromJettyHttpField(requestContentLengthField);
     }
+
     return reqContentLength;
   }
 
@@ -90,15 +87,27 @@ public class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<
   @Nullable
   protected String flavor(Request request, @Nullable Response response) {
 
-    if (response != null) {
-      HttpVersion httpVersion = response.getVersion();
-      for (String version : httpFlavors) {
-        if (httpVersion != null && httpVersion.toString().endsWith(version)) {
-          return version;
-        }
-      }
+    if (response == null) {
+      return "1.1";
     }
-    return "1.1";
+
+    HttpVersion httpVersion = response.getVersion();
+    httpVersion = (httpVersion != null) ? httpVersion : HttpVersion.HTTP_1_1;
+    switch (httpVersion) {
+      case HTTP_0_9:
+        return "0.9";
+      case HTTP_1_0:
+        return "1.0";
+      case HTTP_1_1:
+        return "1.1";
+      default:
+        // version 2.0 enum name difference in later versions 9.2 and 9.4 versions
+        if (httpVersion.toString().endsWith("2.0")) {
+          return "2.0";
+        }
+
+        return "1.1";
+    }
   }
 
   @Override

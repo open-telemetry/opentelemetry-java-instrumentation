@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
+package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -18,7 +18,7 @@ import java.util.List;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
-public class JettyClientInstrumenterBuilder {
+public final class JettyClientInstrumenterBuilder {
 
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.javaagent.jetty-httpclient-9.2";
@@ -34,7 +34,7 @@ public class JettyClientInstrumenterBuilder {
     return this;
   }
 
-  JettyClientInstrumenterBuilder(OpenTelemetry openTelemetry) {
+  public JettyClientInstrumenterBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
 

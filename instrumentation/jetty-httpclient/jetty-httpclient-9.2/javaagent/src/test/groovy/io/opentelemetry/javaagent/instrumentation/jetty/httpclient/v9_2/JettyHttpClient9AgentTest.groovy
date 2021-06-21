@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2
 
-
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.AbstractJettyClient9Test
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import org.eclipse.jetty.client.HttpClient
 import org.eclipse.jetty.util.ssl.SslContextFactory
