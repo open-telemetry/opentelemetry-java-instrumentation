@@ -26,7 +26,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.CheckedCallable;
-import io.opentelemetry.instrumentation.jdbc.TracingConnection;
+import io.opentelemetry.instrumentation.jdbc.OpenTelemetryConnection;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -34,11 +34,11 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
 
-public class TracingDataSource implements DataSource, AutoCloseable {
+public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
 
   private final DataSource delegate;
 
-  public TracingDataSource(DataSource delegate) {
+  public OpenTelemetryDataSource(DataSource delegate) {
     this.delegate = delegate;
   }
 
@@ -67,7 +67,7 @@ public class TracingDataSource implements DataSource, AutoCloseable {
   @Override
   public Connection getConnection() throws SQLException {
     Connection connection = wrapCall(delegate, delegate::getConnection);
-    return new TracingConnection(connection);
+    return new OpenTelemetryConnection(connection);
   }
 
   @Override
@@ -75,7 +75,7 @@ public class TracingDataSource implements DataSource, AutoCloseable {
       throws SQLException {
     Connection connection = wrapCall(delegate,
         () -> delegate.getConnection(username, password));
-    return new TracingConnection(connection);
+    return new OpenTelemetryConnection(connection);
   }
 
   @Override

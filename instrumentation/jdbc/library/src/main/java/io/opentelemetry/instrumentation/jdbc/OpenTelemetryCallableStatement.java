@@ -39,10 +39,11 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-class TracingCallableStatement<S extends CallableStatement> extends TracingPreparedStatement<S>
+class OpenTelemetryCallableStatement<S extends CallableStatement> extends
+    OpenTelemetryPreparedStatement<S>
     implements CallableStatement {
 
-  public TracingCallableStatement(S callableStatement, String query) {
+  public OpenTelemetryCallableStatement(S callableStatement, String query) {
     super(callableStatement, query);
   }
 

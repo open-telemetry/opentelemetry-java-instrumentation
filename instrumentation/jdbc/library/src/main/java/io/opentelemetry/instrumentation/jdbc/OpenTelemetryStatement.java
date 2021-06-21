@@ -33,18 +33,18 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-class TracingStatement<S extends Statement> implements Statement {
+class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   protected final S delegate;
   private final String query;
 
   private final ArrayList<String> batchCommands = new ArrayList<>();
 
-  TracingStatement(S delegate) {
+  OpenTelemetryStatement(S delegate) {
     this(delegate, null);
   }
 
-  TracingStatement(S delegate, String query) {
+  OpenTelemetryStatement(S delegate, String query) {
     this.delegate = delegate;
     this.query = query;
   }

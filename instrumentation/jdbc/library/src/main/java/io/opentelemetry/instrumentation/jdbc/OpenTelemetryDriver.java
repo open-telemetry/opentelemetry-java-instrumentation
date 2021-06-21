@@ -36,11 +36,11 @@ import java.util.Properties;
 import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class TracingDriver implements Driver {
+public class OpenTelemetryDriver implements Driver {
 
   private static final String INTERCEPTOR_MODE_URL_PREFIX = "jdbc:otel:";
 
-  private static final TracingDriver INSTANCE = new TracingDriver();
+  private static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
   private static boolean registered = false;
   private static boolean interceptorMode = false;
@@ -68,7 +68,7 @@ public class TracingDriver implements Driver {
           // the first driver is the tracing driver, skip all this verification
           return;
         }
-        if (driver instanceof TracingDriver) {
+        if (driver instanceof OpenTelemetryDriver) {
           drivers.add(driver);
         }
         DriverManager.deregisterDriver(driver);
@@ -92,7 +92,7 @@ public class TracingDriver implements Driver {
    * @param interceptorMode The {@code interceptorMode} value.
    */
   public static void setInterceptorMode(final boolean interceptorMode) {
-    TracingDriver.interceptorMode = interceptorMode;
+    OpenTelemetryDriver.interceptorMode = interceptorMode;
   }
 
   /**
@@ -109,7 +109,7 @@ public class TracingDriver implements Driver {
           "Driver is already registered. It can only be registered once.");
     }
     DriverManager.registerDriver(INSTANCE);
-    TracingDriver.registered = true;
+    OpenTelemetryDriver.registered = true;
   }
 
   /**
@@ -141,7 +141,7 @@ public class TracingDriver implements Driver {
 
     for (Driver candidate : Collections.list(DriverManager.getDrivers())) {
       try {
-        if (!(candidate instanceof TracingDriver) && candidate.acceptsURL(realUrl)) {
+        if (!(candidate instanceof OpenTelemetryDriver) && candidate.acceptsURL(realUrl)) {
           return candidate;
         }
       } catch (SQLException ignored) {
@@ -180,7 +180,7 @@ public class TracingDriver implements Driver {
     final DbInfo dbInfo = JdbcConnectionUrlParser.parse(realUrl, info);
     JdbcMaps.connectionInfo.put(connection, dbInfo);
 
-    return new TracingConnection(connection);
+    return new OpenTelemetryConnection(connection);
   }
 
   @Override

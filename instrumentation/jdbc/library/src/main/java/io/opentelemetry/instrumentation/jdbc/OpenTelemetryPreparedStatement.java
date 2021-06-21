@@ -48,10 +48,10 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
-class TracingPreparedStatement<S extends PreparedStatement> extends TracingStatement<S>
+class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTelemetryStatement<S>
     implements PreparedStatement {
 
-  public TracingPreparedStatement(S preparedStatement, String query) {
+  public OpenTelemetryPreparedStatement(S preparedStatement, String query) {
     super(preparedStatement, query);
   }
 
