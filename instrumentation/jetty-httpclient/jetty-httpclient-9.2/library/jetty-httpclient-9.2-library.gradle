@@ -4,7 +4,6 @@ apply plugin: "net.ltgt.errorprone"
 
 //Jetty client 9.2 is the best starting point, HttpClient.send() is stable there
 def jettyVers_base9 = '9.2.0.v20140526'
-//jettyVers.base9 = '9.4.42.v20210604'
 
 
 dependencies {
