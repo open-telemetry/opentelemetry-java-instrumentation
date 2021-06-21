@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.connectio
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.extractDbInfo;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.javaagent.instrumentation.jdbc.AutoValue_DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.AutoValue_DbRequest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
