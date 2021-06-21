@@ -69,7 +69,6 @@ public class FakeBackendMain {
             marshaller.writeValue(value, gen);
           }
         });
-    module.setSerializers(serializers);
     serializers.addSerializer(
         new StdSerializer<>(ExportLogsServiceRequest.class) {
           @Override
