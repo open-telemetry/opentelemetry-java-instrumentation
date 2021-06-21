@@ -90,10 +90,8 @@ public class TracingDataSource implements DataSource, AutoCloseable {
             null,
             tracer);
 
-    return WrapperProxy.wrap(
-        connection,
-        new TracingConnection(
-            connection, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer));
+    return new TracingConnection(
+        connection, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
   }
 
   @Override
@@ -109,10 +107,8 @@ public class TracingDataSource implements DataSource, AutoCloseable {
             null,
             tracer);
 
-    return WrapperProxy.wrap(
-        connection,
-        new TracingConnection(
-            connection, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer));
+    return new TracingConnection(
+        connection, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
   }
 
   @Override

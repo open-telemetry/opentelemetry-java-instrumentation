@@ -88,7 +88,7 @@ class JdbcTracingUtils {
         buildSpan(operationName, sql, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
     long startTime =
         (JdbcTracing.getSlowQueryThresholdMs() > 0
-            || JdbcTracing.getExcludeFastQueryThresholdMs() > 0)
+                || JdbcTracing.getExcludeFastQueryThresholdMs() > 0)
             ? System.nanoTime()
             : 0;
     try (Scope ignored = span.makeCurrent()) {
@@ -206,9 +206,7 @@ class JdbcTracingUtils {
     return s != null && !"".contentEquals(s);
   }
 
-  /**
-   * Add tags to span. Skip empty tags to avoid reported NPE in tracers.
-   */
+  /** Add tags to span. Skip empty tags to avoid reported NPE in tracers. */
   private static void decorate(Span span, String sql, ConnectionInfo connectionInfo) {
     if (isNotEmpty(sql)) {
       span.setAttribute(SemanticAttributes.DB_STATEMENT, sql);
@@ -242,7 +240,7 @@ class JdbcTracingUtils {
     long completionTime = System.nanoTime() - startTime;
     if (JdbcTracing.getExcludeFastQueryThresholdMs() > 0
         && completionTime
-        < TimeUnit.MILLISECONDS.toNanos(JdbcTracing.getExcludeFastQueryThresholdMs())) {
+            < TimeUnit.MILLISECONDS.toNanos(JdbcTracing.getExcludeFastQueryThresholdMs())) {
       span.setAttribute(SAMPLING_PRIORITY, 0);
     }
     if (JdbcTracing.getSlowQueryThresholdMs() > 0

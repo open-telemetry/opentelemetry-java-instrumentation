@@ -189,14 +189,12 @@ public class TracingDriver implements Driver {
     DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, info);
     JdbcMaps.connectionInfo.put(connection, dbInfo);
 
-    return WrapperProxy.wrap(
-        connection,
-        new TracingConnection(
-            connection, connectionInfo, withActiveSpanOnly, ignoreStatements, currentTracer));
+    return new TracingConnection(
+        connection, connectionInfo, withActiveSpanOnly, ignoreStatements, currentTracer);
   }
 
   @Override
-  public boolean acceptsURL(String url) throws SQLException {
+  public boolean acceptsURL(String url) {
     return url != null
         && (url.startsWith(getUrlPrefix()) || (interceptorMode && url.startsWith("jdbc:")));
   }
