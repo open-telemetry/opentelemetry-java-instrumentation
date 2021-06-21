@@ -66,7 +66,7 @@ public class OpenTelemetryDriver implements Driver {
       for (int i = 0; enumeration.hasMoreElements(); ++i) {
         Driver driver = enumeration.nextElement();
         if (i == 0 && driver == INSTANCE) {
-          // the first driver is the tracing driver, skip all this verification
+          // the first driver is OTEL driver, skip all this verification
           return;
         }
         if (driver instanceof OpenTelemetryDriver) {
@@ -75,7 +75,7 @@ public class OpenTelemetryDriver implements Driver {
         DriverManager.deregisterDriver(driver);
       }
 
-      // register tracing driver first
+      // register OTEL driver first
       register();
 
       // register other drivers
