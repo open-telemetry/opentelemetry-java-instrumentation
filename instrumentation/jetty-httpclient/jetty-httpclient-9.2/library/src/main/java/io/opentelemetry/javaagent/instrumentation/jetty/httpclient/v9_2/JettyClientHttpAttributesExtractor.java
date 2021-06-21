@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
@@ -91,7 +96,7 @@ public class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<
     if (response != null) {
       HttpVersion httpVersion = response.getVersion();
       for (String version : httpFlavors) {
-        if (httpVersion.toString().endsWith(version)) {
+        if (httpVersion != null && httpVersion.toString().endsWith(version)) {
           return version;
         }
       }

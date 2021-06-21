@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
 import static java.util.stream.Collectors.toList;
@@ -12,7 +17,7 @@ public final class JettyClientWrapUtil {
   private JettyClientWrapUtil() {}
 
   /**
-   * Utility to wrap the response listeners only, this includes the important CompleteListener
+   * Utility to wrap the response listeners only, this includes the important CompleteListener.
    *
    * @param parentContext top level context that is above the Jetty client span context
    * @param listeners all listeners passed to Jetty client send() method

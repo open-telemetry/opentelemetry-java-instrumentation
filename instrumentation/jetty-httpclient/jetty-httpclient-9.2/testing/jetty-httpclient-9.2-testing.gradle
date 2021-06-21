@@ -2,6 +2,8 @@ apply plugin: "otel.java-conventions"
 def jettyVers = [:]
 //Jetty client 9.2 is the best starting point, HttpClient.send() is stable there
 jettyVers.useInTests9 = '9.2.0.v20140526'
+//jettyVers.useInTests9 = '9.4.42.v20210604'
+
 dependencies {
   api(project(':testing-common')) {
     exclude group: 'org.eclipse.jetty', module: 'jetty-client'

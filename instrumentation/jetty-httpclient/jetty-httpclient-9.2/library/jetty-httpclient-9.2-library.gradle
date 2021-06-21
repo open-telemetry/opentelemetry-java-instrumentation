@@ -5,7 +5,8 @@ def jettyVers = [:]
 
 //Jetty client 9.2 is the best starting point, HttpClient.send() is stable there
 jettyVers.base9 = '9.2.0.v20140526'
-jettyVers.useInTests9 = '9.2.0.v20140526'
+//jettyVers.base9 = '9.4.42.v20210604'
+
 
 dependencies {
   library "org.eclipse.jetty:jetty-client:${jettyVers.base9}"
@@ -13,9 +14,9 @@ dependencies {
 
   implementation "org.slf4j:slf4j-api"
 
-  testImplementation("org.eclipse.jetty:jetty-server:${jettyVers.useInTests9}") {
-    exclude group: 'org.eclipse.jetty', module: 'jetty-client'
-  }
+//  testImplementation("org.eclipse.jetty:jetty-server:${jettyVers.base9}") {
+//    exclude group: 'org.eclipse.jetty', module: 'jetty-client'
+//  }
 
 }
 

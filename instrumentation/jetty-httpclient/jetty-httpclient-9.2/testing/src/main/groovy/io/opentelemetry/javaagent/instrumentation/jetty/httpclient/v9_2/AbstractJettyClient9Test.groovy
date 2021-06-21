@@ -25,9 +25,9 @@ import java.util.concurrent.TimeUnit
 
 abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
-  abstract HttpClient createStandardClient();
+  abstract HttpClient createStandardClient()
 
-  abstract HttpClient createHttpsClient(SslContextFactory sslContextFactory);
+  abstract HttpClient createHttpsClient(SslContextFactory sslContextFactory)
 
 
   @Shared
@@ -38,13 +38,15 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
   @Rule
   TestName name = new TestName()
 
+  Request jettyRequest = null
+
   def setupSpec() {
 
     //Start the main Jetty HttpClient
     client.start()
 
     SslContextFactory tlsCtx = new SslContextFactory()
-    tlsCtx.setExcludeProtocols("TLSv1.3")
+//    tlsCtx.setExcludeProtocols("TLSv1.3")
     httpsClient = createHttpsClient(tlsCtx)
     httpsClient.setFollowRedirects(false)
     httpsClient.start()
@@ -61,12 +63,14 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
     request.method(methodObj)
     request.timeout(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
 
+    jettyRequest = request
+
     return request
   }
 
   @Override
   String userAgent() {
-    if (name.methodName.startsWith('connection error')) {
+    if (name.methodName.startsWith('connection error') && jettyRequest.getAgent() == null) {
       return null
     }
     return "Jetty"
@@ -119,7 +123,7 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
       void onComplete(Result result) {
         if (jcl.failure != null) {
           requestResult.complete(jcl.failure)
-          return;
+          return
         }
 
         requestResult.complete(result.response.status)

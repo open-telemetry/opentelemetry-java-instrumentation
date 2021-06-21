@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
