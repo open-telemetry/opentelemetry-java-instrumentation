@@ -26,7 +26,9 @@ import com.datastax.oss.driver.api.core.type.reflect.GenericType;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TracingCqlSession implements CqlSession {
@@ -188,27 +190,48 @@ public class TracingCqlSession implements CqlSession {
   public CompletionStage<AsyncResultSet> executeAsync(Statement<?> statement) {
     String query = getQuery(statement);
     CassandraRequest request = CassandraRequest.create(session, query);
-    Context context = instrumenter().start(Context.current(), request);
-    try (Scope ignored = context.makeCurrent()) {
-      CompletionStage<AsyncResultSet> stage = session.executeAsync(statement);
-      return stage.whenComplete(
-          (asyncResultSet, throwable) ->
-              instrumenter()
-                  .end(context, request, getExecutionInfo(asyncResultSet, throwable), throwable));
-    }
+    return executeAsync(request, () -> session.executeAsync(statement));
   }
 
   @Override
   public CompletionStage<AsyncResultSet> executeAsync(String query) {
     CassandraRequest request = CassandraRequest.create(session, query);
-    Context context = instrumenter().start(Context.current(), request);
+    return executeAsync(request, () -> session.executeAsync(query));
+  }
+
+  private static CompletionStage<AsyncResultSet> executeAsync(
+      CassandraRequest request, Supplier<CompletionStage<AsyncResultSet>> query) {
+    Context parentContext = Context.current();
+    Context context = instrumenter().start(parentContext, request);
     try (Scope ignored = context.makeCurrent()) {
-      CompletionStage<AsyncResultSet> stage = session.executeAsync(query);
-      return stage.whenComplete(
-          (asyncResultSet, throwable) ->
-              instrumenter()
-                  .end(context, request, getExecutionInfo(asyncResultSet, throwable), throwable));
+      CompletionStage<AsyncResultSet> stage = query.get();
+      return wrap(
+          stage.whenComplete(
+              (asyncResultSet, throwable) ->
+                  instrumenter()
+                      .end(
+                          context,
+                          request,
+                          getExecutionInfo(asyncResultSet, throwable),
+                          throwable)),
+          parentContext);
     }
+  }
+
+  static <T> CompletableFuture<T> wrap(CompletionStage<T> future, Context context) {
+    CompletableFuture<T> result = new CompletableFuture<>();
+    future.whenComplete(
+        (T value, Throwable throwable) -> {
+          try (Scope ignored = context.makeCurrent()) {
+            if (throwable != null) {
+              result.completeExceptionally(throwable);
+            } else {
+              result.complete(value);
+            }
+          }
+        });
+
+    return result;
   }
 
   private static String getQuery(Statement<?> statement) {
