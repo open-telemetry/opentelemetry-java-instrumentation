@@ -18,8 +18,15 @@
  * the License.
  */
 
-package io.opentelemetry.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.jdbc.datasource;
 
+import static io.opentelemetry.javaagent.instrumentation.jdbc.datasource.DataSourceSingletons.instrumenter;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.jdbc.CheckedCallable;
+import io.opentelemetry.instrumentation.jdbc.TracingConnection;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -35,16 +42,39 @@ public class TracingDataSource implements DataSource, AutoCloseable {
     this.delegate = delegate;
   }
 
+  private static <T, E extends SQLException> T wrapCall(DataSource ds,
+      CheckedCallable<T, E> callable) throws E {
+    Context parentContext = Context.current();
+
+    if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
+      // this instrumentation is already very noisy, and calls to getConnection outside of an
+      // existing trace do not tend to be very interesting
+      return callable.call();
+    }
+
+    Context context = instrumenter().start(parentContext, ds);
+    T result;
+    try (Scope ignored = context.makeCurrent()) {
+      result = callable.call();
+    } catch (Throwable t) {
+      instrumenter().end(context, ds, null, t);
+      throw t;
+    }
+    instrumenter().end(context, ds, null, null);
+    return result;
+  }
+
   @Override
   public Connection getConnection() throws SQLException {
-    final Connection connection = delegate.getConnection();
+    Connection connection = wrapCall(delegate, delegate::getConnection);
     return new TracingConnection(connection);
   }
 
   @Override
   public Connection getConnection(final String username, final String password)
       throws SQLException {
-    final Connection connection = delegate.getConnection(username, password);
+    Connection connection = wrapCall(delegate,
+        () -> delegate.getConnection(username, password));
     return new TracingConnection(connection);
   }
 

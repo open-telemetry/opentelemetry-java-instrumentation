@@ -55,7 +55,7 @@ class TracingPreparedStatement<S extends PreparedStatement> extends TracingState
     super(preparedStatement, query);
   }
 
-  private static <T, E extends Exception> T executePreparedStatement(
+  private static <T, E extends Exception> T wrapCall(
       PreparedStatement preparedStatement, CheckedCallable<T, E> callable) throws E {
     // Connection#getMetaData() may execute a Statement or PreparedStatement to retrieve DB info
     // this happens before the DB CLIENT span is started (and put in the current context), so this
@@ -93,17 +93,17 @@ class TracingPreparedStatement<S extends PreparedStatement> extends TracingState
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return executePreparedStatement(delegate, delegate::executeQuery);
+    return wrapCall(delegate, delegate::executeQuery);
   }
 
   @Override
   public int executeUpdate() throws SQLException {
-    return executePreparedStatement(delegate, delegate::executeUpdate);
+    return wrapCall(delegate, delegate::executeUpdate);
   }
 
   @Override
   public boolean execute() throws SQLException {
-    return executePreparedStatement(delegate, delegate::execute);
+    return wrapCall(delegate, delegate::execute);
   }
 
   @SuppressWarnings("UngroupedOverloads")
