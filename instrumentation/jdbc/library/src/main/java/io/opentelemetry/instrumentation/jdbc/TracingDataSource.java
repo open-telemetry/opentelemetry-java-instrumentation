@@ -20,136 +20,73 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.jdbc.parser.URLParser;
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.Collections;
-import java.util.Set;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 public class TracingDataSource implements DataSource, AutoCloseable {
 
-  private static final boolean DEFAULT_WITH_ACTIVE_SPAN_ONLY = false;
-  private static final Set<String> DEFAULT_IGNORED_STATEMENTS = Collections.emptySet();
+  private final DataSource delegate;
 
-  private final Tracer tracer;
-  private final DataSource underlying;
-  private final ConnectionInfo connectionInfo;
-  private final boolean withActiveSpanOnly;
-  private final Set<String> ignoreStatements;
-
-  public TracingDataSource(final Tracer tracer, final DataSource underlying) {
-    this(tracer, underlying, null, DEFAULT_WITH_ACTIVE_SPAN_ONLY, DEFAULT_IGNORED_STATEMENTS);
-  }
-
-  public TracingDataSource(
-      final Tracer tracer,
-      final DataSource underlying,
-      final ConnectionInfo connectionInfo,
-      final boolean withActiveSpanOnly,
-      final Set<String> ignoreStatements) {
-    this.tracer = tracer;
-    this.underlying = underlying;
-    ConnectionInfo info = connectionInfo;
-    if (info == null) {
-      try {
-        Method method;
-        try {
-          method = underlying.getClass().getMethod("getJdbcUrl");
-        } catch (NoSuchMethodException e) {
-          method = underlying.getClass().getMethod("getUrl");
-        }
-        info = URLParser.parse((String) method.invoke(underlying));
-      } catch (Exception ignored) {
-        info = ConnectionInfo.UNKNOWN_CONNECTION_INFO;
-      }
-    }
-    this.connectionInfo = info;
-    this.withActiveSpanOnly = withActiveSpanOnly;
-    this.ignoreStatements = ignoreStatements;
-  }
-
-  public DataSource getUnderlying() {
-    return underlying;
+  public TracingDataSource(DataSource delegate) {
+    this.delegate = delegate;
   }
 
   @Override
   public Connection getConnection() throws SQLException {
-    final Connection connection =
-        JdbcTracingUtils.call(
-            "AcquireConnection",
-            underlying::getConnection,
-            null,
-            connectionInfo,
-            withActiveSpanOnly,
-            null,
-            tracer);
-
-    return new TracingConnection(
-        connection, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
+    final Connection connection = delegate.getConnection();
+    return new TracingConnection(connection);
   }
 
   @Override
   public Connection getConnection(final String username, final String password)
       throws SQLException {
-    final Connection connection =
-        JdbcTracingUtils.call(
-            "AcquireConnection",
-            () -> underlying.getConnection(username, password),
-            null,
-            connectionInfo,
-            withActiveSpanOnly,
-            null,
-            tracer);
-
-    return new TracingConnection(
-        connection, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
+    final Connection connection = delegate.getConnection(username, password);
+    return new TracingConnection(connection);
   }
 
   @Override
   public PrintWriter getLogWriter() throws SQLException {
-    return underlying.getLogWriter();
+    return delegate.getLogWriter();
   }
 
   @Override
   public void setLogWriter(final PrintWriter out) throws SQLException {
-    underlying.setLogWriter(out);
-  }
-
-  @Override
-  public void setLoginTimeout(final int seconds) throws SQLException {
-    underlying.setLoginTimeout(seconds);
+    delegate.setLogWriter(out);
   }
 
   @Override
   public int getLoginTimeout() throws SQLException {
-    return underlying.getLoginTimeout();
+    return delegate.getLoginTimeout();
+  }
+
+  @Override
+  public void setLoginTimeout(final int seconds) throws SQLException {
+    delegate.setLoginTimeout(seconds);
   }
 
   @Override
   public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-    return underlying.getParentLogger();
+    return delegate.getParentLogger();
   }
 
   @Override
   public <T> T unwrap(final Class<T> iface) throws SQLException {
-    return underlying.unwrap(iface);
+    return delegate.unwrap(iface);
   }
 
   @Override
   public boolean isWrapperFor(final Class<?> iface) throws SQLException {
-    return underlying.isWrapperFor(iface);
+    return delegate.isWrapperFor(iface);
   }
 
   @Override
   public void close() throws Exception {
-    if (underlying instanceof AutoCloseable) {
-      ((AutoCloseable) underlying).close();
+    if (delegate instanceof AutoCloseable) {
+      ((AutoCloseable) delegate).close();
     }
   }
 }

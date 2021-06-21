@@ -20,9 +20,6 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.jdbc.parser.URLParser;
 import io.opentelemetry.javaagent.instrumentation.jdbc.DbInfo;
 import io.opentelemetry.javaagent.instrumentation.jdbc.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.instrumentation.jdbc.JdbcMaps;
@@ -31,42 +28,29 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TracingDriver implements Driver {
 
-  private static final Driver INSTANCE = new TracingDriver();
+  private static final String INTERCEPTOR_MODE_URL_PREFIX = "jdbc:otel:";
 
-  protected static final String TRACE_WITH_ACTIVE_SPAN_ONLY = "traceWithActiveSpanOnly";
+  private static final TracingDriver INSTANCE = new TracingDriver();
 
-  protected static final String WITH_ACTIVE_SPAN_ONLY = TRACE_WITH_ACTIVE_SPAN_ONLY + "=true";
-
-  public static final String IGNORE_FOR_TRACING_REGEX =
-      "ignoreForTracing=\"((?:\\\\\"|[^\"])*)\"[;]*";
-
-  protected static final Pattern PATTERN_FOR_IGNORING = Pattern.compile(IGNORE_FOR_TRACING_REGEX);
+  private static boolean registered = false;
+  private static boolean interceptorMode = false;
 
   static {
     try {
-      DriverManager.registerDriver(INSTANCE);
+      register();
     } catch (SQLException e) {
-      throw new IllegalStateException("Could not register TracingDriver with DriverManager", e);
+      throw new ExceptionInInitializerError(e);
     }
-  }
-
-  /** Returns the singleton instance of the {@code TracingDriver}. */
-  public static Driver load() {
-    return INSTANCE;
   }
 
   /**
@@ -77,42 +61,30 @@ public class TracingDriver implements Driver {
   public static synchronized void ensureRegisteredAsTheFirstDriver() {
     try {
       Enumeration<Driver> enumeration = DriverManager.getDrivers();
-      List<Driver> drivers = null;
+      List<Driver> drivers = new ArrayList<>();
       for (int i = 0; enumeration.hasMoreElements(); ++i) {
         Driver driver = enumeration.nextElement();
-        if (i == 0) {
-          if (driver == INSTANCE) {
-            return;
-          }
-          drivers = new ArrayList<>();
+        if (i == 0 && driver == INSTANCE) {
+          // the first driver is the tracing driver, skip all this verification
+          return;
         }
-        if (driver != INSTANCE) {
+        if (driver instanceof TracingDriver) {
           drivers.add(driver);
-          DriverManager.deregisterDriver(driver);
         }
+        DriverManager.deregisterDriver(driver);
       }
+
+      // register tracing driver first
+      register();
+
+      // register other drivers
       for (Driver driver : drivers) {
         DriverManager.registerDriver(driver);
       }
     } catch (SQLException e) {
-      throw new IllegalStateException("Could not register TracingDriver with DriverManager", e);
+      throw new ExceptionInInitializerError(e);
     }
   }
-
-  /**
-   * Sets the {@code traceEnabled} property to enable or disable traces.
-   *
-   * @param traceEnabled The {@code traceEnabled} value.
-   */
-  public static void setTraceEnabled(boolean traceEnabled) {
-    JdbcTracing.setTraceEnabled(traceEnabled);
-  }
-
-  public static boolean isTraceEnabled() {
-    return JdbcTracing.isTraceEnabled();
-  }
-
-  private static boolean interceptorMode = false;
 
   /**
    * Turns "interceptor mode" on or off.
@@ -123,119 +95,46 @@ public class TracingDriver implements Driver {
     TracingDriver.interceptorMode = interceptorMode;
   }
 
-  private static boolean withActiveSpanOnly;
+  /**
+   * Register the driver against {@link DriverManager}. This is done automatically when the class is
+   * loaded. Dropping the driver from DriverManager's list is possible using {@link #deregister()}
+   * method.
+   *
+   * @throws IllegalStateException if the driver is already registered
+   * @throws SQLException if registering the driver fails
+   */
+  public static void register() throws SQLException {
+    if (isRegistered()) {
+      throw new IllegalStateException(
+          "Driver is already registered. It can only be registered once.");
+    }
+    DriverManager.registerDriver(INSTANCE);
+    TracingDriver.registered = true;
+  }
 
   /**
-   * Sets the {@code withActiveSpanOnly} property for "interceptor mode".
+   * According to JDBC specification, this driver is registered against {@link DriverManager} when
+   * the class is loaded. To avoid leaks, this method allow unregistering the driver so that the
+   * class can be gc'ed if necessary.
    *
-   * @param withActiveSpanOnly The {@code withActiveSpanOnly} value.
+   * @throws IllegalStateException if the driver is not registered
+   * @throws SQLException if deregistering the driver fails
    */
-  @SuppressWarnings("UngroupedOverloads")
-  public static void setInterceptorProperty(final boolean withActiveSpanOnly) {
-    TracingDriver.withActiveSpanOnly = withActiveSpanOnly;
-  }
-
-  private static Set<String> ignoreStatements;
-
-  /**
-   * Sets the {@code ignoreStatements} property for "interceptor mode".
-   *
-   * @param ignoreStatements The {@code ignoreStatements} value.
-   */
-  @SuppressWarnings("UngroupedOverloads")
-  public static void setInterceptorProperty(final Set<String> ignoreStatements) {
-    TracingDriver.ignoreStatements = ignoreStatements;
-  }
-
-  protected Tracer tracer;
-
-  @Override
-  public Connection connect(String url, Properties info) throws SQLException {
-    // if there is no url, we have problems
-    if (url == null) {
-      throw new SQLException("url is required");
+  public static void deregister() throws SQLException {
+    if (!registered) {
+      throw new IllegalStateException(
+          "Driver is not registered (or it has not been registered using Driver.register() method)");
     }
-
-    final Set<String> ignoreStatements;
-    final boolean withActiveSpanOnly;
-    if (interceptorMode) {
-      withActiveSpanOnly = TracingDriver.withActiveSpanOnly;
-      ignoreStatements = TracingDriver.ignoreStatements;
-    } else if (acceptsURL(url)) {
-      withActiveSpanOnly = url.contains(WITH_ACTIVE_SPAN_ONLY);
-      ignoreStatements = extractIgnoredStatements(url);
-    } else {
-      return null;
-    }
-
-    url = extractRealUrl(url);
-
-    // find the real driver for the URL
-    final Driver wrappedDriver = findDriver(url);
-
-    final Tracer currentTracer = getTracer();
-    final ConnectionInfo connectionInfo = URLParser.parse(url);
-    final String realUrl = url;
-    final Connection connection =
-        JdbcTracingUtils.call(
-            "AcquireConnection",
-            () -> wrappedDriver.connect(realUrl, info),
-            null,
-            connectionInfo,
-            withActiveSpanOnly,
-            null,
-            currentTracer);
-
-    DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, info);
-    JdbcMaps.connectionInfo.put(connection, dbInfo);
-
-    return new TracingConnection(
-        connection, connectionInfo, withActiveSpanOnly, ignoreStatements, currentTracer);
+    DriverManager.deregisterDriver(INSTANCE);
+    registered = false;
   }
 
-  @Override
-  public boolean acceptsURL(String url) {
-    return url != null
-        && (url.startsWith(getUrlPrefix()) || (interceptorMode && url.startsWith("jdbc:")));
+  /** Returns {@code true} if the driver is registered against {@link DriverManager} */
+  public static boolean isRegistered() {
+    return registered;
   }
 
-  @Override
-  public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
-    return findDriver(url).getPropertyInfo(url, info);
-  }
-
-  @Override
-  public int getMajorVersion() {
-    // There is no way to get it from wrapped driver
-    return 1;
-  }
-
-  @Override
-  public int getMinorVersion() {
-    // There is no way to get it from wrapped driver
-    return 0;
-  }
-
-  @Override
-  public boolean jdbcCompliant() {
-    return true;
-  }
-
-  @Override
-  public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-    // There is no way to get it from wrapped driver
-    return null;
-  }
-
-  public void setTracer(Tracer tracer) {
-    this.tracer = tracer;
-  }
-
-  protected String getUrlPrefix() {
-    return "jdbc:tracing:";
-  }
-
-  protected Driver findDriver(String realUrl) throws SQLException {
+  private static Driver findDriver(String realUrl) throws SQLException {
     if (realUrl == null || realUrl.trim().length() == 0) {
       throw new IllegalArgumentException("url is required");
     }
@@ -253,33 +152,71 @@ public class TracingDriver implements Driver {
     throw new SQLException("Unable to find a driver that accepts url: " + realUrl);
   }
 
-  protected String extractRealUrl(String url) {
-    String extracted = url.startsWith(getUrlPrefix()) ? url.replace(getUrlPrefix(), "jdbc:") : url;
-    return extracted
-        .replaceAll(TRACE_WITH_ACTIVE_SPAN_ONLY + "=(true|false)[;]*", "")
-        .replaceAll(IGNORE_FOR_TRACING_REGEX, "")
-        .replaceAll("\\?$", "");
+  private static String extractRealUrl(String url) {
+    return url.startsWith(INTERCEPTOR_MODE_URL_PREFIX)
+        ? url.replace(INTERCEPTOR_MODE_URL_PREFIX, "jdbc:")
+        : url;
   }
 
-  protected Set<String> extractIgnoredStatements(String url) {
-
-    final Matcher matcher = PATTERN_FOR_IGNORING.matcher(url);
-
-    Set<String> results = new HashSet<>(8);
-
-    while (matcher.find()) {
-      String rawValue = matcher.group(1);
-      String finalValue = rawValue.replace("\\\"", "\"");
-      results.add(finalValue);
+  @Nullable
+  @Override
+  public Connection connect(String url, Properties info) throws SQLException {
+    // if there is no url, we have problems
+    if (url == null) {
+      throw new SQLException("url is required");
     }
 
-    return results;
+    if (!acceptsURL(url)) {
+      return null;
+    }
+
+    final String realUrl = extractRealUrl(url);
+
+    // find the real driver for the URL
+    final Driver wrappedDriver = findDriver(realUrl);
+
+    final Connection connection = wrappedDriver.connect(realUrl, info);
+
+    final DbInfo dbInfo = JdbcConnectionUrlParser.parse(realUrl, info);
+    JdbcMaps.connectionInfo.put(connection, dbInfo);
+
+    return new TracingConnection(connection);
   }
 
-  Tracer getTracer() {
-    if (tracer == null) {
-      return GlobalOpenTelemetry.get().getTracer("opentelemetry-jdbc", "0.1.0");
+  @Override
+  public boolean acceptsURL(String url) {
+    if (url == null) {
+      return false;
     }
-    return tracer;
+    if (url.startsWith(INTERCEPTOR_MODE_URL_PREFIX)) {
+      return true;
+    }
+    return interceptorMode && url.startsWith("jdbc:");
+  }
+
+  @Override
+  public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
+    return findDriver(url).getPropertyInfo(url, info);
+  }
+
+  @Override
+  public int getMajorVersion() {
+    return 1;
+  }
+
+  @Override
+  public int getMinorVersion() {
+    return 4;
+  }
+
+  /** Returns {@literal false} because not all delegated drivers are JDBC compliant. */
+  @Override
+  public boolean jdbcCompliant() {
+    return false;
+  }
+
+  @Override
+  public Logger getParentLogger() {
+    return null;
   }
 }

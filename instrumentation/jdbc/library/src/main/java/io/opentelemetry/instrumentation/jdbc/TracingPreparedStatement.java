@@ -20,7 +20,12 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
-import io.opentelemetry.api.trace.Tracer;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.instrumenter;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
+import io.opentelemetry.javaagent.instrumentation.jdbc.DbRequest;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -38,330 +43,356 @@ import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Set;
 
-public class TracingPreparedStatement extends TracingStatement implements PreparedStatement {
+class TracingPreparedStatement<S extends PreparedStatement> extends TracingStatement<S>
+    implements PreparedStatement {
 
-  private final PreparedStatement preparedStatement;
+  public TracingPreparedStatement(S preparedStatement, String query) {
+    super(preparedStatement, query);
+  }
 
-  public TracingPreparedStatement(
-      PreparedStatement preparedStatement,
-      String query,
-      ConnectionInfo connectionInfo,
-      boolean withActiveSpanOnly,
-      Set<String> ignoreStatements,
-      Tracer tracer) {
-    super(preparedStatement, query, connectionInfo, withActiveSpanOnly, ignoreStatements, tracer);
-    this.preparedStatement = preparedStatement;
+  private static <T, E extends Exception> T executePreparedStatement(
+      PreparedStatement preparedStatement, CheckedCallable<T, E> callable) throws E {
+    // Connection#getMetaData() may execute a Statement or PreparedStatement to retrieve DB info
+    // this happens before the DB CLIENT span is started (and put in the current context), so this
+    // instrumentation runs again and the shouldStartSpan() check always returns true - and so on
+    // until we get a StackOverflowError
+    // using CallDepth prevents this, because this check happens before Connection#getMetadata()
+    // is called - the first recursive Statement call is just skipped and we do not create a span
+    // for it
+    if (CallDepthThreadLocalMap.getCallDepth(Statement.class).getAndIncrement() > 0) {
+      return callable.call();
+    }
+
+    try {
+      Context parentContext = Context.current();
+      DbRequest request = DbRequest.create(preparedStatement);
+
+      if (request == null || !instrumenter().shouldStart(parentContext, request)) {
+        return callable.call();
+      }
+
+      Context context = instrumenter().start(parentContext, request);
+      T result;
+      try (Scope ignored = context.makeCurrent()) {
+        result = callable.call();
+      } catch (Throwable t) {
+        instrumenter().end(context, request, null, t);
+        throw t;
+      }
+      instrumenter().end(context, request, null, null);
+      return result;
+    } finally {
+      CallDepthThreadLocalMap.reset(Statement.class);
+    }
   }
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return JdbcTracingUtils.executePreparedStatement(
-        preparedStatement, preparedStatement::executeQuery);
+    return executePreparedStatement(delegate, delegate::executeQuery);
   }
 
   @Override
   public int executeUpdate() throws SQLException {
-    return JdbcTracingUtils.executePreparedStatement(
-        preparedStatement, preparedStatement::executeUpdate);
+    return executePreparedStatement(delegate, delegate::executeUpdate);
   }
 
   @Override
   public boolean execute() throws SQLException {
-    return JdbcTracingUtils.executePreparedStatement(preparedStatement, preparedStatement::execute);
+    return executePreparedStatement(delegate, delegate::execute);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNull(int parameterIndex, int sqlType) throws SQLException {
-    preparedStatement.setNull(parameterIndex, sqlType);
+    delegate.setNull(parameterIndex, sqlType);
   }
 
   @Override
   public void setBoolean(int parameterIndex, boolean x) throws SQLException {
-    preparedStatement.setBoolean(parameterIndex, x);
+    delegate.setBoolean(parameterIndex, x);
   }
 
   @Override
   public void setByte(int parameterIndex, byte x) throws SQLException {
-    preparedStatement.setByte(parameterIndex, x);
+    delegate.setByte(parameterIndex, x);
   }
 
   @Override
   public void setShort(int parameterIndex, short x) throws SQLException {
-    preparedStatement.setShort(parameterIndex, x);
+    delegate.setShort(parameterIndex, x);
   }
 
   @Override
   public void setInt(int parameterIndex, int x) throws SQLException {
-    preparedStatement.setInt(parameterIndex, x);
+    delegate.setInt(parameterIndex, x);
   }
 
   @Override
   public void setLong(int parameterIndex, long x) throws SQLException {
-    preparedStatement.setLong(parameterIndex, x);
+    delegate.setLong(parameterIndex, x);
   }
 
   @Override
   public void setFloat(int parameterIndex, float x) throws SQLException {
-    preparedStatement.setFloat(parameterIndex, x);
+    delegate.setFloat(parameterIndex, x);
   }
 
   @Override
   public void setDouble(int parameterIndex, double x) throws SQLException {
-    preparedStatement.setDouble(parameterIndex, x);
+    delegate.setDouble(parameterIndex, x);
   }
 
   @Override
   public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
-    preparedStatement.setBigDecimal(parameterIndex, x);
+    delegate.setBigDecimal(parameterIndex, x);
   }
 
   @Override
   public void setString(int parameterIndex, String x) throws SQLException {
-    preparedStatement.setString(parameterIndex, x);
+    delegate.setString(parameterIndex, x);
   }
 
   @Override
   public void setBytes(int parameterIndex, byte[] x) throws SQLException {
-    preparedStatement.setBytes(parameterIndex, x);
+    delegate.setBytes(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setDate(int parameterIndex, Date x) throws SQLException {
-    preparedStatement.setDate(parameterIndex, x);
+    delegate.setDate(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTime(int parameterIndex, Time x) throws SQLException {
-    preparedStatement.setTime(parameterIndex, x);
+    delegate.setTime(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
-    preparedStatement.setTimestamp(parameterIndex, x);
+    delegate.setTimestamp(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
-    preparedStatement.setAsciiStream(parameterIndex, x, length);
+    delegate.setAsciiStream(parameterIndex, x, length);
   }
 
   @Override
   @Deprecated
   public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
-    preparedStatement.setUnicodeStream(parameterIndex, x, length);
+    delegate.setUnicodeStream(parameterIndex, x, length);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBinaryStream(int parameterIndex, InputStream x, int length) throws SQLException {
-    preparedStatement.setBinaryStream(parameterIndex, x, length);
+    delegate.setBinaryStream(parameterIndex, x, length);
   }
 
   @Override
   public void clearParameters() throws SQLException {
-    preparedStatement.clearParameters();
+    delegate.clearParameters();
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
-    preparedStatement.setObject(parameterIndex, x, targetSqlType);
+    delegate.setObject(parameterIndex, x, targetSqlType);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setObject(int parameterIndex, Object x) throws SQLException {
-    preparedStatement.setObject(parameterIndex, x);
+    delegate.setObject(parameterIndex, x);
   }
 
   @Override
   public void addBatch() throws SQLException {
-    preparedStatement.addBatch();
+    delegate.addBatch();
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setCharacterStream(int parameterIndex, Reader reader, int length)
       throws SQLException {
-    preparedStatement.setCharacterStream(parameterIndex, reader, length);
+    delegate.setCharacterStream(parameterIndex, reader, length);
   }
 
   @Override
   public void setRef(int parameterIndex, Ref x) throws SQLException {
-    preparedStatement.setRef(parameterIndex, x);
+    delegate.setRef(parameterIndex, x);
   }
 
   @Override
   public void setBlob(int parameterIndex, Blob x) throws SQLException {
-    preparedStatement.setBlob(parameterIndex, x);
+    delegate.setBlob(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setClob(int parameterIndex, Clob x) throws SQLException {
-    preparedStatement.setClob(parameterIndex, x);
+    delegate.setClob(parameterIndex, x);
   }
 
   @Override
   public void setArray(int parameterIndex, Array x) throws SQLException {
-    preparedStatement.setArray(parameterIndex, x);
+    delegate.setArray(parameterIndex, x);
   }
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    return preparedStatement.getMetaData();
+    return delegate.getMetaData();
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
-    preparedStatement.setDate(parameterIndex, x, cal);
+    delegate.setDate(parameterIndex, x, cal);
   }
 
   @Override
   public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
-    preparedStatement.setTime(parameterIndex, x, cal);
+    delegate.setTime(parameterIndex, x, cal);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
-    preparedStatement.setTimestamp(parameterIndex, x, cal);
+    delegate.setTimestamp(parameterIndex, x, cal);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
-    preparedStatement.setNull(parameterIndex, sqlType, typeName);
+    delegate.setNull(parameterIndex, sqlType, typeName);
   }
 
   @Override
   public void setURL(int parameterIndex, URL x) throws SQLException {
-    preparedStatement.setURL(parameterIndex, x);
+    delegate.setURL(parameterIndex, x);
   }
 
   @Override
   public ParameterMetaData getParameterMetaData() throws SQLException {
-    return preparedStatement.getParameterMetaData();
+    return delegate.getParameterMetaData();
   }
 
   @Override
   public void setRowId(int parameterIndex, RowId x) throws SQLException {
-    preparedStatement.setRowId(parameterIndex, x);
+    delegate.setRowId(parameterIndex, x);
   }
 
   @Override
   public void setNString(int parameterIndex, String value) throws SQLException {
-    preparedStatement.setNString(parameterIndex, value);
+    delegate.setNString(parameterIndex, value);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNCharacterStream(int parameterIndex, Reader value, long length)
       throws SQLException {
-    preparedStatement.setNCharacterStream(parameterIndex, value, length);
+    delegate.setNCharacterStream(parameterIndex, value, length);
   }
 
   @Override
   public void setNClob(int parameterIndex, NClob value) throws SQLException {
-    preparedStatement.setNClob(parameterIndex, value);
+    delegate.setNClob(parameterIndex, value);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
-    preparedStatement.setClob(parameterIndex, reader, length);
+    delegate.setClob(parameterIndex, reader, length);
   }
 
   @Override
   public void setBlob(int parameterIndex, InputStream inputStream, long length)
       throws SQLException {
-    preparedStatement.setBlob(parameterIndex, inputStream, length);
+    delegate.setBlob(parameterIndex, inputStream, length);
   }
 
   @Override
   public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
-    preparedStatement.setNClob(parameterIndex, reader, length);
+    delegate.setNClob(parameterIndex, reader, length);
   }
 
   @Override
   public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
-    preparedStatement.setSQLXML(parameterIndex, xmlObject);
+    delegate.setSQLXML(parameterIndex, xmlObject);
   }
 
   @Override
   public void setObject(int parameterIndex, Object x, int targetSqlType, int scaleOrLength)
       throws SQLException {
-    preparedStatement.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
+    delegate.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
-    preparedStatement.setAsciiStream(parameterIndex, x, length);
+    delegate.setAsciiStream(parameterIndex, x, length);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
-    preparedStatement.setBinaryStream(parameterIndex, x, length);
+    delegate.setBinaryStream(parameterIndex, x, length);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setCharacterStream(int parameterIndex, Reader reader, long length)
       throws SQLException {
-    preparedStatement.setCharacterStream(parameterIndex, reader, length);
+    delegate.setCharacterStream(parameterIndex, reader, length);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
-    preparedStatement.setAsciiStream(parameterIndex, x);
+    delegate.setAsciiStream(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
-    preparedStatement.setBinaryStream(parameterIndex, x);
+    delegate.setBinaryStream(parameterIndex, x);
   }
 
   @Override
   public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
-    preparedStatement.setCharacterStream(parameterIndex, reader);
+    delegate.setCharacterStream(parameterIndex, reader);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
-    preparedStatement.setNCharacterStream(parameterIndex, value);
+    delegate.setNCharacterStream(parameterIndex, value);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setClob(int parameterIndex, Reader reader) throws SQLException {
-    preparedStatement.setClob(parameterIndex, reader);
+    delegate.setClob(parameterIndex, reader);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
-    preparedStatement.setBlob(parameterIndex, inputStream);
+    delegate.setBlob(parameterIndex, inputStream);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-    preparedStatement.setNClob(parameterIndex, reader);
+    delegate.setNClob(parameterIndex, reader);
   }
 }
