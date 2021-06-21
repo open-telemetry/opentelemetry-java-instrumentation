@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.testing.bytebuddy;
 
-import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.tooling.ignore.AdditionalLibraryIgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoreAllow;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
@@ -33,7 +32,7 @@ public class TestAgentListener implements AgentBuilder.Listener {
 
   static {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
-    new AdditionalLibraryIgnoredTypesConfigurer().configure(Config.get(), builder);
+    new AdditionalLibraryIgnoredTypesConfigurer().configure(builder);
     ADDITIONAL_LIBRARIES_TRIE = builder.buildIgnoredTypesTrie();
   }
 
