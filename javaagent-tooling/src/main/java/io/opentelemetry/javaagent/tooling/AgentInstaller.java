@@ -435,6 +435,10 @@ public class AgentInstaller {
       if (cl instanceof AgentClassLoader || cl instanceof ExtensionClassLoader) {
         return true;
       }
+      // ignore generate byte buddy helper class
+      if (c.getName().startsWith("java.lang.ClassLoader$ByteBuddyAccessor$")) {
+        return true;
+      }
 
       return HelperInjector.isInjectedClass(c);
     }
