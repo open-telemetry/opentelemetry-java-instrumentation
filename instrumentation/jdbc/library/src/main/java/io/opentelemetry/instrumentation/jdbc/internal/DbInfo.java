@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.jdbc.internal;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.javaagent.instrumentation.jdbc.AutoValue_DbInfo;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @AutoValue

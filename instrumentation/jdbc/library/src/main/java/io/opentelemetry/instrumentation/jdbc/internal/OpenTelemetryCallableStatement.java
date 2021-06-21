@@ -18,7 +18,7 @@
  * the License.
  */
 
-package io.opentelemetry.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.jdbc.internal;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -39,9 +39,8 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-class OpenTelemetryCallableStatement<S extends CallableStatement> extends
-    OpenTelemetryPreparedStatement<S>
-    implements CallableStatement {
+class OpenTelemetryCallableStatement<S extends CallableStatement>
+    extends OpenTelemetryPreparedStatement<S> implements CallableStatement {
 
   public OpenTelemetryCallableStatement(S callableStatement, String query) {
     super(callableStatement, query);

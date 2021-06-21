@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.jdbc.internal;
 
 @FunctionalInterface
 public interface CheckedCallable<T, E extends Throwable> {

@@ -18,9 +18,8 @@
  * the License.
  */
 
-package io.opentelemetry.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.javaagent.instrumentation.jdbc.JdbcMaps;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;

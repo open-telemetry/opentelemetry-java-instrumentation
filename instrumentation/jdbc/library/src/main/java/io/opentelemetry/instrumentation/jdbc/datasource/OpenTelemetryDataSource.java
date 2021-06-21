@@ -20,13 +20,13 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
-import static io.opentelemetry.javaagent.instrumentation.jdbc.datasource.DataSourceSingletons.instrumenter;
+import static io.opentelemetry.instrumentation.jdbc.internal.DataSourceSingletons.instrumenter;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.jdbc.CheckedCallable;
-import io.opentelemetry.instrumentation.jdbc.OpenTelemetryConnection;
+import io.opentelemetry.instrumentation.jdbc.internal.CheckedCallable;
+import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -42,8 +42,8 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     this.delegate = delegate;
   }
 
-  private static <T, E extends SQLException> T wrapCall(DataSource ds,
-      CheckedCallable<T, E> callable) throws E {
+  private static <T, E extends SQLException> T wrapCall(
+      DataSource ds, CheckedCallable<T, E> callable) throws E {
     Context parentContext = Context.current();
 
     if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
@@ -73,8 +73,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   @Override
   public Connection getConnection(final String username, final String password)
       throws SQLException {
-    Connection connection = wrapCall(delegate,
-        () -> delegate.getConnection(username, password));
+    Connection connection = wrapCall(delegate, () -> delegate.getConnection(username, password));
     return new OpenTelemetryConnection(connection);
   }
 

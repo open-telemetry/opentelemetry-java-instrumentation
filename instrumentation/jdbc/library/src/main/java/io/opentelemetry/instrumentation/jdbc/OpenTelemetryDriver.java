@@ -20,9 +20,10 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
-import io.opentelemetry.javaagent.instrumentation.jdbc.DbInfo;
-import io.opentelemetry.javaagent.instrumentation.jdbc.JdbcConnectionUrlParser;
-import io.opentelemetry.javaagent.instrumentation.jdbc.JdbcMaps;
+import io.opentelemetry.instrumentation.jdbc.internal.DbInfo;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcMaps;
+import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;

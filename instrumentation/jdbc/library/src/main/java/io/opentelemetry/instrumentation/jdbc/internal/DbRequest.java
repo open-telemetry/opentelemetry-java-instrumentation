@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.connectionFromStatement;
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcUtils.extractDbInfo;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.connectionFromStatement;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.extractDbInfo;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.javaagent.instrumentation.jdbc.AutoValue_DbRequest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;

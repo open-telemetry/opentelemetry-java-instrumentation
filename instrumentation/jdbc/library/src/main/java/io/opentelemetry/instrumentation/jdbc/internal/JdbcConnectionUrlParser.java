@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jdbc;
+package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.javaagent.instrumentation.jdbc.DbInfo.DEFAULT;
+import static io.opentelemetry.instrumentation.jdbc.internal.DbInfo.DEFAULT;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;

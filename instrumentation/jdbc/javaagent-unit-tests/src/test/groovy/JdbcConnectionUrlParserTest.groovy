@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcConnectionUrlParser.parse
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse
 
-import io.opentelemetry.javaagent.instrumentation.jdbc.DbInfo
+import io.opentelemetry.instrumentation.jdbc.internal.DbInfo
 import spock.lang.Shared
 import spock.lang.Specification
 
