@@ -1,15 +1,14 @@
 apply plugin: "otel.library-instrumentation"
 apply plugin: "net.ltgt.errorprone"
 
-def jettyVers = [:]
 
 //Jetty client 9.2 is the best starting point, HttpClient.send() is stable there
-jettyVers.base9 = '9.2.0.v20140526'
+def jettyVers_base9 = '9.2.0.v20140526'
 //jettyVers.base9 = '9.4.42.v20210604'
 
 
 dependencies {
-  library "org.eclipse.jetty:jetty-client:${jettyVers.base9}"
+  library "org.eclipse.jetty:jetty-client:${jettyVers_base9}"
   testImplementation project(':instrumentation:jetty-httpclient::jetty-httpclient-9.2:testing')
 
   implementation "org.slf4j:slf4j-api"

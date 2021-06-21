@@ -1,8 +1,7 @@
 apply plugin: "otel.java-conventions"
-def jettyVers = [:]
 //Jetty client 9.2 is the best starting point, HttpClient.send() is stable there
-jettyVers.useInTests9 = '9.2.0.v20140526'
-//jettyVers.useInTests9 = '9.4.42.v20210604'
+def jettyVers_useInTests9 = '9.2.0.v20140526'
+//jettyVers_useInTests9 = '9.4.42.v20210604'
 
 dependencies {
   api(project(':testing-common')) {
@@ -11,9 +10,8 @@ dependencies {
   }
 
 
-  api "org.eclipse.jetty:jetty-client:${jettyVers.useInTests9}"
+  api "org.eclipse.jetty:jetty-client:${jettyVers_useInTests9}"
 
-//  implementation deps.guava
   implementation "org.junit.jupiter:junit-jupiter-api"
 
   implementation "org.codehaus.groovy:groovy-all"

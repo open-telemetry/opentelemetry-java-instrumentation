@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
-import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyClientWrapUtil.wrapResponseListeners;
+import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.internal.JettyClientWrapUtil.wrapResponseListeners;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClient9TracingInterceptor;
 import java.util.List;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpClientTransport;

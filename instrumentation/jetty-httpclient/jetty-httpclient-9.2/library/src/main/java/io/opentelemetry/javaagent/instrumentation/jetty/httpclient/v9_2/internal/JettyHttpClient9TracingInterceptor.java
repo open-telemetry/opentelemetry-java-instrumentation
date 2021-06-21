@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
+package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.internal;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;

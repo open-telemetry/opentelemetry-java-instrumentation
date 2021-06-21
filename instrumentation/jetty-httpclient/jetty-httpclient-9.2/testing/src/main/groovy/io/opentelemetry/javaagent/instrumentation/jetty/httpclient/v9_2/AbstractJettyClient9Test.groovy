@@ -89,7 +89,7 @@ abstract class AbstractJettyClient9Test extends HttpClientTest<Request> {
 
   private static class JettyClientListener implements Request.FailureListener, Response.FailureListener {
 
-    Throwable failure
+    volatile Throwable failure
 
     @Override
     void onFailure(Request requestF, Throwable failure) {

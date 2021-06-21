@@ -36,11 +36,8 @@ public class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<
   @Override
   @Nullable
   protected String target(Request request) {
-    if (request != null) {
-      String queryString = request.getQuery();
-      return queryString != null ? request.getPath() + "?" + queryString : request.getPath();
-    }
-    return null;
+    String queryString = request.getQuery();
+    return queryString != null ? request.getPath() + "?" + queryString : request.getPath();
   }
 
   @Override
@@ -145,7 +142,7 @@ public class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<
     try {
       longFromField = httpField != null ? Long.getLong(httpField.getValue()) : null;
     } catch (NumberFormatException t) {
-      LOG.error(
+      LOG.debug(
           "Value {} is not  not valid number format for header field: {}",
           httpField.getValue(),
           httpField.getName());

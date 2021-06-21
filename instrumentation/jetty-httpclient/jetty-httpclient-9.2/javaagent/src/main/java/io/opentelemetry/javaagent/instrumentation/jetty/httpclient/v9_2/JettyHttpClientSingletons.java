@@ -11,11 +11,11 @@ import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAt
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
-public class JettyHttpClientInstrumenters {
+public class JettyHttpClientSingletons {
 
   private static final Instrumenter<Request, Response> INSTRUMENTER;
 
-  private JettyHttpClientInstrumenters() {}
+  private JettyHttpClientSingletons() {}
 
   static {
     JettyClientInstrumenterBuilder builder =
