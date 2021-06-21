@@ -30,6 +30,7 @@ import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.grpc.GrpcService;
 import com.linecorp.armeria.server.healthcheck.HealthCheckService;
 import io.netty.buffer.ByteBufOutputStream;
+import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import java.io.IOException;
@@ -69,6 +70,16 @@ public class FakeBackendMain {
           }
         });
     module.setSerializers(serializers);
+    serializers.addSerializer(
+        new StdSerializer<>(ExportLogsServiceRequest.class) {
+          @Override
+          public void serialize(
+              ExportLogsServiceRequest value, JsonGenerator gen, SerializerProvider provider)
+              throws IOException {
+            marshaller.writeValue(value, gen);
+          }
+        });
+    module.setSerializers(serializers);
     mapper.addModule(module);
     OBJECT_MAPPER = mapper.build();
   }
@@ -76,18 +87,21 @@ public class FakeBackendMain {
   public static void main(String[] args) {
     var traceCollector = new FakeTraceCollectorService();
     var metricsCollector = new FakeMetricsCollectorService();
+    var logsCollector = new FakeLogsCollectorService();
     var server =
         Server.builder()
             .http(8080)
             .service(GrpcService.builder()
                 .addService(traceCollector)
                 .addService(metricsCollector)
+                .addService(logsCollector)
                 .build())
             .service(
                 "/clear",
                 (ctx, req) -> {
                   traceCollector.clearRequests();
                   metricsCollector.clearRequests();
+                  logsCollector.clearRequests();
                   return HttpResponse.of(HttpStatus.OK);
                 })
             .service(
@@ -103,6 +117,15 @@ public class FakeBackendMain {
                 "/get-metrics",
                 (ctx, req) -> {
                   var requests = metricsCollector.getRequests();
+                  var buf = new ByteBufOutputStream(ctx.alloc().buffer());
+                  OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
+                  return HttpResponse.of(
+                      HttpStatus.OK, MediaType.JSON, HttpData.wrap(buf.buffer()));
+                })
+            .service(
+                "/get-logs",
+                (ctx, req) -> {
+                  var requests = logsCollector.getRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(
