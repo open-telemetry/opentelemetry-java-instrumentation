@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtrac
 import javax.sql.DataSource;
 
 public final class DataSourceSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jdbc";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
   private static final Instrumenter<DataSource, Void> INSTRUMENTER;
 

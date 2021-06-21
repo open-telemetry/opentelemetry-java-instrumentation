@@ -24,6 +24,7 @@ import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.ins
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.jdbc.internal.CheckedCallable;
 import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import io.opentelemetry.javaagent.instrumentation.jdbc.DbRequest;
 import java.sql.Connection;
