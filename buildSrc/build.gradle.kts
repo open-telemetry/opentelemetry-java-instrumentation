@@ -5,6 +5,14 @@ plugins {
   id("com.diffplug.spotless") version "5.13.0"
 }
 
+spotless {
+  java {
+    googleJavaFormat("1.10.0")
+    licenseHeaderFile(rootProject.file("../gradle/enforcement/spotless.license.java"), "(package|import|public)")
+    target("src/**/*.java")
+  }
+}
+
 gradlePlugin {
   plugins {
     create("muzzle-plugin") {
