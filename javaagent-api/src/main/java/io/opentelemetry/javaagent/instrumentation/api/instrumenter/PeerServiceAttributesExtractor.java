@@ -56,9 +56,9 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
   @Nullable
   public static <REQUEST, RESPONSE>
       PeerServiceAttributesExtractor<REQUEST, RESPONSE> createUsingReflection(
-          String netAttributesExtractorImplClassName) {
+          String netAttributesExtractorImplClassName, ClassLoader applicationClassLoader) {
     return ReflectionPeerServiceAttributesExtractorFactory.create(
-        netAttributesExtractorImplClassName);
+        netAttributesExtractorImplClassName, applicationClassLoader);
   }
 
   @Override

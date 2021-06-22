@@ -28,7 +28,8 @@ public final class ArmeriaSingletons {
 
     AttributesExtractor<RequestContext, RequestLog> peerServiceAttributesExtractor =
         PeerServiceAttributesExtractor.createUsingReflection(
-            "io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaNetAttributesExtractor");
+            "io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaNetAttributesExtractor",
+            ArmeriaSingletons.class.getClassLoader());
     if (peerServiceAttributesExtractor != null) {
       builder.addAttributeExtractor(peerServiceAttributesExtractor);
     }

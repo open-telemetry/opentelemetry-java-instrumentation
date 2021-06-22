@@ -36,7 +36,8 @@ public final class GrpcSingletons {
 
     PeerServiceAttributesExtractor<GrpcRequest, Status> peerServiceExtractor =
         PeerServiceAttributesExtractor.createUsingReflection(
-            "io.opentelemetry.instrumentation.grpc.v1_6.GrpcNetAttributesExtractor");
+            "io.opentelemetry.instrumentation.grpc.v1_6.GrpcNetAttributesExtractor",
+            GrpcSingletons.class.getClassLoader());
     if (peerServiceExtractor != null) {
       builder.addAttributeExtractor(peerServiceExtractor);
     }

@@ -18,12 +18,12 @@ final class ReflectionPeerServiceAttributesExtractorFactory {
 
   @Nullable
   static <REQUEST, RESPONSE> PeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
-      String netAttributesImplClassName) {
+      String netAttributesImplClassName, ClassLoader classLoader) {
     Constructor<? extends NetAttributesExtractor<REQUEST, RESPONSE>> constructor = null;
     try {
       Class<? extends NetAttributesExtractor<REQUEST, RESPONSE>> netAttributesExtractorClass =
           (Class<? extends NetAttributesExtractor<REQUEST, RESPONSE>>)
-              Class.forName(netAttributesImplClassName);
+              Class.forName(netAttributesImplClassName, true, classLoader);
       constructor = netAttributesExtractorClass.getDeclaredConstructor();
       constructor.setAccessible(true);
       NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor = constructor.newInstance();
