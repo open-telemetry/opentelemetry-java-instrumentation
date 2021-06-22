@@ -11,9 +11,9 @@ import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.HttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTracing;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTracingBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import java.util.function.Function;
 
 // Holds singleton references to decorators to match against during suppression.

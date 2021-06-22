@@ -121,5 +121,4 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     instrumenter().end(context, delegate, null, null);
     return result;
   }
-
 }

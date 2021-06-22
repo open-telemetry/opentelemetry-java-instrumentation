@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
 public final class JdbcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
