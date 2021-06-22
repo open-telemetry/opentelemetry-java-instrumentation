@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class OpenTelemetryDriver implements Driver {
+public final class OpenTelemetryDriver implements Driver {
 
   private static final String INTERCEPTOR_MODE_URL_PREFIX = "jdbc:otel:";
 
