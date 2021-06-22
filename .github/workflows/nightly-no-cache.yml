@@ -20,6 +20,12 @@ jobs:
           distribution: adopt
           java-version: 11
 
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
       - name: Build
         run: ./gradlew build --stacktrace -x :smoke-tests:test --no-build-cache
 
@@ -47,6 +53,12 @@ jobs:
           distribution: adopt
           java-version: 11
 
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
       - name: Test
         run: ./gradlew test -PtestJavaVersion=${{ matrix.java }} --stacktrace -x :smoke-tests:test -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} -Porg.gradle.java.installations.auto-download=false --no-build-cache
 
@@ -62,6 +74,12 @@ jobs:
         with:
           distribution: adopt
           java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Test
         run: ./gradlew test -x :smoke-tests:test -PtestLatestDeps=true --stacktrace --no-build-cache
@@ -88,6 +106,12 @@ jobs:
           distribution: adopt
           java-version: 11
 
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
       - name: Test
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.suite }} --no-build-cache
 
@@ -103,6 +127,12 @@ jobs:
         with:
           distribution: adopt
           java-version: 11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Build
         run: ./gradlew build --stacktrace --no-build-cache

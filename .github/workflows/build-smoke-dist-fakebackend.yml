@@ -27,6 +27,12 @@ jobs:
         with:
           job-id: fakebackend-smoke
 
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
+
       - name: Login to GitHub Package Registry
         uses: docker/login-action@v1.9.0
         with:
@@ -64,6 +70,12 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: fakebackend-smoke
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('smoke-tests/fake-backend/gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Login to GitHub Package Registry
         uses: azure/docker-login@v1

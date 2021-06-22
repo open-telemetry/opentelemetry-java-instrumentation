@@ -74,14 +74,17 @@ class CassandraClientTest extends AgentInstrumentationSpecification {
     CqlSession session = getSession(keyspace)
 
     runUnderTrace("parent") {
-      session.executeAsync(statement).toCompletableFuture().get()
+      session.executeAsync(statement).toCompletableFuture().whenComplete({result, throwable ->
+        runUnderTrace("child") {}
+      }) .get()
     }
 
     expect:
     assertTraces(1) {
-      trace(0, 2) {
+      trace(0, 3) {
         basicSpan(it, 0, "parent")
         cassandraSpan(it, 1, spanName, expectedStatement, operation, keyspace, table, span(0))
+        basicSpan(it, 2, "child", span(0))
       }
     }
 
