@@ -5,7 +5,12 @@ plugins {
 // add repo for org.gradle:gradle-tooling-api which org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain depends on
 repositories {
   mavenCentral()
-  maven { url 'https://repo.gradle.org/artifactory/libs-releases-local' }
+  maven {
+    url 'https://repo.gradle.org/artifactory/libs-releases-local'
+    content {
+      includeGroup 'org.gradle'
+    }
+  }
   mavenLocal()
 }
 

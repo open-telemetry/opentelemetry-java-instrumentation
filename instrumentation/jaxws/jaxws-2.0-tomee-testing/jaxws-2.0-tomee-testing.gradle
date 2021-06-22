@@ -3,10 +3,15 @@ plugins {
 }
 
 // add repo for org.gradle:gradle-tooling-api which org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain
-// which is used by jaxrs-2.0-arquillian-testing depends on
+// which is used by jaxws-2.0-arquillian-testing depends on
 repositories {
   mavenCentral()
-  maven { url 'https://repo.gradle.org/artifactory/libs-releases-local' }
+  maven {
+    url 'https://repo.gradle.org/artifactory/libs-releases-local'
+    content {
+      includeGroup 'org.gradle'
+    }
+  }
   mavenLocal()
 }
 
