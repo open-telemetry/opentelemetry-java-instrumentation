@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.ignore.trie;
+package io.opentelemetry.javaagent.instrumentation.api.util;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -21,7 +21,16 @@ public interface Trie<V> {
    * will return {@code 10}.
    */
   @Nullable
-  V getOrNull(CharSequence str);
+  default V getOrNull(CharSequence str) {
+    return getOrDefault(str, null);
+  }
+
+  /**
+   * Returns the value associated with the longest matched prefix, or the {@code defaultValue} if
+   * there wasn't a match. For example: for a trie containing an {@code ("abc", 10)} entry {@code
+   * trie.getOrDefault("abcd", -1)} will return {@code 10}.
+   */
+  V getOrDefault(CharSequence str, V defaultValue);
 
   interface Builder<V> {
 

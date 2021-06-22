@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.extension.AgentExtension;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.instrumentation.api.concurrent.InstrumentedTaskClasses;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
@@ -177,6 +178,8 @@ public class AgentInstaller {
     for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
       configurer.configure(config, builder);
     }
+
+    InstrumentedTaskClasses.internalSetIgnoredTaskClasses(builder.buildIgnoredTasksTrie());
 
     return agentBuilder
         .ignore(any(), new IgnoredClassLoadersMatcher(builder.buildIgnoredClassLoadersTrie()))

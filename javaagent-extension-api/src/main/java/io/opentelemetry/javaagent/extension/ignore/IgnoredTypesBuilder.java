@@ -84,26 +84,4 @@ public interface IgnoredTypesBuilder {
    * @return {@code this}
    */
   IgnoredTypesBuilder ignoreTaskClass(String classNameOrPrefix);
-
-  /**
-   * Allow the Java concurrent task class specified by {@code classNameOrPrefix} to be instrumented.
-   * Concurrent task classes implement or extend one of the following classes:
-   *
-   * <ul>
-   *   <li>{@link java.lang.Runnable}
-   *   <li>{@link java.util.concurrent.Callable}
-   *   <li>{@link java.util.concurrent.ForkJoinTask}
-   *   <li>{@link java.util.concurrent.Future}
-   * </ul>
-   *
-   * <p>Calling this will will overwrite any previous settings for passed prefix; in particular,
-   * calling this method will override any previous {@link #ignoreTaskClass(String)} setting.
-   *
-   * <p>{@code classNameOrPrefix} can be the full class name (ex. {@code com.example.MyClass}),
-   * package name (ex. {@code com.example.mypackage.}), or outer class name (ex {@code
-   * com.example.OuterClass$})
-   *
-   * @return {@code this}
-   */
-  IgnoredTypesBuilder allowTaskClass(String classNameOrPrefix);
 }
