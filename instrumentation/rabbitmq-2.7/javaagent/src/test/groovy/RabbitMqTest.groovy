@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.test.utils.TraceUtils.runUnderTra
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
-import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.Consumer
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
@@ -23,42 +22,24 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
-import java.time.Duration
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.testcontainers.containers.GenericContainer
-import spock.lang.Shared
 
-class RabbitMQTest extends AgentInstrumentationSpecification {
+class RabbitMqTest extends AgentInstrumentationSpecification implements WithRabbitMqTrait {
 
-  @Shared
-  def rabbitMQContainer
-  @Shared
-  InetSocketAddress rabbitmqAddress
-
-  ConnectionFactory factory = new ConnectionFactory(host: rabbitmqAddress.hostName, port: rabbitmqAddress.port)
-  Connection conn = factory.newConnection()
+  Connection conn = connectionFactory.newConnection()
   Channel channel = conn.createChannel()
 
   def setupSpec() {
-    rabbitMQContainer = new GenericContainer('rabbitmq:latest')
-      .withExposedPorts(5672)
-      .withStartupTimeout(Duration.ofSeconds(120))
-    rabbitMQContainer.start()
-    rabbitmqAddress = new InetSocketAddress(
-      rabbitMQContainer.containerIpAddress,
-      rabbitMQContainer.getMappedPort(5672)
-    )
+    startRabbit()
   }
 
   def cleanupSpec() {
-    if (rabbitMQContainer) {
-      rabbitMQContainer.stop()
-    }
+    stopRabbit()
   }
 
   def cleanup() {
@@ -266,7 +247,7 @@ class RabbitMQTest extends AgentInstrumentationSpecification {
 
   def "test spring rabbit"() {
     setup:
-    def connectionFactory = new CachingConnectionFactory(rabbitmqAddress.hostName, rabbitmqAddress.port)
+    def connectionFactory = new CachingConnectionFactory(connectionFactory)
     AmqpAdmin admin = new RabbitAdmin(connectionFactory)
     def queue = new Queue("some-routing-queue", false, true, true, null)
     admin.declareQueue(queue)

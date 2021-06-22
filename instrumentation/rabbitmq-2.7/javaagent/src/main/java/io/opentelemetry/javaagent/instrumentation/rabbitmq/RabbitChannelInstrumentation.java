@@ -50,7 +50,9 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("com.rabbitmq.client.Channel"));
+    return implementsInterface(named("com.rabbitmq.client.Channel"))
+        // broken implementation that throws UnsupportedOperationException on getConnection() calls
+        .and(not(named("reactor.rabbitmq.ChannelProxy")));
   }
 
   @Override
