@@ -45,7 +45,6 @@ class RatpackHttpClientTest extends HttpClientTest<Void> implements AgentTestTra
 
   HttpClient buildHttpClient(Action<? super HttpClientSpec> action) {
     HttpClient.of {
-      it.readTimeout(Duration.ofSeconds(2))
       // execController method added in 1.9
       if (HttpClientSpec.metaClass.getMetaMethod("execController") != null) {
         it.execController(exec.getController())
