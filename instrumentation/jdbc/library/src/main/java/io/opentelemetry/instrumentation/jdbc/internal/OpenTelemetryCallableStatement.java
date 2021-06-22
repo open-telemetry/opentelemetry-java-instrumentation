@@ -42,8 +42,8 @@ import java.util.Map;
 class OpenTelemetryCallableStatement<S extends CallableStatement>
     extends OpenTelemetryPreparedStatement<S> implements CallableStatement {
 
-  public OpenTelemetryCallableStatement(S callableStatement, String query) {
-    super(callableStatement, query);
+  public OpenTelemetryCallableStatement(S delegate, DbInfo dbInfo, String query) {
+    super(delegate, dbInfo, query);
   }
 
   @SuppressWarnings("UngroupedOverloads")

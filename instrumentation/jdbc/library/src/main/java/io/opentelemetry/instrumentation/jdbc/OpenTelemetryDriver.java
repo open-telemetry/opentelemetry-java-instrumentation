@@ -22,7 +22,6 @@ package io.opentelemetry.instrumentation.jdbc;
 
 import io.opentelemetry.instrumentation.jdbc.internal.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcMaps;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -34,6 +33,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -42,8 +42,8 @@ public class OpenTelemetryDriver implements Driver {
   private static final String INTERCEPTOR_MODE_URL_PREFIX = "jdbc:otel:";
 
   private static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
+  private static final AtomicBoolean REGISTERED = new AtomicBoolean();
 
-  private static boolean registered = false;
   private static boolean interceptorMode = false;
 
   static {
@@ -69,7 +69,7 @@ public class OpenTelemetryDriver implements Driver {
           // the first driver is OTEL driver, skip all this verification
           return;
         }
-        if (driver instanceof OpenTelemetryDriver) {
+        if (!(driver instanceof OpenTelemetryDriver)) {
           drivers.add(driver);
         }
         DriverManager.deregisterDriver(driver);
@@ -110,7 +110,7 @@ public class OpenTelemetryDriver implements Driver {
           "Driver is already registered. It can only be registered once.");
     }
     DriverManager.registerDriver(INSTANCE);
-    OpenTelemetryDriver.registered = true;
+    REGISTERED.set(true);
   }
 
   /**
@@ -122,17 +122,17 @@ public class OpenTelemetryDriver implements Driver {
    * @throws SQLException if deregistering the driver fails
    */
   public static void deregister() throws SQLException {
-    if (!registered) {
+    if (!REGISTERED.get()) {
       throw new IllegalStateException(
           "Driver is not registered (or it has not been registered using Driver.register() method)");
     }
     DriverManager.deregisterDriver(INSTANCE);
-    registered = false;
+    REGISTERED.set(false);
   }
 
   /** Returns {@code true} if the driver is registered against {@link DriverManager} */
   public static boolean isRegistered() {
-    return registered;
+    return REGISTERED.get();
   }
 
   private static Driver findDriver(String realUrl) throws SQLException {
@@ -179,9 +179,8 @@ public class OpenTelemetryDriver implements Driver {
     final Connection connection = wrappedDriver.connect(realUrl, info);
 
     final DbInfo dbInfo = JdbcConnectionUrlParser.parse(realUrl, info);
-    JdbcMaps.connectionInfo.put(connection, dbInfo);
 
-    return new OpenTelemetryConnection(connection);
+    return new OpenTelemetryConnection(connection, dbInfo);
   }
 
   @Override

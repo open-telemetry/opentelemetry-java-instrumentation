@@ -68,7 +68,7 @@ public final class JdbcUtils {
     return JdbcMaps.connectionInfo.computeIfAbsent(connection, JdbcUtils::computeDbInfo);
   }
 
-  private static DbInfo computeDbInfo(Connection connection) {
+  public static DbInfo computeDbInfo(Connection connection) {
     /*
      * Logic to get the DBInfo from a JDBC Connection, if the connection was not created via
      * Driver.connect, or it has never seen before, the connectionInfo map will return null and will

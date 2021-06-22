@@ -20,11 +20,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcSingletons.instrumenter;
-
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.api.CallDepthThreadLocalMap;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -42,7 +37,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -50,59 +44,23 @@ import java.util.Calendar;
 class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTelemetryStatement<S>
     implements PreparedStatement {
 
-  public OpenTelemetryPreparedStatement(S preparedStatement, String query) {
-    super(preparedStatement, query);
-  }
-
-  private static <T, E extends Exception> T wrapCall(
-      PreparedStatement preparedStatement, CheckedCallable<T, E> callable) throws E {
-    // Connection#getMetaData() may execute a Statement or PreparedStatement to retrieve DB info
-    // this happens before the DB CLIENT span is started (and put in the current context), so this
-    // instrumentation runs again and the shouldStartSpan() check always returns true - and so on
-    // until we get a StackOverflowError
-    // using CallDepth prevents this, because this check happens before Connection#getMetadata()
-    // is called - the first recursive Statement call is just skipped and we do not create a span
-    // for it
-    if (CallDepthThreadLocalMap.getCallDepth(Statement.class).getAndIncrement() > 0) {
-      return callable.call();
-    }
-
-    try {
-      Context parentContext = Context.current();
-      DbRequest request = DbRequest.create(preparedStatement);
-
-      if (request == null || !instrumenter().shouldStart(parentContext, request)) {
-        return callable.call();
-      }
-
-      Context context = instrumenter().start(parentContext, request);
-      T result;
-      try (Scope ignored = context.makeCurrent()) {
-        result = callable.call();
-      } catch (Throwable t) {
-        instrumenter().end(context, request, null, t);
-        throw t;
-      }
-      instrumenter().end(context, request, null, null);
-      return result;
-    } finally {
-      CallDepthThreadLocalMap.reset(Statement.class);
-    }
+  public OpenTelemetryPreparedStatement(S delegate, DbInfo dbInfo, String query) {
+    super(delegate, dbInfo, query);
   }
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return wrapCall(delegate, delegate::executeQuery);
+    return wrapCall(query, delegate::executeQuery);
   }
 
   @Override
   public int executeUpdate() throws SQLException {
-    return wrapCall(delegate, delegate::executeUpdate);
+    return wrapCall(query, delegate::executeUpdate);
   }
 
   @Override
   public boolean execute() throws SQLException {
-    return wrapCall(delegate, delegate::execute);
+    return wrapCall(query, delegate::execute);
   }
 
   @SuppressWarnings("UngroupedOverloads")

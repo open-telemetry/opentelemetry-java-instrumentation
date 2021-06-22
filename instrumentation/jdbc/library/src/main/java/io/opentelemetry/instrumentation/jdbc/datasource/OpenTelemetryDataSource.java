@@ -21,11 +21,13 @@
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.DataSourceSingletons.instrumenter;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.computeDbInfo;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.CheckedCallable;
+import io.opentelemetry.instrumentation.jdbc.internal.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -42,39 +44,19 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     this.delegate = delegate;
   }
 
-  private static <T, E extends SQLException> T wrapCall(
-      DataSource ds, CheckedCallable<T, E> callable) throws E {
-    Context parentContext = Context.current();
-
-    if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
-      // this instrumentation is already very noisy, and calls to getConnection outside of an
-      // existing trace do not tend to be very interesting
-      return callable.call();
-    }
-
-    Context context = instrumenter().start(parentContext, ds);
-    T result;
-    try (Scope ignored = context.makeCurrent()) {
-      result = callable.call();
-    } catch (Throwable t) {
-      instrumenter().end(context, ds, null, t);
-      throw t;
-    }
-    instrumenter().end(context, ds, null, null);
-    return result;
-  }
-
   @Override
   public Connection getConnection() throws SQLException {
-    Connection connection = wrapCall(delegate, delegate::getConnection);
-    return new OpenTelemetryConnection(connection);
+    Connection connection = wrapCall(delegate::getConnection);
+    DbInfo dbInfo = computeDbInfo(connection);
+    return new OpenTelemetryConnection(connection, dbInfo);
   }
 
   @Override
   public Connection getConnection(final String username, final String password)
       throws SQLException {
-    Connection connection = wrapCall(delegate, () -> delegate.getConnection(username, password));
-    return new OpenTelemetryConnection(connection);
+    Connection connection = wrapCall(() -> delegate.getConnection(username, password));
+    DbInfo dbInfo = computeDbInfo(connection);
+    return new OpenTelemetryConnection(connection, dbInfo);
   }
 
   @Override
@@ -118,4 +100,26 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
       ((AutoCloseable) delegate).close();
     }
   }
+
+  private <T, E extends SQLException> T wrapCall(CheckedCallable<T, E> callable) throws E {
+    Context parentContext = Context.current();
+
+    if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
+      // this instrumentation is already very noisy, and calls to getConnection outside of an
+      // existing trace do not tend to be very interesting
+      return callable.call();
+    }
+
+    Context context = instrumenter().start(parentContext, delegate);
+    T result;
+    try (Scope ignored = context.makeCurrent()) {
+      result = callable.call();
+    } catch (Throwable t) {
+      instrumenter().end(context, delegate, null, t);
+      throw t;
+    }
+    instrumenter().end(context, delegate, null, null);
+    return result;
+  }
+
 }
