@@ -18,9 +18,11 @@ javaPlatform {
   allowDependencies()
 }
 
+def otelVersion = findProperty("otelVersion")
+
 dependencies {
-  api(platform("io.opentelemetry:opentelemetry-bom:${versions["io.opentelemetry"]}"))
-  api(platform("io.opentelemetry:opentelemetry-bom-alpha:${versions["io.opentelemetry"]}"))
+  api(platform("io.opentelemetry:opentelemetry-bom:${otelVersion}"))
+  api(platform("io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha"))
 }
 
 afterEvaluate {
