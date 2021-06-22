@@ -19,6 +19,7 @@ dependencies {
 
   api project(':testing-common')
   implementation "io.opentelemetry:opentelemetry-api"
+  implementation "org.jsoup:jsoup:1.13.1"
 
   def arquillianVersion = '1.4.0.Final'
   implementation "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}"
