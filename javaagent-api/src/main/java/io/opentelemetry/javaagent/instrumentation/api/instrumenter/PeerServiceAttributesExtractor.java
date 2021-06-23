@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.NetAttributesExtractor;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Extractor of the {@code peer.service} span attribute, described in <a
@@ -46,19 +45,6 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       NetAttributesExtractor<REQUEST, RESPONSE> netAttributesExtractor) {
     return new PeerServiceAttributesExtractor<>(
         JAVAAGENT_PEER_SERVICE_MAPPING, netAttributesExtractor);
-  }
-
-  /**
-   * Returns a new {@link PeerServiceAttributesExtractor} that will create a new instance of type
-   * {@code netAttributesExtractorImplClassName} (which must extend {@link NetAttributesExtractor})
-   * and use it to determine the value of the {@code peer.service} attribute.
-   */
-  @Nullable
-  public static <REQUEST, RESPONSE>
-      PeerServiceAttributesExtractor<REQUEST, RESPONSE> createUsingReflection(
-          String netAttributesExtractorImplClassName) {
-    return ReflectionPeerServiceAttributesExtractorFactory.create(
-        netAttributesExtractorImplClassName);
   }
 
   @Override

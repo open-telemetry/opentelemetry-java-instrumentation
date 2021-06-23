@@ -10,8 +10,8 @@ plugins {
   idea
 
   id("org.gradle.test-retry")
-  id("net.ltgt.errorprone")
 
+  id("otel.errorprone-conventions")
   id("otel.spotless-conventions")
 }
 

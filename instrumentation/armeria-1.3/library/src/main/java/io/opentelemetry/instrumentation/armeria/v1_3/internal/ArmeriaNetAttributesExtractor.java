@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.armeria.v1_3;
+package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
 import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class ArmeriaNetAttributesExtractor
+public final class ArmeriaNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<RequestContext, RequestLog> {
 
   @Override

@@ -13,8 +13,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTracing;
-import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTracingBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcNetAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
 // Holds singleton references.
@@ -27,21 +27,18 @@ public final class GrpcSingletons {
   public static final Context.Storage STORAGE = new ContextStorageBridge();
 
   static {
-    GrpcTracingBuilder builder =
+    boolean experimentalSpanAttributes =
+        Config.get()
+            .getBooleanProperty("otel.instrumentation.grpc.experimental-span-attributes", false);
+    PeerServiceAttributesExtractor<GrpcRequest, Status> peerServiceAttributesExtractor =
+        PeerServiceAttributesExtractor.create(new GrpcNetAttributesExtractor());
+
+    GrpcTracing tracing =
         GrpcTracing.newBuilder(GlobalOpenTelemetry.get())
-            .setCaptureExperimentalSpanAttributes(
-                Config.get()
-                    .getBooleanProperty(
-                        "otel.instrumentation.grpc.experimental-span-attributes", false));
+            .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
+            .addAttributeExtractor(peerServiceAttributesExtractor)
+            .build();
 
-    PeerServiceAttributesExtractor<GrpcRequest, Status> peerServiceExtractor =
-        PeerServiceAttributesExtractor.createUsingReflection(
-            "io.opentelemetry.instrumentation.grpc.v1_6.GrpcNetAttributesExtractor");
-    if (peerServiceExtractor != null) {
-      builder.addAttributeExtractor(peerServiceExtractor);
-    }
-
-    GrpcTracing tracing = builder.build();
     CLIENT_INTERCEPTOR = tracing.newClientInterceptor();
     SERVER_INTERCEPTOR = tracing.newServerInterceptor();
   }
