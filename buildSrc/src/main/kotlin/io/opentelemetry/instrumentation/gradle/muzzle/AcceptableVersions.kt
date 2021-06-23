@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.gradle.muzzle
 import org.eclipse.aether.version.Version
 import java.util.Locale
 import java.util.function.Predicate
-import java.util.regex.Pattern
 
 internal class AcceptableVersions(private val skipVersions: Collection<String>) :
   Predicate<Version?> {
@@ -21,7 +20,7 @@ internal class AcceptableVersions(private val skipVersions: Collection<String>) 
     if (skipVersions.contains(versionString)) {
       return false
     }
-    val draftVersion = (versionString.contains("rc")
+    val draftVersion = versionString.contains("rc")
       || versionString.contains(".cr")
       || versionString.contains("alpha")
       || versionString.contains("beta")
@@ -33,11 +32,11 @@ internal class AcceptableVersions(private val skipVersions: Collection<String>) 
       || versionString.contains("-atlassian-")
       || versionString.contains("public_draft")
       || versionString.contains("snapshot")
-      || GIT_SHA_PATTERN.matcher(versionString).matches())
+      || GIT_SHA_PATTERN.matches(versionString)
     return !draftVersion
   }
 
   companion object {
-    private val GIT_SHA_PATTERN = Pattern.compile("^.*-[0-9a-f]{7,}$")
+    private val GIT_SHA_PATTERN = Regex("^.*-[0-9a-f]{7,}$")
   }
 }
