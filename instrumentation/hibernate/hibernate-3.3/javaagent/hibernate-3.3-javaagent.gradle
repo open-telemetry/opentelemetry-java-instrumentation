@@ -5,7 +5,9 @@
  * instrumentation isn't able to reference it.
  */
 
-apply plugin: "otel.javaagent-instrumentation"
+plugins {
+  id("otel.javaagent-instrumentation")
+}
 
 muzzle {
   pass {

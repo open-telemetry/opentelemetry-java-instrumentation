@@ -1,11 +1,11 @@
 plugins {
-  id "com.github.johnrengelman.shadow"
+  id("com.github.johnrengelman.shadow")
+
+  id("otel.java-conventions")
+  id("otel.publish-conventions")
 }
 
 group = 'io.opentelemetry.instrumentation'
-
-apply plugin: "otel.java-conventions"
-apply plugin: "otel.publish-conventions"
 
 configurations {
   shadowInclude {

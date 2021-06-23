@@ -5,14 +5,14 @@ import com.github.jk1.license.render.InventoryMarkdownReportRenderer
 plugins {
   id "otel.shadow-conventions"
   id "com.github.jk1.dependency-license-report" version "1.16"
+
+  id("otel.java-conventions")
+  id("otel.publish-conventions")
 }
 
 description = 'OpenTelemetry Javaagent'
 
 group = 'io.opentelemetry.javaagent'
-
-apply plugin: "otel.java-conventions"
-apply plugin: "otel.publish-conventions"
 
 configurations {
   shadowInclude {

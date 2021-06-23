@@ -1,4 +1,6 @@
-apply plugin: "otel.library-instrumentation"
+plugins {
+  id("otel.library-instrumentation")
+}
 
 dependencies {
   library "io.reactivex.rxjava3:rxjava:3.0.12"

@@ -1,4 +1,6 @@
-apply plugin: "otel.library-instrumentation"
+plugins {
+  id("otel.library-instrumentation")
+}
 
 dependencies {
   api(project(':instrumentation:servlet:servlet-common:library'))

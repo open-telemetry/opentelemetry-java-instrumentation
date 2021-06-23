@@ -1,9 +1,10 @@
-// Set properties before any plugins get loaded
+plugins {
+  id("otel.javaagent-instrumentation")
+}
+
 ext {
   cassandraDriverTestVersions = "[3.0,4.0)"
 }
-
-apply plugin: "otel.javaagent-instrumentation"
 
 muzzle {
 

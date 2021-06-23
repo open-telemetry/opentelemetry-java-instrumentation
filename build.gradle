@@ -52,15 +52,6 @@ nexusPublishing {
 description = 'OpenTelemetry instrumentations for Java'
 
 allprojects {
-  apply plugin: 'idea'
-
-  idea {
-    module {
-      downloadJavadoc = false
-      downloadSources = false
-    }
-  }
-
   plugins.withId('net.ltgt.errorprone') {
     dependencies {
       errorprone "com.google.errorprone:error_prone_core"
@@ -156,8 +147,6 @@ allprojects {
     }
   }
 }
-
-apply plugin: 'com.diffplug.spotless'
 
 spotless {
   // this formatting is applied at the root level, as some of these files are not in a submodules

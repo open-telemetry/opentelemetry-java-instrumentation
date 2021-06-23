@@ -1,4 +1,6 @@
-apply plugin: "otel.library-instrumentation"
+plugins {
+  id("otel.library-instrumentation")
+}
 
 dependencies {
   library "org.apache.logging.log4j:log4j-core:2.13.2"
