@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.api.concurrent;
+package io.opentelemetry.javaagent.instrumentation.api.internal;
 
 import io.opentelemetry.instrumentation.api.config.Config;
 import io.opentelemetry.javaagent.instrumentation.api.util.Trie;
@@ -42,9 +42,9 @@ public final class InstrumentedTaskClasses {
 
   /**
    * Sets the configured ignored tasks trie. This method is called internally from the agent
-   * classloader. <b>Instrumentation code must not call this.</b>
+   * classloader.
    */
-  public static void internalSetIgnoredTaskClasses(Trie<Boolean> ignoredTasksTrie) {
+  public static void setIgnoredTaskClasses(Trie<Boolean> ignoredTasksTrie) {
     if (InstrumentedTaskClasses.ignoredTaskClasses != null) {
       log.warn("Ignored task classes were already set earlier; returning.");
       return;

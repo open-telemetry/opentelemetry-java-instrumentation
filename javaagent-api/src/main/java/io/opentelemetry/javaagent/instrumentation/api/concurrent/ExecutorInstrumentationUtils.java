@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskClasses;
 
 /** Utils for concurrent instrumentations. */
 public final class ExecutorInstrumentationUtils {
