@@ -39,9 +39,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class OpenTelemetryDriver implements Driver {
 
-  private static final String INTERCEPTOR_MODE_URL_PREFIX = "jdbc:otel:";
+  public static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
-  private static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
+  private static final String INTERCEPTOR_MODE_URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
 
   private static boolean interceptorMode = false;
@@ -135,7 +135,7 @@ public final class OpenTelemetryDriver implements Driver {
     return REGISTERED.get();
   }
 
-  private static Driver findDriver(String realUrl) throws SQLException {
+  private static Driver findDriver(String realUrl) {
     if (realUrl == null || realUrl.trim().length() == 0) {
       throw new IllegalArgumentException("url is required");
     }
@@ -150,7 +150,7 @@ public final class OpenTelemetryDriver implements Driver {
       }
     }
 
-    throw new SQLException("Unable to find a driver that accepts url: " + realUrl);
+    throw new IllegalStateException("Unable to find a driver that accepts url: " + realUrl);
   }
 
   private static String extractRealUrl(String url) {
@@ -162,9 +162,8 @@ public final class OpenTelemetryDriver implements Driver {
   @Nullable
   @Override
   public Connection connect(String url, Properties info) throws SQLException {
-    // if there is no url, we have problems
-    if (url == null) {
-      throw new SQLException("url is required");
+    if (url == null || url.trim().length() == 0) {
+      throw new IllegalArgumentException("url is required");
     }
 
     if (!acceptsURL(url)) {
@@ -191,12 +190,18 @@ public final class OpenTelemetryDriver implements Driver {
     if (url.startsWith(INTERCEPTOR_MODE_URL_PREFIX)) {
       return true;
     }
-    return interceptorMode && url.startsWith("jdbc:");
+    return interceptorMode && url.startsWith("jdbc:") && url.length() > 5;
   }
 
   @Override
   public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
-    return findDriver(url).getPropertyInfo(url, info);
+    if (url == null || url.trim().length() == 0) {
+      throw new IllegalArgumentException("url is required");
+    }
+
+    final String realUrl = extractRealUrl(url);
+    final Driver wrappedDriver = findDriver(realUrl);
+    return wrappedDriver.getPropertyInfo(realUrl, info);
   }
 
   @Override
