@@ -11,7 +11,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public class FakeLogsCollectorService extends LogsServiceGrpc.LogsServiceImplBase{
 
-  private BlockingQueue<ExportLogsServiceRequest> exportRequests = new LinkedBlockingDeque<>();
+  private final BlockingQueue<ExportLogsServiceRequest> exportRequests = new LinkedBlockingDeque<>();
 
   List<ExportLogsServiceRequest> getRequests() {
     return ImmutableList.copyOf(exportRequests);
