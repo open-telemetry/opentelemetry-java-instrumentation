@@ -261,7 +261,7 @@ fun createClassLoaderForTask(muzzleTaskConfiguration: Configuration): ClassLoade
   val userUrls = objects.fileCollection()
   logger.info("Creating task classpath")
   userUrls.from(muzzleTaskConfiguration.resolvedConfiguration.files)
-  return classpathLoader(userUrls.plus(muzzleTooling), ClassLoader.getPlatformClassLoader())
+  return classpathLoader(userUrls.plus(muzzleBootstrap), ClassLoader.getPlatformClassLoader())
 }
 
 fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession): Set<MuzzleDirective> {
