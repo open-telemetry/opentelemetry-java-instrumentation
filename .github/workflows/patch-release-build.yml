@@ -191,7 +191,7 @@ jobs:
         with:
           job-id: jdk11
           remote-build-cache-proxy-enabled: false
-          arguments: build final closeAndReleaseRepository --stacktrace -x :smoke-tests:test -Prelease.version=${{ github.event.inputs.version }}
+          arguments: build final closeAndReleaseSonatypeStagingRepository --stacktrace -x :smoke-tests:test -Prelease.version=${{ github.event.inputs.version }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
