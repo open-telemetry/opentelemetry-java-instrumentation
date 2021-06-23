@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.gradle.muzzle
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
-import java.util.regex.Pattern
 import java.util.stream.Collectors
 
 abstract class MuzzleDirective {
@@ -62,7 +61,7 @@ abstract class MuzzleDirective {
   }
 
   val nameSlug: String
-    get() = NORMALIZE_NAME_SLUG.matcher(name.get().trim()).replaceAll("-")
+    get() = NORMALIZE_NAME_SLUG.replace(name.get().trim(), "-")
 
   val normalizedSkipVersions: Set<String>
     get() = skipVersions.getOrElse(setOf()).stream()
@@ -94,6 +93,6 @@ abstract class MuzzleDirective {
   }
 
   companion object {
-    private val NORMALIZE_NAME_SLUG = Pattern.compile("[^a-zA-Z0-9]+")
+    private val NORMALIZE_NAME_SLUG = Regex("[^a-zA-Z0-9]+")
   }
 }
