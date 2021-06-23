@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaNetAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;

@@ -3,16 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.grpc.v1_6;
+package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
 import io.grpc.Status;
 import io.opentelemetry.instrumentation.api.instrumenter.net.InetSocketAddressNetAttributesExtractor;
+import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-final class GrpcNetAttributesExtractor
+public final class GrpcNetAttributesExtractor
     extends InetSocketAddressNetAttributesExtractor<GrpcRequest, Status> {
   @Override
   @Nullable
