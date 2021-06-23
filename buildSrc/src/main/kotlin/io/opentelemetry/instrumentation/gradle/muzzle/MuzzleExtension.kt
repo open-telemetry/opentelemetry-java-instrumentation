@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 abstract class MuzzleExtension @Inject constructor(private val objectFactory: ObjectFactory) {
 
-  abstract val directives: ListProperty<MuzzleDirective?>
+  internal abstract val directives: ListProperty<MuzzleDirective>
 
   fun pass(action: Action<in MuzzleDirective?>) {
     val pass = objectFactory.newInstance(MuzzleDirective::class.java)
