@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.ignore.trie;
+package io.opentelemetry.javaagent.instrumentation.api.util;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,9 +20,9 @@ final class TrieImpl<V> implements Trie<V> {
   }
 
   @Override
-  public V getOrNull(CharSequence str) {
+  public V getOrDefault(CharSequence str, V defaultValue) {
     Node<V> node = root;
-    V lastMatchedValue = null;
+    V lastMatchedValue = defaultValue;
 
     for (int i = 0; i < str.length(); ++i) {
       char c = str.charAt(i);

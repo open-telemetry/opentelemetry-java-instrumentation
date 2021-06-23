@@ -16,7 +16,8 @@ public class SpringRabbitIgnoredTypesConfigurer implements IgnoredTypesConfigure
   public void configure(Config config, IgnoredTypesBuilder builder) {
     // contains a Runnable that servers as a worker that continuously reads messages from queue
     builder
-        .ignoreClass("org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer")
+        .ignoreClass("org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$")
+        .ignoreTaskClass("org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$")
         // a Runnable callback called only on shutdown
         .ignoreClass(
             "org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry$AggregatingCallback");
