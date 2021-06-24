@@ -63,7 +63,7 @@ public abstract class TomcatTracer extends HttpServerTracer<Request, Response, R
   }
 
   @Override
-  protected String peerHostIP(Request connection) {
+  protected String peerHostIp(Request connection) {
     connection.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, connection);
     return connection.remoteAddr().toString();
   }
@@ -80,8 +80,8 @@ public abstract class TomcatTracer extends HttpServerTracer<Request, Response, R
 
   @Override
   protected String url(Request request) {
-    MessageBytes schemeMB = request.scheme();
-    String scheme = schemeMB.isNull() ? "http" : schemeMB.toString();
+    MessageBytes schemeMessageBytes = request.scheme();
+    String scheme = schemeMessageBytes.isNull() ? "http" : schemeMessageBytes.toString();
     String host = request.serverName().toString();
     int serverPort = request.getServerPort();
     String path = request.requestURI().toString();

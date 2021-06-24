@@ -37,8 +37,8 @@ public class LibertyDispatcherTracer
 
   @Override
   @Nullable
-  protected String peerHostIP(LibertyConnectionWrapper libertyConnectionWrapper) {
-    return libertyConnectionWrapper.peerHostIP();
+  protected String peerHostIp(LibertyConnectionWrapper libertyConnectionWrapper) {
+    return libertyConnectionWrapper.peerHostIp();
   }
 
   @Override

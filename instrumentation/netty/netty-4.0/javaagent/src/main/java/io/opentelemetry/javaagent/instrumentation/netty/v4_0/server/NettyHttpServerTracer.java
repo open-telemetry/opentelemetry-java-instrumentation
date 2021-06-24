@@ -72,7 +72,7 @@ public class NettyHttpServerTracer
   }
 
   @Override
-  protected String peerHostIP(Channel channel) {
+  protected String peerHostIp(Channel channel) {
     SocketAddress socketAddress = channel.remoteAddress();
     if (socketAddress instanceof InetSocketAddress) {
       return ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
