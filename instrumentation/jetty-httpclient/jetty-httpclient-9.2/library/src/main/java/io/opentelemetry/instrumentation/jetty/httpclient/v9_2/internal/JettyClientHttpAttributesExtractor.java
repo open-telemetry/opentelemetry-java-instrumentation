@@ -70,15 +70,8 @@ final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<R
   @Override
   @Nullable
   protected Long requestContentLength(Request request, @Nullable Response response) {
-    Long reqContentLength = null;
-
-    if (request != null) {
-      HttpField requestContentLengthField =
-          request.getHeaders().getField(HttpHeader.CONTENT_LENGTH);
-      reqContentLength = getLongFromJettyHttpField(requestContentLengthField);
-    }
-
-    return reqContentLength;
+    HttpField requestContentLengthField = request.getHeaders().getField(HttpHeader.CONTENT_LENGTH);
+    return getLongFromJettyHttpField(requestContentLengthField);
   }
 
   @Override
@@ -98,7 +91,6 @@ final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<R
     httpVersion = (httpVersion != null) ? httpVersion : HttpVersion.HTTP_1_1;
     switch (httpVersion) {
       case HTTP_0_9:
-        return HTTP_1_0;
       case HTTP_1_0:
         return HTTP_1_0;
       case HTTP_1_1:
@@ -128,7 +120,7 @@ final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<R
   @Override
   @Nullable
   protected Integer statusCode(Request request, Response response) {
-    return response != null ? response.getStatus() : null;
+    return response.getStatus();
   }
 
   @Override
