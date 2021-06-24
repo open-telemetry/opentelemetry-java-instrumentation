@@ -27,7 +27,7 @@ class SpringWebMvcServerTracer
   }
 
   @Override
-  protected String peerHostIP(HttpServletRequest request) {
+  protected String peerHostIp(HttpServletRequest request) {
     return request.getRemoteAddr();
   }
 

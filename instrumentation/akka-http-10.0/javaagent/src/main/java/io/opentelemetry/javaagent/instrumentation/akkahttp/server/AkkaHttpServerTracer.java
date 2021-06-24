@@ -49,7 +49,7 @@ public class AkkaHttpServerTracer
   }
 
   @Override
-  protected String peerHostIP(HttpRequest httpRequest) {
+  protected String peerHostIp(HttpRequest httpRequest) {
     return null;
   }
 

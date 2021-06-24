@@ -74,7 +74,7 @@ public class GrizzlyHttpServerTracer
   }
 
   @Override
-  protected String peerHostIP(HttpRequestPacket httpRequest) {
+  protected String peerHostIp(HttpRequestPacket httpRequest) {
     return httpRequest.getRemoteAddress();
   }
 

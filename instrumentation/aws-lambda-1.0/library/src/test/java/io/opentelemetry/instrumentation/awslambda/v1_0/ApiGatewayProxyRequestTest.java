@@ -44,7 +44,7 @@ class ApiGatewayProxyRequestTest {
   }
 
   @Test
-  public void shouldCreateNoopRequestIfXRayPropagatorsSet() throws IOException {
+  public void shouldCreateNoopRequestIfXrayPropagatorsSet() throws IOException {
     // given
     InputStream mock = mock(InputStream.class);
     GlobalOpenTelemetry.set(
