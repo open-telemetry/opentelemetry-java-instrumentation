@@ -46,18 +46,6 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
     super(delegate, dbInfo, query);
   }
 
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void registerOutParameter(int parameterIndex, int sqlType) throws SQLException {
-    delegate.registerOutParameter(parameterIndex, sqlType);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void registerOutParameter(int parameterIndex, int sqlType, int scale) throws SQLException {
-    delegate.registerOutParameter(parameterIndex, sqlType, scale);
-  }
-
   @Override
   public boolean wasNull() throws SQLException {
     return delegate.wasNull();
@@ -71,8 +59,20 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public String getString(String parameterName) throws SQLException {
+    return delegate.getString(parameterName);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public boolean getBoolean(int parameterIndex) throws SQLException {
     return delegate.getBoolean(parameterIndex);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public boolean getBoolean(String parameterName) throws SQLException {
+    return delegate.getBoolean(parameterName);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -83,8 +83,20 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public byte getByte(String parameterName) throws SQLException {
+    return delegate.getByte(parameterName);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public short getShort(int parameterIndex) throws SQLException {
     return delegate.getShort(parameterIndex);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public short getShort(String parameterName) throws SQLException {
+    return delegate.getShort(parameterName);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -95,8 +107,20 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public int getInt(String parameterName) throws SQLException {
+    return delegate.getInt(parameterName);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public long getLong(int parameterIndex) throws SQLException {
     return delegate.getLong(parameterIndex);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public long getLong(String parameterName) throws SQLException {
+    return delegate.getLong(parameterName);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -107,15 +131,20 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public float getFloat(String parameterName) throws SQLException {
+    return delegate.getFloat(parameterName);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public double getDouble(int parameterIndex) throws SQLException {
     return delegate.getDouble(parameterIndex);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  @Deprecated
-  public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
-    return delegate.getBigDecimal(parameterIndex, scale);
+  public double getDouble(String parameterName) throws SQLException {
+    return delegate.getDouble(parameterName);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -126,8 +155,8 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  public Date getDate(int parameterIndex) throws SQLException {
-    return delegate.getDate(parameterIndex);
+  public byte[] getBytes(String parameterName) throws SQLException {
+    return delegate.getBytes(parameterName);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -138,56 +167,8 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  public Timestamp getTimestamp(int parameterIndex) throws SQLException {
-    return delegate.getTimestamp(parameterIndex);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public Object getObject(int parameterIndex) throws SQLException {
-    return delegate.getObject(parameterIndex);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
-    return delegate.getBigDecimal(parameterIndex);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public Object getObject(int parameterIndex, Map<String, Class<?>> map) throws SQLException {
-    return delegate.getObject(parameterIndex, map);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public Ref getRef(int parameterIndex) throws SQLException {
-    return delegate.getRef(parameterIndex);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public Blob getBlob(int parameterIndex) throws SQLException {
-    return delegate.getBlob(parameterIndex);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public Clob getClob(int parameterIndex) throws SQLException {
-    return delegate.getClob(parameterIndex);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public Array getArray(int parameterIndex) throws SQLException {
-    return delegate.getArray(parameterIndex);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public Date getDate(int parameterIndex, Calendar cal) throws SQLException {
-    return delegate.getDate(parameterIndex, cal);
+  public Time getTime(String parameterName, Calendar cal) throws SQLException {
+    return delegate.getTime(parameterName, cal);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -198,8 +179,113 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public Time getTime(String parameterName) throws SQLException {
+    return delegate.getTime(parameterName);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Timestamp getTimestamp(int parameterIndex) throws SQLException {
+    return delegate.getTimestamp(parameterIndex);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Timestamp getTimestamp(String parameterName, Calendar cal) throws SQLException {
+    return delegate.getTimestamp(parameterName, cal);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Timestamp getTimestamp(String parameterName) throws SQLException {
+    return delegate.getTimestamp(parameterName);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public Timestamp getTimestamp(int parameterIndex, Calendar cal) throws SQLException {
     return delegate.getTimestamp(parameterIndex, cal);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Object getObject(int parameterIndex) throws SQLException {
+    return delegate.getObject(parameterIndex);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Object getObject(int parameterIndex, Map<String, Class<?>> map) throws SQLException {
+    return delegate.getObject(parameterIndex, map);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Object getObject(String parameterName) throws SQLException {
+    return delegate.getObject(parameterName);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
+    return delegate.getObject(parameterIndex, type);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
+    return delegate.getObject(parameterName, type);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Object getObject(String parameterName, Map<String, Class<?>> map) throws SQLException {
+    return delegate.getObject(parameterName, map);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Ref getRef(int parameterIndex) throws SQLException {
+    return delegate.getRef(parameterIndex);
+  }
+
+  @Override
+  public Ref getRef(String parameterName) throws SQLException {
+    return delegate.getRef(parameterName);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Blob getBlob(int parameterIndex) throws SQLException {
+    return delegate.getBlob(parameterIndex);
+  }
+
+  @Override
+  public Blob getBlob(String parameterName) throws SQLException {
+    return delegate.getBlob(parameterName);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Clob getClob(int parameterIndex) throws SQLException {
+    return delegate.getClob(parameterIndex);
+  }
+
+  @Override
+  public Clob getClob(String parameterName) throws SQLException {
+    return delegate.getClob(parameterName);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Array getArray(int parameterIndex) throws SQLException {
+    return delegate.getArray(parameterIndex);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public Array getArray(String parameterName) throws SQLException {
+    return delegate.getArray(parameterName);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -231,8 +317,26 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public void registerOutParameter(int parameterIndex, int sqlType) throws SQLException {
+    delegate.registerOutParameter(parameterIndex, sqlType);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void registerOutParameter(int parameterIndex, int sqlType, int scale) throws SQLException {
+    delegate.registerOutParameter(parameterIndex, sqlType, scale);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public URL getURL(int parameterIndex) throws SQLException {
     return delegate.getURL(parameterIndex);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public URL getURL(String parameterName) throws SQLException {
+    return delegate.getURL(parameterName);
   }
 
   @Override
@@ -244,6 +348,12 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
   @Override
   public void setNull(String parameterName, int sqlType) throws SQLException {
     delegate.setNull(parameterName, sqlType);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setNull(String parameterName, int sqlType, String typeName) throws SQLException {
+    delegate.setNull(parameterName, sqlType, typeName);
   }
 
   @Override
@@ -302,9 +412,21 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
     delegate.setDate(parameterName, x);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setDate(String parameterName, Date x, Calendar cal) throws SQLException {
+    delegate.setDate(parameterName, x, cal);
+  }
+
   @Override
   public void setTime(String parameterName, Time x) throws SQLException {
     delegate.setTime(parameterName, x);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setTime(String parameterName, Time x, Calendar cal) throws SQLException {
+    delegate.setTime(parameterName, x, cal);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -315,14 +437,45 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public void setTimestamp(String parameterName, Timestamp x, Calendar cal) throws SQLException {
+    delegate.setTimestamp(parameterName, x, cal);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public void setAsciiStream(String parameterName, InputStream x, int length) throws SQLException {
     delegate.setAsciiStream(parameterName, x, length);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
+    delegate.setAsciiStream(parameterName, x, length);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setAsciiStream(String parameterName, InputStream x) throws SQLException {
+    delegate.setAsciiStream(parameterName, x);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public void setBinaryStream(String parameterName, InputStream x, int length) throws SQLException {
     delegate.setBinaryStream(parameterName, x, length);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setBinaryStream(String parameterName, InputStream x, long length)
+      throws SQLException {
+    delegate.setBinaryStream(parameterName, x, length);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setBinaryStream(String parameterName, InputStream x) throws SQLException {
+    delegate.setBinaryStream(parameterName, x);
   }
 
   @Override
@@ -350,80 +503,15 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  public void setDate(String parameterName, Date x, Calendar cal) throws SQLException {
-    delegate.setDate(parameterName, x, cal);
+  public void setCharacterStream(String parameterName, Reader reader, long length)
+      throws SQLException {
+    delegate.setCharacterStream(parameterName, reader, length);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  public void setTime(String parameterName, Time x, Calendar cal) throws SQLException {
-    delegate.setTime(parameterName, x, cal);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setTimestamp(String parameterName, Timestamp x, Calendar cal) throws SQLException {
-    delegate.setTimestamp(parameterName, x, cal);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setNull(String parameterName, int sqlType, String typeName) throws SQLException {
-    delegate.setNull(parameterName, sqlType, typeName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public String getString(String parameterName) throws SQLException {
-    return delegate.getString(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public boolean getBoolean(String parameterName) throws SQLException {
-    return delegate.getBoolean(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public byte getByte(String parameterName) throws SQLException {
-    return delegate.getByte(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public short getShort(String parameterName) throws SQLException {
-    return delegate.getShort(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public int getInt(String parameterName) throws SQLException {
-    return delegate.getInt(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public long getLong(String parameterName) throws SQLException {
-    return delegate.getLong(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public float getFloat(String parameterName) throws SQLException {
-    return delegate.getFloat(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public double getDouble(String parameterName) throws SQLException {
-    return delegate.getDouble(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public byte[] getBytes(String parameterName) throws SQLException {
-    return delegate.getBytes(parameterName);
+  public void setCharacterStream(String parameterName, Reader reader) throws SQLException {
+    delegate.setCharacterStream(parameterName, reader);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -434,53 +522,14 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  public Time getTime(String parameterName) throws SQLException {
-    return delegate.getTime(parameterName);
+  public Date getDate(int parameterIndex, Calendar cal) throws SQLException {
+    return delegate.getDate(parameterIndex, cal);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  public Timestamp getTimestamp(String parameterName) throws SQLException {
-    return delegate.getTimestamp(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public Object getObject(String parameterName) throws SQLException {
-    return delegate.getObject(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public BigDecimal getBigDecimal(String parameterName) throws SQLException {
-    return delegate.getBigDecimal(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public Object getObject(String parameterName, Map<String, Class<?>> map) throws SQLException {
-    return delegate.getObject(parameterName, map);
-  }
-
-  @Override
-  public Ref getRef(String parameterName) throws SQLException {
-    return delegate.getRef(parameterName);
-  }
-
-  @Override
-  public Blob getBlob(String parameterName) throws SQLException {
-    return delegate.getBlob(parameterName);
-  }
-
-  @Override
-  public Clob getClob(String parameterName) throws SQLException {
-    return delegate.getClob(parameterName);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public Array getArray(String parameterName) throws SQLException {
-    return delegate.getArray(parameterName);
+  public Date getDate(int parameterIndex) throws SQLException {
+    return delegate.getDate(parameterIndex);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -491,20 +540,21 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  public Time getTime(String parameterName, Calendar cal) throws SQLException {
-    return delegate.getTime(parameterName, cal);
+  public BigDecimal getBigDecimal(String parameterName) throws SQLException {
+    return delegate.getBigDecimal(parameterName);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  public Timestamp getTimestamp(String parameterName, Calendar cal) throws SQLException {
-    return delegate.getTimestamp(parameterName, cal);
+  public BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
+    return delegate.getBigDecimal(parameterIndex);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  public URL getURL(String parameterName) throws SQLException {
-    return delegate.getURL(parameterName);
+  @Deprecated
+  public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
+    return delegate.getBigDecimal(parameterIndex, scale);
   }
 
   @Override
@@ -536,14 +586,44 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public void setNCharacterStream(String parameterName, Reader value) throws SQLException {
+    delegate.setNCharacterStream(parameterName, value);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public void setNClob(String parameterName, NClob value) throws SQLException {
     delegate.setNClob(parameterName, value);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public void setNClob(String parameterName, Reader reader) throws SQLException {
+    delegate.setNClob(parameterName, reader);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setNClob(String parameterName, Reader reader, long length) throws SQLException {
+    delegate.setNClob(parameterName, reader, length);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public void setClob(String parameterName, Reader reader, long length) throws SQLException {
     delegate.setClob(parameterName, reader, length);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setClob(String parameterName, Reader reader) throws SQLException {
+    delegate.setClob(parameterName, reader);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setClob(String parameterName, Clob x) throws SQLException {
+    delegate.setClob(parameterName, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -555,8 +635,14 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
-  public void setNClob(String parameterName, Reader reader, long length) throws SQLException {
-    delegate.setNClob(parameterName, reader, length);
+  public void setBlob(String parameterName, InputStream inputStream) throws SQLException {
+    delegate.setBlob(parameterName, inputStream);
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setBlob(String parameterName, Blob x) throws SQLException {
+    delegate.setBlob(parameterName, x);
   }
 
   @Override
@@ -614,89 +700,4 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
     return delegate.getCharacterStream(parameterName);
   }
 
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setBlob(String parameterName, Blob x) throws SQLException {
-    delegate.setBlob(parameterName, x);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setClob(String parameterName, Clob x) throws SQLException {
-    delegate.setClob(parameterName, x);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
-    delegate.setAsciiStream(parameterName, x, length);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setBinaryStream(String parameterName, InputStream x, long length)
-      throws SQLException {
-    delegate.setBinaryStream(parameterName, x, length);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setCharacterStream(String parameterName, Reader reader, long length)
-      throws SQLException {
-    delegate.setCharacterStream(parameterName, reader, length);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setAsciiStream(String parameterName, InputStream x) throws SQLException {
-    delegate.setAsciiStream(parameterName, x);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setBinaryStream(String parameterName, InputStream x) throws SQLException {
-    delegate.setBinaryStream(parameterName, x);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setCharacterStream(String parameterName, Reader reader) throws SQLException {
-    delegate.setCharacterStream(parameterName, reader);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setNCharacterStream(String parameterName, Reader value) throws SQLException {
-    delegate.setNCharacterStream(parameterName, value);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setClob(String parameterName, Reader reader) throws SQLException {
-    delegate.setClob(parameterName, reader);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setBlob(String parameterName, InputStream inputStream) throws SQLException {
-    delegate.setBlob(parameterName, inputStream);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setNClob(String parameterName, Reader reader) throws SQLException {
-    delegate.setNClob(parameterName, reader);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
-    return delegate.getObject(parameterIndex, type);
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
-    return delegate.getObject(parameterName, type);
-  }
 }

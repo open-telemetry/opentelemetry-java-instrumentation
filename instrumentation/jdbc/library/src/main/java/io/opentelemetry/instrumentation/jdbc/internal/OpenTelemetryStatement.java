@@ -174,6 +174,12 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
     return delegate.getMoreResults();
   }
 
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public boolean getMoreResults(int current) throws SQLException {
+    return delegate.getMoreResults(current);
+  }
+
   @Override
   public int getFetchDirection() throws SQLException {
     return delegate.getFetchDirection();
@@ -219,12 +225,6 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
   @Override
   public Connection getConnection() throws SQLException {
     return delegate.getConnection();
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public boolean getMoreResults(int current) throws SQLException {
-    return delegate.getMoreResults(current);
   }
 
   @Override

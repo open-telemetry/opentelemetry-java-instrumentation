@@ -139,12 +139,6 @@ public class OpenTelemetryConnection implements Connection {
     delegate.commit();
   }
 
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void rollback() throws SQLException {
-    delegate.rollback();
-  }
-
   @Override
   public void close() throws SQLException {
     delegate.close();
@@ -247,6 +241,12 @@ public class OpenTelemetryConnection implements Connection {
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
+  public void rollback() throws SQLException {
+    delegate.rollback();
+  }
+
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
   public void rollback(Savepoint savepoint) throws SQLException {
     delegate.rollback(savepoint);
   }
@@ -287,6 +287,12 @@ public class OpenTelemetryConnection implements Connection {
     delegate.setClientInfo(name, value);
   }
 
+  @SuppressWarnings("UngroupedOverloads")
+  @Override
+  public void setClientInfo(Properties properties) throws SQLClientInfoException {
+    delegate.setClientInfo(properties);
+  }
+
   @Override
   public String getClientInfo(String name) throws SQLException {
     return delegate.getClientInfo(name);
@@ -295,12 +301,6 @@ public class OpenTelemetryConnection implements Connection {
   @Override
   public Properties getClientInfo() throws SQLException {
     return delegate.getClientInfo();
-  }
-
-  @SuppressWarnings("UngroupedOverloads")
-  @Override
-  public void setClientInfo(Properties properties) throws SQLClientInfoException {
-    delegate.setClientInfo(properties);
   }
 
   @Override
