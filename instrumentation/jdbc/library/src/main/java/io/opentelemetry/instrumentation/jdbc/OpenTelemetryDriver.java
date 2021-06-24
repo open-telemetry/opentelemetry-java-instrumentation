@@ -102,7 +102,7 @@ public final class OpenTelemetryDriver implements Driver {
    * method.
    *
    * @throws IllegalStateException if the driver is already registered
-   * @throws SQLException          if registering the driver fails
+   * @throws SQLException if registering the driver fails
    */
   public static void register() throws SQLException {
     if (isRegistered()) {
@@ -119,7 +119,7 @@ public final class OpenTelemetryDriver implements Driver {
    * class can be gc'ed if necessary.
    *
    * @throws IllegalStateException if the driver is not registered
-   * @throws SQLException          if deregistering the driver fails
+   * @throws SQLException if deregistering the driver fails
    */
   public static void deregister() throws SQLException {
     if (!REGISTERED.get()) {
@@ -130,9 +130,7 @@ public final class OpenTelemetryDriver implements Driver {
     REGISTERED.set(false);
   }
 
-  /**
-   * Returns {@code true} if the driver is registered against {@link DriverManager}.
-   */
+  /** Returns {@code true} if the driver is registered against {@link DriverManager}. */
   public static boolean isRegistered() {
     return REGISTERED.get();
   }
@@ -216,9 +214,7 @@ public final class OpenTelemetryDriver implements Driver {
     return 4;
   }
 
-  /**
-   * Returns {@literal false} because not all delegated drivers are JDBC compliant.
-   */
+  /** Returns {@literal false} because not all delegated drivers are JDBC compliant. */
   @Override
   public boolean jdbcCompliant() {
     return false;

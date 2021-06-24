@@ -352,5 +352,4 @@ public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
   public void clearParameters() throws SQLException {
     delegate.clearParameters();
   }
-
 }

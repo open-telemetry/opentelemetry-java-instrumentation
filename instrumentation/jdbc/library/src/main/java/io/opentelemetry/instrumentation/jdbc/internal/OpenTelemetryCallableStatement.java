@@ -699,5 +699,4 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
   public Reader getCharacterStream(String parameterName) throws SQLException {
     return delegate.getCharacterStream(parameterName);
   }
-
 }
