@@ -13,14 +13,14 @@ import java.util.stream.Collectors
 abstract class MuzzleDirective {
 
   abstract val name: Property<String>
-  abstract val group: Property<String?>
-  abstract val module: Property<String?>
-  abstract val versions: Property<String?>
+  abstract val group: Property<String>
+  abstract val module: Property<String>
+  abstract val versions: Property<String>
   abstract val skipVersions: SetProperty<String>
-  abstract val additionalDependencies: ListProperty<String?>
-  abstract val excludedDependencies: ListProperty<String?>
+  abstract val additionalDependencies: ListProperty<String>
+  abstract val excludedDependencies: ListProperty<String>
   abstract val assertPass: Property<Boolean>
-  abstract val assertInverse: Property<Boolean?>
+  abstract val assertInverse: Property<Boolean>
   abstract val coreJdk: Property<Boolean>
 
   init {
@@ -60,10 +60,10 @@ abstract class MuzzleDirective {
     skipVersions.addAll(*version)
   }
 
-  val nameSlug: String
+  internal val nameSlug: String
     get() = NORMALIZE_NAME_SLUG.replace(name.get().trim(), "-")
 
-  val normalizedSkipVersions: Set<String>
+  internal val normalizedSkipVersions: Set<String>
     get() = skipVersions.getOrElse(setOf()).stream()
       .map(String::toLowerCase)
       .collect(Collectors.toSet())
