@@ -46,6 +46,7 @@ public class FakeBackendMain {
         MessageMarshaller.builder()
             .register(ExportTraceServiceRequest.getDefaultInstance())
             .register(ExportMetricsServiceRequest.getDefaultInstance())
+            .register(ExportLogsServiceRequest.getDefaultInstance())
             .build();
 
     var mapper = JsonMapper.builder();
