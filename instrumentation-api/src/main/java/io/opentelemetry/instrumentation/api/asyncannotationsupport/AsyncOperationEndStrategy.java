@@ -30,9 +30,16 @@ public interface AsyncOperationEndStrategy {
    * @param asyncValue Return value from the instrumented method. Must be an instance of a {@code
    *     asyncType} for which {@link #supports(Class)} returned true (in particular it must not be
    *     {@code null}).
+   * @param responseType Expected type of the response that should be obtained from the {@code
+   *     asyncValue}. If the result of the async computation is instance of the passed type it will
+   *     be passed when the {@code instrumenter} is called.
    * @return Either {@code asyncValue} or a value composing over {@code asyncValue} for notification
    *     of completion.
    */
-  <REQUEST> Object end(
-      Instrumenter<REQUEST, ?> instrumenter, Context context, REQUEST request, Object asyncValue);
+  <REQUEST, RESPONSE> Object end(
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
+      Context context,
+      REQUEST request,
+      Object asyncValue,
+      Class<RESPONSE> responseType);
 }

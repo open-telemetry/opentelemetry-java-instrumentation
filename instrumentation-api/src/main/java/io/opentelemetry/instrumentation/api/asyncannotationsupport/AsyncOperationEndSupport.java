@@ -11,32 +11,39 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 /**
  * A wrapper over {@link Instrumenter} that is able to defer {@link Instrumenter#end(Context,
  * Object, Object, Throwable)} until asynchronous computation finishes.
- *
- * <p>This class is not able to extract {@code RESPONSE} from the asynchronous computation value it
- * receives in the {@link #asyncEnd(Context, Object, Object, Throwable)} call, so it will always
- * pass {@code null} as the response to the wrapped {@link Instrumenter}.
  */
-public final class AsyncOperationEndSupport<REQUEST> {
+public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
 
   /**
    * Returns a new {@link AsyncOperationEndSupport} that wraps over passed {@code syncInstrumenter},
-   * configured for usage with asynchronous computations that are instances of {@code asyncType}.
+   * configured for usage with asynchronous computations that are instances of {@code asyncType}. If
+   * the result of the async computation ends up being an instance of {@code responseType} it will
+   * be passed as the response to the {@code syncInstrumenter} call; otherwise {@code null} value
+   * will be used as the response.
    */
-  public static <REQUEST> AsyncOperationEndSupport<REQUEST> create(
-      Instrumenter<REQUEST, ?> syncInstrumenter, Class<?> asyncType) {
+  public static <REQUEST, RESPONSE> AsyncOperationEndSupport<REQUEST, RESPONSE> create(
+      Instrumenter<REQUEST, RESPONSE> syncInstrumenter,
+      Class<RESPONSE> responseType,
+      Class<?> asyncType) {
     return new AsyncOperationEndSupport<>(
-        syncInstrumenter, asyncType, AsyncOperationEndStrategies.resolveStrategy(asyncType));
+        syncInstrumenter,
+        responseType,
+        asyncType,
+        AsyncOperationEndStrategies.instance().resolveStrategy(asyncType));
   }
 
-  private final Instrumenter<REQUEST, ?> instrumenter;
+  private final Instrumenter<REQUEST, RESPONSE> instrumenter;
+  private final Class<RESPONSE> responseType;
   private final Class<?> asyncType;
   private final AsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private AsyncOperationEndSupport(
-      Instrumenter<REQUEST, ?> instrumenter,
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
+      Class<RESPONSE> responseType,
       Class<?> asyncType,
       AsyncOperationEndStrategy asyncOperationEndStrategy) {
     this.instrumenter = instrumenter;
+    this.responseType = responseType;
     this.asyncType = asyncType;
     this.asyncOperationEndStrategy = asyncOperationEndStrategy;
   }
@@ -64,7 +71,8 @@ public final class AsyncOperationEndSupport<REQUEST> {
 
     // use the configured strategy to compose over the asyncValue
     if (asyncOperationEndStrategy != null && asyncType.isInstance(asyncValue)) {
-      return (ASYNC) asyncOperationEndStrategy.end(instrumenter, context, request, asyncValue);
+      return (ASYNC)
+          asyncOperationEndStrategy.end(instrumenter, context, request, asyncValue, responseType);
     }
 
     // fall back to sync end() if asyncValue type doesn't match

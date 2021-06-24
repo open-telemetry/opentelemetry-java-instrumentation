@@ -28,8 +28,8 @@ class AsyncOperationEndSupportTest {
   @Test
   void shouldEndImmediatelyWhenExceptionWasPassed() {
     // given
-    AsyncOperationEndSupport<String> underTest =
-        AsyncOperationEndSupport.create(instrumenter, CompletableFuture.class);
+    AsyncOperationEndSupport<String, String> underTest =
+        AsyncOperationEndSupport.create(instrumenter, String.class, CompletableFuture.class);
 
     Context context = Context.root();
     Exception exception = new RuntimeException("boom!");
@@ -47,8 +47,8 @@ class AsyncOperationEndSupportTest {
   @Test
   void shouldEndImmediatelyWhenWrongReturnTypeWasPassed() {
     // given
-    AsyncOperationEndSupport<String> underTest =
-        AsyncOperationEndSupport.create(instrumenter, Future.class);
+    AsyncOperationEndSupport<String, String> underTest =
+        AsyncOperationEndSupport.create(instrumenter, String.class, Future.class);
 
     Context context = Context.root();
     CompletableFuture<String> future = new CompletableFuture<>();
@@ -65,8 +65,8 @@ class AsyncOperationEndSupportTest {
   @Test
   void shouldEndImmediatelyWhenAsyncWrapperisOfWrongType() {
     // given
-    AsyncOperationEndSupport<String> underTest =
-        AsyncOperationEndSupport.create(instrumenter, CompletableFuture.class);
+    AsyncOperationEndSupport<String, String> underTest =
+        AsyncOperationEndSupport.create(instrumenter, String.class, CompletableFuture.class);
 
     Context context = Context.root();
 
@@ -82,8 +82,8 @@ class AsyncOperationEndSupportTest {
   @Test
   void shouldReturnedDecoratedAsyncWrapper() {
     // given
-    AsyncOperationEndSupport<String> underTest =
-        AsyncOperationEndSupport.create(instrumenter, CompletionStage.class);
+    AsyncOperationEndSupport<String, String> underTest =
+        AsyncOperationEndSupport.create(instrumenter, String.class, CompletionStage.class);
 
     Context context = Context.root();
     CompletableFuture<String> future = new CompletableFuture<>();

@@ -29,10 +29,11 @@ class Jdk8AsyncOperationEndStrategyTest {
     Context context = Context.root();
 
     // when
-    underTest.end(instrumenter, context, "request", CompletableFuture.completedFuture("done!"));
+    underTest.end(
+        instrumenter, context, "request", CompletableFuture.completedFuture("done!"), String.class);
 
     // then
-    verify(instrumenter).end(context, "request", null, null);
+    verify(instrumenter).end(context, "request", "done!", null);
   }
 
   @Test
@@ -45,10 +46,23 @@ class Jdk8AsyncOperationEndStrategyTest {
     future.completeExceptionally(exception);
 
     // when
-    underTest.end(instrumenter, context, "request", future);
+    underTest.end(instrumenter, context, "request", future, String.class);
 
     // then
     verify(instrumenter).end(context, "request", null, exception);
+  }
+
+  @Test
+  void shouldNotPassResponseIfItHasDifferentTypeThanExpected() {
+    // given
+    Context context = Context.root();
+
+    // when
+    underTest.end(
+        instrumenter, context, "request", CompletableFuture.completedFuture(42), String.class);
+
+    // then
+    verify(instrumenter).end(context, "request", null, null);
   }
 
   @Test
@@ -59,7 +73,7 @@ class Jdk8AsyncOperationEndStrategyTest {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     // when
-    underTest.end(instrumenter, context, "request", future);
+    underTest.end(instrumenter, context, "request", future, String.class);
 
     // then
     verifyNoInteractions(instrumenter);
@@ -68,7 +82,7 @@ class Jdk8AsyncOperationEndStrategyTest {
     future.complete("done!");
 
     // then
-    verify(instrumenter).end(context, "request", null, null);
+    verify(instrumenter).end(context, "request", "done!", null);
   }
 
   @Test
@@ -79,7 +93,7 @@ class Jdk8AsyncOperationEndStrategyTest {
     CompletableFuture<String> future = new CompletableFuture<>();
 
     // when
-    underTest.end(instrumenter, context, "request", future);
+    underTest.end(instrumenter, context, "request", future, String.class);
 
     // then
     verifyNoInteractions(instrumenter);

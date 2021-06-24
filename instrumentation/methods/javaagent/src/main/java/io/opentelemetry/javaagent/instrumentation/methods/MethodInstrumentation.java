@@ -77,7 +77,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
       scope.close();
 
       returnValue =
-          AsyncOperationEndSupport.create(instrumenter(), method.getReturnType())
+          AsyncOperationEndSupport.create(instrumenter(), Void.class, method.getReturnType())
               .asyncEnd(context, method, returnValue, throwable);
     }
   }

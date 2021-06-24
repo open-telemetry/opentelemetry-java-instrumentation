@@ -9,8 +9,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
+public enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
   INSTANCE;
 
   @Override
@@ -19,17 +20,21 @@ enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
   }
 
   @Override
-  public <REQUEST> Object end(
-      Instrumenter<REQUEST, ?> instrumenter, Context context, REQUEST request, Object asyncValue) {
+  public <REQUEST, RESPONSE> Object end(
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
+      Context context,
+      REQUEST request,
+      Object asyncValue,
+      Class<RESPONSE> responseType) {
     if (asyncValue instanceof CompletableFuture) {
       CompletableFuture<?> future = (CompletableFuture<?>) asyncValue;
-      if (tryToEndSynchronously(instrumenter, context, request, future)) {
+      if (tryToEndSynchronously(instrumenter, context, request, future, responseType)) {
         return future;
       }
-      return endWhenComplete(instrumenter, context, request, future);
+      return endWhenComplete(instrumenter, context, request, future, responseType);
     }
     CompletionStage<?> stage = (CompletionStage<?>) asyncValue;
-    return endWhenComplete(instrumenter, context, request, stage);
+    return endWhenComplete(instrumenter, context, request, stage, responseType);
   }
 
   /**
@@ -37,27 +42,23 @@ enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
    * synchronously ends the span to avoid additional allocations and overhead registering for
    * notification of completion.
    */
-  private static <REQUEST> boolean tryToEndSynchronously(
-      Instrumenter<REQUEST, ?> instrumenter,
+  private static <REQUEST, RESPONSE> boolean tryToEndSynchronously(
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
       Context context,
       REQUEST request,
-      CompletableFuture<?> future) {
+      CompletableFuture<?> future,
+      Class<RESPONSE> responseType) {
 
     if (!future.isDone()) {
       return false;
     }
 
-    if (future.isCompletedExceptionally()) {
-      // If the future completed exceptionally then join to catch the exception
-      // so that it can be recorded to the span
-      try {
-        future.join();
-      } catch (Throwable t) {
-        instrumenter.end(context, request, null, t);
-        return true;
-      }
+    try {
+      Object potentialResponse = future.join();
+      instrumenter.end(context, request, tryToGetResponse(responseType, potentialResponse), null);
+    } catch (Throwable t) {
+      instrumenter.end(context, request, null, t);
     }
-    instrumenter.end(context, request, null, null);
     return true;
   }
 
@@ -65,12 +66,22 @@ enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
    * Registers for notification of the completion of the {@link CompletionStage} at which time the
    * span will be ended.
    */
-  private static <REQUEST> CompletionStage<?> endWhenComplete(
-      Instrumenter<REQUEST, ?> instrumenter,
+  private static <REQUEST, RESPONSE> CompletionStage<?> endWhenComplete(
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
       Context context,
       REQUEST request,
-      CompletionStage<?> stage) {
+      CompletionStage<?> stage,
+      Class<RESPONSE> responseType) {
     return stage.whenComplete(
-        (result, exception) -> instrumenter.end(context, request, null, exception));
+        (result, exception) ->
+            instrumenter.end(context, request, tryToGetResponse(responseType, result), exception));
+  }
+
+  @Nullable
+  private static <RESPONSE> RESPONSE tryToGetResponse(Class<RESPONSE> responseType, Object result) {
+    if (responseType.isInstance(result)) {
+      return responseType.cast(result);
+    }
+    return null;
   }
 }

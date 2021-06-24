@@ -5,34 +5,36 @@
 
 package io.opentelemetry.instrumentation.api.asyncannotationsupport;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** A global registry of {@link AsyncOperationEndStrategy} implementations. */
-public final class AsyncOperationEndStrategies {
-  private static final List<AsyncOperationEndStrategy> STRATEGIES = new CopyOnWriteArrayList<>();
+public abstract class AsyncOperationEndStrategies {
+  private static volatile AsyncOperationEndStrategies instance;
 
-  static {
-    STRATEGIES.add(Jdk8AsyncOperationEndStrategy.INSTANCE);
+  /**
+   * Sets the actual strategies' registry implementation. The javaagent uses weak references to make
+   * unloading strategy classes possible.
+   *
+   * <p>This is supposed to be only called by the javaagent. <b>Instrumentation must not call
+   * this.</b>
+   */
+  public static void internalSetStrategiesStorage(AsyncOperationEndStrategies strategies) {
+    instance = strategies;
+  }
+
+  /** Obtain instance of the async strategy registry. */
+  public static AsyncOperationEndStrategies instance() {
+    if (instance == null) {
+      instance = new AsyncOperationEndStrategiesImpl();
+    }
+    return instance;
   }
 
   /** Add the passed {@code strategy} to the registry. */
-  public static void registerStrategy(AsyncOperationEndStrategy strategy) {
-    STRATEGIES.add(requireNonNull(strategy));
-  }
+  public abstract void registerStrategy(AsyncOperationEndStrategy strategy);
 
   /** Remove the passed {@code strategy} from the registry. */
-  public static void unregisterStrategy(AsyncOperationEndStrategy strategy) {
-    STRATEGIES.remove(strategy);
-  }
-
-  /** Remove all strategies of type {@code strategyClass} from the registry. */
-  public static void unregisterStrategy(Class<? extends AsyncOperationEndStrategy> strategyClass) {
-    STRATEGIES.removeIf(strategy -> strategy.getClass() == strategyClass);
-  }
+  public abstract void unregisterStrategy(AsyncOperationEndStrategy strategy);
 
   /**
    * Returns an {@link AsyncOperationEndStrategy} that is able to compose over {@code returnType},
@@ -40,12 +42,5 @@ public final class AsyncOperationEndStrategies {
    * registry.
    */
   @Nullable
-  public static AsyncOperationEndStrategy resolveStrategy(Class<?> returnType) {
-    for (AsyncOperationEndStrategy strategy : STRATEGIES) {
-      if (strategy.supports(returnType)) {
-        return strategy;
-      }
-    }
-    return null;
-  }
+  public abstract AsyncOperationEndStrategy resolveStrategy(Class<?> returnType);
 }
