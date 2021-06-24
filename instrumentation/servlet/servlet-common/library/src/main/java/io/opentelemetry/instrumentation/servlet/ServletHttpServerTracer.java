@@ -127,7 +127,7 @@ public abstract class ServletHttpServerTracer<REQUEST, RESPONSE>
   }
 
   @Override
-  protected String peerHostIP(REQUEST connection) {
+  protected String peerHostIp(REQUEST connection) {
     return accessor.getRequestRemoteAddr(connection);
   }
 

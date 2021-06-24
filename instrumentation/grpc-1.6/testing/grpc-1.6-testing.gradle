@@ -1,9 +1,7 @@
 plugins {
-  id "java-library"
-  id "com.google.protobuf" version "0.8.16"
+  id("otel.java-conventions")
+  id("com.google.protobuf") version "0.8.16"
 }
-
-apply plugin: "otel.java-conventions"
 
 def grpcVersion = '1.6.0'
 

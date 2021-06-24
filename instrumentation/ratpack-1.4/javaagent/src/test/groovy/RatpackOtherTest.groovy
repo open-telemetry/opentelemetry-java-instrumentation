@@ -7,6 +7,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import ratpack.path.PathBinding
@@ -17,6 +18,10 @@ class RatpackOtherTest extends AgentInstrumentationSpecification {
 
   @Shared
   RatpackServer app = RatpackServer.start {
+    it.serverConfig {
+      it.port(PortUtils.findOpenPort())
+      it.address(InetAddress.getByName("localhost"))
+    }
     it.handlers {
       it.prefix("a") {
         it.all {context ->

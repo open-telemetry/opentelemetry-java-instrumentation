@@ -1,12 +1,12 @@
 plugins {
-  id "otel.shadow-conventions"
+  id("otel.shadow-conventions")
+
+  id("otel.java-conventions")
+  id("otel.publish-conventions")
 }
 
 description = 'OpenTelemetry Javaagent for testing'
 group = 'io.opentelemetry.javaagent'
-
-apply plugin: "otel.java-conventions"
-apply plugin: "otel.publish-conventions"
 
 jar {
   manifest {

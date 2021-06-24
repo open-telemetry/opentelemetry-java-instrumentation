@@ -6,11 +6,12 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
-import io.opentelemetry.javaagent.tooling.ignore.trie.Trie;
+import io.opentelemetry.javaagent.instrumentation.api.util.Trie;
 
 public class IgnoredTypesBuilderImpl implements IgnoredTypesBuilder {
   private final Trie.Builder<IgnoreAllow> ignoredTypesTrie = Trie.newBuilder();
   private final Trie.Builder<IgnoreAllow> ignoredClassLoadersTrie = Trie.newBuilder();
+  private final Trie.Builder<Boolean> ignoredTasksTrie = Trie.newBuilder();
 
   @Override
   public IgnoredTypesBuilder ignoreClass(String classNameOrPrefix) {
@@ -37,15 +38,9 @@ public class IgnoredTypesBuilderImpl implements IgnoredTypesBuilder {
   }
 
   @Override
-  public IgnoredTypesBuilder ignoreTaskClass(String className) {
-    // TODO: collect task classes into a separate trie
-    throw new UnsupportedOperationException("not implemented yet");
-  }
-
-  @Override
-  public IgnoredTypesBuilder allowTaskClass(String className) {
-    // TODO: collect task classes into a separate trie
-    throw new UnsupportedOperationException("not implemented yet");
+  public IgnoredTypesBuilder ignoreTaskClass(String classNameOrPrefix) {
+    ignoredTasksTrie.put(classNameOrPrefix, true);
+    return this;
   }
 
   public Trie<IgnoreAllow> buildIgnoredTypesTrie() {
@@ -54,5 +49,9 @@ public class IgnoredTypesBuilderImpl implements IgnoredTypesBuilder {
 
   public Trie<IgnoreAllow> buildIgnoredClassLoadersTrie() {
     return ignoredClassLoadersTrie.build();
+  }
+
+  public Trie<Boolean> buildIgnoredTasksTrie() {
+    return ignoredTasksTrie.build();
   }
 }

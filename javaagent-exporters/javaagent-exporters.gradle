@@ -1,8 +1,8 @@
 // Project to collect and shade exporter dependencies included in the agent's full distribution.
 
 plugins {
-  id "otel.java-conventions"
-  id "otel.shadow-conventions"
+  id("otel.java-conventions")
+  id("otel.shadow-conventions")
 }
 
 dependencies {

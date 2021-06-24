@@ -11,6 +11,9 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
+val otelVersion = "1.3.0"
+rootProject.extra["otelVersion"] = otelVersion
+
 // Need both BOM and -all
 val groovyVersion = "2.5.11"
 
@@ -30,8 +33,8 @@ val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.12.3",
   "com.google.guava:guava-bom:30.1.1-jre",
   "org.codehaus.groovy:groovy-bom:${groovyVersion}",
-  "io.opentelemetry:opentelemetry-bom:1.3.0",
-  "io.opentelemetry:opentelemetry-bom-alpha:1.3.0-alpha",
+  "io.opentelemetry:opentelemetry-bom:${otelVersion}",
+  "io.opentelemetry:opentelemetry-bom-alpha:${otelVersion}-alpha",
   "org.junit:junit-bom:5.7.2"
 )
 

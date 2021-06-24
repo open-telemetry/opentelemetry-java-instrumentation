@@ -1,6 +1,6 @@
-ext.skipPublish = true
-
-apply plugin: "otel.javaagent-instrumentation"
+plugins {
+  id("otel.javaagent-testing")
+}
 
 dependencies {
   testImplementation "org.apache.commons:commons-lang3:3.12.0"

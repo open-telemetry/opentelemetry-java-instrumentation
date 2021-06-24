@@ -1,4 +1,6 @@
-apply plugin: "otel.javaagent-instrumentation"
+plugins {
+  id("otel.javaagent-instrumentation")
+}
 
 def scalaVersion = '2.11'
 def playVersion = '2.6.0'
@@ -39,6 +41,7 @@ dependencies {
 
   testInstrumentation project(':instrumentation:netty:netty-4.0:javaagent')
   testInstrumentation project(':instrumentation:netty:netty-4.1:javaagent')
+  testInstrumentation project(':instrumentation:akka-actor-2.5:javaagent')
   testInstrumentation project(':instrumentation:akka-http-10.0:javaagent')
 
   testLibrary group: 'com.typesafe.play', name: "play-java_$scalaVersion", version: playVersion

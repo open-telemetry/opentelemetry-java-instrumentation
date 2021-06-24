@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.api.internal.BootstrapPackagePrefixesHolder;
+import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskClasses;
 import io.opentelemetry.javaagent.spi.BootstrapPackagesProvider;
 import io.opentelemetry.javaagent.tooling.config.ConfigInitializer;
 import io.opentelemetry.javaagent.tooling.context.FieldBackedProvider;
@@ -177,6 +178,8 @@ public class AgentInstaller {
     for (IgnoredTypesConfigurer configurer : loadOrdered(IgnoredTypesConfigurer.class)) {
       configurer.configure(config, builder);
     }
+
+    InstrumentedTaskClasses.setIgnoredTaskClasses(builder.buildIgnoredTasksTrie());
 
     return agentBuilder
         .ignore(any(), new IgnoredClassLoadersMatcher(builder.buildIgnoredClassLoadersTrie()))
@@ -433,6 +436,10 @@ public class AgentInstaller {
     private static boolean isIgnored(Class<?> c) {
       ClassLoader cl = c.getClassLoader();
       if (cl instanceof AgentClassLoader || cl instanceof ExtensionClassLoader) {
+        return true;
+      }
+      // ignore generate byte buddy helper class
+      if (c.getName().startsWith("java.lang.ClassLoader$ByteBuddyAccessor$")) {
         return true;
       }
 

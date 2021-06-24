@@ -1,4 +1,6 @@
-apply plugin: "otel.javaagent-instrumentation"
+plugins {
+  id("otel.javaagent-instrumentation")
+}
 
 muzzle {
   pass {
@@ -15,6 +17,10 @@ dependencies {
   testLibrary ("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE") {
     exclude group: 'com.rabbitmq', module: 'amqp-client'
   }
+
+  testInstrumentation project(':instrumentation:reactor-3.1:javaagent')
+
+  testLibrary 'io.projectreactor.rabbitmq:reactor-rabbitmq:1.0.0.RELEASE'
 }
 
 tasks.withType(Test).configureEach {

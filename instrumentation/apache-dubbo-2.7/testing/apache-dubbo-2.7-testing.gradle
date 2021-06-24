@@ -1,8 +1,6 @@
 plugins {
-  id "java-library"
+  id("otel.java-conventions")
 }
-
-apply plugin: "otel.java-conventions"
 
 def apacheDubboVersion = '2.7.5'
 

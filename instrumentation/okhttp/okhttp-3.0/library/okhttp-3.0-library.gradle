@@ -1,5 +1,7 @@
-apply plugin: "otel.library-instrumentation"
-apply plugin: "net.ltgt.nullaway"
+plugins {
+  id("otel.library-instrumentation")
+  id("net.ltgt.nullaway")
+}
 
 dependencies {
   library "com.squareup.okhttp3:okhttp:3.0.0"

@@ -1,7 +1,9 @@
-group = 'io.opentelemetry.instrumentation'
+plugins {
+  id("otel.java-conventions")
+  id("otel.publish-conventions")
+}
 
-apply plugin: "otel.java-conventions"
-apply plugin: "otel.publish-conventions"
+group = 'io.opentelemetry.instrumentation'
 
 sourceCompatibility = '8'
 

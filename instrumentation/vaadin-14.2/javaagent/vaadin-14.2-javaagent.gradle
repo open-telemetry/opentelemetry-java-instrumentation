@@ -1,5 +1,7 @@
-apply plugin: "otel.javaagent-instrumentation"
-apply plugin: 'org.unbroken-dome.test-sets'
+plugins {
+  id("otel.javaagent-instrumentation")
+  id("org.unbroken-dome.test-sets")
+}
 
 muzzle {
   fail {

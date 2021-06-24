@@ -8,124 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.api.concurrent;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.javaagent.instrumentation.api.ContextStore;
+import io.opentelemetry.javaagent.instrumentation.api.internal.InstrumentedTaskClasses;
 
 /** Utils for concurrent instrumentations. */
 public final class ExecutorInstrumentationUtils {
-  private static final String AGENT_CLASSLOADER_NAME =
-      "io.opentelemetry.javaagent.bootstrap.AgentClassLoader";
-
-  private static final ClassValue<Boolean> INSTRUMENTED_RUNNABLE_CLASS =
-      new ClassValue<Boolean>() {
-        @Override
-        protected Boolean computeValue(Class<?> taskClass) {
-          // ForkJoinPool threads are initialized lazily and continue to handle tasks similar to an
-          // event loop. They should not have context propagated to the base of the thread, tasks
-          // themselves will have it through other means.
-          if (taskClass.getName().equals("java.util.concurrent.ForkJoinWorkerThread")) {
-            return false;
-          }
-
-          // ThreadPoolExecutor worker threads may be initialized lazily and manage interruption of
-          // other threads. The actual tasks being run on those threads will propagate context but
-          // we should not propagate onto this management thread.
-          if (taskClass.getName().equals("java.util.concurrent.ThreadPoolExecutor$Worker")) {
-            return false;
-          }
-
-          // TODO Workaround for
-          // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
-          if (taskClass
-              .getName()
-              .equals("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor")) {
-            return false;
-          }
-
-          // ScheduledRunnable is a wrapper around a Runnable and doesn't itself need context.
-          if (taskClass.getName().equals("io.reactivex.internal.schedulers.ScheduledRunnable")) {
-            return false;
-          }
-
-          // HttpConnection implements Runnable. When async request is completed HttpConnection
-          // may be sent to process next request while context from previous request hasn't been
-          // cleared yet.
-          if (taskClass.getName().equals("org.eclipse.jetty.server.HttpConnection")) {
-            return false;
-          }
-
-          // This is a Mailbox created by akka.dispatch.Dispatcher#createMailbox. We must not add
-          // a context to it as context should only be carried by individual envelopes in the queue
-          // of this mailbox.
-          if (taskClass.getName().equals("akka.dispatch.Dispatcher$$anon$1")) {
-            return false;
-          }
-
-          Class<?> enclosingClass = taskClass.getEnclosingClass();
-          if (enclosingClass != null) {
-            // Avoid context leak on jetty. Runnable submitted from SelectChannelEndPoint is used to
-            // process a new request which should not have context from them current request.
-            if (enclosingClass.getName().equals("org.eclipse.jetty.io.nio.SelectChannelEndPoint")) {
-              return false;
-            }
-
-            // Don't instrument the executor's own runnables. These runnables may never return until
-            // netty shuts down.
-            if (enclosingClass
-                .getName()
-                .equals("io.netty.util.concurrent.SingleThreadEventExecutor")) {
-              return false;
-            }
-
-            // OkHttp task runner is a lazily-initialized shared pool of continuosly running threads
-            // similar to an event loop. The submitted tasks themselves should already be
-            // instrumented to allow async propagation.
-            if (enclosingClass.getName().equals("okhttp3.internal.concurrent.TaskRunner")) {
-              return false;
-            }
-
-            // OkHttp connection pool lazily initializes a long running task to detect expired
-            // connections and should not itself be instrumented.
-            if (enclosingClass.getName().equals("com.squareup.okhttp.ConnectionPool")) {
-              return false;
-            }
-
-            // Avoid instrumenting internal OrderedExecutor worker class
-            if (enclosingClass
-                .getName()
-                .equals("org.hornetq.utils.OrderedExecutorFactory$OrderedExecutor")) {
-              return false;
-            }
-
-            // Avoid instrumenting internal rabbit consumer task
-            if (enclosingClass
-                .getName()
-                .equals(
-                    "org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer")) {
-              return false;
-            }
-          }
-
-          // Don't trace runnables from libraries that are packaged inside the agent.
-          // Although GlobalClassloaderIgnoresMatcher excludes these classes from instrumentation
-          // their instances can still be passed to executors which we have instrumented so we need
-          // to exclude them here too.
-          ClassLoader taskClassLoader = taskClass.getClassLoader();
-          if (taskClassLoader != null
-              && AGENT_CLASSLOADER_NAME.equals(taskClassLoader.getClass().getName())) {
-            return false;
-          }
-
-          if (taskClass.getName().startsWith("ratpack.exec.internal.")) {
-            // Context is passed through Netty channels in Ratpack as executor instrumentation is
-            // not suitable. As the context that would be propagated via executor would be
-            // incorrect, skip the propagation. Not checking for concrete class names as this covers
-            // anonymous classes from ratpack.exec.internal.DefaultExecution and
-            // ratpack.exec.internal.DefaultExecController.
-            return false;
-          }
-
-          return true;
-        }
-      };
 
   /**
    * Checks if given task should get state attached.
@@ -144,7 +30,7 @@ public final class ExecutorInstrumentationUtils {
       return false;
     }
 
-    return INSTRUMENTED_RUNNABLE_CLASS.get(task.getClass());
+    return InstrumentedTaskClasses.canInstrumentTaskClass(task.getClass());
   }
 
   /**
