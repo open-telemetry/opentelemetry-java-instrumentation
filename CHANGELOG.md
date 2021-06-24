@@ -1,5 +1,13 @@
 # Changelog
 
+## Version 1.3.1 - 2021-06-23
+
+### 🛠️ Bug fixes
+
+- Fix incorrect dependency in published BOM (#3376)
+- Fix UnsupportedOperationException with reactor-rabbitmq (#3381)
+- Fix Spring JMS not being instrumented (#3359)
+
 ## Version 1.3.0 - 2021-06-17
 
 ### 🌟 New javaagent instrumentation

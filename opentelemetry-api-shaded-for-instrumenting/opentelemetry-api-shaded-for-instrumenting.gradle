@@ -1,8 +1,8 @@
 plugins {
-  id "com.github.johnrengelman.shadow"
-}
+  id("com.github.johnrengelman.shadow")
 
-apply plugin: "otel.java-conventions"
+  id("otel.java-conventions")
+}
 
 dependencies {
   implementation "io.opentelemetry:opentelemetry-api"

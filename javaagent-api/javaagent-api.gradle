@@ -1,8 +1,11 @@
+plugins {
+  id("otel.java-conventions")
+  id("otel.jacoco-conventions")
+  id("otel.publish-conventions")
+}
+
 group = 'io.opentelemetry.javaagent'
 
-apply plugin: "otel.java-conventions"
-apply plugin: "otel.jacoco-conventions"
-apply plugin: "otel.publish-conventions"
 
 dependencies {
   api "io.opentelemetry:opentelemetry-api"

@@ -1,8 +1,8 @@
 // this project will run in isolation under the agent's classloader
 plugins {
-  id "otel.shadow-conventions"
+  id("otel.shadow-conventions")
+  id("otel.java-conventions")
 }
-apply plugin: "otel.java-conventions"
 
 Project instr_project = project
 subprojects {
@@ -51,7 +51,7 @@ tasks.register("listInstrumentations") {
   description = "List all available instrumentation modules"
   doFirst {
     subprojects
-      .findAll { it.plugins.hasPlugin("muzzle") }
+      .findAll { it.plugins.hasPlugin("otel.muzzle-check") }
       .collect { it.path }
       .each { println it }
   }

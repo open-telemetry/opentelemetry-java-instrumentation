@@ -1,9 +1,9 @@
 plugins {
-  id "me.champeau.jmh"
-  id "com.github.johnrengelman.shadow"
-}
+  id("me.champeau.jmh")
+  id("com.github.johnrengelman.shadow")
 
-apply plugin: "otel.java-conventions"
+  id("otel.java-conventions")
+}
 
 dependencies {
   jmh platform(project(":dependencyManagement"))
@@ -12,6 +12,7 @@ dependencies {
   jmh "net.bytebuddy:byte-buddy-agent"
 
   jmh project(':instrumentation-api')
+  jmh project(':javaagent-api')
   jmh project(':javaagent-tooling')
   jmh project(':javaagent-extension-api')
 

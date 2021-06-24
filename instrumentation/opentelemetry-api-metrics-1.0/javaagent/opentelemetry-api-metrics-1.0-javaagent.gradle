@@ -1,4 +1,6 @@
-apply plugin: "otel.javaagent-instrumentation"
+plugins {
+  id("otel.javaagent-instrumentation")
+}
 
 dependencies {
   // this instrumentation needs to be able to reference both the OpenTelemetry API

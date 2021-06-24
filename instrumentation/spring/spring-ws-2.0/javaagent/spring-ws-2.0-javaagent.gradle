@@ -1,8 +1,7 @@
 plugins {
   id "org.unbroken-dome.xjc" version "2.0.0"
+  id("otel.javaagent-instrumentation")
 }
-
-apply plugin: "otel.javaagent-instrumentation"
 
 muzzle {
   pass {

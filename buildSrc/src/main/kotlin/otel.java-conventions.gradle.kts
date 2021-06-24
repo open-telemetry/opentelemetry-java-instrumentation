@@ -7,10 +7,11 @@ plugins {
   groovy
   checkstyle
   codenarc
+  idea
 
   id("org.gradle.test-retry")
-  id("net.ltgt.errorprone")
 
+  id("otel.errorprone-conventions")
   id("otel.spotless-conventions")
 }
 
@@ -250,4 +251,11 @@ checkstyle {
   // this version should match the version of google_checks.xml used as basis for above configuration
   toolVersion = "8.37"
   maxWarnings = 0
+}
+
+idea {
+  module {
+    setDownloadJavadoc(false)
+    setDownloadSources(false)
+  }
 }

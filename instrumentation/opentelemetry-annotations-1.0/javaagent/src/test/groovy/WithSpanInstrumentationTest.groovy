@@ -66,13 +66,13 @@ class WithSpanInstrumentationTest extends AgentInstrumentationSpecification {
 
   def "should take span kind from annotation"() {
     setup:
-    new TracedWithSpan().oneOfAKind()
+    new TracedWithSpan().someKind()
 
     expect:
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          name "TracedWithSpan.oneOfAKind"
+          name "TracedWithSpan.someKind"
           kind PRODUCER
           hasNoParent()
           attributes {

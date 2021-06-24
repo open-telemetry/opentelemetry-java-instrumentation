@@ -103,7 +103,7 @@ public class UndertowHttpServerTracer
 
   @Override
   @Nullable
-  protected String peerHostIP(HttpServerExchange exchange) {
+  protected String peerHostIp(HttpServerExchange exchange) {
     InetSocketAddress peerAddress =
         exchange.getConnection().getPeerAddress(InetSocketAddress.class);
     return peerAddress.getHostString();

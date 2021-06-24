@@ -1,8 +1,6 @@
-ext {
-  skipPublish = true
+plugins {
+  id("otel.javaagent-testing")
 }
-
-apply plugin: "otel.java-conventions"
 
 dependencies {
   compileOnly 'com.vaadin:vaadin-spring-boot-starter:14.2.0'

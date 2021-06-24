@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.ignore.trie;
+package io.opentelemetry.javaagent.instrumentation.api.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -38,5 +38,12 @@ class TrieTest {
     Trie<Integer> trie = Trie.<Integer>newBuilder().put("abc", 0).put("abc", 12).build();
 
     assertEquals(12, trie.getOrNull("abc"));
+  }
+
+  @Test
+  void shouldReturnDefaultValueWhenNotMatched() {
+    Trie<Integer> trie = Trie.<Integer>newBuilder().put("abc", 42).build();
+
+    assertEquals(-1, trie.getOrDefault("acdc", -1));
   }
 }

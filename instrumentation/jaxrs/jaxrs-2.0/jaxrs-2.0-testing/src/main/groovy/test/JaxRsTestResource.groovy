@@ -194,7 +194,6 @@ class SubResource {
   @GET
   String call() {
     HttpServerTest.controller(SUCCESS) {
-      new Exception().printStackTrace()
       SUCCESS.body
     }
   }

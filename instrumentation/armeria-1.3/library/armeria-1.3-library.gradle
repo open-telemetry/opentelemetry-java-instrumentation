@@ -1,5 +1,7 @@
-apply plugin: "otel.library-instrumentation"
-apply plugin: "net.ltgt.nullaway"
+plugins {
+  id("otel.library-instrumentation")
+  id("net.ltgt.nullaway")
+}
 
 dependencies {
   library "com.linecorp.armeria:armeria:1.3.0"

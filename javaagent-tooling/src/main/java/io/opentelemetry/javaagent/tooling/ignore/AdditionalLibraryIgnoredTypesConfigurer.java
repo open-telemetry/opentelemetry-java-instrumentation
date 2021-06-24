@@ -29,10 +29,13 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
   @Override
   public void configure(Config config, IgnoredTypesBuilder builder) {
-    if (!config.getBooleanProperty(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
-      return;
+    if (config.getBooleanProperty(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
+      configure(builder);
     }
+  }
 
+  // only used by tests (to bypass the ignores check)
+  public void configure(IgnoredTypesBuilder builder) {
     builder
         .ignoreClass("com.beust.jcommander.")
         .ignoreClass("com.fasterxml.classmate.")
@@ -59,6 +62,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.jmx.")
         .ignoreClass("org.springframework.jndi.")
         .ignoreClass("org.springframework.lang.")
+        .ignoreClass("org.springframework.messaging.")
         .ignoreClass("org.springframework.objenesis.")
         .ignoreClass("org.springframework.orm.")
         .ignoreClass("org.springframework.remoting.")
@@ -76,7 +80,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.amqp.")
-        .allowClass("org.springframework.amqp.rabbit.connection.");
+        .allowClass("org.springframework.amqp.rabbit.connection.")
+        .allowClass("org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer");
 
     builder
         .ignoreClass("org.springframework.beans.")
@@ -146,14 +151,9 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.jms.")
-        .ignoreClass("org.springframework.jms.listener.")
-        .ignoreClass(
+        .allowClass("org.springframework.jms.listener.")
+        .allowClass(
             "org.springframework.jms.config.JmsListenerEndpointRegistry$AggregatingCallback");
-
-    builder
-        .ignoreClass("org.springframework.messaging.")
-        .allowClass("org.springframework.messaging.support.ExecutorSubscribableChannel$SendTask")
-        .allowClass("org.springframework.messaging.support.MessageHandlingRunnable");
 
     builder
         .ignoreClass("org.springframework.util.")

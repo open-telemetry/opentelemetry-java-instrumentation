@@ -25,6 +25,12 @@ jobs:
         with:
           job-id: jdk11
 
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
       - name: Build
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
@@ -60,6 +66,12 @@ jobs:
         with:
           job-id: jdk${{ matrix.java }}
 
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
       - name: Test
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
@@ -83,6 +95,12 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: latestDepTest
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Test
         env:
@@ -117,6 +135,12 @@ jobs:
         with:
           job-id: smokeTests
 
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
       - name: Test
         env:
           S3_BUILD_CACHE_ACCESS_KEY_ID: ${{ secrets.S3_BUILD_CACHE_ACCESS_KEY_ID }}
@@ -141,6 +165,12 @@ jobs:
         with:
           job-id: jdk11
 
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('examples/distro/gradle/wrapper/gradle-wrapper.properties') }}
+
       - name: Build
         run: ./gradlew build --stacktrace
         working-directory: examples/distro
@@ -163,6 +193,12 @@ jobs:
         uses: burrunan/gradle-cache-action@v1.10
         with:
           job-id: jdk11
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-cache-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Publish snapshot
         env:

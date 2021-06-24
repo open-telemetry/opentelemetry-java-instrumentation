@@ -1,1 +1,3 @@
-apply plugin: "otel.javaagent-instrumentation"
+plugins {
+  id("otel.javaagent-instrumentation")
+}

@@ -1,7 +1,6 @@
-ext {
-  skipPublish = true
+plugins {
+  id("otel.javaagent-testing")
 }
-apply plugin: "otel.javaagent-instrumentation"
 
 dependencies {
   testInstrumentation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0:javaagent')

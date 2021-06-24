@@ -28,7 +28,7 @@ public class TracedWithSpan {
   }
 
   @WithSpan(kind = SpanKind.PRODUCER)
-  public String oneOfAKind() {
+  public String someKind() {
     return "hello!";
   }
 
