@@ -100,6 +100,6 @@ class AsyncOperationEndSupportTest {
 
     // then
     assertEquals("done!", result.join());
-    verify(instrumenter).end(context, "request", null, null);
+    verify(instrumenter).end(context, "request", "done!", null);
   }
 }
