@@ -1,4 +1,6 @@
-apply plugin: "otel.library-instrumentation"
+plugins {
+  id("otel.library-instrumentation")
+}
 
 dependencies {
   library "io.projectreactor:reactor-core:3.1.0.RELEASE"

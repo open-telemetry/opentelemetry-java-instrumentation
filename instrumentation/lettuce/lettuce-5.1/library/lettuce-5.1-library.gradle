@@ -1,5 +1,7 @@
-apply plugin: "otel.library-instrumentation"
-apply plugin: "net.ltgt.nullaway"
+plugins {
+  id("otel.library-instrumentation")
+  id("net.ltgt.nullaway")
+}
 
 dependencies {
   library "io.lettuce:lettuce-core:5.1.0.RELEASE"

@@ -7,6 +7,7 @@ plugins {
   groovy
   checkstyle
   codenarc
+  idea
 
   id("org.gradle.test-retry")
 
@@ -250,4 +251,11 @@ checkstyle {
   // this version should match the version of google_checks.xml used as basis for above configuration
   toolVersion = "8.37"
   maxWarnings = 0
+}
+
+idea {
+  module {
+    setDownloadJavadoc(false)
+    setDownloadSources(false)
+  }
 }

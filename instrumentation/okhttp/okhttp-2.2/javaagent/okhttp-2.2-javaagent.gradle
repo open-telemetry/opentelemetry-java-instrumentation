@@ -1,4 +1,6 @@
-apply plugin: "otel.javaagent-instrumentation"
+plugins {
+  id("otel.javaagent-instrumentation")
+}
 
 /*
 Note: The Interceptor class for OkHttp was not introduced until 2.2+, so we need to make sure the

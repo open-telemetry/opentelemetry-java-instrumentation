@@ -1,6 +1,8 @@
-apply plugin: "otel.javaagent-instrumentation"
-apply plugin: "otel.scala-conventions"
-apply plugin: 'org.unbroken-dome.test-sets'
+plugins {
+  id("otel.javaagent-instrumentation")
+  id("otel.scala-conventions")
+  id("org.unbroken-dome.test-sets")
+}
 
 muzzle {
   pass {

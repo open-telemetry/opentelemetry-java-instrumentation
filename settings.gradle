@@ -36,8 +36,6 @@ gradleEnterprise {
   }
 }
 
-apply plugin: 'com.github.burrunan.s3-build-cache'
-
 def awsAccessKeyId = System.getenv("S3_BUILD_CACHE_ACCESS_KEY_ID")
 
 buildCache {

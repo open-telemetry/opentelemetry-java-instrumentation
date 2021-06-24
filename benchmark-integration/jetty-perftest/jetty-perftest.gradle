@@ -1,3 +1,9 @@
+plugins {
+  id("com.github.johnrengelman.shadow")
+
+  id("otel.java-conventions")
+}
+
 dependencies {
   implementation project(':javaagent-bootstrap')
   implementation project(':benchmark-integration')

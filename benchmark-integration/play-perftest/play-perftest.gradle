@@ -1,5 +1,8 @@
 plugins {
   id "org.gradle.playframework" version "0.9"
+  id("com.github.johnrengelman.shadow")
+
+  id("otel.java-conventions")
 }
 
 afterEvaluate {

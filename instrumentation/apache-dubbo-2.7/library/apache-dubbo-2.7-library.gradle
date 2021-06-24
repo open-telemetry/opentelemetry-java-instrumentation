@@ -1,4 +1,6 @@
-apply plugin: "otel.library-instrumentation"
+plugins {
+  id("otel.library-instrumentation")
+}
 
 dependencies {
   library "org.apache.dubbo:dubbo:2.7.0"

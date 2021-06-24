@@ -1,4 +1,6 @@
-apply plugin: "otel.javaagent-instrumentation"
+plugins {
+  id("otel.javaagent-instrumentation")
+}
 
 def scalaVersion = '2.11'
 def playVersion = '2.6.0'

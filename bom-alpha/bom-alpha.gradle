@@ -1,8 +1,8 @@
 plugins {
   id("java-platform")
-}
 
-apply plugin: "otel.publish-conventions"
+  id("otel.publish-conventions")
+}
 
 description = "OpenTelemetry Instrumentation Bill of Materials (Alpha)"
 group = "io.opentelemetry.instrumentation"

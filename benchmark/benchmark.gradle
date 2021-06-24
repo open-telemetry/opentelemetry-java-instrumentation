@@ -1,9 +1,9 @@
 plugins {
-  id "me.champeau.jmh"
-  id "com.github.johnrengelman.shadow"
-}
+  id("me.champeau.jmh")
+  id("com.github.johnrengelman.shadow")
 
-apply plugin: "otel.java-conventions"
+  id("otel.java-conventions")
+}
 
 dependencies {
   jmh platform(project(":dependencyManagement"))

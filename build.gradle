@@ -52,15 +52,6 @@ nexusPublishing {
 description = 'OpenTelemetry instrumentations for Java'
 
 allprojects {
-  apply plugin: 'idea'
-
-  idea {
-    module {
-      downloadJavadoc = false
-      downloadSources = false
-    }
-  }
-
   plugins.withId('net.ltgt.nullaway') {
     dependencies {
       errorprone "com.uber.nullaway:nullaway"
@@ -81,8 +72,6 @@ allprojects {
     }
   }
 }
-
-apply plugin: 'com.diffplug.spotless'
 
 spotless {
   // this formatting is applied at the root level, as some of these files are not in a submodules
