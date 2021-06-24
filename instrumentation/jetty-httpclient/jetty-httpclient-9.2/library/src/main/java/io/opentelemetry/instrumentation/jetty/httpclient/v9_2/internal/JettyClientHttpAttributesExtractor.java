@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_0;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_1_1;
+import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HttpFlavorValues.HTTP_2_0;
+
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpAttributesExtractor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.jetty.client.api.Request;
@@ -41,7 +45,7 @@ final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<R
   @Override
   @Nullable
   protected String host(Request request) {
-    return request != null ? request.getHost() : null;
+    return request.getHost();
   }
 
   @Override
@@ -53,7 +57,7 @@ final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<R
   @Override
   @Nullable
   protected String scheme(Request request) {
-    return request != null ? request.getScheme() : null;
+    return request.getScheme();
   }
 
   @Override
@@ -88,25 +92,24 @@ final class JettyClientHttpAttributesExtractor extends HttpAttributesExtractor<R
   protected String flavor(Request request, @Nullable Response response) {
 
     if (response == null) {
-      return "1.1";
+      return HTTP_1_1;
     }
-
     HttpVersion httpVersion = response.getVersion();
     httpVersion = (httpVersion != null) ? httpVersion : HttpVersion.HTTP_1_1;
     switch (httpVersion) {
       case HTTP_0_9:
-        return "0.9";
+        return HTTP_1_0;
       case HTTP_1_0:
-        return "1.0";
+        return HTTP_1_0;
       case HTTP_1_1:
-        return "1.1";
+        return HTTP_1_1;
       default:
         // version 2.0 enum name difference in later versions 9.2 and 9.4 versions
         if (httpVersion.toString().endsWith("2.0")) {
-          return "2.0";
+          return HTTP_2_0;
         }
 
-        return "1.1";
+        return HTTP_1_1;
     }
   }
 

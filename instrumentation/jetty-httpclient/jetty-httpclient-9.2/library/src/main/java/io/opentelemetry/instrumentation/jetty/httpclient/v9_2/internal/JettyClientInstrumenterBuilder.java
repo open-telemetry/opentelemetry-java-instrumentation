@@ -20,8 +20,7 @@ import org.eclipse.jetty.client.api.Response;
 
 public final class JettyClientInstrumenterBuilder {
 
-  private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.javaagent.jetty-httpclient-9.2";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-httpclient-9.2";
 
   private final OpenTelemetry openTelemetry;
 

@@ -6,10 +6,7 @@
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Response;
 
 /** JettyClientTracing, the Entrypoint for tracing Jetty client. */
 public final class JettyClientTracing {
@@ -29,7 +26,7 @@ public final class JettyClientTracing {
     return httpClient;
   }
 
-  JettyClientTracing(Instrumenter<Request, Response> instrumenter, HttpClient httpClient) {
+  JettyClientTracing(HttpClient httpClient) {
     this.httpClient = httpClient;
   }
 }

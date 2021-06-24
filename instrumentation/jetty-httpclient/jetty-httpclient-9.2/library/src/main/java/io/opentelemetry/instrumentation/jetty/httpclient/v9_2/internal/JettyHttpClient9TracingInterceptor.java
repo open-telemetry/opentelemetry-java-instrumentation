@@ -139,14 +139,14 @@ public class JettyHttpClient9TracingInterceptor
   @Override
   public void onFailure(Response response, Throwable t) {
     if (this.context != null) {
-      instrumenter.end(this.context, null, response, t);
+      instrumenter.end(this.context, response.getRequest(), response, t);
     }
   }
 
   private void closeIfPossible(Response response) {
 
     if (this.context != null) {
-      instrumenter.end(this.context, null, response, null);
+      instrumenter.end(this.context, response.getRequest(), response, null);
     } else {
       LOG.debug("onComplete - could not find an otel context");
     }

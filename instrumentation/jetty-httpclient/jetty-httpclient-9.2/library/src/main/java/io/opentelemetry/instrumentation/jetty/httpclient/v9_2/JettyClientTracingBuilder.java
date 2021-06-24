@@ -41,6 +41,6 @@ public final class JettyClientTracingBuilder {
     TracingHttpClient tracingHttpClient =
         TracingHttpClient.buildNew(instrumenter, this.sslContextFactory, this.httpClientTransport);
 
-    return new JettyClientTracing(instrumenter, tracingHttpClient);
+    return new JettyClientTracing(tracingHttpClient);
   }
 }
