@@ -347,4 +347,9 @@ public class OpenTelemetryConnection implements Connection {
   public boolean isWrapperFor(Class<?> iface) throws SQLException {
     return delegate.isWrapperFor(iface);
   }
+
+  // visible for testing
+  public DbInfo getDbInfo() {
+    return dbInfo;
+  }
 }

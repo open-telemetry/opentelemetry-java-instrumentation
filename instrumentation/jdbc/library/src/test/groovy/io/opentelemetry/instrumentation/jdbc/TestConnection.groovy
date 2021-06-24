@@ -61,7 +61,7 @@ class TestConnection implements Connection {
 
   @Override
   DatabaseMetaData getMetaData() throws SQLException {
-    return null
+    return new TestDatabaseMetaData()
   }
 
   @Override
