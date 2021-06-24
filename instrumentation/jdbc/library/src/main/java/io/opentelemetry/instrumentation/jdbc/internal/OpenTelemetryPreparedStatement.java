@@ -41,8 +41,8 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
-class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTelemetryStatement<S>
-    implements PreparedStatement {
+public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
+    extends OpenTelemetryStatement<S> implements PreparedStatement {
 
   public OpenTelemetryPreparedStatement(S delegate, DbInfo dbInfo, String query) {
     super(delegate, dbInfo, query);

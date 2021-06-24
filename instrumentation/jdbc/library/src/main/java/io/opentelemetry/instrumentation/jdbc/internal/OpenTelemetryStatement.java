@@ -31,7 +31,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-class OpenTelemetryStatement<S extends Statement> implements Statement {
+public class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   protected final S delegate;
   protected final DbInfo dbInfo;

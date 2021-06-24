@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test
+package io.opentelemetry.instrumentation.jdbc
 
 import java.sql.*
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
-  TestPreparedStatement(Connection connection) {
-    super(connection)
+  @Override
+  boolean execute() throws SQLException {
+    return true
   }
 
   @Override
@@ -120,11 +121,6 @@ class TestPreparedStatement extends TestStatement implements PreparedStatement {
   @Override
   void setObject(int parameterIndex, Object x) throws SQLException {
 
-  }
-
-  @Override
-  boolean execute() throws SQLException {
-    return false
   }
 
   @Override

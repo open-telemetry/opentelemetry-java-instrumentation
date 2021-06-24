@@ -39,7 +39,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-class OpenTelemetryCallableStatement<S extends CallableStatement>
+public class OpenTelemetryCallableStatement<S extends CallableStatement>
     extends OpenTelemetryPreparedStatement<S> implements CallableStatement {
 
   public OpenTelemetryCallableStatement(S delegate, DbInfo dbInfo, String query) {
