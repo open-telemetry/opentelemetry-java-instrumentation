@@ -4,8 +4,7 @@ muzzle {
   pass {
     group = "org.eclipse.jetty"
     module = 'jetty-client'
-    versions = "[9.2,9.+)"
-    assertInverse = true
+    versions = "[9.2,9.4.+)"
   }
 }
 
