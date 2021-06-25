@@ -1,5 +1,7 @@
-apply plugin: "otel.library-instrumentation"
-apply plugin: "net.ltgt.errorprone"
+plugins {
+  id("otel.library-instrumentation")
+  id("net.ltgt.errorprone")
+}
 
 
 //Jetty client 9.2 is the best starting point, HttpClient.send() is stable there
