@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-  testImplementation project(':instrumentation:internal:internal-proxy:javaagent')
-  testImplementation project(':javaagent-bootstrap')
+  testImplementation(project(":instrumentation:internal:internal-proxy:javaagent"))
+  testImplementation(project(":javaagent-bootstrap"))
 }

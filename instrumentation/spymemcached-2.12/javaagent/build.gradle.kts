@@ -4,20 +4,20 @@ plugins {
 
 muzzle {
   pass {
-    group = "net.spy"
-    module = 'spymemcached'
-    versions = "[2.12.0,)"
-    assertInverse = true
+    group.set("net.spy")
+    module.set("spymemcached")
+    versions.set("[2.12.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library "net.spy:spymemcached:2.12.0"
+  library("net.spy:spymemcached:2.12.0")
 
-  testImplementation "com.google.guava:guava"
+  testImplementation("com.google.guava:guava")
 }
 
-tasks.withType(Test).configureEach {
+tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
-  jvmArgs "-Dotel.instrumentation.spymemcached.experimental-span-attributes=true"
+  jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
 }

@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-  library "com.squareup.okhttp3:okhttp:3.0.0"
+  library("com.squareup.okhttp3:okhttp:3.0.0")
 
-  testImplementation project(':instrumentation:okhttp:okhttp-3.0:testing')
+  testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
 }

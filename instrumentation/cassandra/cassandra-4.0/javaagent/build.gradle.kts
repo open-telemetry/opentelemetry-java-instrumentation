@@ -4,18 +4,18 @@ plugins {
 
 muzzle {
   pass {
-    group = "com.datastax.oss"
-    module = "java-driver-core"
-    versions = "[4.0,)"
-    assertInverse = true
+    group.set("com.datastax.oss")
+    module.set("java-driver-core")
+    versions.set("[4.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library "com.datastax.oss:java-driver-core:4.0.0"
+  library("com.datastax.oss:java-driver-core:4.0.0")
 
-  compileOnly "com.google.auto.value:auto-value-annotations"
-  annotationProcessor "com.google.auto.value:auto-value"
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
 
-  latestDepTestLibrary "com.datastax.oss:java-driver-core:4.+"
+  latestDepTestLibrary("com.datastax.oss:java-driver-core:4.+")
 }

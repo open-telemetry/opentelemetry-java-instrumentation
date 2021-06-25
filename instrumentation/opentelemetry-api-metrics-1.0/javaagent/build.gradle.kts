@@ -21,9 +21,9 @@ dependencies {
   //
   // and in the code "io.opentelemetry.*" refers to the (shaded) OpenTelemetry API that is used by
   // the agent (as those references will later be shaded)
-  compileOnly project(path: ':opentelemetry-api-shaded-for-instrumenting', configuration: 'shadow')
-  compileOnly "io.opentelemetry:opentelemetry-api-metrics"
+  compileOnly(project(path = ":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
+  compileOnly("io.opentelemetry:opentelemetry-api-metrics")
 
-  testImplementation "com.google.guava:guava"
-  testImplementation "io.opentelemetry:opentelemetry-sdk-metrics"
+  testImplementation("com.google.guava:guava")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
 }

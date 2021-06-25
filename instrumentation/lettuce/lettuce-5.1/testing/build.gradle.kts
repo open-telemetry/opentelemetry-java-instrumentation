@@ -3,14 +3,14 @@ plugins {
 }
 
 dependencies {
-  api project(':testing-common')
+  api(project(":testing-common"))
 
-  api "io.lettuce:lettuce-core:5.1.0.RELEASE"
+  api("io.lettuce:lettuce-core:5.1.0.RELEASE")
 
-  implementation "org.testcontainers:testcontainers"
-  implementation "com.google.guava:guava"
+  implementation("org.testcontainers:testcontainers")
+  implementation("com.google.guava:guava")
 
-  implementation "org.codehaus.groovy:groovy-all"
-  implementation "io.opentelemetry:opentelemetry-api"
-  implementation "org.spockframework:spock-core"
+  implementation("org.codehaus.groovy:groovy-all")
+  implementation("io.opentelemetry:opentelemetry-api")
+  implementation("org.spockframework:spock-core")
 }

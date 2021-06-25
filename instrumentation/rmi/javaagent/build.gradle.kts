@@ -8,22 +8,23 @@ muzzle {
   }
 }
 
-def rmic = tasks.register('rmic') {
-  dependsOn(testClasses)
+tasks {
+  val rmic by registering(Exec::class) {
+    dependsOn(testClasses)
 
-  def clazz = 'rmi.app.ServerLegacy'
+    val clazz = "rmi.app.ServerLegacy"
 
-  // Try one level up too in case java.home refers to jre directory inside jdk directory
-  def rmicBinaryPath = ['/bin/rmic', '/../bin/rmic'].findResult {
-    def path = new File(System.getProperty("java.home"), it).getAbsoluteFile()
-    path.isFile() ? path.toString() : null
-  } ?: "rmic"
+    val rmicBinaryPath = listOf("/bin/rmic", "/../bin/rmic").map {
+      File(System.getProperty("java.home"), it).absoluteFile
+    }.find { it.isFile() }?.let(File::toString) ?: "rmic"
 
-  String command = """$rmicBinaryPath -g -keep -classpath ${sourceSets.test.output.classesDirs.asPath} -d ${buildDir}/classes/java/test ${clazz}"""
-  command.execute().text
+    commandLine(rmicBinaryPath, "-g", "-keep", "-classpath", sourceSets.test.get().output.classesDirs.asPath, "-d", "${buildDir}/classes/java/test", clazz)
+  }
+
+  named<Test>("test") {
+    dependsOn(rmic)
+  }
 }
-
-test.dependsOn rmic
 
 // We cannot use "--release" javac option here because that will forbid importing "sun.rmi" package.
 // We also can't seem to use the toolchain without the "--release" option. So disable everything.
@@ -32,16 +33,18 @@ java {
   sourceCompatibility = JavaVersion.VERSION_1_8
   targetCompatibility = JavaVersion.VERSION_1_8
   toolchain {
-    languageVersion = null
+    languageVersion.set(null as JavaLanguageVersion?)
   }
 }
 
-tasks.withType(JavaCompile).configureEach {
-  options.release = null
-}
-tasks.withType(GroovyCompile).configureEach {
-  options.release = null
-}
-tasks.withType(Test).configureEach {
-  jvmArgs "-Djava.rmi.server.hostname=127.0.0.1"
+tasks {
+  withType<JavaCompile>().configureEach {
+    options.release.set(null as Int?)
+  }
+  withType<GroovyCompile>().configureEach {
+    options.release.set(null as Int?)
+  }
+  withType<Test>().configureEach {
+    jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
+  }
 }

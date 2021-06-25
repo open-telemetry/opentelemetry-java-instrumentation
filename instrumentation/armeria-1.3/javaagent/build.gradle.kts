@@ -4,17 +4,17 @@ plugins {
 
 muzzle {
   pass {
-    group = "com.linecorp.armeria"
-    module = "armeria"
-    versions = "[1.3.0,)"
-    assertInverse = true
+    group.set("com.linecorp.armeria")
+    module.set("armeria")
+    versions.set("[1.3.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  implementation project(':instrumentation:armeria-1.3:library')
+  implementation(project(":instrumentation:armeria-1.3:library"))
 
-  library "com.linecorp.armeria:armeria:1.3.0"
+  library("com.linecorp.armeria:armeria:1.3.0")
 
-  testImplementation project(':instrumentation:armeria-1.3:testing')
+  testImplementation(project(":instrumentation:armeria-1.3:testing"))
 }

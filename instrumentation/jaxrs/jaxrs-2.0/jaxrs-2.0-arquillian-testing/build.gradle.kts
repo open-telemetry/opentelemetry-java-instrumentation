@@ -6,23 +6,23 @@ plugins {
 repositories {
   mavenCentral()
   maven {
-    url 'https://repo.gradle.org/artifactory/libs-releases-local'
+    setUrl("https://repo.gradle.org/artifactory/libs-releases-local")
     content {
-      includeGroup 'org.gradle'
+      includeGroup("org.gradle")
     }
   }
   mavenLocal()
 }
 
 dependencies {
-  compileOnly "javax:javaee-api:7.0"
+  compileOnly("javax:javaee-api:7.0")
 
-  api project(':testing-common')
-  implementation "io.opentelemetry:opentelemetry-api"
+  api(project(":testing-common"))
+  implementation("io.opentelemetry:opentelemetry-api")
 
-  def arquillianVersion = '1.4.0.Final'
-  implementation "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}"
-  implementation "org.jboss.arquillian.protocol:arquillian-protocol-servlet:${arquillianVersion}"
-  implementation 'org.jboss.arquillian.spock:arquillian-spock-container:1.0.0.CR1'
-  api "org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain:3.1.3"
+  val arquillianVersion = "1.4.0.Final"
+  implementation("org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}")
+  implementation("org.jboss.arquillian.protocol:arquillian-protocol-servlet:${arquillianVersion}")
+  implementation("org.jboss.arquillian.spock:arquillian-spock-container:1.0.0.CR1")
+  api("org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-gradle-depchain:3.1.3")
 }

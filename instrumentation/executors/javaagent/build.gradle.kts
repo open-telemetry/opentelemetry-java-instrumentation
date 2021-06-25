@@ -8,7 +8,7 @@ muzzle {
   }
 }
 
-tasks.withType(Test).configureEach {
-  jvmArgs "-Dotel.instrumentation.executors.include=ExecutorInstrumentationTest\$CustomThreadPoolExecutor"
-  jvmArgs "-Djava.awt.headless=true"
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.executors.include=ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
+  jvmArgs("-Djava.awt.headless=true")
 }

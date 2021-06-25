@@ -44,11 +44,11 @@ For Gradle add to your dependencies:
 
 ```groovy
 //opentelemetry spring auto-configuration
-implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-boot-autoconfigure:OPENTELEMETRY_VERSION'
+implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-autoconfigure:OPENTELEMETRY_VERSION")
 //opentelemetry
-implementation 'io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION'
+implementation("io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION")
 //opentelemetry exporter
-implementation 'io.opentelemetry:opentelemetry-exporters-otlp:OPENTELEMETRY_VERSION'
+implementation("io.opentelemetry:opentelemetry-exporters-otlp:OPENTELEMETRY_VERSION")
 ```
 
 ### Features
@@ -125,22 +125,22 @@ For Gradle add to your dependencies:
 
 ```groovy
 //opentelemetry exporter
-implementation 'io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION'
-implementation 'io.opentelemetry:opentelemetry-exporters-zipkin:OPENTELEMETRY_VERSION'
-implementation 'io.opentelemetry:opentelemetry-exporters-otlp:OPENTELEMETRY_VERSION'
+implementation("io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry:opentelemetry-exporters-zipkin:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry:opentelemetry-exporters-otlp:OPENTELEMETRY_VERSION")
 
 //Used to autoconfigure spring-web
-implementation "org.springframework:spring-web:SPRING_VERSION"
+implementation("org.springframework:spring-web:SPRING_VERSION")
 
 //Used to autoconfigure spring-webmvc
-implementation "org.springframework:spring-webmvc:SPRING_VERSION"
+implementation("org.springframework:spring-webmvc:SPRING_VERSION")
 
 //Used to autoconfigure spring-webflux
-implementation "org.springframework:spring-webflux:SPRING_WEBFLUX_VERSION"
+implementation("org.springframework:spring-webflux:SPRING_WEBFLUX_VERSION")
 
 //Enables instrumentation using @WithSpan
-implementation "org.springframework:spring-aop:SPRING_VERSION"
-implementation "io.opentelemetry:opentelemetry-extension-annotations:OPENTELEMETRY_VERSION"
+implementation("org.springframework:spring-aop:SPRING_VERSION")
+implementation("io.opentelemetry:opentelemetry-extension-annotations:OPENTELEMETRY_VERSION")
 ```
 
 #### OpenTelemetry Auto Configuration

@@ -4,9 +4,9 @@ plugins {
 
 muzzle {
   pass {
-    group = "org.jboss.resteasy"
-    module = "resteasy-client"
-    versions = "[3.0.0.Final,)"
+    group.set("org.jboss.resteasy")
+    module.set("resteasy-client")
+    versions.set("[3.0.0.Final,)")
   }
 }
 
@@ -24,10 +24,10 @@ dependencies {
   // to:
   //   org.jboss.resteasy.util.CaseInsensitiveMap#putSingle(Ljava/lang/Object;Ljava/lang/Object;)V
   // which WILL be compatible with versions prior to 3.0.10.Final, because in those versions
-  // putSingle(String, Object) is a generic implementation for
+  // putSingle(String, Object) is a generic implementation(for)
   // javax.ws.rs.core.MultivaluedMap.putSingle(K, V), and so there's also a synthetic bridge method
   // putSingle(Object, Object) in those versions
-  library "org.jboss.resteasy:resteasy-client:3.0.10.Final"
+  library("org.jboss.resteasy:resteasy-client:3.0.10.Final")
 
-  implementation project(':instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-common:javaagent')
+  implementation(project(":instrumentation:jaxrs-client:jaxrs-client-2.0:jaxrs-client-2.0-common:javaagent"))
 }

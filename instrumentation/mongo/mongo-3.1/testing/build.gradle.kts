@@ -3,11 +3,11 @@ plugins {
 }
 
 dependencies {
-  api project(':instrumentation:mongo:mongo-testing')
+  api(project(":instrumentation:mongo:mongo-testing"))
 
-  compileOnly "org.mongodb:mongo-java-driver:3.1.0"
+  compileOnly("org.mongodb:mongo-java-driver:3.1.0")
 
-  implementation "org.codehaus.groovy:groovy-all"
-  implementation "io.opentelemetry:opentelemetry-api"
-  implementation "org.spockframework:spock-core"
+  implementation("org.codehaus.groovy:groovy-all")
+  implementation("io.opentelemetry:opentelemetry-api")
+  implementation("org.spockframework:spock-core")
 }

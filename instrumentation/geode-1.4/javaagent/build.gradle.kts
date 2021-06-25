@@ -4,15 +4,15 @@ plugins {
 
 muzzle {
   pass {
-    group = "org.apache.geode"
-    module = "geode-core"
-    versions = "[1.4.0,)"
+    group.set("org.apache.geode")
+    module.set("geode-core")
+    versions.set("[1.4.0,)")
   }
 }
 
 dependencies {
-  library "org.apache.geode:geode-core:1.4.0"
+  library("org.apache.geode:geode-core:1.4.0")
 
-  compileOnly "com.google.auto.value:auto-value-annotations"
-  annotationProcessor "com.google.auto.value:auto-value"
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
 }

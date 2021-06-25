@@ -4,13 +4,13 @@ plugins {
 
 muzzle {
   pass {
-    group = "com.ning"
-    module = "async-http-client"
-    versions = "[1.9.0,)"
-    assertInverse = true
+    group.set("com.ning")
+    module.set("async-http-client")
+    versions.set("[1.9.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library "com.ning:async-http-client:1.9.0"
+  library("com.ning:async-http-client:1.9.0")
 }

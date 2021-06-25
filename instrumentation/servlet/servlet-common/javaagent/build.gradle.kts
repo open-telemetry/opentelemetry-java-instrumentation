@@ -6,5 +6,5 @@ plugins {
 // non-abstract implementations of InstrumentationModule
 
 dependencies {
-  api(project(':instrumentation:servlet:servlet-common:library'))
+  api(project(":instrumentation:servlet:servlet-common:library"))
 }

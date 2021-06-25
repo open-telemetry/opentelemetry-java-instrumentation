@@ -4,29 +4,29 @@ plugins {
 
 muzzle {
   pass {
-    group = "javax.servlet"
-    module = "servlet-api"
-    versions = "(0,)"
+    group.set("javax.servlet")
+    module.set("servlet-api")
+    versions.set("(0,)")
   }
   pass {
-    group = "javax.servlet"
-    module = 'javax.servlet-api'
-    versions = "[3.0,)"
-    assertInverse = true
+    group.set("javax.servlet")
+    module.set("javax.servlet-api")
+    versions.set("[3.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  api(project(':instrumentation:servlet:servlet-javax-common:library'))
-  implementation(project(':instrumentation:servlet:servlet-common:javaagent'))
+  api(project(":instrumentation:servlet:servlet-javax-common:library"))
+  implementation(project(":instrumentation:servlet:servlet-common:javaagent"))
 
-  compileOnly "javax.servlet:servlet-api:2.3"
+  compileOnly("javax.servlet:servlet-api:2.3")
 
-  testImplementation(project(':testing-common')) {
-    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
+  testImplementation(project(":testing-common")) {
+    exclude("org.eclipse.jetty", "jetty-server")
   }
 
   // We don't check testLatestDeps for this module since we have coverage in others like servlet-3.0
-  testImplementation "org.eclipse.jetty:jetty-server:7.0.0.v20091005"
-  testImplementation "org.eclipse.jetty:jetty-servlet:7.0.0.v20091005"
+  testImplementation("org.eclipse.jetty:jetty-server:7.0.0.v20091005")
+  testImplementation("org.eclipse.jetty:jetty-servlet:7.0.0.v20091005")
 }

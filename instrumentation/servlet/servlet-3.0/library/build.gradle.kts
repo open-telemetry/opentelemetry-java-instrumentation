@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(':instrumentation:servlet:servlet-javax-common:library'))
+  api(project(":instrumentation:servlet:servlet-javax-common:library"))
 
-  compileOnly "javax.servlet:javax.servlet-api:3.0.1"
+  compileOnly("javax.servlet:javax.servlet-api:3.0.1")
 }

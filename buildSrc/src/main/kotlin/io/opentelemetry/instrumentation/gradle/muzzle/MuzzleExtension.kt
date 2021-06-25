@@ -14,14 +14,14 @@ abstract class MuzzleExtension @Inject constructor(private val objectFactory: Ob
 
   internal abstract val directives: ListProperty<MuzzleDirective>
 
-  fun pass(action: Action<in MuzzleDirective?>) {
+  fun pass(action: Action<MuzzleDirective>) {
     val pass = objectFactory.newInstance(MuzzleDirective::class.java)
     action.execute(pass)
     pass.assertPass.set(true)
     directives.add(pass)
   }
 
-  fun fail(action: Action<in MuzzleDirective?>) {
+  fun fail(action: Action<MuzzleDirective>) {
     val fail = objectFactory.newInstance(MuzzleDirective::class.java)
     action.execute(fail)
     fail.assertPass.set(false)

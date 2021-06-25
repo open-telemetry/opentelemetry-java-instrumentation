@@ -4,17 +4,17 @@ plugins {
 
 muzzle {
   pass {
-    group = "org.mongodb"
-    module = "mongo-java-driver"
-    versions = "[3.1,)"
-    assertInverse = true
+    group.set("org.mongodb")
+    module.set("mongo-java-driver")
+    versions.set("[3.1,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  implementation(project(':instrumentation:mongo:mongo-3.1:library'))
+  implementation(project(":instrumentation:mongo:mongo-3.1:library"))
 
-  library "org.mongodb:mongo-java-driver:3.1.0"
+  library("org.mongodb:mongo-java-driver:3.1.0")
 
-  testImplementation project(':instrumentation:mongo:mongo-3.1:testing')
+  testImplementation(project(":instrumentation:mongo:mongo-3.1:testing"))
 }

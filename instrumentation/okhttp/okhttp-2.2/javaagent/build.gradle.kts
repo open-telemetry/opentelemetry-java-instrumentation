@@ -8,15 +8,15 @@ instrumentation is not loaded unless the dependency is 2.2+.
 */
 muzzle {
   pass {
-    group = "com.squareup.okhttp"
-    module = "okhttp"
-    versions = "[2.2,3)"
-    assertInverse = true
+    group.set("com.squareup.okhttp")
+    module.set("okhttp")
+    versions.set("[2.2,3)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
   library("com.squareup.okhttp:okhttp:2.2.0")
 
-  latestDepTestLibrary "com.squareup.okhttp:okhttp:[2.6,3)"
+  latestDepTestLibrary("com.squareup.okhttp:okhttp:[2.6,3)")
 }

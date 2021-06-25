@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  library "com.google.guava:guava:10.0"
+  library("com.google.guava:guava:10.0")
 }

@@ -4,17 +4,17 @@ plugins {
 
 muzzle {
   fail {
-    group = "javax.ws.rs"
-    module = "jsr311-api"
-    versions = "[,]"
+    group.set("javax.ws.rs")
+    module.set("jsr311-api")
+    versions.set("[,]")
   }
   pass {
-    group = "javax.ws.rs"
-    module = "javax.ws.rs-api"
-    versions = "[,]"
+    group.set("javax.ws.rs")
+    module.set("javax.ws.rs-api")
+    versions.set("[,]")
   }
 }
 
 dependencies {
-  compileOnly "javax.ws.rs:javax.ws.rs-api:2.0"
+  compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
 }

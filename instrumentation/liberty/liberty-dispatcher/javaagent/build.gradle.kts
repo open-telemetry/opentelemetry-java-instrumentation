@@ -8,5 +8,5 @@ plugins {
 dependencies {
   // liberty jars are not available as a maven dependency so we compile against
   // stub classes
-  compileOnly project(':instrumentation:liberty:compile-stub')
+  compileOnly(project(":instrumentation:liberty:compile-stub"))
 }

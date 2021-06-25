@@ -9,5 +9,5 @@ muzzle {
 }
 
 dependencies {
-  testImplementation "org.springframework:spring-web:4.3.7.RELEASE"
+  testImplementation("org.springframework:spring-web:4.3.7.RELEASE")
 }

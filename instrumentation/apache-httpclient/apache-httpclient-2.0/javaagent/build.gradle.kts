@@ -3,15 +3,15 @@ plugins {
 }
 muzzle {
   pass {
-    group = "commons-httpclient"
-    module = "commons-httpclient"
-    versions = "[2.0,4.0)"
-    assertInverse = true
+    group.set("commons-httpclient")
+    module.set("commons-httpclient")
+    versions.set("[2.0,4.0)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library "commons-httpclient:commons-httpclient:2.0"
+  library("commons-httpclient:commons-httpclient:2.0")
 
-  latestDepTestLibrary "commons-httpclient:commons-httpclient:3.+"
+  latestDepTestLibrary("commons-httpclient:commons-httpclient:3.+")
 }

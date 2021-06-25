@@ -4,38 +4,46 @@ plugins {
 
 muzzle {
   pass {
-    group = "org.springframework.batch"
-    module = "spring-batch-core"
-    versions = "[3.0.0.RELEASE,)"
-    assertInverse = true
+    group.set("org.springframework.batch")
+    module.set("spring-batch-core")
+    versions.set("[3.0.0.RELEASE,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library "org.springframework.batch:spring-batch-core:3.0.0.RELEASE"
+  library("org.springframework.batch:spring-batch-core:3.0.0.RELEASE")
 
-  testImplementation "javax.inject:javax.inject:1"
+  testImplementation("javax.inject:javax.inject:1")
   // SimpleAsyncTaskExecutor context propagation
-  testInstrumentation project(':instrumentation:spring:spring-core-2.0:javaagent')
+  testInstrumentation(project(":instrumentation:spring:spring-core-2.0:javaagent"))
 }
 
-tasks.withType(Test).configureEach {
-  jvmArgs '-Dotel.instrumentation.spring-batch.enabled=true'
-}
-test {
-  filter {
-    excludeTestsMatching '*ChunkRootSpanTest'
-    excludeTestsMatching '*ItemLevelSpanTest'
+tasks {
+  val testChunkRootSpan by registering(Test::class) {
+    filter {
+      includeTestsMatching("*ChunkRootSpanTest")
+    }
+    jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
+  }
+  
+  val testItemLevelSpan by registering(Test::class) {
+    filter {
+      includeTestsMatching("*ItemLevelSpanTest")
+    }
+    jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
+  }
+  
+  named<Test>("test") {
+    dependsOn(testChunkRootSpan)
+    dependsOn(testItemLevelSpan)
+    filter {
+      excludeTestsMatching("*ChunkRootSpanTest")
+      excludeTestsMatching("*ItemLevelSpanTest")
+    }
+  }
+
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
   }
 }
-test.finalizedBy(tasks.register("testChunkRootSpan", Test) {
-  filter {
-    includeTestsMatching '*ChunkRootSpanTest'
-  }
-  jvmArgs '-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true'
-}).finalizedBy(tasks.register("testItemLevelSpan", Test) {
-  filter {
-    includeTestsMatching '*ItemLevelSpanTest'
-  }
-  jvmArgs '-Dotel.instrumentation.spring-batch.item.enabled=true'
-})

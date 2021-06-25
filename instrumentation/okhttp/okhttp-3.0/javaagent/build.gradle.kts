@@ -4,10 +4,10 @@ plugins {
 
 muzzle {
   pass {
-    group = "com.squareup.okhttp3"
-    module = "okhttp"
-    versions = "[3.0,)"
-    assertInverse = true
+    group.set("com.squareup.okhttp3")
+    module.set("okhttp")
+    versions.set("[3.0,)")
+    assertInverse.set(true)
   }
 }
 
@@ -21,9 +21,9 @@ because it looks like exclusions using configurations excludes dependency even i
 not transitive.
  */
 dependencies {
-  implementation project(':instrumentation:okhttp:okhttp-3.0:library')
+  implementation(project(":instrumentation:okhttp:okhttp-3.0:library"))
 
   library("com.squareup.okhttp3:okhttp:3.0.0")
 
-  testImplementation project(':instrumentation:okhttp:okhttp-3.0:testing')
+  testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
 }

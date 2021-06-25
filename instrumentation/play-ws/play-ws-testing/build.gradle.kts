@@ -2,13 +2,13 @@ plugins {
   id("otel.java-conventions")
 }
 
-def scalaVersion = '2.12'
+val scalaVersion = "2.12"
 
 dependencies {
-  api project(':testing-common')
-  api group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.0.2'
+  api(project(":testing-common"))
+  api("com.typesafe.play:play-ahc-ws-standalone_${scalaVersion}:1.0.2")
 
-  implementation "org.codehaus.groovy:groovy-all"
-  implementation "io.opentelemetry:opentelemetry-api"
-  implementation "org.spockframework:spock-core"
+  implementation("org.codehaus.groovy:groovy-all")
+  implementation("io.opentelemetry:opentelemetry-api")
+  implementation("org.spockframework:spock-core")
 }

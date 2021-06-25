@@ -4,20 +4,20 @@ plugins {
 
 muzzle {
   pass {
-    group = "org.mongodb"
-    module = "mongodb-driver-async"
-    versions = "[3.3,)"
-    extraDependency 'org.mongodb:mongo-java-driver'
-    assertInverse = true
+    group.set("org.mongodb")
+    module.set("mongodb-driver-async")
+    versions.set("[3.3,)")
+    extraDependency("org.mongodb:mongo-java-driver")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  implementation(project(':instrumentation:mongo:mongo-3.1:library'))
+  implementation(project(":instrumentation:mongo:mongo-3.1:library"))
 
-  library "org.mongodb:mongodb-driver-async:3.3.0"
+  library("org.mongodb:mongodb-driver-async:3.3.0")
 
-  testImplementation project(':instrumentation:mongo:mongo-testing')
+  testImplementation(project(":instrumentation:mongo:mongo-testing"))
 
-  testInstrumentation project(':instrumentation:mongo:mongo-3.7:javaagent')
+  testInstrumentation(project(":instrumentation:mongo:mongo-3.7:javaagent"))
 }

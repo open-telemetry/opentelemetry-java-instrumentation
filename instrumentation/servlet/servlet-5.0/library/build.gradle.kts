@@ -3,11 +3,11 @@ plugins {
 }
 
 dependencies {
-  api(project(':instrumentation:servlet:servlet-common:library'))
+  api(project(":instrumentation:servlet:servlet-common:library"))
 
-  compileOnly "jakarta.servlet:jakarta.servlet-api:5.0.0"
+  compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
 
-  testImplementation "jakarta.servlet:jakarta.servlet-api:5.0.0"
-  testImplementation "org.mockito:mockito-core:3.6.0"
-  testImplementation "org.assertj:assertj-core"
+  testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
+  testImplementation("org.mockito:mockito-core:3.6.0")
+  testImplementation("org.assertj:assertj-core")
 }

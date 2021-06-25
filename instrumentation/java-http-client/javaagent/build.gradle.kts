@@ -9,5 +9,5 @@ muzzle {
 }
 
 otelJava {
-  minJavaVersionSupported = JavaVersion.VERSION_11
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }

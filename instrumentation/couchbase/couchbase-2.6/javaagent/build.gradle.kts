@@ -4,36 +4,36 @@ plugins {
 
 muzzle {
   pass {
-    group = 'com.couchbase.client'
-    module = 'java-client'
-    versions = "[2.6.0,3)"
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2.6.0,3)")
     // these versions were released as ".bundle" instead of ".jar"
-    skip('2.7.5', '2.7.8')
-    assertInverse = true
+    skip("2.7.5", "2.7.8")
+    assertInverse.set(true)
   }
   fail {
-    group = 'com.couchbase.client'
-    module = 'couchbase-client'
-    versions = "(,)"
+    group.set("com.couchbase.client")
+    module.set("couchbase-client")
+    versions.set("(,)")
   }
 }
 
 dependencies {
-  implementation project(':instrumentation:rxjava:rxjava-1.0:library')
+  implementation(project(":instrumentation:rxjava:rxjava-1.0:library"))
 
-  library "com.couchbase.client:java-client:2.6.0"
+  library("com.couchbase.client:java-client:2.6.0")
 
-  testInstrumentation project(':instrumentation:couchbase:couchbase-2.0:javaagent')
-  testImplementation project(':instrumentation:couchbase:couchbase-testing')
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
+  testImplementation(project(":instrumentation:couchbase:couchbase-testing"))
 
-  testLibrary "org.springframework.data:spring-data-couchbase:3.1.0.RELEASE"
-  testLibrary "com.couchbase.client:encryption:1.0.0"
+  testLibrary("org.springframework.data:spring-data-couchbase:3.1.0.RELEASE")
+  testLibrary("com.couchbase.client:encryption:1.0.0")
 
-  latestDepTestLibrary "org.springframework.data:spring-data-couchbase:3.1+"
-  latestDepTestLibrary "com.couchbase.client:java-client:2.+"
+  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:3.1+")
+  latestDepTestLibrary("com.couchbase.client:java-client:2.+")
 }
 
-tasks.withType(Test).configureEach {
+tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
-  jvmArgs "-Dotel.instrumentation.couchbase.experimental-span-attributes=true"
+  jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
 }

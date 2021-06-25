@@ -3,13 +3,13 @@ plugins {
 }
 
 dependencies {
-  api project(':testing-common')
+  api(project(":testing-common"))
 
-  api "io.reactivex.rxjava3:rxjava:3.0.12"
+  api("io.reactivex.rxjava3:rxjava:3.0.12")
 
-  implementation "com.google.guava:guava"
+  implementation("com.google.guava:guava")
 
-  implementation "org.codehaus.groovy:groovy-all"
-  implementation "io.opentelemetry:opentelemetry-api"
-  implementation "org.spockframework:spock-core"
+  implementation("org.codehaus.groovy:groovy-all")
+  implementation("io.opentelemetry:opentelemetry-api")
+  implementation("org.spockframework:spock-core")
 }

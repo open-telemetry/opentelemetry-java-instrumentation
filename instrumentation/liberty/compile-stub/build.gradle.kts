@@ -8,4 +8,8 @@ plugins {
 
 // disable checkstyle
 // Abbreviation in name 'getRequestURI' must contain no more than '2' consecutive capital letters. [AbbreviationAsWordInName]
-project.tasks['checkstyleMain'].enabled = false
+tasks {
+  named("checkstyleMain") {
+    enabled = false
+  }
+}

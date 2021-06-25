@@ -5,12 +5,12 @@ plugins {
 
 muzzle {
   pass {
-    group = 'com.typesafe.akka'
-    module = 'akka-actor_2.11'
-    versions = "[2.5.0,)"
+    group.set("com.typesafe.akka")
+    module.set("akka-actor_2.11")
+    versions.set("[2.5.0,)")
   }
 }
 
 dependencies {
-  library "com.typesafe.akka:akka-actor_2.11:2.5.0"
+  library("com.typesafe.akka:akka-actor_2.11:2.5.0")
 }

@@ -4,26 +4,28 @@ plugins {
 
 muzzle {
   pass {
-    group = "com.couchbase.client"
-    module = "java-client"
-    versions = "[3.1,3.1.6)"
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[3.1,3.1.6)")
     // these versions were released as ".bundle" instead of ".jar"
-    skip('2.7.5', '2.7.8')
-    assertInverse = true
+    skip("2.7.5", "2.7.8")
+    assertInverse.set(true)
   }
 }
 
+val versions: Map<String, String> by project
+
 dependencies {
   implementation("com.couchbase.client:tracing-opentelemetry:0.3.3") {
-    exclude(group: "com.couchbase.client", module: "core-io")
+    exclude("com.couchbase.client", "core-io")
   }
 
-  library "com.couchbase.client:core-io:2.1.0"
+  library("com.couchbase.client:core-io:2.1.0")
 
-  testLibrary "com.couchbase.client:java-client:3.1.0"
+  testLibrary("com.couchbase.client:java-client:3.1.0")
 
-  testImplementation group: "org.testcontainers", name: "couchbase", version: versions["org.testcontainers"]
+  testImplementation("org.testcontainers:couchbase:${versions["org.testcontainers"]}")
 
-  latestDepTestLibrary "com.couchbase.client:java-client:3.1.5"
-  latestDepTestLibrary "com.couchbase.client:core-io:2.1.5"
+  latestDepTestLibrary("com.couchbase.client:java-client:3.1.5")
+  latestDepTestLibrary("com.couchbase.client:core-io:2.1.5")
 }

@@ -4,11 +4,11 @@ plugins {
 
 
 dependencies {
-  implementation "io.opentelemetry:opentelemetry-api-metrics"
+  implementation("io.opentelemetry:opentelemetry-api-metrics")
 
-  library "com.github.oshi:oshi-core:5.3.1"
+  library("com.github.oshi:oshi-core:5.3.1")
 
-  testImplementation "io.opentelemetry:opentelemetry-sdk-metrics"
-  testImplementation project(':testing-common')
-  testImplementation "org.assertj:assertj-core"
+  testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
+  testImplementation(project(":testing-common"))
+  testImplementation("org.assertj:assertj-core")
 }

@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  compileOnly "org.apache.axis2:axis2-jaxws:1.6.0"
+  compileOnly("org.apache.axis2:axis2-jaxws:1.6.0")
 }

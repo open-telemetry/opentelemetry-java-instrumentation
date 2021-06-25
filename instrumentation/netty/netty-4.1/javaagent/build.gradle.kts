@@ -4,55 +4,57 @@ plugins {
 
 muzzle {
   pass {
-    group = "io.netty"
-    module = "netty-codec-http"
-    versions = "[4.1.0.Final,5.0.0)"
-    assertInverse = true
+    group.set("io.netty")
+    module.set("netty-codec-http")
+    versions.set("[4.1.0.Final,5.0.0)")
+    assertInverse.set(true)
   }
   pass {
-    group = "io.netty"
-    module = "netty-all"
-    versions = "[4.1.0.Final,5.0.0)"
-    excludeDependency 'io.netty:netty-tcnative'
-    assertInverse = true
+    group.set("io.netty")
+    module.set("netty-all")
+    versions.set("[4.1.0.Final,5.0.0)")
+    excludeDependency("io.netty:netty-tcnative")
+    assertInverse.set(true)
   }
   fail {
-    group = "io.netty"
-    module = "netty"
-    versions = "[,]"
+    group.set("io.netty")
+    module.set("netty")
+    versions.set("[,]")
   }
 }
 
 dependencies {
-  library "io.netty:netty-codec-http:4.1.0.Final"
-  api project(':instrumentation:netty:netty-4.1:library')
-  implementation project(':instrumentation:netty:netty-4-common:javaagent')
+  library("io.netty:netty-codec-http:4.1.0.Final")
+  api(project(":instrumentation:netty:netty-4.1:library"))
+  implementation(project(":instrumentation:netty:netty-4-common:javaagent"))
 
   //Contains logging handler
-  testLibrary "io.netty:netty-handler:4.1.0.Final"
-  testLibrary "io.netty:netty-transport-native-epoll:4.1.0.Final:linux-x86_64"
+  testLibrary("io.netty:netty-handler:4.1.0.Final")
+  testLibrary("io.netty:netty-transport-native-epoll:4.1.0.Final:linux-x86_64")
 
   // first version with kqueue, add it only as a compile time dependency
-  testCompileOnly "io.netty:netty-transport-native-kqueue:4.1.11.Final:osx-x86_64"
+  testCompileOnly("io.netty:netty-transport-native-kqueue:4.1.11.Final:osx-x86_64")
 
-  latestDepTestLibrary enforcedPlatform("io.netty:netty-bom:(,5.0)")
-  latestDepTestLibrary "io.netty:netty-codec-http:(,5.0)"
-  latestDepTestLibrary "io.netty:netty-handler:(,5.0)"
-  latestDepTestLibrary "io.netty:netty-transport-native-epoll:(,5.0):linux-x86_64"
-  latestDepTestLibrary "io.netty:netty-transport-native-kqueue:(,5.0):osx-x86_64"
+  latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:(,5.0)"))
+  latestDepTestLibrary("io.netty:netty-codec-http:(,5.0)")
+  latestDepTestLibrary("io.netty:netty-handler:(,5.0)")
+  latestDepTestLibrary("io.netty:netty-transport-native-epoll:(,5.0):linux-x86_64")
+  latestDepTestLibrary("io.netty:netty-transport-native-kqueue:(,5.0):osx-x86_64")
 }
 
-test {
-  systemProperty "testLatestDeps", testLatestDeps
+tasks {
+  named<Test>("test") {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+  }
 }
 
-if (!testLatestDeps) {
+if (!(findProperty("testLatestDeps") as Boolean)) {
   // No BOM for 4.1.0 so we can't use enforcedPlatform to override our transitive version
   // management, so hook into the resolutionStrategy.
-  configurations.each {
-    it.resolutionStrategy.eachDependency {
-      if (it.requested.group == "io.netty" && it.requested.name != "netty-bom" && !it.requested.name.startsWith("netty-transport-native")) {
-        it.useVersion("4.1.0.Final")
+  configurations.configureEach {
+    resolutionStrategy.eachDependency {
+      if (requested.group == "io.netty" && requested.name != "netty-bom" && !requested.name.startsWith("netty-transport-native")) {
+        useVersion("4.1.0.Final")
       }
     }
   }

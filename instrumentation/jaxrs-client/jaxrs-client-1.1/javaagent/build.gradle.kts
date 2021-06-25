@@ -4,13 +4,13 @@ plugins {
 
 muzzle {
   pass {
-    group = "com.sun.jersey"
-    module = "jersey-client"
-    versions = "[1.1,]"
-    assertInverse = true
+    group.set("com.sun.jersey")
+    module.set("jersey-client")
+    versions.set("[1.1,]")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library "com.sun.jersey:jersey-client:1.1.4"
+  library("com.sun.jersey:jersey-client:1.1.4")
 }

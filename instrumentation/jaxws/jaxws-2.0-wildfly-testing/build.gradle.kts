@@ -7,74 +7,73 @@ plugins {
 repositories {
   mavenCentral()
   maven {
-    url 'https://repo.gradle.org/artifactory/libs-releases-local'
+    setUrl("https://repo.gradle.org/artifactory/libs-releases-local")
     content {
-      includeGroup 'org.gradle'
+      includeGroup("org.gradle")
     }
   }
   mavenLocal()
 }
 
-configurations {
-  testServer
-}
+val testServer by configurations.creating
 
 dependencies {
-  testImplementation "javax:javaee-api:7.0"
+  testImplementation("javax:javaee-api:7.0")
 
-  testImplementation project(':instrumentation:jaxws:jaxws-2.0-arquillian-testing')
-  testRuntimeOnly "org.wildfly.arquillian:wildfly-arquillian-container-embedded:2.2.0.Final"
+  testImplementation(project(":instrumentation:jaxws:jaxws-2.0-arquillian-testing"))
+  testRuntimeOnly("org.wildfly.arquillian:wildfly-arquillian-container-embedded:2.2.0.Final")
 
-  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
-  testInstrumentation project(':instrumentation:jaxws:jaxws-2.0:javaagent')
-  testInstrumentation project(':instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent')
-  testInstrumentation project(':instrumentation:jaxws:jws-1.1:javaagent')
+  testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jws-1.1:javaagent"))
 
   // wildfly version used to run tests
-  testServer "org.wildfly:wildfly-dist:18.0.0.Final@zip"
+  testServer("org.wildfly:wildfly-dist:18.0.0.Final@zip")
 }
 
-// extract wildfly dist, path is used from arquillian.xml
-task setupServer(type: Copy) {
-  from zipTree(configurations.testServer.singleFile)
-  into file('build/server/')
-}
+tasks {
+  // extract wildfly dist, path is used from arquillian.xml
+  val setupServer by registering(Copy::class) {
+    from(zipTree(testServer.singleFile))
+    into(file("build/server/"))
+  }
 
-// logback-classic contains /META-INF/services/javax.servlet.ServletContainerInitializer
-// that breaks deploy on embedded wildfly
-// create a copy of logback-classic jar that does not have this file
-task modifyLogbackJar(type: Jar) {
-  doFirst {
-    configurations.configureEach {
-      if (it.name.toLowerCase().endsWith('testruntimeclasspath')) {
-        def logbackJar = it.find { it.name.contains('logback-classic') }
-        from zipTree(logbackJar)
-        exclude(
-          "/META-INF/services/javax.servlet.ServletContainerInitializer"
-        )
+  // logback-classic contains /META-INF/services/javax.servlet.ServletContainerInitializer
+  // that breaks deploy on embedded wildfly
+  // create a copy of logback-classic jar that does not have this file
+  val modifyLogbackJar by registering(Jar::class) {
+    destinationDirectory.set(file("$buildDir/tmp"))
+    archiveFileName.set("logback-classic-modified.jar")
+    exclude("/META-INF/services/javax.servlet.ServletContainerInitializer")
+    doFirst {
+      configurations.configureEach {
+        if (name.toLowerCase().endsWith("testruntimeclasspath")) {
+          val logbackJar = find { it.name.contains("logback-classic") }
+          from(zipTree(logbackJar))
+        }
       }
     }
   }
-  destinationDirectory = file("$buildDir/tmp")
-  archiveFileName = "logback-classic-modified.jar"
-}
 
-test.dependsOn modifyLogbackJar, setupServer
+  named<Test>("test") {
+    dependsOn(modifyLogbackJar)
+    dependsOn(setupServer)
 
-test {
-  doFirst {
-    // --add-modules is unrecognized on jdk8, ignore it instead of failing
-    jvmArgs "-XX:+IgnoreUnrecognizedVMOptions"
-    // needed for java 11 to avoid org.jboss.modules.ModuleNotFoundException: java.se
-    jvmArgs "--add-modules=java.se"
-    // add offset to default port values
-    jvmArgs "-Djboss.socket.binding.port-offset=200"
+    doFirst {
+      // --add-modules is unrecognized on jdk8, ignore it instead of failing
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+      // needed for java 11 to avoid org.jboss.modules.ModuleNotFoundException: java.se
+      jvmArgs("--add-modules=java.se")
+      // add offset to default port values
+      jvmArgs("-Djboss.socket.binding.port-offset=200")
 
-    // remove logback-classic from classpath
-    classpath = classpath.filter {
-      return !it.absolutePath.contains("logback-classic")
+      // remove logback-classic from classpath
+      classpath = classpath.filter {
+        !it.absolutePath.contains("logback-classic")
+      }
+      // add modified copy of logback-classic to classpath
+      classpath = classpath.plus(files("$buildDir/tmp/logback-classic-modified.jar"))
     }
-    // add modified copy of logback-classic to classpath
-    classpath += files("$buildDir/tmp/logback-classic-modified.jar")
   }
 }

@@ -4,14 +4,14 @@ plugins {
 
 muzzle {
   pass {
-    group = "com.google.http-client"
-    module = "google-http-client"
+    group.set("com.google.http-client")
+    module.set("google-http-client")
 
     // 1.19.0 is the first release.  The versions before are betas and RCs
-    versions = "[1.19.0,)"
+    versions.set("[1.19.0,)")
   }
 }
 
 dependencies {
-  library "com.google.http-client:google-http-client:1.19.0"
+  library("com.google.http-client:google-http-client:1.19.0")
 }

@@ -4,19 +4,19 @@ plugins {
 
 muzzle {
   pass {
-    group = "org.redisson"
-    module = "redisson"
-    versions = "[3.0.0,)"
+    group.set("org.redisson")
+    module.set("redisson")
+    versions.set("[3.0.0,)")
   }
 }
 
 dependencies {
-  library "org.redisson:redisson:3.0.0"
+  library("org.redisson:redisson:3.0.0")
 
-  compileOnly "com.google.auto.value:auto-value-annotations"
-  annotationProcessor "com.google.auto.value:auto-value"
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
 }
 
-test {
-  systemProperty "testLatestDeps", testLatestDeps
+tasks.named<Test>("test") {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps"))
 }

@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  implementation project(':instrumentation:runtime-metrics:library')
+  implementation(project(":instrumentation:runtime-metrics:library"))
 }

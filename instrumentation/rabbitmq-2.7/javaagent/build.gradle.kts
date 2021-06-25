@@ -4,26 +4,26 @@ plugins {
 
 muzzle {
   pass {
-    group = "com.rabbitmq"
-    module = 'amqp-client'
-    versions = "[2.7.0,)"
-    assertInverse = true
+    group.set("com.rabbitmq")
+    module.set("amqp-client")
+    versions.set("[2.7.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library "com.rabbitmq:amqp-client:2.7.0"
+  library("com.rabbitmq:amqp-client:2.7.0")
 
   testLibrary ("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE") {
-    exclude group: 'com.rabbitmq', module: 'amqp-client'
+    exclude("com.rabbitmq", "amqp-client")
   }
 
-  testInstrumentation project(':instrumentation:reactor-3.1:javaagent')
+  testInstrumentation(project(":instrumentation:reactor-3.1:javaagent"))
 
-  testLibrary 'io.projectreactor.rabbitmq:reactor-rabbitmq:1.0.0.RELEASE'
+  testLibrary("io.projectreactor.rabbitmq:reactor-rabbitmq:1.0.0.RELEASE")
 }
 
-tasks.withType(Test).configureEach {
+tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
-  jvmArgs "-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true"
+  jvmArgs("-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true")
 }

@@ -5,36 +5,40 @@ plugins {
 
 muzzle {
   pass {
-    group = "org.elasticsearch.client"
-    module = "rest"
-    versions = "[5.0,6.4)"
-    assertInverse = true
+    group.set("org.elasticsearch.client")
+    module.set("rest")
+    versions.set("[5.0,6.4)")
+    assertInverse.set(true)
   }
 
   pass {
-    group = "org.elasticsearch.client"
-    module = "elasticsearch-rest-client"
-    versions = "[5.0,6.4)"
+    group.set("org.elasticsearch.client")
+    module.set("elasticsearch-rest-client")
+    versions.set("[5.0,6.4)")
   }
 }
 
+val versions: Map<String, String> by project
+
 dependencies {
-  compileOnly "org.elasticsearch.client:rest:5.0.0"
+  compileOnly("org.elasticsearch.client:rest:5.0.0")
 
-  implementation project(':instrumentation:elasticsearch:elasticsearch-rest-common:library')
+  implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common:library"))
 
-  testInstrumentation project(':instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent')
-  testInstrumentation project(':instrumentation:apache-httpasyncclient-4.1:javaagent')
+  testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
 
-  testImplementation "org.apache.logging.log4j:log4j-core:2.11.0"
-  testImplementation "org.apache.logging.log4j:log4j-api:2.11.0"
+  testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
+  testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 
-  testImplementation "org.testcontainers:elasticsearch:${versions["org.testcontainers"]}"
-  testLibrary "org.elasticsearch.client:rest:5.0.0"
+  testImplementation("org.testcontainers:elasticsearch:${versions["org.testcontainers"]}")
+  testLibrary("org.elasticsearch.client:rest:5.0.0")
 
-  latestDepTestLibrary "org.elasticsearch.client:elasticsearch-rest-client:6.3.+"
+  latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.3.+")
 }
 
-tasks.withType(Test).configureEach {
-  systemProperty "testLatestDeps", testLatestDeps
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+  }
 }

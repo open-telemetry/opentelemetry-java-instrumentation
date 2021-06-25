@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  compileOnly project(':javaagent-bootstrap')
+  compileOnly(project(":javaagent-bootstrap"))
 
-  testImplementation project(':javaagent-bootstrap')
+  testImplementation(project(":javaagent-bootstrap"))
 }

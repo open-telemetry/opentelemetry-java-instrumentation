@@ -4,22 +4,22 @@ plugins {
 
 muzzle {
   pass {
-    group = "com.google.guava"
-    module = "guava"
-    versions = "[10.0,]"
-    assertInverse = true
+    group.set("com.google.guava")
+    module.set("guava")
+    versions.set("[10.0,]")
+    assertInverse.set(true)
   }
 }
 
-tasks.withType(Test).configureEach {
+tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
-  jvmArgs "-Dotel.instrumentation.guava.experimental-span-attributes=true"
+  jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
 }
 
 dependencies {
-  library "com.google.guava:guava:10.0"
+  library("com.google.guava:guava:10.0")
 
-  implementation project(':instrumentation:guava-10.0:library')
+  implementation(project(":instrumentation:guava-10.0:library"))
 
-  testImplementation "io.opentelemetry:opentelemetry-extension-annotations"
+  testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }

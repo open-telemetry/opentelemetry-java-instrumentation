@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  compileOnly "org.elasticsearch.client:rest:5.0.0"
+  compileOnly("org.elasticsearch.client:rest:5.0.0")
 }

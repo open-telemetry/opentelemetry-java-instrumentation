@@ -3,11 +3,11 @@ plugins {
 }
 
 dependencies {
-  api project(':testing-common')
-  implementation "org.apache.rocketmq:rocketmq-test:4.8.0"
+  api(project(":testing-common"))
+  implementation("org.apache.rocketmq:rocketmq-test:4.8.0")
 
-  implementation "com.google.guava:guava"
-  implementation "org.codehaus.groovy:groovy-all"
-  implementation "io.opentelemetry:opentelemetry-api"
-  implementation "org.spockframework:spock-core"
+  implementation("com.google.guava:guava")
+  implementation("org.codehaus.groovy:groovy-all")
+  implementation("io.opentelemetry:opentelemetry-api")
+  implementation("org.spockframework:spock-core")
 }

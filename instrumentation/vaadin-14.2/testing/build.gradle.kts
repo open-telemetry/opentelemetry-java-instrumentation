@@ -2,12 +2,14 @@ plugins {
   id("otel.javaagent-testing")
 }
 
-dependencies {
-  compileOnly 'com.vaadin:vaadin-spring-boot-starter:14.2.0'
+val versions: Map<String, String> by project
 
-  api "org.testcontainers:selenium:${versions["org.testcontainers"]}"
-  implementation(project(':testing-common')) {
-    exclude(module: 'jetty-server')
+dependencies {
+  compileOnly("com.vaadin:vaadin-spring-boot-starter:14.2.0")
+
+  api("org.testcontainers:selenium:${versions["org.testcontainers"]}")
+  implementation(project(":testing-common")) {
+    exclude(module = "jetty-server")
   }
-  implementation 'org.seleniumhq.selenium:selenium-java:3.141.59'
+  implementation("org.seleniumhq.selenium:selenium-java:3.141.59")
 }

@@ -4,14 +4,16 @@ plugins {
 }
 
 dependencies {
-  library "io.lettuce:lettuce-core:5.1.0.RELEASE"
+  library("io.lettuce:lettuce-core:5.1.0.RELEASE")
 
-  implementation project(':instrumentation:lettuce:lettuce-common:library')
+  implementation(project(":instrumentation:lettuce:lettuce-common:library"))
 
-  testImplementation project(':instrumentation:lettuce:lettuce-5.1:testing')
-  testImplementation project(':instrumentation:reactor-3.1:library')
+  testImplementation(project(":instrumentation:lettuce:lettuce-5.1:testing"))
+  testImplementation(project(":instrumentation:reactor-3.1:library"))
 }
 
-test {
-  systemProperty "testLatestDeps", testLatestDeps
+tasks {
+  named<Test>("test") {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+  }
 }

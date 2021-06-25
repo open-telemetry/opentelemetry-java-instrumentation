@@ -4,20 +4,20 @@ plugins {
 
 muzzle {
   pass {
-    group = "org.apache.rocketmq"
-    module = 'rocketmq-client'
-    versions = "[4.0.0,)"
-    assertInverse = true
+    group.set("org.apache.rocketmq")
+    module.set("rocketmq-client")
+    versions.set("[4.0.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library "org.apache.rocketmq:rocketmq-client:4.8.0"
-  implementation project(':instrumentation:rocketmq-client-4.8:library')
-  testImplementation project(':instrumentation:rocketmq-client-4.8:testing')
-  testLibrary "org.apache.rocketmq:rocketmq-test:4.8.0"
+  library("org.apache.rocketmq:rocketmq-client:4.8.0")
+  implementation(project(":instrumentation:rocketmq-client-4.8:library"))
+  testImplementation(project(":instrumentation:rocketmq-client-4.8:testing"))
+  testLibrary("org.apache.rocketmq:rocketmq-test:4.8.0")
 }
 
-tasks.withType(Test).configureEach {
-  jvmArgs "-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true"
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true")
 }

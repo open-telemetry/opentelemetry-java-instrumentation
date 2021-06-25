@@ -3,9 +3,9 @@ plugins {
 }
 
 dependencies {
-  implementation "io.opentelemetry:opentelemetry-api-metrics"
+  implementation("io.opentelemetry:opentelemetry-api-metrics")
 
-  testImplementation "io.opentelemetry:opentelemetry-sdk-metrics"
-  testImplementation project(':testing-common')
-  testImplementation "org.mockito:mockito-core"
+  testImplementation("io.opentelemetry:opentelemetry-sdk-metrics")
+  testImplementation(project(":testing-common"))
+  testImplementation("org.mockito:mockito-core")
 }

@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  testImplementation project(':instrumentation:jdbc:javaagent')
+  testImplementation(project(":instrumentation:jdbc:javaagent"))
 }

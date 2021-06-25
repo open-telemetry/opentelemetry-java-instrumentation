@@ -10,48 +10,50 @@ muzzle {
   // so the jaxrs-2.0-resteasy-3.0 module applies to [3.0, 3.1) and [3.5, 4.0)
   // and the jaxrs-2.0-resteasy-3.1 module applies to [3.1, 3.5) and [4.0, )
   pass {
-    group = "org.jboss.resteasy"
-    module = "resteasy-jaxrs"
-    versions = "[3.0.0.Final,3.1.0.Final)"
+    group.set("org.jboss.resteasy")
+    module.set("resteasy-jaxrs")
+    versions.set("[3.0.0.Final,3.1.0.Final)")
   }
 
   pass {
-    group = "org.jboss.resteasy"
-    module = "resteasy-jaxrs"
-    versions = "[3.5.0.Final,4)"
+    group.set("org.jboss.resteasy")
+    module.set("resteasy-jaxrs")
+    versions.set("[3.5.0.Final,4)")
   }
 }
 
 dependencies {
-  compileOnly "javax.ws.rs:javax.ws.rs-api:2.0"
-  library "org.jboss.resteasy:resteasy-jaxrs:3.0.0.Final"
+  compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
+  library("org.jboss.resteasy:resteasy-jaxrs:3.0.0.Final")
 
-  implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent')
-  implementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common:javaagent')
+  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
+  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common:javaagent"))
 
-  testInstrumentation project(':instrumentation:servlet:servlet-3.0:javaagent')
-  testInstrumentation project(':instrumentation:servlet:servlet-javax-common:javaagent')
+  testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
-  testImplementation project(':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing')
-  testImplementation "org.eclipse.jetty:jetty-webapp:9.4.6.v20170531"
+  testImplementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-testing"))
+  testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 
   testLibrary("org.jboss.resteasy:resteasy-undertow:3.0.4.Final") {
-    exclude group: 'org.jboss.resteasy', module: 'resteasy-client'
+    exclude("org.jboss.resteasy", "resteasy-client")
   }
-  testLibrary "io.undertow:undertow-servlet:1.0.0.Final"
-  testLibrary "org.jboss.resteasy:resteasy-servlet-initializer:3.0.4.Final"
+  testLibrary("io.undertow:undertow-servlet:1.0.0.Final")
+  testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.0.4.Final")
 
-  latestDepTestLibrary "org.jboss.resteasy:resteasy-jaxrs:3.+"
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-jaxrs:3.+")
   latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:3.+") {
-    exclude group: 'org.jboss.resteasy', module: 'resteasy-client'
+    exclude("org.jboss.resteasy", "resteasy-client")
   }
 }
 
-test {
-  systemProperty 'testLatestDeps', testLatestDeps
-}
+tasks {
+  named<Test>("test") {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+  }
 
-tasks.withType(Test).configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs "-Dotel.instrumentation.jaxrs.experimental-span-attributes=true"
+  withType<Test>().configureEach {
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
+  }
 }

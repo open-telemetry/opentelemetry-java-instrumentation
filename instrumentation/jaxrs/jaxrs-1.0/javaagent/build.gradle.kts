@@ -4,20 +4,20 @@ plugins {
 
 muzzle {
   pass {
-    group = "javax.ws.rs"
-    module = "jsr311-api"
-    versions = "[0.5,)"
+    group.set("javax.ws.rs")
+    module.set("jsr311-api")
+    versions.set("[0.5,)")
   }
   fail {
-    group = "javax.ws.rs"
-    module = "javax.ws.rs-api"
-    versions = "[,]"
+    group.set("javax.ws.rs")
+    module.set("javax.ws.rs-api")
+    versions.set("[,]")
   }
 }
 
 dependencies {
-  compileOnly "javax.ws.rs:jsr311-api:1.1.1"
+  compileOnly("javax.ws.rs:jsr311-api:1.1.1")
 
-  testImplementation "io.dropwizard:dropwizard-testing:0.7.1"
-  testImplementation "javax.xml.bind:jaxb-api:2.2.3"
+  testImplementation("io.dropwizard:dropwizard-testing:0.7.1")
+  testImplementation("javax.xml.bind:jaxb-api:2.2.3")
 }

@@ -4,36 +4,36 @@ plugins {
 
 muzzle {
   pass {
-    group = "org.asynchttpclient"
-    module = "async-http-client"
-    versions = "[2.0.0,)"
-    assertInverse = true
+    group.set("org.asynchttpclient")
+    module.set("async-http-client")
+    versions.set("[2.0.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  library "org.asynchttpclient:async-http-client:2.0.0"
+  library("org.asynchttpclient:async-http-client:2.0.0")
 
-  compileOnly "com.google.auto.value:auto-value-annotations"
-  annotationProcessor "com.google.auto.value:auto-value"
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
 
-  testInstrumentation project(':instrumentation:netty:netty-4.0:javaagent')
+  testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
 }
 
 otelJava {
   //AHC uses Unsafe and so does not run on later java version
-  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+  maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
 }
 
 // async-http-client 2.0.0 does not work with Netty versions newer than this due to referencing an
 // internal file.
-if (!testLatestDeps) {
-  configurations.each {
-    it.resolutionStrategy {
-      eachDependency { DependencyResolveDetails details ->
+if (!(findProperty("testLatestDeps") as Boolean)) {
+  configurations.configureEach {
+    resolutionStrategy {
+      eachDependency {
         //specifying a fixed version for all libraries with io.netty' group
-        if (details.requested.group == 'io.netty' && details.requested.name != "netty-bom") {
-          details.useVersion "4.0.34.Final"
+        if (requested.group == "io.netty" && requested.name != "netty-bom") {
+          useVersion("4.0.34.Final")
         }
       }
     }

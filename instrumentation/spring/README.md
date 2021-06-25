@@ -69,18 +69,18 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 
 #### OpenTelemetry
 ```gradle
-implementation "io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION"
-implementation "io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry:opentelemetry-api:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry:opentelemetry-sdk:OPENTELEMETRY_VERSION")
 ```
 
 #### LoggingExporter
 ```gradle
-implementation "io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry:opentelemetry-exporters-logging:OPENTELEMETRY_VERSION")
 ```
 
 #### Jaeger Exporter
 ```gradle
-implementation "io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry:opentelemetry-exporters-jaeger:OPENTELEMETRY_VERSION")
 compile "io.grpc:grpc-netty:1.30.2"
 ```
 
@@ -612,7 +612,7 @@ Replace `OPENTELEMETRY_VERSION` with the latest stable [release](https://search.
 
 #### Gradle
 ```gradle
-implementation "io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-spring-starter:OPENTELEMETRY_VERSION")
 ```
 
 ### Create two Spring Projects
@@ -843,13 +843,13 @@ To configure OpenTelemetry tracing with the OTLP, Zipkin, or Jaeger span exporte
 ```gradle
 
 //opentelemetry starter with zipkin configurations
-implementation "io.opentelemetry.instrumentation:opentelemetry-zipkin-exporter-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-zipkin-exporter-starter:OPENTELEMETRY_VERSION")
 
 //opentelemetry starter with jaeger configurations
-implementation "io.opentelemetry.instrumentation:opentelemetry-jaeger-exporter-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-jaeger-exporter-starter:OPENTELEMETRY_VERSION")
 
 //opentelemetry starter with otlp configurations
-implementation "io.opentelemetry.instrumentation:opentelemetry-otlp-exporter-starter:OPENTELEMETRY_VERSION"
+implementation("io.opentelemetry.instrumentation:opentelemetry-otlp-exporter-starter:OPENTELEMETRY_VERSION")
 ```
 
 #### Exporter Configuration Properties

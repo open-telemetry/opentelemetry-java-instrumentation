@@ -3,15 +3,15 @@ plugins {
 }
 
 dependencies {
-  api project(':testing-common')
+  api(project(":testing-common"))
 
-  api "org.apache.logging.log4j:log4j-core:2.7"
+  api("org.apache.logging.log4j:log4j-core:2.7")
 
-  implementation "com.google.guava:guava"
+  implementation("com.google.guava:guava")
 
-  implementation "org.codehaus.groovy:groovy-all"
-  implementation "io.opentelemetry:opentelemetry-api"
-  implementation "org.spockframework:spock-core"
+  implementation("org.codehaus.groovy:groovy-all")
+  implementation("io.opentelemetry:opentelemetry-api")
+  implementation("org.spockframework:spock-core")
 
-  annotationProcessor "org.apache.logging.log4j:log4j-core:2.7"
+  annotationProcessor("org.apache.logging.log4j:log4j-core:2.7")
 }
