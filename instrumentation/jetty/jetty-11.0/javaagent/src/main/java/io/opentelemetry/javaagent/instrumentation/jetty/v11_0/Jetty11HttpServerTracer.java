@@ -29,6 +29,6 @@ public class Jetty11HttpServerTracer extends JakartaServletHttpServerTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.jetty-11.0";
+    return "io.opentelemetry.jetty-11.0";
   }
 }

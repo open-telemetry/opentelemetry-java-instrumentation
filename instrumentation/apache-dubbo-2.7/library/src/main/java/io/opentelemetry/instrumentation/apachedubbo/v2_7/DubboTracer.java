@@ -55,7 +55,7 @@ class DubboTracer extends RpcServerTracer<RpcInvocation> {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.apache-dubbo-2.7";
+    return "io.opentelemetry.apache-dubbo-2.7";
   }
 
   @Override

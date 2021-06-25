@@ -20,7 +20,7 @@ public final class LettuceTracing {
   private final Tracer tracer;
 
   private LettuceTracing(OpenTelemetry openTelemetry) {
-    tracer = openTelemetry.getTracer("io.opentelemetry.javaagent.lettuce-5.1");
+    tracer = openTelemetry.getTracer("io.opentelemetry.lettuce-5.1");
   }
 
   /**

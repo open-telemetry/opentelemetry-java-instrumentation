@@ -144,7 +144,7 @@ public class VaadinTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.vaadin-14.2";
+    return "io.opentelemetry.vaadin-14.2";
   }
 
   private static class VaadinServiceContext {

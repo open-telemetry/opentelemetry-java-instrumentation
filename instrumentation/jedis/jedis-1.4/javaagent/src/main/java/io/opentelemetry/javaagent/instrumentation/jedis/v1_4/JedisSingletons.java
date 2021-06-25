@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.db.DbSpanNameExtractor;
 import io.opentelemetry.javaagent.instrumentation.api.instrumenter.PeerServiceAttributesExtractor;
 
 public final class JedisSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jedis-1.4";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
 
   private static final Instrumenter<JedisRequest, Void> INSTRUMENTER;
 

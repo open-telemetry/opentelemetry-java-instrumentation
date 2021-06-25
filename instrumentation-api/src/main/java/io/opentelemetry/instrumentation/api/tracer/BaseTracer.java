@@ -73,9 +73,9 @@ public abstract class BaseTracer {
    * troubleshooting it's possible to pinpoint what tracer produced problematic telemetry.
    *
    * <p>In this project we use a convention to encode the version of the instrument*ed* library into
-   * the instrumentation name, for example {@code io.opentelemetry.javaagent.apache-httpclient-4.0}.
-   * This way, if there are different instrumentations for different library versions it's easy to
-   * find out which instrumentations produced the telemetry data.
+   * the instrumentation name, for example {@code io.opentelemetry.apache-httpclient-4.0}. This way,
+   * if there are different instrumentations for different library versions it's easy to find out
+   * which instrumentations produced the telemetry data.
    *
    * @see io.opentelemetry.api.trace.TracerProvider#get(String, String)
    */

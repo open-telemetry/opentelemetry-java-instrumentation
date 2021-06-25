@@ -26,7 +26,7 @@ public class LibertyDispatcherTracer
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.liberty-dispatcher";
+    return "io.opentelemetry.liberty-dispatcher";
   }
 
   @Override

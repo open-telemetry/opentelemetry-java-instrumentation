@@ -88,6 +88,6 @@ public class MetroJaxWsTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.jaxws-2.0-metro-2.2";
+    return "io.opentelemetry.jaxws-2.0-metro-2.2";
   }
 }

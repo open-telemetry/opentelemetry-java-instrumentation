@@ -53,6 +53,6 @@ public class TapestryTracer extends BaseTracer {
 
   @Override
   protected String getInstrumentationName() {
-    return "io.opentelemetry.javaagent.tapestry-5.4";
+    return "io.opentelemetry.tapestry-5.4";
   }
 }

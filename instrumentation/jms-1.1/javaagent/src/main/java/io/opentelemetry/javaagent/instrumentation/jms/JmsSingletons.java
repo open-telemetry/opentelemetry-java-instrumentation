@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpan
 import java.time.Instant;
 
 public final class JmsSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.javaagent.jms-1.1";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-1.1";
 
   private static final Instrumenter<MessageWithDestination, Void> PRODUCER_INSTRUMENTER;
   private static final Instrumenter<MessageWithDestination, Void> CONSUMER_INSTRUMENTER;
