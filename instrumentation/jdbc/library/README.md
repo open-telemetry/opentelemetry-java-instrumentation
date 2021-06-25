@@ -30,11 +30,11 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-jdbc:OPENTELEMETR
 
 ##### Usage
 
-There are three possible ways to activate OpenTelemetry tracing with JDBC. The first one is requires
-to change the connection URL and switch to use a special OpenTelemetry driver. When the second way
-is requires minimal changes in your application without the needs to change the connection URL but
-requires removing explicit driver selection. And the third way is more preferable for DI frameworks
-which uses connection pool, it requires only wrap DataSource with special OpenTelemetry wrapper.
+There are three possible ways to activate the OpenTelemetry JDBC instrumentation. The first one requires
+to change the connection URL and switch to use a special OpenTelemetry driver. The second method
+only requires minimal changes in your application without needing to change the connection URL, but
+it's necessary to remove the explicit driver selection. And the third way is more preferable for DI frameworks
+which uses connection pools, as it wraps a `DataSource` with a special OpenTelemetry wrapper.
 
 ### Driver: non-interceptor mode.
 
