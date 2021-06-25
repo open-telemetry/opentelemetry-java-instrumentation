@@ -3,28 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test
+package io.opentelemetry.instrumentation.jdbc
 
-import java.sql.Array
-import java.sql.Blob
-import java.sql.Clob
-import java.sql.Connection
-import java.sql.Date
-import java.sql.NClob
-import java.sql.ParameterMetaData
-import java.sql.PreparedStatement
-import java.sql.Ref
-import java.sql.ResultSet
-import java.sql.ResultSetMetaData
-import java.sql.RowId
-import java.sql.SQLException
-import java.sql.SQLXML
-import java.sql.Time
-import java.sql.Timestamp
+import java.sql.*
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
+
+  TestPreparedStatement() {
+    super()
+  }
+
   TestPreparedStatement(Connection connection) {
     super(connection)
+  }
+
+  @Override
+  boolean execute() throws SQLException {
+    return true
   }
 
   @Override
@@ -135,11 +130,6 @@ class TestPreparedStatement extends TestStatement implements PreparedStatement {
   @Override
   void setObject(int parameterIndex, Object x) throws SQLException {
 
-  }
-
-  @Override
-  boolean execute() throws SQLException {
-    return false
   }
 
   @Override

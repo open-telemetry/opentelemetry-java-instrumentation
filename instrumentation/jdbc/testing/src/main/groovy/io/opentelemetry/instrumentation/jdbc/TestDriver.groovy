@@ -3,29 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test
+package io.opentelemetry.instrumentation.jdbc
 
-import java.sql.Connection
-import java.sql.Driver
-import java.sql.DriverPropertyInfo
-import java.sql.SQLException
-import java.sql.SQLFeatureNotSupportedException
+import java.sql.*
 import java.util.logging.Logger
 
 class TestDriver implements Driver {
   @Override
   Connection connect(String url, Properties info) throws SQLException {
-    return new TestConnection("connectException=true" == url)
+    return new TestConnection()
   }
 
   @Override
   boolean acceptsURL(String url) throws SQLException {
-    return false
+    return url?.startsWith("jdbc:test:")
   }
 
   @Override
   DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
-    return new DriverPropertyInfo[0]
+    return [new DriverPropertyInfo("test", "test")]
   }
 
   @Override

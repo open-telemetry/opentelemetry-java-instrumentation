@@ -3,15 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test
+package io.opentelemetry.instrumentation.jdbc
 
-import java.sql.Connection
-import java.sql.DatabaseMetaData
-import java.sql.ResultSet
-import java.sql.RowIdLifetime
-import java.sql.SQLException
+import java.sql.*
 
 class TestDatabaseMetaData implements DatabaseMetaData {
+  final String url
+
+  TestDatabaseMetaData() {
+    this("jdbc:postgresql://127.0.0.1:5432/dbname")
+  }
+
+  TestDatabaseMetaData(String url) {
+    this.url = url
+  }
+
   @Override
   boolean allProceduresAreCallable() throws SQLException {
     return false
@@ -24,7 +30,7 @@ class TestDatabaseMetaData implements DatabaseMetaData {
 
   @Override
   String getURL() throws SQLException {
-    return "jdbc:testdb://localhost"
+    return url
   }
 
   @Override
