@@ -84,8 +84,8 @@ public void contextInitialized(ServletContextEvent event) {
 Sometimes it's also required to register the OpenTelemetry driver as a first driver in the
 DriverManager list, otherwise another driver can be selected at the time of initialization.
 
-To fix this problem it requires calling `OpenTelemetryDriver.ensureRegisteredAsTheFirstDriver()`
-method along with `setInterceptorMode(true)`.
+Calling `OpenTelemetryDriver.ensureRegisteredAsTheFirstDriver()` method along with
+`setInterceptorMode(true)` will fix that problem.
 
 Please note drivers like Oracle JDBC may fail since it's destroyed forever after deregistration.
 
