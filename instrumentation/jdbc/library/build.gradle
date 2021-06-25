@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-apply plugin: "otel.library-instrumentation"
+plugins {
+  id("otel.library-instrumentation")
+}
 
 dependencies {
   implementation project(':instrumentation-api')
