@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 @FunctionalInterface
-public interface CheckedCallable<T, E extends Throwable> {
+public interface ThrowingSupplier<T, E extends Throwable> {
 
   T call() throws E;
 }

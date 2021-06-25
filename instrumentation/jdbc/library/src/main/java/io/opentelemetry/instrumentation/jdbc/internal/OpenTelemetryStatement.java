@@ -272,7 +272,7 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
     return delegate.isWrapperFor(iface);
   }
 
-  protected <T, E extends Exception> T wrapCall(String sql, CheckedCallable<T, E> callable)
+  protected <T, E extends Exception> T wrapCall(String sql, ThrowingSupplier<T, E> callable)
       throws E {
     Context parentContext = Context.current();
     DbRequest request = DbRequest.create(dbInfo, sql);
