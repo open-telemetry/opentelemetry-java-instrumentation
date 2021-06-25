@@ -47,7 +47,7 @@ public final class OpenTelemetryDriver implements Driver {
   private static final String INTERCEPTOR_MODE_URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
 
-  private static boolean interceptorMode = false;
+  private static volatile boolean interceptorMode = false;
 
   static {
     try {
