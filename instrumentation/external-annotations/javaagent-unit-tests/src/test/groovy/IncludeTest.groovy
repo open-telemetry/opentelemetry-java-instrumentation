@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule.DEFAULT_ANNOTATIONS
+import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationInstrumentation.DEFAULT_ANNOTATIONS
 
 import io.opentelemetry.instrumentation.api.config.Config
 import io.opentelemetry.instrumentation.api.config.ConfigBuilder
-import io.opentelemetry.javaagent.instrumentation.extannotations.TraceAnnotationsInstrumentationModule
+import io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationInstrumentation
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -26,7 +26,7 @@ class IncludeTest extends Specification {
     }
 
     expect:
-    TraceAnnotationsInstrumentationModule.AnnotatedMethodsInstrumentation.configureAdditionalTraceAnnotations(config) == expected.toSet()
+    ExternalAnnotationInstrumentation.configureAdditionalTraceAnnotations(config) == expected.toSet()
 
     where:
     value                               | expected

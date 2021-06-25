@@ -315,26 +315,3 @@ include ':benchmark'
 include ':benchmark-integration'
 include ':benchmark-integration:jetty-perftest'
 include ':benchmark-e2e'
-
-def setBuildFile(project) {
-  // javaagent-unittests modules are needed until those projects have library modules
-  // at which time those unittests can be moved to the library modules
-  //
-  // javaagent-integration-tests modules are only needed by "internal-" instrumentation
-  // which needs to be tested by creating some other "test" instrumentation
-  if (['javaagent', 'javaagent-unit-tests', 'javaagent-integration-tests', 'library', 'testing'].contains(project.projectDir.name) && project.path != ':javaagent') {
-    project.buildFileName = "${project.projectDir.parentFile.name}-${project.projectDir.name}.gradle"
-  } else {
-    project.buildFileName = "${project.name}.gradle"
-  }
-  if (!(project.buildFile.exists())) {
-    project.buildFileName += ".kts"
-  }
-  project.children.each {
-    setBuildFile(it)
-  }
-}
-
-rootProject.children.each {
-  setBuildFile(it)
-}
