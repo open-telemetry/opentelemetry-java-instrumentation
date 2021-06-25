@@ -108,12 +108,11 @@ public final class OpenTelemetryDriver implements Driver {
    * @throws SQLException if registering the driver fails
    */
   public static void register() throws SQLException {
-    if (isRegistered()) {
+    if (!REGISTERED.compareAndSet(false, true)) {
       throw new IllegalStateException(
           "Driver is already registered. It can only be registered once.");
     }
     DriverManager.registerDriver(INSTANCE);
-    REGISTERED.set(true);
   }
 
   /**
