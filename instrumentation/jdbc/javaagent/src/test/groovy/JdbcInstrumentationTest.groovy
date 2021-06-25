@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
 import io.opentelemetry.instrumentation.jdbc.TestConnection
 import io.opentelemetry.instrumentation.jdbc.TestDriver
 
