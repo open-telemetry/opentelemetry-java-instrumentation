@@ -1,16 +1,11 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import io.opentelemetry.instrumentation.gradle.bytebuddy.ByteBuddyPluginConfigurator
 
 plugins {
   id("net.bytebuddy.byte-buddy")
 
   id("otel.instrumentation-conventions")
+  id("otel.javaagent-codegen")
   id("otel.shadow-conventions")
-}
-
-val toolingRuntime by configurations.creating {
-  isCanBeConsumed = false
-  isCanBeResolved = true
 }
 
 dependencies {
@@ -39,14 +34,9 @@ dependencies {
 
   testImplementation("org.testcontainers:testcontainers")
 
-  toolingRuntime(project(path = ":javaagent-tooling", configuration = "instrumentationMuzzle"))
-  toolingRuntime(project(path = ":javaagent-extension-api", configuration = "instrumentationMuzzle"))
+  add("codegen", project(path = ":javaagent-tooling", configuration = "instrumentationMuzzle"))
+  add("codegen", project(path = ":javaagent-extension-api", configuration = "instrumentationMuzzle"))
 }
-
-val pluginName = "io.opentelemetry.javaagent.tooling.muzzle.collector.MuzzleCodeGenerationPlugin"
-ByteBuddyPluginConfigurator(project, sourceSets.main.get(), pluginName,
-  toolingRuntime.plus(configurations.runtimeClasspath.get()))
-  .configure()
 
 val testInstrumentation by configurations.creating {
   isCanBeConsumed = false
